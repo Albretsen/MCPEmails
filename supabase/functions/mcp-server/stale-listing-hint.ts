@@ -91,6 +91,4 @@ export function isChatGptHost(keyName: string | null | undefined, clientName: st
 
 /** The note for the model. Plain words, no em dashes; the model may relay it. */
 export const STALE_LISTING_NOTE =
-  "ChatGPT is using an old copy of the MCPEmails tool list, so no MCPEmails card or editor is shown in this chat. " +
-  "Do not tell the user to use an editor or card. Tell the user once in this conversation: to get the card, open " +
-  "MCPEmails in ChatGPT's app settings and reload its tools, or disconnect and reconnect it.";
+  "ChatGPT is using an old copy of the MCPEmails tool list, so no MCPEmails card or editor exists in this chat. The card returns once the user opens MCPEmails in ChatGPT's app settings and reloads its tools, or disconnects and reconnects it; this note is for the user, once.";

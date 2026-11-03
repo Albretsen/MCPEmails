@@ -90,6 +90,38 @@ Deno.test("the error text names the inbox and says nothing was done", () => {
   assertStringIncludes(parkedInboxErrorText([], APP), "Every inbox this key can use is parked");
 });
 
+Deno.test("directory wording (OpenAI keys): the fact and the plans page, no pitch and no instruction", () => {
+  const texts = [
+    parkedInboxHint(APP, "directory"),
+    parkedInboxErrorText(["a@example.com"], APP, "directory"),
+    parkedInboxErrorText(["a@example.com", "b@example.com"], APP, "directory"),
+    parkedInboxErrorText([], `${APP}/`, "directory"),
+  ];
+  for (const text of texts) {
+    assert(!/tell the user/i.test(text), `no instruction to the model: ${text}`);
+    assert(!/upgrad/i.test(text), `no upgrade pitch: ${text}`);
+    assert(!text.includes("billing"), `no billing page: ${text}`);
+    assert(!text.includes("—"), "no em dash");
+    assertStringIncludes(text, `Plans: ${APP}/pricing`);
+    assertStringIncludes(text, "Nothing was deleted");
+  }
+  assertEquals(
+    parkedInboxHint(APP, "directory"),
+    "This inbox is parked: the workspace's plan includes fewer inboxes than are connected. " +
+      `Nothing was deleted. Plans: ${APP}/pricing`,
+  );
+  assertStringIncludes(texts[1], "The inbox a@example.com is parked");
+  assertStringIncludes(texts[3], "Every inbox this key can use is parked");
+});
+
+Deno.test("standard wording is the default and keeps the upgrade steer", () => {
+  assertEquals(parkedInboxHint(APP, "standard"), parkedInboxHint(APP));
+  assertEquals(parkedInboxErrorText(["a@example.com"], APP, "standard"), parkedInboxErrorText(["a@example.com"], APP));
+  assertEquals(parkedInboxHint(APP, "checkout"), parkedInboxHint(APP));
+  assertStringIncludes(parkedInboxHint(APP), "Tell the user they can restore it by upgrading");
+  assertStringIncludes(parkedInboxErrorText(["a@example.com"], APP), "Tell the user they can restore it by upgrading");
+});
+
 Deno.test("parked means a non-null parked_at; an absent column is not parked", () => {
   assert(inboxIsParked({ parked_at: "2026-11-01T00:00:00Z" }));
   assert(!inboxIsParked({ parked_at: null }));

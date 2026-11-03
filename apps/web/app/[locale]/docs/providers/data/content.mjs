@@ -85,7 +85,7 @@ export function datasetCopy() {
     },
     cite: {
       title: 'Use and cite',
-      body: 'Free to use, copy and build on under CC BY 4.0, with credit. Settings drawn from the Thunderbird ISPDB are also available there under MPL 2.0. Found something wrong? Write to hello@mcpemails.com and we will re-check it.',
+      body: 'Free to use, copy and build on under CC BY 4.0, with credit. Settings drawn from the Thunderbird ISPDB are also available there under MPL 2.0. Found something wrong? Write to support@mcpemails.com and we will re-check it.',
       citation: `MCPEmails, "IMAP and SMTP provider compatibility dataset", probed ${s.probedOn}. https://mcpemails.com${DATASET_PATH}`,
     },
     links: {

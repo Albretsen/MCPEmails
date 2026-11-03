@@ -11,9 +11,7 @@ Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -126,6 +124,7 @@ Raw data:
 the hosts, ports, login mechanisms and size limits we probed for every provider are published as an
 open dataset
 , with free JSON and CSV downloads.
+IMAP and SMTP settings lookup
 What the agent can do once connected
 The operations an MCP client can perform per provider: read, search, send, reply, forward, move, flag, folders, drafts, scheduled send and attachments.
 [aria-label] Supported
@@ -396,7 +395,7 @@ Read the docs
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -427,6 +426,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -445,6 +445,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here

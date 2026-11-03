@@ -34,7 +34,7 @@
         "Analíticas de uso",
         "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
         "Claves de API ilimitadas",
-        "Soporte de la comunidad"
+        "Centro de ayuda y soporte por correo"
       ]
     },
     "personal": {
@@ -47,7 +47,7 @@
         "3 bandejas conectadas",
         "Acciones de correo ilimitadas",
         "Límite de ráfaga 2x más alto",
-        "Soporte por correo"
+        "Soporte prioritario por correo"
       ]
     },
     "solo": {
@@ -154,8 +154,9 @@
       "support": {
         "label": "Soporte",
         "rows": {
-          "community": "Foro de la comunidad",
-          "email": "Soporte por correo"
+          "community": "Centro de ayuda",
+          "email": "Soporte por correo",
+          "priority": "Soporte prioritario por correo"
         }
       }
     },
@@ -188,7 +189,7 @@
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
-        "a": "Dos bandejas conectadas más, acciones de correo ilimitadas (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
+        "a": "Dos bandejas conectadas más, acciones de correo ilimitadas (con uso justo), el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60), 90 días de historial de analíticas en lugar de 30 y soporte prioritario por correo, mientras que Free tiene el centro de ayuda y el soporte por correo estándar. Esa es toda la lista. Todo lo que usas a diario también está en Free: leer, buscar, organizar, redactar, enviar y programar envíos, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Las funciones que siguen trabajando con el chat cerrado, como los recordatorios de seguimiento, posponer y el resumen matinal, están en Pro."
       },
       {
         "q": "¿Qué cuenta como una acción de correo?",
@@ -204,7 +205,7 @@
       },
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Business?",
-        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte por correo. Pro además sigue trabajando con el chat cerrado: recordatorios de seguimiento de correos enviados, posponer, un resumen cada mañana en tu bandeja de entrada, una sola búsqueda en todas tus bandejas conectadas e instrucciones para tu IA por bandeja. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto. Incluye todo lo de Pro."
+        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto, 90 días de historial de analíticas y soporte prioritario por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, con hasta 10 buzones conectados, así que una persona puede llevar los buzones de una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, dos años de historial de analíticas en lugar de 90 días y soporte prioritario por correo. Pro además sigue trabajando con el chat cerrado: recordatorios de seguimiento de correos enviados, posponer, un resumen cada mañana en tu bandeja de entrada, una sola búsqueda en todas tus bandejas conectadas e instrucciones para tu IA por bandeja. Business es para más buzones o más personas: 10 buzones incluidos y $3 al mes por cada uno adicional, miembros ilimitados con roles (lector, miembro, administrador) sin coste extra, administradores que aprueban los envíos en espera, varios espacios de trabajo en una sola suscripción y un techo de 1.000 peticiones por minuto. Incluye todo lo de Pro."
       },
       {
         "q": "Somos una empresa con varios buzones. ¿Qué plan necesitamos?",
@@ -232,7 +233,7 @@
       },
       {
         "q": "¿Puedo auto-alojarlo en lugar de pagar?",
-        "a": "Sí. MCPEmails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel se quedan en el servicio alojado, donde funcionan en todos los planes, incluido Gratis; los miembros y roles están en Business, y el soporte por correo en todos los planes de pago."
+        "a": "Sí. MCPEmails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel se quedan en el servicio alojado, donde funcionan en todos los planes, incluido Gratis; los miembros y roles están en Business, y el soporte prioritario por correo en todos los planes de pago."
       }
     ]
   },

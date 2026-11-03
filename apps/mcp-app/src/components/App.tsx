@@ -24,6 +24,7 @@ import {
   type PatchFields,
   type Settled,
 } from "../draft-failure";
+import { draftActionCalls, isDraftActionTool, neverReachedServer, type ToolCall } from "../draft-tools";
 import { bulkVerb } from "../format";
 import {
   bulkCancelContextLine,
@@ -441,12 +442,14 @@ export function App(props: { bridge: HostBridge }) {
     key: DraftAction,
     tool: string,
     args: Record<string, unknown>,
-    opts: { failAs?: DraftAction; quiet?: boolean; auto?: boolean } = {},
+    opts: { failAs?: DraftAction; quiet?: boolean; auto?: boolean; otherName?: ToolCall } = {},
   ): Promise<DraftCall> => {
     // `failAs`: the action the user sees as failed, when it is not the one the
     // busy state names (the save half of "Save and send" is a save).
     // `quiet`: a reconciling re-read, which must not wipe the notice of the
     // failure it is reconciling.
+    // `otherName`: the one call allowed after a host proves the first never
+    // reached the server (draft-tools.ts).
     const action = opts.failAs ?? key;
     let result: ToolResultParams | null = null;
     let raw: Envelope | null = null;
@@ -470,7 +473,10 @@ export function App(props: { bridge: HostBridge }) {
     try {
       result = await (tool === "draft_read"
         ? readDraftOnce(bridge, args, !!opts.auto)
-        : bridge.callServerTool(tool, args));
+        : bridge.callServerTool(tool, args).catch((e: unknown) => {
+          if (!opts.otherName || !neverReachedServer(e)) throw e;
+          return bridge.callServerTool(opts.otherName.tool, opts.otherName.args);
+        }));
       const next = envelopeFrom(result);
       raw = next;
       lastAnswer.current = Date.now();
@@ -482,7 +488,7 @@ export function App(props: { bridge: HostBridge }) {
         // write until a re-read. A send whose delivery the server itself calls
         // unknown, and an answer that is not even that, stay a lost answer:
         // the server may have acted (review 2 of 2026-10-13).
-        const refused = tool === "draft" ? textRefusalCode(result) : null;
+        const refused = isDraftActionTool(tool) ? textRefusalCode(result) : null;
         if (refused === null) return lose("unreadable");
         setFailure({ action, code: refused, at: Date.now() });
         if (refused === "draft_not_found") setState({ draftCheck: "unverified" });
@@ -1636,7 +1642,8 @@ export function App(props: { bridge: HostBridge }) {
                 // so a stored save never carries `resolved_from`.
               }
               const aimedAt = getState().envelope?.draft ?? d;
-              const sent = await callDraft("send", "draft", { action: "send", ...writeTarget() });
+              const [sendCall, sendOther] = draftActionCalls("send", writeTarget());
+              const sent = await callDraft("send", sendCall.tool, sendCall.args, { otherName: sendOther });
               // Said for a lost answer too: "the card does not know whether it
               // was sent" is true, and silence would leave the last line (a
               // save) standing as if nothing had been pressed.
@@ -1668,10 +1675,8 @@ export function App(props: { bridge: HostBridge }) {
               // base_revision marks this as the card's Discard, as it marks
               // its Send, so the server can tell the model the draft was
               // deleted here (card-activity.ts). Nothing is refused on it.
-              const r = await callDraft("discard", "draft", {
-                action: "delete",
-                ...writeTarget(),
-              });
+              const [deleteCall, deleteOther] = draftActionCalls("delete", writeTarget());
+              const r = await callDraft("discard", deleteCall.tool, deleteCall.args, { otherName: deleteOther });
               if (r.lost) {
                 tellAction("discard", held, r);
                 void reconcile("discard", r.lost, null);

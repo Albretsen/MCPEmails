@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Data vi samler inn",
     "accountTitle": "2.1 Kontodata",
-    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din. Hvis du krysser av i boksen på registreringsskjemaet om å få produkttips og tilbud på e-post, registrerer vi også at du gjorde det, når, og hvilken ordlyd du så. Når du registrerer deg, registrerer vi også om du brukte en mobil, et nettbrett eller en datamaskin, ut fra forespørselshodene fra nettleseren din. Vi lagrer bare den kategorien, aldri nettleserens user-agent-streng eller noen enhetsidentifikator, og bruker den bare til å forstå hvor registreringer kommer fra. Vi registrerer også hvilket land registreringen kom fra, som en kode på to bokstaver som vertsleverandøren vår utleder fra IP-adressen din. Vi lagrer bare den koden, aldri IP-adressen, og bruker den bare til å forstå hvor registreringer kommer fra.",
+    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din. Hvis du krysser av i boksen på registreringsskjemaet om å få produkttips og tilbud på e-post, registrerer vi også at du gjorde det, når, og hvilken ordlyd du så. Når du registrerer deg, registrerer vi også om du brukte en mobil, et nettbrett eller en datamaskin, ut fra forespørselshodene fra nettleseren din. Vi lagrer bare den kategorien, aldri nettleserens user-agent-streng eller noen enhetsidentifikator, og bruker den bare til å forstå hvor registreringer kommer fra. Vi registrerer også hvilket land registreringen kom fra, som en kode på to bokstaver som vertsleverandøren vår utleder fra IP-adressen din. Vi lagrer bare den koden, aldri IP-adressen, og bruker den bare til å forstå hvor registreringer kommer fra. Hvis du først kom til oss via oppsettguiden vår på arabisk, registrerer vi også nettleserens hovedspråk som en kort kode (for eksempel ar), og bruker den bare til å måle den guiden.",
     "workspaceTitle": "2.2 Arbeidsområde- og konfigurasjonsdata",
     "workspaceP": "Vi lagrer arbeidsområdenavnet du velger, og konfigurasjonen til hver tilkoblet innboks (leverandørtype, e-postadresse, OAuth-status og tidspunkt for tilkobling). Vi lagrer <b>ikke</b> OAuth-tilgangstokener eller app-passord i klartekst. De krypteres med AES-256-GCM før de skrives til databasen, og krypteringsnøkkelen holdes som en serverhemmelighet i applikasjonsmiljøet vårt, aldri i databasen.",
     "apiKeysTitle": "2.3 API-nøkler",
@@ -168,6 +168,12 @@
     "stripePurpose": "Betalingsbehandling",
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
+    "resendPurpose": "Konto-e-post: kvitteringer, fakturavarsler, invitasjoner, svar fra support, innloggingslenker og lenker for å tilbakestille passord",
+    "resendData": "E-postadressen din og innholdet i disse e-postene, inkludert engangslenker for innlogging",
+    "resendLocation": "Sendes fra EU (Irland); Resend er et amerikansk selskap",
+    "migaduPurpose": "Våre egne bedriftspostkasser, som supportadressen vår",
+    "migaduData": "E-post du sender oss og svarene våre",
+    "migaduLocation": "Driftes fra Sveits",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
     "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. Internasjonale dataoverføringer",
     "p1": "MCPEmails drives fra Norge, som er underlagt det europeiske økonomiske samarbeidsområdets (EØS) personvernrammeverk. Hvis du bruker tjenesten fra utenfor EØS, kan dataene dine bli overført til og behandlet i land innenfor EØS.",
-    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering.",
+    "p2": "Våre infrastruktur-underdatabehandlere (Supabase, Vercel, Resend) opererer under standardkontraktsbestemmelser (SCC) godkjent av Europakommisjonen for dataoverføringer til tredjeland. For Stripe er behandlingen dekket av deres EU-US Data Privacy Framework-sertifisering. Migadu holder til i Sveits, som har en beslutning om tilstrekkelig beskyttelsesnivå fra EU.",
     "p3": "Databasen vår, som inneholder konto- og konfigurasjonsdata, ligger i EU (Stockholm, Sverige) for alle kunder. Ingen plan eller innstilling flytter den til en annen region. Ikke alle serverne som håndterer forespørslene fra agenten din, står i EU: edge-funksjonene som kobler til innboksen din, kjører i USA (østkysten), og det samme gjør delen av nettstedet vårt som videresender disse forespørslene. E-postinnhold passerer gjennom dem direkte for å besvare forespørselen og lagres ikke der. Kryptert legitimasjon dekrypteres i det samme amerikanske miljøet mens forespørselen pågår."
   },
   "yourRights": {

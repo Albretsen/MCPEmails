@@ -11,9 +11,7 @@ E-post for gründere: svar kundene fra Claude · MCPEmails
 Funksjoner
 Slik fungerer det
 Priser
-Sammenlign
 Dokumentasjon
-Selvhosting
 Blogg
 Logg inn
 Kom i gang gratis
@@ -95,7 +93,7 @@ Les dokumentasjonen
 [alt] MCPEmails
 En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
 Kontakt
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Kopier Kontakt
 Kopier
 MCP-endepunkt
@@ -126,6 +124,7 @@ Leverandørstøtte
 Skrivebeskyttet tilgang
 Utviklerguide
 Oppsett av MCP-klienter
+Finn IMAP- og SMTP-innstillinger
 Blog
 Changelog
 Koble til
@@ -143,6 +142,7 @@ Selskap
 Om
 Sikkerhet
 Status
+Hjelp og kundestøtte
 Personvern
 Vilkår
 Gå fra avtalen her

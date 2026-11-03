@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Welche Daten wir erheben",
     "accountTitle": "2.1 Kontodaten",
-    "accountP": "Wenn Sie ein Konto erstellen, erheben wir Ihre E-Mail-Adresse und ein gehashtes Passwort (Passwörter im Klartext speichern wir nie). Optional können Sie einen Anzeigenamen angeben. Diese Daten sind erforderlich, um Ihr Konto einzurichten und zu führen. Wenn Sie im Registrierungsformular das Kästchen für Produkttipps und Angebote per E-Mail ankreuzen, speichern wir zusätzlich, dass Sie dies getan haben, wann und welchen Wortlaut Sie gesehen haben. Bei der Registrierung speichern wir außerdem, ob Sie ein Smartphone, ein Tablet oder einen Computer verwendet haben. Das ermitteln wir aus den Anfrage-Headern Ihres Browsers. Wir speichern nur dieses eine Wort, nie den User-Agent-String Ihres Browsers oder eine Gerätekennung, und verwenden es nur, um zu verstehen, woher Registrierungen kommen.",
+    "accountP": "Wenn Sie ein Konto erstellen, erheben wir Ihre E-Mail-Adresse und ein gehashtes Passwort (Passwörter im Klartext speichern wir nie). Optional können Sie einen Anzeigenamen angeben. Diese Daten sind erforderlich, um Ihr Konto einzurichten und zu führen. Wenn Sie im Registrierungsformular das Kästchen für Produkttipps und Angebote per E-Mail ankreuzen, speichern wir zusätzlich, dass Sie dies getan haben, wann und welchen Wortlaut Sie gesehen haben. Bei der Registrierung speichern wir außerdem, ob Sie ein Smartphone, ein Tablet oder einen Computer verwendet haben. Das ermitteln wir aus den Anfrage-Headern Ihres Browsers. Wir speichern nur dieses eine Wort, nie den User-Agent-String Ihres Browsers oder eine Gerätekennung, und verwenden es nur, um zu verstehen, woher Registrierungen kommen. Wenn Sie zuerst über unsere Einrichtungsanleitung auf Arabisch zu uns gekommen sind, speichern wir außerdem die Hauptsprache Ihres Browsers als kurzen Code (zum Beispiel ar) und verwenden ihn nur, um diese Anleitung zu messen.",
     "workspaceTitle": "2.2 Workspace- und Konfigurationsdaten",
     "workspaceP": "Wir speichern den von Ihnen gewählten Workspace-Namen sowie die Konfiguration jedes verbundenen Postfachs (Anbietertyp, E-Mail-Adresse, OAuth-Status und Zeitpunkt der Verbindung). OAuth-Zugriffstoken und App-Passwörter speichern wir <b>nicht</b> im Klartext. Sie werden vor dem Schreiben in die Datenbank mit AES-256-GCM verschlüsselt. Der Schlüssel wird als Server-Geheimnis in unserer Anwendungsumgebung aufbewahrt, nie in der Datenbank.",
     "apiKeysTitle": "2.3 API-Schlüssel",
@@ -168,6 +168,12 @@
     "stripePurpose": "Zahlungsabwicklung",
     "stripeData": "E-Mail-Adresse für die Abrechnung, Zahlungskartendaten (von Stripe gespeichert, nicht von uns)",
     "stripeLocation": "USA (Stripe ist nach PCI-DSS zertifiziert)",
+    "resendPurpose": "Konto-E-Mails: Belege, Abrechnungshinweise, Einladungen, Support-Antworten, Anmelde- und Passwort-Links",
+    "resendData": "Ihre E-Mail-Adresse und der Inhalt dieser E-Mails, einschließlich einmalig nutzbarer Anmelde-Links",
+    "resendLocation": "Versand aus der EU (Irland); Resend ist ein US-Unternehmen",
+    "migaduPurpose": "Unsere eigenen geschäftlichen Postfächer, etwa unsere Support-Adresse",
+    "migaduData": "E-Mails, die Sie uns senden, und unsere Antworten",
+    "migaduLocation": "Betrieb aus der Schweiz",
     "emailProvidersTitle": "5.2 E-Mail-Anbieter (Ihre Anbieter, nicht unsere)",
     "emailProvidersP": "Wenn Sie Gmail, Outlook / Microsoft 365, Fastmail oder ein anderes IMAP-Konto verbinden, authentifiziert sich MCPEmails bei diesem Anbieter mit den Zugangsdaten, die Sie angeben. Für die in Ihrem Postfach gespeicherten Daten gilt die Datenschutzerklärung Ihres E-Mail-Anbieters. MCPEmails greift nur dann auf Ihr Postfach zu, wenn Ihr Agent ein Tool aufruft, und nur auf die konkreten Nachrichten oder Ordner, die das Tool anfordert.",
     "noBrokersTitle": "5.3 Keine Datenhändler oder Werbenetzwerke",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. Internationale Datenübermittlungen",
     "p1": "MCPEmails wird von Norwegen aus betrieben, das dem Datenschutzrahmen des Europäischen Wirtschaftsraums (EWR) unterliegt. Wenn Sie den Dienst von außerhalb des EWR nutzen, können Ihre Daten in Länder innerhalb des EWR übermittelt und dort verarbeitet werden.",
-    "p2": "Unsere Unterauftragsverarbeiter für die Infrastruktur (Supabase, Vercel) arbeiten für Datenübermittlungen in Drittländer auf Grundlage von der Europäischen Kommission genehmigter Standardvertragsklauseln (SCCs). Bei Stripe ist die Verarbeitung durch dessen Zertifizierung nach dem EU-US Data Privacy Framework abgedeckt.",
+    "p2": "Unsere Unterauftragsverarbeiter für die Infrastruktur (Supabase, Vercel, Resend) arbeiten für Datenübermittlungen in Drittländer auf Grundlage von der Europäischen Kommission genehmigter Standardvertragsklauseln (SCCs). Bei Stripe ist die Verarbeitung durch dessen Zertifizierung nach dem EU-US Data Privacy Framework abgedeckt. Migadu hat seinen Sitz in der Schweiz, für die ein Angemessenheitsbeschluss der EU besteht.",
     "p3": "Unsere Datenbank mit Konto- und Konfigurationsdaten wird für jeden Kunden in der EU (Stockholm, Schweden) gehostet. Es gibt keinen Tarif und keine Einstellung, die sie in eine andere Region verlagert. Nicht jeder Server, der die Anfragen Ihres Agenten bearbeitet, steht in der EU: Die Edge Functions, die sich mit Ihrem Postfach verbinden, laufen in den Vereinigten Staaten (US East), ebenso der Teil unserer Website, der diese Anfragen weiterleitet. E-Mail-Inhalte werden dort live durchgereicht, um die Anfrage zu beantworten, und dort nicht gespeichert. Verschlüsselte Zugangsdaten werden für die Dauer einer Anfrage in derselben US-Umgebung entschlüsselt."
   },
   "yourRights": {

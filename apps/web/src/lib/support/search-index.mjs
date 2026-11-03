@@ -11,7 +11,9 @@
  *  - the client setup guides (src/lib/clients),
  *  - the docs sections and the two docs hubs (messages/<locale>/docs.json),
  *  - the pricing FAQ (messages/<locale>/pricing.json),
- *  - the troubleshooting articles on /help itself (help-content).
+ *  - every help center article (articles.mjs: the troubleshooting set plus the
+ *    area files), linked to its anchor on /help, or to the bare in-page anchor
+ *    when the index is built for the dashboard's help section (`inApp`).
  *
  * Entry shape: { id, kind, title, hint, href, terms }.
  */
@@ -23,6 +25,22 @@ import { fill, helpHref } from './help-content.mjs';
 import { MODEL_VISIBLE_TOOL_COUNT } from '../public-facts.mjs';
 
 export const HINT_MAX = 80;
+
+/**
+ * Article keywords are cut to this many characters, on a word boundary.
+ * Translated keyword lists run longer than English (they keep the English
+ * terms too), and at 160 the French Gmail article lost its 2FA words.
+ */
+export const TERMS_MAX = 260;
+
+/** Search terms cut on a word boundary, without an ellipsis (they are never shown). */
+export function clipTerms(text, max = TERMS_MAX) {
+  const plain = String(text ?? '').replace(/\s+/g, ' ').trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max + 1);
+  const space = cut.lastIndexOf(' ');
+  return (space > 0 ? cut.slice(0, space) : plain.slice(0, max)).trim();
+}
 
 /**
  * Names people type that are not in the provider's own name, slug or domain.
@@ -109,9 +127,11 @@ async function loadPricing(locale) {
 
 /**
  * Pure builder. `help` is the locale's help content, `docs` and `pricing` the
- * locale's next-intl messages for those namespaces.
+ * locale's next-intl messages for those namespaces. `articles` is the flat
+ * article list from articles.mjs (defaults to the troubleshooting set in
+ * `help`); `inApp` links them to the in-page anchor instead of /help.
  */
-export function buildSearchIndex({ locale, help, docs, pricing, now = new Date() }) {
+export function buildSearchIndex({ locale, help, docs, pricing, articles, inApp = false, now = new Date() }) {
   const out = [];
   const href = (path, available = true) => (available ? helpHref(locale, path) : path);
 
@@ -182,14 +202,15 @@ export function buildSearchIndex({ locale, help, docs, pricing, now = new Date()
     });
   });
 
-  for (const a of help.articles ?? []) {
+  const articleBase = inApp ? '' : href('/help');
+  for (const a of articles ?? help.articles ?? []) {
     out.push({
       id: `article:${a.id}`,
       kind: 'article',
       title: a.title,
       hint: clip(a.summary),
-      href: `${href('/help')}#article-${a.id}`,
-      terms: a.keywords ?? '',
+      href: `${articleBase}#article-${a.id}`,
+      terms: clipTerms(a.keywords),
     });
   }
 
@@ -197,7 +218,7 @@ export function buildSearchIndex({ locale, help, docs, pricing, now = new Date()
 }
 
 /** Loads the locale's sources and builds the index. Server only. */
-export async function getSearchIndex(locale, help, now = new Date()) {
+export async function getSearchIndex(locale, help, { articles, inApp = false, now = new Date() } = {}) {
   const [docs, pricing] = await Promise.all([loadDocs(locale), loadPricing(locale)]);
-  return buildSearchIndex({ locale, help, docs, pricing, now });
+  return buildSearchIndex({ locale, help, docs, pricing, articles, inApp, now });
 }

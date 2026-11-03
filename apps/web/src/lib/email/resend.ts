@@ -3,8 +3,12 @@
  * createResend(key) instead of `new Resend(key)`; resend-factory.test.ts fails
  * the build if a `new Resend(` appears anywhere else.
  *
- * IN PRODUCTION (APP_ENV unset or `production`) this returns the plain Resend
- * client, untouched. Nothing about a production send changes.
+ * IN EVERY ENVIRONMENT a refused or thrown send is reported to the owner
+ * (./resend-failure-alert.ts). The answer passed back to the caller is
+ * unchanged.
+ *
+ * IN PRODUCTION (APP_ENV unset or `production`) nothing else changes: the
+ * payload goes to Resend as given.
  *
  * ANYWHERE ELSE (staging, development) `emails.send` and `batch.send` are
  * wrapped so mail can only reach EMAIL_RECIPIENT_ALLOWLIST (exact addresses and
@@ -20,6 +24,8 @@
 import { Resend } from 'resend';
 
 import { isAllowlistedAddress, isProduction, recipientAllowlist } from '@/lib/env/app-env';
+
+import { fromDomain, reportResendFailure, type ResendFailure } from '@/lib/email/resend-failure-alert';
 
 export const SKIPPED_ID_PREFIX = 'skipped-not-allowlisted';
 
@@ -66,8 +72,62 @@ function skippedId(): string {
   return `${SKIPPED_ID_PREFIX}-${crypto.randomUUID()}`;
 }
 
-export function createResend(key: string, env: Record<string, string | undefined> = process.env): Resend {
+type Reporter = (failure: ResendFailure) => Promise<void>;
+
+function errorFields(error: unknown): { name: string; statusCode: number | null; message: string } {
+  const e = (error ?? {}) as { name?: unknown; statusCode?: unknown; message?: unknown };
+  return {
+    name: typeof e.name === 'string' && e.name ? e.name : 'unknown_error',
+    statusCode: typeof e.statusCode === 'number' ? e.statusCode : null,
+    message: typeof e.message === 'string' ? e.message : String(error),
+  };
+}
+
+/**
+ * Every error answer or throw from Resend is reported (see
+ * ./resend-failure-alert.ts), in every environment. The answer itself is
+ * passed back unchanged, so callers keep their own handling. The report is not
+ * awaited: a slow alert must never hold up a send.
+ */
+function watchFailures(resend: Resend, report: Reporter): void {
+  const fire = (failure: ResendFailure) => {
+    void report(failure).catch(() => {});
+  };
+  const sendOne = resend.emails.send.bind(resend.emails);
+  resend.emails.send = (async (payload, options) => {
+    const from = fromDomain((payload as { from?: unknown }).from);
+    try {
+      const result = await sendOne(payload, options);
+      if (result.error) fire({ kind: 'one', from, count: 1, ...errorFields(result.error) });
+      return result;
+    } catch (err) {
+      fire({ kind: 'one', from, count: 1, ...errorFields(err) });
+      throw err;
+    }
+  }) as typeof resend.emails.send;
+
+  if (!resend.batch) return;
+  const sendBatch = resend.batch.send.bind(resend.batch);
+  resend.batch.send = (async (payloads, options) => {
+    const from = fromDomain((payloads[0] as { from?: unknown } | undefined)?.from);
+    try {
+      const result = await sendBatch(payloads, options);
+      if (result.error) fire({ kind: 'batch', from, count: payloads.length, ...errorFields(result.error) });
+      return result;
+    } catch (err) {
+      fire({ kind: 'batch', from, count: payloads.length, ...errorFields(err) });
+      throw err;
+    }
+  }) as typeof resend.batch.send;
+}
+
+export function createResend(
+  key: string,
+  env: Record<string, string | undefined> = process.env,
+  report: Reporter = reportResendFailure,
+): Resend {
   const resend = new Resend(key);
+  watchFailures(resend, report);
   if (isProduction(env)) return resend;
 
   const allowlist = recipientAllowlist(env);

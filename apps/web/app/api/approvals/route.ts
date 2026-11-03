@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
+import { readSummary } from '@/lib/approvals/payload';
 
 async function context() {
   const auth = await createClient();
@@ -28,7 +29,9 @@ export async function GET() {
   // No payload here: the queue lists summaries only, and nothing is
   // decrypted for it. The decision dialog loads one approval's Bcc addresses
   // when it opens (GET /api/approvals/[id]).
-  const approvals = data ?? [];
+  // The summary is stored encrypted since 2026-10-30 (older rows in clear);
+  // the panel gets the plain object either way.
+  const approvals = (data ?? []).map((row) => ({ ...row, summary: readSummary(row.summary) }));
 
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure
@@ -42,7 +45,11 @@ export async function GET() {
       .order('decided_at', { ascending: false, nullsFirst: false }).limit(20),
   );
 
-  return NextResponse.json({ approvals, decided: decided ?? [] });
+  const decidedRows = ((decided ?? []) as Record<string, unknown>[]).map((row) => ({
+    ...row,
+    summary: readSummary(row.summary),
+  }));
+  return NextResponse.json({ approvals, decided: decidedRows });
 }
 
 /**

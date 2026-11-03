@@ -11,6 +11,7 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { inboxHealth, lastErrorForDisplay } from '@/lib/inboxes/health';
 import { canChangeApiKey, keyScopeCap } from '@/lib/api-keys/key-authority';
 import { VIEWER_SCOPES } from '@/lib/api-keys/scopes';
 import { canOperateWorkspace } from '@/lib/workspace/roles';
@@ -40,6 +41,7 @@ import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { MorningBriefSection } from './MorningBriefSection';
 import { InboxInstructionsEditor } from './InboxInstructionsEditor';
 import { ConnectionTypeEditor, connectionTypeAvailable } from './ConnectionTypeEditor';
+import { supportContactHref } from './ConnectModal';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { trimLeadingQuietDays } from '@/lib/analytics/retention';
@@ -1143,7 +1145,9 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   // non-deleted inbox, so a mailbox whose credentials had expired was invisible
   // here and still occupied a slot against the cap.
   const inboxCount = inboxes?.length ?? 0;
-  const activeInboxCount = (inboxes ?? []).filter((i) => i.status === 'active').length;
+  // An 'active' row whose password the mail server refused is not active:
+  // the mcp-server reports it as reconnect_required (src/lib/inboxes/health.ts).
+  const activeInboxCount = (inboxes ?? []).filter((i) => i.status === 'active' && inboxRowHealth(i) === 'ok').length;
   // The overview strip shows at most a fortnight, but it cannot show more days
   // than the plan's analytics window actually contains: on Free that window is
   // 7 days, so slicing a flat 14 would label a 7-bar chart "last 14 days".
@@ -1666,8 +1670,23 @@ export function WorkflowsPage({ mcpUrl, userRole }) {
  * not on its status: an IMAP row re-opens the connect form it was created
  * with, an OAuth row goes to /auth/gmail or /auth/outlook.
  */
-function needsReconnect(status) {
-  return status === 'error';
+function needsReconnect(ib) {
+  return ib.status === 'error' || inboxRowHealth(ib) === 'reconnect_required';
+}
+
+/**
+ * The mcp-server's rule (src/lib/inboxes/health.ts) on a dashboard inbox
+ * object. Catches the case `status` alone misses: an 'active' row whose
+ * password the mail server refused, which AI clients are told needs
+ * reconnecting and which used to show a green "Connected" here.
+ */
+function inboxRowHealth(ib) {
+  return inboxHealth({ provider: ib.provider, status: ib.status, last_error: ib.lastError });
+}
+
+/** 'active' on the row, but the server refused its password. */
+function loginRefused(ib) {
+  return ib.status === 'active' && inboxRowHealth(ib) === 'reconnect_required';
 }
 
 // `businessShaped` is computed ONCE in App.jsx (isBusinessShapedWorkspace) and
@@ -1675,7 +1694,17 @@ function needsReconnect(status) {
 // and the modal's panel cannot classify one workspace two ways. It only changes
 // anything at the Free cap, where inboxCapOffer widens Personal alone to
 // Personal and Pro.
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys }) {
+/**
+ * "Reconnect not working?" on the Inboxes error banner. It opens the contact
+ * form on the connect topic, naming the provider when every errored inbox
+ * shares one.
+ */
+export function reconnectSupportHref(erroredInboxes) {
+  const providers = [...new Set(erroredInboxes.map(ib => ib.provider).filter(Boolean))];
+  return supportContactHref(providers.length === 1 ? providers[0] : null, null);
+}
+
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1687,7 +1716,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   // choice differently. They are read inside UpgradeIntervalChoice,
   // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
-  const erroredCount = inboxes.filter(ib => ib.status === "error" && !ib.parked).length;
+  // Same rule as the Reconnect button: 'error' rows and refused passwords.
+  const erroredInboxes = inboxes.filter(ib => needsReconnect(ib) && !ib.parked);
+  const erroredCount = erroredInboxes.length;
   // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
   // hold a slot under the cap: the same count the server's checkInboxLimit uses.
   const activeCount = inboxes.filter(ib => !ib.parked).length;
@@ -2038,6 +2069,19 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
               ? t('inboxes.errorBannerOne')
               : t('inboxes.errorBannerMany', { count: erroredCount })}
           </span>
+          <a
+            href={reconnectSupportHref(erroredInboxes)}
+            onClick={(e) => {
+              // The help center opens in place (App switches sections); a
+              // modified click is left to the browser.
+              if (!onContactSupport || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              onContactSupport(e.currentTarget.getAttribute('href'));
+            }}
+            style={{ marginLeft: 'auto', color: 'var(--red-700)', textDecoration: 'underline', whiteSpace: 'nowrap' }}
+          >
+            {t('inboxes.errorBannerSupport')}
+          </a>
         </div>
       )}
 
@@ -2091,11 +2135,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         </div>
                       </div>
                     ) : null}
-                    {!ib.parked && ib.status === "active"  ? <Badge tone="live"    dot="live">{t('inboxes.statusConnected')}</Badge>  : null}
+                    {!ib.parked && ib.status === "active" && !loginRefused(ib) ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge> : null}
                     {!ib.parked && ib.status === "pending" ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>               : null}
-                    {!ib.parked && ib.status === "error"   ? (
+                    {!ib.parked && (ib.status === "error" || loginRefused(ib)) ? (
                       <div>
-                        <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
+                        <Badge tone="red" dot="red">{loginRefused(ib) ? t('inboxes.statusNeedsReconnect') : t('inboxes.statusError')}</Badge>
                         {ib.lastError ? (
                           <div style={{
                             marginTop: 4,
@@ -2105,7 +2149,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                             lineHeight: 1.4,
                             fontFamily: "var(--font-sans)",
                           }}>
-                            {ib.lastError}
+                            {lastErrorForDisplay(ib.lastError)}
                           </div>
                         ) : null}
                       </div>
@@ -2118,7 +2162,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                         {t('inboxes.makeActive')}
                       </Btn>
                     ) : null}
-                    {needsReconnect(ib.status) ? (
+                    {needsReconnect(ib) ? (
                       <Btn
                         variant="secondary"
                         size="sm"
@@ -2162,9 +2206,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           </div>
           <div className="inbox-list-mobile">
             {inboxes.map(ib => {
-              const isError = ib.status === 'error';
-              const canReconnect = needsReconnect(ib.status);
+              const refused = loginRefused(ib);
+              const isError = ib.status === 'error' || refused;
+              const canReconnect = needsReconnect(ib);
               const status = ib.parked ? <Badge tone="neutral">{t('inboxes.statusParked')}</Badge>
+                : refused ? <Badge tone="red" dot="red">{t('inboxes.statusNeedsReconnect')}</Badge>
                 : ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
@@ -2193,7 +2239,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                     <span>{ib.calls.toLocaleString()} calls</span>
                   </div>
                   {ib.parked ? <p className="inbox-mobile-parked">{t('inboxes.parkedNote')}</p> : null}
-                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
+                  {!ib.parked && isError && ib.lastError ? <p className="inbox-mobile-error">{lastErrorForDisplay(ib.lastError)}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
                     {ib.parked && canSwap ? (
@@ -2687,6 +2733,31 @@ export function resolveReviewMode(inbox) {
  * here, is that nothing is delivered until a signed-in owner or admin approves
  * it in the browser, which holds in both `inline` and `dashboard`.
  */
+/**
+ * Shown while the fan-out brake holds one message from this inbox
+ * (mcp-server/outbound-brakes.ts). Without it a held send looks like the
+ * review setting failed. The limit itself is deliberately not named.
+ */
+function FanoutHoldNotice({ until }) {
+  const t = useTranslations('dashboard');
+  if (!until) return null;
+  const end = new Date(until);
+  // The page loads only holds that are still active.
+  if (isNaN(end.getTime())) return null;
+  const time = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return (
+    <div
+      role="status"
+      style={{
+        fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)',
+        background: 'var(--bg-sunken)', border: '1px solid var(--border-1)', borderRadius: 8, padding: '8px 10px', marginBottom: 10,
+      }}
+    >
+      {t('approvals.mode.fanoutHold', { time })}
+    </div>
+  );
+}
+
 function ReviewModeSelector({ value, onChange, disabled, lockedNote = null, chatRolledOut = false }) {
   const t = useTranslations('dashboard');
   // 'chat' follows workspaces.chat_send_confirm_enabled, on for every workspace
@@ -3278,6 +3349,8 @@ function SignatureEditor({ inbox, onSave, t, readOnly = false, canManageReview =
         </label>
       </div>
 
+      <FanoutHoldNotice until={inbox.fanoutHoldUntil} />
+
       <ReviewModeSelector
         value={reviewMode}
         onChange={setReviewMode}
@@ -3571,8 +3644,10 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
   const usesOauth = !inbox.hasImap;
   const compatibility = compatibilityForInbox(inbox.provider);
 
+  const refused = loginRefused(inbox);
   const statusLabel =
     inbox.parked               ? t('inboxes.statusParked')    :
+    refused                    ? t('inboxes.statusNeedsReconnect') :
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
@@ -3580,6 +3655,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
   const statusBadge =
     inbox.parked               ? <Badge tone="neutral">{statusLabel}</Badge> :
+    refused                    ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
@@ -3638,7 +3714,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
 
           {/* Surface the most recent error prominently so a broken connection
               is self-explanatory. */}
-          {inbox.status === 'error' && inbox.lastError && (
+          {(inbox.status === 'error' || refused) && inbox.lastError && (
             <div style={{
               padding: '10px 12px',
               marginBottom: 16,
@@ -3650,7 +3726,7 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               color: 'var(--red-700)',
               lineHeight: 1.5,
             }}>
-              {inbox.lastError}
+              {lastErrorForDisplay(inbox.lastError)}
             </div>
           )}
 
@@ -5900,6 +5976,8 @@ function PasswordSection() {
 /* ------------------------------------------------------------------ */
 function DeleteAccountSection({ email }) {
   const t = useTranslations('dashboard');
+  // The confirmation email is written in the interface language.
+  const { locale } = useAppLocale();
   const [open, setOpen] = useState(false);
   const [confirmValue, setConfirmValue] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -5929,7 +6007,7 @@ function DeleteAccountSection({ email }) {
       const res = await fetch('/api/user/delete-account', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmEmail: confirmValue.trim() }),
+        body: JSON.stringify({ confirmEmail: confirmValue.trim(), locale }),
       });
       if (!res.ok) {
         let msg = t('settings.deleteAccount.errFailed');
@@ -6515,7 +6593,7 @@ function BillingSection({
   // back: the grant lifts `maxInboxes` and nothing else, it survives onto a
   // paid plan (nothing clears the entitlement when a subscription activates),
   // and Personal raises their burst rate 60/min to 120/min and adds the
-  // billing portal and email support. (The Free action allowance is not a
+  // billing portal and priority email support. (The Free action allowance is not a
   // delta for this cohort: every workspace from before 2026-09-12 is exempt
   // from it for good.) So it is a strict upgrade for them, and hiding the
   // card meant the cohort could not buy at all: the card was the only way to

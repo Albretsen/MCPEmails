@@ -35,8 +35,7 @@ export const SUPPORT_ERROR_CODES = [
   'unknown',
 ];
 
-/** The address shown as the email way in. */
-export const SUPPORT_EMAIL = 'support@mcpemails.com';
+export { SUPPORT_EMAIL } from './help-links.mjs';
 
 export async function getHelpContent(locale) {
   if (locale === 'en' || !HELP_LOCALES.includes(locale)) return en;
@@ -56,14 +55,4 @@ export function fill(template, values) {
   );
 }
 
-/**
- * A marketing path in a locale (`as-needed` prefixing: English has none).
- * Dashboard paths, anchors-only and absolute URLs are left alone: the dashboard
- * is not under app/[locale].
- */
-export function helpHref(locale, href) {
-  if (typeof href !== 'string' || !href.startsWith('/')) return href;
-  if (href === '/dashboard' || href.startsWith('/dashboard/') || href.startsWith('/api/')) return href;
-  if (!locale || locale === 'en') return href;
-  return href === '/' ? `/${locale}` : `/${locale}${href}`;
-}
+export { helpHref } from './help-links.mjs';

@@ -1,0 +1,273 @@
+{
+  "area": "account-team",
+  "title": "账户、团队与账单",
+  "articles": [
+    {
+      "id": "switch-workspace",
+      "title": "切换或重命名工作区",
+      "summary": "每个工作区都有自己的收件箱、API 密钥和成员。在侧边栏顶部切换。",
+      "keywords": "工作区 切换 更改 重命名 名称 侧边栏 菜单 客户 业务 workspace",
+      "steps": [
+        "点击侧边栏顶部的工作区名称。",
+        "在“工作区”下选择另一个工作区。",
+        "要重命名，请打开“设置”，修改“工作区名称”，然后点击“保存更改”。",
+        "只有所有者或管理员可以重命名工作区。"
+      ],
+      "links": [
+        {
+          "label": "设置",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "create-workspace",
+      "title": "再创建一个工作区",
+      "summary": "额外的工作区是 Business 功能。新工作区沿用你的套餐。",
+      "keywords": "新建工作区 创建 添加 第二个 客户 业务 team 套餐 多个工作区 workspace",
+      "steps": [
+        "点击侧边栏顶部的工作区名称。",
+        "点击“新建工作区”。",
+        "填写“工作区名称”，然后点击“创建工作区”。"
+      ],
+      "body": [
+        "套餐属于你的账户，因此你拥有的每个工作区都共用它。在其他套餐上，“新建工作区”会改为链接到套餐页面。"
+      ],
+      "links": [
+        {
+          "label": "套餐与价格",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "invite-member",
+      "title": "邀请他人加入工作区",
+      "summary": "所有者和管理员在“成员”中邀请他人。邀请需要 Business 套餐。",
+      "keywords": "邀请 成员 同事 协作者 团队 添加用户 席位 邮件 重新发送 取消邀请 invite",
+      "steps": [
+        "打开“成员”。",
+        "在“邀请协作者”下，填写对方的邮箱地址并选择角色。",
+        "点击“发送邀请”。接受链接 7 天内有效。",
+        "如果对方没收到邮件，请在待处理的邀请上点击“重新发送”。",
+        "要撤回邀请，请点击“取消邀请”。"
+      ],
+      "links": [
+        {
+          "label": "成员",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "accept-invite",
+      "title": "接受工作区邀请",
+      "summary": "打开邀请邮件中的链接，并用收到邀请的邮箱地址登录。",
+      "keywords": "接受邀请 加入工作区 邀请链接 已过期 不同邮箱 账户不对 accept invite",
+      "steps": [
+        "在 7 天内打开邀请邮件中的接受链接。",
+        "用收到邀请的那个邮箱地址登录或注册。",
+        "链接过期了？请所有者或管理员点击“重新发送”。之前的链接随即失效。"
+      ]
+    },
+    {
+      "id": "member-roles",
+      "title": "各成员角色的权限",
+      "summary": "所有者、管理员、成员和查看者。查看者只能读取。",
+      "keywords": "角色 权限 所有者 管理员 成员 查看者 只读 访问权限 owner admin member viewer role",
+      "steps": [
+        "所有者：完全控制，包括账单、删除工作区和更改角色。",
+        "管理员：邀请和移除成员，重命名工作区。",
+        "成员：连接邮箱、编辑签名、创建 API 密钥和运行自动化。",
+        "查看者：只读。其 API 密钥只能使用读取类工具。"
+      ],
+      "links": [
+        {
+          "label": "成员",
+          "href": "/dashboard/members"
+        }
+      ]
+    },
+    {
+      "id": "manage-members",
+      "title": "更改角色、移除成员或退出",
+      "summary": "更改立即生效。被移除或退出的成员会失去他们在该工作区的 API 密钥。",
+      "keywords": "更改角色 移除成员 踢出 退出工作区 撤销访问 升级 降级 remove leave",
+      "steps": [
+        "在“成员”中，所有者在“角色”列中更改角色。",
+        "点击某人那一行上的按钮，然后确认“移除成员”。",
+        "管理员可以移除成员和查看者，但不能移除其他管理员。",
+        "要退出你受邀加入的工作区，请点击“退出工作区”。",
+        "所有者无法退出，请改为在“设置”中删除工作区。"
+      ],
+      "links": [
+        {
+          "label": "成员",
+          "href": "/dashboard/members"
+        },
+        {
+          "label": "删除工作区",
+          "href": "/help#article-disconnect-or-delete"
+        }
+      ]
+    },
+    {
+      "id": "profile-email-language",
+      "title": "更改姓名、邮箱或语言",
+      "summary": "在“设置”的“账户”部分修改个人资料和控制台语言。",
+      "keywords": "个人资料 显示名称 邮箱地址 更改 语言 中文 区域 设置 账户 profile language",
+      "steps": [
+        "打开“设置”。",
+        "修改“显示名称”，然后点击“保存更改”。",
+        "点击“更改邮箱”，填写新地址。",
+        "点击发送到新地址的确认链接即可完成。",
+        "在“语言”下选择一种语言。"
+      ],
+      "links": [
+        {
+          "label": "设置",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "password-and-sign-in",
+      "title": "更改或重置密码",
+      "summary": "在“设置”中更改，或在登录页点击“忘记密码？”重置。",
+      "keywords": "密码 更改 重置 忘记密码 登录 魔法链接 magic link google github password",
+      "steps": [
+        "在“设置”中填写“当前密码”和“新密码”，然后点击“更新密码”。",
+        "密码至少 8 个字符。",
+        "忘记了？在登录页点击“忘记密码？”。链接 60 分钟内有效。",
+        "你也可以用 Google、GitHub 或魔法链接登录。"
+      ],
+      "links": [
+        {
+          "label": "设置",
+          "href": "/dashboard/settings"
+        }
+      ]
+    },
+    {
+      "id": "active-sessions",
+      "title": "退出其他设备",
+      "summary": "“安全”列出登录了你账户的所有设备。当前设备会保持登录。",
+      "keywords": "会话 设备 退出 登出 其他设备 浏览器 安全 笔记本被盗 sessions sign out",
+      "steps": [
+        "打开“安全”。",
+        "查看“活跃会话”下的列表。",
+        "点击那里的退出按钮，结束除当前设备外的所有会话。"
+      ],
+      "links": [
+        {
+          "label": "安全",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "audit-log",
+      "title": "查看运行过哪些工具调用",
+      "summary": "“安全”中的审计日志列出每次 MCP 工具调用，以及其收件箱、API 密钥和状态。",
+      "keywords": "审计日志 活动 历史 工具调用 谁 什么 何时 api 密钥 api key 安全 记录 audit log",
+      "steps": [
+        "打开“安全”。",
+        "滚动到“审计日志”。",
+        "每一行显示工具、收件箱、API 密钥、状态、时间戳和耗时。"
+      ],
+      "body": [
+        "日志从不记录邮件主题、正文或收件人。"
+      ],
+      "links": [
+        {
+          "label": "安全",
+          "href": "/dashboard/security"
+        }
+      ]
+    },
+    {
+      "id": "choose-a-plan",
+      "title": "选择合适的套餐",
+      "summary": "先数邮箱数量，再数需要登录的人数。",
+      "keywords": "套餐 方案 免费 free personal pro business team 比较 选哪个 收件箱 席位 升级 价格 plan",
+      "steps": [
+        "Free：一个收件箱，每月 150 次邮件操作。",
+        "Personal：最多 3 个收件箱，邮件操作不限量。",
+        "Pro：一人使用，最多 10 个收件箱。",
+        "Business：10 个或更多收件箱，带角色的成员，每个客户一个工作区。",
+        "价格和完整对比请见价格页面。"
+      ],
+      "links": [
+        {
+          "label": "套餐与价格",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "change-plan-or-interval",
+      "title": "更改套餐或计费周期的费用",
+      "summary": "在任何更改生效前，你都会看到确切金额并确认。",
+      "keywords": "升级 降级 切换套餐 按年 按月 年付 月付 计费周期 按比例 抵扣 扣款 付款未完成 被拒 账单 发票 proration",
+      "steps": [
+        "在“设置”的“账单与套餐”下，选择“按月”或“按年”，然后点击该套餐的“获取”按钮。",
+        "新订阅者在 Stripe 上付款。现有订阅者会先看到金额，再确认。",
+        "更改套餐按比例计费。续费日期保持不变。",
+        "在按月和按年之间切换会抵扣未用时间，计费周期从当天重新开始。",
+        "付款未完成？你的套餐不变。点击“支付账单”完成付款。"
+      ],
+      "links": [
+        {
+          "label": "设置",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "取消或申请退款",
+          "href": "/help#article-change-or-cancel-plan"
+        }
+      ]
+    },
+    {
+      "id": "data-and-privacy",
+      "title": "我们存储了哪些邮件数据",
+      "summary": "除定时发送和待审批的邮件外，邮件内容从不存储。邮箱密码经过加密。",
+      "keywords": "隐私 数据 存储 加密 gdpr 欧盟 eu 训练 凭据 密码 令牌 删除 导出 privacy",
+      "steps": [
+        "助手当下读取或发送的邮件都是实时获取的，从不存储。",
+        "定时或待审批的邮件会存储到发送或审批完成为止。7 天后其内容会被清除，待审批请求在 90 天后删除。",
+        "邮箱密码和令牌使用 AES-256-GCM 加密。",
+        "账户数据存储在欧盟的斯德哥尔摩。你的邮件从不用于训练 AI 模型。",
+        "如需获取你的数据副本，请给我们写信。"
+      ],
+      "links": [
+        {
+          "label": "隐私政策",
+          "href": "/privacy"
+        },
+        {
+          "label": "安全",
+          "href": "/security"
+        },
+        {
+          "label": "联系支持",
+          "href": "/help#contact"
+        }
+      ]
+    },
+    {
+      "id": "self-hosting",
+      "title": "自行托管 MCPEmails",
+      "summary": "它是开源的（AGPL-3.0），用 docker-compose 运行，支持 IMAP 和 SMTP 邮箱。",
+      "keywords": "自托管 自行托管 开源 agpl docker docker-compose 自己的服务器 本地部署 self-host",
+      "body": [
+        "你的凭据用只有你持有的密钥加密。Gmail 和 Outlook 登录以及控制台仍在托管服务上。"
+      ],
+      "links": [
+        {
+          "label": "自托管指南",
+          "href": "/self-hosting"
+        }
+      ]
+    }
+  ]
+}

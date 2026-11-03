@@ -11,9 +11,7 @@ Yahoo Mail-MCP: koble Yahoo Mail til Claude og ChatGPT · MCPEmails
 Funksjoner
 Slik fungerer det
 Priser
-Sammenlign
 Dokumentasjon
-Selvhosting
 Blogg
 Logg inn
 Kom i gang gratis
@@ -22,12 +20,12 @@ Yahoo Mail + AI
 Koble Yahoo Mail til Claude,
 og Cursor, ChatGPT, enhver MCP-klient
 Gi Claude eller ChatGPT den ekte Yahoo-innboksen din på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.
-Claude når ikke Yahoo Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.
 Koble til Yahoo Mail gratis
 Les dokumentasjonen
 1 innboks gratis, for alltid
 App-passord, ingen OAuth-oppsett
 E-post hentes direkte, lagres aldri
+Claude når ikke Yahoo Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.
 Slik kobler Yahoo seg til: et app-passord
 Yahoo Mail kobles til via IMAP/SMTP med et
 Yahoo-app-passord
@@ -86,6 +84,32 @@ Steg-for-steg-guider:
 Slik kobler du Claude til e-posten din
 ·
 Guide til Claude IMAP-koblingen
+Flere guider:
+Egendefinerte koblinger i Claude, forklart
+·
+Planlegg en e-post fra chatten
+Bruk denne innboksen i AI-appen din:
+Claude
+·
+ChatGPT
+·
+Cursor
+·
+VS Code
+·
+Codex
+·
+Claude Code
+·
+Cline
+·
+Windsurf
+·
+Gemini CLI
+·
+Alle støttede apper
+Trenger du servernavn og porter?
+Finn IMAP- og SMTP-innstillinger
 Vil du sammenligne leverandører først?
 Se kompatibilitetsmatrisen for e-postleverandører
 ChatGPT
@@ -172,7 +196,7 @@ Les dokumentasjonen
 [alt] MCPEmails
 En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
 Kontakt
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Kopier Kontakt
 Kopier
 MCP-endepunkt
@@ -203,6 +227,7 @@ Leverandørstøtte
 Skrivebeskyttet tilgang
 Utviklerguide
 Oppsett av MCP-klienter
+Finn IMAP- og SMTP-innstillinger
 Blog
 Changelog
 Koble til
@@ -220,6 +245,7 @@ Selskap
 Om
 Sikkerhet
 Status
+Hjelp og kundestøtte
 Personvern
 Vilkår
 Gå fra avtalen her

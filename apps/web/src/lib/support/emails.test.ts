@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { buildSupportTicketEmail, buildSupportConfirmationEmail, sendSupportTicketEmail, oneLine, SUPPORT_FROM, SUPPORT_INBOX } =
+const { buildSupportTicketEmail, buildSupportConfirmationEmail, sendSupportTicketEmail, oneLine, SUPPORT_FROM, SUPPORT_INBOX, supportIdempotencyKey } =
   await import('./emails.ts');
 
 // Distinctive markers: if either appears in the confirmation, visitor text leaked.
@@ -20,7 +20,9 @@ const input = {
     workspace_id: '00000000-0000-4000-8000-000000000001',
     plan: 'solo',
     mailboxes: [
-      { provider: 'imap', service: 'yahoo', host: 'imap.mail.yahoo.com', status: 'error', last_error_code: 'AUTHENTICATIONFAILED' },
+      { email: 'ada@example.com', provider: 'imap', service: 'yahoo', service_name: 'Yahoo Mail', host: 'imap.mail.yahoo.com', status: 'error', health: 'reconnect_required' as const, last_error_code: 'AUTHENTICATIONFAILED', last_error_text: 'AUTHENTICATIONFAILED' },
+      { email: 'hello@example.com', provider: 'imap', service: 'generic', service_name: 'IMAP', host: 'imap.migadu.example', status: 'active', health: 'reconnect_required' as const, last_error_code: "The mail server refused this mailbox's password. (Checked 2026-10-04T20:04:04.730Z)", last_error_text: "The mail server refused this mailbox's password." },
+      { email: 'ok@example.com', provider: 'gmail', service: null, service_name: 'Gmail', host: null, status: 'active', health: 'ok' as const, last_error_code: null, last_error_text: null },
     ],
     from: 'connect-modal',
     provider: 'yahoo',
@@ -43,14 +45,22 @@ test('support email: message first, then the context block', () => {
     'Category: Billing (billing)',
     'Source: form_signed_in',
     'Workspace: 00000000-0000-4000-8000-000000000001',
-    'Plan: solo',
-    'imap | yahoo | imap.mail.yahoo.com | error | error: AUTHENTICATIONFAILED',
+    'Plan: Pro (solo)',
+    '  - ada@example.com | imap/yahoo | imap.mail.yahoo.com | needs reconnect (status error) | error: AUTHENTICATIONFAILED',
+    "  - hello@example.com | imap/generic | imap.migadu.example | needs reconnect (status active) | error: The mail server refused this mailbox's password. (Checked 2026-10-04T20:04:04.730Z)",
+    '  - ok@example.com | gmail | active\n',
     'From: connect-modal',
     'Provider: yahoo',
     'Code: auth_failed',
   ]) {
     assert.equal(body.includes(line), true, line);
   }
+});
+
+test('support email: the plan shows its display name, never the bare slug', () => {
+  const { body } = buildSupportTicketEmail(input);
+  assert.equal(/^Plan: solo$/m.test(body), false);
+  assert.equal(body.includes('Plan: Pro (solo)'), true);
 });
 
 test('support email: HTML escapes the visitor text', () => {
@@ -76,7 +86,8 @@ test('confirmation: gives the ref and NEVER the subject or message', () => {
   assert.equal(all.includes(SUBJECT_MARK), false);
   assert.equal(all.includes(MESSAGE_MARK), false);
   assert.equal(all.includes('Refund'), false);
-  assert.equal(all.toLowerCase().includes('a person will'), true);
+  assert.equal(all.includes('We reply by email within one business day.'), true);
+  assert.equal(all.toLowerCase().includes('a person will'), false);
 });
 
 test('oneLine strips CR/LF and controls', () => {
@@ -111,7 +122,7 @@ test('sends: support email goes to support@ with Reply-To the customer; confirma
   assert.deepEqual([confirmation.reply_to].flat(), [SUPPORT_INBOX]);
   assert.equal(JSON.stringify(confirmation).includes(MESSAGE_MARK), false);
   const keys = sent.map((s) => s.headers.get('idempotency-key'));
-  assert.deepEqual(keys, ['support-ticket-MCPE-1001', 'support-confirmation-MCPE-1001']);
+  assert.deepEqual(keys, ['support-production-ticket-MCPE-1001', 'support-production-confirmation-MCPE-1001']);
 });
 
 test('sends never throw: no key, or a network failure, is false', async (t) => {
@@ -127,4 +138,21 @@ test('sends never throw: no key, or a network failure, is false', async (t) => {
     delete process.env.RESEND_API_KEY;
   });
   assert.equal(await sendSupportTicketEmail(input), false);
+});
+
+test('the Resend idempotency key differs between staging and production for the same ref', () => {
+  // Both environments share one Resend account and number refs from MCPE-1001.
+  const saved = process.env.APP_ENV;
+  try {
+    process.env.APP_ENV = 'staging';
+    const staging = supportIdempotencyKey('support', 'ticket', 'MCPE-1001');
+    delete process.env.APP_ENV;
+    const production = supportIdempotencyKey('support', 'ticket', 'MCPE-1001');
+    assert.notEqual(staging, production);
+    assert.equal(production, 'support-production-ticket-MCPE-1001');
+    assert.equal(supportIdempotencyKey('support', 'ticket', 'MCPE-1001'), production, 'same env and ref: same key, so a retry still dedupes');
+  } finally {
+    if (saved === undefined) delete process.env.APP_ENV;
+    else process.env.APP_ENV = saved;
+  }
 });

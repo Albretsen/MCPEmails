@@ -34,7 +34,7 @@
         "Analytique d'usage",
         "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
         "Clés API illimitées",
-        "Support communautaire"
+        "Centre d'aide et support par e-mail"
       ]
     },
     "personal": {
@@ -47,7 +47,7 @@
         "3 boîtes connectées",
         "Actions e-mail illimitées",
         "Limite de pointe 2x plus élevée",
-        "Support par e-mail"
+        "Support prioritaire par e-mail"
       ]
     },
     "solo": {
@@ -154,8 +154,9 @@
       "support": {
         "label": "Support",
         "rows": {
-          "community": "Forum communautaire",
-          "email": "Support par e-mail"
+          "community": "Centre d'aide",
+          "email": "Support par e-mail",
+          "priority": "Support prioritaire par e-mail"
         }
       }
     },
@@ -188,7 +189,7 @@
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
-        "a": "Deux boîtes connectées de plus, des actions e-mail illimitées (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support par e-mail à la place du forum communautaire. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
+        "a": "Deux boîtes connectées de plus, des actions e-mail illimitées (usage équitable), un plafond de pointe doublé (120 requêtes par minute au lieu de 60), 90 jours d'historique d'analytique au lieu de 30 et le support prioritaire par e-mail, là où Free a le centre d'aide et le support par e-mail standard. C'est toute la liste. Tout ce que vous utilisez au quotidien est aussi dans Free : lire, chercher, organiser, rédiger, envoyer et programmer des envois, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Les fonctions qui continuent de travailler quand la conversation est fermée, comme les relances, la mise en attente et le récapitulatif du matin, sont dans Pro."
       },
       {
         "q": "Qu'est-ce qui compte comme une action e-mail ?",
@@ -204,7 +205,7 @@
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Business ?",
-        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support par e-mail. Pro continue aussi de travailler quand la conversation est fermée : relances sur les e-mails envoyés, mise en attente, un récapitulatif chaque matin déposé dans votre boîte, une seule recherche dans toutes vos boîtes connectées et des instructions pour votre IA, boîte par boîte. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute. Tout ce qui est dans Pro est inclus."
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute, 90 jours d'historique d'analytique et le support prioritaire par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, avec jusqu'à 10 boîtes connectées : une personne peut donc gérer les boîtes d'une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, deux ans d'historique d'analytique au lieu de 90 jours, et le support prioritaire par e-mail. Pro continue aussi de travailler quand la conversation est fermée : relances sur les e-mails envoyés, mise en attente, un récapitulatif chaque matin déposé dans votre boîte, une seule recherche dans toutes vos boîtes connectées et des instructions pour votre IA, boîte par boîte. Business, c'est pour plus de boîtes ou plus de personnes : 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, des membres illimités avec rôles (observateur, membre, administrateur) sans surcoût, des administrateurs qui valident les envois en attente, plusieurs espaces de travail sur un seul abonnement et un plafond de 1 000 requêtes par minute. Tout ce qui est dans Pro est inclus."
       },
       {
         "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
@@ -232,7 +233,7 @@
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
-        "a": "Oui. MCPEmails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les membres et rôles sont sur Business, et le support par e-mail sur tous les forfaits payants."
+        "a": "Oui. MCPEmails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP. La connexion Gmail et Outlook (OAuth) et le tableau de bord restent sur le service hébergé, où ils fonctionnent avec tous les forfaits, Gratuit compris ; les membres et rôles sont sur Business, et le support prioritaire par e-mail sur tous les forfaits payants."
       }
     ]
   },

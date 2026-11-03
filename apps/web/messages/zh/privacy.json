@@ -168,6 +168,12 @@
     "stripePurpose": "支付处理",
     "stripeData": "计费邮箱、支付卡数据（由 Stripe 存储，非我们存储）",
     "stripeLocation": "美国（Stripe 已通过 PCI-DSS 认证）",
+    "resendPurpose": "账户邮件：收据、账单通知、邀请、支持回复、登录链接和密码重置链接",
+    "resendData": "您的邮箱地址和这些邮件的内容，包括一次性登录链接",
+    "resendLocation": "从欧盟（爱尔兰）发送；Resend 是一家美国公司",
+    "migaduPurpose": "我们自己的企业邮箱，例如我们的支持邮箱",
+    "migaduData": "您发给我们的邮件和我们的回复",
+    "migaduLocation": "从瑞士运营",
     "emailProvidersTitle": "5.2 电子邮件服务商（你的服务商，而非我们的）",
     "emailProvidersP": "当你连接 Gmail、Outlook / Microsoft 365、Fastmail 或其他 IMAP 账户时，MCPEmails 会使用你提供的凭据向该服务商进行身份验证。你邮箱中所保存数据的处理受你自己电子邮件服务商隐私政策的约束。MCPEmails 仅在你的智能体发起工具调用时访问你的邮箱，且仅针对该工具所请求的特定邮件或文件夹。",
     "noBrokersTitle": "5.3 无数据经纪商或广告网络",
@@ -180,7 +186,7 @@
   "internationalTransfers": {
     "title": "6. 国际数据传输",
     "p1": "MCPEmails 在挪威运营，受欧洲经济区（EEA）数据保护框架的约束。如果你从 EEA 之外访问服务，你的数据可能会被传输至 EEA 内的国家并在那里处理。",
-    "p2": "我们的基础设施子处理者（Supabase、Vercel）依据欧盟委员会批准的标准合同条款（SCC）运营，用于向第三国进行数据传输。对于 Stripe，处理活动受其欧盟-美国数据隐私框架认证的覆盖。",
+    "p2": "我们的基础设施子处理者（Supabase、Vercel、Resend）依据欧盟委员会批准的标准合同条款（SCC）运营，用于向第三国进行数据传输。对于 Stripe，处理活动受其欧盟-美国数据隐私框架认证的覆盖。Migadu 位于瑞士，瑞士已获得欧盟充分性认定。",
     "p3": "我们的数据库存放账户和配置数据，对所有客户均托管在欧盟（瑞典斯德哥尔摩）。没有任何套餐或设置会将其迁移到其他区域。处理你的智能体请求的服务器并非都在欧盟：连接你邮箱的 edge functions 运行于美国（东部），我们网站中转发这些请求的部分也是如此。邮件内容会实时经过这些服务器以响应请求，但不会在那里存储。加密凭据会在请求期间于同一美国环境中解密。"
   },
   "yourRights": {

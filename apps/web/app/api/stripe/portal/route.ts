@@ -202,11 +202,14 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
       (message.toLowerCase().includes('configuration') && stripeCode === 'invalid_request_error');
 
     if (isPortalUnconfigured) {
+      // An operator fix (Stripe dashboard > Settings > Billing > Customer
+      // portal), so the log says how and the customer is pointed at support.
+      console.error('[portal] Stripe Customer Portal is not configured: enable it at https://dashboard.stripe.com/settings/billing/portal');
       return NextResponse.json(
         {
           error:
-            'The Stripe Customer Portal has not been configured. ' +
-            'Visit https://dashboard.stripe.com/settings/billing/portal to enable it.',
+            'Billing management is not available right now. ' +
+            'Write to support@mcpemails.com and we will sort it out.',
         },
         { status: 503 },
       );
@@ -214,7 +217,7 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
 
     // ── 5c. Genuinely unexpected error
     return NextResponse.json(
-      { error: 'Failed to open the billing portal. Please try again.' },
+      { error: 'Failed to open the billing portal. Please try again. If it keeps failing, write to support@mcpemails.com.' },
       { status: 500 },
     );
   }

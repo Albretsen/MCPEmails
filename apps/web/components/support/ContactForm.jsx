@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Btn } from '../Primitives';
+import { planDisplayName } from '@/lib/stripe/plans';
 
 /**
  * The /help contact form. Posts JSON to /api/support/tickets.
@@ -28,7 +29,19 @@ function fill(template, values) {
   );
 }
 
-function AttachDisclosure({ copy, context }) {
+/**
+ * The health from src/lib/inboxes/health.ts in words. Older contexts without
+ * `health` fall back to the row status.
+ */
+function healthWords(a, m) {
+  if (m.health === 'reconnect_required') return a.healthNeedsReconnect;
+  if (m.health === 'unavailable') return a.healthUnavailable;
+  if (m.status === 'pending') return a.healthPending;
+  if (m.status === 'error') return a.healthNeedsReconnect;
+  return a.healthConnected;
+}
+
+function AttachDisclosure({ copy, context, providerName = null }) {
   const a = copy.attach;
   const mailboxes = Array.isArray(context?.mailboxes) ? context.mailboxes : [];
   return (
@@ -37,7 +50,7 @@ function AttachDisclosure({ copy, context }) {
       <p className="help-muted">{a.intro}</p>
       <ul>
         {context?.workspace_id ? <li>{a.workspace}: {context.workspace_id}</li> : null}
-        {context?.plan ? <li>{a.plan}: {context.plan}</li> : null}
+        {context?.plan ? <li data-plan="">{a.plan}: {planDisplayName(context.plan)}</li> : null}
         <li>
           {a.mailboxes}:{' '}
           {mailboxes.length === 0 ? a.noMailboxes : null}
@@ -45,15 +58,15 @@ function AttachDisclosure({ copy, context }) {
             <ul>
               {mailboxes.map((m, i) => (
                 <li key={i} data-mailbox="">
-                  {[m.service || m.provider, m.host, m.status].filter(Boolean).join(' · ')}
-                  {m.last_error_code ? ` · ${fill(a.lastError, { code: m.last_error_code })}` : ''}
+                  {[m.email, m.service_name, healthWords(a, m)].filter(Boolean).join(' · ')}
+                  {m.last_error_text ? ` · ${fill(a.lastError, { code: m.last_error_text })}` : ''}
                 </li>
               ))}
             </ul>
           ) : null}
         </li>
         {context?.from ? <li>{a.from}: {context.from}</li> : null}
-        {context?.provider ? <li>{a.provider}: {context.provider}</li> : null}
+        {context?.provider ? <li>{a.provider}: {providerName ?? context.provider}</li> : null}
         {context?.code ? <li>{a.code}: {context.code}</li> : null}
       </ul>
       <p className="help-muted">{a.never}</p>
@@ -85,6 +98,12 @@ export default function ContactForm({
   const [done, setDone] = useState(null); // { ref: string | null }
 
   const errorLine = (code) => copy.errors[code] ?? copy.errors.unknown;
+
+  // Editing any field clears a stale validation or send error.
+  const edit = (setter) => (e) => {
+    setter(e.target.value);
+    if (error) setError(null);
+  };
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -153,7 +172,7 @@ export default function ContactForm({
             name="category"
             className="help-input"
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={edit(setCategory)}
           >
             {categories.map((c) => (
               <option key={c} value={c}>{copy.categories[c]}</option>
@@ -177,7 +196,7 @@ export default function ContactForm({
               autoComplete="email"
               maxLength={LIMITS.email}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={edit(setEmail)}
             />
           </div>
         )}
@@ -190,7 +209,7 @@ export default function ContactForm({
             className="help-input"
             maxLength={LIMITS.subject}
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            onChange={edit(setSubject)}
           />
         </div>
 
@@ -203,7 +222,7 @@ export default function ContactForm({
             rows={7}
             maxLength={LIMITS.message}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={edit(setMessage)}
           />
         </div>
 
@@ -221,7 +240,7 @@ export default function ContactForm({
         </div>
         <input type="hidden" name="formToken" value={formToken} />
 
-        {signedIn ? <AttachDisclosure copy={copy} context={context} /> : null}
+        {signedIn ? <AttachDisclosure copy={copy} context={context} providerName={providerName} /> : null}
 
         <div className="help-actions">
           <Btn type="submit" variant="primary" busy={sending}>

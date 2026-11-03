@@ -9,5 +9,5 @@ Back to home
 [alt] MCPEmails
 [alt] MCPEmails
 Sign-in failed
-Something went wrong while signing you in. Please try again. If the problem persists, contact support.
+Something went wrong while signing you in. Please try again. If the problem persists, write to support@mcpemails.com.
 Try signing in again

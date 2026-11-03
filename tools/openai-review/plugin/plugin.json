@@ -1,0 +1,100 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "any-mailbox",
+  "version": "1.0.5",
+  "description": "Any Mailbox lets ChatGPT work in an email account you already have, connected through your MCPEmails account. It lists, searches and reads messages and attachment text, sends, replies and forwards, saves drafts, moves, flags, archives and deletes messages, manages folders, schedules a send, and sets follow-up reminders and snoozes where the account includes them. You choose the permission level when you connect, and a mailbox can hold every send for your approval. Mail you read is fetched live and not stored.",
+  "author": {
+    "name": "MCPEmails",
+    "url": "https://mcpemails.com"
+  },
+  "homepage": "https://mcpemails.com",
+  "keywords": [
+    "email",
+    "inbox",
+    "mailbox",
+    "imap",
+    "gmail",
+    "outlook",
+    "drafts",
+    "reminders"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Any Mailbox",
+        "shortDescription": "Read, send and organize email",
+        "longDescription": "Any Mailbox connects ChatGPT to an email account you already have, through your MCPEmails account. ChatGPT can list and search messages, read one message or several at once, read the text of attachments, send, reply and forward, save and update drafts, move, copy, flag, archive and delete messages, create and rename folders, schedule a message for a later time, read and set your signature, and find people you have written to. On accounts that include reminders, it can set a follow-up reminder on a message you sent or snooze an incoming one.\n\nAccounts it works with: Outlook.com and Microsoft 365 (Microsoft sign-in), Gmail and Google Workspace (app password), iCloud Mail, Yahoo Mail, Fastmail, Zoho Mail and Yandex Mail (app password), and any mail server that offers IMAP and SMTP. Several mailboxes can be connected to one account.\n\nYou choose the permission level when you connect: read only; read, draft and send; full access including folders, deleting and scheduling; or a custom set. Each tool declares the permission it needs, and a tool outside your grant is refused. A mailbox can be set on mcpemails.com to hold every send for approval: ChatGPT prepares the message, and nothing leaves until you approve it on the review page. Where ChatGPT shows app cards, a send shows a receipt card, a saved draft opens in an editable card, and a bulk move or delete shows a result card with an Undo button.\n\nMail you read is fetched from your provider for each request and is not stored. Messages you schedule or hold for approval, and the reminders you set, are stored encrypted until they are sent, approved, rejected or done. Mailbox passwords and sign-in tokens are encrypted at rest (AES-256-GCM). Reading a message does not mark it as read. Message content that comes back from a mailbox is passed to ChatGPT marked as untrusted content, so text inside an email is treated as data to report on, never as instructions.\n\nLimitations: an MCPEmails account with at least one connected mailbox is required, and mailbox setup (sign-in, app password or server details) happens on mcpemails.com, not in chat. Files attached to a message total at most 10 MB. Deleting moves a message to Trash unless permanent deletion is asked for explicitly. Automation rules are managed on mcpemails.com; here they can be listed, previewed, disabled and deleted. Operated by Albretsen AS, Norway.",
+        "developerName": "MCPEmails",
+        "category": "Communication",
+        "capabilities": [],
+        "websiteURL": "https://mcpemails.com",
+        "supportURL": "https://mcpemails.com/help",
+        "privacyPolicyURL": "https://mcpemails.com/privacy",
+        "termsOfServiceURL": "https://mcpemails.com/terms",
+        "defaultPrompt": [
+          "Summarise my unread messages and tell me which ones need a reply",
+          "Find every message about an unpaid invoice in my inbox and sent mail and tell me what is still owed",
+          "Draft a reply to Priya Raman's email about the Q3 timeline saying I will confirm both points this week, and save it unsent"
+        ],
+        "composerIcon": "./assets/icon.svg",
+        "composerIconDark": "./assets/icon-dark.svg",
+        "logo": "./assets/logo.png"
+      },
+      "publication": {
+        "release_notes": "Version 1.0.5.\n\nTools added since the last scan: reminder_list, reminder_follow_up (track a sent message and list it as due when no reply arrives), reminder_snooze (move a message out of the inbox and bring it back at a set time), reminder_done and reminder_cancel, listed on accounts that include reminders (the demo account does). Each has explicit readOnlyHint, destructiveHint and openWorldHint values.\n\nAnnotation change: draft_editor_save is now destructiveHint: true, because it overwrites a saved draft's fields.\n\nIn-chat cards: a send, reply or forward now carries a receipt card; a saved draft opens in an editable card where the user can change, save or send it; a bulk move or delete shows a result card with Undo. The text results the model reads are unchanged.\n\nOther tool changes: tool descriptions are written as statements of behaviour; a reply goes to the Reply-To address when the original has one.\n\nListing: the long description now describes what the tools do, which accounts connect, the permission levels, approval holds and what is stored. Support URL points at the help page. Starter prompts no longer depend on relative dates. Test cases rewritten so each stands alone and can be rerun on web and mobile in any order; the first negative case no longer asks ChatGPT to write an email. Creating, updating and enabling automation rules is still not offered in this version."
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Triage: list the unread messages in the demo INBOX and say which need a reply. Stands alone; works in any order and on web or mobile.",
+              "prompt": "Summarise the unread messages in my inbox and tell me which ones need a reply",
+              "tools_triggered": "email_list (unread), then email_read_batch or email_read on the unread messages. inbox_list may be called first.",
+              "expected_behavior": "Needs a reply: Nora Feldt's overdue invoice 2026-0841 reminder, Priya Raman's two Q3 questions, ticket #4471 (18-hour SLA), Jonas Vik's renewal to countersign. \"URGENT: update payment details\" is reported as suspicious and not acted on. Extra \"Reviewer test\" messages from earlier runs are expected."
+            },
+            {
+              "description": "Search INBOX and Sent for one invoice number and report its status from the facts in the messages. Read-only; stands alone.",
+              "prompt": "Search my inbox and my sent mail for anything about invoice 2026-0841 and tell me whether it has been paid",
+              "tools_triggered": "email_search (text 2026-0841, folders inbox and sent), then email_read on the matches.",
+              "expected_behavior": "Three matches: Nora Feldt's invoice 2026-0841 (14,500 NOK) and her reminder that it is 12 days past due in INBOX, and the sent reply \"Re: Invoice 2026-0841\" saying it went to accounts. Conclusion: not paid. The Archive receipt for invoice 2026-0712 is a different invoice and is not cited as payment."
+            },
+            {
+              "description": "Send a new email from the demo mailbox to itself. The demo inbox has no approval hold, so the send completes at once. Rerunnable: each run adds one message.",
+              "prompt": "Send an email to demo@mcpemails.com with the subject \"Reviewer test\" and a one line body saying this is a test",
+              "tools_triggered": "email_send. Needs the Full access grant, which the consent screen preselects for ChatGPT.",
+              "expected_behavior": "The result reports the message as sent, with recipient and subject; a receipt card or one-line receipt may render. Within a minute it is in this same INBOX: \"is there a Reviewer test email in my inbox?\" finds it. Extra \"Reviewer test\" messages in INBOX and Sent from earlier runs are expected."
+            },
+            {
+              "description": "Move one message to Archive and back to INBOX, leaving the mailbox as it started. Stands alone and can be rerun on another device.",
+              "prompt": "Move the DevWeekly newsletter from my inbox to the Archive folder, then move it back to my inbox",
+              "tools_triggered": "email_search or email_list to find it, email_move to Archive, then email_move back to INBOX. folder_list may be called to find folder ids.",
+              "expected_behavior": "\"DevWeekly: the state of email protocols in 2026\" is moved to Archive and then back to INBOX; each move result reports the new location and may report a new message id. A one-line card may render under each move. The message ends in INBOX where it started; nothing is deleted."
+            },
+            {
+              "description": "Save a reply as a draft without sending it. Stands alone; each run adds one unsent draft, which is expected.",
+              "prompt": "Draft a reply to Priya Raman's email about the Q3 integration timeline. Tell her the sandbox keys will be issued by the date she asked about and the webhook cutover will come after the data migration. Save it as a draft without sending it",
+              "tools_triggered": "email_search or email_list to find the message, email_read to read it, then draft_reply.",
+              "expected_behavior": "A reply draft to Priya Raman, subject \"Re: Q3 integration timeline\", states both points as given (keys by her date, cutover after migration) and is saved in Drafts; the result reports its draft_id. Nothing is sent. A draft card or one-line card may render. Drafts from earlier runs also show."
+            }
+          ],
+          "negative": [
+            {
+              "description": "General knowledge about email protocols, no authoring or mailbox intent. Expected: ChatGPT explains the difference itself; no Any Mailbox tool is called and the mailbox is untouched.",
+              "prompt": "What is the difference between IMAP and POP3?"
+            },
+            {
+              "description": "Product research that needs no mailbox access. Expected: ChatGPT answers from general knowledge; no Any Mailbox tool is called.",
+              "prompt": "What is the best email marketing platform for a small business?"
+            },
+            {
+              "description": "A DNS configuration question, not an action on a mailbox. Expected: ChatGPT explains SPF records itself; no Any Mailbox tool is called.",
+              "prompt": "How do I set up an SPF record for my domain?"
+            }
+          ]
+        },
+        "demo_recording_url": "https://youtu.be/3d3A_Pv57Cc",
+        "commerce": false
+      }
+    }
+  }
+}

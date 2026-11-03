@@ -7,6 +7,7 @@ import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 import { PATH as COMPARE_PATH, PAGE_UPDATED as COMPARE_UPDATED } from '@/lib/compare/email-mcp-servers.mjs';
 import { DATE_MODIFIED as NATIVE_MODIFIED } from '@/lib/compare/native-connectors.mjs';
+import { PATH as ARABIC_GUIDE_PATH, DATE_MODIFIED as ARABIC_GUIDE_MODIFIED } from './[locale]/docs/claude-email-arabic/content.mjs';
 import { PATH as LOOKUP_PATH, DATE_MODIFIED as LOOKUP_MODIFIED, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
 
 /**
@@ -58,6 +59,7 @@ const MARKETING_PAGES: {
   // The monitor writes a new run every five minutes, so the page's content
   // changes daily even when nothing ships.
   { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },
+  { path: '/help', lastModified: '2026-10-30', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/privacy', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/withdrawal', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
@@ -174,7 +176,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     alternates: { languages: languageAlternatesFor(path, locales) },
   }));
 
-  return withLocaleVariants([...staticEntries, ...providerEntries, ...postEntries, ...partialLocaleEntries]);
+  // The Arabic setup guide: one URL under the English route, declared as Arabic.
+  const arabicGuideUrl = localePath('en', ARABIC_GUIDE_PATH);
+  const arabicGuideEntry: MetadataRoute.Sitemap[number] = {
+    url: arabicGuideUrl,
+    lastModified: new Date(`${ARABIC_GUIDE_MODIFIED}T00:00:00.000Z`),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+    alternates: { languages: { ar: arabicGuideUrl } },
+  };
+
+  return withLocaleVariants([...staticEntries, ...providerEntries, ...postEntries, ...partialLocaleEntries, arabicGuideEntry]);
 }
 
 /**

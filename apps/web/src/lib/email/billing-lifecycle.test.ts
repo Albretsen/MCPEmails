@@ -569,7 +569,7 @@ test('a Stripe-keyed row keeps the original (template, scope_key) key', () => {
   );
 });
 
-test('a workspace-keyed row sends on the transactional path: hello@, no List-Unsubscribe, workspace key', async () => {
+test('a workspace-keyed row sends on the transactional path: hello@ sender, support@ reply-to, no List-Unsubscribe, workspace key', async () => {
   const calls: Array<{ headers: Headers; body: Record<string, unknown> }> = [];
   const realFetch = globalThis.fetch;
   process.env.RESEND_API_KEY = 'test_key';
@@ -591,7 +591,7 @@ test('a workspace-keyed row sends on the transactional path: hello@, no List-Uns
     assert.equal(calls.length, 1, 'one attempt, never a retry');
     const [call] = calls;
     assert.equal(call.body.from, 'MCPEmails <hello@mcpemails.com>');
-    assert.equal(call.body.reply_to, 'hello@mcpemails.com');
+    assert.equal(call.body.reply_to, 'support@mcpemails.com');
     assert.equal(call.body.to, TO);
     assert.equal(call.body.subject, '150 of 150 email actions used, paused until 2026-10-01');
     assert.ok(String(call.body.text).length > 120, 'the plain-text part must be present');
@@ -701,6 +701,40 @@ test('the send attaches List-Unsubscribe to marketing and to nothing else', asyn
   } finally {
     globalThis.fetch = realFetch;
     delete process.env.RESEND_API_KEY;
+  }
+});
+
+test('a win-back replies to the founder (lifecycleReplyTo), billing notices to support@', async () => {
+  const replyTos: unknown[] = [];
+  const realFetch = globalThis.fetch;
+  process.env.RESEND_API_KEY = 'test_key';
+  delete process.env.LIFECYCLE_EMAIL_REPLY_TO;
+  delete process.env.CANCEL_REPLY_TO;
+
+  globalThis.fetch = (async (_url: string, init: RequestInit) => {
+    replyTos.push(JSON.parse(String(init.body)).reply_to);
+    return new Response(JSON.stringify({ id: 'msg_1' }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }) as typeof globalThis.fetch;
+
+  try {
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_14', scopeKey: 'sub_1:1', payload: payload() });
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_30', scopeKey: 'sub_1:2', payload: payload() });
+    await sendBillingLifecycleEmail({ to: TO, template: 'dunning_1', scopeKey: 'in_1', payload: payload() });
+    process.env.LIFECYCLE_EMAIL_REPLY_TO = 'Founder <founder@example.com>';
+    await sendBillingLifecycleEmail({ to: TO, template: 'winback_14', scopeKey: 'sub_1:3', payload: payload() });
+    assert.deepEqual(replyTos, [
+      'Asgeir Albretsen <asgeir@mcpemails.com>',
+      'Asgeir Albretsen <asgeir@mcpemails.com>',
+      'support@mcpemails.com',
+      'Founder <founder@example.com>',
+    ]);
+  } finally {
+    globalThis.fetch = realFetch;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.LIFECYCLE_EMAIL_REPLY_TO;
   }
 });
 
@@ -1072,6 +1106,6 @@ test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branc
   assert.equal(out.length, 240);
   assert.equal(
     createHash('sha256').update(JSON.stringify(out)).digest('hex'),
-    '1ff6cec493bd715f37316807c860cc1befba91a603cdc2a4e7cd5214768672e9',
+    '4e0055c8dfe0959a0c7b3295732b5b0a4ccba22369a41f5d39e353d02b6c46e0',
   );
 });

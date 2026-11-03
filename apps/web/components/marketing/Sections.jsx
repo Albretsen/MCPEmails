@@ -12,7 +12,6 @@ import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
-import { SupportHelpLink } from '../support/SupportHelpLink';
 import { CheckoutReassurance } from '../CheckoutReassurance';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { routing } from '@/i18n/routing';
@@ -1410,7 +1409,7 @@ function LanguageSwitcher({ locales = routing.locales }) {
 
 // Public MCP endpoint shown across the site (canonical apex host).
 const FOOTER_MCP_URL = "https://mcpemails.com/api/mcp";
-const FOOTER_CONTACT_EMAIL = "hello@mcpemails.com";
+const FOOTER_CONTACT_EMAIL = "support@mcpemails.com";
 
 /* A single copyable contact row in the footer (email or MCP endpoint).
    Renders the value, an optional link (mailto), and a copy-to-clipboard button. */
@@ -1529,8 +1528,7 @@ export function Footer({ locales } = {}) {
             <Link href="/about">{t('footer.linkAbout')}</Link>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
             <Link href="/status">{t('footer.linkStatus')}</Link>
-            {/* SUPPORT_RELEASE_GATE: becomes a plain <Link href="/help"> at release. */}
-            <SupportHelpLink label={t('footer.linkHelp')} LinkComponent={Link} />
+            <Link href="/help">{t('footer.linkHelp')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
             <Link href="/dpa">{t('footer.linkDpa')}</Link>

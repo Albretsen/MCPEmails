@@ -26,7 +26,9 @@
  *   LIFECYCLE_EMAIL_FROM  The win-back sender. Deliberately a different address
  *                         from the transactional one.
  *                         Default: Asgeir Albretsen <asgeir@mcpemails.com>,
- *                         which is a real mailbox on the account.
+ *                         which is a real mailbox on the account. Production
+ *                         uses asgeir@updates.mcpemails.com (Resend-only
+ *                         subdomain, no mailbox; replies via lifecycleReplyTo).
  *   NEXT_PUBLIC_APP_URL   Base URL for links.
  */
 
@@ -62,6 +64,16 @@ export function appUrl(): string {
 
 export function lifecycleFrom(): string {
   return process.env.LIFECYCLE_EMAIL_FROM ?? DEFAULT_FROM;
+}
+
+/**
+ * Where a reply to a lifecycle email goes. LIFECYCLE_EMAIL_FROM can point at
+ * a sending-only subdomain (updates.mcpemails.com) that has no mailbox, so
+ * every lifecycle send sets this explicitly instead of letting replies follow
+ * the From address and bounce.
+ */
+export function lifecycleReplyTo(): string {
+  return process.env.LIFECYCLE_EMAIL_REPLY_TO ?? DEFAULT_FROM;
 }
 
 /**

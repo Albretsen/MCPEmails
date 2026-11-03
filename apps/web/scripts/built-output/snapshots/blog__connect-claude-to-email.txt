@@ -1,19 +1,17 @@
-Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · MCPEmails
-[meta description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
-[meta og:title] Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · MCPEmails
-[meta og:description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP · MCPEmails
+[meta description] Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.
+[meta og:title] Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP · MCPEmails
+[meta og:description] Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.
 [meta og:locale] en_US
-[meta twitter:title] Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP) · MCPEmails
-[meta twitter:description] A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+[meta twitter:title] Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP · MCPEmails
+[meta twitter:description] Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.
 [alt] MCPEmails
 [alt] MCPEmails
 [aria-label] Primary navigation
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -23,13 +21,13 @@ Home
 /
 Blog
 /
-Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)
+Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP
 Claude
 MCP
 Email
 Tutorial
-Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)
-A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.
+Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP
+Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.
 [alt] Asgeir Albretsen
 Asgeir Albretsen
 Founder & Engineer, MCPEmails
@@ -43,6 +41,7 @@ What you need
 Step 1: Connect your inbox to MCPEmails
 Gmail and Google Workspace
 iCloud Mail
+Apple Mail
 Fastmail
 Outlook and Microsoft 365
 Yahoo, Zoho, Yandex, and custom IMAP
@@ -59,6 +58,8 @@ Jump to your provider:
 Gmail
 ·
 iCloud
+·
+Apple Mail
 ·
 Fastmail
 ·
@@ -96,6 +97,8 @@ iCloud and IMAP walkthrough
 includes the exact provider steps. See also
 Connect iCloud Mail to Claude
 .
+Apple Mail
+Apple Mail is a mail app, so Claude connects to the account behind it rather than to the app. An iCloud address connects as described above. A Gmail, Outlook, Yahoo or work account connects through its own provider. Folders kept only On My Mac are not on any server, so Claude cannot see them. Nothing has to run on your Mac.
 Fastmail
 Create an app password with Mail access in Fastmail, choose
 Fastmail
@@ -272,7 +275,7 @@ Read the docs
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -303,6 +306,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -321,6 +325,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here
@@ -329,5 +334,5 @@ Impressum
 © 2026 MCPEmails.
 Email fetched live, never stored · Credentials encrypted at rest
 MCPEmails is a service of Albretsen AS, organisation number 938 702 373, Håsteins gate 9, 5160 Laksevåg, Norway.
-[json-ld] {"@context":"https://schema.org","@type":"BlogPosting","headline":"Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)","description":"A practical guide to connecting Claude to Gmail, Outlook and Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, or any IMAP inbox over MCP. No code, and no email stored.","image":["https://mcpemails.com/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg"],"inLanguage":"en","datePublished":"2026-07-28T09:00:00.000Z","dateModified":"2026-09-26T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-claude-to-email","mainEntityOfPage":{"@type":"WebPage","@id":"https://mcpemails.com/blog/connect-claude-to-email"},"keywords":"Claude, MCP, Email, Tutorial","wordCount":1416,"author":{"@type":"Person","name":"Asgeir Albretsen","description":"Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.","url":"https://mcpemails.com/blog"},"publisher":{"@type":"Organization","name":"MCPEmails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}}}
-[json-ld] {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://mcpemails.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://mcpemails.com/blog"},{"@type":"ListItem","position":3,"name":"Connect Claude to Your Email with MCP (Gmail, Outlook, iCloud & IMAP)","item":"https://mcpemails.com/blog/connect-claude-to-email"}]}
+[json-ld] {"@context":"https://schema.org","@type":"BlogPosting","headline":"Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP","description":"Connect Claude to iCloud, Yahoo, Outlook or any IMAP inbox over MCP, including accounts you read in Apple Mail. Two minutes, no code, nothing stored.","image":["https://mcpemails.com/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg"],"inLanguage":"en","datePublished":"2026-07-28T09:00:00.000Z","dateModified":"2026-10-29T09:00:00.000Z","url":"https://mcpemails.com/blog/connect-claude-to-email","mainEntityOfPage":{"@type":"WebPage","@id":"https://mcpemails.com/blog/connect-claude-to-email"},"keywords":"Claude, MCP, Email, Tutorial","wordCount":1483,"author":{"@type":"Person","name":"Asgeir Albretsen","description":"Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.","url":"https://mcpemails.com/blog"},"publisher":{"@type":"Organization","name":"MCPEmails","url":"https://mcpemails.com","logo":{"@type":"ImageObject","url":"https://mcpemails.com/logo-mark.svg"}}}
+[json-ld] {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://mcpemails.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://mcpemails.com/blog"},{"@type":"ListItem","position":3,"name":"Connect Claude to Any Email: iCloud, Apple Mail, Yahoo, IMAP","item":"https://mcpemails.com/blog/connect-claude-to-email"}]}

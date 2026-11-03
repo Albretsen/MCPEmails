@@ -9,7 +9,7 @@ import type Stripe from 'stripe';
 import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { lifecycleFrom } from '@/lib/email/lifecycle';
+import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import {
   checkoutSessionIdOrNull,
   handleExpiredSession,
@@ -36,6 +36,7 @@ const resendSender: Sender = async (email) => {
     const { data, error } = await resend.emails.send(
       {
         from: lifecycleFrom(),
+        replyTo: lifecycleReplyTo(),
         to: email.to,
         subject: email.subject,
         html: email.html,

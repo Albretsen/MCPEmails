@@ -50,7 +50,7 @@ import type { Database, Json } from '@/types/database.types';
 
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { EMPTY_TICKET_CONTEXT } from '@/lib/support/context';
-import { oneLine, SUPPORT_FROM, SUPPORT_INBOX } from '@/lib/support/emails';
+import { oneLine, SUPPORT_FROM, SUPPORT_INBOX, supportIdempotencyKey } from '@/lib/support/emails';
 import { checkSupportFormToken } from '@/lib/support/form-token';
 import { isRateLimited, type TicketCounter } from '@/lib/support/rate-limit';
 import { normalizeEmail } from '@/lib/support/validation';
@@ -513,7 +513,7 @@ function safeCode(value: unknown): string {
   return typeof value === 'string' && /^[a-z0-9_.:\- ]{1,120}$/i.test(value) ? value : 'unexpected_response';
 }
 
-/** One attempt, an Idempotency-Key from the ref, never throws (same rules as emails.ts). */
+/** One attempt, an Idempotency-Key from the environment and ref, never throws (same rules as emails.ts). */
 export async function sendViaResend(
   kind: 'notice' | 'receipt',
   ref: string,
@@ -534,7 +534,7 @@ export async function sendViaResend(
         html: message.htmlBody,
         text: message.body,
       },
-      { idempotencyKey: `contract-${kind}-${ref}`.slice(0, 256) },
+      { idempotencyKey: supportIdempotencyKey('contract', kind, ref) },
     );
     if (error) {
       console.error(`[contract-request] ${kind} FAILED for ${ref}: ${safeCode(error.message)}`);

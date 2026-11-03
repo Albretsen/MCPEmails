@@ -11,9 +11,7 @@ MCP Email Server Documentation: Gmail, Outlook, IMAP & OAuth · MCPEmails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -214,9 +212,9 @@ inbox
 action
 argument that selects the operation; the badges show the scope(s) each one needs, and
 tools/list
-only returns the tools your key (or OAuth token) is scoped for. A full-scope key sees 28 tools in
+only returns the tools your key (or OAuth token) is scoped for. A full-scope key sees 29 tools in
 tools/list
-: these 21 plus 7 approval, bulk-operation and draft-editor tools your MCP client drives from the cards it renders for you, rather than ones you compose by hand. Click "Show example" to see a full request and response.
+: these 21 plus 8 approval, bulk-operation, draft-editor and automation-card tools your MCP client drives from the cards it renders for you, rather than ones you compose by hand. Click "Show example" to see a full request and response.
 inbox_list
 read:email
 email_read
@@ -1370,7 +1368,7 @@ See pricing
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -1401,6 +1399,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -1419,6 +1418,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here
