@@ -29,7 +29,7 @@
   "why": {
     "title": "Pourquoi je l'ai créé",
     "p1": "Je voulais que mes propres agents s'occupent de ma boîte de réception. Toutes les solutions que j'ai trouvées exigeaient d'abord une copie de mon courrier : le synchroniser, l'indexer, le garder dans la base de données de quelqu'un d'autre tant que le compte existe. Pour une boîte pleine de factures, de contrats et de réinitialisations de mot de passe, c'était beaucoup céder pour un outil dont je ne me servais que de temps en temps.",
-    "p2": "J'ai donc construit la version que j'étais prêt à utiliser. Le courrier est récupéré en direct quand votre agent le demande, puis effacé dès que la réponse est envoyée : aucune copie n'est stockée. La seule chose conservée, ce sont les identifiants de la boîte mail, chiffrés au repos, parce que l'appel suivant en a besoin. Mon propre courrier passe par là tous les jours."
+    "p2": "J'ai donc construit la version que j'étais prêt à utiliser. Le courrier est récupéré en direct quand votre agent le demande, puis effacé dès que la réponse est envoyée : aucune copie n'est stockée. Ce qui est conservé pour chaque boîte, ce sont ses identifiants, chiffrés au repos, parce que l'appel suivant en a besoin, plus les quelques informations dont a besoin une fonctionnalité que vous activez, comme un message programmé en attente d'envoi. Mon propre courrier passe par là tous les jours."
   },
   "trusting": {
     "title": "Ce à quoi vous faites confiance",

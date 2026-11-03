@@ -91,7 +91,7 @@ One thing to expect up front: MCPEmails is poll-based. There are no push webhook
 
 Short version: yes, and the design is built around it.
 
-- **Your email is never stored.** Bodies, subjects, and attachments are fetched live on each call, handed to Claude, and dropped immediately. The only thing persisted per inbox is the encrypted credential, your app password. Here's [why "email is never stored" actually matters](/blog/why-email-never-stored-matters).
+- **Your email is never stored.** Bodies, subjects, and attachments are fetched live on each call, handed to Claude, and dropped immediately. What is persisted per inbox is the encrypted credential, your app password, plus the few details a feature you turn on needs, such as a scheduled message waiting to go out. Here's [why "email is never stored" actually matters](/blog/why-email-never-stored-matters).
 - **You control scope.** Approve read-only and Claude literally cannot send. Approve both and you can still revoke either at any time.
 - **No password sharing.** Your normal Google password never reaches MCPEmails. An app password is a separate credential you can revoke at myaccount.google.com/apppasswords at any time, or you can delete the inbox in MCPEmails.
 
@@ -103,7 +103,7 @@ The full threat model (what's encrypted, what an attacker would and wouldn't see
 No. Claude supports OAuth, so you paste the endpoint URL and approve a sign-in. API keys are only for clients without built-in OAuth.
 
 **Does Claude store my Gmail messages?**
-No. Email is fetched live from Gmail on every request and discarded right after Claude reads it. Nothing is retained except your encrypted credential (the app password).
+No. Email is fetched live from Gmail on every request and discarded right after Claude reads it. Nothing from the mail Claude reads is retained; what is kept is your encrypted credential (the app password).
 
 **Can Claude send email from my Gmail?**
 Yes, if you grant the \`send:email\` scope. Sends go out through Gmail as normal messages from your own account. Grant read-only if you'd rather Claude never send.

@@ -58,9 +58,9 @@ Choisissez OAuth, pas l'option sans authentification. Ce serveur refuse les appe
 
 ## Étape 3 : N'accordez que les scopes nécessaires
 
-L'écran de consentement est le nôtre, pas celui d'OpenAI. Le premier consentement démarre à \`read:email\`, ce qui suffit pour trier, résumer et retrouver des choses, et met toute action irréversible hors de portée le temps que vous décidiez jusqu'où aller. Les autres scopes sont \`send:email\`, \`search:email\` et \`manage:automations\`.
+L'écran de consentement est le nôtre, pas celui d'OpenAI. Pour ChatGPT, il s'ouvre sur **Accès complet**, parce que ChatGPT ne revient pas plus tard demander davantage d'accès. Choisissez un niveau plus restreint avant de cliquer sur **Autoriser l'accès** si vous le souhaitez : **Lecture seule** suffit pour trier, résumer et retrouver des choses, et met toute action irréversible hors de portée. **Personnaliser les autorisations** liste les neuf autorisations (lecture, recherche, envoi, dossiers, suppression, brouillons, contacts, planification et automatisations). Par défaut, l'écran donne aussi accès à toutes les boîtes de l'espace de travail, y compris celles que vous connecterez plus tard ; choisissez-y des boîtes précises pour le limiter.
 
-En accorder trop peu se rattrape : un appel qui exige un scope absent du jeton renvoie un 403 avec une erreur de scope insuffisant, le client peut donc redemander ce scope précis et réessayer. Le propriétaire d'une boîte peut aussi exiger une [approbation humaine](/blog/approve-ai-agent-email-sends) dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère.
+En accorder trop peu se rattrape. Quand un outil a besoin d'une autorisation qui manque à la connexion de ChatGPT, le résultat de l'outil indique laquelle et demande à ChatGPT de se reconnecter. Le propriétaire d'une boîte peut aussi exiger une [approbation humaine](/blog/approve-ai-agent-email-sends) dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère.
 
 ## Étape 4 : Donnez à ChatGPT une première tâche sûre
 

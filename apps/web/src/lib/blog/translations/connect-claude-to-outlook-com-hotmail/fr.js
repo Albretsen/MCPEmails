@@ -88,7 +88,7 @@ MCPEmails ne pousse pas les nouveaux e-mails vers Claude. Claude consulte la bo�
 
 ## Mes e-mails Outlook.com sont-ils stockés quelque part ?
 
-Non. Chaque fois que Claude demande un message, MCPEmails le récupère en direct chez Microsoft, le transmet à Claude et n'en garde aucune copie. La seule chose conservée pour la boîte est le jeton OAuth issu de votre connexion Microsoft, chiffré au repos. Pour déconnecter la boîte, supprimez-la dans MCPEmails, ou retirez MCPEmails des applications qui ont accès à votre compte Microsoft. [Pourquoi le « courriel jamais stocké » compte](/blog/why-email-never-stored-matters) explique ce principe, et [est-il sûr de donner à un agent IA l'accès à ses e-mails ?](/blog/is-it-safe-to-give-ai-agent-email-access) détaille les points de vigilance, comme les instructions cachées dans un e-mail.
+Non. Chaque fois que Claude demande un message, MCPEmails le récupère en direct chez Microsoft, le transmet à Claude et n'en garde aucune copie. Pour la boîte, nous conservons le jeton OAuth issu de votre connexion Microsoft, chiffré au repos, plus les quelques informations dont a besoin une fonctionnalité que vous activez, comme un message programmé en attente d'envoi. Pour déconnecter la boîte, supprimez-la dans MCPEmails, ou retirez MCPEmails des applications qui ont accès à votre compte Microsoft. [Pourquoi le « courriel jamais stocké » compte](/blog/why-email-never-stored-matters) explique ce principe, et [est-il sûr de donner à un agent IA l'accès à ses e-mails ?](/blog/is-it-safe-to-give-ai-agent-email-access) détaille les points de vigilance, comme les instructions cachées dans un e-mail.
 
 ## FAQ
 
