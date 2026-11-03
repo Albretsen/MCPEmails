@@ -25,6 +25,10 @@
 // Everything here is PURE: no I/O, no provider clients, no imports. That is
 // what lets the six call sites in index.ts share ONE answer, and lets the
 // answer be tested without a mailbox. See recipient-rules.test.ts.
+//
+// 2026-10-31: replies now go to Reply-To when the source message has one (RFC
+// 5322 3.6.2). A help desk ticket with From = the support mailbox and Reply-To
+// = the customer used to draft its reply back to the support mailbox.
 // ---------------------------------------------------------------------------
 
 /** A parsed address. `name` is the display name, absent or empty when bare. */
@@ -129,6 +133,8 @@ export function draftNoRecipientsMessage(draftId: string): string {
 export interface ReplyRecipientInput {
   /** Parsed From of the source message (usually one entry). */
   from?: readonly (RecipientAddress | null | undefined)[] | null;
+  /** Parsed Reply-To of the source message. Takes the place of From when it holds an address. */
+  replyTo?: readonly (RecipientAddress | null | undefined)[] | null;
   /** Parsed To of the source message. */
   to?: readonly (RecipientAddress | null | undefined)[] | null;
   /** Parsed Cc of the source message. */
@@ -156,11 +162,17 @@ export type ReplyRecipients =
 /**
  * Compute the recipients of a reply.
  *
- *   reply            -> the sender.
- *   reply_all        -> the sender plus To plus Cc, minus this inbox's own
+ *   reply            -> Reply-To, or the sender when it has no usable address,
+ *                       minus this inbox's own addresses, capped.
+ *   reply_all        -> that, plus To plus Cc, minus this inbox's own
  *                       addresses, deduplicated, capped.
- *   either, and the  -> the sender anyway (a reply to yourself), exactly once.
- *   filter empties it
+ *   either, and the  -> the first of them anyway (a reply to yourself), exactly
+ *   filter empties it   once.
+ *
+ * With a Reply-To the From address is not a recipient, on reply_all as well,
+ * unless To or Cc also names it: RFC 5322 3.6.3 sends the reply to Reply-To
+ * "and not" to From. An own address in Reply-To stays a reply to yourself when
+ * nothing else is left, as it does in a mail client.
  *
  * The last line is F7. The self filter is right for a genuine multi-party
  * thread, where echoing a copy back to the user is noise, and wrong as an
@@ -178,26 +190,22 @@ export function computeReplyRecipients(
   const limit = input.limit ?? REPLY_RECIPIENT_LIMIT;
 
   const from = normalizeEntries(input.from);
+  const replyTo = dedupe(normalizeEntries(input.replyTo));
   const everyone = dedupe([
-    ...from,
+    ...(replyTo.length > 0 ? replyTo : from),
     ...normalizeEntries(input.to),
     ...normalizeEntries(input.cc),
   ]);
   if (everyone.length === 0) return { ok: false, reason: "no_addresses" };
 
-  // Whoever we fall back to when the thread is entirely the account itself:
-  // the sender if the message has one, else the first participant found.
-  const self = from[0] ?? everyone[0];
+  // Who a plain reply is for: Reply-To if the message has one, else the sender,
+  // else the first participant found.
+  const primary = replyTo.length > 0 ? replyTo : [from[0] ?? everyone[0]];
+  // Whoever we fall back to when the filter below leaves nobody.
+  const self = primary[0];
 
-  if (input.replyAll !== true) {
-    return {
-      ok: true,
-      recipients: [self],
-      selfReply: own.has(self.email.toLowerCase()),
-    };
-  }
-
-  const others = everyone.filter((entry) => !own.has(entry.email.toLowerCase()));
+  const others = (input.replyAll === true ? everyone : primary)
+    .filter((entry) => !own.has(entry.email.toLowerCase()));
   if (others.length > 0) {
     return { ok: true, recipients: others.slice(0, limit), selfReply: false };
   }

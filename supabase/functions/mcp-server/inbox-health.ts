@@ -100,7 +100,8 @@ export function inboxHealthStatus(row: InboxHealthRow, noMailboxMessage?: string
 export function inboxHealthHint(status: InboxHealthStatus, reconnectUrl: string): string {
   return status === "unavailable"
     ? "This inbox cannot be used: its account has no mailbox the server can reach. " +
-      "Do not offer it as a choice. Tell the user this; reconnecting will not help."
+      "Do not offer it as a choice. Tell the user this; reconnecting will not help. " +
+      "For help with it, they can email support@mcpemails.com."
     : "This inbox needs to be reconnected: its sign-in has expired, was revoked, or its " +
       "password was refused. Do not offer it as a choice for reading, drafting or sending. " +
       `Tell the user they can reconnect it here: ${reconnectUrl}`;

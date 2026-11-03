@@ -120,6 +120,8 @@ export async function sendInviteEmail(params: SendInviteEmailParams): Promise<vo
   const { error } = await resend.emails.send({
     from: FROM,
     to,
+    // A reply is usually someone stuck, so it goes to the support mailbox.
+    replyTo: 'support@mcpemails.com',
     subject: `You've been invited to join ${workspaceName} on MCPEmails`,
     html,
     text,

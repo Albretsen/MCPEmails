@@ -2,9 +2,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { buildTicketContext, loadTicketContext, toErrorCode } = await import('./context.ts');
+const { buildTicketContext, loadTicketContext, serviceDisplayName, toErrorCode } = await import('./context.ts');
 
-const SECRET_COLUMNS = ['imap_password', 'oauth_access_token', 'oauth_refresh_token', 'imap_username', 'email_address', 'signature_html'];
+// email_address is read on purpose: it is the customer's own, and support
+// needs it to tell inboxes apart. Credentials and content never are.
+const SECRET_COLUMNS = ['imap_password', 'oauth_access_token', 'oauth_refresh_token', 'imap_username', 'signature_html'];
+const MARKER = "The mail server refused this mailbox's password. Reconnect this inbox to restore access. (Checked 2026-10-04T20:04:04.730Z)";
 
 /** Records every select list and filter; answers from fixed tables. */
 function fakeClient(tables: Record<string, Array<Record<string, unknown>>>) {
@@ -42,8 +45,9 @@ const tables = {
     { id: 'w3', plan: 'pro', deleted_at: null },
   ],
   inboxes: [
-    { workspace_id: 'w1', provider: 'imap', service: 'yahoo', imap_host: 'imap.mail.yahoo.com', status: 'error', last_error: 'AUTHENTICATIONFAILED\r\nInvalid credentials', deleted_at: null, imap_password: 'SECRETPW' },
-    { workspace_id: 'w1', provider: 'gmail', service: null, imap_host: null, status: 'active', last_error: null, deleted_at: null, oauth_refresh_token: 'SECRETTOKEN' },
+    { workspace_id: 'w1', email_address: 'y@example.com', provider: 'imap', service: 'yahoo', imap_host: 'imap.mail.yahoo.com', status: 'error', last_error: 'AUTHENTICATIONFAILED\r\nInvalid credentials', deleted_at: null, imap_password: 'SECRETPW' },
+    { workspace_id: 'w1', email_address: 'g@example.com', provider: 'gmail', service: null, imap_host: null, status: 'active', last_error: null, deleted_at: null, oauth_refresh_token: 'SECRETTOKEN' },
+    { workspace_id: 'w1', email_address: 'm@example.com', provider: 'imap', service: 'generic', imap_host: 'imap.migadu.example', status: 'active', last_error: MARKER, deleted_at: null },
     { workspace_id: 'w1', provider: 'imap', service: 'other', imap_host: 'gone.example', status: 'active', last_error: null, deleted_at: '2026-03-01' },
     { workspace_id: 'w3', provider: 'outlook', service: null, imap_host: null, status: 'active', last_error: null, deleted_at: null },
   ],
@@ -55,8 +59,22 @@ test('earliest membership by default; only that workspace, only live inboxes', a
   assert.equal(ctx.workspace_id, 'w1');
   assert.equal(ctx.plan, 'free');
   assert.deepEqual(ctx.mailboxes, [
-    { provider: 'imap', service: 'yahoo', host: 'imap.mail.yahoo.com', status: 'error', last_error_code: 'AUTHENTICATIONFAILED Invalid credentials' },
-    { provider: 'gmail', service: null, host: null, status: 'active', last_error_code: null },
+    {
+      email: 'y@example.com', provider: 'imap', service: 'yahoo', service_name: 'Yahoo Mail', host: 'imap.mail.yahoo.com',
+      status: 'error', health: 'reconnect_required',
+      last_error_code: 'AUTHENTICATIONFAILED Invalid credentials', last_error_text: 'AUTHENTICATIONFAILED Invalid credentials',
+    },
+    {
+      email: 'g@example.com', provider: 'gmail', service: null, service_name: 'Gmail', host: null,
+      status: 'active', health: 'ok', last_error_code: null, last_error_text: null,
+    },
+    {
+      email: 'm@example.com', provider: 'imap', service: 'generic', service_name: 'IMAP', host: 'imap.migadu.example',
+      status: 'active', health: 'reconnect_required',
+      // Support keeps the timestamp; the customer sees the sentence alone.
+      last_error_code: MARKER,
+      last_error_text: "The mail server refused this mailbox's password. Reconnect this inbox to restore access.",
+    },
   ]);
 });
 
@@ -78,7 +96,7 @@ test('never reads or returns credential or content columns', async () => {
   for (const col of SECRET_COLUMNS) {
     assert.equal(client.selects.inboxes.includes(col), false, col);
   }
-  assert.equal(client.selects.inboxes, 'provider, service, imap_host, status, last_error');
+  assert.equal(client.selects.inboxes, 'email_address, provider, service, imap_host, status, last_error');
 });
 
 test('buildTicketContext carries from/provider/code and caps mailboxes at 20', () => {
@@ -94,5 +112,19 @@ test('toErrorCode: one line, capped', () => {
   assert.equal(toErrorCode(null), null);
   assert.equal(toErrorCode('  '), null);
   assert.equal(toErrorCode('a\nb'), 'a b');
-  assert.equal(toErrorCode('x'.repeat(500))!.length, 120);
+  assert.equal(toErrorCode('x'.repeat(500))!.length, 200);
+  // Over the cap, the cut lands on a word boundary.
+  const words = toErrorCode('word '.repeat(60))!;
+  assert.equal(words.endsWith('word…'), true);
+  assert.equal(words.length <= 200, true);
+});
+
+test('serviceDisplayName: catalogue names, generic reads IMAP', () => {
+  assert.equal(serviceDisplayName('gmail', null), 'Gmail');
+  assert.equal(serviceDisplayName('outlook', null), 'Outlook');
+  assert.equal(serviceDisplayName('fastmail', null), 'Fastmail');
+  assert.equal(serviceDisplayName('imap', 'yahoo'), 'Yahoo Mail');
+  assert.equal(serviceDisplayName('imap', 'generic'), 'IMAP');
+  assert.equal(serviceDisplayName('generic', null), 'IMAP');
+  assert.equal(serviceDisplayName('imap', 'no-such-service'), 'IMAP');
 });

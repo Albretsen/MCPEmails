@@ -11,9 +11,7 @@ Documentation du serveur MCP e-mail : Gmail, Outlook, IMAP et OAuth · MCPEmails
 Fonctionnalités
 Fonctionnement
 Tarifs
-Comparer
 Docs
-Auto-hébergement
 Blog
 Se connecter
 Commencer gratuitement
@@ -209,9 +207,9 @@ inbox
 action
 qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et
 tools/list
-ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 28 outils dans
+ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 29 outils dans
 tools/list
-: ces 21 plus 7 outils d'approbation, d'opérations groupées et d'éditeur de brouillons que votre client MCP pilote depuis les cartes qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.
+: ces 21 plus 8 outils d'approbation, d'opérations groupées et d'éditeur de brouillons que votre client MCP pilote depuis les cartes qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.
 inbox_list
 read:email
 email_read
@@ -1365,7 +1363,7 @@ Voir les tarifs
 [alt] MCPEmails
 Un serveur MCP hébergé qui donne aux agents IA un accès en lecture et en envoi à votre boîte de réception, sans jamais stocker le courrier qu'il lit.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copier Contact
 Copier
 Point de terminaison MCP
@@ -1396,6 +1394,7 @@ Fournisseurs pris en charge
 Accès en lecture seule
 Guide du développeur
 Configuration des clients MCP
+Trouver les paramètres IMAP et SMTP
 Blog
 Changelog
 Connecter
@@ -1413,6 +1412,7 @@ Entreprise
 À propos
 Sécurité
 Statut
+Aide et support
 Confidentialité
 Conditions
 Se rétracter du contrat ici

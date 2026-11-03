@@ -151,7 +151,7 @@ test('an ordinary cancellation is stored as a billing ticket and mails support a
   assert.match(String(receipt.payload.subject), /cancellation is received \(MCPE-1001\)/);
   assert.match(String(receipt.payload.text), /At the earliest possible date/);
   assert.match(String(receipt.payload.text), /Received: \d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC/);
-  assert.equal(receipt.opts.idempotencyKey, 'contract-receipt-MCPE-1001');
+  assert.equal(receipt.opts.idempotencyKey, 'contract-production-receipt-MCPE-1001');
 });
 
 function isoDay(offsetDays: number) {

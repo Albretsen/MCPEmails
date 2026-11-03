@@ -1,0 +1,226 @@
+{
+  "area": "safety-automation",
+  "title": "Safety and automation",
+  "articles": [
+    {
+      "id": "turn-on-send-review",
+      "title": "Review emails before they are sent",
+      "summary": "Set Review before sending on an inbox so every prepared send waits for your approval.",
+      "keywords": "send review approval hold approve before sending review card dashboard only send immediately safety",
+      "steps": [
+        "In Inboxes, click the inbox to open its details.",
+        "Open Signature & sending.",
+        "Choose Approve on mcpemails.com, with a card in the chat, or Approve on mcpemails.com only.",
+        "Choose Save signature. This saves the review setting too."
+      ],
+      "body": [
+        "In both review modes nothing is delivered until a workspace owner or admin approves it in a signed-in browser. Send immediately turns review off."
+      ],
+      "links": [
+        {
+          "label": "Inboxes",
+          "href": "/dashboard/inboxes"
+        }
+      ]
+    },
+    {
+      "id": "approve-held-send",
+      "title": "Approve or reject a held send",
+      "summary": "Held sends wait under Approvals. An owner or admin approves or rejects them there.",
+      "keywords": "approvals pending send approve reject held email waiting review expired 24 hours owner admin",
+      "steps": [
+        "Go to Approvals.",
+        "Select Review & approve, then Approve & send.",
+        "Or select Reject, then Reject request. Nothing is sent."
+      ],
+      "body": [
+        "A request nobody decides within 24 hours expires and is never sent. Ask your assistant to prepare it again if you still want it."
+      ],
+      "links": [
+        {
+          "label": "Approvals",
+          "href": "/dashboard/approvals"
+        }
+      ]
+    },
+    {
+      "id": "use-workflow-prompts",
+      "title": "Run a ready-made workflow",
+      "summary": "Copy a routine from Workflows into your assistant, such as Morning inbox triage.",
+      "keywords": "workflows prompts routines templates morning triage follow-up radar decision tracker clean up copy prompt",
+      "steps": [
+        "Go to Workflows.",
+        "Select Copy prompt on a routine.",
+        "Paste it into your AI assistant and fill in any brackets."
+      ],
+      "body": [
+        "Clients that support MCP prompts can also list these routines directly. Prompts never add permissions: your connection's scopes still control every action."
+      ],
+      "links": [
+        {
+          "label": "Workflows",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "stop-bulk-run",
+      "title": "Stop a bulk run in progress",
+      "summary": "Workflows lists running bulk moves and flags. Stop halts work that has not started yet.",
+      "keywords": "bulk run stop cancel large-work controls progress bulk move flag",
+      "steps": [
+        "Go to Workflows and scroll to Large-work controls.",
+        "Select Stop on the running row."
+      ],
+      "body": [
+        "Stop does not undo messages that were already changed."
+      ],
+      "links": [
+        {
+          "label": "Workflows",
+          "href": "/dashboard/workflows"
+        }
+      ]
+    },
+    {
+      "id": "create-automation",
+      "title": "Create an automation",
+      "summary": "An automation runs a saved search on a schedule and applies one fixed action to the matches.",
+      "keywords": "automation rule schedule filter sort inbox triage unattended new automation preview matches",
+      "steps": [
+        "Go to Automations and select New automation.",
+        "Choose the inbox, API key, how often it runs and messages per run.",
+        "Set the filter under Which messages, then select Preview matches.",
+        "Pick the action under What to do and select Create automation.",
+        "Switch it On in the Status column. New automations start off."
+      ],
+      "body": [
+        "Only workspace owners and admins can create or change automations. Your assistant can also create one if its key has the manage:automations scope."
+      ],
+      "links": [
+        {
+          "label": "Automations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-safety",
+      "title": "What an automation can and cannot do",
+      "summary": "Automations move, label, mark read, forward or draft a reply. They never delete email.",
+      "keywords": "automation safety delete forward approval draft reply template blast radius limits runs as api key",
+      "steps": [
+        "Forwards always wait under Approvals until a person approves them.",
+        "Draft a reply only saves a draft. Nothing is sent.",
+        "Each run touches at most the messages per run you set (1 to 200).",
+        "It acts as its API key. Revoking the key stops it."
+      ],
+      "links": [
+        {
+          "label": "Automation safety model",
+          "href": "/docs#automation-safety"
+        }
+      ]
+    },
+    {
+      "id": "automation-run-log",
+      "title": "See what an automation did",
+      "summary": "The Run log shows every run and what happened to each message.",
+      "keywords": "run log history automation messages applied failed skipped waiting for approval",
+      "steps": [
+        "Go to Automations and select Run log on the automation.",
+        "Select Messages on a run to see each message and its outcome."
+      ],
+      "body": [
+        "Deleting an automation keeps its run log."
+      ],
+      "links": [
+        {
+          "label": "Automations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "automation-switched-off",
+      "title": "An automation switched itself off",
+      "summary": "After 5 failed runs in a row an automation turns off. Fix the cause, then switch it on.",
+      "keywords": "automation failing failed disabled switched off repeated failures error reconnect key revoked",
+      "steps": [
+        "Go to Automations and read the reason shown on the row.",
+        "Fix it, for example reconnect the inbox or point it at a live API key.",
+        "Switch it back On in the Status column."
+      ],
+      "links": [
+        {
+          "label": "Automations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    },
+    {
+      "id": "read-usage-page",
+      "title": "Read the Usage page",
+      "summary": "Usage shows tool calls per day, by tool and by inbox, plus a Free workspace's monthly allowance.",
+      "keywords": "usage analytics calls per day by tool by inbox history allowance meter dashboard",
+      "body": [
+        "History covers a month on Free, 90 days on Personal and 2 years on Pro and Business. A Free workspace also sees how many of its 150 monthly email actions are used and when the count resets."
+      ],
+      "links": [
+        {
+          "label": "Usage",
+          "href": "/dashboard/usage"
+        },
+        {
+          "label": "Usage limit reached",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "rate-limited",
+      "title": "My assistant is being rate limited",
+      "summary": "Too many requests in a short time. Wait the seconds the error gives, then retry.",
+      "keywords": "rate limit 429 too many requests retry_after per minute burst throttled slow down",
+      "body": [
+        "Each API key has a per-minute, hourly and daily limit, sized to your plan. Each workspace also has a per-minute ceiling: Free 60, Personal 120, Pro 300, Business 1,000."
+      ],
+      "links": [
+        {
+          "label": "Rate limits",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "usage-notification-emails",
+      "title": "Emails about your usage",
+      "summary": "On Free, the workspace owner gets an email at 80% and 100% of the monthly allowance.",
+      "keywords": "notification email usage warning 80 percent limit reached automation paused alert",
+      "body": [
+        "When the allowance is used up, automations pause and you get an email naming the date they resume. Personal, Pro and Business have unlimited email actions, so these emails do not apply."
+      ],
+      "links": [
+        {
+          "label": "Usage limit reached",
+          "href": "/help#article-usage-limit-reached"
+        }
+      ]
+    },
+    {
+      "id": "new-mail-alerts",
+      "title": "Get your assistant to react to new mail",
+      "summary": "MCPEmails never starts your assistant. Ask it to check for unread mail, or use an automation.",
+      "keywords": "notifications new mail push webhook alert trigger poll incoming email real time",
+      "body": [
+        "An incoming email never starts an assistant call on its own. Have your assistant check unread mail on a schedule, or let an automation sort it. On Pro and Business, a webhook under API keys can notify your own URL."
+      ],
+      "links": [
+        {
+          "label": "Automations",
+          "href": "/dashboard/automations"
+        }
+      ]
+    }
+  ]
+}

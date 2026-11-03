@@ -22,6 +22,7 @@ const PAGES = [
   { id: 'automations', labelKey: 'commandPalette.pageAutomations', icon: 'zap', keywords: 'automation rule triage schedule unattended filter move label forward recurring' },
   { id: 'settings', labelKey: 'commandPalette.pageSettings', icon: 'settings', keywords: 'account profile password preferences' },
   { id: 'security', labelKey: 'commandPalette.pageSecurity', icon: 'shield',   keywords: 'audit log sessions devices' },
+  { id: 'help',     labelKey: 'commandPalette.pageHelp',     icon: 'mail',     keywords: 'support contact question faq guide docs articles problem' },
 ];
 
 function matches(query, ...fields) {

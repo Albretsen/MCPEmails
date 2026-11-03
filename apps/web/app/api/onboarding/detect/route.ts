@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { Resolver } from 'node:dns/promises';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { logAutofillLookup } from '@/lib/email-providers/autofill-log';
 import { isPublicMailDomain, normalizeDomain, type MxRecord, type SrvRecord } from '@/lib/email-providers/autodiscover';
 import { detectInboxDomain } from '@/lib/onboarding/inbox-detect-server';
 import type { InboxDetection } from '@/lib/onboarding/inbox-detect';
@@ -51,9 +53,9 @@ function cacheSet(domain: string, value: InboxDetection): void {
   cache.set(domain, { expires: Date.now() + (hit ? CACHE_TTL_HIT_MS : CACHE_TTL_MISS_MS), value });
 }
 
-function withTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+function withTimeout<T>(work: Promise<T>, ms: number, fallback: T, onTimeout?: () => void): Promise<T> {
   return new Promise<T>((resolve) => {
-    const timer = setTimeout(() => resolve(fallback), ms);
+    const timer = setTimeout(() => { onTimeout?.(); resolve(fallback); }, ms);
     work.then(
       (value) => { clearTimeout(timer); resolve(value); },
       () => { clearTimeout(timer); resolve(fallback); },
@@ -81,8 +83,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Not a valid mail domain.', error_code: 'domain_invalid' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
   }
 
+  // Logged per user, cached or not (see /api/inboxes/autodiscover).
+  const logAnswer = (detection: InboxDetection, timedOut = false) =>
+    after(() => logAutofillLookup(createServiceRoleClient, user.id, {
+      surface: 'onboarding',
+      domain,
+      source: timedOut ? 'timeout' : detection.source,
+      kind: detection.kind,
+      imapHost: detection.settings?.imapHost,
+      smtpHost: detection.settings?.smtpHost,
+    }));
+
   const cached = cacheGet(domain);
-  if (cached) return respond(cached);
+  if (cached) {
+    logAnswer(cached);
+    return respond(cached);
+  }
 
   const limited = await checkRateLimit(`onboarding-detect:${user.id}`, 60, 10 * 60 * 1000);
   if (limited) {
@@ -91,6 +107,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const resolver = new Resolver({ timeout: DNS_TIMEOUT_MS, tries: 1 });
   const fallback: InboxDetection = { kind: 'imap', label: null, source: 'none', settings: null, customDomain: true };
+  let timedOut = false;
   const detection = await withTimeout(
     detectInboxDomain(domain, {
       resolveSrv: async (name) => (await resolver.resolveSrv(name)) as SrvRecord[],
@@ -110,8 +127,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }),
     TOTAL_TIMEOUT_MS,
     fallback,
+    () => { timedOut = true; },
   );
 
   cacheSet(domain, detection);
+  logAnswer(detection, timedOut);
   return respond(detection);
 }

@@ -20,6 +20,13 @@ stored rule whose action is run later by the server, so they are withheld from
 OpenAI clients (`PER_OPERATION_UNLISTED`) and have no block below. The reads,
 `automation_disable` and `automation_delete` passed and are listed.
 
+**The two subscription tools are not on it either.** The scan of 2026-11-02
+answered `subscriptions_scan` with "This new tool definition needs further
+review before it can be published." They get the same remedy
+(`PER_OPERATION_UNLISTED`): not listed for OpenAI clients, still callable by
+name, unchanged for every other client, and no block below. The feature is
+internal-rollout only (`subscription_cleanup_enabled`) in any case.
+
 **The portal no longer asks for these strings.** Since the move to ZIP upload
 the listing comes from the plugin package and the annotations are judged by
 the scan alone. The submitted text below is kept, and still tested, because it
@@ -959,7 +966,7 @@ strings exist when it does.
   `send_approval_required` and never looks at `draft_editor_hidden`. None of
   that is a permission boundary; the scope and inbox checks are.
 
-## draft_editor_save (readOnly: false, destructive: false, openWorld: false)
+## draft_editor_save (readOnly: false, destructive: true, openWorld: false)
 
 **Submitted text.**
 
@@ -970,7 +977,7 @@ strings exist when it does.
 **Reasoning.**
 
 - **readOnly false:** it saves the fields a person edited in the draft editor.
-- **destructive false, and the loudest thing it does stated first:** when
+- **destructive true (2026-11-02), and the loudest thing it does stated first:** when
   `body_text` is supplied, DIFFERS from the stored text, and the stored draft
   has an HTML part, that HTML part is REGENERATED from the new plain text
   through `plainTextBodyToHtml`. Whatever
@@ -980,15 +987,21 @@ strings exist when it does.
   were written independently, most clients rendered the stale HTML, and the
   recipient read the sentence that had been replaced. Between losing formatting
   and silently sending wording the user replaced, this tool loses the
-  formatting. It is still annotated `destructiveHint: false` because what it
-  overwrites is an UNSENT draft in the user's own mailbox, with text a person
-  typed into the card themselves, and because nothing is transmitted and no
-  stored mail is touched. OPEN QUESTION since 2026-10-13: `draft_update`, the
-  model-callable overwrite of the same draft, is now `true` under the
-  additive-only rule, and this app-only tool was left `false` because the scan
-  that flagged `signature_set` did not flag it and a host that prompts on every
-  destructive call would prompt on every Save in the editor. If a later scan
-  flags it, the value to change is in `mcp-app-drafts.ts`. The regenerated part is DROPPED,
+  formatting. OpenAI's scan of 2026-11-02 flagged `destructiveHint: false` here
+  ("its behavior appears to cause material loss or a hard-to-reverse change"),
+  which is the OPEN QUESTION this note carried since 2026-10-13: `draft_update`,
+  the model-callable overwrite of the same draft, is `true` under the
+  additive-only rule. So the per-operation listing, which is what OpenAI scans,
+  now publishes `true` (`index.ts`, where the card tools join that listing).
+  The consolidated listing every other client gets keeps `false`, unchanged:
+  the tool is app-only (`visibility: ["app"]`), but that is a host UI hint and
+  the server cannot tell a card call from a model call, so the annotation is
+  what a host that prompts on destructive calls would act on, and Claude's Save
+  in the editor must not start to prompt. What it overwrites is an UNSENT draft
+  in the user's own mailbox, with text a person typed into the card, nothing is
+  transmitted and no stored mail is touched; the value is `true` on the
+  OpenAI listing because an overwrite is destructive under that rule, not
+  because more is lost than described. The regenerated part is DROPPED,
   leaving the message text/plain, in two cases: when it would exceed the HTML
   body limit (escaping can multiply the input), and when it is empty — a
   cleared body should leave a message with no HTML part, not one carrying an
@@ -1069,8 +1082,9 @@ strings exist when it does.
   destructive, and says being able to undo an action does not justify false;
   this tool overwrites a stored setting and its `false` rested on exactly that
   reversibility. And it became model-callable, so it is no longer one of the
-  card-only tools that rule was left unapplied to (compare the open question on
-  `draft_editor_save`, which is still app-only and still `false`). What the
+  card-only tools that rule was left unapplied to (compare
+  `draft_editor_save`, which is app-only and `false` on the consolidated
+  listing, `true` on the per-operation one). What the
   write touches is unchanged: nothing is lost from the mailbox and nothing is
   sent. It changes only whether the draft editor card is rendered; drafts,
   sending and every other tool behave identically either way, and the result of
@@ -1214,42 +1228,3 @@ strings exist when it does.
 > a fix on 2026-09-16, along with the `draft_editor_hidden` error code and the
 > owner/admin check at workspace grain. All three are in the server this revision
 > was written against and are described above.
-
-## subscriptions_scan (readOnly: true, destructive: false, openWorld: false)
-
-**Submitted text.**
-
-- **readOnlyHint:** It reads mail headers (List-Unsubscribe, List-Id, sender) from the connected mailbox and changes nothing in it. It stores a short-lived plan of the result for the follow-up call.
-- **destructiveHint:** Nothing in the mailbox is changed, moved or sent. The only write is a 15-minute plan row in the caller's own workspace, which expires on its own.
-- **openWorldHint:** It reads one connected mailbox. It contacts no sender and fetches no link from the mail it reads.
-
-**Reasoning.**
-
-- **readOnly true:** the scan reads headers only and never sets a flag. The plan
-  row it writes is bookkeeping for `subscriptions_cleanup`, the same kind of
-  write `bulk_plans` makes for a bulk preview.
-- **Internal rollout (2026-10-24):** listed only for workspaces with
-  `subscription_cleanup_enabled`.
-
-## subscriptions_cleanup (readOnly: false, destructive: true, openWorld: true)
-
-**Submitted text.**
-
-- **readOnlyHint:** It unsubscribes from senders the user picked, saves unsubscribe emails as drafts, and can archive the mail those senders already sent.
-- **destructiveHint:** An unsubscribe request cannot be taken back from our side, and the optional archive step moves mail in bulk. It never deletes mail and never sends email: a by-email unsubscribe becomes a draft.
-- **openWorldHint:** For senders that support one-click unsubscribe (RFC 8058) it sends one HTTPS request to the sender's own unsubscribe address, which is a party outside the account.
-
-**Reasoning.**
-
-- **destructive true:** an RFC 8058 one-click POST asks the sender to stop, and
-  there is no undo for that from this server. The backlog step is a bulk move,
-  which this server's convention marks destructive (compare
-  `email_search_and_move`).
-- **openWorld true:** the one-click POST goes to the sender's server. It is sent
-  only for a sender whose DKIM signature covers both list headers and aligns
-  with the From domain, only to https on port 443, never to a private address,
-  with redirects refused.
-- **No email is sent.** A mailto-only sender gets a draft the user sends
-  themselves; a link-only sender is returned as a link. Only sender keys from
-  the plan are accepted, and a ledger keyed per inbox, sender and target stops a
-  replay from sending a second request.

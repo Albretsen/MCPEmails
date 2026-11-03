@@ -1,0 +1,290 @@
+{
+  "area": "getting-started",
+  "title": "入门",
+  "articles": [
+    {
+      "id": "what-is-mcp-emails",
+      "title": "MCPEmails 能做什么",
+      "summary": "通过一个 URL，把你的邮箱连接到 Claude、ChatGPT 和 Cursor 等 AI 助手。",
+      "keywords": "mcp emails 是什么 mcpemails 介绍 概览 工作原理 mcp 服务器 mcp server ai 助手 智能体 agent 存储 隐私",
+      "body": [
+        "邮件在每次请求时实时获取，不会被存储。例外是定时或待审批的邮件，会存储到发送为止。除此之外，我们只保存你加密后的邮箱密码或访问令牌。"
+      ],
+      "links": [
+        {
+          "label": "文档",
+          "href": "/docs"
+        },
+        {
+          "label": "安全",
+          "href": "/security"
+        }
+      ]
+    },
+    {
+      "id": "first-steps",
+      "title": "完成设置",
+      "summary": "先连接一个邮箱，再把 MCP 服务器 URL 添加到你的 AI 助手。",
+      "keywords": "开始 入门 设置 第一步 注册 创建账户 新手引导 快速开始 新用户 get started setup",
+      "steps": [
+        "在“概览”中，点击“开始使用”卡片上的“连接收件箱”。",
+        "从同一张卡片复制 MCP 服务器 URL。",
+        "在“选择你的客户端”下选择你的助手，并按步骤操作。",
+        "问你的助手：总结一下我今天的未读邮件。"
+      ],
+      "links": [
+        {
+          "label": "控制台概览",
+          "href": "/dashboard"
+        },
+        {
+          "label": "客户端配置指南",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-connection-method",
+      "title": "选择邮箱的连接方式",
+      "summary": "Outlook 用 Microsoft 登录，Gmail 等少数服务商用应用密码，其余用 IMAP。",
+      "keywords": "连接 收件箱 邮箱 服务商 选择 方式 应用密码 app password imap smtp outlook gmail icloud yahoo zoho yandex fastmail 哪种方式 数量限制",
+      "steps": [
+        "Outlook.com 或 Microsoft 365：选择 Outlook，并用 Microsoft 登录。",
+        "Gmail、iCloud、Yahoo、Zoho、Yandex 或 Fastmail：选择对应卡片并粘贴应用密码。",
+        "其他邮箱或你自己的域名：选择“IMAP / SMTP”。"
+      ],
+      "body": [
+        "Free 可连接一个邮箱，Personal 三个，Pro 最多 10 个。Business 含 10 个，还可以再添加。"
+      ],
+      "links": [
+        {
+          "label": "应用密码帮助",
+          "href": "/help#article-app-password-required"
+        },
+        {
+          "label": "服务商指南",
+          "href": "/connect"
+        }
+      ]
+    },
+    {
+      "id": "connect-gmail",
+      "title": "连接 Gmail",
+      "summary": "粘贴 Google 应用密码，或改用 Google 账号登录。",
+      "keywords": "gmail google 连接 应用密码 app password 两步验证 2-step verification google 登录 oauth 未经验证的应用 警告 高级 不安全 双重验证 双因素认证 2fa mfa",
+      "steps": [
+        "在你的 Google 账号中开启两步验证。",
+        "在 myaccount.google.com/apppasswords 创建一个应用密码。",
+        "点击“连接收件箱”，选择 Gmail，然后粘贴应用密码。",
+        "或者展开“更想用 Google 登录？”，点击“使用 Google 连接”。",
+        "在 Google 的警告页面，点击 Advanced，然后点击 Go to mcpemails.com (unsafe)。"
+      ],
+      "links": [
+        {
+          "label": "Gmail 指南",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Google Workspace 指南",
+          "href": "/connect/google-workspace"
+        }
+      ]
+    },
+    {
+      "id": "connect-outlook-microsoft-365",
+      "title": "连接 Outlook 或 Microsoft 365",
+      "summary": "用 Microsoft 登录。工作或学校账户可能需要 IT 管理员批准一次。",
+      "keywords": "outlook hotmail live msn microsoft 365 office 365 exchange 工作 学校 使用 microsoft 连接 管理员批准 同意 it 管理员",
+      "steps": [
+        "点击“连接收件箱”，选择 Outlook，然后点击“使用 Microsoft 连接”。",
+        "如果你的组织需要管理员批准，请点击“获取发给管理员的批准链接”。",
+        "把链接发给你的 IT 管理员。链接 7 天内有效。",
+        "管理员批准后，再次点击“使用 Microsoft 连接”。"
+      ],
+      "body": [
+        "你的管理员不需要 MCPEmails 账户。Microsoft 账户无法通过 IMAP 用密码连接。"
+      ],
+      "links": [
+        {
+          "label": "Outlook.com 指南",
+          "href": "/connect/outlook"
+        },
+        {
+          "label": "Microsoft 365 指南",
+          "href": "/connect/office365"
+        }
+      ]
+    },
+    {
+      "id": "connect-imap-mailbox",
+      "title": "用 IMAP 连接任意邮箱",
+      "summary": "选择“IMAP / SMTP”，填写邮箱地址、服务器名称和邮箱密码。",
+      "keywords": "imap smtp 自定义域名 自有域名 主机 虚拟主机 cpanel plesk 工作邮箱 服务器设置 主机名 端口 ssl tls starttls 仅接收 仅发送 双重验证 2fa mfa smtp 错误 发送失败",
+      "steps": [
+        "点击“连接收件箱”，然后选择“IMAP / SMTP”。",
+        "填写你的邮箱地址。已知服务商会自动填好服务器设置。",
+        "否则，请填写服务商提供的 IMAP 主机和 SMTP 主机。",
+        "填写邮箱密码；如果开启了两步验证，请填写应用密码。",
+        "点击“连接收件箱”。检查最多可能需要一分钟。"
+      ],
+      "body": [
+        "“高级设置”中可以选择连接类型（收发邮件、仅接收、仅发送）、安全模式，以及单独的用户名。"
+      ],
+      "links": [
+        {
+          "label": "IMAP 指南",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "密码被拒？",
+          "href": "/help#article-imap-password-rejected"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-inbox",
+      "title": "重新连接失去访问权限的邮箱",
+      "summary": "在“收件箱”中，点击显示“错误”的邮箱旁边的“重新连接”。",
+      "keywords": "重新连接 收件箱 失去访问 错误 状态 断开 过期 密码已更改 已撤销 邮箱无法使用 reconnect",
+      "steps": [
+        "打开“收件箱”，找到状态为“错误”的邮箱。",
+        "点击“重新连接”。",
+        "如果是用应用密码连接的邮箱，请粘贴一个新的应用密码。"
+      ],
+      "links": [
+        {
+          "label": "控制台收件箱",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "应用密码帮助",
+          "href": "/help#article-app-password-required"
+        }
+      ]
+    },
+    {
+      "id": "connect-claude",
+      "title": "连接 Claude",
+      "summary": "在 Claude 网页版或桌面版添加自定义连接器 https://mcpemails.com/api/mcp。",
+      "keywords": "claude claude.ai claude desktop anthropic 自定义连接器 custom connector 添加连接器 oauth 设置",
+      "steps": [
+        "在 Claude 中打开 Customize，然后打开 Connectors。",
+        "点击 Add，然后点击 Add custom connector。",
+        "命名为 MCPEmails，粘贴 https://mcpemails.com/api/mcp，然后点击 Continue。检查登录设置，然后点击 Add。",
+        "点击 Connect，并用你的 MCPEmails 账户登录。",
+        "在对话中点击左下角的 +，选择 Connectors，然后打开 MCPEmails 的开关。"
+      ],
+      "links": [
+        {
+          "label": "Claude 指南",
+          "href": "/docs/claude"
+        },
+        {
+          "label": "Claude Code 指南",
+          "href": "/docs/claude-code"
+        }
+      ]
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "连接 ChatGPT",
+      "summary": "在 chatgpt.com 上把 https://mcpemails.com/api/mcp 添加为自定义 MCP 服务器，然后登录。",
+      "keywords": "chatgpt openai 开发者模式 developer mode 连接器 connector 插件 应用 apps 自定义 mcp 服务器 oauth 设置",
+      "steps": [
+        "在 chatgpt.com 上打开 Plugins，再打开 Personal，点击 Add，然后点击 Add custom MCP server。",
+        "命名为 MCPEmails，在 Connection 下粘贴 https://mcpemails.com/api/mcp，并选择 OAuth。",
+        "勾选 I understand and want to continue，然后点击 Create as a plugin。",
+        "登录 MCPEmails，并选择它可以使用哪些收件箱。",
+        "在对话中输入 @ 并选择 MCPEmails。后续问题需要用到邮件时请再次选择它。"
+      ],
+      "body": [
+        "需在浏览器中使用 chatgpt.com，适用于 ChatGPT Go 和所有付费套餐；移动应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
+      ],
+      "links": [
+        {
+          "label": "ChatGPT 指南",
+          "href": "/docs/chatgpt"
+        },
+        {
+          "label": "助手看不到邮件？",
+          "href": "/help#article-assistant-sees-nothing"
+        }
+      ]
+    },
+    {
+      "id": "connect-cursor",
+      "title": "连接 Cursor",
+      "summary": "把服务器 URL 添加到 Cursor 的 mcp.json，然后在 Cursor 提示时登录。",
+      "keywords": "cursor 编辑器 ide mcp.json mcpServers url oauth 编程 智能体 coding agent 设置",
+      "steps": [
+        "编辑 ~/.cursor/mcp.json（所有项目）或 .cursor/mcp.json（单个项目）。",
+        "在 mcpServers 下添加一个服务器，并将 url 设为 https://mcpemails.com/api/mcp。",
+        "Cursor 提示时，用你的 MCPEmails 账户登录。"
+      ],
+      "links": [
+        {
+          "label": "Cursor 指南",
+          "href": "/docs/cursor"
+        }
+      ]
+    },
+    {
+      "id": "connect-other-clients",
+      "title": "连接其他 AI 客户端",
+      "summary": "客户端都用 https://mcpemails.com/api/mcp，多数用 OAuth，少数要 API 密钥。",
+      "keywords": "vs code vscode copilot windsurf cascade gemini cli zed raycast warp cline jetbrains claude code curl 其他客户端 mcp 客户端 设置 api key",
+      "steps": [
+        "Claude Code、VS Code、Windsurf、Gemini CLI、Zed、Raycast、Warp：粘贴 URL 并授权。",
+        "Cline 和 JetBrains AI Assistant：以 Authorization: Bearer 请求头添加 API 密钥。"
+      ],
+      "links": [
+        {
+          "label": "所有客户端指南",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-assistant-permissions",
+      "title": "限制助手能做的事",
+      "summary": "授权时选择访问级别和收件箱。之后可用“编辑访问权限”修改。",
+      "keywords": "权限 范围 scopes 访问级别 只读 标准 完全访问 自定义 授权 同意 允许访问 收件箱 限制 编辑访问权限",
+      "steps": [
+        "在授权页面，选择“只读”“标准”“完全访问”或“自定义”。",
+        "选择“所有收件箱”，或选择“指定收件箱”并勾选它可以使用的收件箱。",
+        "为这个连接命名，然后点击“允许访问”。",
+        "以后要修改，请打开“API 密钥”，在该行点击“编辑访问权限”。"
+      ],
+      "body": [
+        "“只读”无法发送、修改或删除任何内容。“完全访问”还包括文件夹、定时发送和删除。"
+      ],
+      "links": [
+        {
+          "label": "控制台 API 密钥",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "api-keys-and-revoking",
+      "title": "创建 API 密钥或撤销访问",
+      "summary": "在控制台的“API 密钥”中管理 API 密钥和已连接的助手。",
+      "keywords": "api 密钥 api key bearer 令牌 token oauth 连接 创建密钥 新建密钥 撤销 断开 移除访问 权限 请求头 authorization",
+      "steps": [
+        "点击“新建密钥”，填写“密钥名称”，勾选“权限”，然后点击“创建密钥”。",
+        "立即复制密钥。它只显示一次。",
+        "只在 Authorization: Bearer 请求头中发送它，切勿放在 URL 里。",
+        "要终止某个密钥或助手的访问，请在该行点击“撤销”。"
+      ],
+      "body": [
+        "在 Claude 中移除连接器并不会在这里撤销它。请在本页面撤销。"
+      ],
+      "links": [
+        {
+          "label": "控制台 API 密钥",
+          "href": "/dashboard/keys"
+        }
+      ]
+    }
+  ]
+}

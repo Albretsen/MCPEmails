@@ -11,9 +11,7 @@ AI 邮件 MCP 服务器价格：免费、Personal、Pro 和 Business 套餐 · M
 功能
 工作原理
 价格
-对比
 文档
-自托管
 博客
 登录
 免费开始使用
@@ -36,7 +34,7 @@ $0
 使用分析
 Gmail、Outlook、iCloud、Fastmail 及任何 IMAP
 无限量 API 密钥
-社区支持
+帮助中心和邮件支持
 免费开始
 Personal
 $7.20
@@ -47,7 +45,7 @@ $7.20
 3 个已连接收件箱
 邮件操作不限量
 突发速率上限提升 2 倍
-邮件支持
+优先邮件支持
 获取 Personal
 今天扣款。随时可以取消。14 天内可全额退款。
 Pro
@@ -186,8 +184,9 @@ reminder_list
 邮件实时获取，从不存储
 凭据静态加密
 支持
-社区论坛
+帮助中心
 邮件支持
+优先邮件支持
 –
 常见问题
 常见疑问。
@@ -211,7 +210,7 @@ Personal、Pro 和 Business 有什么区别？
 [alt] MCPEmails
 一个托管的 MCP 服务器，让 AI 智能体能够读取并发送你收件箱中的邮件，且从不存储它所读取的邮件。
 联系
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] 复制联系
 复制
 MCP 端点
@@ -259,6 +258,7 @@ Changelog
 关于
 安全
 服务状态
+帮助与支持
 隐私
 条款
 在此撤回合同

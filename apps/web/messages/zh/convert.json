@@ -7,7 +7,7 @@
     "freeGrace": "{date} 之前不限量",
     "freeCap": "每月 {cap} 次邮件操作",
     "noCap": "邮件操作不限量",
-    "emailSupport": "邮件支持",
+    "emailSupport": "优先邮件支持",
     "everythingPersonal": "包含 Personal 的全部功能",
     "perMonth": "{price}/月",
     "perYear": "{price}/年",

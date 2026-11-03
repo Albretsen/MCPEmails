@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { Resolver } from 'node:dns/promises';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { logAutofillLookup } from '@/lib/email-providers/autofill-log';
 import {
   autodiscoverMailSettings,
   isPublicMailDomain,
@@ -71,9 +73,9 @@ function cacheSet(domain: string, value: AutodiscoveredSettings | null): void {
 }
 
 /** Resolve, but never for longer than `ms`, and never by throwing. */
-function withTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+function withTimeout<T>(work: Promise<T>, ms: number, fallback: T, onTimeout?: () => void): Promise<T> {
   return new Promise<T>((resolve) => {
-    const timer = setTimeout(() => resolve(fallback), ms);
+    const timer = setTimeout(() => { onTimeout?.(); resolve(fallback); }, ms);
     work.then(
       (value) => { clearTimeout(timer); resolve(value); },
       () => { clearTimeout(timer); resolve(fallback); }
@@ -138,8 +140,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Not a valid mail domain.', error_code: 'domain_invalid' }, { status: 400 });
   }
 
+  // Every answer is logged per user, cached or not: the hit rate is about what
+  // the user saw, and the memo is shared across users.
+  const logAnswer = (settings: AutodiscoveredSettings | null, timedOut = false) =>
+    after(() => logAutofillLookup(createServiceRoleClient, user.id, {
+      surface: 'connect_modal',
+      domain,
+      source: settings?.source ?? (timedOut ? 'timeout' : 'none'),
+      imapHost: settings?.imapHost,
+      smtpHost: settings?.smtpHost,
+    }));
+
   const cached = cacheGet(domain);
   if (cached) {
+    logAnswer(cached.value);
     return NextResponse.json(
       cached.value ? { found: true, settings: cached.value } : { found: false },
       { headers: { 'Cache-Control': 'no-store' } }
@@ -148,7 +162,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const resolver = makeResolver();
 
-  const settings = await withTimeout(
+  let timedOut = false;
+  const settings = await withTimeout<AutodiscoveredSettings | null>(
     autodiscoverMailSettings(domain, {
       resolveSrv: async (name) => (await resolver.resolveSrv(name)) as SrvRecord[],
       resolveMx: async (name) => (await resolver.resolveMx(name)) as MxRecord[],
@@ -171,10 +186,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     }),
     TOTAL_TIMEOUT_MS,
-    null
+    null,
+    () => { timedOut = true; }
   );
 
   cacheSet(domain, settings);
+  logAnswer(settings, timedOut);
 
   return NextResponse.json(
     settings ? { found: true, settings } : { found: false },

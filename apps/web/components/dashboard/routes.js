@@ -25,6 +25,8 @@ export const DASHBOARD_SECTIONS = [
   'invite',
   'settings',
   'security',
+  // Help & support: the help center inside the app shell.
+  'help',
 ];
 
 /** Map a route id to its URL path. Overview is the bare /dashboard. */

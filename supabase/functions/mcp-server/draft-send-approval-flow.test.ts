@@ -254,8 +254,12 @@ Deno.test("held draft send: the approval records the draft, Bcc and body include
   assertEquals(snapshot.subject, "Q3 notes");
   assert(String(snapshot.body_text).includes("See you Thursday."), "the body the reviewer reads");
   assert(/^[0-9a-f]{64}$/.test(String(payload.draft_digest)), "a digest to check at dispatch");
-  // The plaintext summary (dashboard queue, model channel) keeps Bcc as a count.
-  const summary = row.summary as Row;
+  // The summary (dashboard queue, model channel) keeps Bcc as a count. It is
+  // stored encrypted like the payload, never in clear (2026-10-30).
+  const sealed = row.summary as Row;
+  assertEquals(sealed.v, 1, "summary stored as the encrypted wrapper");
+  assert(!JSON.stringify(sealed).includes("Q3 notes"), "no subject in clear");
+  const summary = await decryptStored(String(sealed.data));
   assertEquals(summary.bcc_count, 1);
   assertEquals(summary.subject, "Q3 notes");
   assert(!JSON.stringify(summary).includes("audit@example.com"), "no Bcc address in the summary");

@@ -9,7 +9,7 @@
  * THE CONFIRMATION NEVER ECHOES THE SUBJECT OR MESSAGE. The signed-out form
  * sends it to whatever address was typed, so echoing visitor text would let
  * anyone use our domain to deliver their words to a third party. It says only
- * that we received a request, its ref, and that a person will reply.
+ * that we received a request, its ref, and when we reply.
  *
  * ENGLISH ONLY, like purchase-confirmation.ts and for a similar reason: the
  * request carries no reliable language (the interface locale lives in
@@ -23,7 +23,9 @@
  */
 import type { Resend } from 'resend';
 import { createResend } from '@/lib/email/resend';
+import { appEnv } from '@/lib/env/app-env';
 
+import { planDisplayName } from '@/lib/stripe/plans';
 import type { TicketContext } from '@/lib/support/context';
 import { SUPPORT_CATEGORY_LABELS, type SupportCategory, type SupportTicketSource } from '@/lib/support/validation';
 
@@ -62,11 +64,26 @@ export function oneLine(value: string): string {
   return value.replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function mailboxHealthLabel(m: TicketContext['mailboxes'][number]): string {
+  if (m.health === 'reconnect_required') return `needs reconnect (status ${m.status})`;
+  if (m.health === 'unavailable') return `unavailable (status ${m.status})`;
+  return m.status;
+}
+
 function contextLines(input: TicketEmailInput): string[] {
   const c = input.context;
   const mailboxes = c.mailboxes.length
     ? c.mailboxes.map((m) =>
-        `  - ${[m.provider, m.service, m.host, m.status, m.last_error_code ? `error: ${m.last_error_code}` : null]
+        // Address first: five inboxes on one host are otherwise identical.
+        // Health is the mcp-server's rule; the raw row status follows when
+        // they differ (an 'active' row whose password was refused).
+        `  - ${[
+          m.email ?? '(no address)',
+          m.service ? `${m.provider}/${m.service}` : m.provider,
+          m.host,
+          mailboxHealthLabel(m),
+          m.last_error_code ? `error: ${m.last_error_code}` : null,
+        ]
           .filter(Boolean)
           .join(' | ')}`,
       )
@@ -77,7 +94,8 @@ function contextLines(input: TicketEmailInput): string[] {
     `Category: ${SUPPORT_CATEGORY_LABELS[input.category]} (${input.category})`,
     `Source: ${input.source}`,
     `Workspace: ${c.workspace_id ?? '-'}`,
-    `Plan: ${c.plan ?? '-'}`,
+    // Display name for reading, slug in brackets for support lookups.
+    `Plan: ${c.plan ? `${planDisplayName(c.plan)} (${c.plan})` : '-'}`,
     'Mailboxes:',
     ...mailboxes,
     `From: ${c.from ?? '-'}`,
@@ -109,7 +127,7 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
     '',
     `We received your support request. Its reference is ${ref}.`,
     '',
-    'A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.',
+    'We reply by email within one business day. If you want to add anything, reply to this email and keep the reference in the subject.',
     '',
     'If you did not contact MCPEmails, you can ignore this email.',
     '',
@@ -121,11 +139,21 @@ export function buildSupportConfirmationEmail(input: { ref: string }): ComposedE
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;font-size:15px;line-height:1.6;">
 <p>Hi,</p>
 <p>We received your support request. Its reference is <strong>${escapeHtml(ref)}</strong>.</p>
-<p>A person will read it and reply to this address. If you want to add anything, reply to this email and keep the reference in the subject.</p>
+<p>We reply by email within one business day. If you want to add anything, reply to this email and keep the reference in the subject.</p>
 <p style="color:#64748b;font-size:13px;">If you did not contact MCPEmails, you can ignore this email.</p>
 <p>MCPEmails Support<br><a href="mailto:${SUPPORT_INBOX}" style="color:#3b82f6;">${SUPPORT_INBOX}</a></p>
 </body></html>`;
   return { subject, body, htmlBody };
+}
+
+/**
+ * Resend Idempotency-Key for a ticket or contract email. Staging and production
+ * share one Resend account and both number refs from MCPE-1001, so the key
+ * carries the environment: without it production's first tickets reused keys
+ * staging had spent that day and Resend refused them (409 within 24 hours).
+ */
+export function supportIdempotencyKey(prefix: string, kind: string, ref: string): string {
+  return `${prefix}-${appEnv()}-${kind}-${ref}`.slice(0, 256);
 }
 
 function getResend(): Resend | null {
@@ -157,7 +185,7 @@ async function send(
         html: message.htmlBody,
         text: message.body,
       },
-      { idempotencyKey: `support-${kind}-${ref}`.slice(0, 256) },
+      { idempotencyKey: supportIdempotencyKey('support', kind, ref) },
     );
     if (error) {
       console.error(`[support-email] ${kind} FAILED for ${ref}: ${safeCode(error.message)}`);

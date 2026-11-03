@@ -1,0 +1,290 @@
+{
+  "area": "getting-started",
+  "title": "Kom i gang",
+  "articles": [
+    {
+      "id": "what-is-mcp-emails",
+      "title": "Hva MCPEmails gjør",
+      "summary": "Det kobler postkassene dine til AI-assistenter som Claude, ChatGPT og Cursor via én URL.",
+      "keywords": "hva er mcp emails mcpemails om oversikt hvordan virker det mcp-server mcp server ai-assistent agent lagret personvern",
+      "body": [
+        "E-post hentes direkte for hver forespørsel og lagres ikke. Unntaket er planlagte eller holdte meldinger, som lagres til de er sendt. Ellers lagres bare det krypterte postkassepassordet eller tilgangstokenet ditt."
+      ],
+      "links": [
+        {
+          "label": "Dokumentasjon",
+          "href": "/docs"
+        },
+        {
+          "label": "Sikkerhet",
+          "href": "/security"
+        }
+      ]
+    },
+    {
+      "id": "first-steps",
+      "title": "Kom i gang",
+      "summary": "Koble til en postkasse, og legg så til MCP-server-URL-en i AI-assistenten din.",
+      "keywords": "kom i gang oppsett første steg registrer deg opprett konto onboarding hurtigstart start ny get started",
+      "steps": [
+        "I Oversikt velger du Koble til innboks på Kom i gang-kortet.",
+        "Kopier MCP-server-URL-en fra det samme kortet.",
+        "Under Velg klienten din velger du assistenten din og følger stegene.",
+        "Spør assistenten: Oppsummer den uleste e-posten min fra i dag."
+      ],
+      "links": [
+        {
+          "label": "Oversikt i dashbordet",
+          "href": "/dashboard"
+        },
+        {
+          "label": "Oppsett for klienter",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-connection-method",
+      "title": "Velg hvordan du kobler til postkassen",
+      "summary": "Outlook logger inn med Microsoft, Gmail og noen få andre bruker app-passord, resten bruker IMAP.",
+      "keywords": "koble til innboks postkasse leverandør velg alternativ app-passord app password imap smtp outlook gmail icloud yahoo zoho yandex fastmail hvilken metode grense",
+      "steps": [
+        "Outlook.com eller Microsoft 365: velg Outlook og logg inn med Microsoft.",
+        "Gmail, iCloud, Yahoo, Zoho, Yandex eller Fastmail: velg kortet og lim inn et app-passord.",
+        "Alle andre postkasser eller ditt eget domene: velg IMAP / SMTP."
+      ],
+      "body": [
+        "Free kobler til én postkasse, Personal tre og Pro opptil 10. Business har 10 inkludert og kan legge til flere."
+      ],
+      "links": [
+        {
+          "label": "Hjelp med app-passord",
+          "href": "/help#article-app-password-required"
+        },
+        {
+          "label": "Veiledninger per leverandør",
+          "href": "/connect"
+        }
+      ]
+    },
+    {
+      "id": "connect-gmail",
+      "title": "Koble til Gmail",
+      "summary": "Lim inn et app-passord fra Google, eller logg inn med Google i stedet.",
+      "keywords": "gmail google koble til app-passord app password totrinnsbekreftelse 2-step verification google-innlogging oauth ubekreftet app advarsel avansert usikker tofaktor tofaktorautentisering totrinns 2fa mfa two factor",
+      "steps": [
+        "Slå på totrinnsbekreftelse i Google-kontoen din.",
+        "Lag et app-passord på myaccount.google.com/apppasswords.",
+        "Velg Koble til innboks, så Gmail, og lim inn app-passordet.",
+        "Eller åpne Vil du heller logge inn med Google? og velg Koble til med Google.",
+        "På advarselssiden fra Google velger du Advanced, så Go to mcpemails.com (unsafe)."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Veiledning for Google Workspace",
+          "href": "/connect/google-workspace"
+        }
+      ]
+    },
+    {
+      "id": "connect-outlook-microsoft-365",
+      "title": "Koble til Outlook eller Microsoft 365",
+      "summary": "Logg inn med Microsoft. Jobb- og skolekontoer kan trenge én godkjenning fra IT-administratoren.",
+      "keywords": "outlook hotmail live msn microsoft 365 office 365 exchange jobb skole koble til med microsoft administratorgodkjenning samtykke it-administrator admin",
+      "steps": [
+        "Velg Koble til innboks, så Outlook, så Koble til med Microsoft.",
+        "Krever organisasjonen godkjenning fra en administrator, velg Få godkjenningslenken til administratoren.",
+        "Send lenken til IT-administratoren. Den virker i 7 dager.",
+        "Når de har godkjent, velger du Koble til med Microsoft igjen."
+      ],
+      "body": [
+        "Administratoren trenger ikke en MCPEmails-konto. Microsoft-kontoer kan ikke kobles til med passord over IMAP."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for Outlook.com",
+          "href": "/connect/outlook"
+        },
+        {
+          "label": "Veiledning for Microsoft 365",
+          "href": "/connect/office365"
+        }
+      ]
+    },
+    {
+      "id": "connect-imap-mailbox",
+      "title": "Koble til hvilken som helst postkasse med IMAP",
+      "summary": "Velg IMAP / SMTP og skriv inn adressen, servernavnene og postkassepassordet.",
+      "keywords": "imap smtp eget domene webhotell hosting cpanel plesk jobbpostkasse serverinnstillinger vert port ssl tls starttls kun motta kun sende tofaktor 2fa mfa smtp-feil smtp feil sending feilet",
+      "steps": [
+        "Velg Koble til innboks, så IMAP / SMTP.",
+        "Skriv inn e-postadressen din. Kjente leverandører fyller inn serverinnstillingene.",
+        "Ellers skriver du inn IMAP-verten og SMTP-verten fra leverandøren.",
+        "Skriv inn postkassepassordet, eller et app-passord hvis totrinnsbekreftelse er på.",
+        "Velg Koble til innboks. Sjekken kan ta opptil ett minutt."
+      ],
+      "body": [
+        "Avanserte innstillinger har tilkoblingstypen (Send og motta, Kun motta, Kun sende), sikkerhetsmoduser og et eget brukernavn."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for IMAP",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Passordet avvist?",
+          "href": "/help#article-imap-password-rejected"
+        }
+      ]
+    },
+    {
+      "id": "reconnect-inbox",
+      "title": "Koble til en postkasse som har mistet tilgangen",
+      "summary": "I Innbokser velger du Koble til på nytt ved postkassen som viser Feil.",
+      "keywords": "koble til på nytt innboks mistet tilgang feil status ødelagt utløpt passord endret opphevet postkasse virker ikke reconnect",
+      "steps": [
+        "Åpne Innbokser og finn postkassen med status Feil.",
+        "Velg Koble til på nytt.",
+        "For en postkasse med app-passord limer du inn et nytt app-passord."
+      ],
+      "links": [
+        {
+          "label": "Innbokser i dashbordet",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Hjelp med app-passord",
+          "href": "/help#article-app-password-required"
+        }
+      ]
+    },
+    {
+      "id": "connect-claude",
+      "title": "Koble til Claude",
+      "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert tilkobling i claude.ai eller Claude Desktop.",
+      "keywords": "claude claude.ai claude desktop anthropic egendefinert tilkobling custom connector legg til tilkobling oauth oppsett",
+      "steps": [
+        "I Claude åpner du Tilpasning, så Tilkoblinger.",
+        "Velg Legg til, så Legg til egendefinert tilkobling.",
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp og velg Fortsett. Sjekk innstillingene for innlogging, og velg Legg til.",
+        "Velg Connect og logg inn med MCPEmails-kontoen din.",
+        "I en samtale klikker du + nede til venstre, velger Connectors og slår på MCPEmails."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for Claude",
+          "href": "/docs/claude"
+        },
+        {
+          "label": "Veiledning for Claude Code",
+          "href": "/docs/claude-code"
+        }
+      ]
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "Koble til ChatGPT",
+      "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert MCP-server på chatgpt.com, og logg inn.",
+      "keywords": "chatgpt openai utviklermodus developer mode connector plugin apper egendefinert mcp-server oauth oppsett",
+      "steps": [
+        "På chatgpt.com åpner du Plugins og deretter Personal, velger Add og så Add custom MCP server.",
+        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection og velg OAuth.",
+        "Huk av for I understand and want to continue, og velg Create as a plugin.",
+        "Logg inn på MCPEmails og velg hvilke innbokser den kan bruke.",
+        "I en chat skriver du @ og velger MCPEmails. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
+      ],
+      "body": [
+        "Dette virker i nettleseren på chatgpt.com med ChatGPT Go eller et betalt abonnement; mobilappen kan ikke legge den til. På Business og Enterprise kan en administrator eller eier måtte legge den til."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for ChatGPT",
+          "href": "/docs/chatgpt"
+        },
+        {
+          "label": "Ser assistenten ingen e-post?",
+          "href": "/help#article-assistant-sees-nothing"
+        }
+      ]
+    },
+    {
+      "id": "connect-cursor",
+      "title": "Koble til Cursor",
+      "summary": "Legg server-URL-en inn i mcp.json i Cursor, og logg inn når Cursor spør.",
+      "keywords": "cursor editor ide mcp.json mcpServers url oauth kodeagent oppsett",
+      "steps": [
+        "Rediger ~/.cursor/mcp.json (alle prosjekter) eller .cursor/mcp.json (ett prosjekt).",
+        "Under mcpServers legger du til en server med url satt til https://mcpemails.com/api/mcp.",
+        "Når Cursor spør, logger du inn med MCPEmails-kontoen din."
+      ],
+      "links": [
+        {
+          "label": "Veiledning for Cursor",
+          "href": "/docs/cursor"
+        }
+      ]
+    },
+    {
+      "id": "connect-other-clients",
+      "title": "Koble til en annen AI-klient",
+      "summary": "Alle klienter bruker https://mcpemails.com/api/mcp. De fleste logger inn med OAuth, noen trenger en API-nøkkel.",
+      "keywords": "vs code vscode copilot windsurf cascade gemini cli zed raycast warp cline jetbrains claude code curl andre klienter mcp-klient oppsett api-nøkkel api key",
+      "steps": [
+        "Claude Code, VS Code, Windsurf, Gemini CLI, Zed, Raycast, Warp: lim inn URL-en og godkjenn.",
+        "Cline og JetBrains AI Assistant: legg til en API-nøkkel som en Authorization: Bearer-header."
+      ],
+      "links": [
+        {
+          "label": "Alle klientveiledninger",
+          "href": "/docs/clients"
+        }
+      ]
+    },
+    {
+      "id": "choose-assistant-permissions",
+      "title": "Begrens hva assistenten kan gjøre",
+      "summary": "Velg tilgangsnivå og innbokser når du godkjenner. Endre dem senere med Rediger tilgang.",
+      "keywords": "tillatelser tilganger scopes tilgangsnivå skrivebeskyttet standard full tilgang tilpasset godkjenn samtykke gi tilgang innbokser begrens rediger tilgang",
+      "steps": [
+        "På godkjenningssiden velger du Skrivebeskyttet, Standard, Full tilgang eller Tilpasset.",
+        "Velg Alle innbokser, eller Bestemte innbokser og huk av dem den kan bruke.",
+        "Gi tilkoblingen et navn, og velg Gi tilgang.",
+        "For å endre det senere, åpne API-nøkler og velg Rediger tilgang på den raden."
+      ],
+      "body": [
+        "Skrivebeskyttet kan ikke sende, endre eller slette noe. Full tilgang legger til mapper, planlegging og sletting."
+      ],
+      "links": [
+        {
+          "label": "API-nøkler i dashbordet",
+          "href": "/dashboard/keys"
+        }
+      ]
+    },
+    {
+      "id": "api-keys-and-revoking",
+      "title": "Lag en API-nøkkel eller opphev tilgang",
+      "summary": "Administrer API-nøkler og tilkoblede assistenter under API-nøkler i dashbordet.",
+      "keywords": "api-nøkkel api key bearer token oauth tilkobling lag nøkkel ny nøkkel opphev koble fra fjern tilgang tillatelser header authorization",
+      "steps": [
+        "Velg Ny nøkkel, skriv inn et Nøkkelnavn, huk av Tillatelser og velg Opprett nøkkel.",
+        "Kopier nøkkelen nå. Den vises bare én gang.",
+        "Send den bare i en Authorization: Bearer-header, aldri i en URL.",
+        "For å avslutte tilgangen for en nøkkel eller en assistent, velg Opphev på raden."
+      ],
+      "body": [
+        "Å fjerne en tilkobling inne i Claude opphever den ikke her. Opphev den på denne siden."
+      ],
+      "links": [
+        {
+          "label": "API-nøkler i dashbordet",
+          "href": "/dashboard/keys"
+        }
+      ]
+    }
+  ]
+}

@@ -11,9 +11,7 @@ Yahoo Mail MCP: Connect Yahoo Mail to Claude and ChatGPT · MCPEmails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -22,12 +20,12 @@ Yahoo Mail + AI
 Connect Yahoo Mail to Claude,
 and Cursor, ChatGPT, any MCP client
 Give Claude or ChatGPT your real Yahoo inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.
-Claude cannot reach Yahoo Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP on port 993, authenticating with a Yahoo app password created under External connections on your Account Security page, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Your ordinary Yahoo password is never accepted from a mail client. Setup takes a couple of minutes and one inbox is free, forever.
 Connect Yahoo Mail free
 Read the docs
 1 inbox free, forever
 App password, no OAuth setup
 Email fetched live, never stored
+Claude cannot reach Yahoo Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP on port 993, authenticating with a Yahoo app password created under External connections on your Account Security page, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Your ordinary Yahoo password is never accepted from a mail client. Setup takes a couple of minutes and one inbox is free, forever.
 How Yahoo connects: an app password
 Yahoo Mail connects over IMAP/SMTP using a
 Yahoo app password
@@ -86,6 +84,32 @@ Step-by-step guides:
 How to connect Claude to your email
 ·
 Claude IMAP connector guide
+More guides:
+Custom connectors in Claude, explained
+·
+Schedule an email from the chat
+Use this inbox in your AI app:
+Claude
+·
+ChatGPT
+·
+Cursor
+·
+VS Code
+·
+Codex
+·
+Claude Code
+·
+Cline
+·
+Windsurf
+·
+Gemini CLI
+·
+All supported apps
+Need the server names and ports?
+Look up IMAP and SMTP settings
 Comparing providers first?
 See the email provider compatibility matrix
 ChatGPT
@@ -172,7 +196,7 @@ Read the docs
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -203,6 +227,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -221,6 +246,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here

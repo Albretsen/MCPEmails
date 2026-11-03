@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
@@ -9,7 +9,8 @@ import { Icon, Btn } from '../Primitives';
 import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, InvitePage, planDisplayName, PLAN_LADDER } from './Pages';
-import { ConnectModal } from './ConnectModal';
+import { ConnectModal, supportContactHref } from './ConnectModal';
+import { HelpSection, prefetchHelpData } from './HelpSection';
 import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
@@ -151,7 +152,7 @@ const SETUP_PARAMS = ['setup', 'client', 'provider', 'step', 'from', 'exp', 'sig
  * DashboardInner: holds all dashboard state and routing logic.
  * Calls useToast() for user-facing feedback on all mutating actions.
  */
-function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, supportVisible = false /* SUPPORT_RELEASE_GATE */, referralTileFacts = null, chatReturn = null, setup = null }) {
+function DashboardInner({ initialRoute = 'overview', user, workspace: serverWorkspace, workspaces = [], activeWorkspaceId, canCreateWorkspace = false, mcpUrl, userRole, planLimits, actionAllowance = null, inboxesGrandfathered = false, stripePrices: serverStripePrices, passState = null, overviewStats, activityFeed, inboxes: serverInboxes, apiKeys: serverApiKeys, usageData, auditLog, members: serverMembers, pendingInvites: serverPendingInvites, firstToolEvent = null, referralTileFacts = null, chatReturn = null, setup = null }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tr = useTranslations('dashboardChrome');
@@ -227,6 +228,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     } catch { /* SSR / unsupported history: state still updates */ }
   };
 
+  // Bumped to remount the help section when the connect modal sends someone
+  // there with a new topic, so it refetches with the new form seed.
+  const [helpKey, setHelpKey] = useState(0);
+
   // Fetch the signature editor once the dashboard has gone idle.
   //
   // The editor and its sanitiser (TipTap, ProseMirror, DOMPurify) are no longer
@@ -248,6 +253,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     const timer = setTimeout(() => warmSignatureEditor(), 200);
     return () => clearTimeout(timer);
   }, []);
+
+  // Same idea for Help & support: fetch its data once the page is idle, so
+  // opening the section from the sidebar or ⌘K shows it at once.
+  const locale = useLocale();
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(() => prefetchHelpData(locale), { timeout: 4000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => prefetchHelpData(locale), 1500);
+    return () => clearTimeout(timer);
+  }, [locale]);
 
   // Keep the active section in sync with browser back/forward navigation.
   useEffect(() => {
@@ -357,6 +374,21 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
   // (identity pre-filled and locked; only the password is re-entered).
   const [reconnectInbox, setReconnectInbox] = useState(null);
+
+  // "Still stuck? Contact support" in the connect modal: close the modal and
+  // open the help section in place, keeping the modal's query (topic,
+  // provider, code) and the #contact anchor in the URL for the section to read.
+  const openHelpFromConnect = (href) => {
+    setShowConnect(false);
+    setReconnectInbox(null);
+    setConnectPreselect(null);
+    setSidebarOpen(false);
+    try {
+      window.history.pushState({ route: 'help' }, '', href);
+    } catch { /* the section still opens; it just has no seed */ }
+    setHelpKey((k) => k + 1);
+    setRouteState('help');
+  };
   const [showCommand, setShowCommand] = useState(false);
   // { planId, interval } while the post-checkout confirmation panel is open.
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
@@ -501,6 +533,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   }, [firstrun]);
 
   // Handle ?connected=<provider> and ?error=<code> params injected by OAuth callbacks.
+  // "Contact support" on a connect failure that a retry will not fix: the
+  // in-app help form, seeded with the provider and error code.
+  const contactSupportAction = (provider, code) => ({
+    label: tr('app.contactSupport'),
+    onClick: () => {
+      window.location.assign(supportContactHref(provider, code));
+    },
+  });
+
   useEffect(() => {
     const connectedParam = readQuery(searchParams, 'connected');
     const errorParam = readQuery(searchParams, 'error');
@@ -588,7 +629,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Microsoft signed the person in but returned no usable email address to
       // attach the inbox to. Retrying the same account fails the same way, so
       // the message points at another account or support, and stays open.
-      toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0 });
+      toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0, action: contactSupportAction('outlook', errorParam) });
       setRouteState('inboxes');
     } else if (errorParam === 'inbox_exists_other_provider') {
       // The address is already connected through a different provider (e.g.
@@ -602,7 +643,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // Microsoft signed the person in, but the account has no Exchange Online
       // mailbox, so no inbox was created. Signing in again gives the same
       // answer, so the message points at IMAP rather than a retry.
-      toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0 });
+      toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0, action: contactSupportAction('outlook', errorParam) });
       setRouteState('inboxes');
     } else if (adminConsentParam === 'granted') {
       // The tenant-wide approval went through. That grants nothing by itself:
@@ -629,7 +670,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       openConnect('other');
       setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
-      toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
+      toast({ message: tr('app.tokenExchangeFailed'), variant: 'error', duration: 0, action: contactSupportAction(null, errorParam) });
       setRouteState('inboxes');
     } else if (errorParam === 'insufficient_role') {
       // The provider OAuth callbacks redirect here when a workspace VIEWER
@@ -647,7 +688,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       toast({ message: tr('app.connectionCancelled'), variant: 'info' });
       setRouteState('inboxes');
     } else if (errorParam) {
-      toast({ message: tr('app.connectionFailed', { error: errorParam }), variant: 'error' });
+      toast({ message: tr('app.connectionFailed', { error: errorParam }), variant: 'error', duration: 0, action: contactSupportAction(null, errorParam) });
       setRouteState('inboxes');
     }
 
@@ -1369,7 +1410,6 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         workspaces={workspaces}
         activeWorkspaceId={activeWorkspaceId}
         canCreateWorkspace={canCreateWorkspace}
-        supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
         referralVisible={workspace?.referralEnabled === true}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -1401,7 +1441,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} onContactSupport={openHelpFromConnect} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
@@ -1416,6 +1456,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           </div>
         )}
         {route === "security" && <SecurityPage auditLog={auditLog} userRole={userRole} />}
+        {route === "help" && <HelpSection key={helpKey} onNavigateSection={setRoute} />}
       </div>
 
       {/* atInboxLimit is false whenever maxInboxes is null, which is how every
@@ -1458,7 +1499,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           continueOnFree={serverWorkspace?.onboarding?.convert === 'on'}
           gmailOauthAllowed={workspace?.gmailOAuthAllowed === true}
           onAdminConsentLink={() => setShowAdminLink(true)}
-          supportVisible={supportVisible} // SUPPORT_RELEASE_GATE
+          onContactSupport={openHelpFromConnect}
         />
       )}
 

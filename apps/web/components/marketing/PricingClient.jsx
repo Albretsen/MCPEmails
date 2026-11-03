@@ -182,7 +182,8 @@ const TABLE_SECTIONS = [
     key: 'support',
     rows: [
       { key: 'community', free: true,  personal: true,  solo: true,  pro: true },
-      { key: 'email',     free: false, personal: true,  solo: true,  pro: true },
+      { key: 'email',     free: true,  personal: true,  solo: true,  pro: true },
+      { key: 'priority',  free: false, personal: true,  solo: true,  pro: true },
     ],
   },
 ];
@@ -710,6 +711,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             <strong>{t('enterprise.title')}</strong>{' '}
             {t.rich('enterprise.body', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,
+              dpa: (chunks) => <Link href="/dpa">{chunks}</Link>,
             })}
           </p>
         </div>

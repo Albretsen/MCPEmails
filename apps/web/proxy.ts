@@ -73,14 +73,14 @@ const MARKETING_PATHS = new Set([
   // The developer landing page. Its guide lives under /docs/, which the
   // prefix rule below already covers.
   '/developers',
-  // Help & support. The route itself 404s anyone the release gate does not
-  // admit, so listing it here exposes nothing; without it /help never reaches
-  // the [locale] route and 404s even for staff. Stays at release.
+  // Help & support: the public help center and contact form.
   '/help',
   // The public cancellation and withdrawal form, and the withdrawal notice.
   // Both must open without a login (§312k BGB, Directive (EU) 2023/2673).
   '/cancel',
   '/withdrawal',
+  // The Data Processing Agreement. Part of the terms, so public like them.
+  '/dpa',
   // The optional cancel reason, opened from the post-cancel email by a signed
   // link (no login). noindex; the page itself never writes on GET.
   '/billing/feedback',

@@ -67,6 +67,8 @@ export async function sendSendAsCode(params: { to: string; inboxAddress: string;
   const { error } = await createResend(key).emails.send({
     from: FROM,
     to: params.to,
+    // A reply is usually someone stuck, so it goes to the support mailbox.
+    replyTo: 'support@mcpemails.com',
     subject: email.subject,
     html: email.html,
     text: email.text,

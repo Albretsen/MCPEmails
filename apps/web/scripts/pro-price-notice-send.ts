@@ -47,7 +47,7 @@ const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > 0 ? Math.max(1, Number(process.argv[limitArg + 1]) || 0) : Infinity;
 
 const { createServiceRoleClient } = await import('@/lib/supabase/service');
-const { lifecycleFrom } = await import('@/lib/email/lifecycle');
+const { lifecycleFrom, lifecycleReplyTo } = await import('@/lib/email/lifecycle');
 const { noticeSendAllowed } = await import('@/lib/email/pro-price-notice');
 const { runProPriceNotice } = await import('@/lib/email/pro-price-notice-run');
 
@@ -68,7 +68,7 @@ const sender = SEND
       return async (email: { to: string; subject: string; html: string; text: string; headers: Record<string, string>; idempotencyKey: string }) => {
         try {
           const { data, error } = await resend.emails.send(
-            { from: lifecycleFrom(), to: email.to, subject: email.subject, html: email.html, text: email.text, headers: email.headers },
+            { from: lifecycleFrom(), replyTo: lifecycleReplyTo(), to: email.to, subject: email.subject, html: email.html, text: email.text, headers: email.headers },
             { idempotencyKey: email.idempotencyKey },
           );
           return error ? { ok: false as const, reason: String(error.message) } : { ok: true as const, id: data?.id ?? null };

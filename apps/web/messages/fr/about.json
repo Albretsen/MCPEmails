@@ -58,7 +58,7 @@
     "title": "Contact",
     "p1": "Il n'y a pas de service de support. Votre message arrive chez moi, et c'est moi qui y réponds.",
     "points": [
-      "<hello>hello@mcpemails.com</hello> pour le produit, votre compte, la facturation ou un bug. Comptez une réponse sous un jour ouvré.",
+      "<hello>support@mcpemails.com</hello> pour le produit, votre compte, la facturation ou un bug. Comptez une réponse sous un jour ouvré.",
       "<securityEmail>security@mcpemails.com</securityEmail> pour signaler une vulnérabilité. Comptez un accusé de réception sous 24 heures. La procédure de divulgation, clause de safe harbour comprise, est décrite sur la <security>page sécurité</security>.",
       "Je suis à Bergen, en Norvège. Un message envoyé en fin de journée, heure nord-américaine, reçoit généralement une réponse le lendemain matin, heure européenne."
     ]

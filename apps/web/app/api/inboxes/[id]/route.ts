@@ -3,6 +3,7 @@ import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { decryptToken } from '@/lib/crypto';
+import { cancelQueuedMail, revokeGoogleGrant, revokeOutlookToken } from '@/lib/inboxes/teardown';
 import {
   sanitizeSignatureHtml,
   SIGNATURE_HTML_MAX_LENGTH,
@@ -53,27 +54,9 @@ type InboxUpdate = Database['public']['Tables']['inboxes']['Update'];
  * that reference the inbox id.
  */
 
-// ─── Provider revocation helpers ─────────────────────────────────────────────
-// Each is best-effort: awaited, but all errors are caught at the call site so a
+// Provider revocation lives in lib/inboxes/teardown.ts, shared with workspace
+// and account deletion. Best effort: errors are caught at the call site so a
 // provider outage never blocks local cleanup.
-
-async function revokeGoogleGrant(token: string): Promise<void> {
-  // Google's revocation endpoint revokes the entire grant when given the
-  // refresh token (preferred) or just the one access token. Either is accepted
-  // as the `token` query parameter.
-  await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(token)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-}
-
-async function revokeOutlookToken(): Promise<void> {
-  // Microsoft offers no token revocation endpoint; tokens are invalidated by
-  // expiry (1 hour). The logout endpoint is called for completeness only.
-  await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/logout', {
-    method: 'GET',
-  });
-}
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 
@@ -194,6 +177,12 @@ export async function DELETE(
     console.error('[disconnect-inbox] Failed to disconnect inbox:', updateError.message);
     return NextResponse.json({ error: 'Failed to disconnect inbox.' }, { status: 500 });
   }
+
+  // 4b. Mail still queued for this inbox is cancelled and its stored message
+  //     removed (lib/inboxes/teardown.ts). Before 2026-10-30 a queued send
+  //     failed at send time, or went out after all if the inbox was reconnected
+  //     first. Best effort: the disconnect itself has already happened.
+  await cancelQueuedMail(service, { inboxIds: [inboxId] }, 'disconnect-inbox');
 
   // One mailbox fewer on a Business bill from the next renewal (no credit for
   // the current period; see src/lib/stripe/mailbox-addon.ts). After the

@@ -16,9 +16,7 @@ MCP-server for e-post: Gmail, Outlook og IMAP · mcpemails
 Funksjoner
 Slik fungerer det
 Priser
-Sammenlign
 Dokumentasjon
-Selvhosting
 Blogg
 Logg inn
 Kom i gang gratis
@@ -315,7 +313,7 @@ Godkjenning før sending
 Bruksanalyse
 Gmail, Outlook, iCloud, Fastmail og alle IMAP
 Ubegrenset antall API-nøkler
-Fellesskapsstøtte
+Hjelpesenter og e-poststøtte
 Start gratis
 Personal
 $9
@@ -324,7 +322,7 @@ Tre postkasser for én person eller et lite firma: jobb, privat eller firmaets f
 Alt i Free
 3 tilkoblede innbokser
 2x høyere burst-grense
-E-poststøtte
+Prioritert e-poststøtte
 Velg Personal
 Trekkes i dag. Si opp når som helst. 14 dagers angrerett.
 Pro
@@ -389,7 +387,7 @@ Ja. MCPEmails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjøre
 [alt] MCPEmails
 En vertsbasert MCP-server som gir AI-agenter tilgang til å lese og sende fra innboksen din, uten å noen gang lagre e-posten den leser.
 Kontakt
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Kopier Kontakt
 Kopier
 MCP-endepunkt
@@ -420,6 +418,7 @@ Leverandørstøtte
 Skrivebeskyttet tilgang
 Utviklerguide
 Oppsett av MCP-klienter
+Finn IMAP- og SMTP-innstillinger
 Blog
 Changelog
 Koble til
@@ -437,6 +436,7 @@ Selskap
 Om
 Sikkerhet
 Status
+Hjelp og kundestøtte
 Personvern
 Vilkår
 Gå fra avtalen her

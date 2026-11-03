@@ -21,7 +21,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { createResend } from '@/lib/email/resend';
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { lifecycleFrom } from '@/lib/email/lifecycle';
+import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import { runProPriceNotice, type NoticeSender } from '@/lib/email/pro-price-notice-run';
 
 export const maxDuration = 60;
@@ -53,6 +53,7 @@ const resendSender: NoticeSender = async (email) => {
     const { data, error } = await createResend(key).emails.send(
       {
         from: lifecycleFrom(),
+        replyTo: lifecycleReplyTo(),
         to: email.to,
         subject: email.subject,
         html: email.html,

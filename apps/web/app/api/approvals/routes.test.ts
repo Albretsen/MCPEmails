@@ -122,3 +122,36 @@ test('queue: lists summaries with the revision, and no payload or Bcc addresses'
   assert.equal(JSON.stringify(body).includes('drop@evil.example'), false);
   assert.equal(JSON.stringify(body).includes('"data"'), false, 'no ciphertext either');
 });
+
+// Since 2026-10-30 mcp-server stores the summary encrypted; older rows hold it
+// in clear. Both must render the same.
+function sealSummary() {
+  const row = tables.send_approvals[0];
+  row.summary = { v: 1, data: encryptToken(JSON.stringify(row.summary)) };
+}
+
+test('queue: an encrypted summary is returned decrypted, without ciphertext', async () => {
+  seed('owner', { to: ['colleague@example.com'], body: 'x' });
+  sealSummary();
+  const body = await (await list.GET()).json();
+  assert.equal(body.approvals[0].summary.subject, 'Notes');
+  assert.deepEqual(body.approvals[0].summary.to, ['colleague@example.com']);
+  assert.equal(JSON.stringify(body).includes('"data"'), false, 'no ciphertext');
+});
+
+test('details: an encrypted summary reads like a plaintext one', async () => {
+  seed('owner', { to: ['colleague@example.com'], bcc: [], body: 'x' });
+  sealSummary();
+  const body = await (await get()).json();
+  assert.equal(body.subject, 'Notes');
+  assert.deepEqual(body.to, ['colleague@example.com']);
+  assert.equal(body.bcc_count, 1);
+});
+
+test('details: a summary that does not decrypt reads as empty, not a 500', async () => {
+  seed('owner', { to: ['colleague@example.com'], bcc: [], body: 'x' });
+  tables.send_approvals[0].summary = { v: 1, data: 'not-ciphertext' };
+  const res = await get();
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).subject, '');
+});

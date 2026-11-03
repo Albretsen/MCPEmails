@@ -120,6 +120,7 @@ ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS pro_features_enabled               boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS subscription_cleanup_enabled       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS sends_frozen_at                    timestamptz,
+  ADD COLUMN IF NOT EXISTS fanout_recipient_limit             integer CHECK (fanout_recipient_limit IS NULL OR fanout_recipient_limit > 0),
   ADD COLUMN IF NOT EXISTS payment_issue_since                timestamptz,
   ADD COLUMN IF NOT EXISTS payment_issue_kind                 text CHECK (payment_issue_kind IS NULL OR payment_issue_kind IN ('declined', 'confirm')),
   ADD COLUMN IF NOT EXISTS payment_notice_shown_on            date,
@@ -446,7 +447,8 @@ $$;
 -- ============================================================
 -- Outbound abuse brakes: outbound_send_events, inbox_send_brakes,
 -- outbound_send_gate(), outbound_send_refusal()
--- (migration 20261024130000_outbound_abuse_brakes.sql). The hosted
+-- (migrations 20261024130000_outbound_abuse_brakes.sql and
+-- 20261103120000_fanout_brake_scope.sql). The hosted
 -- schema runs purge_outbound_send_events() hourly with pg_cron; self-host has
 -- no pg_cron, so run it from your own scheduler to keep the table small.
 -- ============================================================
@@ -478,6 +480,7 @@ CREATE TABLE IF NOT EXISTS public.inbox_send_brakes (
   inbox_id            uuid PRIMARY KEY REFERENCES public.inboxes(id) ON DELETE CASCADE,
   workspace_id        uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   fanout_hold_until   timestamptz,
+  fanout_content_hash text CHECK (fanout_content_hash IS NULL OR fanout_content_hash ~ '^[0-9a-f]{64}$'),
   refusal_pause_until timestamptz,
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
@@ -524,10 +527,14 @@ DECLARE
   v_oldest     timestamptz;
   v_distinct   bigint;
   v_hold_until timestamptz;
+  v_limit      integer;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended('outbound_send_gate:' || p_inbox_id::text, 0));
 
-  SELECT sends_frozen_at INTO v_frozen FROM public.workspaces WHERE id = p_workspace_id;
+  SELECT sends_frozen_at, COALESCE(fanout_recipient_limit, p_fanout_limit)
+    INTO v_frozen, v_limit
+    FROM public.workspaces WHERE id = p_workspace_id;
+  v_limit := COALESCE(v_limit, p_fanout_limit);
   IF v_frozen IS NOT NULL THEN
     RETURN jsonb_build_object('decision', 'frozen');
   END IF;
@@ -548,8 +555,12 @@ BEGIN
   END IF;
 
   IF NOT COALESCE(p_human_approved, false) THEN
-    IF v_brake.fanout_hold_until IS NOT NULL AND v_brake.fanout_hold_until > v_now THEN
-      RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_brake.fanout_hold_until, 'newly_tripped', false);
+    -- Only the message that tripped the brake is held. Other mail from the
+    -- inbox goes out. A row from before fanout_content_hash existed has no
+    -- hash, so it holds nothing.
+    IF v_brake.fanout_hold_until IS NOT NULL AND v_brake.fanout_hold_until > v_now
+       AND p_content_hash IS NOT NULL AND v_brake.fanout_content_hash = p_content_hash THEN
+      RETURN jsonb_build_object('decision', 'hold', 'reason', 'fanout', 'retry_at', v_brake.fanout_hold_until, 'newly_tripped', false);
     END IF;
 
     IF p_content_hash IS NOT NULL AND COALESCE(cardinality(p_recipient_hashes), 0) > 0 THEN
@@ -562,14 +573,16 @@ BEGIN
         UNION
         SELECT unnest(p_recipient_hashes)
       ) AS recipients;
-      IF v_distinct > p_fanout_limit THEN
-        -- Held until the end of the current UTC day.
-        v_hold_until := (date_trunc('day', v_now AT TIME ZONE 'UTC') + interval '1 day') AT TIME ZONE 'UTC';
-        INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, fanout_hold_until, updated_at)
-        VALUES (p_inbox_id, p_workspace_id, v_hold_until, v_now)
+      IF v_distinct > v_limit THEN
+        -- Held for one window, the same span the count looks back over.
+        v_hold_until := v_now + (p_fanout_window_ms || ' milliseconds')::interval;
+        INSERT INTO public.inbox_send_brakes (inbox_id, workspace_id, fanout_hold_until, fanout_content_hash, updated_at)
+        VALUES (p_inbox_id, p_workspace_id, v_hold_until, p_content_hash, v_now)
         ON CONFLICT (inbox_id) DO UPDATE
-          SET fanout_hold_until = EXCLUDED.fanout_hold_until, updated_at = v_now;
-        RETURN jsonb_build_object('decision', 'hold', 'retry_at', v_hold_until, 'newly_tripped', true);
+          SET fanout_hold_until = EXCLUDED.fanout_hold_until,
+              fanout_content_hash = EXCLUDED.fanout_content_hash,
+              updated_at = v_now;
+        RETURN jsonb_build_object('decision', 'hold', 'reason', 'fanout', 'retry_at', v_hold_until, 'newly_tripped', true);
       END IF;
     END IF;
   END IF;
@@ -656,6 +669,146 @@ BEGIN
   RETURN jsonb_build_object('outbound_send_events', v_events, 'inbox_send_brakes', v_brakes);
 END;
 $$;
+
+-- ============================================================
+-- Send history retention: purge_send_history()
+-- (migration 20261030120000_retention_low_risk.sql, identical body). Clears
+-- the stored message of finished scheduled sends and decided approvals after
+-- 7 days, deletes approvals after 90 days, and drops expired idempotency keys
+-- and bulk plans. The hosted schema runs it daily from pg_cron; self-host has
+-- no pg_cron, so run `SELECT public.purge_send_history();` daily from your own
+-- scheduler. Some tables it names are created further down; plpgsql
+-- resolves names at call time, so that order is fine.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.purge_send_history()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  c_batch    constant integer := 1000;
+  v_n        integer;
+  v_sends    integer := 0;
+  v_retired  integer := 0;
+  v_cleared  integer := 0;
+  v_deleted  integer := 0;
+  v_idem     integer := 0;
+  v_plans    integer := 0;
+BEGIN
+  -- scheduled_sends: message body of finished sends.
+  LOOP
+    UPDATE public.scheduled_sends
+    SET    payload = '{}'::jsonb,
+           payload_encrypted = true
+    WHERE  id IN (
+      SELECT s.id
+      FROM   public.scheduled_sends s
+      WHERE  s.status IN ('sent', 'error', 'cancelled')
+        AND  s.updated_at < now() - interval '7 days'
+        AND  s.payload <> '{}'::jsonb
+        AND  NOT (s.payload_encrypted = false
+                  AND jsonb_typeof(s.payload) = 'object'
+                  AND s.payload ? 'approval_id')
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_sends := v_sends + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  -- send_approvals: retire requests that expired while nobody looked.
+  UPDATE public.send_approvals
+  SET    status = 'expired',
+         decided_at = coalesce(expires_at, created_at + interval '24 hours')
+  WHERE  status = 'pending'
+    AND  coalesce(expires_at, created_at + interval '24 hours') < now() - interval '1 day';
+  GET DIAGNOSTICS v_retired = ROW_COUNT;
+
+  -- send_approvals: message body 7 days after the decision.
+  LOOP
+    UPDATE public.send_approvals
+    SET    payload = '{}'::jsonb
+    WHERE  id IN (
+      SELECT a.id
+      FROM   public.send_approvals a
+      WHERE  a.status IN ('approved', 'rejected', 'cancelled', 'expired')
+        AND  coalesce(a.decided_at, a.created_at) < now() - interval '7 days'
+        AND  a.payload <> '{}'::jsonb
+        AND  NOT EXISTS (
+               SELECT 1 FROM public.scheduled_sends s
+               WHERE  s.status IN ('pending', 'sending')
+                 AND  (s.id = a.dispatch_scheduled_send_id
+                       OR (s.payload_encrypted = false
+                           AND jsonb_typeof(s.payload) = 'object'
+                           AND s.payload ->> 'approval_id' = a.id::text))
+             )
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_cleared := v_cleared + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  -- send_approvals: the record itself after 90 days.
+  LOOP
+    DELETE FROM public.send_approvals
+    WHERE  id IN (
+      SELECT a.id
+      FROM   public.send_approvals a
+      WHERE  a.status <> 'pending'
+        AND  a.created_at < now() - interval '90 days'
+        AND  NOT EXISTS (
+               SELECT 1 FROM public.scheduled_sends s
+               WHERE  s.status IN ('pending', 'sending')
+                 AND  (s.id = a.dispatch_scheduled_send_id
+                       OR (s.payload_encrypted = false
+                           AND jsonb_typeof(s.payload) = 'object'
+                           AND s.payload ->> 'approval_id' = a.id::text))
+             )
+      LIMIT  c_batch
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_deleted := v_deleted + v_n;
+    EXIT WHEN v_n < c_batch;
+  END LOOP;
+
+  LOOP
+    DELETE FROM public.outbound_idempotency
+    WHERE  id IN (
+      SELECT id FROM public.outbound_idempotency
+      WHERE  expires_at < now() - interval '1 day'
+      LIMIT  c_batch * 5
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_idem := v_idem + v_n;
+    EXIT WHEN v_n < c_batch * 5;
+  END LOOP;
+
+  LOOP
+    DELETE FROM public.bulk_plans
+    WHERE  id IN (
+      SELECT id FROM public.bulk_plans
+      WHERE  expires_at < now() - interval '7 days'
+      LIMIT  c_batch * 5
+    );
+    GET DIAGNOSTICS v_n = ROW_COUNT;
+    v_plans := v_plans + v_n;
+    EXIT WHEN v_n < c_batch * 5;
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'scheduled_sends_cleared', v_sends,
+    'send_approvals_retired', v_retired,
+    'send_approvals_cleared', v_cleared,
+    'send_approvals_deleted', v_deleted,
+    'outbound_idempotency', v_idem,
+    'bulk_plans', v_plans
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.purge_send_history() FROM PUBLIC, anon, authenticated;
 
 -- ============================================================
 -- The rest of the data plane, copied from the hosted schema (pg_dump of

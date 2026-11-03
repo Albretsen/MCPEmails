@@ -5,8 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createResend } from '@/lib/email/resend';
-import { appUrl, lifecycleFrom } from '@/lib/email/lifecycle';
-import { SUPPORT_EMAIL } from '@/lib/support/help-content.mjs';
+import { appUrl, lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import { normalizeChipClient } from '@/lib/onboarding/clients.mjs';
 import { isInternalViewer } from '@/lib/onboarding/variant';
 import {
@@ -114,7 +113,7 @@ async function sendServiceEmail(to: string, message: ServiceEmail, idempotencyKe
   if (!key) return false;
   try {
     const { error } = await createResend(key).emails.send(
-      { from: lifecycleFrom(), to, replyTo: SUPPORT_EMAIL, subject: message.subject, html: message.html, text: message.text },
+      { from: lifecycleFrom(), to, replyTo: lifecycleReplyTo(), subject: message.subject, html: message.html, text: message.text },
       { idempotencyKey },
     );
     if (error) {

@@ -166,9 +166,13 @@ function ToastItem({ t, dismiss, timers }) {
     }
   };
 
+  // A long message with an action stacks the button under the text, so the
+  // text keeps the toast's full width instead of a narrow column beside it.
+  const stacked = Boolean(action) && typeof message === 'string' && message.length > 70;
+
   return (
     <div
-      className={`toast toast-${variant}`}
+      className={`toast toast-${variant}${stacked ? ' toast-stacked' : ''}`}
       role={variant === 'error' ? 'alert' : 'status'}
       aria-live={variant === 'error' ? 'assertive' : 'polite'}
       onMouseEnter={handleMouseEnter}
@@ -178,13 +182,15 @@ function ToastItem({ t, dismiss, timers }) {
         <Icon name={VARIANT_ICON[variant]} size={14} />
       </div>
 
-      <span className="toast-msg">{message}</span>
+      <div className="toast-body">
+        <span className="toast-msg">{message}</span>
 
-      {action && (
-        <button className="toast-action" onClick={action.onClick} type="button">
-          {action.label}
-        </button>
-      )}
+        {action && (
+          <button className="toast-action" onClick={action.onClick} type="button">
+            {action.label}
+          </button>
+        )}
+      </div>
 
       <button
         className="toast-close"

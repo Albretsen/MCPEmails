@@ -44,6 +44,48 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-02',
+    kind: 'fixed',
+    title: 'Send and Delete work in the ChatGPT draft card',
+    body:
+      "The Send and Delete draft buttons in the draft card now work in ChatGPT. Before, the card said the connection had dropped and the draft stayed in Drafts.",
+  },
+  {
+    date: '2026-11-01',
+    kind: 'fixed',
+    title: 'Searching all inboxes works with one inbox',
+    body:
+      "When your AI app asks to list or search all inboxes and you have one connected, it now reads that inbox. Before, the request came back with a plan notice and the app had to ask again.",
+  },
+  {
+    date: '2026-10-31',
+    kind: 'fixed',
+    title: 'Replies follow the Reply-To address',
+    body:
+      "Replies and reply drafts now go to a message's Reply-To address when it has one, on every provider. Before, a reply to a contact form or help desk message could be addressed to the From address, which was often your own mailbox.",
+  },
+  {
+    date: '2026-10-30',
+    kind: 'fixed',
+    title: 'Inboxes page shows when a password was refused',
+    body:
+      "When your mail server refuses an inbox's password, the Inboxes page now marks it Needs reconnect with a Reconnect button, where before it could still read Connected. The support form lists each mailbox by its address and says whether it is connected.",
+  },
+  {
+    date: '2026-10-30',
+    kind: 'added',
+    title: 'Help articles and support in the dashboard',
+    body:
+      "You can now search help articles and write to support from Help & support in the dashboard and at mcpemails.com/help. When an inbox fails to connect, the error offers a Contact support link that opens the form with the provider and error already filled in.",
+  },
+  {
+    date: '2026-10-30',
+    kind: 'improved',
+    title: 'Account deletion confirmation and Google access',
+    body:
+      "Deleting your account now sends a confirmation email that lists what was removed and the date the remaining records are erased, and ends MCPEmails' access to your Gmail inboxes in your Google account, as disconnecting a single inbox already did. Disconnecting an inbox also cancels the scheduled emails still queued for it.",
+  },
+  {
     date: '2026-10-29',
     kind: 'added',
     title: 'One-click install on the client setup guides',
@@ -286,7 +328,7 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'added',
-    title: 'MCP Emails in German',
+    title: 'MCPEmails in German',
     body:
       'The website, sign-up, dashboard, setup guides for every AI client and the pages for German, Austrian and Swiss mailbox providers such as GMX, WEB.DE and T-Online are now in German. Checkout opens in German for German visitors too.',
   },
@@ -314,7 +356,7 @@ export const ENTRIES = [
   {
     date: '2026-10-20',
     kind: 'changed',
-    title: 'MCP Emails is run by Albretsen AS',
+    title: 'MCPEmails is run by Albretsen AS',
     body:
       'From 1 November 2026 the service is provided by Albretsen AS (org. no. 938 702 373), a Norwegian limited company owned by the same founder at the same address. The terms, privacy policy and email footers name the new company.',
   },
@@ -414,7 +456,7 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Mail hosts that turn away cloud servers now connect',
     body:
-      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCP Emails now retries those connections through a separate route and remembers which providers need it.',
+      'A few mail providers refuse connections from cloud servers, so connecting or sending from them timed out or was refused even with the right password. MCPEmails now retries those connections through a separate route and remembers which providers need it.',
   },
   {
     date: '2026-10-15',
@@ -435,7 +477,7 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Inline cards in Claude keep working after an update',
     body:
-      'After we shipped a new version, Claude could show "can\'t reach MCP Emails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
+      'After we shipped a new version, Claude could show "can\'t reach MCPEmails" where a card belonged until the connector was refreshed. Cards now load from the current version whatever Claude has cached.',
   },
   {
     date: '2026-10-13',
@@ -856,7 +898,7 @@ export const ENTRIES = [
   {
     date: '2026-08-29',
     kind: 'added',
-    title: 'Who is behind MCP Emails',
+    title: 'Who is behind MCPEmails',
     body:
       'A new About page, and the legal entity, organisation number and registered address in the Terms and Privacy pages.',
   },
@@ -1125,7 +1167,7 @@ export const ENTRIES = [
   {
     date: '2026-05-26',
     kind: 'added',
-    title: 'MCP Emails is live',
+    title: 'MCPEmails is live',
     body:
       'Connect a mailbox and work it from an AI assistant: list, read, search, send and reply. Gmail and Fastmail to start, with Claude connecting over OAuth and other clients using an API key.',
   },

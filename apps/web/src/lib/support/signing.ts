@@ -2,10 +2,9 @@
  * HMAC helpers for the support system, keyed on the existing `CSRF_SECRET`.
  *
  * One secret, several uses, so every use carries its own label: a value
- * signed as a form token can never verify as a preview token or collide with
+ * signed as a form token can never verify as a feedback link or collide with
  * an IP hash, because the label is part of the MAC input. Labels in use:
  *
- *   'support-preview'  release-gate.ts, the staff preview cookie
  *   'support-form'     form-token.ts, the signed render timestamp
  *   'support-ip'       ip.ts, the stored client IP hash
  *   'billing-feedback' src/lib/billing/feedback-token.ts, the signed link in
@@ -17,7 +16,7 @@
  */
 import crypto from 'node:crypto';
 
-export type SupportHmacLabel = 'support-preview' | 'support-form' | 'support-ip' | 'billing-feedback';
+export type SupportHmacLabel = 'support-form' | 'support-ip' | 'billing-feedback';
 
 function key(): Buffer | null {
   const hex = process.env.CSRF_SECRET;

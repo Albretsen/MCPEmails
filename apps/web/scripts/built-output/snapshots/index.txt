@@ -16,9 +16,7 @@ Email MCP Server: Gmail, Outlook, IMAP & Claude · mcpemails
 Features
 How it works
 Pricing
-Compare
 Docs
-Self-host
 Blog
 Sign in
 Get started free
@@ -316,7 +314,7 @@ Send review and approval hold
 Usage analytics
 Gmail, Outlook, iCloud, Fastmail & any IMAP
 Unlimited API keys
-Community support
+Help center and email support
 Start free
 Personal
 $9
@@ -325,7 +323,7 @@ Three mailboxes for one person or one small business: work, personal, or your fi
 Everything in Free
 3 connected inboxes
 2x higher burst rate limit
-Email support
+Priority email support
 Get Personal
 Charged today. Cancel any time. 14-day refund.
 Pro
@@ -390,7 +388,7 @@ Yes. MCPEmails is open source under AGPL-3.0, and the hosted service runs the sa
 [alt] MCPEmails
 A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
 Contact
-hello@mcpemails.com
+support@mcpemails.com
 [aria-label] Copy Contact
 Copy
 MCP endpoint
@@ -421,6 +419,7 @@ Provider support
 Read-only access
 Developer guide
 MCP client setup
+IMAP and SMTP settings lookup
 Blog
 Changelog
 Connect
@@ -439,6 +438,7 @@ Company
 About
 Security
 Status
+Help & support
 Privacy
 Terms
 Withdraw from contract here

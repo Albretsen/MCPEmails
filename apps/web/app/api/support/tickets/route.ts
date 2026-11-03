@@ -1,16 +1,15 @@
 /**
  * POST /api/support/tickets: file a support ticket from the /help form.
  *
- * Thin by design; the flow lives in src/lib/support/tickets.ts.
- * While Help & support is internal-only, every method answers a non-visible
- * caller with the same 404 as an unmatched /api path, and a visible caller
- * with 405 on anything but POST.
+ * Thin by design; the flow lives in src/lib/support/tickets.ts. Every method
+ * other than POST answers 405.
  */
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { getTicketContextPreview } from '@/lib/support/context';
 import { sendSupportConfirmationEmail, sendSupportTicketEmail } from '@/lib/support/emails';
-import { supportJson, supportMethodNotAllowed, supportNotFound } from '@/lib/support/http';
+import { supportJson, supportMethodNotAllowed } from '@/lib/support/http';
 import { clientIp, hashSupportIp } from '@/lib/support/ip';
+import { readBodyWithLimit } from '@/lib/support/read-body';
 import { createSupabaseTicketStore, submitSupportTicket } from '@/lib/support/tickets';
 import { getSupportViewer } from '@/lib/support/viewer';
 
@@ -18,11 +17,12 @@ import { getSupportViewer } from '@/lib/support/viewer';
 const MAX_BODY_BYTES = 64 * 1024;
 
 export async function POST(request: Request): Promise<Response> {
+  const read = await readBodyWithLimit(request, MAX_BODY_BYTES);
+  if (!read.ok) {
+    return supportJson({ ok: false, error: read.reason === 'too_large' ? 'message_too_long' : 'invalid_json' }, 400);
+  }
+  const rawBody = read.text;
   const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
-
-  const rawBody = await request.text().catch(() => '');
-  if (rawBody.length > MAX_BODY_BYTES) return supportJson({ ok: false, error: 'message_too_long' }, 400);
 
   let store;
   try {
@@ -46,8 +46,6 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 async function otherMethod(): Promise<Response> {
-  const viewer = await getSupportViewer();
-  if (!viewer.visible) return supportNotFound(); // SUPPORT_RELEASE_GATE
   return supportMethodNotAllowed('POST');
 }
 
