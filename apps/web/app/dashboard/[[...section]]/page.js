@@ -176,7 +176,7 @@ async function fetchActivityFeed(supabase, workspaceId) {
  * @returns {Promise<Array<{ id: string, label: string, address: string, provider: string, status: string, lastError: string|null, hasImap: boolean, calls: number, createdAt: string, lastCallAt: string|null }>>}
  */
 async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DAYS) {
-  const [{ data: rows, error }, { data: logRows }] = await Promise.all([
+  const [{ data: rows, error }, { data: logRows }, { data: brakeRows }] = await Promise.all([
     // `send_review_mode` is added by a migration that may land after this
     // code; selectTolerantly re-runs without it rather than blanking the whole
     // inbox list. See src/lib/approvals/columns.ts.
@@ -218,6 +218,16 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
       p_workspace_id: workspaceId,
       p_days: historyDays,
     }),
+
+    // Active fan-out holds (mcp-server/outbound-brakes.ts), so the inbox can
+    // say why a send was held although its review setting is off. The table
+    // has no member policy, so this reads with the service role, scoped to
+    // this workspace. An error only hides the notice.
+    createServiceRoleClient()
+      .from('inbox_send_brakes')
+      .select('inbox_id, fanout_hold_until')
+      .eq('workspace_id', workspaceId)
+      .gt('fanout_hold_until', new Date().toISOString()),
   ]);
 
   if (error || !rows) {
@@ -230,6 +240,8 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
   // call count; older successes read as "no successful calls" for that window.
   const callsByInbox = {};
   const lastCallByInbox = {};
+  const fanoutHoldByInbox = {};
+  for (const row of brakeRows ?? []) fanoutHoldByInbox[row.inbox_id] = row.fanout_hold_until;
   for (const row of logRows ?? []) {
     if (!row.inbox_id) continue;
     callsByInbox[row.inbox_id] = row.calls ?? 0;
@@ -309,6 +321,8 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     // It is not `true`, so the card stays on, matching the column's own
     // NOT NULL DEFAULT false.
     draftEditorHidden: row.draft_editor_hidden === true,
+    // End of an active fan-out hold on this inbox (ISO), or null.
+    fanoutHoldUntil: fanoutHoldByInbox[row.id] ?? null,
   }));
 }
 
