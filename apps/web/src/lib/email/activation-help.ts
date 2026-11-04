@@ -251,7 +251,7 @@ const HOST_TABLE: ReadonlyArray<{ suffixes: readonly string[]; match: HostMatch 
   },
   { suffixes: ['imap.yandex.com', 'imap.yandex.ru'], match: { provider: 'yandex', label: 'Yandex', slug: 'yandex' } },
   { suffixes: ['imap.zoho.com', 'imap.zoho.eu', 'imappro.zoho.com', 'imappro.zoho.eu'], match: { provider: 'zoho', label: 'Zoho', slug: 'zoho' } },
-  { suffixes: ['.ionos.com', '.ionos.de', '.ionos.co.uk', '.ionos.fr', '.ionos.es', '.ionos.it', '.1and1.com'], match: { provider: 'other', label: 'IONOS', slug: 'ionos' } },
+  { suffixes: ['.ionos.com', '.ionos.de', '.ionos.co.uk', '.ionos.fr', '.ionos.es', '.ionos.it', '.ionos.eu', '.1and1.com', '.1und1.de'], match: { provider: 'other', label: 'IONOS', slug: 'ionos' } },
   { suffixes: ['secureimap.t-online.de', 'imap.t-online.de'], match: { provider: 'other', label: 'T-Online', slug: 't-online' } },
   { suffixes: ['imap.mail.ru'], match: { provider: 'other', label: 'Mail.ru', slug: 'mail-ru' } },
   { suffixes: ['imap.qq.com', 'imap.exmail.qq.com'], match: { provider: 'other', label: 'QQ Mail', slug: 'qq' } },
@@ -262,7 +262,16 @@ const HOST_TABLE: ReadonlyArray<{ suffixes: readonly string[]; match: HostMatch 
   { suffixes: ['imap.orange.fr'], match: { provider: 'other', label: 'Orange', slug: 'orange-fr' } },
   { suffixes: ['imap.seznam.cz'], match: { provider: 'other', label: 'Seznam', slug: 'seznam' } },
   { suffixes: ['imap.titan.email'], match: { provider: 'other', label: 'Titan', slug: 'titan' } },
-  { suffixes: ['imap.strato.de'], match: { provider: 'other', label: 'STRATO', slug: 'strato' } },
+  { suffixes: ['imap.strato.de', 'imap.strato.com'], match: { provider: 'other', label: 'STRATO', slug: 'strato' } },
+  // Hosts from the 2026-11-04 host research. Only providers with a /connect
+  // page are listed: the slug is the CTA's ?provider=, and a slug the registry
+  // does not know would preselect nothing while the email says it does.
+  { suffixes: ['mail.your-server.de'], match: { provider: 'other', label: 'Hetzner', slug: 'hetzner' } },
+  { suffixes: ['mx.freenet.de'], match: { provider: 'other', label: 'freenet', slug: 'freenet' } },
+  { suffixes: ['imaps.bluewin.ch'], match: { provider: 'other', label: 'Bluewin', slug: 'bluewin' } },
+  { suffixes: ['imap.uol.com.br'], match: { provider: 'other', label: 'UOL', slug: 'uol' } },
+  { suffixes: ['imap.bol.com.br'], match: { provider: 'other', label: 'BOL', slug: 'bol' } },
+  { suffixes: ['imap.terra.com.br'], match: { provider: 'other', label: 'Terra', slug: 'terra' } },
 ];
 
 export function matchHost(host: string | null | undefined): HostMatch | null {

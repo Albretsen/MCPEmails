@@ -1,7 +1,7 @@
 // Browser-safe: the connect modal calls this on render. Nothing here may reach
 // for a node builtin, and the only runtime import is the host-preset table the
 // modal already bundles.
-import { emailDomain, findMailHostPreset, prefillFromDomain } from '@/lib/email-providers/host-presets';
+import { emailDomain, findMailHostPreset, prefillFromDomain, TELEKOM_MAIL_PASSWORD_HELP } from '@/lib/email-providers/host-presets';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
 
 /**
@@ -90,7 +90,7 @@ export const HOST_HELP: readonly HostHelp[] = [
     id: 'ionos',
     label: 'IONOS',
     sources: ['ionos'],
-    presetIds: ['ionos', 'ionos-de', 'ionos-uk', 'ionos-fr', 'ionos-es', 'ionos-it'],
+    presetIds: ['ionos', 'ionos-de', 'ionos-uk', 'ionos-fr', 'ionos-es', 'ionos-it', 'ionos-exchange'],
     hostSuffixes: ['imap.ionos.com', 'smtp.ionos.com'],
     whereKey: 'connect.authHelpWhereIonos',
   },
@@ -102,6 +102,7 @@ export const HOST_HELP: readonly HostHelp[] = [
     id: 'strato',
     label: 'STRATO',
     sources: ['strato'],
+    presetIds: ['strato'],
     hostSuffixes: ['imap.strato.de', 'smtp.strato.de'],
     whereKey: 'connect.authHelpWhereStrato',
   },
@@ -181,11 +182,11 @@ export const HOST_HELP: readonly HostHelp[] = [
     // inmotion.json, setup[2]: "IMAP checks the password on the individual
     // address, not your AMP login. In cPanel open Email Accounts, click Manage
     // on the address, and set a password. ... secureNN.inmotionhosting.com as
-    // the host." The `uhserver` preset is the same company's older hostname.
+    // the host." (uhserver.com is UOL Host in Brazil, not InMotion: see the
+    // `uol_host` fix provider.)
     id: 'inmotion',
     label: 'InMotion Hosting',
     sources: ['inmotion', 'cpanel'],
-    presetIds: ['uhserver'],
     hostSuffixes: ['.inmotionhosting.com'],
     whereKey: 'connect.authHelpWhereCpanel',
   },
@@ -354,9 +355,10 @@ export function authFailureHelp(input: AuthFailureHelpInput): AuthFailureHelp {
 //
 // Every URL and menu path below was checked against the provider's own help
 // page on 2026-10-24, or is copied from the verified provider content in
-// src/lib/connect/content/en/<slug>.json. Where a help page could not be
-// fetched (Telekom puts its help articles behind a sign-in check) the link is
-// the provider's help root rather than a guessed deep link.
+// src/lib/connect/content/en/<slug>.json. The Brazilian, Japanese and DACH
+// rows added on 2026-11-04 cite the vendor page the host research found; a
+// provider with no official page gets steps and no link rather than a
+// third-party one.
 //
 // Like the rest of this module: keys and plain values only, never sentences,
 // and nothing the mail server said. The password is never an input.
@@ -386,11 +388,31 @@ export type FixProviderId =
   | 'web_de'
   | 'zoho'
   | 'yandex'
-  | 'office365';
+  | 'office365'
+  | 'uol_host'
+  | 'locaweb'
+  | 'kinghost'
+  | 'uol'
+  | 'yahoo_jp'
+  | 'docomo'
+  | 'softbank'
+  | 'ocn'
+  | 'biglobe'
+  | 'nifty'
+  | 'so_net'
+  | 'plala'
+  | 'hetzner'
+  | 'freenet'
+  | 'vodafone'
+  | 'hostpoint'
+  | 'cyon'
+  | 'world4you';
 
 interface FixBlock {
   steps: readonly string[];
   links: readonly FixLink[];
+  /** A step names the Username field, which the generic form keeps under Advanced. */
+  usernameField?: boolean;
 }
 
 export interface FixProvider {
@@ -414,6 +436,23 @@ const QQ_HELP = 'https://help.mail.qq.com/detail/106/985';
 const MAIL_COM_IMAP = 'https://support.mail.com/pop-imap/index.html';
 const ZOHO_IMAP = 'https://www.zoho.com/mail/help/imap-access.html';
 const YANDEX_IMAP = 'https://yandex.com/support/yandex-360/customers/mail/en/mail-clients/others.html';
+const IONOS_HELP = 'https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/';
+const TELEKOM_EMAIL_CENTER = 'https://email.t-online.de';
+const LOCAWEB_HELP = 'https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/';
+const YAHOO_JAPAN_IMAP = 'https://support.yahoo-net.jp/PccMail/s/article/H000007321';
+const DOCOMO_HELP = 'https://www.docomo.ne.jp/service/docomo_mail/other/';
+const SOFTBANK_HELP = 'https://www.softbank.jp/mobile/service/mail-address-portability/email-i/';
+const OCN_HELP = 'https://support.ntt.com/ocn-business/support/detail/pid21000001uk9/';
+const BIGLOBE_HELP = 'https://support.biglobe.ne.jp/settei/mailer/imap.html';
+const NIFTY_IMAP = 'https://mail.nifty.com/cs/mail-faq/detail/200326000044/';
+const SO_NET_IMAP = 'https://www.so-net.ne.jp/option/mail/imap/';
+const PLALA_IMAP = 'https://www.plala.or.jp/support/manual/mail/standard/setup_imap/';
+const FREENET_IMAP = 'https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/';
+const VODAFONE_HELP = 'https://forum.vodafone.de/t5/Community-Blog/Vodafone-E-Mail-funktioniert-nicht-IMAP-Login-amp-Arcor-Probleme/ba-p/3339557';
+const HOSTPOINT_HELP = 'https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance';
+
+/** "Use the address's own password, not your account login", then the full address. */
+const MAILBOX_PASSWORD_STEPS = ['connect.fix.mailbox.password', 'connect.fix.fullAddress'] as const;
 
 /**
  * Scanned in order. Where a provider is also in `MAIL_HOST_PRESETS` with an
@@ -480,20 +519,26 @@ export const CONNECT_FIX_PROVIDERS: readonly FixProvider[] = [
     // control panel under Email, and the login is the full address.
     id: 'ionos',
     label: 'IONOS',
-    presetIds: ['ionos', 'ionos-de', 'ionos-uk', 'ionos-fr', 'ionos-es', 'ionos-it'],
+    presetIds: ['ionos', 'ionos-de', 'ionos-uk', 'ionos-fr', 'ionos-es', 'ionos-it', 'ionos-exchange'],
     credential: {
       steps: ['connect.fix.ionos.password', 'connect.authHelpWhereIonos', 'connect.fix.fullAddress'],
-      links: [{ id: 'ionos_help', labelKey: 'connect.fix.link.providerHelp', url: 'https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/' }],
+      links: [{ id: 'ionos_help', labelKey: 'connect.fix.link.providerHelp', url: IONOS_HELP }],
     },
   },
   {
-    // t-online.json: only the "Passwort für E-Mail-Programme" works.
+    // t-online.json: only the "Passwort für E-Mail-Programme" works. The
+    // article on that password, and the E-Mail Center where it is set. 30
+    // rejected logins at secureimap.t-online.de and none ever connected: the
+    // Telekom Login password is what people paste.
     id: 't_online',
     label: 'Telekom',
     presetIds: ['t-online'],
     credential: {
       steps: ['connect.fix.tOnline.password', 'connect.fix.tOnline.where'],
-      links: [{ id: 't_online_help', labelKey: 'connect.fix.link.providerHelp', url: 'https://www.telekom.de/hilfe' }],
+      links: [
+        { id: 't_online_help', labelKey: 'connect.fix.link.providerHelp', url: TELEKOM_MAIL_PASSWORD_HELP },
+        { id: 't_online_email_center', labelKey: 'connect.fix.link.emailCenter', url: TELEKOM_EMAIL_CENTER },
+      ],
     },
   },
   {
@@ -583,7 +628,7 @@ export const CONNECT_FIX_PROVIDERS: readonly FixProvider[] = [
     // gmx.json: POP3 and IMAP access is off by default.
     id: 'gmx',
     label: 'GMX',
-    presetIds: ['gmx'],
+    presetIds: ['gmx', 'gmx-com'],
     credential: {
       steps: ['connect.fix.gmx.imap', 'connect.fix.gmx.twoFactor'],
       links: [{ id: 'gmx_imap', labelKey: 'connect.fix.link.imapSetting', url: 'https://hilfe.gmx.net/pop-imap/einschalten.html' }],
@@ -644,10 +689,176 @@ export const CONNECT_FIX_PROVIDERS: readonly FixProvider[] = [
       links: [{ id: 'yandex_imap', labelKey: 'connect.fix.link.imapSetting', url: YANDEX_IMAP }],
     },
   },
+  // ── Brazil ───────────────────────────────────────────────────────────────
+  {
+    // UOL Host: a mailbox on the customer's own domain, signed in with the
+    // full address and that mailbox's password. No official UOL Host help page
+    // was found, so no link.
+    id: 'uol_host',
+    label: 'UOL Host',
+    presetIds: ['uhserver'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
+  {
+    // locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb: the
+    // full address and the mailbox password.
+    id: 'locaweb',
+    label: 'Locaweb',
+    presetIds: ['locaweb'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'locaweb_help', labelKey: 'connect.fix.link.providerHelp', url: LOCAWEB_HELP }] },
+  },
+  {
+    // Full address and mailbox password; KingHost's help center had no page
+    // to cite.
+    id: 'kinghost',
+    label: 'KingHost',
+    presetIds: ['kinghost'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
+  {
+    // UOL Mail refuses IMAP until "Ativar IMAP" is switched on in webmail
+    // (the instruction UOL publishes through the Mozilla ISPDB entry for
+    // uol.com.br). No UOL help page was found to link.
+    id: 'uol',
+    label: 'UOL',
+    presetIds: ['uol'],
+    credential: { steps: ['connect.fix.uol.imap'], links: [] },
+    imapDisabled: { steps: ['connect.fix.uol.imap'], links: [] },
+  },
+  // ── Japan ────────────────────────────────────────────────────────────────
+  {
+    // support.yahoo-net.jp H000007321: no app passwords. Allow other mail
+    // apps and turn on IMAP and SMTP together (SMTP cannot be on alone), then
+    // the ordinary Yahoo! JAPAN ID password; a passwordless account sets one
+    // first. Access is switched off again after suspicious activity or long
+    // non-use, so the same steps are the imap_disabled answer.
+    id: 'yahoo_jp',
+    label: 'Yahoo! JAPAN',
+    presetIds: ['yahoo-jp'],
+    credential: {
+      steps: ['connect.fix.yahooJapan.access', 'connect.fix.yahooJapan.password'],
+      links: [{ id: 'yahoo_jp_imap', labelKey: 'connect.fix.link.imapSetting', url: YAHOO_JAPAN_IMAP }],
+    },
+    imapDisabled: {
+      steps: ['connect.fix.yahooJapan.access'],
+      links: [{ id: 'yahoo_jp_imap', labelKey: 'connect.fix.link.imapSetting', url: YAHOO_JAPAN_IMAP }],
+    },
+  },
+  {
+    // docomo.ne.jp/service/docomo_mail/other: switch on "use docomo mail with
+    // d account" in My docomo, over the mobile network, then sign in with the
+    // IMAP-only ID and password shown there (not the address).
+    id: 'docomo',
+    label: 'docomo',
+    presetIds: ['docomo'],
+    credential: {
+      steps: ['connect.fix.docomo.setting', 'connect.fix.docomo.login'],
+      links: [{ id: 'docomo_help', labelKey: 'connect.fix.link.providerHelp', url: DOCOMO_HELP }],
+      usernameField: true,
+    },
+  },
+  {
+    // softbank.jp Eメール(i): the full address and the password shown in My
+    // SoftBank, not the My SoftBank login.
+    id: 'softbank',
+    label: 'SoftBank',
+    presetIds: ['softbank'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'softbank_help', labelKey: 'connect.fix.link.providerHelp', url: SOFTBANK_HELP }] },
+  },
+  {
+    // support.ntt.com: the mail password, not the OCN ID password.
+    id: 'ocn',
+    label: 'OCN',
+    presetIds: ['ocn'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'ocn_help', labelKey: 'connect.fix.link.providerHelp', url: OCN_HELP }] },
+  },
+  {
+    // support.biglobe.ne.jp/settei/mailer/imap.html: the BIGLOBE mail
+    // password, not the connection password.
+    id: 'biglobe',
+    label: 'BIGLOBE',
+    presetIds: ['biglobe'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'biglobe_help', labelKey: 'connect.fix.link.providerHelp', url: BIGLOBE_HELP }] },
+  },
+  {
+    // mail.nifty.com mail-faq 200326000044: set メールソフト接続許可（IMAP）
+    // to 許可中 first.
+    id: 'nifty',
+    label: '@nifty',
+    presetIds: ['nifty'],
+    credential: { steps: ['connect.fix.nifty.imap', 'connect.fix.mailbox.password'], links: [{ id: 'nifty_imap', labelKey: 'connect.fix.link.imapSetting', url: NIFTY_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.nifty.imap'], links: [{ id: 'nifty_imap', labelKey: 'connect.fix.link.imapSetting', url: NIFTY_IMAP }] },
+  },
+  {
+    // so-net.ne.jp/option/mail/imap: IMAP is the paid IMAPサービス option.
+    id: 'so_net',
+    label: 'So-net',
+    presetIds: ['so-net'],
+    credential: { steps: ['connect.fix.soNet.option', 'connect.fix.mailbox.password'], links: [{ id: 'so_net_imap', labelKey: 'connect.fix.link.imapSetting', url: SO_NET_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.soNet.option'], links: [{ id: 'so_net_imap', labelKey: 'connect.fix.link.imapSetting', url: SO_NET_IMAP }] },
+  },
+  {
+    // plala.or.jp setup_imap: turn on IMAPを利用する in plala Webmail first.
+    id: 'plala',
+    label: 'plala',
+    presetIds: ['plala'],
+    credential: { steps: ['connect.fix.plala.imap', 'connect.fix.fullAddress'], links: [{ id: 'plala_imap', labelKey: 'connect.fix.link.imapSetting', url: PLALA_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.plala.imap'], links: [{ id: 'plala_imap', labelKey: 'connect.fix.link.imapSetting', url: PLALA_IMAP }] },
+  },
+  // ── Germany, Austria, Switzerland ────────────────────────────────────────
+  {
+    // The mailbox password from konsoleH, not the Hetzner account login. No
+    // Hetzner page was opened for this, so no link.
+    id: 'hetzner',
+    label: 'Hetzner',
+    presetIds: ['hetzner'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
+  {
+    // kundenservice.freenet.de: POP3, IMAP and SMTP must be activated first.
+    id: 'freenet',
+    label: 'freenet',
+    presetIds: ['freenet'],
+    credential: { steps: ['connect.fix.freenet.imap', 'connect.fix.fullAddress'], links: [{ id: 'freenet_imap', labelKey: 'connect.fix.link.imapSetting', url: FREENET_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.freenet.imap'], links: [{ id: 'freenet_imap', labelKey: 'connect.fix.link.imapSetting', url: FREENET_IMAP }] },
+  },
+  {
+    // Vodafone's community blog on IMAP logins: the e-mail password is
+    // separate from the MeinVodafone login.
+    id: 'vodafone',
+    label: 'Vodafone',
+    presetIds: ['vodafone'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'vodafone_help', labelKey: 'connect.fix.link.providerHelp', url: VODAFONE_HELP }] },
+  },
+  {
+    // support.hostpoint.ch, e-mail settings at a glance: the full address and
+    // the password set in the Control Panel.
+    id: 'hostpoint',
+    label: 'Hostpoint',
+    presetIds: ['hostpoint'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'hostpoint_help', labelKey: 'connect.fix.link.providerHelp', url: HOSTPOINT_HELP }] },
+  },
+  {
+    id: 'cyon',
+    label: 'cyon',
+    presetIds: ['cyon'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
+  {
+    id: 'world4you',
+    label: 'World4You',
+    presetIds: ['world4you'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
 ];
 
 /** Microsoft 365 / Outlook hosts. Password sign-in is off there, so no password can work. */
 const MICROSOFT_HOSTS = ['outlook.office365.com', 'smtp.office365.com', 'outlook.office.com', 'imap-mail.outlook.com', 'smtp-mail.outlook.com'];
+
+/** The US IONOS platform's names; a European IONOS mailbox lives elsewhere. */
+function isIonosUsHost(host: string): boolean {
+  return host === 'imap.ionos.com' || host === 'smtp.ionos.com';
+}
 
 export function isMicrosoftMailHost(value: string | null | undefined): boolean {
   const host = normalizeHost(value);
@@ -754,7 +965,7 @@ export interface ConnectFix {
 const NOT_A_MAILBOX_FAILURE = new Set([
   'session_expired', 'workspace_not_found', 'insufficient_role', 'inbox_limit_reached', 'login_already_connected',
   'own_site_host', 'port_not_allowed', 'host_not_allowed', 'host_invalid', 'save_failed',
-  'microsoft_account_use_outlook', 'inbox_exists_other_provider', 'password_required', 'app_password_too_short',
+  'microsoft_account_use_outlook', 'yahoo_japan_use_generic', 'inbox_exists_other_provider', 'password_required', 'app_password_too_short',
 ]);
 
 /** The one fix to show for a failed connect, or null when no row applies. Pure. */
@@ -826,6 +1037,12 @@ export function connectFix(input: ConnectFixInput): ConnectFix | null {
       const block = fixProvider.credential;
       const steps = lines(block.steps, values);
       if (reason === 'app_password_length') steps.unshift({ key: 'connect.appPasswordLengthDetail', values });
+      // 228 rejected logins on imap.ionos.com across 37 workspaces, the largest
+      // failure pool we have. IONOS runs separate US and European platforms
+      // (see host-presets.ts), and a European mailbox is not on the .com one.
+      if (fixProvider.id === 'ionos' && generic && isIonosUsHost(normalizeHost(input.imapHost) || host)) {
+        steps.push({ key: 'connect.fix.ionos.platform', values });
+      }
       return {
         ...base,
         row: `${fixProvider.id}_${reason === 'password_rejected' ? 'password_rejected' : 'app_password'}`,
@@ -833,6 +1050,7 @@ export function connectFix(input: ConnectFixInput): ConnectFix | null {
         steps,
         links: withValues(block.links, values),
         passwordProblem: true,
+        showsUsernameField: generic && block.usernameField === true,
       };
     }
 

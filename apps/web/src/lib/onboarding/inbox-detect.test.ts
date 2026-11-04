@@ -9,6 +9,7 @@ import {
   isCompleteAddress,
   kindFromProviderSlug,
   panelLinks,
+  panelNoteKey,
   type InboxDetection,
 } from './inbox-detect.ts';
 import { detectInboxDomain } from './inbox-detect-server.ts';
@@ -75,14 +76,26 @@ test('server: Google Workspace from the MX, with Gmail servers', async () => {
   assert.equal(found.settings?.imapHost, 'imap.gmail.com');
 });
 
-test('server: a Strato domain through the ISPDB on the MX base domain', async () => {
+test('server: a Strato domain is known from its rzone.de MX, without the ISPDB', async () => {
   const { d, asked, mxCalls } = deps({ mx: [{ exchange: 'smtpin.rzone.de', priority: 5 }], ispdb: { 'rzone.de': STRATO_ISPDB } });
   const found = await detectInboxDomain('baeckerei-muster.de', d);
   assert.equal(found.kind, 'imap');
-  assert.equal(found.source, 'ispdb_mx');
-  assert.equal(found.label, 'Strato');
+  assert.equal(found.label, 'STRATO');
   assert.equal(found.settings?.imapHost, 'imap.strato.de');
-  assert.ok(asked.some((u) => u.endsWith('/rzone.de')), asked.join(','));
+  assert.equal(found.settings?.smtpPort, 465);
+  assert.equal(asked.some((u) => u.endsWith('/rzone.de')), false, asked.join(','));
+  assert.equal(mxCalls.length, 1, 'one MX lookup shared with autodiscover');
+});
+
+test('server: a host the table does not know, through the ISPDB on the MX base domain', async () => {
+  const ispdb = STRATO_ISPDB.replaceAll('strato.de', 'examplemailhost.net').replace('<displayName>Strato</displayName>', '<displayName>Example Mailhost</displayName>');
+  const { d, asked, mxCalls } = deps({ mx: [{ exchange: 'mx1.examplemailhost.net', priority: 5 }], ispdb: { 'examplemailhost.net': ispdb } });
+  const found = await detectInboxDomain('baeckerei-muster.de', d);
+  assert.equal(found.kind, 'imap');
+  assert.equal(found.source, 'ispdb_mx');
+  assert.equal(found.label, 'Example Mailhost');
+  assert.equal(found.settings?.imapHost, 'imap.examplemailhost.net');
+  assert.ok(asked.some((u) => u.endsWith('/examplemailhost.net')), asked.join(','));
   assert.equal(mxCalls.length, 1, 'one MX lookup shared with autodiscover');
 });
 
@@ -165,4 +178,35 @@ test('Google links pick the right account with authuser', () => {
   assert.equal(panelLinks('aol', 'a@aol.com').app_passwords, 'https://login.aol.com/myaccount/security/app-password');
   assert.ok(panelLinks('gmx', 'a@gmx.de').imap_setting);
   assert.deepEqual(panelLinks('outlook', 'a@outlook.com'), {});
+});
+
+test('a Yahoo! JAPAN address is not routed to the Yahoo app-password card', () => {
+  // The family pattern would call yahoo.co.jp "Yahoo"; the table must win.
+  const detection = detectFromAddress('a@yahoo.co.jp') as InboxDetection;
+  assert.equal(detection.kind, 'imap');
+  assert.equal(detection.label, 'Yahoo! JAPAN');
+  assert.equal(detection.settings?.imapHost, 'imap.mail.yahoo.co.jp');
+  const request = connectRequestFor({ detection, email: 'a@yahoo.co.jp', password: 'x' });
+  assert.equal(request?.endpoint, '/api/inboxes/imap');
+  assert.equal(request?.body.imapHost, 'imap.mail.yahoo.co.jp');
+  // yahoo.com.br is ordinary Yahoo and keeps the card.
+  assert.equal(detectFromAddress('a@yahoo.com.br')?.kind, 'yahoo');
+});
+
+test('T-Online and Yahoo! JAPAN get a note naming the password they want', () => {
+  assert.equal(panelNoteKey(detectFromAddress('a@t-online.de')?.settings), 'noteTOnline');
+  assert.equal(panelNoteKey(detectFromAddress('a@magenta.de')?.settings), 'noteTOnline');
+  assert.equal(panelNoteKey(detectFromAddress('a@yahoo.co.jp')?.settings), 'noteYahooJapan');
+  assert.equal(panelNoteKey(detectFromAddress('a@gmx.de')?.settings), null);
+  assert.equal(panelNoteKey(null), null);
+  // The T-Online panel link is the article on that password, not the help root.
+  const tOnline = detectFromAddress('a@t-online.de');
+  assert.equal(
+    panelLinks('imap', 'a@t-online.de', tOnline?.settings).app_passwords,
+    'https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten',
+  );
+});
+
+test('gmx.com is the GMX panel too', () => {
+  assert.equal(detectFromAddress('a@gmx.com')?.kind, 'gmx');
 });

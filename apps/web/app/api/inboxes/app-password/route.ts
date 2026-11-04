@@ -26,6 +26,7 @@ import {
   DEFAULT_ZOHO_ACCOUNT_TYPE,
 } from '@/lib/email-providers/imap-presets';
 import { isMicrosoftConsumerAddress, microsoftAccountErrorBody } from '@/lib/email-providers/microsoft-accounts';
+import { isYahooJapanAddress, YAHOO_JAPAN_USE_GENERIC } from '@/lib/email-providers/host-presets';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -162,6 +163,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // when their mail is hosted by Microsoft.
   if (isMicrosoftConsumerAddress(email)) {
     return NextResponse.json(microsoftAccountErrorBody(), { status: 422 });
+  }
+  // A Yahoo! JAPAN address on the Yahoo card would send a Yahoo! JAPAN
+  // password to Yahoo's US servers, which can never accept it. Refused before
+  // anything is dialled; the modal points at the generic form instead.
+  if (service === 'yahoo' && isYahooJapanAddress(email)) {
+    return NextResponse.json(
+      {
+        error: 'Yahoo! JAPAN mail is a separate service from Yahoo Mail. Connect it with the generic IMAP form instead.',
+        error_code: YAHOO_JAPAN_USE_GENERIC,
+      },
+      { status: 422 },
+    );
   }
   // Two different situations, and the client can only say the right thing about
   // either if they are separated. An empty value is a field the user has not

@@ -388,7 +388,8 @@
         "create": "account.apple.com で「サインインとセキュリティ」、「アプリ用パスワード」の順に開き、MCPEmailsという名前で作成します。2ファクタ認証がオンになっている必要があります。"
       },
       "ionos": {
-        "password": "IONOSでは、IONOSへのログインに使うパスワードではなく、このメールアドレスのパスワードが必要です。"
+        "password": "IONOSでは、IONOSへのログインに使うパスワードではなく、このメールアドレスのパスワードが必要です。",
+        "platform": "IONOSは米国用と欧州用で別のメールサーバーを使っています。欧州のIONOS契約なら、imap.ionos.com ではなく imap.ionos.de や imap.ionos.co.uk など、その国のサーバーを使ってください。"
       },
       "fullAddress": "ログインにはメールアドレス全体を使ってください。",
       "tOnline": {
@@ -453,7 +454,8 @@
         "appPasswords": "{provider}のアプリ パスワードのページを開く",
         "imapSetting": "{provider}でIMAPをオンにする方法",
         "providerHelp": "{provider}のヘルプページ",
-        "adminGuide": "管理者向けのGoogleのガイド"
+        "adminGuide": "管理者向けのGoogleのガイド",
+        "emailCenter": "{provider}の E-Mail Center を開く"
       },
       "outlookConsent": {
         "line1": "Microsoftの同意画面に、MCPEmailsに許可する操作（メールの閲覧と変更、メールの送信、接続の維持）が表示されます。",
@@ -471,10 +473,37 @@
         "bodyClient": "次に、この受信トレイを使えるように{client}を接続しましょう。",
         "openGuide": "手順を見る",
         "later": "後で"
+      },
+      "mailbox": {
+        "password": "{provider}では、{provider}アカウントへのログイン パスワードではなく、このメールアドレスのパスワードを使います。"
+      },
+      "uol": {
+        "imap": "UOLはIMAPをオンにするまでメールアプリを拒否します。UOLのウェブメールで Configurações を開いて Ativar IMAP を選び、もう一度テストしてください。"
+      },
+      "yahooJapan": {
+        "access": "Yahoo! JAPANにはアプリ パスワードがありません。Yahoo!メールの設定で、ほかのメールアプリからのアクセスを許可し、IMAPとSMTPの両方を有効にしてください。",
+        "password": "そのうえで、普段のYahoo! JAPAN IDのパスワードを使います。パスワードなし（パスキーやSMS）でログインしている場合は、先にパスワードを設定してください。"
+      },
+      "docomo": {
+        "setting": "My docomoで メール設定、dアカウントの利用設定 の順に開き、dアカウントでドコモメールを利用する をオンにします。この設定はWi-Fiではなくモバイル回線からのみ変更できます。",
+        "login": "次に、My docomoに表示されるIMAP専用IDを 詳細設定 の ユーザー名（任意） に、IMAP専用パスワードをパスワード欄に入力します。"
+      },
+      "nifty": {
+        "imap": "@niftyのメール設定で メールソフト接続許可（IMAP） を 許可中 にしてから、もう一度テストしてください。"
+      },
+      "soNet": {
+        "option": "So-netのメールをメールアプリでIMAP接続するには、有料のIMAPサービス オプションが必要です。先にSo-netの契約に追加してください。"
+      },
+      "plala": {
+        "imap": "先にplala Webメールで IMAPを利用する をオンにしてから、もう一度テストしてください。"
+      },
+      "freenet": {
+        "imap": "freenetは、freenet Mailの設定でPOP3、IMAP、SMTPを有効にするまでメールアプリを拒否します。有効にしてから、もう一度テストしてください。"
       }
     },
     "businessCapBodyFounder": "Proで接続できるメールボックスは10個です。Businessには10個が含まれ、メンバーは追加費用なしで無制限です。",
-    "businessCapCtaFounder": "Businessにアップグレード（月額${price}）"
+    "businessCapCtaFounder": "Businessにアップグレード（月額${price}）",
+    "errorYahooJapanShort": "Yahoo!メール（Yahoo! JAPAN）はYahoo Mailとは別のサービスで、アプリ パスワードはありません。戻って IMAP / SMTP を選んでください。"
   },
   "commandPalette": {
     "pageOverview": "概要",
