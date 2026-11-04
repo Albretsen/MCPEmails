@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-11-04',
+    kind: 'added',
+    title: 'Setup guides for Yahoo! JAPAN, Locaweb, Vodafone and more',
+    body:
+      "New step-by-step connect guides for Yahoo! JAPAN, OCN, BIGLOBE and @nifty in Japanese, Locaweb and KingHost in Brazilian Portuguese, and Vodafone and A1 in German. The HostGator guide now covers HostGator Brasil.",
+  },
+  {
+    date: '2026-11-04',
     kind: 'improved',
     title: 'Server settings fill in for more mailbox providers',
     body:
