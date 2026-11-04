@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-04',
+    kind: 'added',
+    title: 'MCPEmails in Brazilian Portuguese and Japanese',
+    body:
+      "The website, dashboard, setup guides for every AI client and the pages for mailbox providers such as UOL, BOL and Terra are now in Brazilian Portuguese at /pt and in Japanese at /ja.",
+  },
+  {
     date: '2026-11-02',
     kind: 'fixed',
     title: 'Send and Delete work in the ChatGPT draft card',
