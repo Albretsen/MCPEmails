@@ -109,7 +109,9 @@
         "smtpHost": "送信サーバー（SMTP）",
         "port": "ポート",
         "username": "ログイン名（メールアドレスと異なる場合）",
-        "advanced": "詳細設定"
+        "advanced": "詳細設定",
+        "noteTOnline": "T-Onlineでは Passwort für E-Mail-Programme だけが使えます。Telekom Login のパスワードは使えません。E-Mail Center の Einstellungen、Passwörter で設定してください。",
+        "noteYahooJapan": "Yahoo! JAPANにはアプリ パスワードがありません。Yahoo!メールの設定でほかのメールアプリを許可し、IMAPとSMTPを有効にしてから、Yahoo! JAPAN IDのパスワードを使ってください。"
       },
       "password": {
         "labelApp": "アプリ パスワード",

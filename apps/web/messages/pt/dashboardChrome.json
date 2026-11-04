@@ -388,7 +388,8 @@
         "create": "Em account.apple.com, abra Sign-In and Security (Início de sessão e segurança), depois App-Specific Passwords (senhas específicas de app), e crie uma com o nome MCPEmails. A autenticação de dois fatores precisa estar ativada."
       },
       "ionos": {
-        "password": "A IONOS pede a senha deste endereço de e-mail, não a que você usa para entrar na IONOS."
+        "password": "A IONOS pede a senha deste endereço de e-mail, não a que você usa para entrar na IONOS.",
+        "platform": "A IONOS tem servidores de e-mail separados para os EUA e para a Europa. Se o seu contrato IONOS é europeu, use o servidor do seu país, como imap.ionos.de ou imap.ionos.es, em vez de imap.ionos.com."
       },
       "fullAddress": "Use seu endereço de e-mail completo como login.",
       "tOnline": {
@@ -453,7 +454,8 @@
         "appPasswords": "Abrir a página de senhas de app do {provider}",
         "imapSetting": "Como ativar o IMAP no {provider}",
         "providerHelp": "Página de ajuda do {provider}",
-        "adminGuide": "Guia do Google para o seu admin"
+        "adminGuide": "Guia do Google para o seu admin",
+        "emailCenter": "Abrir o E-Mail Center da {provider}"
       },
       "outlookConsent": {
         "line1": "A Microsoft vai mostrar uma tela de consentimento listando o que o MCPEmails pode fazer: ler e alterar e-mails, enviar e-mails e permanecer conectado.",
@@ -471,10 +473,37 @@
         "bodyClient": "Agora conecte o {client} para que ele possa usar esta caixa de entrada.",
         "openGuide": "Mostre como",
         "later": "Depois"
+      },
+      "mailbox": {
+        "password": "O {provider} pede a senha deste endereço de e-mail, não a que você usa para entrar na sua conta {provider}."
+      },
+      "uol": {
+        "imap": "O UOL recusa apps de e-mail até o IMAP estar ativado. No webmail do UOL, abra Configurações e escolha Ativar IMAP. Depois teste de novo."
+      },
+      "yahooJapan": {
+        "access": "O Yahoo! JAPAN não tem senhas de app. Nas configurações de e-mail do Yahoo! JAPAN, permita o acesso por outros apps de e-mail e ative IMAP e SMTP.",
+        "password": "Depois use a senha normal do seu Yahoo! JAPAN ID. Se você entra sem senha (chave de acesso ou SMS), crie uma senha primeiro."
+      },
+      "docomo": {
+        "setting": "No My docomo, abra メール設定, depois dアカウントの利用設定, e ative dアカウントでドコモメールを利用する. Isso só funciona pela rede móvel, não pelo Wi-Fi.",
+        "login": "Depois digite o IMAP専用ID do My docomo em Nome de usuário (opcional), em Configurações avançadas, e a IMAP専用パスワード como senha."
+      },
+      "nifty": {
+        "imap": "Nas configurações de e-mail do @nifty, mude メールソフト接続許可（IMAP） para 許可中 (permitido) e teste de novo."
+      },
+      "soNet": {
+        "option": "O e-mail da So-net só funciona por IMAP em apps de e-mail com a opção paga de serviço IMAP (IMAPサービス). Adicione-a ao seu contrato So-net primeiro."
+      },
+      "plala": {
+        "imap": "Primeiro ative IMAPを利用する (usar IMAP) no plala Webmail e teste de novo."
+      },
+      "freenet": {
+        "imap": "O freenet recusa apps de e-mail até POP3, IMAP e SMTP estarem ativados nas configurações do freenet Mail. Ative-os e teste de novo."
       }
     },
     "businessCapBodyFounder": "O Pro conecta 10 caixas de correio. O Business inclui 10, com membros ilimitados sem custo adicional.",
-    "businessCapCtaFounder": "Fazer upgrade para o Business, ${price}/mês"
+    "businessCapCtaFounder": "Fazer upgrade para o Business, ${price}/mês",
+    "errorYahooJapanShort": "O e-mail do Yahoo! JAPAN é um serviço diferente do Yahoo Mail e não tem senhas de app. Volte e escolha IMAP / SMTP."
   },
   "commandPalette": {
     "pageOverview": "Visão geral",

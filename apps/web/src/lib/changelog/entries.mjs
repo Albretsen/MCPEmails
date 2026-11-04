@@ -44,6 +44,20 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-04',
+    kind: 'improved',
+    title: 'Server settings fill in for more mailbox providers',
+    body:
+      "When you connect a mailbox from Locaweb, KingHost, UOL, BOL, Terra, Yahoo! JAPAN, docomo, OCN, BIGLOBE, @nifty, STRATO, freenet, Vodafone, A1, Bluewin and other providers in Brazil, Japan, Germany, Austria and Switzerland, MCPEmails now fills in the server settings and shows the provider's own steps if the sign-in is refused.",
+  },
+  {
+    date: '2026-11-04',
+    kind: 'added',
+    title: 'MCPEmails in Brazilian Portuguese and Japanese',
+    body:
+      "The website, dashboard, setup guides for every AI client and the pages for mailbox providers such as UOL, BOL and Terra are now in Brazilian Portuguese at /pt and in Japanese at /ja.",
+  },
+  {
     date: '2026-11-02',
     kind: 'fixed',
     title: 'Send and Delete work in the ChatGPT draft card',

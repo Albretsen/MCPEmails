@@ -388,7 +388,8 @@
         "create": "在 account.apple.com 打开登录和安全，再打开 App 专用密码，创建一个名为 MCPEmails 的密码。必须已开启双重认证。"
       },
       "ionos": {
-        "password": "IONOS 需要的是这个邮箱地址的密码，而不是你登录 IONOS 时使用的密码。"
+        "password": "IONOS 需要的是这个邮箱地址的密码，而不是你登录 IONOS 时使用的密码。",
+        "platform": "IONOS 在美国和欧洲使用不同的邮件服务器。如果你的 IONOS 合同在欧洲，请使用你所在国家的服务器，例如 imap.ionos.de 或 imap.ionos.co.uk，而不是 imap.ionos.com。"
       },
       "fullAddress": "请使用完整的邮箱地址作为用户名。",
       "tOnline": {
@@ -453,7 +454,8 @@
         "appPasswords": "打开 {provider} 的应用密码页面",
         "imapSetting": "如何在 {provider} 开启 IMAP",
         "providerHelp": "{provider} 帮助页面",
-        "adminGuide": "Google 为管理员提供的指南"
+        "adminGuide": "Google 为管理员提供的指南",
+        "emailCenter": "打开 {provider} E-Mail Center"
       },
       "outlookConsent": {
         "line1": "Microsoft 会显示一个授权页面，列出 MCPEmails 可以做的事：读取和更改邮件、发送邮件以及保持连接。",
@@ -471,8 +473,35 @@
         "bodyClient": "现在连接 {client}，让它可以使用这个收件箱。",
         "openGuide": "告诉我怎么做",
         "later": "稍后"
+      },
+      "mailbox": {
+        "password": "{provider} 需要的是这个邮箱地址的密码，而不是你登录 {provider} 账户所用的密码。"
+      },
+      "uol": {
+        "imap": "在开启 IMAP 之前，UOL 会拒绝邮件应用。请在 UOL 网页邮箱中打开 Configurações，选择 Ativar IMAP，然后再测试一次。"
+      },
+      "yahooJapan": {
+        "access": "Yahoo! JAPAN 没有应用专用密码。请在 Yahoo! JAPAN 邮箱设置中允许其他邮件应用访问，并同时开启 IMAP 和 SMTP。",
+        "password": "然后使用你平时的 Yahoo! JAPAN ID 密码。如果你不用密码登录（通行密钥或短信），请先设置一个密码。"
+      },
+      "docomo": {
+        "setting": "在 My docomo 中依次打开 メール設定、dアカウントの利用設定，并开启 dアカウントでドコモメールを利用する。此设置只能通过移动网络更改，不能通过 Wi-Fi。",
+        "login": "然后在高级设置的 用户名（可选） 中填入 My docomo 显示的 IMAP専用ID，并把 IMAP専用パスワード 作为密码。"
+      },
+      "nifty": {
+        "imap": "在 @nifty 邮箱设置中把 メールソフト接続許可（IMAP） 设为 許可中（允许），然后再测试一次。"
+      },
+      "soNet": {
+        "option": "So-net 邮箱只有在开通付费的 IMAP 服务选项（IMAPサービス）后才能在邮件应用中通过 IMAP 使用。请先把它加入你的 So-net 合同。"
+      },
+      "plala": {
+        "imap": "请先在 plala Webmail 中开启 IMAPを利用する（使用 IMAP），然后再测试一次。"
+      },
+      "freenet": {
+        "imap": "在 freenet Mail 设置中启用 POP3、IMAP 和 SMTP 之前，freenet 会拒绝邮件应用。请启用后再测试一次。"
       }
-    }
+    },
+    "errorYahooJapanShort": "Yahoo! JAPAN 邮箱是与 Yahoo Mail 不同的服务，没有应用专用密码。请返回并选择 IMAP / SMTP。"
   },
   "commandPalette": {
     "pageOverview": "概览",

@@ -388,7 +388,8 @@
         "create": "At account.apple.com, open Sign-In and Security, then App-Specific Passwords, and create one named MCPEmails. Two-factor authentication must be on."
       },
       "ionos": {
-        "password": "IONOS wants the password of this email address, not the one you use to sign in to IONOS."
+        "password": "IONOS wants the password of this email address, not the one you use to sign in to IONOS.",
+        "platform": "IONOS has separate mail servers for the US and for Europe. If your IONOS contract is European, use your country's server, such as imap.ionos.de or imap.ionos.co.uk, instead of imap.ionos.com."
       },
       "fullAddress": "Use your full email address as the login.",
       "tOnline": {
@@ -453,7 +454,8 @@
         "appPasswords": "Open the {provider} app password page",
         "imapSetting": "How to turn on IMAP at {provider}",
         "providerHelp": "{provider} help page",
-        "adminGuide": "Google's guide for your admin"
+        "adminGuide": "Google's guide for your admin",
+        "emailCenter": "Open the {provider} E-Mail Center"
       },
       "outlookConsent": {
         "line1": "Microsoft will show a consent screen listing what MCPEmails may do: read and change mail, send mail, and stay connected.",
@@ -471,10 +473,37 @@
         "bodyClient": "Now connect {client} so it can use this inbox.",
         "openGuide": "Show me how",
         "later": "Later"
+      },
+      "mailbox": {
+        "password": "{provider} wants the password of this email address, not the one you use to sign in to your {provider} account."
+      },
+      "uol": {
+        "imap": "UOL refuses mail apps until IMAP is on. In UOL webmail, open Configurações and choose Ativar IMAP, then test again."
+      },
+      "yahooJapan": {
+        "access": "Yahoo! JAPAN has no app passwords. In Yahoo! JAPAN mail settings, allow access from other mail apps and turn on both IMAP and SMTP.",
+        "password": "Then use your normal Yahoo! JAPAN ID password. If you sign in without a password (passkey or SMS), set a password first."
+      },
+      "docomo": {
+        "setting": "In My docomo, open メール設定, then dアカウントの利用設定, and turn on dアカウントでドコモメールを利用する. This only works over the mobile network, not Wi-Fi.",
+        "login": "Then enter the IMAP専用ID from My docomo in Username (optional) under Advanced settings, and the IMAP専用パスワード as the password."
+      },
+      "nifty": {
+        "imap": "In @nifty mail settings, set メールソフト接続許可（IMAP） to 許可中 (allowed), then test again."
+      },
+      "soNet": {
+        "option": "So-net mail works in mail apps over IMAP only with the paid IMAP service option (IMAPサービス). Add it to your So-net contract first."
+      },
+      "plala": {
+        "imap": "In plala Webmail, turn on IMAPを利用する (use IMAP) first, then test again."
+      },
+      "freenet": {
+        "imap": "freenet refuses mail apps until POP3, IMAP and SMTP are activated in your freenet Mail settings. Turn them on, then test again."
       }
     },
     "businessCapBodyFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
-    "businessCapCtaFounder": "Upgrade to Business, ${price}/mo"
+    "businessCapCtaFounder": "Upgrade to Business, ${price}/mo",
+    "errorYahooJapanShort": "Yahoo! JAPAN mail is a separate service from Yahoo Mail and has no app passwords. Go back and choose IMAP / SMTP instead."
   },
   "commandPalette": {
     "pageOverview": "Overview",

@@ -247,3 +247,43 @@ test('the domain only ever reaches the two fixed origins', async () => {
   assert.ok(calls.length > 0);
   for (const url of calls) assert.ok(url.startsWith(DOH_ORIGIN) || url.startsWith(ISPDB_ORIGIN), url);
 });
+
+test('a typed UOL Host server is UOL Host, shown back as typed, with no InMotion page', async () => {
+  const { r, calls } = await run('imap.uhserver.com');
+  assert.equal(r.kind, 'found');
+  if (r.kind !== 'found') return;
+  assert.equal(r.label, 'UOL Host');
+  assert.equal(r.imap.host, 'imap.uhserver.com');
+  assert.deepEqual(r.smtp, { host: 'smtps.uhserver.com', port: 465, security: 'tls' });
+  assert.equal(r.slug, null);
+  assert.equal(calls.length, 0);
+});
+
+test('every GMX German-platform address gets the same servers as gmx.net', async () => {
+  for (const q of ['a@gmx.de', 'a@gmx.at', 'a@gmx.ch']) {
+    const { r } = await run(q);
+    assert.equal(r.kind, 'found', q);
+    if (r.kind !== 'found') continue;
+    assert.equal(r.imap.host, 'imap.gmx.net', q);
+    assert.deepEqual(r.smtp, { host: 'mail.gmx.net', port: 465, security: 'tls' }, q);
+    assert.equal(r.slug, 'gmx', q);
+  }
+});
+
+test('a Locaweb custom domain is found through its MX', async () => {
+  const { r } = await run('contato@loja.example', { 'MX loja.example': ['10 mx.core.locaweb.com.br.'] });
+  assert.equal(r.kind, 'found');
+  if (r.kind !== 'found') return;
+  assert.equal(r.label, 'Locaweb');
+  assert.equal(r.imap.host, 'email-ssl.com.br');
+  assert.equal(r.source, 'mx');
+});
+
+test('Yahoo! JAPAN is answered from the table, with no app-password claim', async () => {
+  const { r, calls } = await run('a@yahoo.co.jp');
+  assert.equal(r.kind, 'found');
+  if (r.kind !== 'found') return;
+  assert.equal(r.imap.host, 'imap.mail.yahoo.co.jp');
+  assert.equal(r.requiresAppPassword, false);
+  assert.equal(calls.length, 0);
+});
