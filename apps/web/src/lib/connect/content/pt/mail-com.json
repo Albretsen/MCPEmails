@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.mail.com/pop-imap/index.html",
+    "https://support.mail.com/pop-imap/imap/index.html",
+    "https://support.mail.com/pop-imap/imap/server.html",
+    "https://support.mail.com/pop-imap/imap/outlook.html",
+    "https://support.mail.com/pop-imap/setup-emailprogram-fails.html",
+    "https://support.mail.com/security/2fa/index.html",
+    "https://support.mail.com/security/2fa/application-specific-passwords.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Senha da conta (senha específica de aplicativo se a 2FA estiver ativa)",
+    "helpUrl": "https://support.mail.com/pop-imap/index.html",
+    "usernameForm": "Seu endereço mail.com completo, exatamente como foi emitido, em qualquer um dos domínios da família mail.com em que ele termine, como you@email.com ou you@usa.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecte o Mail.com ao Claude, Cursor e clientes MCP",
+    "description": "Conecte o mail.com ao Claude, Cursor, ChatGPT e qualquer cliente MCP via IMAP em imap.mail.com:993. POP3/IMAP é um recurso do mail.com Premium e vem desativado."
+  },
+  "hero": {
+    "eyebrow": "Mail.com + IA",
+    "titleLine1": "Conecte o Mail.com ao Claude,",
+    "titleLine2": "e ao Cursor, ChatGPT, qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real do mail.com. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, em todos os clientes MCP e não só em um, depois que o acesso por cliente estiver ativado.",
+    "answer": "O Claude não acessa o mail.com sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP em imap.mail.com na porta 993, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar esses e-mails. Duas condições do mail.com vêm antes: POP3, IMAP e SMTP são recursos Premium, e mesmo no Premium o acesso começa desativado até você ativá-lo em Email, Settings, POP3 and IMAP. Depois disso, conectar uma caixa de entrada é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Conta Premium, IMAP ativado",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o mail.com se conecta: IMAP Premium, ativado à mão",
+    "body": "O mail.com oferece IMAP em <code>imap.mail.com</code> na porta 993 com TLS. Para o envio, a central de ajuda lista <code>smtp.mail.com</code> na porta 587 com STARTTLS e depois oferece a porta 465 com SSL/TLS como alternativa, que é a que o MCPEmails usa. O mail.com é operado pela 1&1 Mail and Media, o mesmo grupo por trás do GMX e do WEB.DE, e herda a regra da casa: <b>o acesso fora do navegador é um recurso pago e começa desativado</b>. A página de aplicativos de terceiros do próprio mail.com diz que POP, IMAP e SMTP são recursos exclusivos do Premium, e a página de solução de problemas diz, à parte, que a busca por POP3 ou IMAP vem desativada por padrão na sua caixa de correio. Um endereço gratuito do mail.com não pode ser conectado por este nem por nenhum outro cliente de e-mail até a conta passar para o Premium, e uma conta Premium ainda precisa da opção marcada."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. Não precisa de cartão, e o plano gratuito conecta uma caixa de entrada pelo tempo que você quiser."
+    },
+    {
+      "h": "Ative POP3 e IMAP no mail.com",
+      "p": "Entre no mail.com e vá em <b>Email</b>, depois <b>Settings</b>, depois <b>POP3 and IMAP</b> (rótulos em inglês, como aparecem no mail.com). Marque <b>Enable access to this account via POP3 and IMAP</b> e clique em <b>Save</b>. Se essa seção não existir ou não salvar, a caixa de correio ainda está no plano gratuito, que não tem POP3, IMAP nem SMTP."
+    },
+    {
+      "h": "Crie uma senha específica de aplicativo se a 2FA estiver ativa e conecte",
+      "p": "Com a autenticação de dois fatores ativada, sua senha normal do mail.com deixa de funcionar em clientes. Clique no <b>ícone do perfil</b>, depois em <b>Security Options</b>, depois em <b>Manage application-specific passwords</b> e em <b>Create new application-specific password</b>. O mail.com mostra a senha uma única vez. Agora escolha IMAP / SMTP no MCPEmails e informe seu endereço completo, no domínio da família mail.com em que ele estiver, com essa senha."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O IMAP é Premium, e a frase que diz isso passa fácil despercebida",
+      "p": "A central de ajuda do mail.com traz a restrição numa única frase da página de aplicativos de terceiros: POP, IMAP e SMTP são recursos exclusivos do Premium. Não há período de teste, nem acesso parcial, nem mensagem no cliente que explique isso: uma caixa gratuita recusa o login do mesmo jeito que uma senha errada. Fazer o upgrade é o único caminho, e nenhum servidor MCP, nem o nosso, consegue contornar isso. Essa é a causa mais comum de falha numa conexão com o mail.com."
+    },
+    {
+      "h": "Ativar a autenticação de dois fatores desliga o IMAP de novo, sem avisar",
+      "p": "A documentação de dois fatores do mail.com observa que, depois de ativar a 2FA, o acesso por POP3 e IMAP precisa ser reativado nas configurações de e-mail. Então uma caixa de correio que estava conectada e funcionando para no momento em que você reforça a segurança da conta, e a opção que você marcou semanas atrás fica desmarcada de novo sem aviso. Volte em <b>Email</b>, <b>Settings</b>, <b>POP3 and IMAP</b>, marque a opção de novo e salve, e passe a conexão para uma senha específica de aplicativo, porque sua senha normal também não vai mais autenticar."
+    },
+    {
+      "h": "Seu endereço provavelmente não termina em @mail.com",
+      "p": "O mail.com oferece mais de 100 domínios para escolher no cadastro, então caixas ativas do mail.com estão em endereços como <code>@email.com</code>, <code>@usa.com</code>, <code>@engineer.com</code> e <code>@dr.com</code>. Todos autenticam em <code>imap.mail.com</code>. Digite o endereço exatamente como foi emitido, com o domínio. O nome de usuário nunca é só a parte antes do @, e o hostname não muda conforme o seu domínio, então não procure um imap.usa.com."
+    },
+    {
+      "h": "Uma conexão que não funciona pode ser um bloqueio que só o webmail mostra",
+      "p": "A solução de problemas do próprio mail.com avisa que alguns erros, em especial bloqueios temporários da conta, não aparecem direito num cliente de terceiros. A conexão simplesmente falha, sem nada útil junto. A orientação deles é entrar no mail.com num navegador de computador e ler o aviso que aparece logo após o login, que traz o motivo real e os passos para resolver. Se as credenciais estão certas e o IMAP está ativado, confira o webmail antes de mudar mais alguma configuração."
+    }
+  ],
+  "limits": [
+    "Uma caixa de correio gratuita do mail.com não pode ser conectada de jeito nenhum, nem por nós nem por nenhum cliente de e-mail, porque POP3, IMAP e SMTP são reservados para contas Premium.",
+    "A página de dados do servidor IMAP do mail.com também lista a porta 143, que não é criptografada a menos que o cliente negocie STARTTLS. O MCPEmails conecta apenas na 993 com TLS implícito e não oferece a porta sem criptografia."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o mail.com?",
+      "a": "Não diretamente, e de jeito nenhum numa conta gratuita do mail.com. O Claude não tem conector nativo para o mail.com. Numa caixa Premium com POP3 e IMAP ativados, conectar um servidor MCP como o MCPEmails dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar, e a mesma conexão funciona no Cursor, no ChatGPT e em qualquer outro cliente MCP."
+    },
+    {
+      "q": "Preciso do mail.com Premium para usar IMAP?",
+      "a": "Sim. A central de ajuda do mail.com diz com todas as letras que POP, IMAP e SMTP são recursos exclusivos do Premium, e direciona os usuários gratuitos para a página de upgrade. A restrição é aplicada nos próprios servidores do mail.com, então no plano gratuito o navegador e os apps do mail.com para celular são o seu único acesso."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP do mail.com?",
+      "a": "O IMAP é imap.mail.com na porta 993 com TLS implícito. Para SMTP, o mail.com documenta smtp.mail.com na porta 587 com STARTTLS e a porta 465 com SSL/TLS como alternativa equivalente; o MCPEmails usa a 465. Entre com seu endereço mail.com completo e a senha da conta, ou uma senha específica de aplicativo se a autenticação de dois fatores estiver ativada."
+    },
+    {
+      "q": "Minha conexão com o mail.com parou depois que ativei a autenticação de dois fatores. Por quê?",
+      "a": "Porque ativar a 2FA reinicia o acesso por clientes. O mail.com exige que POP3 e IMAP sejam reativados nas configurações de e-mail depois disso, e sua senha normal não autentica mais um cliente. Reative a opção em Email, Settings, POP3 and IMAP, depois gere uma senha específica de aplicativo em Security Options e use essa."
+    },
+    {
+      "q": "Funciona com @email.com, @usa.com e os outros domínios do mail.com?",
+      "a": "Sim. O mail.com emite endereços em mais de 100 domínios, e todos são a mesma plataforma de e-mail por trás de um único conjunto de hostnames. Digite o endereço como foi emitido e conecte em imap.mail.com, seja qual for o domínio. A exigência do Premium e a opção de ativação valem igualmente para todos."
+    },
+    {
+      "q": "Meus e-mails do mail.com ficam armazenados nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no mail.com via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso; o conteúdo das mensagens não é retido depois da solicitação que o pediu."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Mail.com",
+    "sub": "Conecte o mail.com Premium em poucos minutos. Uma caixa de entrada grátis para sempre no MCPEmails, sem cartão."
+  }
+}

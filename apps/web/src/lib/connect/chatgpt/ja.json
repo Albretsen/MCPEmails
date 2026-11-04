@@ -1,0 +1,24 @@
+{
+  "eyebrow": "ChatGPT",
+  "title": "ChatGPTで{provider}を使う",
+  "sub": "ChatGPTはカスタムMCPサーバーを通じて{provider}にアクセスします。サーバーはChatGPT Goまたは有料プランでchatgpt.comから追加します。",
+  "steps": [
+    "上の手順で{provider}をMCPEmailsに接続します。",
+    "chatgpt.comで「プラグイン」、「Personal」を開き、「Add」、「カスタム MCP サーバーを追加」の順にクリックします。",
+    "名前をMCPEmailsにし、Connection（接続）に<code>https://mcpemails.com/api/mcp</code>を貼り付け、OAuthを選んで確認し、「プラグインとして作成」をクリックしてMCPEmailsにログインします。",
+    "チャットで<b>@</b>と入力し、MCPEmailsを選びます。続きの質問でメールが必要なときは、もう一度選びます。"
+  ],
+  "docsLink": "ChatGPTの詳しい設定ガイド",
+  "blogLink": "ChatGPTをメールに接続する方法",
+  "faqQ": "ChatGPTは{provider}のメールを読めますか？",
+  "faqQMailName": "ChatGPTは{provider}を読めますか？",
+  "faqA": "はい。{provider}をMCPEmailsに接続すれば読めます。chatgpt.comで、URLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。ChatGPT Goと有料プランで使えます。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
+  "directorySub": "ChatGPTはMCPEmailsのAny Mailboxアプリを通じて{provider}にアクセスします。",
+  "directorySteps": [
+    "上の手順で{provider}をMCPEmailsに接続します。",
+    "ChatGPTのアプリディレクトリでAny Mailboxを開き、Connect（接続）をクリックします。",
+    "MCPEmailsにログインし、ChatGPTに許可するアクセスを承認します。"
+  ],
+  "directoryLink": "ChatGPTのアプリディレクトリにあるAny Mailbox",
+  "directoryFaqA": "はい。{provider}をMCPEmailsに接続すれば読めます。ChatGPTのアプリディレクトリからAny Mailboxをインストールし、MCPEmailsにログインします。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。"
+}

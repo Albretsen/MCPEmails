@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "title": "Segurança de agentes de IA para e-mail: OAuth, criptografia e privacidade",
+    "description": "Veja como o MCPEmails protege o acesso da IA ao seu e-mail: busca em tempo real em vez de armazenamento de e-mails, credenciais criptografadas, permissões restritas e revogáveis, proteções contra prompt injection e código aberto."
+  },
+  "hero": {
+    "eyebrow": "Segurança e confiança",
+    "title": "Você não precisa acreditar só na minha palavra",
+    "lead": "O MCPEmails conecta um agente de IA à sua caixa de entrada, então precisa conquistar uma confiança real. Esta é a versão franca: o que o serviço acessa, o que ele guarda, o que ele nunca pode fazer e como você pode verificar tudo isso por conta própria."
+  },
+  "tldr": {
+    "title": "1. A versão curta",
+    "intro": "Se você não ler mais nada nesta página:",
+    "points": [
+      "O seu e-mail é buscado em tempo real a cada solicitação e descartado no momento em que a resposta é enviada. Não guardamos nenhuma cópia dos e-mails que o seu agente lê.",
+      "Por caixa de entrada, armazenamos um token de acesso ou uma senha de app, criptografado com AES-256-GCM, para podermos fazer a próxima chamada que você pedir. Alguns recursos guardam uma pequena parte de uma mensagem enquanto você os usa: envios agendados e retidos, lembretes de acompanhamento e adiamentos, e o histórico de execuções das automações. A Seção 2 lista cada um deles.",
+      "Nunca treinamos nenhum modelo de IA com o seu e-mail e nunca enviamos o seu e-mail a um modelo escolhido por nós. O seu agente é o único que o lê, sob o seu controle.",
+      "O acesso é limitado pela credencial que você configura: as chaves de API podem ser restritas a caixas de entrada selecionadas ou ter permissão para acessar todas as caixas de entrada do espaço de trabalho. Você pode revogar o acesso do provedor a qualquer momento nas configurações do Google, da Microsoft ou do seu provedor.",
+      "O código que executa o serviço é público. Você pode lê-lo, auditá-lo ou hospedar tudo por conta própria."
+    ]
+  },
+  "access": {
+    "title": "2. O que acessamos e o que armazenamos",
+    "intro": "A diferença entre acesso e armazenamento é todo o design. No momento da solicitação, o agente pode ler muita coisa, em tempo real. Quase nada disso é registrado.",
+    "thData": "Dados",
+    "thAccessed": "Acessado",
+    "thStored": "Armazenado",
+    "rows": [
+      {
+        "data": "Corpos, assuntos e anexos dos e-mails",
+        "accessed": "Em tempo real, só quando o seu agente faz uma chamada de leitura ou pesquisa",
+        "stored": "Nunca gravados em disco, cache ou logs"
+      },
+      {
+        "data": "Contatos / catálogo de endereços",
+        "accessed": "Levantados em tempo real a partir dos e-mails recentes, quando solicitado",
+        "stored": "Nunca. Não existe catálogo de endereços armazenado"
+      },
+      {
+        "data": "Token OAuth ou senha de app",
+        "accessed": "Descriptografado nos nossos servidores apenas para a solicitação que precisa dele",
+        "stored": "Sim, criptografado em repouso com AES-256-GCM; chave mantida separadamente"
+      },
+      {
+        "data": "Chaves de API que você cria",
+        "accessed": "Comparadas como hash a cada solicitação",
+        "stored": "Apenas um hash SHA-256; a chave bruta é mostrada uma vez e nunca pode ser recuperada"
+      },
+      {
+        "data": "Mensagens que você agenda para depois",
+        "accessed": "Retidas até o horário de envio e então enviadas",
+        "stored": "Sim, criptografadas em repouso até o envio; o conteúdo é apagado 7 dias após o envio"
+      },
+      {
+        "data": "Envios retidos para a sua aprovação",
+        "accessed": "Retidos até que um revisor aprove ou rejeite, ou até expirarem após 24 horas",
+        "stored": "Sim, criptografados em repouso. O conteúdo é apagado 7 dias após a decisão; o registro da aprovação (destinatários e assunto, criptografados) é mantido por 90 dias"
+      },
+      {
+        "data": "Lembretes de acompanhamento e adiamentos",
+        "accessed": "Verificados em segundo plano até que o lembrete seja concluído",
+        "stored": "Assunto, remetente e destinatários, criptografados, até que o lembrete seja concluído. Nunca o corpo"
+      },
+      {
+        "data": "Histórico de execuções das automações",
+        "accessed": "Gravado quando uma automação age sobre uma mensagem",
+        "stored": "Remetente e os primeiros 120 caracteres do assunto, por 90 dias. Nunca o corpo"
+      },
+      {
+        "data": "Atividade das chamadas de ferramentas (metadados)",
+        "accessed": "Registrada para o seu próprio log de auditoria",
+        "stored": "Apenas nome da ferramenta, caixa de entrada, data e hora e status. Nenhum conteúdo de e-mail"
+      }
+    ],
+    "outro": "As exceções deliberadas são recursos que precisam lembrar parte de uma mensagem: um envio agendado ou retido, um lembrete de acompanhamento ou um adiamento, e o histórico de execuções das automações. Cada um guarda apenas o que precisa, pelo tempo indicado na tabela acima."
+  },
+  "verify": {
+    "title": "3. Você não precisa confiar em mim, pode verificar",
+    "p1": "“Uma pessoa qualquer fez isso no vibe coding” é uma preocupação legítima para qualquer ferramenta hospedada que acessa o seu e-mail. A resposta certa não é uma promessa maior. É eliminar a necessidade de você acreditar na minha palavra.",
+    "points": [
+      "<b>Leia o código.</b> O servidor que executa o MCPEmails é público no GitHub. Você pode ver exatamente o que ele guarda (um token criptografado, mais os registros de recursos listados acima) e o que não guarda (os e-mails que o seu agente lê).",
+      "<selfhost><b>Hospede você mesmo.</b></selfhost> Se preferir não usar o serviço hospedado, você pode executar o mesmo código na sua própria infraestrutura, com as suas próprias chaves: uma stack Docker de um único comando está em <selfhost>self-host/</selfhost>.",
+      "<b>Use uma conexão restrita e revogável.</b> Você se conecta com OAuth ou com uma senha de app que concede apenas acesso aos e-mails, e pode revogá-la com um clique no seu provedor, sem nenhuma participação minha.",
+      "<b>Acompanhe o que ele faz.</b> Cada chamada de ferramenta do seu agente é registrada em um log de atividade que você pode ler, para ver exatamente o que foi acessado e quando."
+    ],
+    "outro": "E se um conector nativo já atende o seu provedor e faz o que você precisa, use-o. O MCPEmails existe para os provedores e as combinações de várias caixas de entrada que esses conectores não atendem."
+  },
+  "injection": {
+    "title": "4. O risco real: prompt injection",
+    "p1": "A ameaça real aqui não sou eu lendo os seus e-mails. É um e-mail hostil tentando sequestrar o agente: instruções escondidas dentro de uma mensagem que tentam fazer a sua IA encaminhar, excluir ou vazar algo. Esse é um problema real e ainda sem solução para todo agente de e-mail. Não vou dizer que está resolvido. Posso mostrar como ele é contido:",
+    "points": [
+      "<b>O acesso às caixas de entrada é configurável.</b> As chaves de API podem ser restritas a caixas de entrada selecionadas ou receber, de forma deliberada, permissão para acessar todas as caixas de entrada de um espaço de trabalho. Uma chave restrita não consegue acessar uma caixa de entrada que não lhe foi concedida.",
+      "<b>Ações destrutivas são separadas e sinalizadas.</b> Enviar e excluir são ferramentas próprias, com escopos separados; a exclusão exige <code>confirm: true</code>. Se um cliente mostra ou não uma confirmação ao usuário depende da política desse cliente.",
+      "<b>Só e-mail.</b> As conexões pedem acesso aos e-mails, nunca à sua conta inteira: nada de agenda, arquivos ou contatos. Dentro dos e-mails o acesso é amplo, porque as ferramentas precisam dele: ler, organizar, excluir e enviar. Com o login do Google, o Gmail também nos deixa ler os seus endereços de “Enviar e-mail como”. O que o seu agente pode fazer com esse acesso é limitado pelas permissões que você concede a cada app de IA ou chave de API e pelas restrições da caixa de entrada.",
+      "<b>Limite de taxa.</b> Toda chave tem limite de taxa, então um agente descontrolado ou sequestrado não consegue disparar milhares de ações sem que ninguém perceba."
+    ],
+    "outro": "Não está resolvido. Está contido: ações irreversíveis têm uma barreira, e os escopos das chaves de API e as restrições de caixa de entrada podem reduzir o raio de impacto."
+  },
+  "credentials": {
+    "title": "5. Como as suas credenciais são protegidas",
+    "intro": "Os tokens e as senhas das suas caixas de entrada são o dado mais sensível que guardamos, então recebem a proteção mais forte que podemos oferecer:",
+    "measures": [
+      "Todos os dados em trânsito são criptografados com TLS 1.2 ou superior. Conexões que não suportam TLS são recusadas.",
+      "Os tokens OAuth e as credenciais IMAP são criptografados em repouso com AES-256-GCM. A chave de criptografia é mantida como um segredo de servidor, separada do banco de dados, e nunca é armazenada junto com os dados criptografados.",
+      "As chaves de API passam por hash SHA-256 antes de serem armazenadas. A chave bruta não pode ser recuperada a partir do hash.",
+      "O acesso ao banco de dados é protegido por políticas de Row-Level Security que impedem que um espaço de trabalho acesse os dados de outro, mesmo que uma consulta seja escrita de forma errada.",
+      "O acesso administrativo à infraestrutura de produção exige autenticação multifator e é registrado em log."
+    ]
+  },
+  "google": {
+    "title": "6. Verificação do Google, da Microsoft e dos provedores",
+    "p1": "O acesso ao Gmail usa os escopos restritos do Google, a categoria que o Google examina com mais rigor.",
+    "p2": "O uso e a transferência, pelo MCPEmails, de informações recebidas das APIs do Google para qualquer outro app seguem a <link>Política de Dados do Usuário dos Serviços de API do Google</link>, incluindo os requisitos de Uso Limitado.",
+    "p3": "O acesso ao Outlook e ao Microsoft 365 passa pelo Microsoft Graph, a partir de um app cujo editor é verificado pela Microsoft, e solicita apenas um conjunto nomeado de permissões mostrado na tela de consentimento da Microsoft: Mail.ReadWrite, Mail.Send, offline_access, openid, profile e email. Para Fastmail, iCloud, Yahoo, Zoho, Yandex e outros provedores IMAP, você se conecta com uma senha de app emitida pelo provedor, que pode revogar a qualquer momento, sem escopos OAuth amplos que pudéssemos solicitar em excesso."
+  },
+  "subprocessors": {
+    "title": "7. Suboperadores",
+    "intro": "Mantemos curta a lista de empresas que têm contato com algum dado. Cada uma trata dados apenas conforme as nossas instruções, com base em um acordo de processamento de dados ou nos termos padrão de processamento de dados do provedor, e o nosso <dpa>Acordo de Processamento de Dados</dpa> está disponível para clientes que precisarem dele. Repare no que não está na lista: nenhum provedor de IA. O MCPEmails não envia o seu e-mail a nenhum modelo próprio. Quem faz isso é o seu agente, sob o seu controle e de acordo com a política de dados do provedor dele.",
+    "thProvider": "Provedor",
+    "thPurpose": "Finalidade",
+    "thLocation": "Localização",
+    "rows": [
+      {
+        "provider": "Supabase",
+        "purpose": "Banco de dados, autenticação, edge functions",
+        "location": "Dados armazenados na UE (Estocolmo, Suécia); e-mails processados em tempo real nos EUA (Leste)"
+      },
+      {
+        "provider": "Vercel",
+        "purpose": "Hospedagem do site, do painel e do endpoint MCP",
+        "location": "CDN global; servidores nos EUA (Leste) e na UE (Estocolmo)"
+      },
+      {
+        "provider": "Hetzner",
+        "purpose": "Relay de e-mail para os poucos provedores que recusam conexões vindas de endereços de nuvem (um túnel TLS: ele não consegue ler e-mails nem senhas)",
+        "location": "Alemanha (UE)"
+      },
+      {
+        "provider": "Resend",
+        "purpose": "E-mails da conta, de cobrança e de suporte, e e-mails de marketing se você tiver aceitado (nunca o conteúdo da caixa de correio)",
+        "location": "UE (Irlanda); a Resend Inc. é uma empresa dos EUA"
+      },
+      {
+        "provider": "Migadu",
+        "purpose": "As nossas próprias caixas de suporte e noreply (e-mails de cadastro e de senha, mensagens de suporte)",
+        "location": "Suíça / UE"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Processamento de pagamentos (somente cobrança, nenhum dado de e-mail)",
+        "location": "EUA; certificação PCI-DSS"
+      }
+    ]
+  },
+  "report": {
+    "title": "8. Como relatar uma vulnerabilidade",
+    "p1": "Se você encontrar um problema de segurança, por favor relate. Prefiro muito mais ouvir de você do que ler sobre isso depois.",
+    "points": [
+      "Envie um e-mail para <securityEmail></securityEmail> com os detalhes e os passos para reproduzir o problema.",
+      "Um contato legível por máquina está publicado em <securitytxt>/.well-known/security.txt</securitytxt>.",
+      "O meu objetivo é confirmar o recebimento dos relatos em até 24 horas e corrigir problemas críticos confirmados em até 72 horas."
+    ],
+    "safeHarbor": "<b>Porto seguro.</b> Se você se esforçar de boa-fé para seguir esta política, não acessar nem modificar dados de outros usuários e me der uma oportunidade razoável de corrigir o problema antes de divulgá-lo, eu não vou mover nem apoiar nenhuma ação judicial contra você pela sua pesquisa."
+  },
+  "cta": {
+    "title": "Dúvidas sobre algo disso?",
+    "sub": "Pergunte o que quiser. Eu sou Asgeir Albretsen e respondo pessoalmente a todas as mensagens.",
+    "contactBtn": "Enviar e-mail para security@",
+    "privacyBtn": "Ler a política de privacidade"
+  },
+  "selfhost": {
+    "title": "Execute você mesmo, sem confiar em ninguém (nem em nós)",
+    "p1": "O MCPEmails é código aberto sob a licença AGPL-3.0, e o serviço hospedado executa exatamente o mesmo servidor MCP que você pode hospedar por conta própria. Isso significa que “o e-mail é buscado em tempo real e nunca é armazenado” é algo que você pode verificar executando o código e observando a rede, não algo em que precisa acreditar.",
+    "p2": "A hospedagem própria prioriza IMAP/SMTP: conecte qualquer caixa de correio com uma senha de app, e as suas credenciais são criptografadas com uma chave que só você tem. Um único comando sobe a stack inteira na sua própria máquina.",
+    "cta": "Ler o guia de hospedagem própria"
+  },
+  "operator": {
+    "title": "Quem está por trás",
+    "p1": "Uma pessoa: eu. Sou Asgeir Albretsen e opero o MCPEmails por meio da Albretsen AS, uma sociedade de responsabilidade limitada de direito norueguês (aksjeselskap) da qual sou proprietário, número de organização 938 702 373, sediada em Bergen, na Noruega. Os commits também são meus, em <gh>github.com/Albretsen</gh>, então o nome nesta página e o nome no código são o mesmo. Há mais detalhes na <about>página Sobre</about>, e a identificação jurídica completa está nos <terms>termos</terms>.",
+    "p2": "Tudo depender de uma única pessoa é um risco real, e a resposta não é prometer que eu sempre estarei aqui. O MCPEmails é público sob a AGPL-3.0 e o serviço hospedado executa esse mesmo código, então, se eu parar, ou se você simplesmente deixar de confiar em mim, você pode clonar o repositório e executá-lo na sua própria infraestrutura, com as suas próprias chaves. <selfhostpage>O guia de hospedagem própria</selfhostpage> descreve o procedimento completo. Prefiro ser uma pessoa com nome, que você pode contatar e deixar, a ser um fornecedor anônimo em quem você só pode confiar.",
+    "p3": "Os e-mails de suporte e de segurança não passam por uma fila. Eles chegam a mim, e eu respondo pessoalmente a todas as mensagens."
+  }
+}

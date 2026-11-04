@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.titan.email/hc/en-us/articles/900000215446-Configure-Titan-on-other-apps-using-IMAP-POP",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "https://support.titan.email/hc/en-us/articles/59899461438233-Application-Password-in-Titan-for-Third-Party-Clients",
+    "https://support.titan.email/hc/en-us/articles/4406867379865-Configure-Titan-on-other-apps-using-IMAP-POP-for-EU-hosted-users",
+    "https://support.titan.email/hc/en-us/articles/9820407299737-Setting-up-and-editing-Two-Factor-Authentication-settings",
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Titanのメールボックスのパスワード（2段階認証がオンならアプリケーションパスワード）",
+    "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "usernameForm": "独自ドメインのTitanアドレス全体（例：jack@yourdomain.com）。クライアントがユーザー名を別に尋ねる場合も、同じアドレスを入力するようTitanは案内しています。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Titan EmailをClaude、Cursor、MCPクライアントに接続",
+    "description": "Titan EmailをIMAP（imap.titan.email:993）でClaude、Cursor、ChatGPTなどあらゆるMCPクライアントに接続します。先にEnable Titan on Other Appsをオンに。受信トレイ1つはずっと無料。"
+  },
+  "hero": {
+    "eyebrow": "Titan Email + AI",
+    "titleLine1": "Titan EmailをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のTitan受信トレイを渡せます。IMAPでメールの閲覧、検索、送信、返信、予約送信、整理ができ、1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "answer": "ClaudeはそのままではTitan Emailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.titan.emailのポート993にIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。Titanは、Webメールの設定でEnable Titan on Other Appsをオンにするまで、サードパーティのクライアントをすべて拒否します。また、2段階認証を使っているメールボックスでは、通常のパスワードではなくTitanのアプリケーションパスワードが必要です。受信トレイ1つはずっと無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "サードパーティのアクセスを有効にする必要あり",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "Titan Emailの接続方法：サードパーティのアクセスを解放してからIMAPで",
+    "body": "Titanは<code>imap.titan.email</code>のポート993でTLS経由のIMAPを、<code>smtp.titan.email</code>のポート465で同じく暗黙的TLSのSMTPを提供しています。先に確認すべき点が2つあります。Titanのメールボックスでは、誰かがオンにするまでサードパーティのアクセスが<b>オフ</b>で、それまではログインを通過できません。また、Titanはほかの会社のブランドで販売されているため、<b>メールボックスをどこで購入したかによって使うホスト名が変わります</b>。販売したホスティング会社が「Titan」と一言も言わなかったため、そもそもTitanのメールボックスなのかわからないままここに来る人も多くいます。次の3点で判断できます。TitanのWebメールは<code>app.titan.email</code>にあること、ドメインのMXレコードが<code>mx1.titan.email</code>と<code>mx2.titan.email</code>を指していること、そしてホスティング会社がTitan Email（Hostingerなど）、またはProfessional Email（GoDaddyでの同じ製品の名前）として販売していることです。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成",
+      "p": "mcpemails.comで新規登録します。カードは不要で、Freeプランでは受信トレイ1つを期限なく接続できます。"
+    },
+    {
+      "h": "Enable Titan on Other Appsをオンにする",
+      "p": "app.titan.emailでTitanのWebメールにログインし、右上の<b>Settings</b>アイコンをクリックして、<b>Enable Titan on Other Apps</b>（ほかのアプリでTitanを有効にする）をクリックします。短い機能紹介が開くので、もう一度ボタンをクリックして確定します。この項目がなく、代わりに<b>Configure 3rd party apps</b>が表示される場合は、そのメールボックスのサードパーティのアクセスはすでにオンです。"
+    },
+    {
+      "h": "ホスト名を確認し、すべてをMCPEmailsに貼り付け",
+      "p": "ほとんどのTitanメールボックスは、上記で入力済みのホストを使います。ドメインをGoDaddyで管理している場合、GoDaddyは代わりに<code>imap.secureserver.net</code>のポート993と<code>smtpout.secureserver.net</code>のポート465を案内しています。TitanをBlacknight、MonoVM、DomainDiscount24、Fluccs、Domain Centralで購入した場合、Titanは<code>imap0101.titan.email</code>と<code>smtp0101.titan.email</code>を案内しています。MCPEmailsでIMAP / SMTPを選び、Titanのアドレス全体とそのパスワードを入力します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Titanは、スイッチを1つ切り替えるまですべてのメールクライアントを拒否します",
+      "p": "Titanのメールボックスはサードパーティのアクセスが無効の状態で提供され、Titan自身の設定ガイドも冒頭でそう述べています。IMAP、POP、SMTPはすべてログインの段階で失敗し、そのエラーはパスワード間違いとまったく同じに見えるため、まずパスワードをリセットしたくなります。スイッチはTitanのWebメールの<b>Settings</b>、<b>Enable Titan on Other Apps</b>にあります。見分ける手がかりもあります。このメニュー項目がすでに<b>Configure 3rd party apps</b>に置き換わっていれば、アクセスはオンで、問題は別のところにあります。"
+    },
+    {
+      "h": "Titanをどこで購入したかでホスト名が変わります",
+      "p": "Titanはホスティング会社を通じてホワイトラベルで提供されているため、請求書のブランドとメールサーバーのブランドは一致しません。GoDaddyはProfessional Emailとして再販しており、クライアントには<code>imap.secureserver.net</code>と<code>smtpout.secureserver.net</code>を案内しています。Blacknight、MonoVM、DomainDiscount24、Fluccs、Domain Centralで購入したTitanはEUでホストされ、<code>imap0101.titan.email</code>と<code>smtp0101.titan.email</code>で応答します。それ以外は通常の<code>imap.titan.email</code>です。1つの製品に3系統のホストがあり、間違ったホストではログインではなく接続の段階で失敗します。"
+    },
+    {
+      "h": "Titanのトラブルシューティングは2段階認証をオフにするよう案内していますが、その必要はありません",
+      "p": "TitanのIMAPガイドのトラブルシューティングでは、パスワードが拒否される原因を2段階認証とし、オフにするよう案内しています。Titanはアプリケーションパスワードに対応していますが、深い場所にあります。<b>Settings</b>、<b>Preferences</b>、<b>Account and Security</b>、<b>Security and Access</b>の順に進み、Two-Factor Authenticationの下の<b>Manage</b>を開いて、パスワードと6桁のコードを入力し直すと、ようやく<b>Generate App Password</b>が表示されます。そこでパスワードを生成し、2段階認証はオンのままにしてください。Titanはパスワードを一度しか表示せず、同じ画面から取り消せます。"
+    },
+    {
+      "h": "TitanのIMAPサーバーは機能が少なく、それが動作に影響します",
+      "p": "Titanの機能一覧が通知しているのは、IMAP4rev1、AUTH=PLAIN、SASL-IR程度です。MOVEがないため、メッセージの移動は1つのアトミックなコマンドではなく、コピー、フラグ付け、expungeの組み合わせになり、移動が途中で止まると元のメッセージが残ることがあります。IDLEもないため、どのクライアントも新着メールを待って接続を開いたままにできません。MCPEmailsはリクエストごとにその場で取得しますが、同じメールボックスを使うデスクトップクライアントはポーリングになります。UIDPLUSとSPECIAL-USEもないため、ここではフォルダーを名前で照合します。"
+    }
+  ],
+  "limits": [
+    "このページの設定表は、Titanの標準のホストの組み合わせです。GoDaddy Professional EmailとEUの販売代理店経由のメールボックスには専用のホスト名が必要で、接続時に入力済みの値を使わず手動で入力します。",
+    "SPECIAL-USEがないため、フォルダー名を変更したTitanメールボックスでは、エージェントに整理やアーカイブを頼むときにフォルダー名を明示する必要があります。",
+    "TitanのSMTPサーバーが受け付けるメッセージは50 MBまでなので、非常に大きな添付ファイルを含む転送は送信時に拒否されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはTitan Emailで使えますか？",
+      "a": "直接は使えません。ClaudeにはTitan用のコネクタが組み込まれておらず、自分でIMAPセッションを開くこともできません。MCPEmailsのようなMCPサーバーをTitanのメールボックスに接続すると、Claudeからメールの閲覧、検索、送信、返信、予約送信、整理ができるようになり、同じ接続を1つのアプリだけでなくCursorなどあらゆるMCPクライアントで使えます。"
+    },
+    {
+      "q": "自分のメールボックスが本当にTitanかどうかを確認するには？",
+      "a": "3つの点を確認してください。ホスティング会社が自社の名前でリンクしていても、Webメールがapp.titan.emailにあること。ドメインのMXレコードがmx1.titan.emailとmx2.titan.emailを指していること。そしてプロバイダーがTitan Email（Hostingerなど）、またはProfessional Email（GoDaddyでの同じサービスの名前）として販売していることです。"
+    },
+    {
+      "q": "Titan EmailのIMAPとSMTPの設定は？",
+      "a": "IMAPはimap.titan.email、ポート993、暗黙的TLSです。SMTPはsmtp.titan.email、ポート465で、こちらも暗黙的TLSです。ログインにはTitanのアドレス全体とそのメールボックスのパスワードを使います。どちらのホストも、このページに記載の日付に実際のTLS接続で確認しています。"
+    },
+    {
+      "q": "Titanがパスワードを拒否するのはなぜですか？",
+      "a": "ほぼ必ず、メールボックスでサードパーティのアクセスが有効になっていないことが原因で、役に立つエラーではなく認証エラーが表示されます。まずWebメールの設定でEnable Titan on Other Appsをオンにしてください。すでにオンでもログインに失敗する場合は、メールボックスで2段階認証が使われているため、Security and Access画面で作成するアプリケーションパスワードが必要です。"
+    },
+    {
+      "q": "GoDaddy Professional Emailでも使えますか？",
+      "a": "はい、ホスト名は異なります。GoDaddy Professional Emailの中身はTitanですが、GoDaddyはimap.secureserver.netのポート993とsmtpout.secureserver.netのポート465を案内しており、Titan自身のガイドもGoDaddyで管理しているドメインをそちらに案内しています。入力済みの組み合わせではなく、これらのホストを手動で入力してください。"
+    },
+    {
+      "q": "Titanのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにTitanからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文はそれを求めたリクエストの後には保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにTitan Emailの受信トレイを",
+    "sub": "Titanを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

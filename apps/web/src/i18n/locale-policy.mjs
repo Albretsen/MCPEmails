@@ -27,10 +27,22 @@ export const FULL_LOCALES = /** @type {const} */ (['en', 'nb', 'es', 'fr']);
  * list or translations folder says so, and a missing page is not generated,
  * not advertised in hreflang, and the switcher sends that option home.
  */
-export const SCOPED_LOCALES = /** @type {const} */ (['de']);
+export const SCOPED_LOCALES = /** @type {const} */ (['de', 'pt', 'ja']);
 
 /** Still served, no longer required. Missing strings fall back to English. */
 export const FROZEN_LOCALES = /** @type {const} */ (['zh']);
+
+/**
+ * The BCP 47 tag a locale is declared as in hreflang and <html lang>, where it
+ * differs from the URL code. /pt is written in Brazilian Portuguese, so it is
+ * advertised as pt-BR; every other locale uses its code as is.
+ */
+export const LANGUAGE_TAGS = Object.freeze({ pt: 'pt-BR' });
+
+/** hreflang / <html lang> value for a URL locale code. */
+export function languageTag(locale) {
+  return LANGUAGE_TAGS[locale] ?? locale;
+}
 
 /** The locale every fallback resolves to. */
 export const FALLBACK_LOCALE = 'en';

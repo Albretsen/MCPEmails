@@ -77,7 +77,7 @@ export const TABLE_ROWS = [
   { key: 'portable', apps: false, provider: true, us: true },
 ];
 
-export const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
+export const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'];
 
 /** Copy for one locale, or null if that locale has no translation. */
 export async function getNativeContent(locale) {

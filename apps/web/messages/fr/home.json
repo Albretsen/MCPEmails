@@ -175,6 +175,7 @@
     "readFull": "Lire l'avis complet"
   },
   "pricing": {
+    "mostPopular": "Le plus populaire",
     "eyebrow": "Tarifs",
     "title": "Un tarif par boîte. Aucun comptage sur les offres payantes.",
     "sub": "Gratuit connecte une boîte avec 150 actions e-mail par mois. Personal en connecte trois. Pro en connecte jusqu'à 10 pour une personne qui gère une entreprise. Business inclut 10 boîtes, ajoute 3 $ par mois par boîte en plus et accueille toute votre équipe.",
@@ -339,7 +340,9 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文",
-    "de": "Deutsch"
+    "de": "Deutsch",
+  "pt": "Português (Brasil)",
+  "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Aperçu du produit",

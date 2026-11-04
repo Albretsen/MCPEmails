@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
-import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { LAST_UPDATED, EFFECTIVE_DATE, formatLegalDate } from '@/lib/legal-config';
 import { planDisplayName } from '@/lib/stripe/plans';
 import { REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
 import { founderTermsVisible } from '@/lib/stripe/founder-offer-server';
@@ -97,7 +97,7 @@ export default async function TermsPage({ params }) {
             {t('hero.lead')}
           </p>
           <p style={{ fontSize: 13, color: 'var(--fg-4)', marginTop: 8 }}>
-            {t('hero.dates', { lastUpdated: LAST_UPDATED, effective: EFFECTIVE_DATE })}
+            {t('hero.dates', { lastUpdated: formatLegalDate(LAST_UPDATED, locale), effective: formatLegalDate(EFFECTIVE_DATE, locale) })}
           </p>
         </div>
       </section>

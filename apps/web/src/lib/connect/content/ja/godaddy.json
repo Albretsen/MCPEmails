@@ -1,0 +1,109 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールのパスワード",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "ドメインを含むアドレス全体（例：name@yourdomain.com）。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "GoDaddyのメールをClaude、Cursor、MCPに接続",
+    "description": "GoDaddy Professional EmailをIMAP（imap.secureserver.net:993）でClaudeなどあらゆるMCPクライアントに接続します。GoDaddyのMicrosoft 365は代わりにOutlookで接続します。"
+  },
+  "hero": {
+    "eyebrow": "GoDaddyのメール + AI",
+    "titleLine1": "GoDaddyのメールをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のGoDaddy受信トレイを渡せます。お使いのアドレスがGoDaddyの複数あるメール製品のどれにあたるかがわかれば、IMAPでメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "answer": "ClaudeはそのままではGoDaddyのメールボックスにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、GoDaddy Professional Emailにimap.secureserver.netのポート993でIMAP接続します。認証にはアドレス全体とそのメールボックス自身のメールパスワードを使うので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。GoDaddyは同じブランドで複数のメール製品を販売しており、GoDaddy経由で購入したMicrosoft 365のメールボックスはMicrosoftのメールボックスです。こちらはIMAPではなくOutlook（Sign in with Microsoft）で接続するので、まずどちらをお使いか確認してください。受信トレイ1つはずっと無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "メールボックス自身のメールパスワード",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "GoDaddyの接続方法：製品を確認してからIMAPで",
+    "body": "「GoDaddyのメール」は、1つのブランドを共有する3つか4つの別々のサービスで、設定も共通ではありません。<b>Professional Email</b>はGoDaddyがTitanの基盤で販売している現在の主力製品で、GoDaddyは<code>imap.secureserver.net</code>のポート993と<code>smtpout.secureserver.net</code>のポート465（どちらも暗黙的TLS）を案内しています。ユーザー名はアドレス、パスワードはそのメールボックス自身のパスワードです。提供が終了した<b>Workspace Email</b>も同じsecureserverのホスト名を使っていたため、Web上の古いガイドの多くにいまもこのホスト名が載っています。<b>Microsoft 365 from GoDaddy</b>はそもそもGoDaddyのメールボックスではありません。GoDaddyが再販して請求しているMicrosoftのテナントで、Microsoft自身のサーバー上にあります。また、<b>cPanel Web Hosting</b>の中で作成したメールボックスはsecureserverではなくお使いのホスティングサーバー上にあり、そのサーバー独自のホスト名を使います。製品さえ正しく見分ければ、残りの設定は2分で終わります。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成",
+      "p": "mcpemails.comで新規登録します。Freeプランでは受信トレイ1つをずっと接続でき、カードの登録も不要です。"
+    },
+    {
+      "h": "お使いのGoDaddyメール製品を確認",
+      "p": "GoDaddyにログインし、My ProductsからEmail & Officeダッシュボードを開きます。タイルに表示されたプラン名が答えです。Professional EmailはTitanベースの製品で、secureserverのホストを使います。Microsoft 365はOutlook on the webが開くMicrosoftのメールボックスなので、このIMAP設定ではなくOutlookで接続してください。アドレスをcPanelのEmail Accountsで作成した場合は、secureserverの設定ではなく、yourdomain.com/webmailのConfigure Mail Clientに表示される設定を使います。"
+    },
+    {
+      "h": "メールボックスのパスワードを用意し、外部クライアントを許可",
+      "p": "Email & Officeダッシュボードで、アドレスの横にあるManageを開き、メールのパスワードを設定またはリセットします。これはGoDaddyアカウントのログイン情報ではなく、メールボックス自身のパスワードです。それでもログインが拒否される場合は、メールボックスのセキュリティ設定でサードパーティまたは外部メールクライアントの切り替えを確認してください。なお、Titanはそのメールボックスで2段階認証がオンになっている間、外部クライアントをブロックします。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "MCPEmailsにアドレスとパスワードを追加し、https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GoDaddyで購入したMicrosoft 365のメールボックスは、IMAPではなくOutlookで接続します",
+      "p": "GoDaddyはMicrosoft 365を再販しており、旧Workspace Emailの顧客をMicrosoft 365へ移行させてきました。そのため「GoDaddyのメール」を使っているつもりの人の多くは、実際にはGoDaddyから請求が来るMicrosoftのメールボックスを使っています。これらのメールボックスは<code>imap.secureserver.net</code>ではなくMicrosoftのサーバー上にあるので、このページの設定ではなく、Outlookのオプション（Sign in with Microsoft）で接続してください。職場のMicrosoft 365アカウントなので、最初に一度、組織のIT管理者がMCPEmailsを承認する必要がある場合があり、ダッシュボードに管理者へ送る承認リンクが表示されます。見分け方は簡単です。Webメールにログインして開くのがOutlook on the webなら、それはMicrosoftの製品です。"
+    },
+    {
+      "h": "ネット上のGoDaddy IMAPガイドの半分は、もう存在しない製品向けです",
+      "p": "Workspace Emailは提供が終了し、顧客はMicrosoft 365へ移行しましたが、この製品向けに書かれたガイドはいまも「GoDaddy IMAP設定」の検索結果の上位に表示され、secureserverのホスト名を載せています。ややこしいことに、現在のProfessional Emailも同じホスト名を使っているため、このホスト名自体は今でも正しいのです。そのため移行済みのユーザーがガイドに従って正しそうな設定を入力すると、理由のわからない認証エラーになります。設定は正しく、ただメールボックスがもうそこにないのです。"
+    },
+    {
+      "h": "Titanは、メールボックスで2段階認証がオンの間、外部クライアントをブロックします",
+      "p": "GoDaddy Professional EmailはTitan上で動いています。TitanはIMAP、POP、SMTPをメールボックスのサードパーティアプリのアクセス設定で制御しており、そのメールボックスで2段階認証が有効な間は外部クライアントからの接続を拒否します。この拒否はログイン失敗として表示されるため、パスワード間違いと勘違いされがちです。何かをリセットする前に、この切り替えを確認してください。"
+    },
+    {
+      "h": "GoDaddyのIMAPサーバーはSASL-IRを通知していません",
+      "p": "<code>imap.secureserver.net</code>の背後にあるIMAPサーバーはFenixと名乗り、SASL-IR機能を通知していません。そのため、AUTHENTICATEコマンドと同じ行で認証情報を送る1ステップの認証を拒否します。SASL-IRを前提とするクライアントには説明のない<code>BAD</code>だけが返り、認証情報の誤りとまったく同じように見えます。MCPEmailsはこれを検出して2ステップのやり取りで再試行するので接続は成功しますが、ほかのIMAPツールがよそでは動くのにGoDaddyでだけ失敗するのはこのためです。"
+    }
+  ],
+  "limits": [
+    "GoDaddyで販売されているMicrosoft 365のメールボックスはsecureserverのホスト上にありません。Outlook（Sign in with Microsoft）で接続してください。IT管理者による一度の承認が必要な場合があります。",
+    "cPanelホスティングのメールボックスはsecureserverのホスト上にありません。代わりにcPanelのConfigure Mail Client画面に表示されるホスト名で接続してください。",
+    "サーバーがMOVE拡張を通知していないため、メッセージの移動は1つのアトミックなコマンドではなく、コピー、フラグ付け、expungeの組み合わせで行われます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはGoDaddyのメールで使えますか？",
+      "a": "MCPEmailsのようなMCPサーバーをIMAPでメールボックスに接続すれば、TitanベースのGoDaddy Professional Emailで使えます。ClaudeにはGoDaddy用のコネクタが組み込まれていません。GoDaddy経由で購入したMicrosoft 365のメールボックスも使えますが、IMAPではなくOutlook（Sign in with Microsoft）で接続し、最初に一度IT管理者がMCPEmailsを承認する必要がある場合があります。"
+    },
+    {
+      "q": "GoDaddyのIMAPとSMTPの設定は？",
+      "a": "Professional Emailの場合、IMAPはimap.secureserver.net、ポート993、暗黙的TLS、SMTPはsmtpout.secureserver.net、ポート465で、こちらも暗黙的TLSです。ユーザー名はメールアドレス全体、パスワードはそのメールボックス自身のメールパスワードです。どちらのホストもGoDaddyが案内しているもので、実際のTLS接続で確認しています。"
+    },
+    {
+      "q": "Professional EmailかMicrosoft 365かを見分けるには？",
+      "a": "GoDaddyアカウントでMy Productsを開き、Email & Officeダッシュボードを確認してください。アドレスごとのタイルにプラン名が表示されています。もっと手早い方法は、Webメールにログインすることです。Outlook on the webが開けばMicrosoft 365、TitanのWebメール画面が開けばProfessional Emailで、secureserverの設定が当てはまります。"
+    },
+    {
+      "q": "GoDaddyのメールパスワードが拒否されるのはなぜですか？",
+      "a": "よくある原因は3つあり、次の順に確認してください。メールボックス自身のメールパスワードではなく、GoDaddyアカウントのログイン情報を使っている。メールボックスで2段階認証が有効になっていて、Titanが外部クライアントを拒否している。あるいは、メールボックスがMicrosoft 365に移行済みで、secureserverのホスト上にはもう存在しない（その場合はOutlookで接続してください）。"
+    },
+    {
+      "q": "cPanelホスティングで作成したメールアドレスはどうなりますか？",
+      "a": "これらはお使いのホスティングサーバー上の通常のIMAPメールボックスで、接続できますが、secureserverのホスト名は使いません。yourdomain.com/webmailにログインしてConfigure Mail Clientを開き、そこに表示される手動設定を使ってください。パスワードは、cPanelのEmail Accountsでそのアドレスに設定したものです。"
+    },
+    {
+      "q": "GoDaddyのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにGoDaddyからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにGoDaddyの受信トレイを",
+    "sub": "GoDaddy Professional Emailを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  },
+  "seeAlso": {
+    "intro": "GoDaddyのMicrosoft 365メールボックスをお使いですか？",
+    "label": "Outlook（Sign in with Microsoft）で接続",
+    "href": "/connect/office365"
+  }
+}

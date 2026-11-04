@@ -1,0 +1,109 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha do e-mail",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "Seu endereço completo, incluindo o domínio: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecte o e-mail da GoDaddy ao Claude, Cursor e MCP",
+    "description": "Conecte o Professional Email da GoDaddy ao Claude e a qualquer cliente MCP via IMAP em imap.secureserver.net:993. O Microsoft 365 da GoDaddy se conecta pelo Outlook."
+  },
+  "hero": {
+    "eyebrow": "E-mail da GoDaddy + IA",
+    "titleLine1": "Conecte o e-mail da GoDaddy ao Claude,",
+    "titleLine2": "Cursor, ChatGPT, qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real da GoDaddy. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, depois de saber em qual dos vários produtos de e-mail da GoDaddy o seu endereço realmente está.",
+    "answer": "O Claude não acessa uma caixa de correio da GoDaddy sozinho. O MCPEmails é um servidor MCP hospedado que conecta o Professional Email da GoDaddy via IMAP em imap.secureserver.net na porta 993, autenticando com o seu endereço completo e a senha de e-mail daquela caixa de correio, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar os e-mails. A GoDaddy vende mais de um produto de e-mail com a mesma marca, e uma caixa do Microsoft 365 comprada pela GoDaddy é uma caixa da Microsoft, que se conecta pelo Outlook (Entrar com a Microsoft) e não por IMAP, então confira primeiro qual é a sua. Uma caixa de entrada é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "A senha de e-mail da própria caixa de correio",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como a GoDaddy se conecta: identifique o produto, depois IMAP",
+    "body": "\"E-mail da GoDaddy\" são três ou quatro serviços diferentes com a mesma marca, e eles não compartilham configurações. O <b>Professional Email</b>, que a GoDaddy vende sobre a plataforma Titan, é o produto principal atual e é documentado pela GoDaddy em <code>imap.secureserver.net</code> porta 993 e <code>smtpout.secureserver.net</code> porta 465, ambos com TLS implícito, usando o endereço como nome de usuário e a senha da própria caixa de correio. O antigo <b>Workspace Email</b>, já descontinuado, usava os mesmos hostnames secureserver, e é por isso que tantos guias antigos na internet ainda os mostram. O <b>Microsoft 365 da GoDaddy</b> nem é uma caixa de correio da GoDaddy: é um tenant da Microsoft que a GoDaddy revende e cobra, hospedado nos servidores da própria Microsoft. E uma caixa de correio criada dentro do <b>cPanel Web Hosting</b> fica no seu servidor de hospedagem, não no secureserver, e usa o hostname desse servidor. Acerte o produto e o resto da configuração leva dois minutos."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada para sempre e não pede cartão."
+    },
+    {
+      "h": "Confira qual produto de e-mail da GoDaddy você tem",
+      "p": "Entre na GoDaddy e abra o painel Email & Office em My Products (rótulos em inglês, como aparecem na GoDaddy). O nome do plano no bloco é a resposta. O Professional Email é o produto baseado no Titan e usa os hosts secureserver. O Microsoft 365 abre o Outlook na web e é uma caixa da Microsoft: conecte pelo Outlook em vez destas configurações IMAP. Se o endereço foi criado no cPanel, em Email Accounts, as configurações dele são as mostradas em yourdomain.com/webmail, em Configure Mail Client, e não as do secureserver."
+    },
+    {
+      "h": "Pegue a senha da caixa de correio e libere clientes externos",
+      "p": "No painel Email & Office, abra Manage ao lado do endereço e defina ou redefina a senha de e-mail. Essa é a senha da própria caixa de correio, não o login da sua conta GoDaddy. Se o login ainda for recusado, procure nas configurações de segurança da caixa de correio a opção de cliente de e-mail de terceiros ou externo, e saiba que o Titan bloqueia clientes externos enquanto a autenticação de dois fatores estiver ativada para aquela caixa."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Adicione seu endereço e senha no MCPEmails, depois coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Uma caixa do Microsoft 365 comprada na GoDaddy se conecta pelo Outlook, não por IMAP",
+      "p": "A GoDaddy revende o Microsoft 365 e vem migrando os antigos clientes do Workspace Email para ele, então boa parte de quem acha que tem \"um e-mail da GoDaddy\" hoje tem uma caixa da Microsoft com fatura da GoDaddy. Essas caixas não ficam em <code>imap.secureserver.net</code>; ficam nos servidores da Microsoft, então conecte-as pela opção Outlook (Entrar com a Microsoft) e não com as configurações desta página. Por ser uma conta corporativa do Microsoft 365, o administrador de TI da sua organização pode precisar aprovar o MCPEmails uma vez antes, e o painel oferece um link de aprovação para enviar a ele. O sinal é simples: se ao entrar no webmail você cai no Outlook na web, é o produto da Microsoft."
+    },
+    {
+      "h": "Metade dos guias de IMAP da GoDaddy na internet são de um produto que não existe mais",
+      "p": "O Workspace Email foi descontinuado e seus clientes foram migrados para o Microsoft 365, mas os guias escritos para ele ainda são os primeiros resultados para \"configurações IMAP GoDaddy\", e mostram os hostnames secureserver. Para confundir, esses hostnames continuam corretos, porque o Professional Email atual da GoDaddy usa os mesmos. Então um usuário migrado segue um guia, digita configurações que parecem certas e recebe uma falha de autenticação sem nenhuma pista do motivo: as configurações estavam certas, a caixa de correio é que não está mais lá."
+    },
+    {
+      "h": "O Titan bloqueia clientes externos enquanto a 2FA está ativa na caixa de correio",
+      "p": "O Professional Email da GoDaddy roda no Titan, que condiciona IMAP, POP e SMTP a uma configuração de acesso por apps de terceiros na caixa de correio e recusa conexões de clientes externos enquanto a autenticação de dois fatores estiver ativada para ela. A recusa aparece como falha de login, por isso é confundida o tempo todo com senha errada. Confira essa opção antes de redefinir qualquer coisa."
+    },
+    {
+      "h": "O servidor IMAP da GoDaddy não anuncia SASL-IR",
+      "p": "O servidor IMAP por trás de <code>imap.secureserver.net</code> se identifica como Fenix e omite a capacidade SASL-IR, então rejeita a autenticação em uma etapa que envia as credenciais na mesma linha do comando AUTHENTICATE. Clientes que pressupõem SASL-IR recebem um <code>BAD</code> seco, sem explicação, que parece exatamente credencial errada. O MCPEmails detecta isso e tenta de novo com a troca em duas etapas, então a conexão funciona, mas é por isso que outras ferramentas IMAP falham com a GoDaddy enquanto funcionam em outros lugares."
+    }
+  ],
+  "limits": [
+    "Caixas do Microsoft 365 vendidas pela GoDaddy não ficam nos hosts secureserver. Conecte-as pelo Outlook (Entrar com a Microsoft); um administrador de TI pode precisar aprovar o app uma vez.",
+    "Caixas de correio de hospedagem cPanel não ficam nos hosts secureserver. Conecte-as com o hostname mostrado na tela Configure Mail Client do cPanel.",
+    "O servidor não anuncia a extensão MOVE, então mover uma mensagem é feito como cópia, flag e expunge, e não com um único comando atômico."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o e-mail da GoDaddy?",
+      "a": "Funciona com o Professional Email da GoDaddy, o produto baseado no Titan, depois que um servidor MCP como o MCPEmails é conectado à caixa de correio via IMAP. O Claude não tem conector nativo para a GoDaddy. Uma caixa do Microsoft 365 comprada pela GoDaddy também funciona, mas se conecta pelo Outlook (Entrar com a Microsoft) e não por IMAP, e um administrador de TI pode precisar aprovar o MCPEmails uma vez antes."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP da GoDaddy?",
+      "a": "No Professional Email, o IMAP é imap.secureserver.net na porta 993 com TLS implícito e o SMTP é smtpout.secureserver.net na porta 465, também com TLS implícito. O nome de usuário é o seu endereço de e-mail completo e a senha é a senha de e-mail da própria caixa de correio. Os dois hosts são documentados pela GoDaddy e foram confirmados com uma conexão TLS real."
+    },
+    {
+      "q": "Como sei se tenho o Professional Email ou o Microsoft 365?",
+      "a": "Abra My Products na sua conta GoDaddy e olhe o painel Email & Office. O nome do plano aparece no bloco de cada endereço. Um teste mais rápido: entre no seu webmail. Se cair no Outlook na web, é Microsoft 365. Se cair na interface de webmail do Titan, é Professional Email e as configurações secureserver valem."
+    },
+    {
+      "q": "Por que a senha do meu e-mail da GoDaddy é recusada?",
+      "a": "Três causas comuns, nesta ordem. Você está usando o login da conta GoDaddy, e não a senha de e-mail da própria caixa de correio. A autenticação de dois fatores está ativada na caixa, o que faz o Titan recusar clientes externos. Ou a caixa foi migrada para o Microsoft 365 e nem existe mais nos hosts secureserver; nesse caso, conecte pelo Outlook."
+    },
+    {
+      "q": "E os endereços de e-mail que criei na hospedagem cPanel?",
+      "a": "Esses são caixas IMAP comuns no seu próprio servidor de hospedagem e podem ser conectados, mas não com os hostnames secureserver. Entre em yourdomain.com/webmail, abra Configure Mail Client e use as configurações manuais mostradas ali. A senha é a que você definiu para aquele endereço em Email Accounts no cPanel."
+    },
+    {
+      "q": "Meus e-mails da GoDaddy ficam armazenados nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo na GoDaddy via IMAP a cada solicitação e entregues ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada da GoDaddy",
+    "sub": "Conecte o Professional Email da GoDaddy em poucos minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  },
+  "seeAlso": {
+    "intro": "Caixa do Microsoft 365 da GoDaddy?",
+    "label": "Conecte pelo Outlook (Entrar com a Microsoft)",
+    "href": "/connect/office365"
+  }
+}

@@ -113,7 +113,7 @@ export function clip(text, max = HINT_MAX) {
 
 // One literal namespace per import, so the bundler's context module covers
 // docs.json and pricing.json only, not every namespace of every locale.
-const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh', 'de']);
+const LOCALES = new Set(['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja']);
 
 async function loadDocs(locale) {
   const l = LOCALES.has(locale) ? locale : 'en';

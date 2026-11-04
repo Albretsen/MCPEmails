@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "title": "E-mail com IA para founders: atenda clientes pelo Claude",
+    "description": "Use o Claude ou outro cliente MCP para triar e responder e-mails de clientes. Leia, rascunhe, envie, agende e organize caixas Gmail, Outlook ou IMAP em um único fluxo seguro."
+  },
+  "hero": {
+    "eyebrow": "Feito para founders",
+    "titleLine1": "Responda a cada cliente",
+    "titleLine2": "de dentro da sua IA",
+    "lead": "Você é o suporte, o comercial e o founder. O MCPEmails conecta sua caixa de entrada ao Claude para você triar, rascunhar respostas com a sua voz, enviar e agendar follow-ups sem sair da conversa. Nosso usuário mais ativo faz exatamente isso, todos os dias.",
+    "ctaPrimary": "Conecte sua caixa de entrada grátis",
+    "ctaSecondary": "Veja como funciona"
+  },
+  "pains": {
+    "eyebrow": "Por que founders escolhem",
+    "title": "Suporte não deveria tomar o seu dia",
+    "sub": "E-mail de cliente é o trabalho que você não pode largar e o que mais quebra sua concentração. Entregue a caixa de entrada à sua IA e recupere essas horas.",
+    "items": {
+      "speed": {
+        "tag": "Agilidade",
+        "h": "Responda em minutos, não à meia-noite",
+        "p": "Peça ao Claude para <b>ler as conversas de clientes sem resposta e rascunhar as respostas</b>. Você revisa e envia. Uma manhã de suporte vira uma passada de cinco minutos, e potenciais clientes e clientes pagantes recebem resposta no mesmo dia."
+      },
+      "voice": {
+        "tag": "Sua voz",
+        "h": "Soa como você, não como um robô",
+        "p": "Mostre ao Claude uma resposta antiga e diga <b>use o meu tom</b>. Ele escreve do jeito que você escreve: caloroso, direto, alinhado à sua marca. Chega de copiar e colar respostas prontas e de soar como uma central de atendimento."
+      },
+      "context": {
+        "tag": "Contexto",
+        "h": "Nunca perca o fio da conversa",
+        "p": "O Claude pode <b>pesquisar todas as conversas anteriores com um cliente</b> antes de responder, então a resposta já sabe o que ele comprou, o que deu problema da última vez e o que você prometeu. Nada de vasculhar a caixa de entrada para lembrar."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Um dia na sua caixa de entrada",
+    "title": "Prompts reais que founders digitam",
+    "sub": "Nenhum app novo para aprender. Você só conversa com o Claude, e ele age dentro da sua caixa de entrada real.",
+    "prompts": [
+      "Mostre os e-mails de clientes sem resposta dos últimos 3 dias, dos mais recentes para os mais antigos.",
+      "Rascunhe uma resposta ao pedido de reembolso da Maria. Use o mesmo tom da minha última resposta para ela.",
+      "Isto é um pedido de funcionalidade. Responda agradecendo e depois coloque no marcador Feedback.",
+      "Pesquise na minha caixa de entrada tudo de acme.com e resuma em que pé está a negociação.",
+      "Agende este follow-up para segunda às 8h, para ser a primeira coisa que a pessoa vê.",
+      "Arquive todas as newsletters e notificações para que só sobrem pessoas de verdade na minha caixa de entrada."
+    ]
+  },
+  "does": {
+    "eyebrow": "O que ele faz de fato",
+    "title": "Uma caixa de entrada de verdade, não uma espiada somente leitura",
+    "sub": "Vinte e uma ferramentas de ação que seu agente usa de ponta a ponta.",
+    "items": {
+      "read": {
+        "h": "Ler e pesquisar",
+        "p": "Liste, leia e pesquise em pastas e em todas as caixas de entrada conectadas, sempre em tempo real."
+      },
+      "send": {
+        "h": "Enviar e responder",
+        "p": "Envie, responda e encaminhe diretamente. O agente termina o e-mail, não só um rascunho."
+      },
+      "schedule": {
+        "h": "Agendar",
+        "p": "Programe um envio para mais tarde, para que os follow-ups cheguem no momento certo do dia do cliente."
+      },
+      "organize": {
+        "h": "Organizar",
+        "p": "Mova, copie, sinalize, arquive e aplique marcadores, para que a triagem aconteça enquanto você lê, não depois."
+      }
+    }
+  },
+  "proof": {
+    "quote": "O founder que mais usa o MCPEmails abre o Claude toda manhã, zera a fila de clientes e termina antes do café. Essa é a proposta inteira.",
+    "label": "Nosso fluxo mais ativo, em uma frase"
+  },
+  "providers": {
+    "eyebrow": "Qualquer caixa de entrada, qualquer IA",
+    "title": "Conecte a caixa de entrada de onde você já faz o suporte",
+    "sub": "Outlook com login da Microsoft, Gmail com uma senha de app do Google, os demais com uma senha de app. Depois, a mesma caixa de entrada funciona no Claude, Cursor, VS Code, ChatGPT e em qualquer cliente MCP, então você nunca fica preso a um único app.",
+    "ctaGmail": "Conectar Gmail",
+    "ctaOutlook": "Conectar Outlook",
+    "ctaFastmail": "Conectar Fastmail",
+    "ctaIcloud": "Conectar iCloud"
+  },
+  "faq": {
+    "eyebrow": "Perguntas de founders",
+    "title": "O que founders perguntam antes de conectar",
+    "sub": "As objeções práticas, respondidas sem rodeios.",
+    "items": [
+      {
+        "q": "Sou founder solo e faço meu próprio suporte. Isso não é exagero?",
+        "a": "É o contrário. Quanto menos gente você tem, mais um acúmulo de suporte dói. O MCPEmails transforma responder clientes em uma passada rápida diária no Claude, em vez de uma hora pulando de contexto, e é grátis para começar, sem cartão."
+      },
+      {
+        "q": "As respostas vão soar genéricas?",
+        "a": "Só se você deixar. Peça ao Claude para usar o tom de uma resposta antiga, ou cole alguns dos seus e-mails, e ele escreve com a sua voz. Você sempre revisa antes de qualquer envio, então nada sai sem soar como você."
+      },
+      {
+        "q": "Ele envia de verdade ou só rascunha?",
+        "a": "Ele envia, responde, encaminha e agenda de verdade. Você pode deixá-lo só em rascunhos enquanto ganha confiança e liberar o envio quando se sentir à vontade. De qualquer forma, o agente faz o trabalho dentro da sua caixa de entrada real."
+      },
+      {
+        "q": "Os e-mails dos meus clientes ficam armazenados em algum lugar?",
+        "a": "Não. As mensagens são buscadas em tempo real no seu provedor a cada vez e nunca ficam armazenadas nos nossos servidores. Guardamos apenas um token criptografado ou uma senha de app para autenticar as próximas solicitações, e você pode revogar o acesso com um clique."
+      },
+      {
+        "q": "Quanto custa enquanto ainda sou pequeno?",
+        "a": "Grátis, com uma caixa de entrada conectada e sem precisar de cartão. O Personal, a $9 por mês, conecta três caixas de correio, o Pro, a $15 por mês, conecta até 10, e o Business adiciona membros, funções e um espaço de trabalho separado para cada cliente, com 10 caixas de correio incluídas."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Recupere suas noites",
+    "sub": "Conecte sua caixa de entrada em minutos e deixe o Claude zerar a fila de clientes com você. Uma caixa de entrada grátis para começar, sem cartão.",
+    "ctaPrimary": "Conecte sua caixa de entrada grátis",
+    "ctaSecondary": "Leia a documentação"
+  }
+}

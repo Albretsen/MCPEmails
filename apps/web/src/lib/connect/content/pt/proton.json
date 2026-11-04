@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "https://proton.me/support/smtp-submission",
+    "https://proton.me/support/email-forwarding",
+    "https://proton.me/mail/bridge"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Não existe login remoto",
+    "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "usernameForm": "Não há nada para digitar aqui. O Proton só emite credenciais para clientes de e-mail dentro do Proton Mail Bridge, e elas só valem para o Bridge no computador em que ele está rodando.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Proton Mail e Claude: por que o Bridge impede a conexão",
+    "description": "O Proton Mail não tem IMAP remoto. O IMAP só existe dentro do Proton Mail Bridge, um app pago de desktop que serve em localhost, então nenhum servidor MCP hospedado consegue alcançá-lo."
+  },
+  "hero": {
+    "eyebrow": "Proton Mail + IA",
+    "titleLine1": "O Proton Mail não pode ser",
+    "titleLine2": "conectado a um servidor MCP hospedado",
+    "lead": "O Proton não tem servidor IMAP na internet. O único IMAP que existe para uma caixa do Proton roda no seu próprio computador, dentro do Proton Mail Bridge, e é por isso que toda ferramenta hospedada esbarra na mesma parede.",
+    "answer": "Não. O Proton Mail não expõe nenhum endpoint IMAP, POP ou SMTP em que um cliente em outro lugar possa fazer login. O único caminho para um cliente de e-mail chegar ao Proton é o Proton Mail Bridge, um aplicativo de desktop disponível nos planos pagos do Proton que descriptografa seus e-mails localmente e serve IMAP e SMTP em localhost, ou seja, no endereço de loopback da máquina em que roda. Um servidor MCP hospedado como o MCPEmails roda na nossa infraestrutura, não na sua mesa, e nada na internet consegue rotear até o seu localhost, então a conexão é impossível, e não apenas não implementada. Se você quer um agente de IA trabalhando com e-mails que chegam ao seu endereço Proton, as opções reais são o encaminhamento automático pago do Proton para uma caixa de correio que fale IMAP, que o MCPEmails conecta de graça para uma caixa de entrada, ou o envio SMTP do Proton, que serve só para mensagens de saída."
+  },
+  "method": {
+    "title": "Como o Proton Mail se conecta: localmente, pelo Bridge, ou de jeito nenhum",
+    "body": "A documentação de suporte do próprio Proton deixa claro que clientes de e-mail de terceiros passam pelo <b>Proton Mail Bridge</b>, e que o Proton não oferece POP3. O Bridge roda no Windows, macOS e Linux, guarda suas chaves, descriptografa as mensagens quando chegam na sua máquina e criptografa de novo os e-mails de saída antes de entregá-los ao Proton, e então apresenta essa visão em texto puro como um servidor IMAP e SMTP comum, vinculado à interface de loopback. Seu cliente de e-mail se conecta a esse servidor local com credenciais que o Bridge gera para ele. Essas credenciais não são a sua senha do Proton e não podem ser usadas em nenhum outro lugar, porque o servidor em que elas autenticam só existe enquanto o Bridge está rodando naquele computador. O Bridge exige um plano pago: Proton Mail Plus, Proton Unlimited, Proton Business ou superior. No Proton Free não há acesso por cliente de nenhum tipo."
+  },
+  "setup": [
+    {
+      "h": "Crie a conta grátis no MCPEmails",
+      "p": "Um endereço de e-mail, sem cartão. Uma caixa de entrada conectada é grátis para sempre, e os próximos dois passos definem qual caixa será essa."
+    },
+    {
+      "h": "Escolha a caixa de correio que vai receber o trabalho automatizado",
+      "p": "Escolha um endereço num provedor que tenha um servidor IMAP de verdade: uma caixa de domínio próprio, uma conta de trabalho, Fastmail, Migadu, Gmail. Essa é a conta que o MCPEmails conecta e a partir da qual seu agente lê, envia, arquiva e agenda. Seu endereço Proton continua exatamente como está."
+    },
+    {
+      "h": "Adicione uma regra de encaminhamento nas configurações do Proton",
+      "p": "No Proton Mail na web, abra Settings, depois All settings, depois <b>Forward and auto-reply</b> (encaminhamento e resposta automática), e escolha Add forwarding rule. Escolha o endereço Proton de origem e o endereço de destino, e deixe as condições vazias para encaminhar tudo. O Proton envia ao destino um pedido de confirmação que precisa ser aceito antes que qualquer coisa chegue. Leia a próxima seção antes: encaminhar para um endereço fora do Proton muda o cenário de criptografia."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e o agente trabalha na caixa de correio conectada, incluindo as cópias que chegam do Proton."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Bridge fica preso ao localhost, e esse fato sozinho é todo o bloqueio",
+      "p": "O Bridge escuta no endereço de loopback do computador em que roda. O tráfego de loopback nunca sai daquela máquina, então não há hostname que um serviço hospedado possa resolver nem porta que ele possa alcançar, quaisquer que sejam as credenciais. É por isso que todo assistente hospedado, servidor MCP e ferramenta de automação na nuvem para exatamente no mesmo lugar com o Proton, e por isso a resposta não muda se você fizer upgrade do plano."
+    },
+    {
+      "h": "O Bridge não está disponível no Proton Free",
+      "p": "Quem está no plano gratuito muitas vezes chega a baixar o Bridge antes de descobrir isso. O Bridge exige um plano pago do Proton Mail, então no Proton Free não existe forma suportada de usar nenhum cliente de e-mail de terceiros, local ou não. Isso inclui o Thunderbird e o Apple Mail, não só ferramentas de automação."
+    },
+    {
+      "h": "O envio SMTP do Proton parece a solução e não consegue ler uma única mensagem",
+      "p": "O Proton oferece envio SMTP nos planos pagos com endereços de domínio próprio, autenticado com um token que você gera nas configurações, e não com a senha da conta. A documentação do Proton diz que ele serve apenas para enviar, ao contrário do protocolo IMAP usado por clientes de terceiros para buscar os e-mails recebidos. Então um aplicativo pode enviar como o seu endereço Proton e nunca vê a resposta. Para um agente que lê uma conversa antes de respondê-la, isso não é nem uma solução parcial."
+    },
+    {
+      "h": "Encaminhar para fora do Proton desativa a criptografia de ponta a ponta desse endereço",
+      "p": "O Proton diz isso diretamente: e-mails encaminhados para outro endereço Proton continuam com criptografia de ponta a ponta, e encaminhar para um endereço fora do Proton desativa a criptografia de ponta a ponta para os e-mails enviados e recebidos pelo endereço que encaminha. Se o motivo de você usar o Proton é que o Proton não consegue ler seus e-mails, espelhá-los numa caixa de correio comum abre mão disso para os e-mails espelhados. Encaminhe um conjunto específico de correspondência em vez da caixa inteira, ou não encaminhe nada."
+    }
+  ],
+  "limits": [
+    "Expor o Bridge à internet por um túnel ou redirecionamento de porta não é uma configuração suportada, e não recomendamos. O Bridge foi feito para ser acessado por um cliente na mesma máquina, e colocar uma visão descriptografada da sua caixa de correio numa porta pública desfaz o motivo de você ter escolhido o Proton.",
+    "Uma cópia encaminhada é um espelho, não a caixa de correio. As respostas que seu agente envia saem do outro endereço, e nada do que ele faz aparece nas suas conversas, pastas ou marcadores do Proton."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Proton Mail?",
+      "a": "Não diretamente, e não por nenhum servidor MCP hospedado. O Proton não tem endpoint IMAP voltado para a internet, e o aplicativo local Bridge, que fornece o IMAP, só é acessível a partir do computador em que roda. O caminho que funciona é encaminhar os e-mails que você quer que sejam tratados para uma caixa de correio que fale IMAP e conectar essa no lugar."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP do Proton Mail?",
+      "a": "Não existe um par público para divulgar. Os dados de IMAP e SMTP de uma caixa do Proton são gerados pelo Proton Mail Bridge no seu próprio computador e mostrados na janela do Bridge, apontando para o endereço de loopback com credenciais específicas daquela instalação. Qualquer diretório de configurações que liste um hostname IMAP do Proton acessível de outro lugar está errado."
+    },
+    {
+      "q": "Posso usar o Proton Mail Bridge com um servidor MCP hospedado?",
+      "a": "Não. O Bridge serve IMAP em localhost, que por definição só é acessível a partir da máquina em que o Bridge está rodando. Um servidor hospedado fica em outra infraestrutura, sem rota até a sua interface de loopback. Isso é um fato de rede, não uma política que pudéssemos dispensar."
+    },
+    {
+      "q": "Preciso de um plano pago do Proton para usar IMAP?",
+      "a": "Sim. O Bridge é o único caminho para IMAP ou SMTP numa caixa do Proton e exige um plano pago: Proton Mail Plus, Proton Unlimited, Proton Business ou superior. O Proton Free não tem nenhum acesso por cliente de terceiros, então uma conta gratuita não consegue conectar o Thunderbird, o Apple Mail nem nada mais."
+    },
+    {
+      "q": "Uma IA consegue pelo menos enviar e-mails do meu endereço Proton?",
+      "a": "Consegue, pelo recurso de envio SMTP do Proton, disponível nos planos pagos com endereços de domínio próprio e que usa um token gerado nas configurações. Ele serve só para envio. Nada que o use consegue listar, ler ou pesquisar sua caixa de correio, então um agente poderia enviar em seu nome sem nunca ver o que chegou."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Nas caixas de correio que o MCPEmails conecta, as mensagens são buscadas ao vivo via IMAP a cada solicitação e repassadas ao seu cliente de IA, com as credenciais criptografadas em repouso e sem reter o conteúdo das mensagens. Nunca guardamos credenciais do Proton, porque não existe conexão com o Proton a fazer."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada que ela consiga alcançar",
+    "sub": "O Proton continua privado e desconectado. Aponte uma caixa de correio IMAP para o seu agente, grátis para sempre."
+  }
+}

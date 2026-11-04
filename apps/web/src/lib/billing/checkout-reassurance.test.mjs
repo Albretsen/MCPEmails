@@ -44,6 +44,8 @@ test('locale tags normalise; anything unknown is English', () => {
   assert.equal(reassuranceLocale('DE'), 'de');
   assert.equal(reassuranceLocale('it'), 'en');
   assert.equal(reassuranceLocale(undefined), 'en');
-  assert.equal(checkoutReassurance('pt', 'pass'), checkoutReassurance('en', 'pass'));
+  assert.equal(reassuranceLocale('pt-BR'), 'pt');
+  assert.equal(reassuranceLocale('ja-JP'), 'ja');
+  assert.equal(checkoutReassurance('it', 'pass'), checkoutReassurance('en', 'pass'));
   assert.equal(checkoutReassurance('fr', 'bogus'), checkoutReassurance('fr', 'subscription'));
 });

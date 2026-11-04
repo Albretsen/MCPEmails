@@ -26,7 +26,7 @@ function postLocales(slug) {
   const dir = join(translationsDir, slug);
   if (existsSync(dir)) for (const f of readdirSync(dir)) locales.add(f.replace(/\.js$/, ''));
   const src = readFileSync(join(postsDir, `${slug}.js`), 'utf8');
-  for (const m of src.matchAll(/^\s+(nb|es|fr|zh|de):\s/gm)) locales.add(m[1]);
+  for (const m of src.matchAll(/^\s+(nb|es|fr|zh|de|pt|ja):\s/gm)) locales.add(m[1]);
   return [...locales];
 }
 
@@ -135,7 +135,7 @@ test('every internal blog link resolves to a page that exists in its locale', ()
     for (const [, href] of src.matchAll(/\]\((\/[^)\s]*)\)/g)) {
       for (const locale of locales) {
         const out = localizeHref(href, locale, opts);
-        const m = out.match(/^\/(nb|es|fr|zh|de)(\/[^?#]*)?/);
+        const m = out.match(/^\/(nb|es|fr|zh|de|pt|ja)(\/[^?#]*)?/);
         const target = m ? m[2] || '/' : out.replace(/[?#].*$/, '');
         const targetLocale = m ? m[1] : 'en';
         if (!exists(target, targetLocale)) broken.push(`${file}: ${href} -> ${out}`);

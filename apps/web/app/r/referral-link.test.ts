@@ -90,7 +90,9 @@ test('the landing page follows ?lang, then Accept-Language, then English', async
   seed();
   assert.equal((await open('ABCD2345', { 'accept-language': 'fr-FR,fr;q=0.9,en;q=0.8' })).location, 'https://mcpemails.test/fr?acq=referral');
   assert.equal((await open('ABCD2345', { 'accept-language': 'no;q=0.9,de;q=0.5' })).location, 'https://mcpemails.test/nb?acq=referral');
-  assert.equal((await open('ABCD2345', { 'accept-language': 'ja,pt;q=0.5' })).location, 'https://mcpemails.test/?acq=referral');
+  assert.equal((await open('ABCD2345', { 'accept-language': 'ko,it;q=0.5' })).location, 'https://mcpemails.test/?acq=referral');
+  assert.equal((await open('ABCD2345', { 'accept-language': 'pt-BR,pt;q=0.9' })).location, 'https://mcpemails.test/pt?acq=referral');
+  assert.equal((await open('ABCD2345', { 'accept-language': 'ja-JP' })).location, 'https://mcpemails.test/ja?acq=referral');
   assert.equal((await open('ABCD2345', { 'accept-language': 'fr' }, '?lang=es')).location, 'https://mcpemails.test/es?acq=referral');
   assert.equal((await open('ZZZZ9999', { 'accept-language': 'de' })).location, 'https://mcpemails.test/de');
 });

@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://support.apple.com/en-us/102525",
+    "https://support.apple.com/en-us/102654"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ用パスワード",
+    "helpUrl": "https://support.apple.com/en-us/102654",
+    "usernameForm": "Appleはユーザー名をiCloudアドレスの名前部分、つまりjohnappleseed@icloud.comではなくjohnappleseedと案内しています。それが拒否されたら、アドレス全体を使ってください。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "ClaudeとChatGPT向けのiCloud、Apple Mail MCP",
+    "description": "Apple Mailで読んでいるiCloudの受信トレイをClaudeやChatGPTから使えます。アプリ用パスワードで2分で接続。Macは不要。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "iCloud Mail + AI",
+    "titleLine1": "iCloud MCPサーバー",
+    "titleLine2": "Claude、Cursor、ChatGPT向け",
+    "lead": "ClaudeやChatGPTに、Apple Mailで読んでいるiCloudの受信トレイを渡せます。Appleのアプリ用パスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができます。ホスト型なのでMacの電源は切ったままで構わず、同じ受信トレイがすべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "アプリ用パスワード、OAuthなし",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "AppleはiCloud MailにOAuthを提供していないため、Claudeは直接接続できません。MCPEmailsはAppleのアプリ用パスワードを使ってiCloudの受信トレイにIMAPで接続し、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができるようにします。セットアップは2分ほどで、受信トレイ1つは無料です。"
+  },
+  "method": {
+    "title": "iCloudの接続方法：アプリ用パスワード",
+    "body": "iCloud MailはIMAP/SMTPを通じて<b>Appleのアプリ用パスワード</b>で接続します。account.apple.comの「サインインとセキュリティ」→「アプリ用パスワード」で生成し（2ファクタ認証が必要）、iCloudアドレスとともにMCPEmailsに貼り付けてください。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "アプリ用パスワードを生成する",
+      "p": "account.apple.comで「サインインとセキュリティ」→「アプリ用パスワード」を開いて作成します（2ファクタ認証が有効である必要があります）。"
+    },
+    {
+      "h": "MCPEmailsに貼り付ける",
+      "p": "iCloudアドレスとアプリ用パスワードを追加して、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントが受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "2ファクタ認証は好みではなく前提条件です",
+      "p": "Appleは2ファクタ認証で保護されたApple Accountにしかアプリ用パスワードを発行しません。account.apple.comの「サインインとセキュリティ」に「アプリ用パスワード」がなければそれが理由で、2ファクタ認証を有効にするのは任意の強化策ではなく最初の一歩です。他の道はありません。AppleはiCloud MailにOAuthを提供しておらず、通常のApple Accountのパスワードはどんな設定でもメールクライアントを認証しません。"
+    },
+    {
+      "h": "ユーザー名はたいていメールアドレス全体ではありません",
+      "p": "Appleは受信用のユーザー名をiCloudアドレスの<b>名前部分</b>、たとえば<code>johnappleseed@icloud.com</code>ではなく<code>johnappleseed</code>と案内しています。このサイトの他のほぼすべてのプロバイダーとは逆で、習慣でアドレスをコピーして入れてしまう人がつまずきます。古い<code>@me.com</code>や<code>@mac.com</code>のアドレス、iCloud+のカスタムドメインのアドレスも、すべて同じ主アカウント名でサインインします。短い形式が拒否されたら、Apple自身のドキュメントがアドレス全体を代替として挙げています。"
+    },
+    {
+      "h": "送信は587のSTARTTLSで、アップグレードするまで何も提供されません",
+      "p": "Appleの送信サーバーは<code>smtp.mail.me.com</code>のポート587で、平文の接続で始まりSTARTTLSでアップグレードします。このサイトに載っているプロバイダーの多くは代わりに465の暗黙的TLSを使うので、iCloudに対して465を前提にするクライアントはただ固まります。同じ場所に2つ目の罠があります。サーバーを調べたところ、STARTTLSの前には<b>認証メカニズムをまったく通知していません</b>でした。メカニズム一覧を早く読みすぎるクライアントは認証が未対応だと判断して諦めますが、実際は先に接続をアップグレードするだけでよかったのです。"
+    },
+    {
+      "h": "AppleのIMAPサーバーはほとんど何も通知せず、それがメールの移動方法を変えます",
+      "p": "<code>imap.mail.me.com</code>から読み取った機能一覧は異例なほど少ないものです。<code>MOVE</code>がないので、メッセージの移動は1つのアトミックなコマンドではなくコピー、フラグ更新、expungeとして実行され、途中で切れた接続はメッセージを両方のフォルダーに残すことがあります。<code>IDLE</code>がないので、プッシュされるものはなく、新着メールは見に行って見つけます。<code>UIDPLUS</code>がないので、コピーしたメッセージの識別子は返されず、移動先を検索して見つける必要があります。そして<code>SPECIAL-USE</code>がないので、送信済み、下書き、ゴミ箱、迷惑メールは役割ではなく名前で照合されます。別の言語で作られたメールボックスでは、フォルダー名を明示すればエージェントが見つけます。"
+    }
+  ],
+  "limits": [
+    "iCloudはIDLEに対応していないため、新着メールは届いた瞬間にプッシュされるのではなく、エージェントが見に行ったときに見つかります。",
+    "MOVE拡張がないため、移動はアトミックではありません。操作の途中で接続が切れると、メッセージが一時的に2つのフォルダーに残ることがあります。",
+    "AppleはiCloud MailにOAuthを提供していません。アプリ用パスワードが唯一の入り口で、Apple Accountでそれを取り消すと受信トレイはすぐに切断されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはiCloud Mailで使えますか？",
+      "a": "単体では使えません。Claudeに内蔵のiCloudコネクタはなく、AppleはiCloud MailのOAuthインターフェイスを公開していません。MCPEmailsのようなMCPサーバーをAppleのアプリ用パスワードでIMAP経由でメールボックスに接続すると、Claudeがメールの閲覧、検索、送信、返信、予約送信、整理をできるようになり、同じ接続がCursorやChatGPTからも使えます。"
+    },
+    {
+      "q": "ClaudeはApple Mailに接続できますか？",
+      "a": "アプリには接続できませんし、その必要もありません。Apple Mailはプロバイダー側にあるメールボックスを表示しているだけです。iCloudアドレスなら、ここでアプリ用パスワードを使って接続すれば、ClaudeやChatGPTは「このMac内」にだけ置いたフォルダーを除いて同じフォルダーとメッセージを見られます。Apple MailにGmail、Outlook、Yahoo、職場のアカウントが表示されているなら、代わりにそのプロバイダーを接続してください。MCPEmailsはホスト型なので、Macの電源は入っていなくて構いません。"
+    },
+    {
+      "q": "iCloud MailのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはimap.mail.me.comのポート993、暗黙的TLSです。SMTPはsmtp.mail.me.comのポート587でSTARTTLS、465の暗黙的TLSではありません。パスワードはどちらもAppleのアプリ用パスワードです。Appleは受信用のユーザー名をアドレスの名前部分と案内しています。両方のホストは、このページに表示された日付に実際のTLS接続で確認しました。"
+    },
+    {
+      "q": "Appleのパスワードが拒否されるのはなぜですか？",
+      "a": "iCloudはメールクライアントからのApple Accountのパスワードを決して受け付けないからです。account.apple.comの「サインインとセキュリティ」で作成したアプリ用パスワードが必要で、その項目は2ファクタ認証が有効になって初めて表示されます。パスワードが正しいのにログインが失敗するなら、ユーザー名にアドレス全体ではなく名前部分を試してください。"
+    },
+    {
+      "q": "@me.com、@mac.com、iCloud+のカスタムドメインでも使えますか？",
+      "a": "使えます。いずれも同じiCloudメールボックスで、同じホストに同じアプリ用パスワードで届きます。iCloud+のカスタムドメインのアドレスは別のメールボックスではなくiCloudアカウント上のエイリアスなので、主アカウント名で認証し、そのメールは同じフォルダーに届きます。"
+    },
+    {
+      "q": "私のiCloudメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにAppleからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。Apple Accountでアプリ用パスワードを取り消せば、Apple側で接続がすぐに終了します。"
+    },
+    {
+      "q": "iCloudのカレンダー、連絡先、メモ、Driveにも届きますか？",
+      "a": "届きません。MCPEmailsが扱うのはメールだけです。iCloudの受信トレイとそのフォルダーを、IMAPとSMTPで扱います。カレンダー、連絡先、メモ、リマインダー、iCloud Driveは接続されず、アプリ用パスワードはメール以外には使いません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにiCloudの受信トレイを渡す",
+    "sub": "iCloud Mailを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  },
+  "guide": {
+    "intro": "Fastmailや他のIMAPホストも接続しますか？",
+    "label": "iCloud、Fastmail、任意のIMAP受信トレイをClaudeに接続する方法",
+    "href": "/blog/connect-icloud-fastmail-imap-to-claude"
+  }
+}

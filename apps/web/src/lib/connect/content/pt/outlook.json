@@ -1,0 +1,117 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Entrar com a Microsoft (OAuth 2.0)",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "Nada para digitar. Você entra com sua conta Microsoft na própria página da Microsoft e aprova o acesso, então nenhuma senha nem senha de app é digitada aqui. As configurações de IMAP e SMTP publicadas para o Outlook.com não se aplicam: o MCPEmails se conecta pelo Microsoft Graph.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conectar o Outlook.com ao Claude, ao ChatGPT e ao Cursor",
+    "description": "Conecte o e-mail do Outlook.com, Hotmail, Live ou MSN ao Claude, ao ChatGPT, ao Cursor ou a qualquer cliente MCP. Entre com a Microsoft, sem senha de app. Uma caixa de entrada grátis, para sempre."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + IA",
+    "titleLine1": "Conecte o Outlook.com ao Claude,",
+    "titleLine2": "ao ChatGPT, ao Cursor e a qualquer cliente MCP",
+    "lead": "O conector Microsoft 365 do próprio Claude só aceita contas corporativas ou de estudante. O MCPEmails conecta caixas de entrada pessoais do Outlook.com, Hotmail, Live e MSN: entre com a Microsoft, aprove o acesso uma vez e leia, pesquise, envie, responda, agende e organize e-mails em todos os clientes MCP com uma única URL.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Entre com a Microsoft, sem senha de app",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Sim. O MCPEmails é um servidor MCP hospedado que conecta uma conta Microsoft pessoal, um endereço terminado em outlook.com, hotmail.com, live.com ou msn.com, pelo Microsoft Graph. Você clica em Conectar com a Microsoft, entra e aprova o acesso na tela de consentimento da Microsoft, onde o MCPEmails aparece como editor verificado. Não há senha de app nem configuração de IMAP para digitar, e nenhum administrador participa quando a conta é pessoal. Cole uma URL no Claude, no ChatGPT, no Cursor ou em qualquer cliente MCP e o agente consegue ler, pesquisar, enviar, responder, encaminhar, agendar e arquivar seus e-mails. Uma caixa de entrada é grátis, para sempre."
+  },
+  "method": {
+    "title": "Como o Outlook.com se conecta: Entrar com a Microsoft",
+    "body": "O Outlook.com se conecta pelo <b>Microsoft Graph</b> com OAuth 2.0, não via IMAP. Você entra na própria página da Microsoft e aprova uma lista curta de permissões: ler e alterar e-mails (<b>Mail.ReadWrite</b>), enviar e-mails (<b>Mail.Send</b>), manter a conexão (<b>offline_access</b>) e seu perfil básico e endereço de e-mail. Sua senha da Microsoft é digitada só na página da Microsoft e nunca chega até nós. Para desconectar, exclua a caixa de entrada no MCPEmails ou remova o MCPEmails dos apps com acesso à sua conta Microsoft."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Escolha Outlook e conecte com a Microsoft",
+      "p": "No painel, abra Conectar caixa de entrada, escolha Outlook e clique em Conectar com a Microsoft."
+    },
+    {
+      "h": "Entre e aprove o acesso",
+      "p": "Entre na página da Microsoft com seu endereço do Outlook.com, Hotmail, Live ou MSN e aprove as permissões. Você volta ao painel com a caixa de entrada conectada."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Senhas de app e senhas IMAP não funcionam, e é por isso que usamos o Microsoft Graph",
+      "p": "A Microsoft encerrou a autenticação Básica para contas pessoais conectadas a partir de apps que não são da Microsoft em 16 de setembro de 2024, e o serviço IMAP do Outlook.com agora oferece apenas OAuth. Muitos guias antigos ainda mandam gerar uma senha de app; ela não consegue mais fazer login no e-mail. O MCPEmails não usa IMAP para o Outlook.com de jeito nenhum: ele entra com a Microsoft e fala com o Microsoft Graph, então não há senha para criar nem configuração de servidor para errar."
+    },
+    {
+      "h": "Endereços hotmail.com, live.com e msn.com são o mesmo serviço",
+      "p": "O e-mail por trás de todos esses domínios é um único serviço da Microsoft para consumidores. Um endereço hotmail.com antigo se conecta exatamente como um endereço outlook.com criado ontem: escolha Outlook e entre com esse endereço."
+    },
+    {
+      "h": "Uma conta Microsoft sem caixa de correio do Outlook é recusada",
+      "p": "Se a conta Microsoft com a qual você entra não tem uma caixa de correio do Exchange Online por trás, o Microsoft Graph não tem nada para abrir, então o MCPEmails recusa a conexão e avisa. Se o e-mail desse endereço está hospedado em outro servidor, conecte-o via IMAP."
+    },
+    {
+      "h": "Uma conta nova do Outlook.com pode ficar bloqueada para envio por um tempo",
+      "p": "Os sistemas antiabuso da Microsoft podem impedir temporariamente que uma conta recém-criada do Outlook.com envie e-mails quando ela envia muitas mensagens em pouco tempo. É uma restrição na conta Microsoft, não uma falha de conexão, então reconectar a caixa de entrada não muda nada."
+    }
+  ],
+  "limits": [
+    "O Outlook organiza o e-mail em pastas, incluindo pastas aninhadas. As ferramentas de marcadores são só do Gmail, mas a ação de marcador de uma automação aplica uma categoria do Outlook à mensagem.",
+    "O Microsoft Graph não consegue combinar uma pesquisa por texto com os filtros de não lido, anexo, sinalizado ou data. Quando a pesquisa inclui texto, esses filtros não são aplicados, e o resultado informa quais ficaram de fora.",
+    "O envio aceita até 10 MB de anexos por mensagem; baixar anexos e encaminhar originais funciona até 25 MB.",
+    "A versão auto-hospedada se conecta apenas via IMAP e SMTP. Entrar com a Microsoft faz parte do serviço hospedado."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Outlook.com?",
+      "a": "Sim. Conecte sua caixa de correio do Outlook.com ao MCPEmails entrando com a Microsoft, cole uma URL de MCP no Claude, e o Claude consegue ler, pesquisar, enviar, responder, encaminhar, agendar e arquivar seus e-mails. A mesma URL funciona no ChatGPT, no Cursor e em outros clientes MCP."
+    },
+    {
+      "q": "Por que o conector Microsoft 365 do Claude rejeita minha conta do Outlook.com?",
+      "a": "O conector Microsoft 365 integrado ao Claude precisa de uma conta corporativa ou de estudante em um locatário do Microsoft Entra, e a Anthropic declara que contas Microsoft pessoais não são compatíveis, então endereços do Outlook.com, Hotmail, Live e MSN são recusados. O MCPEmails conecta essas contas pessoais: você entra com a Microsoft na própria página da Microsoft e depois adiciona o MCPEmails ao Claude como conector personalizado, com uma URL."
+    },
+    {
+      "q": "Funciona com endereços do Hotmail, Live e MSN?",
+      "a": "Sim. Eles são o mesmo serviço de e-mail da Microsoft para consumidores que o outlook.com, então se conectam do mesmo jeito: escolha Outlook no painel e entre com esse endereço."
+    },
+    {
+      "q": "Preciso de senha de app ou de configurações de IMAP?",
+      "a": "Não. O MCPEmails conecta o Outlook.com pelo Microsoft Graph depois que você entra com a Microsoft, então não há senha de app para criar nem servidor IMAP ou SMTP para digitar. Uma senha de app nem funcionaria: a Microsoft parou de aceitar senhas de apps de e-mail que não são dela em contas pessoais em setembro de 2024."
+    },
+    {
+      "q": "O que minha IA consegue fazer no Outlook.com?",
+      "a": "Ler, pesquisar, enviar, responder e encaminhar; trabalhar com rascunhos; criar e usar pastas, incluindo aninhadas; mover, copiar e arquivar; sinalizar; excluir para a lixeira ou definitivamente; enviar até 10 MB de anexos por mensagem e baixar anexos ou encaminhar originais de até 25 MB; agendar envios; executar regras de automação; e gerenciar sua assinatura."
+    },
+    {
+      "q": "É igual a conectar uma conta corporativa do Microsoft 365?",
+      "a": "O login é o mesmo, a aprovação talvez não. Uma conta pessoal não precisa de administrador. Uma conta corporativa ou de estudante do Microsoft 365 muitas vezes precisa que um administrador de TI aprove o MCPEmails uma vez para a organização. Quando é o caso, o painel dá um link de aprovação para você enviar ao administrador de TI, e ele não precisa de uma conta no MCPEmails para usá-lo."
+    },
+    {
+      "q": "Meu e-mail fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo na Microsoft a cada solicitação e entregues ao seu cliente de IA. O token OAuth do seu login na Microsoft é criptografado em repouso, e o conteúdo das mensagens não é retido. Excluir a caixa de entrada no MCPEmails encerra a conexão na hora, e você também pode remover o MCPEmails dos apps com acesso à sua conta Microsoft."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA a sua caixa de entrada do Outlook.com",
+    "sub": "Entre com a Microsoft e conecte em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  },
+  "seeAlso": {
+    "intro": "Usa uma conta Microsoft corporativa ou de estudante?",
+    "label": "Conectar o e-mail do Microsoft 365",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "Prefere um passo a passo detalhado?",
+    "label": "Conectando o Outlook e o Microsoft 365 ao seu agente de IA via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

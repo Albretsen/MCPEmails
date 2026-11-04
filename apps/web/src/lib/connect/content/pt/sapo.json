@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "https://ajuda.sapo.pt/sapo-mail-premium-99980"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Senha do SAPO, numa conta Premium",
+    "helpUrl": "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "usernameForm": "Seu endereço completo, incluindo o domínio: nome@sapo.pt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP do SAPO Mail: só Premium, e a configuração MCP no Claude",
+    "description": "O SAPO restringe IMAP, POP e SMTP às contas Premium. O que isso significa para conectar imap.sapo.pt:993 ao Claude, e o que uma conta Base gratuita ainda pode fazer."
+  },
+  "hero": {
+    "eyebrow": "SAPO Mail + IA",
+    "titleLine1": "SAPO Mail via IMAP,",
+    "titleLine2": "no Claude, Cursor, qualquer cliente MCP",
+    "lead": "O SAPO reserva o acesso por clientes de e-mail ao plano Premium. Se a sua conta tem esse plano, um agente de IA pode ler, pesquisar, enviar, responder, agendar e organizar a caixa de correio via IMAP.",
+    "answer": "O Claude não acessa uma caixa de correio do SAPO sozinho, e numa conta SAPO Base gratuita nada mais acessa: o SAPO diz na própria documentação que \"o acesso IMAP/POP está disponível apenas para contas Premium\". Numa conta Premium, o MCPEmails é um servidor MCP hospedado que conecta a caixa de correio via IMAP em imap.sapo.pt na porta 993 com seu endereço e sua senha do SAPO, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar os e-mails. Não há senha de app nem opção para ativar: a barreira é o plano. Uma caixa de entrada no MCPEmails é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Exige uma conta SAPO Premium",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o SAPO se conecta: IMAP numa conta Premium, nada numa conta Base",
+    "body": "O SAPO oferece IMAP em <code>imap.sapo.pt</code> na porta 993 com TLS implícito e envio SMTP em <code>smtp.sapo.pt</code> na porta 465, com autenticação obrigatória. A própria página de configuração descreve os hosts como <b>imap.sapo.pt para endereços terminados @sapo.pt</b>, e a credencial como <b>o seu endereço de e-mail SAPO e a respetiva password</b>. Não existe senha específica de aplicativo nem opção de acesso por cliente em cada caixa de correio. A única coisa que decide se isso funciona é o plano da conta. As páginas de ajuda do SAPO dizem a restrição diretamente: <b>O acesso por IMAP, POP e SMTP só está disponível para contas Premium.</b> Uma conta Base gratuita mantém seus e-mails e o webmail em mail.sapo.pt e perde os protocolos, o que significa todos os clientes de e-mail de computador e celular, e todos os servidores MCP hospedados, incluindo este."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada para sempre e não pede cartão."
+    },
+    {
+      "h": "Confira se a conta SAPO é Base ou Premium",
+      "p": "Entre em mail.sapo.pt e veja o plano da conta. Base é o plano gratuito e não tem IMAP, POP nem SMTP: é só webmail e o app do SAPO. Premium devolve os protocolos, junto com a caixa de correio maior e sem publicidade. Isso é uma situação de cobrança e não uma configuração, então nada na tela de opções de e-mail vai mudar isso."
+    },
+    {
+      "h": "Use seu endereço e sua senha do SAPO",
+      "p": "O SAPO não emite senha específica de aplicativo. A credencial é a sua senha normal do SAPO com o endereço completo como nome de usuário, usada tanto na entrada quanto na saída. Se o webmail aceita a senha e o cliente não, a conta quase certamente está no plano Base e não no Premium."
+    },
+    {
+      "h": "Cole no MCPEmails e depois cole a URL do MCP na sua IA",
+      "p": "Escolha IMAP / SMTP, informe o endereço completo, como nome@sapo.pt, e a senha. Os hosts e portas do SAPO já vêm preenchidos e foram verificados com uma conexão TLS real. Depois coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Os servidores respondem, mas a conta gratuita mesmo assim não consegue entrar",
+      "p": "<code>imap.sapo.pt</code> está no ar, completa o handshake TLS e cumprimenta com <code>Welcome to PTMail</code>, não importa quem esteja pedindo. Isso torna a restrição do Premium bem difícil de diagnosticar, porque todos os sintomas apontam para as credenciais. Se o webmail do SAPO aceita sua senha e um cliente de e-mail não, pare de testar a senha. A diferença é o plano. Isso vale igualmente para Outlook, Thunderbird, Apple Mail, os clientes de celular e todos os servidores MCP, incluindo o nosso: nenhuma ferramenta de terceiros consegue dar um acesso por protocolo que a conta não tem."
+    },
+    {
+      "h": "Uma conta Base parada deixa de receber e-mails depois de 90 dias",
+      "p": "O SAPO hiberna contas Base gratuitas sem uso por mais de 90 dias: <b>as contas Base inativas por mais de 90 dias são hibernadas, deixando de receber mensagens</b>, e o conteúdo de uma conta hibernada pode ser removido. Contas Premium nunca são hibernadas. Isso pesa especialmente para a ideia tentadora de criar um endereço SAPO extra para entregar a um agente e depois esquecer dele. Uma conta Base em que você não entra deixa de ser uma caixa de correio que funciona."
+    },
+    {
+      "h": "Só PLAIN no IMAP, PLAIN e LOGIN no SMTP",
+      "p": "O banner IMAP oferece <code>AUTH=PLAIN</code> e mais nada, sem <code>AUTH=LOGIN</code>. Bibliotecas cliente presas ao mecanismo LOGIN, comuns em ferramentas escritas para Exchange, são recusadas na autenticação com um erro que parece credencial errada. O lado SMTP aceita PLAIN e LOGIN, então as duas metades da mesma conta podem se comportar de forma diferente no mesmo cliente. O MCPEmails negocia o que cada lado realmente oferece."
+    },
+    {
+      "h": "Sem MOVE e sem SPECIAL-USE numa caixa com pastas em português",
+      "p": "O servidor não anuncia a extensão IMAP <code>MOVE</code>, então arquivar uma mensagem é feito como cópia, atualização de flag e expunge, e não com um único comando atômico. Ele também omite <code>SPECIAL-USE</code>, então Enviados, Rascunhos e Lixeira são reconhecidos pelo nome e não pela função. Uma caixa do SAPO em português costuma chamá-las de <b>Enviadas</b>, <b>Rascunhos</b> e <b>Lixo</b>, então diga o nome da pasta explicitamente se um agente não a encontrar."
+    }
+  ],
+  "limits": [
+    "Numa conta SAPO Base gratuita não há nada para conectar. É uma restrição do provedor, e nenhum servidor MCP, incluindo o nosso, consegue contorná-la.",
+    "As mensagens enviadas têm limite de cerca de 30 MB de mensagem codificada, então um anexo grande encaminhado por um agente pode ser rejeitado na etapa SMTP.",
+    "Como o servidor não suporta MOVE, mover não é atômico. Se a conexão cair no meio da operação, uma mensagem pode existir por um instante nas duas pastas."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o SAPO Mail?",
+      "a": "Só numa conta Premium. O SAPO restringe IMAP, POP e SMTP ao Premium, então uma conta Base gratuita não pode ser conectada por nenhum cliente de e-mail nem servidor MCP. Com o Premium, apontar o MCPEmails para a caixa de correio dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar, e a mesma conexão funciona no Cursor e no ChatGPT."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP do SAPO?",
+      "a": "O IMAP é imap.sapo.pt na porta 993 com SSL. O SMTP é smtp.sapo.pt na porta 465 com SSL e autenticação obrigatória. O nome de usuário é o seu endereço sapo.pt completo e a senha é a sua senha do SAPO. Os dois hosts foram confirmados com uma conexão TLS real e batem com o que o SAPO publica."
+    },
+    {
+      "q": "Por que o Outlook não funciona mais com meu endereço do SAPO?",
+      "a": "Porque o acesso por IMAP e POP passou para o plano Premium. A própria ajuda do SAPO diz que IMAP e POP estão disponíveis apenas para contas Premium. Uma conta Base gratuita mantém o webmail em mail.sapo.pt e o app do SAPO, e perde todos os protocolos que um cliente de computador ou celular usaria."
+    },
+    {
+      "q": "O SAPO emite senha de app?",
+      "a": "Não. O SAPO não publica nenhum mecanismo de senha específica de aplicativo. Os clientes de e-mail autenticam com a senha normal da conta SAPO junto com o endereço completo, tanto no servidor de entrada quanto no de saída. Se essa senha funciona no webmail mas não num cliente, a causa é o plano da conta, e não a credencial."
+    },
+    {
+      "q": "O que acontece com uma conta SAPO que eu deixo de usar?",
+      "a": "Contas Base gratuitas inativas por mais de 90 dias são hibernadas e deixam de receber mensagens, e o conteúdo delas pode ser removido. Contas acima do limite de armazenamento por mais de 90 dias recebem o mesmo tratamento. Contas Premium não são hibernadas. Não deixe um endereço Base sem uso como caixa de correio dedicada a um agente."
+    },
+    {
+      "q": "Meus e-mails do SAPO ficam armazenados nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no SAPO via IMAP a cada solicitação e entregues ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do SAPO",
+    "sub": "Se a sua conta SAPO é Premium, conecte em poucos minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

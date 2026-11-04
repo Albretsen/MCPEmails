@@ -2,7 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
-import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE, formatLegalDate } from '@/lib/legal-config';
 import { requireLocale } from '@/i18n/require-locale';
 
 export async function generateMetadata({ params }) {
@@ -84,7 +84,7 @@ export default async function PrivacyPage({ params }) {
             {t('hero.lead')}
           </p>
           <p style={{ fontSize: 13, color: 'var(--fg-4)', marginTop: 8 }}>
-            {t('hero.dates', { lastUpdated: PRIVACY_LAST_UPDATED, effectiveDate: EFFECTIVE_DATE })}
+            {t('hero.dates', { lastUpdated: formatLegalDate(PRIVACY_LAST_UPDATED, locale), effectiveDate: formatLegalDate(EFFECTIVE_DATE, locale) })}
           </p>
         </div>
       </section>

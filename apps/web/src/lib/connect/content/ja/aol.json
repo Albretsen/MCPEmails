@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.aol.com/articles/Create-and-manage-app-password",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ パスワード",
+    "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
+    "usernameForm": "ドメインを含むAOLアドレス全体（例：name@aol.com）。古いaim.comや国別のAOLアドレスも同じ形式です。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "AOL MailをClaude、Cursor、MCPクライアントに接続",
+    "description": "AOLのアプリ パスワードでAOL MailをIMAP（imap.aol.com:993）接続し、Claude、CursorなどあらゆるMCPクライアントで使えます。AOLのパスワードだけでは接続できません。"
+  },
+  "hero": {
+    "eyebrow": "AOL Mail + AI",
+    "titleLine1": "AOL MailをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のAOL Mail受信トレイを数分で渡せます。アプリ パスワード1つでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "アプリ パスワードで接続、OAuth設定は不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "ClaudeはそのままではAOL Mailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、アプリ パスワードを使ってIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。設定は数分で終わり、受信トレイ1つは無料です。"
+  },
+  "method": {
+    "title": "AOL Mailの接続方法：IMAPとアプリ パスワード",
+    "body": "AOL MailはIMAP/SMTPを通じて<b>AOLのアプリ パスワード</b>で接続します。通常のAOLパスワードではメールクライアントの認証ができないため、ここでログインが拒否される原因はほぼ必ずアプリ パスワードがないことです。2-Step Verification（2段階認証）をオンにし、Account Info、Account Securityでアプリ パスワードを生成して、AOLアドレス全体と一緒にMCPEmailsに貼り付けてください。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランで受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "AOLのアプリ パスワードを生成",
+      "p": "AOL MailでAccount Info、Account Securityを開き、2-Step Verificationがオフならオンにしてから、アプリ パスワードを生成します。AOLは一度しか表示しないので、すぐにコピーしてください。"
+    },
+    {
+      "h": "MCPEmailsに貼り付け",
+      "p": "IMAP / SMTPを選び、AOL Mailのアドレス、上記のホスト、パスワードを入力して、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "AOL MailはYahooの基盤で動いていますが、アプリ パスワードはAOLで作成する必要があります",
+      "p": "<code>imap.aol.com</code>はYahoo Mailと同じ<code>yahoodns.net</code>のメールサービスに名前解決され、2つのサーバーは同じバナーで応答します。共有されていないのはアカウントです。AOLのアドレスは<b>AOL</b>のAccount Securityページで管理し、Yahooアカウント内で生成したアプリ パスワードではAOLのメールボックスは開けません。AOLの設定を検索するとYahooのヘルプ記事がよく表示されるため、この点は重要です。書かれている手順は正しくても、操作すべきサイトが違うのです。"
+    },
+    {
+      "h": "アプリ パスワードはウィザードで作成し、一度しか表示されず、パスワードを変更しても取り消されません",
+      "p": "AOLのAccount Securityページで、Generate app password（一部のアカウントではGenerate and manage app passwords）を選び、Get Started、アプリ名の入力、Generate passwordの順に進みます。AOLはパスワードを一度だけ表示します。その後は、AOLのメインのパスワードを変更しても使い続けられるため、パスワードを変更してもメールクライアントの接続は切れ<b>ません</b>。アクセスを取り消す唯一の方法は、同じ画面でそのアプリ パスワードを削除することです。"
+    },
+    {
+      "h": "AOLのIMAPはAUTH=LOGINに対応していませんが、SMTPは対応しています",
+      "p": "調べたところ、AOLのIMAPサーバーが通知していたのは<code>AUTH=PLAIN</code>と2つのOAuth方式で、<code>AUTH=LOGIN</code>はありませんでした。一方、送信サーバーはPLAINとLOGINの両方を受け付けます。そのため、同じアカウントの受信側と送信側が、同じクライアント内で異なる動きをすることがあります。Exchange向けに書かれたコードによくある、LOGIN方式に固定されたツールは、メールの送信は問題なくできても読み取りに失敗し、その認証エラーはパスワード間違いとまったく同じように見えます。"
+    },
+    {
+      "h": "システムフォルダーは役割で識別されるので、名前を変えても問題ありません",
+      "p": "AOLは<code>SPECIAL-USE</code>、<code>MOVE</code>、<code>UIDPLUS</code>、<code>IDLE</code>を通知しています。わかりやすく言えば、送信済み、下書き、迷惑メール、ごみ箱は名前ではなく役割で識別されるため、送信済みフォルダーの名前を変えてもエージェントは見つけられます。また、メッセージの移動はコピーと削除の組み合わせではなく、1つのアトミックなコマンドで行われます。これはいくつかの有料プロバイダーより優れたIMAPサーバーで、AOLは自動化しやすいメールボックスだと言えます。"
+    }
+  ],
+  "limits": [
+    "AOLの送信サーバーが公表しているメッセージサイズの上限は約41 MBです。MCPEmailsでの添付ファイルの読み取りは1リクエストあたり25 MBまでです。",
+    "アプリ パスワードはAOLのパスワードを変更した後も有効です。アクセスを止める唯一の方法は、AOLのAccount Securityページで削除することです。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはAOL Mailで使えますか？",
+      "a": "そのままでは使えません。ClaudeにはAOL用のコネクタが組み込まれていません。MCPEmailsのようなMCPサーバーを、AOLのアプリ パスワードを使ってAOLのメールボックスにIMAPで接続すると、Claudeからメールの閲覧、検索、送信、返信、予約送信、整理ができるようになり、同じ接続をCursor、ChatGPTなどのMCPクライアントからも使えます。"
+    },
+    {
+      "q": "AOL MailのIMAPとSMTPの設定は？",
+      "a": "IMAPはimap.aol.com、ポート993、暗黙的TLSです。SMTPはsmtp.aol.com、ポート465で、こちらも暗黙的TLSです。ユーザー名はAOLアドレス全体、パスワードはアカウントのパスワードではなくAOLのアプリ パスワードです。どちらのホストも、このページに記載の日付に実際のTLS接続で確認しています。"
+    },
+    {
+      "q": "AOLのパスワードが拒否されるのはなぜですか？",
+      "a": "AOLは、サードパーティのメールアプリからの通常のアカウントパスワードを受け付けません。AOLのAccount Securityページで作成するアプリ パスワードが必要です。次によくある原因は、作成する場所を間違えることです。2つのサービスは同じメール基盤を使っていますが、Yahooアカウント内で作成したアプリ パスワードはAOLのアドレスでは使えません。"
+    },
+    {
+      "q": "AOL MailとYahoo Mailは同じものですか？",
+      "a": "同じインフラで動いており、IMAPでの動作もほぼ同じですが、アカウント、ホスト名、セキュリティページはそれぞれ別です。aol.comのアドレスは、AOLのホストとAOLのアプリ パスワードで接続してください。yahoo.com、ymail.com、rocketmail.comのアドレスはYahooとして接続します。認証情報は相互に使えません。"
+    },
+    {
+      "q": "古いaim.comや国別のAOLアドレスも使えますか？",
+      "a": "はい、メールボックスがまだ有効であれば使えます。これらは同じホスト上の通常のAOL Mailアカウントで、同じ手順のアプリ パスワードを使い、ユーザー名にはアドレス全体を入力します。かなり古い設定ガイドには現在の基盤に移行する前のAOLの設定が載っているので、10年前のフォーラム投稿ではなく、このページのホストを使ってください。"
+    },
+    {
+      "q": "AOLのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにAOLからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文は保持しません。AOLのAccount Securityでアプリ パスワードを削除すれば、AOL側で接続がすぐに切断されます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにAOL Mailの受信トレイを",
+    "sub": "AOL Mailを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

@@ -309,7 +309,9 @@ test('locale: from acquisition_locale, region tags folded, unknown and null fall
   assert.equal(loc('no'), 'nb');
   assert.equal(loc('zh'), 'zh');
   assert.equal(loc('es'), 'es');
-  assert.equal(loc('pt'), 'en');
+  assert.equal(loc('pt'), 'pt');
+  assert.equal(loc('ja'), 'ja');
+  assert.equal(loc('it'), 'en');
   assert.equal(loc(null), 'en');
 });
 

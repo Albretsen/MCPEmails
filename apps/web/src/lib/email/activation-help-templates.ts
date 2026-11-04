@@ -21,7 +21,7 @@
  * from a mailbox. A provider appears only by its public name (Gmail, IONOS),
  * and only when the failure row or the connect error log already named it.
  *
- * LOCALES. en, nb, de, es, fr, zh, chosen from workspaces.acquisition_locale
+ * LOCALES. en, nb, de, pt, ja, es, fr, zh, chosen from workspaces.acquisition_locale
  * with en as the fallback. German uses formal Sie, French vous, Spanish tu, as
  * the rest of the site does. Every locale except en needs a native read before
  * the first send.
@@ -37,7 +37,7 @@ import { MCP_URL } from '@/lib/clients/mcp-url.mjs';
 
 export const ACTIVATION_HELP_CATEGORY = 'lifecycle' as const;
 
-export const ACTIVATION_HELP_LOCALES = ['en', 'nb', 'de', 'es', 'fr', 'zh'] as const;
+export const ACTIVATION_HELP_LOCALES = ['en', 'nb', 'de', 'pt', 'ja', 'es', 'fr', 'zh'] as const;
 export type HelpLocale = (typeof ACTIVATION_HELP_LOCALES)[number];
 
 /** Any stored locale (or junk, or a region tag like `fr-CA`) to one with copy. */
@@ -85,6 +85,8 @@ const STARTER_PROMPT: Record<HelpLocale, string> = {
   en: 'Summarize my unread email from today.',
   nb: 'Oppsummer den uleste e-posten min fra i dag.',
   de: 'Fasse meine ungelesenen E-Mails von heute zusammen.',
+  pt: 'Resuma meus e-mails não lidos de hoje.',
+  ja: '今日の未読メールを要約してください。',
   es: 'Resume mi correo sin leer de hoy.',
   fr: "Résume mes e-mails non lus d'aujourd'hui.",
   zh: '总结一下我今天的未读邮件。',
@@ -388,6 +390,186 @@ const COPY: Record<HelpLocale, Copy> = {
         other: 'Prüfen Sie, ob MCPEmails in dem Chat eingeschaltet ist, den Sie gerade nutzen.',
       },
       tryLine: (prompt) => `Versuchen Sie zum Beispiel: „${prompt}“`,
+    },
+  },
+
+  pt: {
+    lang: 'pt-BR',
+    greeting: 'Olá, aqui é o Asgeir.',
+    replyLine: 'Se ainda não funcionar, responda a este e-mail e eu vejo isso com você.',
+    footerNote: 'As respostas chegam à nossa caixa de suporte, e eu mesmo leio.',
+    unsubscribeReason: 'Você está recebendo este e-mail porque começou a configurar o MCPEmails.',
+    unsubscribeLink: 'Cancelar a inscrição destes e-mails',
+    notAffected: 'Os avisos de conta e de cobrança não são afetados.',
+    textUnsubscribe: 'Cancelar inscrição',
+    e1: {
+      subject: (label) => (label ? `Sua conexão do ${label} com o MCPEmails` : 'A conexão da sua caixa de entrada com o MCPEmails'),
+      title: 'Como conectar sua caixa de entrada',
+      cta: 'Abrir a etapa de conexão',
+      ctaMicrosoft: 'Conectar com a Microsoft',
+      body: {
+        gmail_app_password: () => [
+          'Vi que sua caixa do Gmail não conectou há pouco. O Gmail não aceita sua senha normal do Google em apps como este. Ele pede uma senha de app, e para isso a verificação em duas etapas precisa estar ativada antes.',
+          `1. Ative a verificação em duas etapas: ${PROVIDER_LINKS.googleTwoStep}`,
+          `2. Crie uma senha de app: ${PROVIDER_LINKS.googleAppPasswords}`,
+          '3. Cole as 16 letras no MCPEmails. Pode deixar os espaços.',
+          'Em uma conta do Google de trabalho, a página de senhas de app pode não aparecer porque um administrador a desativou. Nesse caso, o administrador precisa liberá-la.',
+        ],
+        yahoo_app_password: (label, link) => [
+          `Vi que sua caixa do ${label} não conectou há pouco. O ${label} recusa sua senha normal em apps como este e pede uma senha de app.`,
+          `Você pode criar uma aqui: ${link}. Dê a ela o nome MCPEmails e cole na etapa de conexão.`,
+        ],
+        icloud_app_password: () => [
+          'Vi que sua caixa do iCloud não conectou há pouco. O Mail do iCloud não aceita a senha da sua Conta Apple em outros apps. Ele pede uma senha específica de app.',
+          `Acesse ${PROVIDER_LINKS.appleAccount}, abra Sign-In and Security (início de sessão e segurança) e depois App-Specific Passwords (senhas específicas de app), e crie uma com o nome MCPEmails. Use seu endereço completo do iCloud como nome de usuário.`,
+        ],
+        known_host: (label) => [
+          `Vi que sua caixa do ${label} não conectou há pouco. O ${label} muitas vezes pede algo diferente da senha que você usa para entrar: uma senha própria da caixa de correio, uma senha de app ou o IMAP ativado nas configurações.`,
+          `O botão abaixo abre a etapa de conexão com o ${label} já selecionado, e lá aparece o que verificar no ${label}.`,
+        ],
+        imap_disabled: (label) => [
+          `Vi que sua caixa do ${label} não conectou há pouco. O ${label} nos informou que o acesso IMAP está desativado na sua caixa de correio, então nenhuma senha vai funcionar até ele ser ativado.`,
+          `Ative o IMAP (às vezes chamado de acesso por outros apps de e-mail) nas configurações de e-mail do ${label} e tente de novo. Em uma conta de trabalho ou de escola, talvez um administrador precise fazer isso.`,
+        ],
+        consent_cancelled: (label) => [
+          `Vi que a página de login do ${label} foi fechada antes de sua caixa de entrada ser conectada.`,
+          `Essa página mostra o acesso que o MCPEmails pede para que seu app de IA possa ler, organizar e enviar e-mails quando você pedir. Você pode remover esse acesso quando quiser. Quando estiver pronto, comece de novo e aceite na página do ${label}.`,
+        ],
+        office365_basic_auth: () => [
+          'Vi que sua caixa de correio do Microsoft 365 não conectou com senha. O Microsoft 365 bloqueia logins com senha vindos de apps como este, então o problema não era a senha em si.',
+          'Use a opção do Outlook. Ela faz login direto na Microsoft, sem precisar digitar senha. Se a sua empresa precisa aprovar apps novos, a etapa de conexão traz um link para você enviar ao administrador de TI.',
+        ],
+        server_unreachable: () => [
+          'Vi que o MCPEmails não conseguiu alcançar seu servidor de e-mail há pouco. Ele nunca respondeu.',
+          'Normalmente o nome do servidor tem um erro de digitação, ou o servidor só aceita conexões de dentro da própria rede. Servidores de escolas, universidades e empresas costumam funcionar assim.',
+          'Confira o nome do servidor nas páginas de ajuda do seu provedor e tente de novo. Se for um servidor de escola ou de trabalho que não permite apps externos, conectar outro endereço é o caminho mais rápido.',
+        ],
+        smtp_rejected: () => [
+          'Vi que sua caixa de entrada ficou pela metade há pouco: a leitura dos e-mails funcionou, mas o login para envio foi recusado.',
+          'Alguns provedores usam um login diferente para envio. Se por enquanto você só quer ler e organizar e-mails, abra Configurações avançadas na etapa de conexão e escolha Somente recebimento (IMAP).',
+        ],
+        generic_password: () => [
+          'Vi que sua caixa de entrada não conectou há pouco: o servidor de e-mail recusou o login.',
+          'Na maioria dos provedores, isso significa uma de duas coisas. Ou ele pede uma senha de app (que você cria nas configurações de segurança) em vez da senha que você usa para entrar, ou o nome de usuário não é o seu endereço de e-mail. Você pode informar outro nome de usuário em Configurações avançadas, na etapa de conexão.',
+        ],
+        generic: () => [
+          'Vi que sua caixa de entrada não conectou ao MCPEmails há pouco.',
+          'A etapa de conexão mostra o que deu errado na última tentativa. A maioria das falhas vem do tipo de senha ou de uma configuração no provedor de e-mail, e as duas coisas se resolvem rápido.',
+        ],
+      },
+    },
+    e2: {
+      clientName: { chatgpt: 'ChatGPT', claude: 'Claude', other: 'seu app de IA' },
+      subject: {
+        not_linked: (client) => `Falta um passo para usar sua caixa de entrada no ${client}`,
+        linked_no_call: (client) => `Faça sua primeira pergunta no ${client}`,
+      },
+      title: 'Sua caixa de entrada está pronta',
+      cta: 'Abrir o painel',
+      notLinked: (client) => [
+        `Sua caixa de entrada está conectada ao MCPEmails, mas o ${client} ainda não está vinculado a ela.`,
+        `Leva cerca de um minuto. O painel tem os passos para o ${client}.`,
+      ],
+      notLinkedOneClick: (client) => `Leva cerca de um minuto. O botão abaixo abre o ${client} com o MCPEmails já preenchido. Adicione e depois entre no MCPEmails quando o ${client} pedir.`,
+      linkedNoCall: (client) => [
+        `Sua caixa de entrada e o ${client} já estão conectados ao MCPEmails, mas nada foi perguntado ainda.`,
+      ],
+      toggle: {
+        chatgpt: 'No ChatGPT, o MCPEmails precisa estar ativado no chat que você está usando. Abra um chat novo e ative o MCPEmails pelo menu +.',
+        claude: 'No Claude, o MCPEmails precisa estar ativado no chat que você está usando. Abra um chat novo e ative o MCPEmails no menu de ferramentas do chat.',
+        other: 'Verifique se o MCPEmails está ativado no chat que você está usando.',
+      },
+      tryLine: (prompt) => `Depois experimente: "${prompt}"`,
+    },
+  },
+
+  ja: {
+    lang: 'ja',
+    greeting: 'こんにちは、Asgeirです。',
+    replyLine: 'それでもうまくいかない場合は、このメールに返信してください。一緒に確認します。',
+    footerNote: '返信はサポート用の受信トレイに届き、私自身が読んでいます。',
+    unsubscribeReason: 'このメールは、MCPEmailsの設定を始めた方にお送りしています。',
+    unsubscribeLink: 'このメールの配信を停止する',
+    notAffected: 'アカウントと請求に関するお知らせは引き続き届きます。',
+    textUnsubscribe: '配信停止',
+    e1: {
+      subject: (label) => (label ? `${label}とMCPEmailsの接続について` : '受信トレイとMCPEmailsの接続について'),
+      title: '受信トレイを接続するには',
+      cta: '接続ステップを開く',
+      ctaMicrosoft: 'Microsoftで接続する',
+      body: {
+        gmail_app_password: () => [
+          '先ほど、Gmailの受信トレイが接続できなかったようです。Gmailでは、このようなアプリから通常のGoogleパスワードは使えません。アプリ パスワードが必要で、その前に2段階認証プロセスを有効にする必要があります。',
+          `1. 2段階認証プロセスを有効にする: ${PROVIDER_LINKS.googleTwoStep}`,
+          `2. アプリ パスワードを作成する: ${PROVIDER_LINKS.googleAppPasswords}`,
+          '3. 16文字をMCPEmailsに貼り付ける。スペースが入っていても問題ありません。',
+          '仕事用のGoogleアカウントでは、管理者が無効にしているためにアプリ パスワードのページが表示されないことがあります。その場合は管理者に許可してもらう必要があります。',
+        ],
+        yahoo_app_password: (label, link) => [
+          `先ほど、${label}の受信トレイが接続できなかったようです。${label}では、このようなアプリから通常のパスワードは使えず、アプリ パスワードが必要です。`,
+          `こちらで作成できます: ${link}。名前をMCPEmailsにして、接続ステップに貼り付けてください。`,
+        ],
+        icloud_app_password: () => [
+          '先ほど、iCloudの受信トレイが接続できなかったようです。iCloudメールでは、ほかのアプリからApple Accountのパスワードは使えません。App用パスワードが必要です。',
+          `${PROVIDER_LINKS.appleAccount} にアクセスし、Sign-In and Security（サインインとセキュリティ）、App-Specific Passwords（App用パスワード）の順に開いて、MCPEmailsという名前で作成してください。ユーザー名にはiCloudのメールアドレスを省略せずに入力します。`,
+        ],
+        known_host: (label) => [
+          `先ほど、${label}の受信トレイが接続できなかったようです。${label}では、ログインに使うパスワードとは別のものが必要なことがよくあります。メールボックス専用のパスワード、アプリ パスワード、または設定でIMAPを有効にすることです。`,
+          `下のボタンから、${label}が選択された状態で接続ステップが開きます。${label}で確認すべき点もそこに載っています。`,
+        ],
+        imap_disabled: (label) => [
+          `先ほど、${label}の受信トレイが接続できなかったようです。${label}から、このメールボックスではIMAPアクセスが無効になっているとの応答がありました。有効にするまでは、どのパスワードでも接続できません。`,
+          `${label}のメール設定でIMAP（ほかのメールアプリからのアクセス、と呼ばれることもあります）を有効にしてから、もう一度お試しください。仕事用や学校のアカウントでは、管理者による設定が必要な場合があります。`,
+        ],
+        consent_cancelled: (label) => [
+          `受信トレイの接続が終わる前に、${label}のログインページが閉じられたようです。`,
+          `このページには、MCPEmailsが求めるアクセス権限が表示されます。これにより、AIアプリがあなたの指示でメールを読み、整理し、送信できるようになります。このアクセスはいつでも取り消せます。準備ができたら、もう一度始めて${label}のページで承認してください。`,
+        ],
+        office365_basic_auth: () => [
+          'Microsoft 365のメールボックスがパスワードで接続できなかったようです。Microsoft 365は、このようなアプリからのパスワードによるログインをブロックしています。パスワード自体に問題があったわけではありません。',
+          '代わりにOutlookのオプションを使ってください。Microsoftに直接ログインするので、パスワードの入力は不要です。会社で新しいアプリの承認が必要な場合は、IT管理者に送るリンクが接続ステップに表示されます。',
+        ],
+        server_unreachable: () => [
+          '先ほど、MCPEmailsがメールサーバーに接続できなかったようです。サーバーから応答がありませんでした。',
+          'よくある原因は、サーバー名の入力ミスか、サーバーが自身のネットワーク内からの接続しか受け付けていないことです。学校、大学、企業のサーバーはそうなっていることがよくあります。',
+          'プロバイダーのヘルプページでサーバー名を確認して、もう一度お試しください。外部アプリを許可していない学校や職場のサーバーであれば、別のアドレスを接続するほうが早く済みます。',
+        ],
+        smtp_rejected: () => [
+          '先ほど、受信トレイの接続が途中で止まったようです。メールの読み込みはできましたが、送信用のログインが拒否されました。',
+          'プロバイダーによっては、送信に別のログイン情報を使います。当面はメールの閲覧と整理だけでよければ、接続ステップで詳細設定を開き、受信のみ（IMAP）を選んでください。',
+        ],
+        generic_password: () => [
+          '先ほど、受信トレイが接続できなかったようです。メールサーバーがログインを拒否しました。',
+          'ほとんどのプロバイダーでは、原因は次のどちらかです。ログイン用のパスワードではなくアプリ パスワード（セキュリティ設定で作成するもの）が必要か、ユーザー名がメールアドレスとは異なるかです。別のユーザー名は、接続ステップの詳細設定で入力できます。',
+        ],
+        generic: () => [
+          '先ほど、受信トレイがMCPEmailsに接続できなかったようです。',
+          '接続ステップには、前回の試行で何がうまくいかなかったかが表示されます。失敗の多くはパスワードの種類かメールプロバイダー側の設定が原因で、どちらもすぐに直せます。',
+        ],
+      },
+    },
+    e2: {
+      clientName: { chatgpt: 'ChatGPT', claude: 'Claude', other: 'お使いのAIアプリ' },
+      subject: {
+        not_linked: (client) => `あと1ステップで${client}から受信トレイを使えます`,
+        linked_no_call: (client) => `${client}で最初の質問をしてみましょう`,
+      },
+      title: '受信トレイの準備ができました',
+      cta: 'ダッシュボードを開く',
+      notLinked: (client) => [
+        `受信トレイはMCPEmailsに接続されていますが、${client}はまだ連携されていません。`,
+        `1分ほどで終わります。${client}の手順はダッシュボードにあります。`,
+      ],
+      notLinkedOneClick: (client) => `1分ほどで終わります。下のボタンを押すと、MCPEmailsが入力済みの状態で${client}が開きます。追加したら、${client}に求められたときにMCPEmailsにログインしてください。`,
+      linkedNoCall: (client) => [
+        `受信トレイと${client}はどちらもMCPEmailsに接続されていますが、まだ何も質問されていません。`,
+      ],
+      toggle: {
+        chatgpt: 'ChatGPTでは、使用中のチャットでMCPEmailsをオンにする必要があります。新しいチャットを開き、+メニューからMCPEmailsをオンにしてください。',
+        claude: 'Claudeでは、使用中のチャットでMCPEmailsをオンにする必要があります。新しいチャットを開き、チャットのツールメニューでMCPEmailsをオンにしてください。',
+        other: '使用中のチャットでMCPEmailsがオンになっているか確認してください。',
+      },
+      tryLine: (prompt) => `次に、たとえばこう聞いてみてください:「${prompt}」`,
     },
   },
 

@@ -44,7 +44,7 @@ export const CHECKED_ON = '2026-10-20';
  * has none, so /zh/tools/email-settings-lookup 404s and is left out of
  * hreflang.
  */
-export const LOCALES = ['en', 'nb', 'es', 'fr', 'de'];
+export const LOCALES = ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'];
 
 /**
  * Link targets for `[label](key)` in the copy, as English paths. The page

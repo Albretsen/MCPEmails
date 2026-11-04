@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://zed.dev/docs/ai/mcp"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Zed: configuração MCP no Agent Panel",
+    "description": "Adicione uma caixa de entrada real ao Agent Panel do Zed como context server. Cole uma URL, autorize com OAuth, sem chave de API. Leia, pesquise, envie e agende e-mails. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Zed + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Zed",
+    "titleLine2": "pelo Agent Panel",
+    "lead": "Adicione uma caixa de correio real ao Zed como context server. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails sem sair do editor.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Nas configurações do Agent Panel, clique em Add Custom Server, ou adicione uma entrada em context_servers no settings.json com a url https://mcpemails.com/api/mcp. O Zed inicia o fluxo OAuth quando nenhum header Authorization está definido."
+  },
+  "method": {
+    "title": "Como o Zed se conecta: OAuth, sem chave de API",
+    "body": "O Zed executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra as configurações do Agent Panel",
+      "p": "Nas configurações do Agent Panel, clique em <b>Add Custom Server</b> (adicionar servidor personalizado), ou edite o <code>settings.json</code> diretamente."
+    },
+    {
+      "h": "Adicione o servidor",
+      "p": "Adicione a entrada abaixo em <code>context_servers</code>."
+    },
+    {
+      "h": "Autorize",
+      "p": "O Zed inicia o fluxo OAuth quando nenhum header Authorization está definido. Faça login com o MCPEmails e aprove os escopos que você quer que o Zed tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Deixe o header Authorization vazio de propósito",
+      "p": "O Zed escolhe entre OAuth e um token estático conforme você tenha configurado ou não um header Authorization. Defina um e o Zed o usa e nunca pede login; deixe vazio e o Zed executa o fluxo no navegador. Preencher esse campo pela metade é como as pessoas acabam com um servidor que nem pede login nem autentica."
+    },
+    {
+      "h": "O Zed chama de context servers, todo mundo chama de servidores MCP",
+      "p": "A chave de configuração é <code>context_servers</code>. É o mesmo MCP, e um trecho de outro cliente está certo, tirando a chave que envolve a entrada, que é exatamente o tipo de diferença que passa por uma leitura cuidadosa."
+    },
+    {
+      "h": "O Agent Panel é onde as ferramentas aparecem",
+      "p": "As ferramentas de e-mail são ferramentas do agente. Uma conexão bem-sucedida não muda nada nos autocompletes inline; o lugar para confirmar que funcionou, e ver quais ferramentas chegaram, é o Agent Panel."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Zed?",
+      "a": "Adicione um servidor personalizado nas configurações do Agent Panel, ou adicione uma entrada em context_servers no settings.json com a url https://mcpemails.com/api/mcp. Deixe o header Authorization vazio e o Zed executa o fluxo OAuth. O Agent Panel passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Zed?",
+      "a": "Não, desde que você deixe o header Authorization sem valor, que é o que faz o Zed iniciar o fluxo OAuth. Uma chave bearer é a alternativa se você preferir gerenciar o token por conta própria."
+    },
+    {
+      "q": "Quais caixas de correio o Zed alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Zed pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao Zed uma caixa de entrada real",
+    "sub": "Um context server, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

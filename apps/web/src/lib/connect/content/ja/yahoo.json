@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ パスワード",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "ドメインを含むYahooアドレス全体。name@yahoo.com、または登録時に使ったymail.comやrocketmail.comの形式です。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo Mail MCP: Yahoo MailをClaudeとChatGPTに接続する",
+    "description": "Yahoo Mail（yahoo.com）をYahooのアプリ パスワードでポート993のIMAP接続し、ClaudeやChatGPTに接続。アカウントのパスワードでは接続できません。受信トレイ1つはずっと無料。"
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + AI",
+    "titleLine1": "Yahoo MailをClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "ClaudeやChatGPTに本物のYahoo受信トレイを数分で渡せます。アプリ パスワード1つでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "アプリ パスワード、OAuth設定なし",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Claudeは自力ではYahoo Mailに届きません。MCPEmailsはホスト型のMCPサーバーで、ポート993のIMAPで接続し、Yahooの「Account Security」（アカウントセキュリティ）ページの「External connections」（外部接続）で作成したYahooのアプリ パスワードで認証するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。通常のYahooパスワードはメールクライアントからは一切受け付けられません。セットアップは数分で、受信トレイ1つはずっと無料です。"
+  },
+  "method": {
+    "title": "Yahooの接続方法：アプリ パスワード",
+    "body": "このページは米国Yahooのyahoo.comなどのアドレス向けです。<b>Yahoo!メール（@yahoo.co.jp）は別のサービス</b>で、アプリ パスワードはありません。Yahoo!メールの設定でIMAPとSMTPのアクセスを有効にしてから、汎用IMAPとしてimap.mail.yahoo.co.jp（993）とsmtp.mail.yahoo.co.jp（465）、Yahoo! JAPAN IDのパスワードで接続してください。手順はYahoo! JAPANのヘルプ（support.yahoo-net.jp）にあります。Yahoo MailはIMAP/SMTPを通じて<b>Yahooのアプリ パスワード</b>で接続します。YahooのAccount Securityの「External connections」で生成し、YahooアドレスとともにMCPEmailsに貼り付けてください。その項目が見当たらなければ、2段階認証を有効にしてからもう一度確認してください。OAuthのやり取りも、ブラウザーのポップアップもありません。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Yahooのアプリ パスワードを生成する",
+      "p": "YahooのAccount Security（アカウントセキュリティ）の「External connections」（外部接続）でアプリ パスワードを生成します。項目がなければ、先に2段階認証を有効にしてください。"
+    },
+    {
+      "h": "MCPEmailsに貼り付ける",
+      "p": "Yahooアドレスとアプリ パスワードを追加して、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントが受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahooが文書化しているホストと私たちが接続するホストは、1つのサーバーの2つの名前です",
+      "p": "Yahoo自身のヘルプ記事は<code>imap.mail.yahoo.com</code>を挙げています。このページの設定表には<code>export.imap.mail.yahoo.com</code>があります。どちらも間違いではありません。両方の名前は同じ<code>jimap.imap.mail.yahoo.com</code>へのエイリアスで、同じアドレスに解決され、Yahooが提示する証明書は両方をカバーする<code>*.imap.mail.yahoo.com</code>のワイルドカードです。私たちは実際にTLS接続を開いた名前を公開しています。お使いのメールクライアントが文書化された名前で設定済みなら、そのままで構いません。同じマシンと話しています。"
+    },
+    {
+      "h": "アプリ パスワードはExternal connectionsにあり、パスワード変更後も生き残ります",
+      "p": "YahooはAccount Securityページの<b>External connections</b>（外部接続）でアプリ パスワードを生成します。「Create app password」、アプリ名を付けて、「Generate password」です。Yahooが表示するのは一度だけです。見落とされがちなのはその後の挙動です。アプリ パスワードはメインのYahooパスワードを変更しても有効なままなので、パスワードを変えてもメールクライアントのアクセスは取り消されません。Yahoo側で接続を断つ唯一の方法は、同じ画面でそのアプリ パスワードを削除することです。"
+    },
+    {
+      "h": "YahooとAOLはプラットフォームを共有していますがアカウントは別で、認証情報は相互に使えません",
+      "p": "ymail.comとrocketmail.comのアドレスは通常のYahooアカウントで、このページの対象です。AOL Mailは同じ基盤インフラで動き、<code>imap.aol.com</code>は同じ<code>yahoodns.net</code>サービスで解決されますが、AOLには独自のホスト名と独自のアカウントセキュリティページがあります。Yahooアカウントで生成したアプリ パスワードではAOLのメールボックスは開けませんし、その逆も同じです。AOLアドレスはAOLとして接続してください。"
+    },
+    {
+      "h": "YahooのIMAPは多くの無料メールボックスより高機能で、それが有利に働きます",
+      "p": "調査時、Yahooは<code>SASL-IR</code>、<code>MOVE</code>、<code>UIDPLUS</code>、<code>IDLE</code>、<code>SPECIAL-USE</code>を通知していました。実用上は、移動がコピーと削除の組み合わせではなく1つのアトミックなコマンドで済み、送信済み、下書き、迷惑メール、ゴミ箱が名前ではなく<b>役割</b>で識別されるので、名前を変えたり英語以外にしたりしたシステムフォルダーも正しく解決されます。IMAPでは<code>AUTH=LOGIN</code>を通知せず、PLAINとOAuthの仕組みだけなので、LOGINメカニズムに固定されたツールは正しいアプリ パスワードでも認証で失敗します。"
+    }
+  ],
+  "limits": [
+    "Yahooの送信サーバーはメッセージの最大サイズをおよそ41 MBと通知します。MCPEmails経由の添付ファイル読み取りはリクエストあたり25 MBが上限なので、それより大きいものはYahoo Mail自体で取得する必要があります。",
+    "アプリ パスワードは期限切れにならず、Yahooパスワードの変更後も残ります。アクセスを取り消す唯一の方法は、Account Securityでアプリ パスワードを削除することです。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはYahoo Mailで使えますか？",
+      "a": "直接は使えません。Claudeに内蔵のYahooコネクタはありません。MCPEmailsのようなMCPサーバーをYahooのアプリ パスワードでIMAP経由でYahoo Mailボックスに接続すると、Claudeがメールの閲覧、検索、送信、返信、予約送信、整理をできるようになります。同じ接続がそのままCursor、ChatGPT、その他のMCPクライアントからも使えます。"
+    },
+    {
+      "q": "ChatGPTはYahoo Mailに接続できますか？",
+      "a": "できます。MCPEmailsをカスタムMCPサーバーとして追加します。chatgpt.comでChatGPT Goまたは有料プランを使い、「プラグイン」、「Personal」（個人）、「Add」（追加）、「カスタム MCP サーバーを追加」の順に開き、MCPEmailsのURLを貼り付けてOAuthを選び、ログインします。あとはチャットで@と入力してMCPEmailsを選べば、ここで接続したYahooの受信トレイに届きます。同じアプリ パスワードがClaudeにも使えます。"
+    },
+    {
+      "q": "Yahoo MailのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはポート993の暗黙的TLS、SMTPはsmtp.mail.yahoo.comのポート465で、こちらも暗黙的TLSです。Yahooは受信ホストをimap.mail.yahoo.comと文書化しています。このページの表にはexport.imap.mail.yahoo.comがあり、これは同じサーバーへのエイリアスで、私たちが実際に確認した名前です。アドレス全体とアプリ パスワードでログインしてください。"
+    },
+    {
+      "q": "Yahooのパスワードが拒否されるのはなぜですか？",
+      "a": "Yahooはサードパーティのメールアプリからのアカウントパスワードを受け付けないからです。YahooのAccount Securityページの「External connections」で作成したアプリ パスワードが必要です。Yahooは二度と表示しないので、表示されたときにコピーしてください。古いアプリ パスワードが使えなくなったら、再利用せず新しく生成してください。"
+    },
+    {
+      "q": "Yahooのアプリ パスワードを得るには2段階認証が必要ですか？",
+      "a": "YahooはAccount Securityページの「External connections」でアプリ パスワードを作成します。その項目がアカウントに見当たらなければ、2段階認証を有効にしてからもう一度確認してください。Yahooはこの画面の場所や条件を長年のあいだ何度も変えています。パスワードは以前ログインしたことのあるブラウザーで生成し、プライベートウィンドウは使わないでください。"
+    },
+    {
+      "q": "私のYahoo Mailはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにYahooからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。YahooのAccount Securityでアプリ パスワードを削除すれば、Yahoo側で接続がすぐに終了します。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにYahooの受信トレイを渡す",
+    "sub": "Yahoo Mailを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  }
+}

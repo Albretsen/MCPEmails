@@ -1,0 +1,10 @@
+{
+  "eyebrow": "Várias caixas de correio",
+  "title": "Todas as caixas de correio {provider} da sua empresa em um só agente",
+  "body": "Se a sua empresa usa mais de um endereço no {provider}, como info@, vendas@ e faturas@, conecte cada um deles ao mesmo espaço de trabalho do MCPEmails. Seu cliente de IA passa a acessar todos pela mesma URL MCP, no Claude, ChatGPT, Cursor ou qualquer outro cliente MCP. Cada chamada de ferramenta indica a caixa de correio em que atua, cada caixa mantém seu próprio nome de remetente e sua assinatura, e uma resposta sai pela caixa a que pertence.",
+  "plans": "O Free conecta uma caixa de correio, o Personal três, o Pro até 10 e o Business quantas você precisar, todas com um único login.",
+  "pricingLink": "Compare os planos e quantas caixas de correio cada um conecta",
+  "link": "Como uma pessoa cuida de todas as caixas de correio da empresa com um só agente",
+  "faqQ": "Posso conectar várias caixas de correio {provider} ao mesmo agente de IA?",
+  "faqA": "Sim. Conecte cada endereço {provider} a um espaço de trabalho do MCPEmails, e seu cliente de IA acessa todos pela mesma URL MCP. Cada chamada de ferramenta indica a caixa de correio em que atua, então a resposta a uma mensagem em vendas@ sai de vendas@. O Free conecta uma caixa de correio, o Personal três, o Pro até 10 e o Business quantas você precisar."
+}

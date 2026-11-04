@@ -44,7 +44,8 @@ const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
 // ChatGPT Go and paid plans, under Plugins, Personal, Add, with no developer
 // mode. Menu labels stay in English in every locale.
 const GO_PLAN = /ChatGPT Go\b/;
-const MENU_PATH = /Plugins[,、]\s*Personal/;
+// ja quotes OpenAI's Japanese label (プラグイン) in 「」.
+const MENU_PATH = /(?:Plugins|プラグイン)」?[,、]\s*「?Personal/;
 const STALE = /developer mode|Developer mode|Entwicklermodus|mode développeur|modo desarrollador|utviklermodus|开发者模式|Plus.{1,3}Pro.{1,3}Business/;
 const MCP_URL = 'https://mcpemails.com/api/mcp';
 

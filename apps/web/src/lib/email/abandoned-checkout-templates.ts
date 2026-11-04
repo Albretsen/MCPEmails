@@ -14,7 +14,7 @@
  * checkout page the link opens shows the right one. The 14-day refund sentence
  * matches the pricing FAQ in each language.
  *
- * LOCALES. en, nb, es, fr, de. zh is frozen (src/i18n/locale-policy.mjs) and
+ * LOCALES. en, nb, es, fr, de, pt, ja. zh is frozen (src/i18n/locale-policy.mjs) and
  * renders English, as a missing zh message key would. German uses formal Sie,
  * like the German checkout text.
  *
@@ -28,7 +28,7 @@ import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
 
 export const ABANDONED_CHECKOUT_CATEGORY = 'lifecycle' as const;
 
-export const REMINDER_LOCALES = ['en', 'nb', 'es', 'fr', 'de'] as const;
+export const REMINDER_LOCALES = ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'] as const;
 export type ReminderLocale = (typeof REMINDER_LOCALES)[number];
 
 /** Any app locale (or junk) to a locale this email has copy for. */
@@ -137,6 +137,38 @@ const COPY: Record<ReminderLocale, Copy> = {
     unsubscribeLink: 'Von diesen E-Mails abmelden',
     notAffected: 'Rechnungs- und Kontohinweise sind davon nicht betroffen.',
     textUnsubscribe: 'Abmelden',
+  },
+  pt: {
+    lang: 'pt-BR',
+    greeting: 'Olá,',
+    subject: (plan) => `Sua compra do MCPEmails ${plan}`,
+    title: (plan) => `Sua compra do ${plan}`,
+    intro: (plan, interval) =>
+      `Você começou a assinar o MCPEmails ${plan}, com cobrança ${interval === 'year' ? 'anual' : 'mensal'}, mas não concluiu. Se ainda quiser, o botão abaixo abre um novo pagamento para o mesmo plano.`,
+    help: 'Se algo atrapalhou, como uma dúvida sobre o plano ou um pagamento que não foi aprovado, responda a este e-mail e me conte. Eu leio todas as respostas.',
+    refund: 'Se a primeira cobrança não for o que você esperava, fale com a gente em até 14 dias e devolvemos o valor integral.',
+    cta: 'Continuar para o pagamento',
+    footerNote: 'As respostas chegam direto para mim, não para uma fila de chamados.',
+    unsubscribeReason: 'Você está recebendo este e-mail porque pediu dicas e ofertas do produto ao criar sua conta.',
+    unsubscribeLink: 'Cancelar a inscrição destes e-mails',
+    notAffected: 'Os avisos de cobrança e de conta não são afetados.',
+    textUnsubscribe: 'Cancelar inscrição',
+  },
+  ja: {
+    lang: 'ja',
+    greeting: 'こんにちは。',
+    subject: (plan) => `MCPEmails ${plan}のお手続きについて`,
+    title: (plan) => `${plan}のお手続きについて`,
+    intro: (plan, interval) =>
+      `MCPEmails ${plan}（${interval === 'year' ? '年払い' : '月払い'}）のお手続きを始められましたが、完了していないようです。引き続きご希望の場合は、下のボタンから同じプランの新しい決済ページを開けます。`,
+    help: 'プランについての疑問や、支払いが通らなかったなど、何か問題があった場合は、このメールに返信してお知らせください。返信はすべて私が読んでいます。',
+    refund: '初回の請求が想定と違った場合は、14日以内にご連絡いただければ全額返金します。',
+    cta: '決済を続ける',
+    footerNote: '返信はチケット管理システムではなく、私に直接届きます。',
+    unsubscribeReason: 'このメールは、登録時に製品のヒントやお得な情報の受け取りを希望された方にお送りしています。',
+    unsubscribeLink: 'このメールの配信を停止する',
+    notAffected: '請求とアカウントに関するお知らせは引き続き届きます。',
+    textUnsubscribe: '配信停止',
   },
 };
 

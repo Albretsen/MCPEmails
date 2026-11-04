@@ -54,6 +54,8 @@ const IN_PROGRESS = {
   nb: /under utvikling|under arbeid|kommer snart|enn[aå] ikke allment tilgjengelig|kan (?:enn[aå] )?ikke kobles?|ikke mulig [aå] koble til enn[aå]/i,
   zh: /(?:正|仍)在开发中|即将推出|尚未全面开放|尚未在生产环境中提供|无法在生产环境中连接|目前还不能连接/,
   de: /in Entwicklung|in Arbeit|demn[aä]chst verf[uü]gbar|kommt bald|noch nicht allgemein verf[uü]gbar|(?:k[oö]nnen|l[aä]sst sich) (?:noch )?nicht verbunden|noch nicht verbindbar/i,
+  pt: /em desenvolvimento|em breve|ainda n[aã]o (?:est[aá] )?dispon[ií]vel para todos|ainda n[aã]o (?:[eé] poss[ií]vel|pode) conectar|ainda n[aã]o conect[aá]vel/i,
+  ja: /開発中|近日(?:公開|提供)|まだ一般提供されていません|まだ接続できません|まだ接続できない/,
 };
 
 /**
@@ -71,6 +73,8 @@ const ADMIN_CAVEAT = {
   nb: /IT-ansvarlig|administratorgodkjenning/i,
   zh: /IT 管理员|管理员批准/,
   de: /IT-Administrator|IT-Admin|Administrator-?(?:genehmigung|freigabe)|Freigabe durch (?:einen|Ihren|die) (?:IT-)?Admin/i,
+  pt: /administrador de TI/i,
+  ja: /IT管理者/,
 };
 
 const localeFiles = (slug) =>
@@ -149,6 +153,8 @@ const GMAIL_ONE_CLICK = {
   nb: /ett-klikks OAuth|Gmail bruker OAuth|Gmail \(OAuth\)|Gmail-tilkoblingen bruker Google OAuth/i,
   zh: /一键 ?OAuth|Gmail 使用 OAuth|Gmail（OAuth）|Gmail 连接使用 Google OAuth/,
   de: /OAuth mit einem Klick|Ein-Klick-OAuth|Gmail (?:nutzt|verwendet) OAuth|Gmail \(OAuth\)|Gmail-Verbindung (?:nutzt|verwendet) Google OAuth/i,
+  pt: /OAuth (?:com|em) um clique|Gmail usa OAuth|Gmail \(OAuth\)|conex[aã]o (?:com o|do) Gmail usa (?:o )?Google OAuth/i,
+  ja: /ワンクリック(?:で)?(?:の)? ?OAuth|GmailはOAuthを使用|Gmail ?[（(]OAuth[）)]|Gmailの接続はGoogle OAuthを使用/,
 };
 
 for (const slug of allPostSlugs) {

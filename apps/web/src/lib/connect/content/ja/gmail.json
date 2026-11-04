@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://developers.google.com/gmail/api/guides",
+    "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
+    "https://support.google.com/a/answer/7281227"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ パスワード",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "Gmailアドレス全体（例：you@gmail.com）。アプリ パスワードは通常のGoogleパスワードの代わりに使います。通常のパスワードでは接続できません。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Claude、Cursor、ChatGPT向けGmail MCPサーバー",
+    "description": "ホスト型のGmail MCPサーバー。Googleのアプリ パスワードでGmailをIMAP接続し、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Gmail + AI",
+    "titleLine1": "Gmail MCPサーバー",
+    "titleLine2": "Claude、Cursor、ChatGPT向け",
+    "lead": "AIエージェントに本物のGmail受信トレイを数分で渡せます。Googleのアプリ パスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Googleのアプリ パスワードで接続",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Gmail MCPサーバーのURLはhttps://mcpemails.com/api/mcpです。MCPEmailsはホスト型のMCPサーバーです。Googleのアプリ パスワードを作成し、ダッシュボードでGmailを一度接続したら、そのURLをClaude、ChatGPT、Cursorに貼り付けます。Cursorでは~/.cursor/mcp.jsonのmcpServersにurlフィールドで追加すると、Cursorがログインを求めます。APIキーは不要です。FreeプランではGmail受信トレイ1つをカード登録なしでずっと接続でき、個人のGoogleアカウントでもGoogle Workspaceでも使えます。"
+  },
+  "method": {
+    "title": "Gmailの接続方法：Googleのアプリ パスワード",
+    "body": "GmailはIMAPとSMTPを通じて<b>Googleのアプリ パスワード</b>で接続します。Googleは<b>2 段階認証プロセスが有効</b>なアカウントにしかアプリ パスワードを提供しないので、まずそれを有効にし、<b>myaccount.google.com/apppasswords</b>で作成してください。アプリ パスワードは小文字16文字が4つのグループに分かれた形式で、通常のGoogleパスワードの代わりに貼り付けます（通常のパスワードでは接続できません）。同じGoogleのページからいつでも取り消せますし、MCPEmailsで受信トレイを削除しても構いません。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Googleのアプリ パスワードを作成する",
+      "p": "Googleアカウントで2 段階認証プロセスがまだ有効でなければ有効にし、myaccount.google.com/apppasswordsを開いて作成します。16文字をGmailアドレス全体と一緒にMCPEmailsに貼り付けます。コードの中のスペースは気にしなくて構いません。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントが受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Googleは独自のGmail MCPサーバーを公開しており、Gmailだけなら近道はそちらです",
+      "p": "GoogleはGmailをDrive、カレンダー、Chatと一緒にカバーするWorkspace MCPサーバーを含め、自社サービスの公式MCPサポートを発表しました。これを隠すつもりはありません。アシスタントに触らせたいメールボックスがGmailだけで、お使いのクライアントがGoogleのサーバーと通信できるなら、そちらを使ってください。代わりにMCPEmailsをGmailにつなぐ理由は、同じサーバーがiCloud、Fastmail、Zoho、Yahoo、会社のIMAPメールボックスも保持し、そのすべてを<b>1つ</b>のMCP URLで公開し、Claude、Cursor、ChatGPTで同じように振る舞う点にあります。プロバイダーごとに別々のコネクタを持ち、それぞれに認証とツール名があるという状態を、これで避けられます。"
+    },
+    {
+      "h": "別のアドレスから送るには、確認済みのSend Asアドレスが必要です",
+      "p": "アプリ パスワードで接続したメールボックスは、自分のアドレスから送信します。エイリアスや自分が所有する別のアドレスからエージェントに送信させるには、MCPEmailsの受信トレイ設定にある<b>Send Asアドレス</b>に追加してください。そのアドレスに6桁のコードをメールで送り、コードを入力すると使えるようになります。Gmail側でもそのアドレスを受け付ける必要があるので、先にGmailの「アカウントとインポート」で<b>他のメール アドレスを追加</b>（Send mail as）して設定しておいてください。メールボックス自身のアドレスでも確認済みでもないFromアドレスは拒否され、黙って書き換えられることはありません。"
+    },
+    {
+      "h": "Gmailにあるのはフォルダーではなくラベルなので、移動は移動ではありません",
+      "p": "Gmailが保存するのはフォルダーではなくラベルです。IMAP経由ではすべてのラベルがフォルダーとして見えるため、1通のメッセージが複数のラベルを同時に持ち、複数のフォルダーに現れることがあります。移動とは1つのラベルを付けて別のラベルを外すことで、アーカイブは単に<code>INBOX</code>を外すことです。削除はメッセージを消去するのではなく、Gmailのゴミ箱に入れます。まだ存在しないフォルダーにメールを振り分けるようエージェントに頼むと、先にラベルが作成され、その後すべてのデバイスのGmailに表示されます。"
+    },
+    {
+      "h": "Google Workspaceの管理者はアプリ パスワードを無効にできます",
+      "p": "個人のGoogleアカウントでは、前提条件は2 段階認証プロセスだけです。Google Workspaceアカウントでは、管理者がドメイン全体でアプリ パスワードを無効にできます。その場合myaccount.google.com/apppasswordsは単に利用できず、メールボックスの側からできることはありません。管理者に相談するか、別のメールボックスを接続してください。"
+    }
+  ],
+  "limits": [
+    "MCPEmailsが触れるのはメールだけです。アプリ パスワードはIMAPとSMTPにしか使いません。Drive、カレンダー、Chat、ドキュメントには届きません。",
+    "Google Workspaceの管理者は、管理コンソールからドメインのアプリ パスワードを無効にできます。その判断を変えられるのは管理者だけです。",
+    "削除はメッセージをGmailのゴミ箱に移動します。完全削除はGmailのIMAP設定に従います。既定ではメッセージを削除したラベルを外すだけで、ゴミ箱からの完全消去（expunge）で消えます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはGmailで使えますか？",
+      "a": "はい。ClaudeとGmailの間に、Claudeの代わりにGmailと話す何かが入れば使えます。MCPEmailsはそのひとつです。Googleのアプリ パスワードを作成し、MCP URLを1つ貼り付けると、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信をできるようになります。GoogleもGmailをカバーする公式のWorkspace MCPサーバーを公開しています。実用上の違いは、MCPEmailsはGoogle専用ではないので、同じURLが他のメールボックスにも使える点です。"
+    },
+    {
+      "q": "Gmail MCPサーバーのURLは何ですか。無料ですか？",
+      "a": "URLはhttps://mcpemails.com/api/mcpで、Claude、ChatGPT、Cursorをはじめ、どのMCPクライアントでも同じです。FreeプランではGmail受信トレイ1つをカード登録なしでずっと接続できます。有料プランでは受信トレイを増やせます。"
+    },
+    {
+      "q": "Google公式のGmail MCPサーバーはありますか？",
+      "a": "あります。GoogleはGmail、Drive、カレンダー、ChatにまたがるWorkspace MCPサーバーを含め、自社サービスの公式MCPサポートを発表しました。関係するメールボックスがGmailだけで、クライアントが対応しているならそちらを使ってください。複数のプロバイダーを1つのMCP URLの後ろにまとめたいとき、またはClaude、Cursor、ChatGPTで同一の振る舞いが欲しいときは、MCPEmailsのようなサードパーティのサーバーを選んでください。"
+    },
+    {
+      "q": "Gmailにアプリ パスワードは必要ですか？",
+      "a": "必要です。GmailはIMAPとSMTPを通じて、通常のGoogleパスワードではなくGoogleのアプリ パスワードで接続します。Googleは2 段階認証プロセスが有効なアカウントにしかアプリ パスワードを表示しないので、まずそれを有効にし、myaccount.google.com/apppasswordsで作成してください。1分ほどで終わります。"
+    },
+    {
+      "q": "仕事用アカウントでアプリ パスワードを作成できないのはなぜですか？",
+      "a": "Googleは2 段階認証プロセスが有効なアカウントにしかアプリ パスワードを提供しないので、まずそこを確認してください。Google Workspaceアカウントでは、管理者がドメイン全体でアプリ パスワードを無効にすることもでき、その場合メールボックス側で何をしてもmyaccount.google.com/apppasswordsは利用できないままです。変えられるのは管理者だけです。個人のGmailアカウントに必要なのは2 段階認証プロセスだけです。"
+    },
+    {
+      "q": "Google Workspaceの独自ドメインでも使えますか？",
+      "a": "使えます。独自ドメインのWorkspaceメールボックスはgmail.comアドレスとまったく同じようにアプリ パスワードで接続し、その後の振る舞いも同じです。条件は管理者のポリシーだけで、ドメインでアプリ パスワードとIMAPアクセスが許可されている必要があります。"
+    },
+    {
+      "q": "私のGmailはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにGoogleからその場で取得し、AIクライアントに渡します。アプリ パスワードは保存時に暗号化され、メッセージ本文は保持しません。Googleアカウントでアプリ パスワードを取り消すか、MCPEmailsで受信トレイを削除すれば、接続はすぐに終了します。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにGmailの受信トレイを渡す",
+    "sub": "Gmailを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  },
+  "guide": {
+    "intro": "スクリーンショット付きの手順をご希望ですか？",
+    "label": "GmailをClaudeに接続する方法",
+    "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "独自ドメインのGoogle Workspaceにある会社のメールボックスですか？",
+    "label": "Google Workspaceの接続と、それを左右する管理者設定",
+    "href": "/connect/google-workspace"
+  }
+}

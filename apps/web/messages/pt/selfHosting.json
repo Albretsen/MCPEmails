@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Hospede seu próprio servidor MCP de e-mail open source",
+    "description": "Rode o servidor open source do MCPEmails para IMAP e SMTP na sua própria infraestrutura. Fique com a sua chave de criptografia, busque e-mails em tempo real e nunca armazene o conteúdo da caixa de correio."
+  },
+  "hero": {
+    "eyebrow": "Open source, AGPL-3.0",
+    "title": "Rode o MCPEmails você mesmo.",
+    "lead": "O mesmo servidor MCP que roda o mcpemails.com, na sua própria máquina, com o seu próprio banco de dados. As credenciais da sua caixa de correio nunca saem da infraestrutura que você controla. Elas são criptografadas com uma chave que só você tem e descriptografadas apenas no seu contêiner, no momento em que uma chamada de ferramenta precisa delas."
+  },
+  "proof": {
+    "title": "Tudo em um único comando",
+    "caption": "Quatro contêineres pequenos (Postgres, PostgREST, nginx e o servidor Deno). Sem conta, sem chaves guardadas por nós, sem telemetria. Ele roda <c>supabase/functions/mcp-server</c> sem modificações: exatamente o código por trás do produto hospedado.",
+    "ctaGuide": "Leia o guia de self-hosting",
+    "ctaSource": "Veja o código-fonte"
+  },
+  "sovereignty": {
+    "title": "Sua caixa de entrada nunca sai da sua máquina.",
+    "body": "Conecte Fastmail, iCloud, Yahoo, Zoho, Yandex ou qualquer caixa de correio IMAP/SMTP com uma senha de app. Os e-mails são buscados em tempo real e nunca armazenados. As credenciais são criptografadas em repouso com AES-256-GCM, usando uma chave que você gera e guarda. Não há nada se comunicando com a gente por trás."
+  },
+  "compare": {
+    "title": "Self-hosting vs hospedado",
+    "intro": "O servidor MCP completo e suas ferramentas de e-mail estão nos dois. Hospedar por conta própria troca a comodidade gerenciada pelo controle total.",
+    "thFeature": "",
+    "thSelf": "Self-hosting",
+    "thHosted": "Hospedado",
+    "rows": [
+      {
+        "feature": "Preço",
+        "self": "Grátis, você mesmo roda",
+        "hosted": "Grátis, $9, $15 ou $39"
+      },
+      {
+        "feature": "O servidor MCP e suas ferramentas de e-mail",
+        "self": "Sim",
+        "hosted": "Sim"
+      },
+      {
+        "feature": "Caixas de entrada IMAP / SMTP (senha de app)",
+        "self": "Sim",
+        "hosted": "Sim"
+      },
+      {
+        "feature": "E-mails buscados em tempo real, nunca armazenados",
+        "self": "Sim",
+        "hosted": "Sim"
+      },
+      {
+        "feature": "Credenciais criptografadas em repouso",
+        "self": "Sim, com a sua chave",
+        "hosted": "Sim"
+      },
+      {
+        "feature": "Login do Outlook (OAuth)",
+        "self": "Não incluído",
+        "hosted": "Sim (contas corporativas podem precisar de aprovação do admin de TI)"
+      },
+      {
+        "feature": "Painel web (conexões, chaves, atividade)",
+        "self": "CLI no lugar",
+        "hosted": "Sim"
+      },
+      {
+        "feature": "Disparador de envios agendados",
+        "self": "Use o seu próprio cron",
+        "hosted": "Gerenciado"
+      },
+      {
+        "feature": "Atualizações automáticas, backups, disponibilidade",
+        "self": "Por sua conta",
+        "hosted": "Gerenciado"
+      },
+      {
+        "feature": "Membros, funções e vários espaços de trabalho",
+        "self": "Não incluído",
+        "hosted": "Plano Business"
+      },
+      {
+        "feature": "Suporte",
+        "self": "Comunidade e GitHub",
+        "hosted": "E-mail nos planos pagos"
+      },
+      {
+        "feature": "Configuração",
+        "self": "Cerca de 5 minutos",
+        "hosted": "Cerca de 2 minutos"
+      }
+    ]
+  },
+  "security": {
+    "title": "Dar à IA acesso à sua caixa de entrada, com segurança",
+    "intro": "A preocupação é legítima. Veja como o design a limita, com ou sem self-hosting.",
+    "points": [
+      "<b>Privilégio mínimo por padrão.</b> Toda chave de API tem escopos: conceda só leitura, ou envio sem exclusão. Ações destrutivas exigem um escopo de exclusão explícito.",
+      "<b>Prompt injection tem limites concretos, não promessas vagas.</b> Um e-mail malicioso pode tentar dar instruções ao agente. Os escopos por chave limitam o estrago: uma chave que não pode enviar não pode ser enganada para enviar.",
+      "<b>As credenciais são criptografadas em repouso</b> com AES-256-GCM. Quando você hospeda por conta própria, a chave de criptografia é sua e de mais ninguém.",
+      "<b>Verifique, não confie.</b> O código é público sob AGPL-3.0, e a versão hospedada o executa sem modificações. Leia e depois decida."
+    ]
+  },
+  "commitment": {
+    "title": "Hospedar por conta própria é um compromisso de verdade.",
+    "body": "Você cuida da configuração IMAP/SMTP, das atualizações e da segurança, e o suporte vem só da comunidade. O login do Gmail e do Outlook (OAuth) e o painel web ficam no produto hospedado. Esses recursos precisam de segredos OAuth e de uma camada de sessão que uma instalação de um único operador não tem; para o Outlook, você também precisaria do seu próprio registro de aplicativo no Microsoft Entra. Se preferir não cuidar de infraestrutura, o plano hospedado leva dois minutos e é grátis para começar.",
+    "cta": "Use a versão hospedada"
+  },
+  "cta": {
+    "title": "Rode você mesmo, ou deixe que a gente rode.",
+    "sub": "O mesmo servidor de qualquer jeito. Você decide quem fica com as chaves.",
+    "primary": "Leia o guia de self-hosting",
+    "secondary": "Use a versão hospedada"
+  }
+}

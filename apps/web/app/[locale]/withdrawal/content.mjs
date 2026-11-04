@@ -307,7 +307,105 @@ const de = {
   termsLabel: 'Nutzungsbedingungen',
 };
 
-export const WITHDRAWAL_COPY = { en, nb, es, fr, zh, de };
+const pt = {
+  meta: {
+    title: 'Direito de arrependimento',
+    description:
+      'Como desistir de uma assinatura do MCPEmails ou de um passe de 3 meses em até 14 dias, o reembolso que você recebe e um modelo de formulário de arrependimento.',
+  },
+  eyebrow: 'Jurídico',
+  title: 'Direito de arrependimento',
+  lead:
+    'Se você é consumidor, pode desistir de uma nova assinatura do MCPEmails ou de um passe de 3 meses em até 14 dias, sem precisar dar um motivo. Abaixo está o aviso formal, seguido de um formulário que você pode copiar.',
+  notice: {
+    h: 'Aviso sobre o direito de arrependimento',
+    paras: [
+      'Você tem o direito de desistir deste contrato em até 14 dias, sem precisar apresentar nenhum motivo.',
+      'O prazo de arrependimento termina 14 dias após o dia em que o contrato foi celebrado, ou seja, o dia em que você concluiu o pagamento.',
+      'Para exercer o direito de arrependimento, você deve nos informar ({entity}, {address}, {email}) da sua decisão de desistir deste contrato por meio de uma declaração clara, por exemplo um e-mail. Você pode usar o formulário on-line em {cancelLink} ou o modelo de formulário de arrependimento abaixo, mas não é obrigatório.',
+      'Para cumprir o prazo de arrependimento, basta enviar sua comunicação antes de o prazo terminar.',
+    ],
+  },
+  effects: {
+    h: 'Efeitos do arrependimento',
+    paras: [
+      'Se você desistir deste contrato, reembolsaremos todos os pagamentos recebidos de você sem demora injustificada e, em qualquer caso, no máximo 14 dias a partir do dia em que formos informados da sua decisão. Usamos o mesmo meio de pagamento que você usou na transação original, a menos que você tenha concordado expressamente com outro. Você não paga nenhuma taxa pelo reembolso.',
+      'Seu plano começa assim que o pagamento é concluído, então o serviço começa durante o prazo de arrependimento. Mesmo assim, reembolsamos o valor integral, como prometem as seções 5.4 e 5.8 dos nossos {terms}: a primeira cobrança de uma assinatura ou o pagamento total de um passe de 3 meses. Não cobramos pelos dias que você usou.',
+    ],
+  },
+  form: {
+    h: 'Modelo de formulário de arrependimento',
+    intro: 'Preencha e envie este formulário somente se quiser desistir do contrato.',
+    lines: [
+      'Para: {entity}, {address}, {email}',
+      'Por meio deste, comunico que desisto do meu contrato de prestação do seguinte serviço: assinatura do MCPEmails (plano: ______) ou passe de 3 meses do MCPEmails (risque o que não se aplica)',
+      'Pedido em: ______',
+      'Nome do consumidor: ______',
+      'Endereço do consumidor: ______',
+      'Endereço de e-mail da conta do MCPEmails: ______',
+      'Assinatura do consumidor (somente se este formulário for enviado em papel): ______',
+      'Data: ______',
+    ],
+  },
+  cancelling: {
+    h: 'Cancelar em qualquer outro momento',
+    para:
+      'Você pode cancelar a qualquer momento, dentro ou fora dos 14 dias. O cancelamento interrompe a próxima renovação, e seu plano continua ativo até o fim do período que você já pagou. Cancele pelo painel ou, sem fazer login, em {cancelLink}. Um passe de 3 meses não é renovado, então não há nada para cancelar: ele termina na data mostrada no pagamento, e seu espaço de trabalho volta para o plano Free.',
+  },
+  cta: 'Desistir on-line',
+  termsLabel: 'termos de serviço',
+};
+
+const ja = {
+  meta: {
+    title: '撤回権',
+    description:
+      'MCPEmailsのサブスクリプションまたは3か月パスを14日以内に撤回する方法、返金の内容、撤回書式の見本をご案内します。',
+  },
+  eyebrow: '法的情報',
+  title: '撤回権',
+  lead:
+    '消費者の方は、新規のMCPEmailsサブスクリプションまたは3か月パスを、14日以内であれば理由を示さずに撤回できます。以下に正式な通知と、コピーして使える書式を掲載しています。',
+  notice: {
+    h: '撤回に関する通知',
+    paras: [
+      'お客様は、14日以内であれば、理由を示すことなくこの契約を撤回する権利を有します。',
+      '撤回期間は、契約締結日（お支払い手続きを完了した日）から14日を経過した時点で終了します。',
+      '撤回権を行使するには、この契約を撤回する旨を明確な意思表示（メールなど）により当社（{entity}、{address}、{email}）に通知する必要があります。{cancelLink}のオンラインフォームや下記の撤回書式の見本を利用できますが、利用は必須ではありません。',
+      '撤回期間を守るには、撤回期間が終了する前に通知を送信すれば足ります。',
+    ],
+  },
+  effects: {
+    h: '撤回の効果',
+    paras: [
+      'お客様がこの契約を撤回した場合、当社はお客様から受領したすべての支払いを、不当な遅延なく、遅くとも撤回の決定を通知された日から14日以内に返金します。返金には、お客様が別の方法に明示的に同意した場合を除き、元の取引で使用されたものと同じ支払い方法を使用します。返金に関して手数料はかかりません。',
+      'プランはお支払い手続きの完了と同時に開始するため、サービスは撤回期間中に始まります。それでも当社は、{terms}の第5.4条および第5.8条でお約束しているとおり全額を返金します。サブスクリプションの場合は初回の請求額、3か月パスの場合はお支払い額の全額です。ご利用いただいた日数分の料金はいただきません。',
+    ],
+  },
+  form: {
+    h: '撤回書式の見本',
+    intro: '契約の撤回を希望する場合にのみ、この書式に記入して返送してください。',
+    lines: [
+      '宛先：{entity}、{address}、{email}',
+      '私は、以下のサービスの提供に関する契約を撤回することをここに通知します：MCPEmailsサブスクリプション（プラン：______）またはMCPEmails 3か月パス（該当しないものを削除）',
+      '注文日：______',
+      '消費者の氏名：______',
+      '消費者の住所：______',
+      'MCPEmailsアカウントのメールアドレス：______',
+      '消費者の署名（この書式を紙で送付する場合のみ）：______',
+      '日付：______',
+    ],
+  },
+  cancelling: {
+    h: 'その他の時期の解約',
+    para:
+      '14日以内かどうかにかかわらず、いつでも解約できます。解約すると次回の更新が停止し、お支払い済みの期間が終わるまでプランは引き続きご利用いただけます。ダッシュボードから、またはログインせずに{cancelLink}から解約できます。3か月パスは自動更新されないため、解約の必要はありません。お支払い時に表示された日付で終了し、ワークスペースはFreeプランに戻ります。',
+  },
+  cta: 'オンラインで撤回する',
+  termsLabel: '利用規約',
+};
+
+export const WITHDRAWAL_COPY = { en, nb, es, fr, zh, de, pt, ja };
 
 export function withdrawalCopy(locale) {
   return WITHDRAWAL_COPY[locale] ?? en;

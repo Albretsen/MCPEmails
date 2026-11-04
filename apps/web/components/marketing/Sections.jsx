@@ -19,6 +19,7 @@ import { withClientIntent } from '@/lib/connect/intent-carry.mjs';
 import { AI_CLIENT_NAMES, orderClients, signupClientParam } from '@/lib/clients/preferred.mjs';
 import { usePreferredClient } from './PreferredClient';
 import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
+import { languageTag } from '@/i18n/locale-policy.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1231,7 +1232,7 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
             const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
 
             return (
-              <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
+              <div className={"price" + (tier.accent ? " featured" : "")} data-badge={tier.accent ? t('pricing.mostPopular') : undefined} key={tier.msgKey}>
                 <div>
                   <h3>{t(`pricing.tiers.${tier.msgKey}.name`)}</h3>
                   <div className="num">
@@ -1396,7 +1397,7 @@ function LanguageSwitcher({ locales = routing.locales }) {
           href={href}
           className={"lang-opt" + (locale === code ? " active" : "")}
           aria-current={locale === code && samePage ? 'true' : undefined}
-          hrefLang={code}
+          hrefLang={languageTag(code)}
         >
           {t(`languageSwitcher.${code}`)}
         </a>

@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "API do servidor MCP de e-mail: curl, JSON-RPC e autenticação Bearer",
+    "description": "Chame o servidor MCP do MCPEmails direto por HTTP. Um endpoint Streamable HTTP, JSON-RPC 2.0, uma chave bearer com escopo e o catálogo completo de ferramentas. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "HTTP + e-mail",
+    "titleLine1": "Chame o servidor MCP de e-mail",
+    "titleLine2": "direto do curl ou de um script",
+    "lead": "Sem cliente, sem SDK. Um endpoint Streamable HTTP que fala JSON-RPC 2.0, autenticado com uma chave bearer com escopo que você revoga com um clique.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Chave de API com escopo, revogável com um clique",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Faça um POST de JSON-RPC 2.0 para https://mcpemails.com/api/mcp com um header Authorization Bearer contendo uma chave de API do seu painel. Os métodos suportados são initialize, tools/list, tools/call, prompts/list e prompts/get."
+  },
+  "method": {
+    "title": "Como um script ou cliente HTTP se conecta: uma chave de API com escopo",
+    "body": "Um script ou cliente HTTP direto não executa o fluxo OAuth no navegador com um servidor MCP remoto, então ele autentica com um token bearer. Crie uma chave de API no seu painel, marque só os escopos de que o agente precisa e envie a chave do seu script ou cliente HTTP como um header <code>Authorization: Bearer</code>. Conexões por chave e por OAuth chegam ao mesmo endpoint e recebem o mesmo catálogo de ferramentas; a diferença está só em como o token é obtido."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Crie uma chave de API com escopo",
+      "p": "No painel, em Chaves de API, clique em Criar chave. Dê um nome e marque só os escopos de que este agente precisa: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> e <code>manage:automations</code>. A chave tem o formato <code>mcpe_</code> seguido de 64 caracteres hexadecimais e aparece uma única vez, então copie antes de fechar a janela."
+    },
+    {
+      "h": "Chame o endpoint",
+      "p": "Faça um POST com um corpo JSON-RPC 2.0 para <code>https://mcpemails.com/api/mcp</code> com a chave no header <code>Authorization</code>. Comece com <code>tools/list</code> para ver o catálogo e depois <code>inbox_list</code> para descobrir os ids das suas caixas de correio."
+    },
+    {
+      "h": "Trate a resposta",
+      "p": "Os resultados voltam como JSON-RPC 2.0. Resultados bem-sucedidos também trazem um objeto tipado <code>structuredContent</code>, então um script não precisa interpretar texto corrido."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Envie a chave no header, não na query string",
+      "p": "Uma chave em <code>?key=</code> ou <code>?api_key=</code> ainda é aceita para integrações anteriores ao header, mas não deve ser usada em nada novo. Credenciais na URL ficam no histórico do navegador, em logs de proxy, em headers de referer e em sistemas de monitoramento, e você não controla nenhum deles. O header <code>Authorization</code> é o caminho suportado."
+    },
+    {
+      "h": "Chamadas de saída aceitam uma chave de idempotência, e repetir sem ela é um risco real",
+      "p": "Envio, resposta, encaminhamento, envio de rascunho e envio agendado aceitam uma chave de idempotência opcional, respeitada por 24 horas. Um timeout de rede num envio é ambíguo por natureza: o e-mail pode muito bem ter saído. Com uma chave de idempotência, repetir é seguro. Sem ela, repetir é um segundo e-mail."
+    },
+    {
+      "h": "Operações longas são longas de verdade",
+      "p": "Uma pesquisa com movimentação numa caixa de correio grande já levou cerca de 152 segundos em produção, e o proxy permite até 270 segundos antes de desistir por conta própria. Defina um timeout no cliente que leve isso em conta, e não os poucos segundos de sempre, ou você vai cancelar operações que estavam prestes a dar certo."
+    },
+    {
+      "h": "Não há push, em nenhuma direção",
+      "p": "Sem webhooks, sem eventos iniciados pelo servidor, sem URL de callback para registrar. Reagir a e-mails novos significa fazer polling, por exemplo <code>email_read</code> com <code>action: \"list\"</code> e só os não lidos, no intervalo que o seu fluxo precisar. Os limites de taxa valem por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Posso usar isso sem um cliente MCP?",
+      "a": "Sim. É um endpoint HTTPS comum que fala JSON-RPC 2.0, então curl, um cron job, um serviço de backend ou qualquer biblioteca HTTP pode chamá-lo. Autentique com uma chave de API bearer do painel, em Chaves de API. O catálogo de ferramentas é idêntico ao que um cliente MCP vê."
+    },
+    {
+      "q": "Quais métodos JSON-RPC são suportados?",
+      "a": "initialize, tools/list, tools/call, prompts/list e prompts/get. Resultados bem-sucedidos trazem um objeto tipado structuredContent junto com o conteúdo legível por humanos, e é ele que um script deve ler."
+    },
+    {
+      "q": "Como torno as repetições seguras?",
+      "a": "Passe uma chave de idempotência nas operações de saída. Envio, resposta, encaminhamento, envio de rascunho e envio agendado aceitam uma e a respeitam por 24 horas, então repetir a mesma solicitação depois de um timeout não gera um segundo e-mail. Leituras já são seguras de repetir por natureza."
+    },
+    {
+      "q": "Quais são os limites de taxa?",
+      "a": "Janelas por minuto, por hora e por dia por chave, dimensionadas para o seu plano: uma chave pode usar todo o teto por minuto do plano, e várias chaves o dividem. Respostas bem-sucedidas de tools/call trazem RateLimit-Limit, RateLimit-Remaining e RateLimit-Reset."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Automatize sua caixa de entrada com scripts",
+    "sub": "Um endpoint, uma chave com escopo. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

@@ -576,7 +576,30 @@ const zh = {
   pdf: '下载 PDF',
 };
 
-export const DPA_PAGE_COPY = { en, nb, es, fr, de, zh };
+const pt = {
+  meta: {
+    title: 'Acordo de processamento de dados',
+    description:
+      'O acordo de processamento de dados da MCPEmails (artigo 28 do GDPR, com um anexo sobre a POPIA): o que processamos, suboperadores, transferências, aviso de incidentes e retenção.',
+  },
+  eyebrow: 'Jurídico',
+  notice:
+    'Por enquanto, este acordo está disponível apenas em inglês. A versão em inglês é a que vale, e traduções podem ser publicadas depois.',
+  pdf: 'Baixar PDF',
+};
+
+const ja = {
+  meta: {
+    title: 'データ処理契約',
+    description:
+      'MCPEmailsのデータ処理契約（GDPR第28条、POPIA附属書付き）：処理するデータ、再委託先、越境移転、侵害の通知、保存期間について定めています。',
+  },
+  eyebrow: '法務',
+  notice: '本契約は現在、英語版のみです。英語版が正本となり、翻訳版は今後公開される場合があります。',
+  pdf: 'PDFをダウンロード',
+};
+
+export const DPA_PAGE_COPY = { en, nb, es, fr, de, zh, pt, ja };
 
 export function dpaPageCopy(locale) {
   return DPA_PAGE_COPY[locale] ?? en;

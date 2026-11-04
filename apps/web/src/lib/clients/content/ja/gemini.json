@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://support.google.com/gemini/answer/17209137?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://support.google.com/gemini/answer/17094507?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://blog.google/innovation-and-ai/products/gemini-app/gemini-spark-updates-june-2026/"
+  ],
+  "meta": {
+    "title": "Geminiアプリにメールを接続：カスタムMCPアプリの設定",
+    "description": "Geminiアプリに本物の受信トレイをカスタムアプリとして追加できます。Connected AppsにMCPサーバーのURLを1つ貼り付けてログインするだけ。APIキーは不要。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Gemini + メール",
+    "titleLine1": "受信トレイをGeminiアプリに接続",
+    "titleLine2": "カスタムの連携アプリとして",
+    "lead": "gemini.google.comのConnected AppsにURLを1つ追加すれば、GeminiがWebでもモバイルアプリでも、本物のメールの閲覧、検索、送信、返信、転送、予約送信、整理を行えるようになります。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "gemini.google.comでSettings、Connected Appsの順に開き、Custom appsでMCPサーバーURLをhttps://mcpemails.com/api/mcpとしたカスタムアプリを追加します。Nextをクリックし、画面のログイン手順に従ってMCPEmailsで認可します。現在Googleがカスタムアプリを提供しているのは、米国在住の18歳以上で、個人のGoogleアカウントでログインし、Keep Activity（アクティビティを保持）をオンにして、英語で利用しているユーザーです。"
+  },
+  "method": {
+    "title": "Geminiアプリの接続方法：OAuth、APIキー不要",
+    "body": "Googleの設定フォームは<b>Dynamic Client Registration</b>（動的クライアント登録）に対応したMCPサーバーを想定しており、このサーバーは対応しています。Geminiアプリは<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、Advanced featuresに入力するものもありません。続いてS256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "WebでConnected Appsを開く",
+      "p": "パソコンでgemini.google.comにアクセスします。下部の<b>Settings</b>（設定）をクリックし、<b>Connected Apps</b>（連携アプリ）をクリックします。カスタムアプリはWebアプリでしか追加できません。"
+    },
+    {
+      "h": "カスタムアプリを追加",
+      "p": "<b>Custom apps</b>（カスタムアプリ）で<b>Add a custom app link to get started</b>（カスタムアプリのリンクを追加して開始）欄を使うか、すでに1つある場合は<b>Add a custom app</b>（カスタムアプリを追加）をクリックします。MCPサーバーURLとして<code>https://mcpemails.com/api/mcp</code>を入力し、Advanced features（詳細機能）は閉じたままにします。"
+    },
+    {
+      "h": "Nextをクリックして認可",
+      "p": "<b>Next</b>（次へ）をクリックし、画面の指示に従います。MCPEmailsに移動するので、ログインしてGeminiに持たせたいスコープを承認します。"
+    },
+    {
+      "h": "@で呼び出す",
+      "p": "チャットで<b>@</b>と入力してMCPEmailsアプリを選ぶと、そのプロンプトでGeminiが確実にこのアプリを使います。接続後はGeminiモバイルアプリでも使えます。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "カスタムアプリは現在、米国、個人アカウント、英語のみ",
+      "p": "Googleが挙げている条件は、18歳以上で米国在住であること、個人のGoogleアカウントでログインしていること、Keep Activityがオンであることです。職場や学校のGoogleアカウントではまだカスタムアプリを追加できず、機能は英語のみです。Connected AppsにCustom appsが表示されない場合は、まずこれらを確認してください。Googleのヘルプページには、カスタムアプリに必要な有料プランは記載されていません。"
+    },
+    {
+      "h": "Advanced featuresには入力しない",
+      "p": "フォームには、Advanced featuresの横の<b>Show more</b>（もっと見る）の先に認証情報の入力欄があります。これはDynamic Client Registrationに対応していないサーバー向けです。このサーバーは対応しているので、空欄のままにしてGeminiに自身を登録させてください。MCPEmails側で作成するクライアントIDやシークレットはありません。"
+    },
+    {
+      "h": "Geminiは書き込みを確認する。スコープを絞ることもできる",
+      "p": "Googleによると、Geminiは現在、書き込み操作の前に必ず手動での確認を求めます。さらに同意画面では、Geminiに<code>read:email</code>と<code>search:email</code>だけを渡すこともでき、仕分けや検索にはそれで十分です。または、ダッシュボードで人による承認をオンにして、すべての送信を人の確認待ちにすることもできます。"
+    }
+  ],
+  "limits": [
+    "リクエストのレート制限は、キーごとに1分あたり100件、1時間あたり1,000件、1日あたり10,000件です。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Geminiアプリにメールを接続するには？",
+      "a": "gemini.google.comでSettings、Connected Appsの順に開き、Custom appsでURLをhttps://mcpemails.com/api/mcpとしたカスタムアプリを追加します。Nextをクリックし、MCPEmailsにログインしてスコープを承認します。これでGeminiに、Webでもモバイルアプリでも、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが加わります。"
+    },
+    {
+      "q": "GeminiにはAPIキーが必要ですか？",
+      "a": "いいえ。GeminiアプリはDynamic Client Registrationで自身を登録し、OAuthでログインさせるので、フォームに秘密情報を入力することはありません。それができない他のクライアント向けには、Bearerキーを用意しています。"
+    },
+    {
+      "q": "Connected AppsにCustom appsが表示されないのはなぜですか？",
+      "a": "現在Googleがカスタムアプリを提供しているのは、米国在住の18歳以上で、個人のGoogleアカウントでログインし、Keep Activityをオンにして、英語で利用しているユーザーのみです。職場や学校のアカウントにはまだ対応していません。カスタムアプリの追加はgemini.google.comのWebアプリで行い、モバイルアプリではできません。"
+    },
+    {
+      "q": "この方法でGeminiが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。クライアントはこれらすべてを同じ接続で扱います。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Geminiが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。また、Googleによると、Geminiは書き込み操作の前に確認を求めます。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードの「APIキー」でOAuthのエントリを取り消すか、受信トレイを削除すれば、接続はすぐに切れます。Geminiでは、More details（詳細）、Remove app（アプリを削除）でも、サーバーとGoogleアカウントの連携を解除できます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "受信トレイをGeminiアプリに",
+    "sub": "URL1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

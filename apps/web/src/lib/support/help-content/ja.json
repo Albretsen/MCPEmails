@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "title": "ヘルプとサポート",
+    "description": "接続、クライアント、請求についてよくある質問への回答と、MCPEmailsの開発チームに問い合わせるためのフォームです。"
+  },
+  "hero": {
+    "eyebrow": "ヘルプ",
+    "title": "どのようなことでお困りですか？",
+    "lead": "ガイドを検索するか、下のトピックを開くか、お問い合わせください。"
+  },
+  "search": {
+    "label": "ヘルプを検索",
+    "placeholder": "質問やキーワードを入力",
+    "empty": "一致する結果はありません。",
+    "emptyLink": "下のフォームからお問い合わせください",
+    "kinds": {
+      "provider": "プロバイダー",
+      "client": "クライアント",
+      "docs": "ドキュメント",
+      "faq": "FAQ",
+      "article": "記事"
+    }
+  },
+  "nav": {
+    "label": "ヘルプのトピック",
+    "contact": "お問い合わせ"
+  },
+  "feedback": {
+    "question": "この情報は役に立ちましたか？",
+    "yes": "はい",
+    "no": "いいえ",
+    "thanks": "ご回答ありがとうございます。",
+    "thanksNo": "ありがとうございます。足りなかった点をお知らせいただければ修正します。",
+    "contactLink": "お問い合わせ",
+    "change": "回答を変更"
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "設定ガイド · OAuthでログイン、APIキー不要",
+    "clientKey": "設定ガイド · 範囲を限定したAPIキー",
+    "docs": "ドキュメント",
+    "docsProviders": "すべてのプロバイダーの設定とサポート状況",
+    "docsClients": "すべてのMCPクライアントの設定ガイド",
+    "faq": "料金に関するFAQ"
+  },
+  "providerCategories": {
+    "generic": "あらゆるIMAPメールボックス",
+    "consumer": "Webメール",
+    "privacy": "プライバシー重視のメール",
+    "business": "ビジネス向けメール",
+    "hosting": "メール付きWebホスティング",
+    "cpanel": "cPanelと共有ホスティング",
+    "selfhost": "自前のメールサーバー",
+    "isp": "インターネットプロバイダー",
+    "regional": "地域のメールサービス",
+    "blocked": "制限あり、または非対応"
+  },
+  "articlesHeading": "よくある問題の解決方法",
+  "articlesLead": "お問い合わせの多い問題と、その解決方法です。",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "メールサーバーにパスワードが拒否される",
+      "summary": "ほとんどの場合、パスワードかユーザー名の誤りです。メールボックス自体のログイン情報を使ってください。",
+      "keywords": "imap smtp パスワード 拒否 間違い ログイン ユーザー名 認証 失敗 cpanel plesk ホスティング 独自ドメイン 送信 エラー password rejected wrong login username auth failed smtp error send failed",
+      "steps": [
+        "ホスティングやコントロールパネルのログイン情報ではなく、メールボックスのパスワードを使ってください。",
+        "ユーザー名にはメールアドレス全体を使ってください。",
+        "メールボックスで2段階のログインを有効にしている場合は、アプリ パスワードを使ってください。",
+        "ホスティング会社がメールアカウントを一覧表示している画面でパスワードを再設定してください（cPanelの場合はEmail Accounts）。",
+        "サーバー名がプロバイダー別ガイドの記載と一致しているか確認してください。"
+      ],
+      "links": [
+        {
+          "label": "IMAP全般のガイド",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "プロバイダーの対応状況",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "アプリ パスワードが必要（Yahoo、iCloud、Gmail、Zoho）",
+      "summary": "これらのプロバイダーは、ここでは通常のパスワードを受け付けません。アプリ パスワードを作成して貼り付けてください。",
+      "keywords": "アプリ パスワード アプリパスワード App用パスワード アプリケーション固有のパスワード yahoo icloud apple gmail google zoho 2段階認証 二要素認証 2fa mfa app password app-specific two-step",
+      "steps": [
+        "Yahoo: Account Security（アカウントのセキュリティ）を開き、Generate app password（アプリ パスワードを生成）を選びます。",
+        "iCloud: account.apple.comで「サインインとセキュリティ」を開き、「アプリ用パスワード」を選びます。",
+        "Gmail: 2 段階認証プロセスを有効にしてから、myaccount.google.com/apppasswordsにアクセスします。",
+        "Zoho: アプリケーション固有のパスワードを作成し、Zoho Mailの設定でIMAPを有効にします。",
+        "表示されたとおりに貼り付けてください。スペースは無視されます。"
+      ],
+      "links": [
+        {
+          "label": "Yahoo Mailのガイド",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "iCloudメールのガイド",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Gmailのガイド",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Zoho Mailのガイド",
+          "href": "/connect/zoho"
+        }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex: IMAPアクセスがオフになっている",
+      "summary": "YandexはIMAPを有効にするまでメールアプリからの接続を拒否します。パスワードの誤りのように見えます。",
+      "keywords": "yandex imap 無効 オフ アプリ パスワード メールクライアント yandex 360 disabled app password mail clients",
+      "steps": [
+        "Yandex MailでSettings（設定）を開き、Mail clients（メールクライアント）を選びます。",
+        "IMAPアクセスと、アプリ パスワードおよびOAuthトークンを有効にします。",
+        "id.yandex.comで、種類がMailのアプリ パスワードを作成します。",
+        "メールアドレス全体とそのアプリ パスワードで接続します。"
+      ],
+      "links": [
+        {
+          "label": "Yandex Mailのガイド",
+          "href": "/connect/yandex"
+        }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "接続済みなのに、アシスタントがメールを見られない",
+      "summary": "メールボックスは接続されているのに、アシスタントがメールツールがない、または何も見つからないと答えます。",
+      "keywords": "ツールがない 何もない 空 コネクタ 動かない claude chatgpt cursor 開発者モード スコープ 権限 inbox_list no tools developer mode scope plugin @",
+      "steps": [
+        "ダッシュボードの受信トレイを開き、メールボックスがエラーなしで表示されているか確認してください。エラーが表示されている場合は再接続してください。",
+        "コネクタを追加したら、新しいチャットを始めてください。Claudeでは、+ からコネクタを開き、MCPEmailsがオンになっているか確認してください。ChatGPTでは、@ を入力してMCPEmailsを選び、続けての質問でメールが必要なときも改めて @ でMCPEmailsを指定してください。",
+        "メールボックスを登録しているのと同じMCPEmailsアカウントでコネクタを承認してください。",
+        "アシスタントが使えるのは、コネクタまたはAPIキーで許可した範囲のツールだけです。チェックを外したままの範囲がある場合は、コネクタを削除して追加し直してください。",
+        "まず、受信トレイの一覧を表示するようアシスタントに頼んでください。メールはアシスタントが求めたときに取得されるため、自動で届くことはありません。"
+      ],
+      "links": [
+        {
+          "label": "クライアントの設定ガイド",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "エラーコード",
+          "href": "/docs#errors"
+        }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "利用上限に達した",
+      "summary": "Freeには月150回のメール操作が含まれます。それを超えると、操作は翌月1日（UTC）まで待機します。",
+      "keywords": "利用上限 上限 制限 150 操作 アクション freeプラン 無料 拒否 リセット クォータ usage limit quota",
+      "steps": [
+        "使用済みの操作数は、ダッシュボードの使用状況で確認できます。",
+        "受信トレイの一覧表示とダッシュボードでの操作は一切カウントされません。また、登録後の最初の3日間は何もカウントされません。",
+        "再試行しても解決しません。利用枠は翌月1日（UTC）にリセットされ、一時停止した自動化は自動で再開します。",
+        "Personal、Pro、Businessでは、フェアユースの範囲でメール操作が無制限です。"
+      ],
+      "links": [
+        {
+          "label": "料金に関するFAQ",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "レート制限",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "プランの変更または解約",
+      "summary": "設定の「請求とプラン」から、いつでも変更や解約ができます。",
+      "keywords": "プラン アップグレード ダウングレード 変更 解約 キャンセル サブスクリプション 請求 請求書 領収書 返金 stripe ポータル 支払い カード plan cancel subscription refund",
+      "steps": [
+        "設定を開き、「請求とプラン」を選びます。",
+        "「請求を管理」を選ぶと、解約、カードの変更、請求書の取得ができます。",
+        "解約すると更新が停止します。期間が終わるまでは現在のプランを使えます。",
+        "身に覚えのない初回の請求がありましたか。14日以内にご連絡いただければ全額返金します。"
+      ],
+      "links": [
+        {
+          "label": "ダッシュボードの設定",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "プランと料金",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "メールボックスの接続解除またはアカウントの削除",
+      "summary": "ダッシュボードから、メールボックス1つ、ワークスペース1つ、またはアカウント全体を削除できます。",
+      "keywords": "接続解除 切断 削除 受信トレイ メールボックス アカウント削除 ワークスペース 閉じる 危険な操作 disconnect remove delete account workspace danger zone",
+      "steps": [
+        "メールボックス：受信トレイで対象をクリックし、「接続を解除」を選びます。保存されている認証情報は削除されます。",
+        "ワークスペース：設定の「ワークスペース」で「ワークスペースを削除」を選びます。",
+        "アカウント：設定の「危険な操作」で「アカウントを削除」を選びます。この操作は元に戻せません。",
+        "いずれの操作でも、削除したメールボックスから送信待ちになっている予約メールは取り消されます。アカウントを削除すると、Googleでログインして接続したGmailの受信トレイについて、当社のアクセスを終了するようGoogleにも依頼し、確認メールをお送りします。",
+        "アカウントを削除すると、有料プランはその場で解約されます。未使用期間分は自動では返金されません。初回の請求から14日以内であればご連絡ください。支払い済みの期間を使い切りたい場合は、先に解約し、あとで削除してください。"
+      ],
+      "links": [
+        {
+          "label": "ダッシュボードの受信トレイ",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "ダッシュボードの設定",
+          "href": "/dashboard/settings"
+        }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "お問い合わせ",
+    "lead": "1営業日以内にメールで返信します。",
+    "emailLine": "{email}までメールでご連絡いただくか、こちらからメッセージを送信してください。",
+    "openForm": "メッセージを書く"
+  },
+  "categories": {
+    "connect": "メールボックスの接続",
+    "client": "AIクライアントの設定",
+    "billing": "請求とプラン",
+    "bug": "不具合がある",
+    "feature": "機能のリクエスト",
+    "other": "その他"
+  },
+  "form": {
+    "category": "トピック",
+    "subject": "件名",
+    "message": "メッセージ",
+    "email": "メールアドレス",
+    "emailSignedIn": "返信先",
+    "submit": "メッセージを送信",
+    "sending": "送信しています…",
+    "subjectConnect": "{provider}に接続できない",
+    "aboutProvider": "対象：{provider}"
+  },
+  "attach": {
+    "summary": "メッセージに添付される情報",
+    "intro": "何度もやり取りせずにサポートできるよう、メッセージと一緒に次の情報を送信します。",
+    "workspace": "ワークスペース",
+    "plan": "プラン",
+    "mailboxes": "メールボックス",
+    "noMailboxes": "接続済みのメールボックスはありません",
+    "lastError": "直近のエラー：{code}",
+    "from": "開いたページ",
+    "provider": "プロバイダー",
+    "code": "エラーコード",
+    "never": "パスワード、トークン、メールの内容は決して添付しません。",
+    "healthConnected": "接続済み",
+    "healthPending": "保留中",
+    "healthNeedsReconnect": "再接続が必要",
+    "healthUnavailable": "使用できません"
+  },
+  "errors": {
+    "invalid_json": "フォームの送信中に問題が発生しました。ページを再読み込みして、もう一度お試しください。",
+    "invalid_email": "返信できるよう、有効なメールアドレスを入力してください。",
+    "invalid_category": "トピックを選んでください。",
+    "subject_required": "件名を入力してください。",
+    "subject_too_long": "件名が長すぎます。150文字未満にしてください。",
+    "message_required": "メッセージを入力してください。",
+    "message_too_long": "メッセージが長すぎます。5,000文字未満にしてください。",
+    "invalid_form_token": "このページを開いてから時間が経ちすぎました。再読み込みして、もう一度送信してください。",
+    "rate_limited": "短時間に送信されたメッセージが多すぎます。しばらく待つか、support@mcpemails.comまでご連絡ください。",
+    "server_error": "メッセージを保存できませんでした。もう一度お試しいただくか、support@mcpemails.comまでご連絡ください。",
+    "not_found": "現在、お問い合わせフォームは利用できません。support@mcpemails.comまでご連絡ください。",
+    "network": "サーバーに接続できませんでした。接続を確認して、もう一度お試しください。",
+    "unknown": "問題が発生しました。もう一度お試しいただくか、support@mcpemails.comまでご連絡ください。"
+  },
+  "success": {
+    "withRef": "ありがとうございます。メッセージを受け付けました。受付番号は{ref}です。メールで返信します。",
+    "noRef": "ありがとうございます。メッセージを受け付けました。メールで返信します。"
+  }
+}

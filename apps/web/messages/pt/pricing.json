@@ -1,0 +1,257 @@
+{
+  "meta": {
+    "title": "Preços do servidor MCP de e-mail com IA: planos Free, Personal, Pro e Business",
+    "description": "O Free conecta uma caixa de entrada. O Personal conecta três por $9 por mês. O Pro conecta até 10 por $15. O Business inclui 10 caixas de correio e quantas pessoas quiser por $39."
+  },
+  "hero": {
+    "eyebrow": "Preços",
+    "titleLine1": "Uma caixa de entrada, grátis.",
+    "titleLine2": "Três caixas de entrada, $9.",
+    "titleLine2Yearly": "Três caixas de entrada, $86.40 por ano.",
+    "lead": "Conecte uma caixa de correio uma vez e seu agente pode ler, pesquisar, organizar, rascunhar, agendar e enviar. O Free cobre uma caixa de entrada. O Personal cobre três por $9 por mês. O Pro cobre até 10 para uma pessoa que toca um negócio, em um só login. O Business inclui 10 caixas de correio, cobra $3 por mês por cada uma além disso e deixa toda a sua equipe entrar sem custo extra."
+  },
+  "billing": {
+    "monthly": "Mensal",
+    "annual": "Anual",
+    "save": "Economize ~20%"
+  },
+  "card": {
+    "perForever": "/para sempre",
+    "perMonth": "/mês",
+    "billedYearly": "Cobrado ${total}/ano",
+    "inclVat": "impostos inclusos"
+  },
+  "plans": {
+    "free": {
+      "name": "Free",
+      "desc": "Conecte uma caixa de entrada e dê ao seu agente uma caixa de correio de verdade.",
+      "cta": "Começar grátis",
+      "features": [
+        "1 caixa de entrada conectada",
+        "150 ações de e-mail por mês, os 3 primeiros dias não contam",
+        "Ler, pesquisar, organizar, rascunhar, agendar e enviar",
+        "Revisão de envios e retenção para aprovação",
+        "Análise de uso",
+        "Gmail, Outlook, iCloud, Fastmail e qualquer IMAP",
+        "Chaves de API ilimitadas",
+        "Central de ajuda e suporte por e-mail"
+      ]
+    },
+    "personal": {
+      "name": "Personal",
+      "desc": "Três caixas de correio para uma pessoa ou um pequeno negócio: trabalho, pessoal ou os primeiros endereços da sua empresa.",
+      "cta": "Assinar o Personal",
+      "ctaGrandfathered": "Você já tem caixas de entrada ilimitadas",
+      "features": [
+        "Tudo do Free",
+        "3 caixas de entrada conectadas",
+        "Ações de e-mail ilimitadas",
+        "Limite de pico 2x maior",
+        "Suporte prioritário por e-mail"
+      ]
+    },
+    "solo": {
+      "name": "Pro",
+      "tagline": "Configure no chat. Continua rodando depois que você fecha.",
+      "desc": "Para uma pessoa que toca um negócio: até 10 caixas de correio em um agente, do financeiro e vendas ao suporte e à sua própria.",
+      "cta": "Assinar o Pro",
+      "features": [
+        "Tudo do Personal",
+        "10 caixas de entrada conectadas",
+        "Limite de pico 5x maior",
+        "Histórico de análise mais longo",
+        "Lembretes de acompanhamento quando ninguém responde ao e-mail que você enviou",
+        "Adiar: o e-mail sai da caixa de entrada e volta quando você escolher",
+        "Um resumo matinal diário, colocado direto na sua caixa de entrada",
+        "Pesquisa em todas as caixas de entrada conectadas de uma vez",
+        "Instruções para a sua IA, por caixa de entrada",
+        "Webhooks para e-mails novos"
+      ]
+    },
+    "pro": {
+      "name": "Business",
+      "desc": "Para uma empresa com muitas caixas de correio ou várias pessoas: 10 caixas incluídas, mais por um preço fixo cada.",
+      "cta": "Assinar o Business",
+      "features": [
+        "Tudo do Pro",
+        "10 caixas de correio incluídas, $3 por mês por cada extra",
+        "Membros ilimitados com funções, sem custo extra",
+        "Administradores aprovam envios retidos para revisão",
+        "Vários espaços de trabalho em uma assinatura, um por empresa ou cliente",
+        "Webhooks para e-mails novos"
+      ]
+    }
+  },
+  "cardsFootnote": {
+    "all": "Todos os planos incluem: e-mail buscado ao vivo, nunca armazenado · credenciais criptografadas em repouso · dados armazenados na UE (Estocolmo)",
+    "business": "Uma pessoa cuidando de várias caixas de correio da empresa? Isso é o Pro, para até 10. <business>Veja como todas as caixas do trabalho rodam em um só agente</business>."
+  },
+  "enterprise": {
+    "title": "Enterprise: fale com a gente",
+    "body": "Um <dpa>DPA</dpa>, cobrança por fatura e ajuda para aprovar o Microsoft 365 com o seu administrador de TI. Escreva para <contact>hello@mcpemails.com</contact>."
+  },
+  "comparison": {
+    "eyebrow": "Comparação completa",
+    "title": "Tudo lado a lado.",
+    "featureCol": "Recurso",
+    "free": "Free",
+    "personal": "Personal",
+    "solo": "Pro",
+    "business": "Business",
+    "sections": {
+      "usage": {
+        "label": "O que você recebe",
+        "rows": {
+          "inboxes": "Caixas de entrada conectadas",
+          "actions": "Ações de e-mail por mês",
+          "keys": "Chaves de API",
+          "webhooks": "Webhooks para e-mails novos",
+          "members": "Pessoas que podem entrar",
+          "burst": "Limite de pico",
+          "approvals": "Revisão de envios e retenção para aprovação"
+        }
+      },
+      "providers": {
+        "label": "Provedores de e-mail",
+        "rows": {
+          "gmail": "Gmail (senha de app do Google)",
+          "outlook": "Outlook / Microsoft 365 (login com a conta Microsoft)",
+          "fastmail": "Fastmail (senha de app)",
+          "appPassword": "iCloud, Yahoo, Zoho, Yandex (senha de app)",
+          "imap": "Qualquer caixa de correio IMAP / SMTP"
+        }
+      },
+      "mcpTools": {
+        "label": "Ferramentas MCP"
+      },
+      "chatClosed": {
+        "label": "Quando o chat está fechado",
+        "rows": {
+          "followUps": "Lembretes de acompanhamento para e-mails que você envia",
+          "snooze": "Adiar e-mails até a hora que você escolher",
+          "brief": "Resumo matinal na sua caixa de entrada",
+          "searchAll": "Pesquisa em todas as caixas de entrada de uma vez",
+          "instructions": "Instruções para a sua IA, por caixa de entrada"
+        }
+      },
+      "analytics": {
+        "label": "Análise e segurança",
+        "rows": {
+          "dashboard": "Painel de análise de uso",
+          "roles": "Membros com funções (visualizador, membro, administrador)",
+          "adminApprovals": "Administradores aprovam envios retidos para revisão",
+          "workspaces": "Vários espaços de trabalho em uma assinatura",
+          "history": "Histórico de análise"
+        }
+      },
+      "privacy": {
+        "label": "Privacidade e segurança",
+        "rows": {
+          "neverStored": "E-mail buscado ao vivo, nunca armazenado",
+          "encrypted": "Credenciais criptografadas em repouso"
+        }
+      },
+      "support": {
+        "label": "Suporte",
+        "rows": {
+          "community": "Central de ajuda",
+          "email": "Suporte por e-mail",
+          "priority": "Suporte prioritário por e-mail"
+        }
+      }
+    },
+    "values": {
+      "unlimited": "Ilimitadas",
+      "tenMailboxes": "Até 10 caixas de correio",
+      "businessMailboxes": "10 incluídas, depois $3 por mês cada",
+      "actionsFree": "150 / mês, os 3 primeiros dias não contam",
+      "actionsPaid": "Ilimitadas, uso justo",
+      "oneInbox": "1 caixa de entrada",
+      "threeInboxes": "3 caixas de entrada",
+      "oneSeat": "1 pessoa",
+      "unlimitedPeople": "Ilimitadas, sem custo extra",
+      "burstFree": "60 / min",
+      "burstPersonal": "120 / min",
+      "burstSolo": "300 / min",
+      "burstPro": "1.000 / min",
+      "history30": "30 dias",
+      "history90": "90 dias",
+      "history2y": "2 anos"
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Perguntas frequentes.",
+    "items": [
+      {
+        "q": "O que eu recebo no plano gratuito?",
+        "a": "Uma caixa de entrada conectada, para sempre, sem cartão, e 150 ações de e-mail por mês civil. Seus 3 primeiros dias após criar a conta não são contados, então você pode configurar seu agente e testar tudo antes de o contador começar. Seu agente pode ler, pesquisar, organizar, marcar, rascunhar, agendar e enviar nessa caixa de correio, e a revisão de envios e a retenção para aprovação por caixa de entrada estão incluídas. Quando você quiser uma segunda ou terceira caixa de correio, ou ações de e-mail ilimitadas, isso é o Personal, por $9 por mês."
+      },
+      {
+        "q": "O que o Personal acrescenta em relação ao Free?",
+        "a": "Mais duas caixas de entrada conectadas, ações de e-mail ilimitadas (dentro do uso justo), o dobro do limite de pico (120 requisições por minuto em vez de 60), 90 dias de histórico de análise em vez de 30 e suporte prioritário por e-mail, enquanto o Free tem a central de ajuda e o suporte padrão por e-mail. É essa a lista completa. Todo o resto que você usa no dia a dia também está no Free: ler, pesquisar, organizar, rascunhar, enviar e agendar envios, a revisão de envios e a retenção para aprovação por caixa de entrada e o painel de análise de uso. Os recursos que continuam funcionando com o chat fechado, como lembretes de acompanhamento, adiamento de e-mails e o resumo matinal, estão no Pro."
+      },
+      {
+        "q": "O que conta como ação de e-mail?",
+        "a": "Uma chamada de ferramenta ao seu endpoint /mcp que toca uma caixa de correio: uma leitura, uma pesquisa, uma movimentação, um rascunho, um envio. Listar suas caixas de entrada (inbox_list) e qualquer coisa que você faça no painel nunca são contados. Somos um servidor MCP padrão, então o mesmo endpoint funciona com Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make e qualquer cliente compatível com MCP. O Free inclui 150 ações de e-mail por mês civil; Personal, Pro e Business têm ações de e-mail ilimitadas, dentro do uso justo."
+      },
+      {
+        "q": "O que acontece quando eu chego a 150 ações de e-mail?",
+        "a": "Todas as outras ações de e-mail naquele espaço de trabalho são recusadas até o dia 1º do mês seguinte (UTC), quando a cota é renovada. Seu agente recebe um resultado de ferramenta claro dizendo quantas ações foram usadas e quando o contador zera, então ele sabe que tentar de novo não vai adiantar. Automações sem supervisão pausam e retomam sozinhas no dia 1º. O painel e o inbox_list continuam funcionando, e enviamos um e-mail para você em 80% e de novo em 100%. O Personal dá ações de e-mail ilimitadas por $9 por mês. Espaços de trabalho criados antes de 2026-09-12 são de membros antigos e não são medidos contra a cota."
+      },
+      {
+        "q": "O conteúdo do meu e-mail fica armazenado em algum lugar?",
+        "a": "O e-mail que seu agente lê nunca é armazenado: corpos, assuntos, anexos e conteúdo das conversas são buscados ao vivo no seu provedor e devolvidos direto ao agente, sem nada persistido entre as chamadas. Guardamos seu token OAuth ou sua senha de app criptografados para autenticar as próximas requisições. As exceções são mensagens de saída que precisam esperar: uma mensagem que você nos pede para agendar para depois, ou um envio retido para sua aprovação. Guardamos essas mensagens criptografadas e mantemos um registro depois, no seu histórico."
+      },
+      {
+        "q": "Qual é a diferença entre Personal, Pro e Business?",
+        "a": "O Personal é um assento com três caixas de entrada conectadas, limite de 120 requisições por minuto, 90 dias de histórico de análise e suporte prioritário por e-mail. O Pro continua sendo um assento e um login, com até 10 caixas de correio conectadas, para que uma pessoa cuide das caixas que uma empresa tem (vendas, faturas, suporte, info). Ele também tem limite de 300 requisições por minuto, dois anos de histórico de análise em vez de 90 dias e suporte prioritário por e-mail. O Pro também continua trabalhando com o chat fechado: lembretes de acompanhamento para e-mails que você enviou, adiamento de e-mails, um resumo matinal diário colocado na sua caixa de entrada, uma pesquisa em todas as caixas de entrada conectadas e instruções para a sua IA por caixa de entrada. O Business é para mais caixas de correio ou mais pessoas: 10 caixas incluídas e $3 por mês por cada uma além disso, membros ilimitados com funções (visualizador, membro, administrador) sem custo extra, administradores que aprovam envios retidos para revisão, vários espaços de trabalho em uma assinatura e limite de 1.000 requisições por minuto. Tudo do Pro está incluído."
+      },
+      {
+        "q": "Somos uma empresa com várias caixas de correio. De qual plano precisamos?",
+        "a": "Conte primeiro as caixas de correio, depois as pessoas que fazem login. Se uma pessoa cuida de info@, sales@, invoices@ e das demais, isso é o Pro: um login, até 10 caixas de correio conectadas, e cada caixa mantém seu próprio nome de remetente e assinatura e envia pelo seu próprio servidor de e-mail. Dois ou três endereços cabem no Personal. O Business é para mais de 10 caixas de correio, ou para quando uma segunda pessoa precisa de um login próprio: 10 caixas estão incluídas, cada extra custa $3 por mês, e os membros não custam nada a mais. Qualquer caixa de correio que fale IMAP e SMTP conecta, seja quem for o provedor, e o mesmo vale para Gmail, Google Workspace e Microsoft 365; uma conta corporativa do Microsoft 365 pode precisar que o administrador de TI aprove o app uma vez."
+      },
+      {
+        "q": "E se eu precisar de uma quarta caixa de entrada?",
+        "a": "O Personal cobre três caixas de entrada conectadas. A quarta leva você ao Pro por $15 por mês, que cobre até 10 caixas de correio em um agente e um login. Acima de 10, o Business inclui 10 e cobra $3 por mês por cada uma além disso. Se você está um pouco acima de três e isso não funciona para você, escreva para hello@mcpemails.com."
+      },
+      {
+        "q": "Posso mudar ou cancelar meu plano?",
+        "a": "Sim. Faça upgrade, downgrade ou cancele a qualquer momento na seção de cobrança do seu painel. Cancelar interrompe a próxima renovação, e você mantém tudo o que pagou até o fim do período atual, depois volta ao Free com uma caixa de entrada conectada. Não reembolsamos períodos parciais, mas veja a pergunta sobre reembolso abaixo para a primeira cobrança de uma assinatura nova."
+      },
+      {
+        "q": "Como funciona o desconto anual?",
+        "a": "Pagar anualmente economiza cerca de 20% em relação ao mensal: o Personal custa $86.40 por ano ($7.20 por mês), o Pro custa $144 por ano ($12 por mês) e o Business custa $374.40 por ano ($31.20 por mês), com cada caixa de correio extra a $28.80 por ano ($2.40 por mês). Você é cobrado uma vez, por 12 meses adiantados. Cancelar interrompe a renovação, e você mantém o acesso até o fim do ano que pagou. Fora o reembolso de 14 dias na primeira cobrança, não reembolsamos os meses restantes."
+      },
+      {
+        "q": "Quais provedores de e-mail são suportados?",
+        "a": "Gmail e Google Workspace conectam com uma senha de app do Google via IMAP. Outlook e Microsoft 365 conectam entrando com a conta Microsoft (OAuth): contas pessoais conectam direto, e uma conta corporativa ou de estudante pode precisar que o administrador de TI aprove o app uma vez. O Fastmail conecta com uma senha de app. iCloud, Yahoo, Zoho e Yandex conectam com uma senha específica de app, e qualquer outra caixa de correio funciona pelo conector IMAP / SMTP genérico."
+      },
+      {
+        "q": "Existe política de reembolso?",
+        "a": "Sim. Se a primeira cobrança de uma assinatura nova não for o que você esperava, escreva para a gente em até 14 dias e reembolsamos o valor integral. Depois disso, você pode cancelar a qualquer momento e manter o acesso até o fim do período que já pagou, mas não reembolsamos períodos parciais. Se você é consumidor na UE ou no Reino Unido, esses mesmos 14 dias são o seu direito legal de desistência."
+      },
+      {
+        "q": "Posso hospedar por conta própria em vez de pagar?",
+        "a": "Sim. O MCPEmails é código aberto sob a AGPL-3.0 e grátis para self-host. Uma stack docker-compose roda o mesmo servidor MCP, com as credenciais das suas caixas de correio criptografadas com uma chave que só você tem. O self-host cobre caixas de correio IMAP e SMTP. O login do Gmail e do Outlook (OAuth) e o painel ficam no serviço hospedado, onde funcionam em todos os planos, inclusive o Free; membros e funções estão no Business, e o suporte prioritário por e-mail está em todos os planos pagos."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Pronto para dar uma caixa de entrada ao seu agente?",
+    "sub": "Comece no Free: uma caixa de entrada, sem precisar de cartão. O Personal leva você a três caixas de correio por $9 por mês, o Pro a 10 por $15, e o Business inclui 10 por $39, com $3 por mês por cada uma além disso.",
+    "ctaPrimary": "Começar grátis",
+    "ctaSecondary": "Ler a documentação",
+    "subFounder": "Comece no Free: uma caixa de entrada, sem precisar de cartão. O Personal leva você a três caixas de correio por $9 por mês, o Pro a 10 por $15, e o Business inclui 10 pelo preço de fundador acima, com $3 por mês por cada uma além disso."
+  },
+  "seasonal": {
+    "badge": "Black Week",
+    "line": "Black Week: ${firstYear} no primeiro ano, depois ${renewal} por ano. Você economiza ${saving}.",
+    "ends": "Termina em {date}, às {time}, horário de Oslo."
+  },
+  "founder": {
+    "line": "Preço de fundador: ${price} por mês, mantido enquanto você continuar assinante. Aberto às primeiras {total} empresas ou até 31 de dezembro de 2026, o que vier primeiro. Caixas de correio extras custam ${addon} por mês cada.",
+    "places": "{left} de {total} vagas restantes"
+  },
+  "mostPopular": "Mais popular"
+}

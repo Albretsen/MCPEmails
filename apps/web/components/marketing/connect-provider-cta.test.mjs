@@ -99,7 +99,7 @@ async function signupAnchors(locale, provider) {
 }
 
 test('the locales under test are the ones the site routes', () => {
-  assert.deepEqual([...LOCALES], ['en', 'nb', 'es', 'fr', 'zh', 'de']);
+  assert.deepEqual([...LOCALES], ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja']);
   assert.equal(routing.defaultLocale, 'en');
   assert.equal(routing.localePrefix, 'as-needed');
 });
@@ -114,13 +114,16 @@ function expectedHref(locale, slug) {
 }
 
 for (const locale of LOCALES) {
-  test(`${locale}: /connect/ionos sends both signup buttons to /signup?provider=ionos`, async () => {
-    const ionos = PROVIDERS.find((p) => p.slug === 'ionos');
-    const anchors = await signupAnchors(locale, ionos);
+  // IONOS is not translated into every scoped locale (pt, ja): those check
+  // Gmail, which every locale has.
+  const ionos = PROVIDERS.find((p) => p.slug === 'ionos');
+  const provider = ionos.locales.includes(locale) ? ionos : PROVIDERS.find((p) => p.slug === 'gmail');
+  test(`${locale}: /connect/${provider.slug} sends both signup buttons to /signup?provider=${provider.slug}`, async () => {
+    const anchors = await signupAnchors(locale, provider);
     assert.equal(anchors.length, 2, 'the hero and the closing band each have one signup button');
-    const label = messagesFor(locale).cta.primary.replace('{provider}', ionos.name);
+    const label = messagesFor(locale).cta.primary.replace('{provider}', provider.name);
     for (const a of anchors) {
-      assert.equal(a.href, expectedHref(locale, 'ionos'));
+      assert.equal(a.href, expectedHref(locale, provider.slug));
       assert.equal(a.text, label);
       // A plain anchor: no locale prefix is ever added to it.
       assert.equal(a.intlLink, false);

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Grokにメールを接続：カスタムMCPコネクタの設定",
+    "description": "Grokに本物の受信トレイをカスタムMCPコネクタとして追加できます。grok.comにURLを1つ貼り付けてOAuthでログインすれば、メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Grok + メール",
+    "titleLine1": "受信トレイをGrokに接続",
+    "titleLine2": "カスタムMCPコネクタとして",
+    "lead": "grok.comのConnectorsにURLを1つ追加すれば、Grokが接続済みのすべての受信トレイで、メールの閲覧、検索、送信、返信、転送、予約送信、整理を行えるようになります。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "grok.com/connectorsを開き、New Connectorをクリックして、Customを選び、MCPサーバーURLとしてhttps://mcpemails.com/api/mcpを貼り付けます。Grokに求められたらMCPEmailsにログインし、スコープを承認します。Grok BusinessとEnterpriseでは、先にチーム管理者がクラウドコンソールでサーバーを追加します。"
+  },
+  "method": {
+    "title": "Grokの接続方法：OAuth、APIキー不要",
+    "body": "Grokはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "grok.comでConnectorsを開く",
+      "p": "Grokにログインした状態で<code>grok.com/connectors</code>にアクセスします。"
+    },
+    {
+      "h": "カスタムコネクタを追加",
+      "p": "<b>New Connector</b>（新しいコネクタ）をクリックし、<b>Custom</b>（カスタム）を選びます。MCPサーバーURLとして<code>https://mcpemails.com/api/mcp</code>を貼り付けます。"
+    },
+    {
+      "h": "ログインして承認",
+      "p": "Grokが求める認証を完了します。MCPEmailsに移動するので、ログインしてGrokに持たせたいスコープを承認します。その後、Grokがサーバーの提供するツールを検出します。"
+    },
+    {
+      "h": "メールについて聞いてみる",
+      "p": "チャットを始めて、「受信トレイはいくつある？」や「未読メールを要約して」のように聞いてみてください。Grokは質問がコネクタに関係するときに、そのツールを使います。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "BusinessとEnterpriseでは、先に管理者が追加する",
+      "p": "Grok BusinessとEnterpriseのプランでは、チーム管理者がプロビジョニングするまで、メンバーは自分でサーバーを追加できません。管理者は<code>console.x.ai</code>にログインしてチームを選び、<b>Grok Business</b>、<b>Connectors</b>の順に開いて<b>+ Add Connector</b>（コネクタを追加）をクリックし、<b>Other</b>（その他）を選んで<code>https://mcpemails.com/api/mcp</code>を入力します。これにはTeam Read-Write（チームの読み書き）権限が必要です。その後、各メンバーが<code>grok.com/connectors</code>で自分のMCPEmailsアカウントを接続します。"
+    },
+    {
+      "h": "設定はWebで",
+      "p": "xAIのドキュメントには、カスタムコネクタの追加方法が<code>grok.com/connectors</code>でのものしかなく、iOSやAndroidアプリでの手順はありません。コネクタはブラウザーから追加してください。"
+    },
+    {
+      "h": "読み取り専用は現実的な選択肢で、最初の一歩として適していることが多い",
+      "p": "同意画面では、Grokに<code>read:email</code>と<code>search:email</code>だけを渡せます。仕分け、要約、検索にはそれで十分で、どこまで任せるかを決めるまでの間、取り消せない操作をすべて除外できます。<code>send:email</code>を許可する場合でも、受信トレイのオーナーは人による承認をオンにして、送信のたびに人の確認を待たせることができます。"
+    }
+  ],
+  "limits": [
+    "リクエストのレート制限は、キーごとに1分あたり100件、1時間あたり1,000件、1日あたり10,000件です。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Grokにメールを接続するには？",
+      "a": "grok.com/connectorsを開き、New Connectorをクリックして、Customを選び、https://mcpemails.com/api/mcpを貼り付けます。次にMCPEmailsにログインしてスコープを承認します。これでGrokに、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが加わります。"
+    },
+    {
+      "q": "GrokにはAPIキーが必要ですか？",
+      "a": "いいえ。Grokはコネクタの追加時にOAuthフローを実行するので、Grokに秘密情報を貼り付けることはありません。それができない他のクライアント向けには、Bearerキーを用意しています。"
+    },
+    {
+      "q": "Grokに組み込みのGmailコネクタと同じものですか？",
+      "a": "いいえ。Grokに組み込みのGmailとOutlookのコネクタは、その2つのプロバイダーにつながります。MCPEmailsはカスタムコネクタで、Outlook、Microsoft 365、Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex、任意のIMAPメールボックスに1つの接続でつながり、スコープを自分で選べるほか、送信に人による承認を付けることもできます。"
+    },
+    {
+      "q": "この方法でGrokが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。Grokはこれらすべてを同じ接続で扱います。最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Grokが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Grokに本物の受信トレイを",
+    "sub": "URL1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

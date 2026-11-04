@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "Guias de agentes de e-mail com IA, tutoriais de MCP e segurança",
+    "description": "Guias práticos para conectar o e-mail ao Claude e a clientes MCP, proteger o acesso de agentes de IA e usar Gmail, Outlook, IMAP e fluxos de e-mail com segurança."
+  },
+  "blogName": "Blog do MCPEmails",
+  "index": {
+    "eyebrow": "O blog do MCPEmails",
+    "title": "Notas sobre agentes, e-mail e MCP",
+    "lead": "Guias, análises em profundidade e notas de campo sobre como conectar Gmail, Outlook, Fastmail e qualquer caixa de entrada IMAP ao Claude, ao Cursor e a clientes compatíveis com MCP.",
+    "filterAria": "Filtrar posts por tema",
+    "all": "Todos",
+    "empty": "Ainda não há posts com a tag “{tag}”.",
+    "minRead": "{minutes} min"
+  },
+  "post": {
+    "home": "Início",
+    "blog": "Blog",
+    "toc": "Nesta página",
+    "writtenBy": "Escrito por",
+    "back": "← Voltar para todos os posts",
+    "minRead": "{minutes} min de leitura",
+    "cta": {
+      "title": "Dê uma caixa de entrada ao seu agente",
+      "sub": "Conecte Gmail, Outlook, Fastmail ou qualquer conta IMAP ao seu agente de IA em poucos minutos.",
+      "primary": "Começar grátis",
+      "secondary": "Ler a documentação"
+    }
+  }
+}

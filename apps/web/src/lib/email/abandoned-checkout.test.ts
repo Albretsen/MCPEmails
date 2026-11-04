@@ -416,7 +416,7 @@ test('every locale composes, with the refund line, opt-out and postal line, and 
     assert.match(c.text, /api\/email\/unsubscribe\?token=tok-123&c=lifecycle/);
     assert.match(c.text, /organisation number/);
     assert.equal(c.headers['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click');
-    assert.match(c.html, new RegExp(`<html lang="${locale}">`));
+    assert.match(c.html, new RegExp(`<html lang="${reminderCopy(locale).lang}">`));
   }
 });
 

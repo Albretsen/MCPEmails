@@ -1,0 +1,377 @@
+{
+  "meta": {
+    "title": "Servidor MCP de e-mail: Gmail, Outlook, IMAP e Claude",
+    "description": "Servidor MCP de e-mail hospedado para Claude, ChatGPT e Cursor. Conecte Gmail, Outlook ou qualquer caixa de correio IMAP, várias ao mesmo tempo. O e-mail é buscado ao vivo e nunca armazenado."
+  },
+  "nav": {
+    "features": "Recursos",
+    "how": "Como funciona",
+    "pricing": "Preços",
+    "docs": "Docs",
+    "blog": "Blog",
+    "signIn": "Entrar",
+    "dashboard": "Painel",
+    "getStarted": "Começar grátis",
+    "selfHost": "Self-host"
+  },
+  "hero": {
+    "eyebrow": "Servidor MCP de e-mail hospedado",
+    "titleLine1": "Dê ao seu agente",
+    "titleLine2": "de IA uma",
+    "titleAccent": "caixa de entrada.",
+    "lead": "Conecte Gmail, Outlook, iCloud, Fastmail ou qualquer caixa de entrada IMAP uma única vez. Cole uma URL de endpoint MCP no Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make ou em qualquer cliente MCP. Clientes com OAuth conectam em um clique, sem configurar chave de API. Seu agente lê, pesquisa e envia e-mails ao vivo, e o e-mail que ele lê nunca é armazenado.",
+    "ctaPrimary": "Conectar sua caixa de entrada",
+    "ctaSecondary": "Ler a documentação",
+    "metaFreeInbox": "1 caixa de entrada grátis, para sempre",
+    "metaNoCard": "Sem cartão de crédito",
+    "metaNeverStored": "E-mail buscado ao vivo",
+    "businessLine": "Cuida de info@, sales@ e invoices@ de uma empresa? <business>Todas as caixas de correio do trabalho em um só agente</business>.",
+    "pipe": {
+      "flow": "Como uma chamada flui",
+      "agent": "Agente de IA",
+      "agentSub": "Claude · Cursor · VS Code · ChatGPT · qualquer cliente MCP",
+      "serverSub": "endpoint /api/mcp",
+      "provider": "Seu provedor",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
+      "logCalls": "o agente chama",
+      "logReturns": "retorna os IDs das caixas de entrada, sem copiar e colar do painel",
+      "logFetches": "o MCPEmails busca ao vivo no seu provedor",
+      "logResult": "20 mensagens retornadas",
+      "logNothing": "nada armazenado",
+      "legendPipe": "MCPEmails (o canal)",
+      "legendLive": "requisição ao vivo",
+      "legendData": "seus dados, seu provedor"
+    }
+  },
+  "trusted": {
+    "label": "Funciona com todo agente e cliente compatível com MCP"
+  },
+  "whatIs": {
+    "title": "O que é um servidor MCP de e-mail?",
+    "p1": "Um servidor MCP de e-mail é a ponte entre um assistente de IA e uma caixa de correio de verdade. Ele fala o Model Context Protocol, então Claude, ChatGPT, Cursor ou qualquer outro cliente MCP consegue ler, pesquisar, rascunhar e enviar e-mails por um único endpoint, sem uma integração separada para cada app.",
+    "p2": "O MCPEmails é um servidor desse tipo, hospedado. Funciona com Gmail, Outlook e Microsoft 365, iCloud, Fastmail e qualquer caixa de correio que fale IMAP, e um agente pode trabalhar em várias caixas ao mesmo tempo. O e-mail é buscado ao vivo no seu provedor a cada chamada e nunca armazenado nos nossos servidores.",
+    "linkImap": "Configurar o servidor MCP IMAP",
+    "linkBusiness": "MCP de e-mail para caixas de correio de empresas",
+    "linkProviders": "Todos os provedores de e-mail suportados",
+    "guideClaude": "Como conectar o Claude ao seu e-mail",
+    "guideChatgpt": "Como conectar o ChatGPT ao seu e-mail",
+    "guideImap": "Guia do conector IMAP para o Claude"
+  },
+  "features": {
+    "eyebrow": "Princípios",
+    "titleLine1": "Seis coisas em que acreditamos",
+    "titleLine2": "sobre e-mail e agentes.",
+    "sub": "As decisões que moldaram o produto. Se alguma delas deixar de ser verdade, é um bug que vale a pena reportar.",
+    "items": {
+      "0": {
+        "tag": "Escopo",
+        "h": "Vinte e uma ferramentas focadas. O essencial, coberto.",
+        "p": "As ferramentas cobrem o trabalho do dia a dia: <code>inbox_list</code>, <code>email_read</code> (listar, ler, pesquisar) e <code>email_compose</code> (enviar, responder), além de ferramentas específicas para organizar, excluir, pastas, rascunhos, agendamento, contatos, assinaturas e automações sem supervisão. Cole a URL do endpoint MCP no claude.ai, no Claude Desktop, no Cursor ou em qualquer agente compatível com MCP."
+      },
+      "1": {
+        "tag": "Armazenamento",
+        "h": "O e-mail é buscado ao vivo. Nunca armazenado.",
+        "p": "Cada chamada de ferramenta vai ao seu provedor em tempo real: API do Gmail, Microsoft Graph ou IMAP. Corpos das mensagens, assuntos e anexos vão para o agente e são descartados na hora. Guardamos uma única coisa por caixa de entrada, um token ou uma senha de app criptografados, para poder fazer a próxima chamada. As exceções são mensagens de saída que precisam esperar: uma mensagem que você agenda para depois, ou um envio retido para sua aprovação, fica armazenada criptografada, e seu registro é mantido no seu histórico."
+      },
+      "2": {
+        "tag": "Envio",
+        "h": "Você continua no controle de cada envio.",
+        "p": "Seu próprio provedor envia cada mensagem, a partir do seu endereço: Gmail, Outlook, Fastmail ou seu próprio servidor SMTP. Se um provedor recusa conexões vindas de endereços de nuvem, a conexão passa pelo nosso relay, um túnel simples com TLS de ponta a ponta, então o relay nunca vê seu e-mail nem sua senha. Ative a aprovação por caixa de entrada para reter envios, respostas, encaminhamentos, envios de rascunhos e envios agendados para revisão no painel. Tentativas automáticas podem reutilizar uma chave de idempotência por 24 horas, e um endereço de remetente diferente só funciona quando é um endereço Send As verificado para aquela caixa de entrada."
+      },
+      "3": {
+        "tag": "Provedores",
+        "h": "Gmail, Outlook, iCloud, Fastmail e qualquer caixa de entrada IMAP.",
+        "p": "Uma senha de app do Google via IMAP para o Gmail; login da Microsoft (OAuth 2.0) para Outlook / Microsoft 365 (uma conta corporativa ou de estudante pode precisar que o administrador de TI aprove o app uma vez); senhas específicas de app para Fastmail, iCloud, Yahoo, Zoho e Yandex; um conector IMAP / SMTP genérico para todo o resto. Cada caixa de entrada informa um perfil de compatibilidade versionado, então o agente pode usar ações portáveis enquanto vê onde um provedor se comporta de forma diferente ou não suporta uma operação."
+      },
+      "4": {
+        "tag": "Acesso",
+        "h": "OAuth 2.0 para agentes. Um clique para revogar.",
+        "p": "Somos MCP padrão (streamable-http) com OAuth 2.1, DCR e PKCE, então não há dependência de fornecedor. Funciona com Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI e qualquer cliente compatível com MCP. Clientes com OAuth conectam automaticamente via authorization code + PKCE; uma chave de API com escopo cobre clientes sem OAuth e acesso por scripts. Revogue qualquer conexão no painel com um clique."
+      },
+      "5": {
+        "tag": "Segurança",
+        "h": "Credenciais criptografadas em repouso.",
+        "p": "Tokens OAuth e senhas de app são criptografados com AES-256-GCM antes de serem gravados no banco de dados. Eles são descriptografados nos nossos servidores apenas para a requisição que precisa deles. A chave de criptografia é guardada como segredo de ambiente, separada do banco de dados."
+      }
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "Como funciona",
+    "title": "Você é o usuário. Nós somos o canal.",
+    "sub": "Três passos entre criar a conta e seu agente ler e enviar e-mails.",
+    "steps": {
+      "0": {
+        "h": "Conecte sua caixa de entrada",
+        "p": "Entre e clique em <b>Conectar caixa de entrada</b>. Escolha Gmail, Outlook, iCloud, Fastmail ou qualquer caixa de entrada IMAP, depois conclua o OAuth ou cole uma senha de app. As credenciais são criptografadas; o e-mail que seu agente lê nunca é armazenado."
+      },
+      "1": {
+        "h": "Cole a URL: OAuth ou chave de API",
+        "p": "Em um cliente MCP com suporte a OAuth 2.0 (claude.ai, Claude Desktop, Cursor e outros), cole <code>https://mcpemails.com/api/mcp</code>, clique em Connect (conectar) e autorize. Nenhuma chave é necessária. Em clientes sem OAuth (Cline, JetBrains, scripts próprios), gere uma chave de API com escopo no painel."
+      },
+      "2": {
+        "h": "Seu agente trabalha na caixa de entrada",
+        "p": "O agente chama ferramentas como <code>email_read()</code> ou <code>email_compose()</code>. O MCPEmails busca ao vivo no seu provedor e retorna o resultado. Nada fica em cache entre as chamadas."
+      }
+    },
+    "tools": {
+      "0": "Descobre todas as caixas de entrada conectadas e seus IDs. Chame primeiro, sem copiar e colar UUIDs do painel.",
+      "1": "Lê e-mails: lista resumos recentes, busca uma mensagem completa, lê até 50 em lote, pesquisa em vários provedores, extrai o texto legível de anexos ou salva o e-mail original como .eml.",
+      "2": "Organiza e-mails: move, copia, exclui, sinaliza ou arquiva, um por vez, em lote ou direto de uma pesquisa. Execuções longas em lote informam seu status e podem ser canceladas no painel.",
+      "3": "Compõe: envia uma nova mensagem, responde na conversa ou encaminha pela API do Gmail, pelo Microsoft Graph ou por SMTP. A aprovação opcional por caixa de entrada retém o e-mail de saída para revisão no painel antes de ele sair.",
+      "4": "Gerencia pastas (marcadores no Gmail): cria, renomeia ou exclui, e as usa como destino de movimentação. folder_list lê as que já existem.",
+      "5": "Rascunhos: cria, atualiza e envia rascunhos armazenados no provedor, incluindo uma resposta não enviada mantida na conversa de origem para revisão. draft_list lê o que está salvo.",
+      "6": "Agenda uma mensagem para um horário futuro e a cancela antes de sair. schedule_list mostra o que está na fila.",
+      "7": "Encontra pessoas por nome ou e-mail com uma varredura ao vivo nos e-mails recentes correspondentes. Nada é armazenado."
+    }
+  },
+  "examples": {
+    "eyebrow": "Prompts reais",
+    "titleLine1": "É só pedir.",
+    "titleLine2": "Ele lê, escreve e organiza.",
+    "sub": "Nenhum painel para aprender. Diga ao seu assistente de IA o que você quer, em português claro, e ele usa o MCPEmails para resolver.",
+    "items": [
+      {
+        "prompt": "Passe por sales@ e info@ e liste todo pedido de informação desta semana que ninguém respondeu",
+        "outcome": "7 pedidos em aberto nas duas caixas de entrada, do mais antigo ao mais recente. Dois esperam desde segunda-feira."
+      },
+      {
+        "prompt": "Cancele a inscrição de toda newsletter que eu não abro há 3 meses",
+        "outcome": "14 newsletters que você não toca desde abril foram arquivadas."
+      },
+      {
+        "prompt": "Encaminhe as notas fiscais deste mês de invoices@ para o nosso contador",
+        "outcome": "9 notas fiscais de invoices@ encaminhadas, com os PDFs anexados."
+      },
+      {
+        "prompt": "Mova todos os recibos deste mês para uma pasta Recibos",
+        "outcome": "23 recibos movidos para Recibos/2026."
+      },
+      {
+        "prompt": "Envie isso segunda às 8h, não agora",
+        "outcome": "Agendado para segunda, 8:00. Nada sai antes disso."
+      },
+      {
+        "prompt": "O que o consultório do médico disse sobre a minha consulta?",
+        "outcome": "Confirmada para quinta-feira às 14:15."
+      }
+    ]
+  },
+  "quote": {
+    "text": "Eu queria que meus agentes trabalhassem na minha caixa de entrada, mas toda opção significava entregar uma cópia do meu e-mail a um terceiro. Então construí o canal que eu gostaria que existisse: conecte uma vez, sua caixa de entrada é buscada ao vivo e nunca armazenada, e você corta qualquer agente com um clique. É esse o produto em que confio para a minha própria caixa de entrada.",
+    "role": "fundador, MCPEmails"
+  },
+  "reviews": {
+    "eyebrow": "Avaliações",
+    "titleLine1": "Não é a nossa palavra.",
+    "titleLine2": "É a deles.",
+    "sub": "Avaliações reais de pessoas que usam o MCPEmails na própria caixa de entrada, publicadas com o nome delas.",
+    "ratingLabel": "Nota {rating} de 5",
+    "count": "{count, plural, one {# avaliação} other {# avaliações}}",
+    "via": "Avaliado no {source}",
+    "trackLabel": "Avaliações de clientes",
+    "prev": "Avaliações anteriores",
+    "next": "Mais avaliações",
+    "featuredLabel": "Avaliação de cliente em destaque",
+    "readFull": "Ler a avaliação completa"
+  },
+  "pricing": {
+    "mostPopular": "Mais popular",
+    "eyebrow": "Preços",
+    "title": "Preço por caixa de entrada. Sem medição nos planos pagos.",
+    "sub": "O Free conecta uma caixa de entrada com 150 ações de e-mail por mês. O Personal conecta três. O Pro conecta até 10 para uma pessoa que toca um negócio. O Business inclui 10 caixas de correio, cobra $3 por mês por cada extra e tem espaço para toda a sua equipe.",
+    "perForever": "/para sempre",
+    "perMonth": "/mês",
+    "inclVat": "impostos inclusos",
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "desc": "Conecte uma caixa de entrada e dê ao seu agente uma caixa de correio de verdade.",
+        "features": [
+          "1 caixa de entrada conectada",
+          "Ler, pesquisar, organizar, rascunhar, agendar e enviar",
+          "Revisão de envios e retenção para aprovação",
+          "Análise de uso",
+          "Gmail, Outlook, iCloud, Fastmail e qualquer IMAP",
+          "Chaves de API ilimitadas",
+          "Central de ajuda e suporte por e-mail"
+        ],
+        "cta": "Começar grátis"
+      },
+      "personal": {
+        "name": "Personal",
+        "desc": "Três caixas de correio para uma pessoa ou um pequeno negócio: trabalho, pessoal ou os primeiros endereços da sua empresa.",
+        "features": [
+          "Tudo do Free",
+          "3 caixas de entrada conectadas",
+          "Limite de pico 2x maior",
+          "Suporte prioritário por e-mail"
+        ],
+        "cta": "Assinar o Personal",
+        "ctaGrandfathered": "Você já tem caixas de entrada ilimitadas"
+      },
+      "solo": {
+        "name": "Pro",
+        "tagline": "Configure no chat. Continua rodando depois que você fecha.",
+        "desc": "Para uma pessoa que toca um negócio: até 10 caixas de correio em um agente, do financeiro e vendas ao suporte e à sua própria.",
+        "features": [
+          "Tudo do Personal",
+          "10 caixas de entrada conectadas",
+          "Limite de pico 5x maior",
+          "Histórico de análise mais longo",
+          "Lembretes de acompanhamento quando ninguém responde ao e-mail que você enviou",
+          "Adiar: o e-mail sai da caixa de entrada e volta quando você escolher",
+          "Um resumo matinal diário, colocado direto na sua caixa de entrada",
+          "Pesquisa em todas as caixas de entrada conectadas de uma vez",
+          "Instruções para a sua IA, por caixa de entrada"
+        ],
+        "cta": "Assinar o Pro"
+      },
+      "business": {
+        "name": "Business",
+        "desc": "Para uma empresa com muitas caixas de correio ou várias pessoas: 10 caixas incluídas, mais por um preço fixo cada.",
+        "features": [
+          "Tudo do Pro",
+          "10 caixas de correio incluídas, $3 por mês por cada extra",
+          "Membros ilimitados com funções, sem custo extra",
+          "Administradores aprovam envios retidos para revisão",
+          "Vários espaços de trabalho em uma assinatura, um por empresa ou cliente"
+        ],
+        "cta": "Assinar o Business"
+      }
+    },
+    "footnote": "Todos os planos: o e-mail que seu agente lê é buscado ao vivo e nunca armazenado. Tokens OAuth criptografados em repouso. Precisa de algo sob medida? <contact>Fale com a gente</contact>. <comparison>Ver a comparação completa de recursos →</comparison>",
+    "businessLink": "Cuida das caixas de correio de uma empresa? <business>Veja como uma pessoa conecta todas elas</business>."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Perguntas, respondidas",
+    "sub": "Tudo o que você precisa saber antes de conectar sua primeira caixa de entrada.",
+    "items": [
+      {
+        "q": "O MCPEmails é um servidor MCP IMAP?",
+        "a": "Sim. Além de Gmail e Outlook, há um conector IMAP e SMTP genérico, então qualquer caixa de correio com acesso IMAP funciona: seu próprio domínio, um provedor de hospedagem, um ISP regional. Você informa os dados do servidor e uma senha de app uma vez, e seu agente lê via IMAP e envia pelo seu próprio servidor SMTP."
+      },
+      {
+        "q": "Um agente pode trabalhar em várias caixas de correio ao mesmo tempo?",
+        "a": "Sim. Conecte cada caixa de correio à mesma conta e seu agente alcança todas por um único endpoint. Ele pode listar as caixas de entrada conectadas, escolher a certa para cada pedido e alternar, por exemplo, entre um endereço de suporte e um pessoal na mesma conversa. Quantas caixas de entrada você pode conectar depende do seu plano."
+      },
+      {
+        "q": "Como adiciono o conector MCP de e-mail ao Claude ou ao ChatGPT?",
+        "a": "Adicione um conector personalizado nas configurações do seu cliente, cole https://mcpemails.com/api/mcp como URL do servidor e aprove o login. Clientes com suporte a OAuth não precisam de chave de API. A mesma URL funciona no Cursor, no VS Code e em outros clientes MCP."
+      },
+      {
+        "q": "Vocês usam análise de dados?",
+        "a": "Usamos análise de produto sem cookies e com preservação de privacidade para entender o desempenho do site e da configuração. Nunca coletamos conteúdo de e-mail, endereços, chaves de API, tokens OAuth ou dados de requisições MCP."
+      },
+      {
+        "q": "Com quais clientes de IA ele funciona?",
+        "a": "Qualquer cliente compatível com MCP. Somos um servidor MCP streamable-http padrão com OAuth 2.1, DCR e PKCE, então a mesma caixa de entrada funciona no Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat e mais. Cole uma URL de endpoint e você está conectado, sem refazer nada para cada app."
+      },
+      {
+        "q": "Quais provedores de e-mail posso conectar?",
+        "a": "Gmail e Google Workspace com uma senha de app do Google via IMAP, Outlook e Microsoft 365 entrando com a conta Microsoft (uma conta corporativa ou de estudante pode precisar que o administrador de TI aprove o app uma vez), Fastmail, iCloud, Yahoo, Zoho e Yandex com uma senha específica de app, e qualquer outra caixa de correio por uma conexão IMAP/SMTP genérica. Conecte quantas caixas de entrada quiser e identifique cada uma pelo seu uso."
+      },
+      {
+        "q": "Meu e-mail fica armazenado em algum lugar?",
+        "a": "Não. O e-mail que seu agente lê é buscado ao vivo no seu provedor a cada requisição e nunca armazenado nos nossos servidores. As exceções são mensagens de saída que precisam esperar: uma mensagem que você agenda para depois, ou um envio retido para sua aprovação, fica armazenada criptografada."
+      },
+      {
+        "q": "É grátis mesmo?",
+        "a": "Sim. O plano gratuito conecta uma caixa de entrada, para sempre, sem precisar de cartão, e seu agente pode ler, pesquisar, enviar, responder, agendar e organizar nela. O Personal custa $9 por mês para uma segunda e uma terceira caixa de correio no mesmo agente, o Pro cobre até 10 por $15, e o Business é para mais caixas de correio ou para quando outras pessoas precisam entrar."
+      },
+      {
+        "q": "O que a IA consegue fazer de fato com a minha caixa de entrada?",
+        "a": "Ler e pesquisar e-mails, enviar, responder e encaminhar mensagens de verdade, agendar envios para depois e organizar sua caixa de entrada: mover, copiar, sinalizar, arquivar e excluir. Vinte e uma ferramentas baseadas em ações, para que o agente termine o trabalho dentro da sua caixa de entrada em vez de só rascunhar."
+      },
+      {
+        "q": "Como conecto uma caixa de entrada?",
+        "a": "Crie uma conta grátis, conecte sua caixa de correio (uma senha de app do Google para o Gmail, login com a conta Microsoft para o Outlook, ou cole uma senha de app para os demais), depois coloque https://mcpemails.com/api/mcp no seu cliente de IA e autorize. Seu agente tem a caixa de entrada em alguns minutos."
+      },
+      {
+        "q": "Posso hospedar por conta própria?",
+        "a": "Sim. O MCPEmails é código aberto sob a AGPL-3.0, e o serviço hospedado roda o mesmo servidor que você pode rodar. Uma stack docker-compose coloca o servidor MCP completo e todas as suas ferramentas para funcionar com o seu próprio banco de dados em cerca de cinco minutos, para qualquer caixa de correio IMAP ou SMTP. O login do Gmail e do Outlook (OAuth) e o painel ficam no plano hospedado."
+      }
+    ]
+  },
+  "footer": {
+    "tagline": "Um servidor MCP hospedado que dá a agentes de IA acesso de leitura e envio à sua caixa de entrada, sem nunca armazenar o e-mail que ele lê.",
+    "productHeading": "Produto",
+    "resourcesHeading": "Recursos",
+    "companyHeading": "Empresa",
+    "linkFeatures": "Recursos",
+    "linkHow": "Como funciona",
+    "linkPricing": "Preços",
+    "linkDocs": "Docs",
+    "linkToolReference": "Referência de ferramentas",
+    "linkQuickstart": "Início rápido",
+    "linkOauth": "Conexão OAuth",
+    "linkProviders": "Provedores suportados",
+    "linkReadOnly": "Acesso somente leitura",
+    "linkApiGuide": "Guia para desenvolvedores",
+    "linkClients": "Configuração de clientes MCP",
+    "linkSettingsLookup": "Consulta de configurações IMAP e SMTP",
+    "linkPrivacy": "Privacidade",
+    "linkTerms": "Termos",
+    "linkDpa": "Acordo de processamento de dados",
+    "linkWithdrawal": "Desistir do contrato aqui",
+    "linkCancel": "Cancelar contratos aqui",
+    "linkImpressum": "Impressum",
+    "copyright": "© 2026 MCPEmails.",
+    "legal": "E-mail buscado ao vivo, nunca armazenado · Credenciais criptografadas em repouso",
+    "legalEntity": "O MCPEmails é um serviço da Albretsen AS, número de registro 938 702 373, Håsteins gate 9, 5160 Laksevåg, Noruega.",
+    "contactLabel": "Contato",
+    "mcpLabel": "Endpoint MCP",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyAria": "Copiar {label}",
+    "linkAbout": "Sobre",
+    "linkSecurity": "Segurança",
+    "linkStatus": "Status",
+    "linkHelp": "Ajuda e suporte",
+    "linkSelfHost": "Self-hosting",
+    "linkFounders": "Para fundadores",
+    "linkBusiness": "Para empresas",
+    "linkDevelopers": "Desenvolvedores"
+  },
+  "languageSwitcher": {
+    "label": "Idioma",
+    "en": "English",
+    "nb": "Norsk",
+    "es": "Español",
+    "fr": "Français",
+    "zh": "中文",
+    "de": "Deutsch",
+  "pt": "Português (Brasil)",
+  "ja": "日本語"
+  },
+  "preview": {
+    "eyebrow": "Prévia do produto",
+    "title": "Veja toda a sua operação MCP de relance.",
+    "sub": "Um painel em tempo real para cada caixa de entrada conectada, chave de API e chamada de ferramenta, para você sempre saber o que seus agentes estão fazendo.",
+    "mock": {
+      "nav": {
+        "overview": "Visão geral",
+        "inboxes": "Caixas de entrada",
+        "apiKeys": "Chaves de API",
+        "usage": "Uso"
+      },
+      "stats": {
+        "inboxes": "Caixas de entrada conectadas",
+        "calls": "Chamadas MCP (30d)",
+        "avgResponse": "Resposta média",
+        "plan": "Plano"
+      },
+      "userPlan": "Plano Pro",
+      "title": "Visão geral",
+      "subtitle": "Visão em tempo real das suas caixas de entrada conectadas e do tráfego MCP.",
+      "recentActivity": "Atividade recente",
+      "justNow": "agora mesmo",
+      "secondsAgo": "há {count}s",
+      "minutesAgo": "há {count}min"
+    }
+  },
+  "referralBanner": {
+    "text": "Um amigo convidou você para o MCPEmails. Seu segundo mês pago é grátis.",
+    "close": "Fechar"
+  }
+}
