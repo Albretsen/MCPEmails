@@ -28,6 +28,7 @@ import * as tls from 'tls';
 import { mailRelayConfigFromEnv, openMailRelayTunnel, relayForMailHost } from './mail-relay.ts';
 import { relayRouteForHost } from './relay-fallback.ts';
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
+import { legacyTlsOptions } from './legacy-tls.ts';
 import {
   chooseImapPasswordMechanism,
   cramMd5Response,
@@ -865,6 +866,8 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
           // never the pinned address: checkServerIdentity prefers `servername`,
           // so pinning an IP does not weaken validation.
           servername: config.host,
+          // Empty except for docomo's exact hosts; see legacy-tls.ts.
+          ...legacyTlsOptions(config.host),
         },
         () => resolve(s)
       );

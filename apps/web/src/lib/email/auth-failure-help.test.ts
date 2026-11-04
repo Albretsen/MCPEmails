@@ -51,7 +51,6 @@ const HOST_CASES: Array<{ id: string; host: string; label: string; expect: strin
   { id: 'hostgator', host: 'gator1234.hostgator.com', label: 'HostGator', expect: ['connect.authHelpMailboxPassword', 'connect.authHelpWhereCpanel'] },
   { id: 'hostgator', host: 'srv7.websitewelcome.com', label: 'HostGator', expect: ['connect.authHelpMailboxPassword', 'connect.authHelpWhereCpanel'] },
   { id: 'inmotion', host: 'secure42.inmotionhosting.com', label: 'InMotion Hosting', expect: ['connect.authHelpMailboxPassword', 'connect.authHelpWhereCpanel'] },
-  { id: 'inmotion', host: 'secure42.uhserver.com', label: 'InMotion Hosting', expect: ['connect.authHelpMailboxPassword', 'connect.authHelpWhereCpanel'] },
   // Titan's usual cause is its third-party-access switch, so it leads with
   // that and skips the "not your account login" sentence.
   { id: 'titan', host: 'imap.titan.email', label: 'Titan', expect: ['connect.authHelpTitanSwitch', 'connect.authHelpTwoFactor'] },
@@ -84,6 +83,14 @@ test('an address on the host’s own domain is enough, without a mail host', () 
 
 test('host matching ignores case, whitespace and a trailing dot', () => {
   assert.equal(findHostHelp({ host: '  IMAP.Strato.DE. ' })?.id, 'strato');
+});
+
+test('UOL Host (uhserver.com) is not InMotion', () => {
+  assert.notEqual(rejected({ host: 'imap.uhserver.com', smtpHost: 'smtps.uhserver.com' }).hostId, 'inmotion');
+});
+
+test('a STRATO custom domain found by its MX-derived preset still gets the STRATO hint', () => {
+  assert.equal(findHostHelp({ host: 'imap.strato.com' })?.id, 'strato');
 });
 
 test('a lookalike hostname is not matched', () => {

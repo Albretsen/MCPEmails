@@ -109,7 +109,9 @@
         "smtpHost": "发件服务器（SMTP）",
         "port": "端口",
         "username": "登录名（如果不是你的邮箱地址）",
-        "advanced": "高级"
+        "advanced": "高级",
+        "noteTOnline": "T-Online 在这里只接受 Passwort für E-Mail-Programme，不接受 Telekom Login 密码。请在 E-Mail Center 的 Einstellungen、Passwörter 中设置。",
+        "noteYahooJapan": "Yahoo! JAPAN 没有应用专用密码。请在 Yahoo! JAPAN 邮箱设置中允许其他邮件应用并开启 IMAP 和 SMTP，然后使用你的 Yahoo! JAPAN ID 密码。"
       },
       "password": {
         "labelApp": "应用专用密码",

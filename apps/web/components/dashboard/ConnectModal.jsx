@@ -196,6 +196,9 @@ const ERROR_HEADLINE_KEYS = {
   // sign-in for those on 2024-09-16, so no server or password can make it
   // work; the inline notice under the address points at the Outlook card.
   microsoft_account_use_outlook: 'connect.errorMicrosoftAccountShort',
+  // 422: a Yahoo! JAPAN address (@yahoo.co.jp) on the Yahoo card. A separate
+  // service with no app passwords; the generic form has its servers.
+  yahoo_japan_use_generic: 'connect.errorYahooJapanShort',
   // ── The SSRF guard's own refusals (lib/email/host-guard.ts) ──────────────
   // All three were reaching the user as "Connection failed. Please try again."
   // with the guard's actual sentence folded behind a disclosure that stayed

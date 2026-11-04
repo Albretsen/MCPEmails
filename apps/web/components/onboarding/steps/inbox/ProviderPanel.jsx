@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { panelLinks } from '@/lib/onboarding/inbox-detect';
+import { panelLinks, panelNoteKey } from '@/lib/onboarding/inbox-detect';
 import { recordActivationEvent } from '@/lib/analytics/record-activation-event';
 
 /**
@@ -97,8 +97,10 @@ export function ProviderPanel({ kind, label, email, settings, funnelProvider, on
   }
 
   // Fastmail, Zoho, Yandex and any other IMAP mailbox.
+  const noteKey = panelNoteKey(settings);
   return (
     <div className="onb-provider" data-kind={kind}>
+      {noteKey && <p className="onb-note">{t(`imap.${noteKey}`)}</p>}
       <ol className="onb-checklist">
         <li>{t('imap.step1')}</li>
         <li>
