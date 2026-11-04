@@ -5,7 +5,7 @@
     "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
   ],
   "meta": {
-    "title": "VS Codeにメールを接続: CopilotエージェントのMCP設定",
+    "title": "VS Codeにメールを接続：CopilotエージェントのMCP設定",
     "description": "VS CodeのGitHub Copilotエージェントモードに本物の受信トレイを追加できます。MCP: Add Serverを実行してHTTPを選び、OAuthで認可するだけ。APIキーは不要です。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "コマンドパレットからMCP: Add Serverを実行し、HTTP (HTTP or Server-Sent Events)を選んでhttps://mcpemails.com/api/mcpを貼り付け、Global、続いてCopilot Globalを選びます。ログインの確認を承認すれば、MCPEmailsでの認可は完了です。APIキーは使いません。"
   },
   "method": {
-    "title": "VS Codeの接続方法: OAuth、APIキー不要",
+    "title": "VS Codeの接続方法：OAuth、APIキー不要",
     "body": "VS Codeはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

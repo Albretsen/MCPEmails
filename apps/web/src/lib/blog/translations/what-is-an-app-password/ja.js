@@ -31,7 +31,7 @@ AIコネクタもまったく同じ立場です。ClaudeやChatGPTが[MCPメー�
 
 以下の各項目では、作成画面がどこにあるか、事前に何を有効にする必要があるかを示します。各サービスのリンク先のセットアップページに、IMAPとSMTPの設定と詳しい手順があります。
 
-- **GmailとGoogle Workspace：** 2段階認証プロセスを有効にしてから、\`myaccount.google.com/apppasswords\`で作成します。コードは4つのグループに分けて表示される16文字の英字で、スペースは入れても入れなくても構いません。Googleは、この項目が表示されないケースとして3つを挙げています。一部の職場、学校、その他の組織のアカウント（Workspaceでは管理者の設定によります）、高度な保護機能プログラム、セキュリティキーのみで設定した2 段階認証プロセスです。セットアップ：[Gmail](/connect/gmail)、[Google Workspace](/connect/google-workspace)。
+- **GmailとGoogle Workspace：** 2 段階認証プロセスを有効にしてから、\`myaccount.google.com/apppasswords\`で作成します。コードは4つのグループに分けて表示される16文字の英字で、スペースは入れても入れなくても構いません。Googleは、この項目が表示されないケースとして3つを挙げています。一部の職場、学校、その他の組織のアカウント（Workspaceでは管理者の設定によります）、高度な保護機能プログラム、セキュリティキーのみで設定した2 段階認証プロセスです。セットアップ：[Gmail](/connect/gmail)、[Google Workspace](/connect/google-workspace)。
 - **iCloudメール：** 2ファクタ認証が必要です。\`account.apple.com\`で**サインインとセキュリティ**を開き、**アプリ用パスワード**で生成します。同時に有効にできるのは最大25個です。セットアップ：[iCloudメール](/connect/icloud)。
 - **Yahoo Mail：** Yahooの**Account Security**（アカウントセキュリティ）ページの**External connections**（外部との接続）で**Create app password**（アプリ パスワードを作成）を選び、名前を付けて生成します。セットアップ：[Yahoo Mail](/connect/yahoo)、[ChatGPTとClaudeでYahoo Mailを使う](/blog/connect-yahoo-mail-to-chatgpt-and-claude)。
 - **AOLメール：** AOLの**Account Security**ページで**Generate app password**（アプリ パスワードを生成）を選び（アカウントによっては**Generate and manage app passwords**と表示されます）、**Get Started**（開始）を押して名前を付け、生成します。AOLは、プライベートウィンドウではなく、数日間AOLメールにログインしているブラウザーでこの操作をするよう求めています。YahooとAOLは同じ基盤で動いていますが、Yahooのアプリ パスワードではAOLのメールボックスは開けません。セットアップ：[AOLメール](/connect/aol)。

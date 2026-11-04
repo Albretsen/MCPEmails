@@ -5,7 +5,7 @@
     "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
-    "title": "Windsurfにメールを接続: CascadeのMCPサーバー設定",
+    "title": "Windsurfにメールを接続：CascadeのMCPサーバー設定",
     "description": "WindsurfのCascadeに本物の受信トレイを追加できます。mcp_config.jsonにserverUrlを使ったエントリを1つ書き、OAuthで認可するだけ。APIキーは不要です。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "Devin DesktopはWindsurfの新しい名前です。Cascadeパネル右上の...メニューを開き、MCPsセクションのOpen MCP config fileをクリックします。mcpServersの下に、urlではなくserverUrlフィールドでhttps://mcpemails.com/api/mcpを指定したエントリを1つ追加してファイルを保存し、求められたらMCPEmailsでログインします。"
   },
   "method": {
-    "title": "Windsurfの接続方法: OAuth、APIキー不要",
+    "title": "Windsurfの接続方法：OAuth、APIキー不要",
     "body": "Devin Desktop（旧Windsurf）はこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

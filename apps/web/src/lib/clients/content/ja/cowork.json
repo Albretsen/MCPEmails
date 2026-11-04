@@ -9,7 +9,7 @@
     "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
   ],
   "meta": {
-    "title": "メールをClaude Coworkに接続する: カスタムコネクタの設定",
+    "title": "メールをClaude Coworkに接続する：カスタムコネクタの設定",
     "description": "Claude Coworkに本物の受信トレイを渡します。「カスタマイズ」、「コネクタ」でURLを1つ追加してOAuthでログインすれば、Coworkがメールの閲覧、検索、下書き、送信をできます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -23,7 +23,7 @@
     "answer": "Claudeで「カスタマイズ」、「コネクタ」を開き、「+ 追加」、「カスタムコネクタを追加」の順にクリックします。https://mcpemails.com/api/mcpを貼り付け、ログイン設定の画面で「続行」をクリックして進み、「追加」をクリックしてMCPEmailsでログインします。あとはメッセージボックスで「Cowork」を選び、メールのタスクを説明します。Coworkには有料のClaudeプランが必要です。"
   },
   "method": {
-    "title": "Coworkの接続方法: OAuth、APIキー不要",
+    "title": "Coworkの接続方法：OAuth、APIキー不要",
     "body": "CoworkはClaudeアカウントのカスタムコネクタを使い、ClaudeはデスクトップアプリでCoworkを実行していても、あなたのコンピューターからではなくAnthropicのクラウドから接続を開きます。Claudeはこのサーバーに対して標準のMCP OAuthフローを実行します。既定では公開されたクライアントアイデンティティで自身を識別し、<b>RFC 7591の動的クライアント登録</b>で自身を登録することもできます。ここでは両方に対応しているので、作成するクライアントIDはありません。S256を使った<b>認可コード＋PKCE</b>で認可し、クライアントシークレットは送信されず、トークンには私たちの同意画面であなたが承認したスコープだけが含まれます。アクセストークンは1時間有効で自動更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名で表示され、接続の取り消しもそこで行います。"
   },
   "setup": [

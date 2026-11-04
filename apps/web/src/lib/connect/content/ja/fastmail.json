@@ -9,7 +9,7 @@
     "method": "app-password",
     "label": "アプリ パスワード",
     "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
-    "usernameForm": "ドメインを含むFastmailアドレス全体（例: name@fastmail.com、独自ドメインを使っている場合はそのアドレス）。",
+    "usernameForm": "ドメインを含むFastmailアドレス全体（例：name@fastmail.com、独自ドメインを使っている場合はそのアドレス）。",
     "status": "active"
   },
   "meta": {
@@ -27,7 +27,7 @@
     "answer": "ClaudeはそのままではFastmailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.fastmail.comのポート993にIMAPで接続します。認証にはアカウントのパスワードではなくFastmailのアプリ パスワードを使うので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。FastmailはFastmail専用の公式MCPサーバーを提供しています。それでもこちらを使う理由は、1つのURLでほかのメールボックスもまとめて扱えることです。受信トレイ1つはずっと無料です。"
   },
   "method": {
-    "title": "Fastmailの接続方法: アプリ パスワード",
+    "title": "Fastmailの接続方法：アプリ パスワード",
     "body": "FastmailはIMAP/SMTPを通じて<b>Fastmailのアプリ パスワード</b>で接続します。FastmailのSettings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password（設定、プライバシーとセキュリティ、連携アプリとAPIトークン、アプリ パスワードとアクセスの管理、新しいアプリ パスワード）で作成し、MCPEmailsに貼り付ければ接続完了です。OAuthの手順もブラウザーのポップアップもありません。"
   },
   "setup": [

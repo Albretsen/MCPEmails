@@ -13,7 +13,7 @@
     "intro": "Se você não ler mais nada nesta página:",
     "points": [
       "O seu e-mail é buscado em tempo real a cada solicitação e descartado no momento em que a resposta é enviada. Não guardamos nenhuma cópia dos e-mails que o seu agente lê.",
-      "Por caixa de entrada, armazenamos um token de acesso ou uma senha de app, criptografado com AES-256-GCM, para podermos fazer a próxima chamada que você pedir. Alguns recursos guardam uma pequena parte de uma mensagem enquanto você os usa: envios agendados e retidos, lembretes de acompanhamento e sonecas, e o histórico de execuções das automações. A Seção 2 lista cada um deles.",
+      "Por caixa de entrada, armazenamos um token de acesso ou uma senha de app, criptografado com AES-256-GCM, para podermos fazer a próxima chamada que você pedir. Alguns recursos guardam uma pequena parte de uma mensagem enquanto você os usa: envios agendados e retidos, lembretes de acompanhamento e adiamentos, e o histórico de execuções das automações. A Seção 2 lista cada um deles.",
       "Nunca treinamos nenhum modelo de IA com o seu e-mail e nunca enviamos o seu e-mail a um modelo escolhido por nós. O seu agente é o único que o lê, sob o seu controle.",
       "O acesso é limitado pela credencial que você configura: as chaves de API podem ser restritas a caixas de entrada selecionadas ou ter permissão para acessar todas as caixas de entrada do espaço de trabalho. Você pode revogar o acesso do provedor a qualquer momento nas configurações do Google, da Microsoft ou do seu provedor.",
       "O código que executa o serviço é público. Você pode lê-lo, auditá-lo ou hospedar tudo por conta própria."
@@ -57,7 +57,7 @@
         "stored": "Sim, criptografados em repouso. O conteúdo é apagado 7 dias após a decisão; o registro da aprovação (destinatários e assunto, criptografados) é mantido por 90 dias"
       },
       {
-        "data": "Lembretes de acompanhamento e sonecas",
+        "data": "Lembretes de acompanhamento e adiamentos",
         "accessed": "Verificados em segundo plano até que o lembrete seja concluído",
         "stored": "Assunto, remetente e destinatários, criptografados, até que o lembrete seja concluído. Nunca o corpo"
       },
@@ -72,7 +72,7 @@
         "stored": "Apenas nome da ferramenta, caixa de entrada, data e hora e status. Nenhum conteúdo de e-mail"
       }
     ],
-    "outro": "As exceções deliberadas são recursos que precisam lembrar parte de uma mensagem: um envio agendado ou retido, um lembrete de acompanhamento ou uma soneca, e o histórico de execuções das automações. Cada um guarda apenas o que precisa, pelo tempo indicado na tabela acima."
+    "outro": "As exceções deliberadas são recursos que precisam lembrar parte de uma mensagem: um envio agendado ou retido, um lembrete de acompanhamento ou um adiamento, e o histórico de execuções das automações. Cada um guarda apenas o que precisa, pelo tempo indicado na tabela acima."
   },
   "verify": {
     "title": "3. Você não precisa confiar em mim, pode verificar",

@@ -390,6 +390,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
         return (
           <div
             className={'price' + (plan.featured ? ' featured' : '') + (chosen ? ' price-chosen' : '')}
+            data-badge={plan.featured ? t('mostPopular') : undefined}
             key={plan.key}
           >
             <div>

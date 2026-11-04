@@ -61,7 +61,7 @@
         "Limite de pico 5x maior",
         "Histórico de análise mais longo",
         "Lembretes de acompanhamento quando ninguém responde ao e-mail que você enviou",
-        "Soneca: o e-mail sai da caixa de entrada e volta quando você escolher",
+        "Adiar: o e-mail sai da caixa de entrada e volta quando você escolher",
         "Um resumo matinal diário, colocado direto na sua caixa de entrada",
         "Pesquisa em todas as caixas de entrada conectadas de uma vez",
         "Instruções para a sua IA, por caixa de entrada",
@@ -128,7 +128,7 @@
         "label": "Quando o chat está fechado",
         "rows": {
           "followUps": "Lembretes de acompanhamento para e-mails que você envia",
-          "snooze": "Soneca do e-mail até a hora que você escolher",
+          "snooze": "Adiar e-mails até a hora que você escolher",
           "brief": "Resumo matinal na sua caixa de entrada",
           "searchAll": "Pesquisa em todas as caixas de entrada de uma vez",
           "instructions": "Instruções para a sua IA, por caixa de entrada"
@@ -161,7 +161,7 @@
       }
     },
     "values": {
-      "unlimited": "Ilimitado",
+      "unlimited": "Ilimitadas",
       "tenMailboxes": "Até 10 caixas de correio",
       "businessMailboxes": "10 incluídas, depois $3 por mês cada",
       "actionsFree": "150 / mês, os 3 primeiros dias não contam",
@@ -189,7 +189,7 @@
       },
       {
         "q": "O que o Personal acrescenta em relação ao Free?",
-        "a": "Mais duas caixas de entrada conectadas, ações de e-mail ilimitadas (dentro do uso justo), o dobro do limite de pico (120 requisições por minuto em vez de 60), 90 dias de histórico de análise em vez de 30 e suporte prioritário por e-mail, enquanto o Free tem a central de ajuda e o suporte padrão por e-mail. É essa a lista completa. Todo o resto que você usa no dia a dia também está no Free: ler, pesquisar, organizar, rascunhar, enviar e agendar envios, a revisão de envios e a retenção para aprovação por caixa de entrada e o painel de análise de uso. Os recursos que continuam funcionando com o chat fechado, como lembretes de acompanhamento, soneca e o resumo matinal, estão no Pro."
+        "a": "Mais duas caixas de entrada conectadas, ações de e-mail ilimitadas (dentro do uso justo), o dobro do limite de pico (120 requisições por minuto em vez de 60), 90 dias de histórico de análise em vez de 30 e suporte prioritário por e-mail, enquanto o Free tem a central de ajuda e o suporte padrão por e-mail. É essa a lista completa. Todo o resto que você usa no dia a dia também está no Free: ler, pesquisar, organizar, rascunhar, enviar e agendar envios, a revisão de envios e a retenção para aprovação por caixa de entrada e o painel de análise de uso. Os recursos que continuam funcionando com o chat fechado, como lembretes de acompanhamento, adiamento de e-mails e o resumo matinal, estão no Pro."
       },
       {
         "q": "O que conta como ação de e-mail?",
@@ -197,7 +197,7 @@
       },
       {
         "q": "O que acontece quando eu chego a 150 ações de e-mail?",
-        "a": "Todas as outras ações de e-mail naquele espaço de trabalho são recusadas até o dia 1 do mês seguinte (UTC), quando a cota é renovada. Seu agente recebe um resultado de ferramenta claro dizendo quantas ações foram usadas e quando o contador zera, então ele sabe que tentar de novo não vai adiantar. Automações sem supervisão pausam e retomam sozinhas no dia 1. O painel e o inbox_list continuam funcionando, e enviamos um e-mail para você em 80% e de novo em 100%. O Personal dá ações de e-mail ilimitadas por $9 por mês. Espaços de trabalho criados antes de 2026-09-12 são de membros antigos e não são medidos contra a cota."
+        "a": "Todas as outras ações de e-mail naquele espaço de trabalho são recusadas até o dia 1º do mês seguinte (UTC), quando a cota é renovada. Seu agente recebe um resultado de ferramenta claro dizendo quantas ações foram usadas e quando o contador zera, então ele sabe que tentar de novo não vai adiantar. Automações sem supervisão pausam e retomam sozinhas no dia 1º. O painel e o inbox_list continuam funcionando, e enviamos um e-mail para você em 80% e de novo em 100%. O Personal dá ações de e-mail ilimitadas por $9 por mês. Espaços de trabalho criados antes de 2026-09-12 são de membros antigos e não são medidos contra a cota."
       },
       {
         "q": "O conteúdo do meu e-mail fica armazenado em algum lugar?",
@@ -205,7 +205,7 @@
       },
       {
         "q": "Qual é a diferença entre Personal, Pro e Business?",
-        "a": "O Personal é um assento com três caixas de entrada conectadas, limite de 120 requisições por minuto, 90 dias de histórico de análise e suporte prioritário por e-mail. O Pro continua sendo um assento e um login, com até 10 caixas de correio conectadas, para que uma pessoa cuide das caixas que uma empresa tem (vendas, faturas, suporte, info). Ele também tem limite de 300 requisições por minuto, dois anos de histórico de análise em vez de 90 dias e suporte prioritário por e-mail. O Pro também continua trabalhando com o chat fechado: lembretes de acompanhamento para e-mails que você enviou, soneca, um resumo matinal diário colocado na sua caixa de entrada, uma pesquisa em todas as caixas de entrada conectadas e instruções para a sua IA por caixa de entrada. O Business é para mais caixas de correio ou mais pessoas: 10 caixas incluídas e $3 por mês por cada uma além disso, membros ilimitados com funções (visualizador, membro, administrador) sem custo extra, administradores que aprovam envios retidos para revisão, vários espaços de trabalho em uma assinatura e limite de 1.000 requisições por minuto. Tudo do Pro está incluído."
+        "a": "O Personal é um assento com três caixas de entrada conectadas, limite de 120 requisições por minuto, 90 dias de histórico de análise e suporte prioritário por e-mail. O Pro continua sendo um assento e um login, com até 10 caixas de correio conectadas, para que uma pessoa cuide das caixas que uma empresa tem (vendas, faturas, suporte, info). Ele também tem limite de 300 requisições por minuto, dois anos de histórico de análise em vez de 90 dias e suporte prioritário por e-mail. O Pro também continua trabalhando com o chat fechado: lembretes de acompanhamento para e-mails que você enviou, adiamento de e-mails, um resumo matinal diário colocado na sua caixa de entrada, uma pesquisa em todas as caixas de entrada conectadas e instruções para a sua IA por caixa de entrada. O Business é para mais caixas de correio ou mais pessoas: 10 caixas incluídas e $3 por mês por cada uma além disso, membros ilimitados com funções (visualizador, membro, administrador) sem custo extra, administradores que aprovam envios retidos para revisão, vários espaços de trabalho em uma assinatura e limite de 1.000 requisições por minuto. Tudo do Pro está incluído."
       },
       {
         "q": "Somos uma empresa com várias caixas de correio. De qual plano precisamos?",
@@ -252,5 +252,6 @@
   "founder": {
     "line": "Preço de fundador: ${price} por mês, mantido enquanto você continuar assinante. Aberto às primeiras {total} empresas ou até 31 de dezembro de 2026, o que vier primeiro. Caixas de correio extras custam ${addon} por mês cada.",
     "places": "{left} de {total} vagas restantes"
-  }
+  },
+  "mostPopular": "Mais popular"
 }

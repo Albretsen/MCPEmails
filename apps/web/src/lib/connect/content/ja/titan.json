@@ -11,7 +11,7 @@
     "method": "account-password",
     "label": "Titanのメールボックスのパスワード（2段階認証がオンならアプリケーションパスワード）",
     "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
-    "usernameForm": "独自ドメインのTitanアドレス全体（例: jack@yourdomain.com）。クライアントがユーザー名を別に尋ねる場合も、同じアドレスを入力するようTitanは案内しています。",
+    "usernameForm": "独自ドメインのTitanアドレス全体（例：jack@yourdomain.com）。クライアントがユーザー名を別に尋ねる場合も、同じアドレスを入力するようTitanは案内しています。",
     "status": "active"
   },
   "meta": {
@@ -29,7 +29,7 @@
     "meta2": "メールはその場で取得、保存はしません"
   },
   "method": {
-    "title": "Titan Emailの接続方法: サードパーティのアクセスを解放してからIMAPで",
+    "title": "Titan Emailの接続方法：サードパーティのアクセスを解放してからIMAPで",
     "body": "Titanは<code>imap.titan.email</code>のポート993でTLS経由のIMAPを、<code>smtp.titan.email</code>のポート465で同じく暗黙的TLSのSMTPを提供しています。先に確認すべき点が2つあります。Titanのメールボックスでは、誰かがオンにするまでサードパーティのアクセスが<b>オフ</b>で、それまではログインを通過できません。また、Titanはほかの会社のブランドで販売されているため、<b>メールボックスをどこで購入したかによって使うホスト名が変わります</b>。販売したホスティング会社が「Titan」と一言も言わなかったため、そもそもTitanのメールボックスなのかわからないままここに来る人も多くいます。次の3点で判断できます。TitanのWebメールは<code>app.titan.email</code>にあること、ドメインのMXレコードが<code>mx1.titan.email</code>と<code>mx2.titan.email</code>を指していること、そしてホスティング会社がTitan Email（Hostingerなど）、またはProfessional Email（GoDaddyでの同じ製品の名前）として販売していることです。"
   },
   "setup": [

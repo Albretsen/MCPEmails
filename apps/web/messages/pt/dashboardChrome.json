@@ -145,7 +145,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Contas Outlook.com, Hotmail, Live e MSN entram na hora. Uma conta Microsoft 365 corporativa ou de escola pode precisar que o admin de TI aprove o MCPEmails uma vez; ele não precisa de uma conta MCPEmails para isso.",
+    "hintOutlook": "Contas Outlook.com, Hotmail, Live e MSN entram na hora. Uma conta Microsoft 365 corporativa ou de estudante pode precisar que o admin de TI aprove o MCPEmails uma vez; ele não precisa de uma conta MCPEmails para isso.",
     "subFastmail": "Senha de app",
     "subAppPassword": "Senha de app",
     "subGeneric": "Qualquer caixa de correio · recomendado",
@@ -222,7 +222,7 @@
     "authHelpOwnDomainPassword": "No seu próprio domínio, use a senha da própria caixa de correio. O login da sua conta de hospedagem ou do painel de controle é outra senha, mesmo que seja o mesmo endereço.",
     "authHelpOwnDomainWhere": "Você define ou redefine a senha de uma caixa de correio onde seu provedor lista seus endereços de e-mail. No cPanel é em Email Accounts, depois Manage. No Plesk é em Mail Accounts.",
     "appPasswordTryAnyway": "Se tiver certeza de que está certa, clique em Conectar de novo para enviar.",
-    "appPasswordStepsIcloud": "A Apple chama de senha específica de app. Entre em account.apple.com, abra Sign-In and Security (Iniciar sessão e segurança), depois App-Specific Passwords (senhas específicas de app), e gere uma. São 16 letras minúsculas, exibidas em quatro grupos.",
+    "appPasswordStepsIcloud": "A Apple chama de senha específica de app. Entre em account.apple.com, abra Sign-In and Security (Início de sessão e segurança), depois App-Specific Passwords (senhas específicas de app), e gere uma. São 16 letras minúsculas, exibidas em quatro grupos.",
     "appPasswordStepsYahoo": "O Yahoo chama de senha de app. Abra Account Security (segurança da conta) e depois Generate app password (gerar senha de app). São 16 letras minúsculas sem espaços.",
     "appPasswordStepsZoho": "O Zoho chama de senha específica de aplicativo, na Zoho Account em Security. O acesso IMAP também precisa estar ativado nas configurações do Zoho Mail; ele vem desativado por padrão.",
     "appPasswordStepsYandex": "O Yandex chama de senha de app. Primeiro ative o IMAP e as senhas de app nas configurações do Yandex Mail, depois crie uma senha de app do tipo Mail no Yandex ID, em Security. São 16 letras minúsculas.",
@@ -370,7 +370,7 @@
         "twoStep": "Ative a verificação em duas etapas na sua conta do Google.",
         "create": "Crie uma senha de app em myaccount.google.com/apppasswords e dê o nome MCPEmails.",
         "paste": "Cole as 16 letras no campo de senha. Pode deixar os espaços.",
-        "workspace": "Em uma conta corporativa ou de escola, a opção de senha de app pode não aparecer porque o administrador a desativou. Nesse caso, peça ao administrador para liberar as senhas de app.",
+        "workspace": "Em uma conta corporativa ou de estudante, a opção de senha de app pode não aparecer porque o administrador a desativou. Nesse caso, peça ao administrador para liberar as senhas de app.",
         "imapDisabled": "O admin do seu Google Workspace desativou o IMAP na sua conta, então nenhuma senha vai funcionar.",
         "imapDisabledAdmin": "Envie isto para o admin de TI: por favor, ative o acesso IMAP para a minha conta no Google Admin console, em Apps, Google Workspace, Gmail, End User Access."
       },
@@ -385,7 +385,7 @@
         "create": "Na página Account Security (segurança da conta) da AOL, gere uma senha de app e dê o nome MCPEmails. Se a opção não aparecer, ative a verificação em duas etapas primeiro."
       },
       "icloud": {
-        "create": "Em account.apple.com, abra Sign-In and Security (Iniciar sessão e segurança), depois App-Specific Passwords (senhas específicas de app), e crie uma com o nome MCPEmails. A autenticação de dois fatores precisa estar ativada."
+        "create": "Em account.apple.com, abra Sign-In and Security (Início de sessão e segurança), depois App-Specific Passwords (senhas específicas de app), e crie uma com o nome MCPEmails. A autenticação de dois fatores precisa estar ativada."
       },
       "ionos": {
         "password": "A IONOS pede a senha deste endereço de e-mail, não a que você usa para entrar na IONOS."
@@ -429,7 +429,7 @@
         "imap": "Nas configurações do Yandex Mail, abra Email clients e ative tanto IMAP access quanto App passwords and OAuth tokens."
       },
       "office365": {
-        "useOutlook": "Caixas de correio corporativas e de escola do Microsoft 365 não aceitam senhas vindas de apps de e-mail. Conecte com o login da Microsoft."
+        "useOutlook": "Caixas de correio corporativas e de estudante do Microsoft 365 não aceitam senhas vindas de apps de e-mail. Conecte com o login da Microsoft."
       },
       "smtp": {
         "readingOk": "Seu servidor aceitou o login para ler e-mails, mas recusou para enviar.",

@@ -5,7 +5,7 @@
     "https://cursor.com/docs/mcp"
   ],
   "meta": {
-    "title": "Cursorにメールを接続: mcp.jsonでMCPサーバーを設定",
+    "title": "Cursorにメールを接続：mcp.jsonでMCPサーバーを設定",
     "description": "mcp.jsonに4行書くだけで、Cursorに本物の受信トレイを追加できます。CursorがOAuthのログインを求めるのでAPIキーは不要。メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,11 +19,11 @@
     "answer": "~/.cursor/mcp.jsonのmcpServersに、urlをhttps://mcpemails.com/api/mcpとしたエントリを1つ追加します。するとCursorがOAuthでのログインを求めます。APIキーは使いません。"
   },
   "method": {
-    "title": "Cursorの接続方法: OAuth、APIキー不要",
+    "title": "Cursorの接続方法：OAuth、APIキー不要",
     "body": "Cursorはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "answerSection": {
-    "title": "例: CursorでGmailを使う",
+    "title": "例：CursorでGmailを使う",
     "body": "MCPEmailsのダッシュボードでGoogleのアプリ パスワードを使ってGmailを接続し、下に示す<code>mcpemails</code>エントリを<code>~/.cursor/mcp.json</code>に追加して、Cursorに求められたらログインします。あとはCursorのエージェントに「昨日Annaが私のGmailに送ってきたバグ報告を探して、修正は今日リリースされると返信の下書きを作って」のように頼みます。エージェントはGmailを検索してスレッドを読み、返信をGmailの下書きとして保存するので、送信前に内容を確認できます。"
   },
   "setup": [

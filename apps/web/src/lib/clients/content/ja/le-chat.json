@@ -15,7 +15,7 @@
     "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
   ],
   "meta": {
-    "title": "Mistral Le Chatにメールを接続: MCPコネクタの設定",
+    "title": "Mistral Le Chatにメールを接続：MCPコネクタの設定",
     "description": "Custom MCP Connectorで、MistralのLe Chatに本物の受信トレイを追加します。URLを1つ貼り付けてログインするだけ。APIキーは不要です。受信トレイ1つは無料。"
   },
   "hero": {
@@ -29,7 +29,7 @@
     "answer": "Le ChatでConnectorsを開き、+ Add Connectorをクリックして、Custom MCP Connectorタブを選びます。Server URLにhttps://mcpemails.com/api/mcpを貼り付け、Connectをクリックして、MCPEmailsにログインします。"
   },
   "method": {
-    "title": "Le Chatの接続方法: OAuth、APIキー不要",
+    "title": "Le Chatの接続方法：OAuth、APIキー不要",
     "body": "Server URLを入力すると、Le Chatはサーバーの認証方式を検出します。MistralはOAuthサーバーに対し、未認証のリクエストには<b>401</b>と<code>WWW-Authenticate</code>ヘッダーで応答するよう求めており、このサーバーはそのとおりにOAuthメタデータを示して応答します。そのためLe ChatはBearerトークンを求めるのではなく、OAuth 2.1を実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [
@@ -43,7 +43,7 @@
     },
     {
       "h": "サーバーを入力",
-      "p": "<b>Connector name</b>には、スペースや特殊文字を含まない一意の名前（例: MCPEmails）を入力し、<b>Server URL</b>に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。<b>Description</b>は任意です。"
+      "p": "<b>Connector name</b>には、スペースや特殊文字を含まない一意の名前（例：MCPEmails）を入力し、<b>Server URL</b>に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。<b>Description</b>は任意です。"
     },
     {
       "h": "接続してログイン",

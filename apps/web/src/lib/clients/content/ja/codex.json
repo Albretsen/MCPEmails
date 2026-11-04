@@ -14,7 +14,7 @@
     "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
-    "title": "OpenAI Codexにメールを接続: MCPサーバーの設定",
+    "title": "OpenAI Codexにメールを接続：MCPサーバーの設定",
     "description": "codex mcp add --urlで、OpenAI Codexに受信トレイを追加できます。CodexがOAuthを検出してブラウザーを開くので、APIキーは不要。CLI、IDE拡張機能、デスクトップアプリで使えます。"
   },
   "hero": {
@@ -28,7 +28,7 @@
     "answer": "codex mcp add mcpemails --url https://mcpemails.com/api/mcpを実行します。CodexがサーバーのOAuth対応を検出してブラウザーを開くので、MCPEmailsの同意画面でアクセスを承認します。CLI、IDE拡張機能、ChatGPTデスクトップアプリは同じ設定を共有するため、一度の設定で3つすべてに反映されます。"
   },
   "method": {
-    "title": "Codexの接続方法: OAuth、APIキー不要",
+    "title": "Codexの接続方法：OAuth、APIキー不要",
     "body": "Codexはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>クライアントIDメタデータドキュメント</b>または<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [
@@ -60,7 +60,7 @@
     },
     {
       "h": "同意画面がどのカードで開くかを確認",
-      "p": "Codexは401チャレンジに含まれるスコープ（<code>read:email</code>）を要求するため、登録によっては同意画面が<b>読み取り専用</b>で開きます。仕分けにはそれで十分です。Codexに下書きや送信をさせたい場合は、「アクセスを許可」をクリックする前に<b>標準</b>か<b>フルアクセス</b>を選んでください。後から広げるには、<code>codex mcp login mcpemails</code>をもう一度実行してより広いカードを選ぶか、<code>--scopes</code>でスコープを指定します。例: <code>--scopes read:email,search:email,manage:drafts</code>。"
+      "p": "Codexは401チャレンジに含まれるスコープ（<code>read:email</code>）を要求するため、登録によっては同意画面が<b>読み取り専用</b>で開きます。仕分けにはそれで十分です。Codexに下書きや送信をさせたい場合は、「アクセスを許可」をクリックする前に<b>標準</b>か<b>フルアクセス</b>を選んでください。後から広げるには、<code>codex mcp login mcpemails</code>をもう一度実行してより広いカードを選ぶか、<code>--scopes</code>でスコープを指定します。例：<code>--scopes read:email,search:email,manage:drafts</code>。"
     },
     {
       "h": "CLI、IDE拡張機能、デスクトップアプリは1つの設定を共有",

@@ -63,7 +63,7 @@
     },
     "values": {
       "reachApps": "Gmail。ClaudeではMicrosoft 365の職場アカウント、ChatGPTではOutlook。",
-      "reachProvider": "そのプロバイダーのみ: Fastmail、Zoho、またはGoogleのプレビュー版でのGmail。",
+      "reachProvider": "そのプロバイダーのみ：Fastmail、Zoho、またはGoogleのプレビュー版でのGmail。",
       "reachUs": "Gmail、OutlookとOutlook.com、iCloud、Yahoo、Fastmail、Zoho、Yandex、あらゆるIMAP。",
       "sendProvider": "FastmailとZohoは送信可能。Googleのプレビュー版サーバーは下書きの作成のみ。",
       "organizeApps": "ClaudeのGmailコネクタではラベルとゴミ箱。",
@@ -103,11 +103,11 @@
     "title": "出典",
     "sub": "以下の各ページは{date}に確認しました。",
     "items": {
-      "claudeGoogle": "Claudeヘルプセンター: Google Workspaceコネクタ",
+      "claudeGoogle": "Claudeヘルプセンター：Google Workspaceコネクタ",
       "claudeGmailListing": "ClaudeのGmailコネクタの掲載ページ",
-      "claudeM365": "Claudeヘルプセンター: Microsoft 365コネクタ",
+      "claudeM365": "Claudeヘルプセンター：Microsoft 365コネクタ",
       "chatgptReleaseNotes": "ChatGPTのリリースノート（GmailまたはOutlookからの送信）",
-      "chatgptApps": "OpenAIヘルプセンター: ChatGPTのアプリ",
+      "chatgptApps": "OpenAIヘルプセンター：ChatGPTのアプリ",
       "fastmailMcp": "Fastmail: FastmailのMCPサーバーを通じたAIツールの接続",
       "zohoMcp": "Zoho Mail MCP: はじめに",
       "googleGmailMcp": "Google for Developers: Gmail MCPサーバーの設定"

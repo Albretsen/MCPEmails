@@ -8,7 +8,7 @@
     "method": "app-password",
     "label": "アプリ パスワード",
     "helpUrl": "https://support.google.com/accounts/answer/185833",
-    "usernameForm": "Gmailアドレス全体（例: you@gmail.com）。アプリ パスワードは通常のGoogleパスワードの代わりに使います。通常のパスワードでは接続できません。",
+    "usernameForm": "Gmailアドレス全体（例：you@gmail.com）。アプリ パスワードは通常のGoogleパスワードの代わりに使います。通常のパスワードでは接続できません。",
     "status": "active"
   },
   "meta": {
@@ -26,7 +26,7 @@
     "answer": "Gmail MCPサーバーのURLはhttps://mcpemails.com/api/mcpです。MCPEmailsはホスト型のMCPサーバーです。Googleのアプリ パスワードを作成し、ダッシュボードでGmailを一度接続したら、そのURLをClaude、ChatGPT、Cursorに貼り付けます。Cursorでは~/.cursor/mcp.jsonのmcpServersにurlフィールドで追加すると、Cursorがログインを求めます。APIキーは不要です。FreeプランではGmail受信トレイ1つをカード登録なしでずっと接続でき、個人のGoogleアカウントでもGoogle Workspaceでも使えます。"
   },
   "method": {
-    "title": "Gmailの接続方法: Googleのアプリ パスワード",
+    "title": "Gmailの接続方法：Googleのアプリ パスワード",
     "body": "GmailはIMAPとSMTPを通じて<b>Googleのアプリ パスワード</b>で接続します。Googleは<b>2 段階認証プロセスが有効</b>なアカウントにしかアプリ パスワードを提供しないので、まずそれを有効にし、<b>myaccount.google.com/apppasswords</b>で作成してください。アプリ パスワードは小文字16文字が4つのグループに分かれた形式で、通常のGoogleパスワードの代わりに貼り付けます（通常のパスワードでは接続できません）。同じGoogleのページからいつでも取り消せますし、MCPEmailsで受信トレイを削除しても構いません。"
   },
   "setup": [

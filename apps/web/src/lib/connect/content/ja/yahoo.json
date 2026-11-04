@@ -25,8 +25,8 @@
     "answer": "Claudeは自力ではYahoo Mailに届きません。MCPEmailsはホスト型のMCPサーバーで、ポート993のIMAPで接続し、Yahooの「Account Security」（アカウントセキュリティ）ページの「External connections」（外部接続）で作成したYahooのアプリ パスワードで認証するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。通常のYahooパスワードはメールクライアントからは一切受け付けられません。セットアップは数分で、受信トレイ1つはずっと無料です。"
   },
   "method": {
-    "title": "Yahooの接続方法: アプリ パスワード",
-    "body": "Yahoo MailはIMAP/SMTPを通じて<b>Yahooのアプリ パスワード</b>で接続します。YahooのAccount Securityの「External connections」で生成し、YahooアドレスとともにMCPEmailsに貼り付けてください。その項目が見当たらなければ、2段階認証を有効にしてからもう一度確認してください。OAuthのやり取りも、ブラウザーのポップアップもありません。"
+    "title": "Yahooの接続方法：アプリ パスワード",
+    "body": "このページは米国Yahooのyahoo.comなどのアドレス向けです。<b>Yahoo!メール（@yahoo.co.jp）は別のサービス</b>で、アプリ パスワードはありません。Yahoo!メールの設定でIMAPとSMTPのアクセスを有効にしてから、汎用IMAPとしてimap.mail.yahoo.co.jp（993）とsmtp.mail.yahoo.co.jp（465）、Yahoo! JAPAN IDのパスワードで接続してください。手順はYahoo! JAPANのヘルプ（support.yahoo-net.jp）にあります。Yahoo MailはIMAP/SMTPを通じて<b>Yahooのアプリ パスワード</b>で接続します。YahooのAccount Securityの「External connections」で生成し、YahooアドレスとともにMCPEmailsに貼り付けてください。その項目が見当たらなければ、2段階認証を有効にしてからもう一度確認してください。OAuthのやり取りも、ブラウザーのポップアップもありません。"
   },
   "setup": [
     {

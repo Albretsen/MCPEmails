@@ -5,7 +5,7 @@
     "https://help.openai.com/en/articles/12584461"
   ],
   "meta": {
-    "title": "メールをChatGPTに接続する: MCPコネクタの設定",
+    "title": "メールをChatGPTに接続する：MCPコネクタの設定",
     "description": "開発者モードとカスタムMCPコネクタで、ChatGPTに本物の受信トレイを追加。OAuthでAPIキー不要、メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "chatgpt.comで「プラグイン」、「Personal」（個人）、「Add」（追加）、「カスタム MCP サーバーを追加」の順に開きます。名前をMCPEmailsにし、「接続」の欄にhttps://mcpemails.com/api/mcpを貼り付け、OAuthを選び、確認のチェックボックスにチェックを入れて「プラグインとして作成」をクリックし、MCPEmailsでログインします。カスタムMCPサーバーはGoと有料プランで追加できます。チャットでは@と入力してMCPEmailsを選びます。"
   },
   "method": {
-    "title": "ChatGPTの接続方法: OAuth、APIキー不要",
+    "title": "ChatGPTの接続方法：OAuth、APIキー不要",
     "body": "ChatGPTはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するので作成するクライアントIDはなく、S256を使った<b>認可コード＋PKCE</b>で認可します。クライアントシークレットは一切送信されず、トークンには私たちの同意画面であなたが承認したスコープだけが含まれます。受け取るアクセストークンは1時間有効で自動更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名で表示され、接続の取り消しもそこで行います。"
   },
   "setup": [
@@ -78,7 +78,7 @@
     },
     {
       "q": "この方法でChatGPTはどのメールボックスに届きますか？",
-      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で（職場アカウントではIT管理者がアプリを一度承認する必要がある場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ用のパスワードで。そして標準ポートでIMAPとSMTPを話す他のあらゆるメールボックス。クライアントはそれらすべてを同じ接続で見ます。エージェントはまずinbox_listを呼んで接続済みの全メールボックスとそのidを見つけるので、どこかにUUIDを貼り付ける必要はありません。"
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で（職場アカウントではIT管理者がアプリを一度承認する必要がある場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで。そして標準ポートでIMAPとSMTPを話す他のあらゆるメールボックス。クライアントはそれらすべてを同じ接続で見ます。エージェントはまずinbox_listを呼んで接続済みの全メールボックスとそのidを見つけるので、どこかにUUIDを貼り付ける必要はありません。"
     },
     {
       "q": "ChatGPTは私に見えないところでメールを送れますか？",

@@ -26,7 +26,7 @@
     "answer": "ClaudeはそのままではHostingerにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、メールボックスのパスワードを使ってIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。設定は数分で終わり、受信トレイ1つは無料です。"
   },
   "method": {
-    "title": "Hostingerの接続方法: IMAPとメールボックスのパスワード",
+    "title": "Hostingerの接続方法：IMAPとメールボックスのパスワード",
     "body": "Hostinger Emailは、hPanelのEmailsで設定したメールボックスのパスワードを使ってIMAP/SMTPで接続します。アプリ パスワードもOAuthの手順もありません。Hostinger Emailのホストは、どのドメインでも<code>imap.hostinger.com</code>と<code>smtp.hostinger.com</code>です。Business EmailとEnterprise EmailのプランはTitan上で動いており、別のホストを使います（後述）。"
   },
   "setup": [

@@ -1232,7 +1232,7 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
             const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
 
             return (
-              <div className={"price" + (tier.accent ? " featured" : "")} key={tier.msgKey}>
+              <div className={"price" + (tier.accent ? " featured" : "")} data-badge={tier.accent ? t('pricing.mostPopular') : undefined} key={tier.msgKey}>
                 <div>
                   <h3>{t(`pricing.tiers.${tier.msgKey}.name`)}</h3>
                   <div className="num">

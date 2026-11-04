@@ -390,7 +390,7 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   position: relative;
 }
 .price.featured::before {
-  content: "Most popular"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  content: attr(data-badge); position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
   background: var(--cobalt-500); color: #fff; font-family: var(--font-sans); font-size: 11.5px;
   font-weight: 500; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.02em;
 }

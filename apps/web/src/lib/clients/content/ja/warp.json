@@ -5,7 +5,7 @@
     "https://docs.warp.dev/agent-platform/capabilities/mcp/"
   ],
   "meta": {
-    "title": "Warpにメールを接続: エージェントのMCPサーバー設定",
+    "title": "Warpにメールを接続：エージェントのMCPサーバー設定",
     "description": "Warpのエージェントに本物の受信トレイを追加できます。Settings、Agents、MCP serversでStreamable HTTPサーバーをURLで追加し、ブラウザーでOAuthを完了するだけ。APIキーは不要です。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "Settings、Agents、MCP serversを開いてAddをクリックし、Streamable HTTP or SSE Server (URL)タブを選んでhttps://mcpemails.com/api/mcpを貼り付け、確定します。求められたら、WarpがブラウザーでのOAuthフローを完了します。"
   },
   "method": {
-    "title": "Warpの接続方法: OAuth、APIキー不要",
+    "title": "Warpの接続方法：OAuth、APIキー不要",
     "body": "Warpはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

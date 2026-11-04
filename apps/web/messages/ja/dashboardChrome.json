@@ -47,7 +47,7 @@
       "pricePerYear": "年額{price}",
       "renewsLabel": "次回の請求",
       "includesLabel": "含まれるもの",
-      "inboxesLimit": "接続できる受信トレイ: 最大{count, plural, other {#件}}",
+      "inboxesLimit": "接続できる受信トレイ：最大{count, plural, other {#件}}",
       "inboxesUnlimited": "受信トレイを無制限に接続",
       "connectedLabel": "接続済み",
       "connectedOfMax": "{count} / {max}",
@@ -354,7 +354,7 @@
     "businessCapBody": "Proで接続できるメールボックスは10個です。Businessには月額$39で10個が含まれ、追加のメールボックスは1個につき月額$3で追加できます。メンバーは追加費用なしで無制限です。",
     "businessCapCta": "Businessにアップグレード（月額$39）",
     "businessFeatureInboxes": "メールボックス10個込み、追加は1個につき月額$3",
-    "businessFeatureMembers": "ロール付きのメンバーを追加費用なしで無制限に",
+    "businessFeatureMembers": "役割付きのメンバーを追加費用なしで無制限に",
     "businessFeatureApprovals": "保留中の送信を管理者が承認",
     "businessFeatureWorkspaces": "1つのサブスクリプションで複数のワークスペース",
     "fix": {
@@ -372,7 +372,7 @@
         "paste": "16文字をパスワード欄に貼り付けます。スペースが入っていても問題ありません。",
         "workspace": "職場または学校のアカウントでは、管理者がオフにしているためにアプリ パスワードの項目が表示されないことがあります。その場合は、アプリ パスワードを許可するよう管理者に依頼してください。",
         "imapDisabled": "Google Workspace の管理者があなたのアカウントのIMAPをオフにしているため、どのパスワードでも接続できません。",
-        "imapDisabledAdmin": "IT管理者に次の内容を送ってください: Google Admin console（Google 管理コンソール）の Apps、Google Workspace、Gmail、End User Access で、私のアカウントのIMAPアクセスをオンにしてください。"
+        "imapDisabledAdmin": "IT管理者に次の内容を送ってください：Google Admin console（Google 管理コンソール）の Apps、Google Workspace、Gmail、End User Access で、私のアカウントのIMAPアクセスをオンにしてください。"
       },
       "appPassword": {
         "normalRejected": "通常の{provider}のパスワードはここでは拒否されます。使えるのはアプリ パスワードだけです。",
@@ -567,7 +567,7 @@
     "ended": "Black Weekのオファーは終了したため、請求は行われていません。上の金額は通常価格です。"
   },
   "founder": {
-    "line": "創業者価格: 月額${price}。サブスクリプションを継続している限り、この価格が適用されます。先着{total}社、または2026年12月31日までのいずれか早いほうまでの提供です。追加のメールボックスは1個につき月額${addon}です。",
+    "line": "創業者価格：月額${price}。サブスクリプションを継続している限り、この価格が適用されます。先着{total}社、または2026年12月31日までのいずれか早いほうまでの提供です。追加のメールボックスは1個につき月額${addon}です。",
     "places": "残り{left}枠（全{total}枠）",
     "priceChanged": "確定前に価格が変わったため、請求は行われていません。上の金額が現在適用される価格です。"
   },

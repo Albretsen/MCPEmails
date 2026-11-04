@@ -26,7 +26,7 @@
     "answer": "ClaudeはそのままではZoho Mailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.zoho.comのポート993にIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。事前に確認すべき点が2つあります。新しいZohoメールボックスではIMAPアクセスが有効にするまでオフになっていること、そしてホスト名がZohoのデータセンターによって変わるため、EUやインドで作成したアカウントでは別のホスト名を使うことです。受信トレイ1つはずっと無料です。"
   },
   "method": {
-    "title": "Zohoの接続方法: IMAPとパスワード",
+    "title": "Zohoの接続方法：IMAPとパスワード",
     "body": "Zoho MailはIMAP/SMTPで接続します。まずZohoでIMAPアクセスを有効にし（初期状態ではオフです）、ZohoのアドレスとパスワードをMCPEmailsに貼り付けます。2段階認証、フェデレーションログイン、SAMLを使っている場合は、アプリケーション固有のパスワードを作成してそちらを使ってください。MCPEmailsはZohoのすべてのデータセンター地域に対応しています。"
   },
   "setup": [
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Zohoには6つのデータセンターがあり、ホスト名は登録したデータセンターで決まります",
-      "p": "Zohoは地域ごとに別々のデータセンターを運営しており、<code>zoho.com</code>、<code>zoho.eu</code>、<code>zoho.in</code>、<code>zoho.com.au</code>、<code>zoho.jp</code>、<code>zohocloud.ca</code>でアクセスします。あるデータセンターで作成したメールボックスには、別のデータセンターのホスト名では接続できません。このページの表の設定は米国のものです。5秒でできる確認方法: mail.zoho.comにログインし、アドレスバーがどう変わるかを見てください。<code>zoho.eu</code>になれば、IMAPとSMTPのホストも<code>.eu</code>で終わります。ZohoはSettings、Mail AccountsのServer Configuration Details（サーバー設定の詳細）に、そのアカウント用の正確なホストの組み合わせも表示しています。<b>地域の不一致はZoho接続が失敗する最も多い原因</b>で、サーバー違いのエラーではなく認証エラーとして表示されます。そのため、原因にたどり着くまでにパスワードを4回リセットしてしまう人が少なくありません。"
+      "p": "Zohoは地域ごとに別々のデータセンターを運営しており、<code>zoho.com</code>、<code>zoho.eu</code>、<code>zoho.in</code>、<code>zoho.com.au</code>、<code>zoho.jp</code>、<code>zohocloud.ca</code>でアクセスします。あるデータセンターで作成したメールボックスには、別のデータセンターのホスト名では接続できません。このページの表の設定は米国のものです。5秒でできる確認方法：mail.zoho.comにログインし、アドレスバーがどう変わるかを見てください。<code>zoho.eu</code>になれば、IMAPとSMTPのホストも<code>.eu</code>で終わります。ZohoはSettings、Mail AccountsのServer Configuration Details（サーバー設定の詳細）に、そのアカウント用の正確なホストの組み合わせも表示しています。<b>地域の不一致はZoho接続が失敗する最も多い原因</b>で、サーバー違いのエラーではなく認証エラーとして表示されます。そのため、原因にたどり着くまでにパスワードを4回リセットしてしまう人が少なくありません。"
     },
     {
       "h": "IMAPは誰かがオンにするまでオフのままで、設定はメールボックスごとです",

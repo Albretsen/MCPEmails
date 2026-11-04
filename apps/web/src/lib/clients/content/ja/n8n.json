@@ -11,7 +11,7 @@
     "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
   ],
   "meta": {
-    "title": "n8nにメールを接続: AI Agent用のMCP Client Tool",
+    "title": "n8nにメールを接続：AI Agent用のMCP Client Tool",
     "description": "MCP Client Toolノードでn8nのAI Agentにメールを接続します。HTTP Streamable、Bearer Auth、スコープを絞ったAPIキーで、メールの閲覧、検索、下書き作成、送信ができます。"
   },
   "hero": {
@@ -25,7 +25,7 @@
     "answer": "n8nのワークフローで、AI AgentのTool入力にMCP Client Toolノードを追加します。Endpointをhttps://mcpemails.com/api/mcp、Server TransportをHTTP Streamable、AuthenticationをBearer Authに設定し、MCPEmailsのダッシュボードで作成したAPIキーをBearer Tokenに貼り付けます。"
   },
   "method": {
-    "title": "n8nの接続方法: スコープを絞ったキーを入れたBearer Auth認証情報",
+    "title": "n8nの接続方法：スコープを絞ったキーを入れたBearer Auth認証情報",
     "body": "MCP Client Toolノードは、接続した認証情報をそのまま送信します。このガイドではn8nの<b>Bearer Auth</b>認証情報を使います。これはすべてのリクエストの<code>Authorization</code>ヘッダーにキーを付けるものです。キーはダッシュボードで作成し、ワークフローに必要なスコープだけにチェックを入れてください。ワークフローは誰も見ていないところでスケジュール実行されることが多いので、このスコープが重要な境界になります。キーによる接続とOAuthによる接続は同じエンドポイントにアクセスし、同じツール一覧を受け取ります。"
   },
   "setup": [
@@ -35,7 +35,7 @@
     },
     {
       "h": "スコープを絞ったAPIキーを作成",
-      "p": "ダッシュボードの「APIキー」で「キーを作成」をクリックします。ワークフローの名前を付け、必要なスコープだけにチェックを入れます: <code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、一度しか表示されないので、ダイアログを閉じる前にコピーしてください。"
+      "p": "ダッシュボードの「APIキー」で「キーを作成」をクリックします。ワークフローの名前を付け、必要なスコープだけにチェックを入れます：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、一度しか表示されないので、ダイアログを閉じる前にコピーしてください。"
     },
     {
       "h": "AI AgentにMCP Client Toolを追加",

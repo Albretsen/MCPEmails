@@ -10,8 +10,8 @@
   ],
   "docsLink": "ChatGPTの詳しい設定ガイド",
   "blogLink": "ChatGPTをメールに接続する方法",
-  "faqQ": "ChatGPTは{provider}のメールを読めますか?",
-  "faqQMailName": "ChatGPTは{provider}を読めますか?",
+  "faqQ": "ChatGPTは{provider}のメールを読めますか？",
+  "faqQMailName": "ChatGPTは{provider}を読めますか？",
   "faqA": "はい。{provider}をMCPEmailsに接続すれば読めます。chatgpt.comで、URLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。ChatGPT Goと有料プランで使えます。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
   "directorySub": "ChatGPTはMCPEmailsのAny Mailboxアプリを通じて{provider}にアクセスします。",
   "directorySteps": [

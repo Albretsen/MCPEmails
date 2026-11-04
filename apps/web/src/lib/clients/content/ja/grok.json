@@ -8,7 +8,7 @@
     "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
   ],
   "meta": {
-    "title": "Grokにメールを接続: カスタムMCPコネクタの設定",
+    "title": "Grokにメールを接続：カスタムMCPコネクタの設定",
     "description": "Grokに本物の受信トレイをカスタムMCPコネクタとして追加できます。grok.comにURLを1つ貼り付けてOAuthでログインすれば、メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -22,7 +22,7 @@
     "answer": "grok.com/connectorsを開き、New Connectorをクリックして、Customを選び、MCPサーバーURLとしてhttps://mcpemails.com/api/mcpを貼り付けます。Grokに求められたらMCPEmailsにログインし、スコープを承認します。Grok BusinessとEnterpriseでは、先にチーム管理者がクラウドコンソールでサーバーを追加します。"
   },
   "method": {
-    "title": "Grokの接続方法: OAuth、APIキー不要",
+    "title": "Grokの接続方法：OAuth、APIキー不要",
     "body": "Grokはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

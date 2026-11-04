@@ -252,5 +252,6 @@
   "founder": {
     "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
     "places": "Places restantes : {left} sur {total}"
-  }
+  },
+  "mostPopular": "Le plus populaire"
 }

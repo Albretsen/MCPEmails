@@ -9,7 +9,7 @@
     "method": "mail-password",
     "label": "メールのパスワード",
     "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
-    "usernameForm": "ドメインを含むアドレス全体（例: name@yourdomain.com）。",
+    "usernameForm": "ドメインを含むアドレス全体（例：name@yourdomain.com）。",
     "status": "active"
   },
   "meta": {
@@ -27,7 +27,7 @@
     "meta2": "メールはその場で取得、保存はしません"
   },
   "method": {
-    "title": "GoDaddyの接続方法: 製品を確認してからIMAPで",
+    "title": "GoDaddyの接続方法：製品を確認してからIMAPで",
     "body": "「GoDaddyのメール」は、1つのブランドを共有する3つか4つの別々のサービスで、設定も共通ではありません。<b>Professional Email</b>はGoDaddyがTitanの基盤で販売している現在の主力製品で、GoDaddyは<code>imap.secureserver.net</code>のポート993と<code>smtpout.secureserver.net</code>のポート465（どちらも暗黙的TLS）を案内しています。ユーザー名はアドレス、パスワードはそのメールボックス自身のパスワードです。提供が終了した<b>Workspace Email</b>も同じsecureserverのホスト名を使っていたため、Web上の古いガイドの多くにいまもこのホスト名が載っています。<b>Microsoft 365 from GoDaddy</b>はそもそもGoDaddyのメールボックスではありません。GoDaddyが再販して請求しているMicrosoftのテナントで、Microsoft自身のサーバー上にあります。また、<b>cPanel Web Hosting</b>の中で作成したメールボックスはsecureserverではなくお使いのホスティングサーバー上にあり、そのサーバー独自のホスト名を使います。製品さえ正しく見分ければ、残りの設定は2分で終わります。"
   },
   "setup": [

@@ -7,7 +7,7 @@
     "docs/token-cost/research-spec.md"
   ],
   "meta": {
-    "title": "Claude Codeにメールを接続: コマンド1つでMCPを設定",
+    "title": "Claude Codeにメールを接続：コマンド1つでMCPを設定",
     "description": "claude mcp addで、Claude Code CLIに本物の受信トレイを追加できます。ターミナルでOAuth認証、APIキーは不要。シェルからメールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -21,7 +21,7 @@
     "answer": "claude mcp add --transport http mcpemails https://mcpemails.com/api/mcpを実行し、Claude Codeに求められたらブラウザーで認証します。設定はこれだけです。APIキーも、手で編集する設定ファイルもありません。"
   },
   "method": {
-    "title": "Claude Codeの接続方法: OAuth、APIキー不要",
+    "title": "Claude Codeの接続方法：OAuth、APIキー不要",
     "body": "Claude Codeはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [
@@ -65,7 +65,7 @@
   "faq": [
     {
       "q": "Claude Codeにメールを接続するには？",
-      "a": "このMCPサーバーをURLで追加します: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp。次にセッション内で/mcpを実行し、ブラウザーでのログインを完了します。これでClaude Codeに、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが加わります。"
+      "a": "このMCPサーバーをURLで追加します：claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp。次にセッション内で/mcpを実行し、ブラウザーでのログインを完了します。これでClaude Codeに、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが加わります。"
     },
     {
       "q": "OAuthの代わりにAPIキーを使えますか？",
