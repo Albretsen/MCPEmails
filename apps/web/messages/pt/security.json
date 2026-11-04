@@ -53,7 +53,7 @@
       },
       {
         "data": "Envios retidos para a sua aprovação",
-        "accessed": "Retidos até que um revisor aprove ou rejeite, ou até expirarem após 24 horas",
+        "accessed": "Retidos até que um revisor aprove ou rejeite, ou até expirarem: após 24 horas no caso de um envio de assistente de IA, após 7 dias no caso de um encaminhamento de automação",
         "stored": "Sim, criptografados em repouso. O conteúdo é apagado 7 dias após a decisão; o registro da aprovação (destinatários e assunto, criptografados) é mantido por 90 dias"
       },
       {

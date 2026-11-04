@@ -29,7 +29,7 @@
       "routine": {
         "tag": "Rotina",
         "h": "Coloque a rotina em uma programação",
-        "p": "Tarefas recorrentes podem rodar como <b>automações de triagem</b>: uma pesquisa salva mais uma ação fixa (mover, rotular, marcar como lido, encaminhar ou rascunhar uma resposta) em uma frequência definida, sem nenhum modelo de IA no meio. Uma automação nunca pode excluir e-mails, e um encaminhamento que ela enfileira sempre espera sua aprovação."
+        "p": "Tarefas recorrentes podem rodar como <b>automações de triagem</b>: uma pesquisa salva mais uma ação fixa (mover, rotular, marcar como lido, encaminhar ou rascunhar uma resposta) em uma frequência definida, sem nenhum modelo de IA no meio. Uma automação nunca pode excluir e-mails, e um encaminhamento que ela enfileira espera sua aprovação, a menos que você tenha liberado aquele endereço exato."
       }
     }
   },
@@ -76,7 +76,7 @@
     "items": {
       "approval": {
         "h": "Retenção para aprovação dos e-mails de saída",
-        "p": "Ative por caixa de e-mail e todo envio, resposta, encaminhamento, envio de rascunho e envio agendado fica esperando no seu painel até você aprovar ou rejeitar. Está incluído em todos os planos, inclusive no Free."
+        "p": "Ative por caixa de e-mail e todo envio, resposta, encaminhamento, envio de rascunho e envio agendado feito pelo seu cliente de IA fica esperando no seu painel até você aprovar ou rejeitar. Está incluído em todos os planos, inclusive no Free."
       },
       "stored": {
         "h": "Os e-mails que ele lê nunca são armazenados",
@@ -143,7 +143,7 @@
       },
       {
         "q": "Posso impedir que ele envie qualquer coisa sem mim?",
-        "a": "Sim. Ative a retenção para aprovação em uma caixa de e-mail e toda mensagem de saída dela fica esperando no seu painel até você aprovar ou rejeitar. Você também pode dar a um cliente de IA uma chave de API sem nenhuma permissão de envio. As duas opções estão em todos os planos."
+        "a": "Sim. Ative a retenção para aprovação em uma caixa de e-mail e toda mensagem de saída que seu cliente de IA enviar dela fica esperando no seu painel até você aprovar ou rejeitar. Você também pode dar a um cliente de IA uma chave de API sem nenhuma permissão de envio. As duas opções estão em todos os planos."
       },
       {
         "q": "O e-mail da empresa fica armazenado nos seus servidores?",
