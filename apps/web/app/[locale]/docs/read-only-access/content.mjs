@@ -538,7 +538,7 @@ const pt = {
       items: [
         'Abrimos uma conexão TLS, verificamos o certificado do servidor, fazemos login uma vez para conferir sua senha ou senha de app e saímos.',
         'Nada é baixado, copiado ou indexado. As mensagens são buscadas no seu provedor só quando uma ferramenta as solicita.',
-        'Só há trabalho em segundo plano para automações e envios agendados, e os dois exigem permissões de escrita que uma conexão somente leitura não tem.',
+        'Só há trabalho em segundo plano para recursos que você ativa. Automações, envios agendados, lembretes de acompanhamento e sonecas exigem permissões de escrita que uma conexão somente leitura não tem. O resumo matinal e os webhooks de e-mail novo são configurações do painel, não permissões da conexão: o resumo lê a sua caixa de entrada e adiciona uma mensagem a ela, e os webhooks verificam se há e-mail novo. Os dois ficam desativados até você ativá-los.',
         'Se você nunca quiser enviar a partir do endereço, escolha **Configurações avançadas** → **Tipo de conexão** → **Só receber (IMAP)** ao conectá-lo. Nenhum servidor SMTP é configurado ou contatado.',
       ],
     },
@@ -613,7 +613,7 @@ const ja = {
       items: [
         'TLS接続を開き、サーバーの証明書を検証し、パスワードまたはアプリ パスワードを確認するために一度ログインしてから、ログアウトします。',
         'ダウンロード、コピー、インデックス作成は一切行いません。メッセージは、ツールが要求したときにだけプロバイダーから取得します。',
-        'バックグラウンドで動くのは自動化と予約送信だけで、どちらも読み取り専用接続にはない書き込み権限が必要です。',
+        'バックグラウンドで動くのは、オンにした機能だけです。自動化、予約送信、フォローアップ、スヌーズには、読み取り専用接続にはない書き込み権限が必要です。モーニングブリーフと新着メールのWebhookは接続の権限ではなく、ダッシュボードの設定です。ブリーフは受信トレイを読み取ってメッセージを1通追加し、Webhookは新着メールを確認します。どちらもオンにしない限りオフのままです。',
         'そのアドレスから送信することがない場合は、接続時に**詳細設定** → **接続の種類** → **受信のみ (IMAP)** を選んでください。SMTPサーバーの設定も接続も行われません。',
       ],
     },

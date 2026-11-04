@@ -88,7 +88,7 @@ O MCPEmails não envia novos e-mails ao Claude por conta própria. O Claude veri
 
 ## Meus e-mails do Outlook.com ficam armazenados em algum lugar?
 
-Não. Cada vez que o Claude pede uma mensagem, o MCPEmails a busca ao vivo na Microsoft, entrega ao Claude e descarta. A única coisa guardada para a caixa é o token OAuth do seu login na Microsoft, criptografado em repouso. Para desconectar, exclua a caixa no MCPEmails ou remova o MCPEmails dos apps que têm acesso à sua conta Microsoft. [Por que "o e-mail nunca é armazenado" importa](/blog/why-email-never-stored-matters) explica o modelo, e [é seguro dar a um agente de IA acesso ao e-mail?](/blog/is-it-safe-to-give-ai-agent-email-access) mostra o que observar, como instruções escondidas dentro de um e-mail.
+Não. Cada vez que o Claude pede uma mensagem, o MCPEmails a busca ao vivo na Microsoft, entrega ao Claude e descarta. O que fica guardado para a caixa é o token OAuth do seu login na Microsoft, criptografado em repouso, mais os poucos dados de que um recurso que você ativa precisa, como uma mensagem agendada esperando para sair. Para desconectar, exclua a caixa no MCPEmails ou remova o MCPEmails dos apps que têm acesso à sua conta Microsoft. [Por que "o e-mail nunca é armazenado" importa](/blog/why-email-never-stored-matters) explica o modelo, e [é seguro dar a um agente de IA acesso ao e-mail?](/blog/is-it-safe-to-give-ai-agent-email-access) mostra o que observar, como instruções escondidas dentro de um e-mail.
 
 ## Perguntas frequentes
 

@@ -84,7 +84,7 @@ Uma coisa para saber desde já: o MCPEmails funciona por consulta. Não há webh
 
 Versão curta: sim, e o design foi feito em torno disso.
 
-- **Seu e-mail nunca é armazenado.** Corpos, assuntos e anexos são buscados ao vivo a cada chamada, entregues ao Claude e descartados imediatamente. A única coisa que fica guardada por caixa de entrada é a credencial criptografada, a sua senha de app. Veja [por que "e-mail nunca armazenado" realmente importa](/blog/why-email-never-stored-matters).
+- **Seu e-mail nunca é armazenado.** Corpos, assuntos e anexos são buscados ao vivo a cada chamada, entregues ao Claude e descartados imediatamente. O que fica guardado por caixa de entrada é a credencial criptografada, a sua senha de app, mais os poucos dados de que um recurso que você ativa precisa, como uma mensagem agendada esperando para sair. Veja [por que "e-mail nunca armazenado" realmente importa](/blog/why-email-never-stored-matters).
 - **Você controla o escopo.** Aprove somente leitura e o Claude literalmente não consegue enviar. Aprove os dois e você ainda pode revogar qualquer um a qualquer momento.
 - **Sem compartilhar senha.** Sua senha normal do Google nunca chega ao MCPEmails. Uma senha de app é uma credencial separada que você pode revogar em myaccount.google.com/apppasswords a qualquer momento, ou pode excluir a caixa de entrada no MCPEmails.
 
@@ -96,7 +96,7 @@ O modelo de ameaças completo (o que é criptografado, o que um invasor veria e 
 Não. O Claude tem suporte a OAuth, então você cola a URL do endpoint e aprova um login. As chaves de API são só para clientes sem OAuth integrado.
 
 **O Claude armazena minhas mensagens do Gmail?**
-Não. O e-mail é buscado ao vivo no Gmail a cada solicitação e descartado logo depois que o Claude o lê. Nada fica guardado além da sua credencial criptografada (a senha de app).
+Não. O e-mail é buscado ao vivo no Gmail a cada solicitação e descartado logo depois que o Claude o lê. Nada dos e-mails que o Claude lê fica guardado; o que fica guardado é a sua credencial criptografada (a senha de app).
 
 **O Claude consegue enviar e-mail pelo meu Gmail?**
 Sim, se você conceder o escopo \`send:email\`. Os envios saem pelo Gmail como mensagens normais da sua própria conta. Conceda somente leitura se preferir que o Claude nunca envie.
