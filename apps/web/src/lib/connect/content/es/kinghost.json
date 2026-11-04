@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "https://king.host/wiki/artigo/como-ativar-o-smtp-internacional/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón, con SMTP Internacional activado para enviar",
+    "helpUrl": "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "usernameForm": "Tu dirección de correo completa en el dominio, por ejemplo contato@suaempresa.com.br. Las guías de KingHost empiezan toda configuración con la dirección completa.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de KingHost en Claude: IMAP y el interruptor SMTPi para enviar",
+    "description": "Conecta un buzón de KingHost a Claude o a cualquier cliente MCP en imap.kinghost.net:993. El envío desde fuera de Brasil pasa por smtpi.kinghost.net, que antes hay que activar en el panel de KingHost."
+  },
+  "hero": {
+    "eyebrow": "KingHost + IA",
+    "titleLine1": "Conecta el correo de KingHost a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de KingHost en tu propio dominio. Lee, busca, envía, responde, programa y organiza correo por IMAP, con un solo interruptor del panel para que el envío funcione desde fuera de Brasil.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de KingHost. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.kinghost.net en el puerto 993, autenticándose con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Leer es sencillo. Enviar necesita una cosa que KingHost documenta para cualquiera que esté fuera de Brasil: su servidor SMTP normal solo responde desde redes brasileñas, así que el correo enviado desde cualquier otro sitio, incluidos los servidores de MCPEmails, pasa por SMTP Internacional en smtpi.kinghost.net, y eso hay que activarlo antes para tu dominio en el panel de KingHost. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón, SMTPi activado en el panel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta KingHost: IMAP en imap.kinghost.net, SMTP a través de SMTPi",
+    "body": "KingHost documenta IMAP en <code>imap.kinghost.net</code> en el puerto 993 con SSL/TLS, y SMTP en <code>smtp.kinghost.net</code> en el puerto 465 con SSL/TLS, con el 143 y el 587 como alternativas sin cifrar. Los dominios registrados bajo un revendedor de KingHost usan en su lugar <code>imap.uni5.net</code> y <code>smtp.uni5.net</code>. El usuario es la dirección de correo completa y la contraseña es la definida en ese buzón. La pega es geográfica. Las guías de KingHost dicen que, si estás fuera de Brasil, debes usar <b>SMTPi</b>, el servicio SMTP Internacional, y desde aquí <code>smtp.kinghost.net</code> no respondió en absoluto mientras que <code>smtpi.kinghost.net</code> sí. MCPEmails envía desde servidores en Europa, así que el servidor SMTPi es el que publica esta página. No viene activado de serie: el panel de KingHost tiene un interruptor para ello por dominio, y KingHost dice que el cambio tarda entre 30 minutos y 2 horas en aplicarse. Activarlo no cambia nada en la recepción de correo ni en el envío desde máquinas en Brasil."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta. Deja la pestaña abierta mientras activas SMTPi, porque esa parte tiene un tiempo de espera."
+    },
+    {
+      "h": "Activa SMTP Internacional para el dominio en el panel de KingHost",
+      "p": "Abre el <b>Painel de Controle</b> de KingHost, selecciona el dominio y ve a la sección de e-mail. Haz clic en el icono <b>SMTP INTERNACIONAL</b> y luego en <b>ATIVAR</b> en la página que se abre. KingHost dice que hay que esperar entre 30 minutos y 2 horas para que el cambio surta efecto en el dominio. Sin esto, los envíos desde MCPEmails se rechazan, porque el servidor SMTP normal de KingHost no responde desde fuera de Brasil."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña del buzón en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa junto con la contraseña definida en ese buzón en el panel de KingHost, no tu acceso de cliente de KingHost. El servidor entrante <code>imap.kinghost.net</code> y el saliente <code>smtpi.kinghost.net</code> ya vienen rellenados y se confirmaron con una conexión TLS real. En un dominio de revendedor, sustitúyelos por <code>imap.uni5.net</code> y <code>smtpi.uni5.net</code>."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de KingHost."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor SMTP de las guías de KingHost es inaccesible desde fuera de Brasil",
+      "p": "Los artículos de configuración de KingHost nombran <code>smtp.kinghost.net</code> en el puerto 465. Desde nuestros servidores ese servidor no respondió ni en el 465 ni en el 587: la conexión agotó el tiempo de espera en lugar de ser rechazada, que es la señal típica de una red que solo admite tráfico brasileño. El propio artículo de KingHost sobre SMTPi lo dice: fuera de Brasil, SMTP Internacional es obligatorio. Un agente que envía a través de MCPEmails está fuera de Brasil sea cual sea tu ubicación, así que usa <code>smtpi.kinghost.net</code> y asegúrate de que SMTPi está activado para el dominio, o cada envío se queda colgado hasta agotar el tiempo de espera."
+    },
+    {
+      "h": "El interruptor es por dominio, y tarda hasta dos horas",
+      "p": "SMTPi se activa en el panel de KingHost para cada dominio por separado, en la sección de e-mail, con el icono <b>SMTP INTERNACIONAL</b> y el botón <b>ATIVAR</b>. KingHost dice que el cambio tarda entre 30 minutos y 2 horas en aplicarse. Un envío intentado en ese intervalo falla igual que antes de activarlo, así que si el envío sigue sin funcionar justo después de activarlo, espera en lugar de cambiar ajustes. La recepción de correo y el envío desde máquinas brasileñas no se ven afectados en ningún caso."
+    },
+    {
+      "h": "Los dominios de revendedor usan uni5.net, no kinghost.net",
+      "p": "Un dominio registrado bajo una cuenta de revendedor de KingHost (Revenda) vive en un clúster distinto, y las guías de KingHost le dan sus propios nombres: <code>imap.uni5.net</code> para el correo entrante y <code>smtpi.uni5.net</code> para SMTPi, con los mismos puertos. Los nombres kinghost.net no son alias de esos, así que un cliente de revendedor que copie los servidores de esta página se conecta a los servidores equivocados. Si no estás seguro, pregunta a quien te vendió el alojamiento si el dominio está en un plan de revendedor."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, así que las carpetas se identifican por nombre",
+      "p": "El servidor Dovecot detrás de <code>imap.kinghost.net</code> anuncia <code>IDLE</code>, pero ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un solo comando, y las carpetas de enviados, borradores y papelera se identifican por su nombre y no por una función que declare el servidor. Si un agente archiva algo en el lugar equivocado, nombra la carpeta en la instrucción."
+    }
+  ],
+  "limits": [
+    "Enviar requiere que SMTP Internacional esté activado para el dominio en el panel de KingHost. Hasta entonces, los envíos desde MCPEmails fallan, y el servidor SMTP normal de KingHost no se puede usar desde fuera de Brasil.",
+    "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El servidor SMTPi acepta mensajes de hasta 60 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de KingHost?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para KingHost y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de KingHost?",
+      "a": "IMAP es imap.kinghost.net en el puerto 993 con SSL/TLS. Para enviar desde fuera de Brasil, que es donde funciona MCPEmails, SMTP es smtpi.kinghost.net en el puerto 465 con SSL/TLS, una vez activado SMTP Internacional para el dominio en el panel. Las guías de KingHost indican smtp.kinghost.net para clientes dentro de Brasil. Los dominios de revendedor usan imap.uni5.net y smtpi.uni5.net. Ambos servidores publicados se confirmaron con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Por qué MCPEmails puede leer mi correo de KingHost pero no enviar?",
+      "a": "Porque SMTP Internacional no está activado para el dominio, o lleva activado menos de dos horas. El servidor SMTP normal de KingHost no responde desde fuera de Brasil, y los envíos de MCPEmails salen desde Europa. Abre el panel de KingHost, selecciona el dominio, ve a la sección de e-mail, haz clic en SMTP INTERNACIONAL y luego en ATIVAR, y espera hasta dos horas."
+    },
+    {
+      "q": "¿Activar SMTPi cambia cómo recibo el correo?",
+      "a": "No. KingHost indica que activar o desactivar SMTP Internacional no afecta ni a la recepción ni al envío desde máquinas situadas en Brasil. Solo abre el servidor smtpi para el envío autenticado desde otros lugares."
+    },
+    {
+      "q": "¿KingHost necesita una contraseña de aplicación?",
+      "a": "No. KingHost no tiene un sistema de contraseñas específicas de aplicación. La contraseña definida en el buzón desde el panel autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de KingHost en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de KingHost por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de KingHost",
+    "sub": "Conecta un buzón de KingHost en minutos, una vez activado SMTPi. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,99 +1,98 @@
 {
   "_sources": [
-    "https://bluemail.me/pt/setup/bol-com-br-email-account-settings/",
-    "https://www.getmailspring.com/setup/access-bol-com-br-via-imap-smtp",
+    "https://autoconfig.thunderbird.net/v1.1/bol.com.br",
     "https://en.wikipedia.org/wiki/Brasil_Online"
   ],
   "auth": {
     "method": "account-password",
-    "label": "BOL-passord, på et betalt BOL-abonnement",
+    "label": "BOL-passord",
     "helpUrl": null,
-    "usernameForm": "Hele adressen din, med domenet: name@bol.com.br.",
+    "usernameForm": "Hele adressen din, name@bol.com.br. Avvises den, prøv innloggingen alene uten domenet: Mozilla-databaseoppføringen for BOL registrerer brukernavnet i den kortere formen.",
     "status": "active"
   },
   "meta": {
-    "title": "BOL Mail til Claude: IMAP og BOL Completo-abonnementet",
-    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993. Tredjepartsveiledninger oppgir at gratis BOL-kontoer bare har webmail, og at IMAP krever det betalte BOL Completo."
+    "title": "BOL Mail til Claude: IMAP på imap.bol.com.br",
+    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993 med BOL-passordet ditt. Utgående e-post er smtps.bol.com.br på port 465, som ikke er innstillingen søstertjenesten UOL bruker."
   },
   "hero": {
     "eyebrow": "BOL Mail + AI",
     "titleLine1": "Koble BOL Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte BOL-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, forutsatt at postkassen er på et betalt BOL-abonnement og ikke på det gratis webmailnivået.",
-    "answer": "Claude kan ikke nå BOL Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler den til over IMAP på imap.bol.com.br, port 993, og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Haken ligger sannsynligvis i abonnementet, ikke i protokollen: tredjepartsveiledninger oppgir at BOL fjernet IMAP- og POP-tilgang fra gratiskontoene sine, som dermed bare har webmail, så en gratis bol.com.br-adresse lar seg kanskje ikke koble til fra noen klient før den er oppgradert til et betalt BOL-abonnement. Én innboks i MCPEmails er gratis.",
+    "lead": "Gi AI-agenten din en ekte BOL-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med det vanlige BOL-passordet ditt og innstillingene som er verifisert på denne siden.",
+    "answer": "Claude når ikke BOL Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.bol.com.br port 993 og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. BOL drives av UOL på samme e-postplattform, og innstillingene ser like nok ut til å kopiere fra UOL, og det er der de fleste feilene kommer fra: BOLs utgående server bruker implisitt TLS på port 465, mens UOLs bruker STARTTLS på 587. Det finnes ikke noe app-passord og ingenting å generere. Én innboks i MCPEmails er gratis.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Betalt BOL-abonnement, deretter passordet ditt",
+    "meta1": "BOL-passordet ditt, uten app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
-    "title": "Slik kobles BOL Mail til: IMAP bare på det betalte nivået",
-    "body": "BOL leverer IMAP på <code>imap.bol.com.br</code>, port 993 med implisitt TLS, og innsending på <code>smtps.bol.com.br</code>, port 465, også med implisitt TLS. BOL drives av UOL, og serveren bak begge er den samme Dovecot-installasjonen som UOL kjører, med samme grense for meldingsstørrelse og samme navngivning. Forskjellen som mest sannsynlig betyr noe, er kommersiell. Tredjepartsveiledninger oppgir at BOLs gratispostkasse, som de fleste bol.com.br-adresser er, fungerer i webmailen og ingen andre steder, fordi tilgang over POP og IMAP ble fjernet fra gratisabonnementet, og at det betalte nivået, som selges som <b>BOL Completo</b>, gir tilbake klienttilgangen. Vi har ikke funnet dokumentasjon fra BOL som bekrefter dette. På et abonnement med klienttilgang er autentiseringen helt vanlig. Det finnes ikke noe app-passord og ingen egen autorisasjonskode, bare BOL-passordet ditt og hele adressen som brukernavn."
+    "title": "Slik kobler BOL Mail seg til: IMAP og SMTP på UOL-plattformen",
+    "body": "BOL leverer IMAP på <code>imap.bol.com.br</code> port 993 over implisitt TLS, og innsending på <code>smtps.bol.com.br</code> port 465, også implisitt TLS. BOL drives av UOL, og serveren bak begge er den samme Dovecot-installasjonen som UOL kjører, med samme tak for meldingsstørrelse og samme navngivning. Autentiseringen er helt vanlig. Det finnes ikke noe app-passord og ingen egen autorisasjonskode, bare BOL-passordet ditt, med hele adressen som brukernavn. Den ene rynken er formen på brukernavnet: Mozilla-autokonfigurasjonsoppføringen for bol.com.br, som Thunderbird og andre klienter bruker for å fylle inn innstillinger, registrerer innloggingen som delen før @ i stedet for hele adressen, så avvises hele adressen, er den kortere formen det neste å prøve. Vertene og portene på denne siden ble bekreftet via en direkte TLS-tilkobling, og innstillingstabellen viser datoen."
   },
   "setup": [
     {
-      "h": "Opprett en gratis MCPEmails-konto",
-      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Før du går videre, sjekker du hvilket BOL-abonnement postkassen er på, fordi det avgjør om resten av denne siden gjelder."
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La den stå åpen; BOL-delen tar omtrent ett minutt."
     },
     {
-      "h": "Bekreft at postkassen er på et betalt BOL-abonnement",
-      "p": "Logg inn i BOLs webmail og sjekk abonnementet på kontoen. Tredjepartsveiledninger oppgir at en gratis BOL-konto ikke har noen klienttilgang å slå på, fordi POP og IMAP ble fjernet fra det nivået, og at det er en oppgradering til BOL Completo som gjør en IMAP-tilkobling mulig. Hvis kontoen er gratis og et riktig passord avvises, er det den sannsynlige årsaken; koble da heller en annen postkasse til MCPEmails og videresend BOL-e-posten dit."
+      "h": "Sjekk at postkassen åpner i BOL-webmailen",
+      "p": "Logg inn i BOL-webmailen med adressen og passordet du har tenkt å bruke. Avviser webmailen selv passordet, godtar ingen e-postklient det heller, så tilbakestill det der først. En postkasse som åpner normalt i webmailen, er klar til å kobles til."
     },
     {
       "h": "Skriv inn adressen og passordet ditt i MCPEmails",
-      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel <code>nome@bol.com.br</code>, sammen med BOL-passordet ditt. Verter og porter er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling. Legg merke til den utgående porten: BOL bruker implisitt TLS på 465, som ikke er den samme innstillingen søstertjenesten bruker."
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel <code>nome@bol.com.br</code>, sammen med BOL-passordet ditt. Vertene og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Legg merke til den utgående porten: BOL bruker implisitt TLS på 465, som ikke er den samme innstillingen søstertjenesten bruker."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-klienten",
-      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere i BOL-postkassen."
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere BOL-postkassen."
     }
   ],
   "gotchas": [
     {
-      "h": "Gratis BOL-kontoer skal etter sigende bare ha webmail, og innloggingsfeilen nevner ikke abonnement",
-      "p": "Tredjepartsveiledninger oppgir at gratis BOL-postkasser bare fungerer i webmailen, fordi POP- og IMAP-tilgang ble fjernet fra gratisabonnementet. Vi har ikke funnet dokumentasjon fra BOL som bekrefter det. Hvis det gjelder kontoen din, feiler Thunderbird, Outlook, Apple Mail, et skript og en hostet MCP-server alle på samme måte, ved pålogging, med en feilmelding om påloggingsopplysninger som ikke sier noe om abonnement. Folk konkluderer med at passordet er feil, tilbakestiller det og feiler igjen med det nye. Sjekk abonnementet før du sjekker noe annet. Hvis abonnementet er årsaken, løser ingen konfigurasjon det, bare en oppgradering til BOL Completo."
+      "h": "Brukernavnet kan være innloggingen uten domenet",
+      "p": "De fleste leverandører forventer hele adressen i brukernavnfeltet, og det er formen å prøve først. Mozilla-autokonfigurasjonsoppføringen for bol.com.br, den e-postklienter bruker for å sette opp BOL automatisk, registrerer brukernavnet som bare den lokale delen, innloggingen uten <code>@bol.com.br</code>. Avvises hele adressen på nøyaktig samme måte som et feil passord ville blitt, er det å bytte til den korte formen en test på ti sekunder som er verdt å kjøre før du tilbakestiller noe. UOL dokumenterer de samme to formene for sine egne postkasser."
     },
     {
       "h": "UOLs innstillinger ser like nok ut til å kopieres, og SMTP-porten er ulik",
-      "p": "BOL drives av UOL på den samme plattformen, og de to settene med innstillinger er så like at folk bytter det ene ut med det andre. Det er transporten som gjør at det går galt. BOLs innsendingsvert bruker <b>implisitt TLS på port 465</b>. UOLs bruker <b>STARTTLS på port 587</b>. Begge vertene har det samme <code>smtps</code>-prefikset i navnet, så navnet gir deg ingen advarsel. Feil kombinasjon fører som regel til at tilkoblingen henger i stedet for å gi en feil, fordi en klient som venter et TLS-håndtrykk på en ukryptert port, venter på en hilsen som aldri kommer."
+      "p": "BOL drives av UOL på samme plattform, og de to settene med innstillinger er så like at folk bytter det ene ut med det andre. Det er transporten som gjør at det går galt. BOLs innsendingsvert bruker <b>implisitt TLS på port 465</b>. UOLs bruker <b>STARTTLS på port 587</b>. Begge vertene har samme <code>smtps</code>-prefiks i navnet, så navnet gir deg ingen advarsel. Feil kombinasjon fører som regel til at tilkoblingen henger i stedet for å gi en feil, fordi en klient som venter et TLS-håndtrykk på en ukryptert port, venter på en hilsen som aldri kommer."
     },
     {
-      "h": "Ingen MOVE, ingen SPECIAL-USE, og portugisiske mappenavn",
-      "p": "BOLs IMAP-server annonserer ikke MOVE-utvidelsen, så å flytte en melding til en mappe skjer som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og en tilkobling som brytes underveis, kan etterlate meldingen en kort stund i begge mappene. Den mangler også SPECIAL-USE, så mapper matches etter navn og ikke etter rolle. I en portugisiskspråklig postkasse heter de vanligvis Enviados (Sent), Rascunhos (Drafts), Lixeira (Trash) og Spam. Oppgi målmappen eksplisitt hvis agenten legger noe på feil sted."
+      "h": "Ingen MOVE, ingen SPECIAL-USE, og mapper matchet etter navn",
+      "p": "BOLs IMAP-server annonserer ikke MOVE-utvidelsen, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og en tilkobling som brytes underveis, kan etterlate meldingen en kort stund i begge mappene. Den mangler også SPECIAL-USE, så mapper matches etter navn og ikke etter rolle. Bruker postkassen portugisiske mappenavn som Enviados, Rascunhos eller Lixeira, finner MCPEmails dem likevel, og legger agenten din noe på feil sted, oppgi målmappen i instruksjonen."
     }
   ],
   "limits": [
-    "Tredjepartsveiledninger oppgir at IMAP krever et betalt BOL-abonnement. Hvis det gjelder postkassen din, kan ikke MCPEmails omgå det, fordi innloggingen avvises på BOLs server.",
-    "Det finnes ingen IDLE-støtte, så e-post hentes ved jevnlige sjekker i stedet for å bli dyttet ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
+    "BOL avgjør selv hvilke postkasser som har klienttilgang. Avvises et riktig passord både her og i alle andre e-postprogrammer, ligger begrensningen hos BOL, og MCPEmails kan ikke omgå den.",
+    "Det finnes ingen IDLE-støtte, så e-post hentes ved polling i stedet for å skyves ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
     "SMTP-serveren godtar meldinger opptil omtrent 33 MB. En videresending med større vedlegg avvises ved sending i stedet for å settes i kø."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med BOL-e-post?",
-      "a": "Etter det som oppgis, bare på et betalt BOL-abonnement. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd, så den trenger en MCP-server som MCPEmails foran postkassen. Den tilkoblingen går over IMAP, som gratis BOL-kontoer ifølge tredjepartsveiledninger ikke tilbyr, så en gratis bol.com.br-adresse må kanskje oppgraderes først."
+      "a": "Ikke direkte. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling selv, så den trenger en MCP-server som MCPEmails foran postkassen. Den tilkoblingen går via IMAP på imap.bol.com.br, og gir Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere. Samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for BOL?",
-      "a": "IMAP er imap.bol.com.br på port 993 med implisitt TLS. Utgående e-post er smtps.bol.com.br på port 465, også med implisitt TLS. Logg inn med hele bol.com.br-adressen din og BOL-passordet ditt. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+      "a": "IMAP er imap.bol.com.br på port 993 med implisitt TLS. Utgående e-post er smtps.bol.com.br på port 465, også implisitt TLS. Logg inn med bol.com.br-adressen din og BOL-passordet ditt. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
     },
     {
-      "q": "Hvorfor fungerer ikke BOL-passordet mitt i en e-postklient?",
-      "a": "Mest sannsynlig fordi postkassen er på gratisabonnementet, der POP- og IMAP-tilgang ifølge tredjepartsveiledninger er fjernet. Serveren avviser da likevel påloggingen med en vanlig feilmelding om påloggingsopplysninger, og det får det til å se ut som et passordproblem. Bekreft abonnementet i BOLs webmail før du tilbakestiller noe. På et betalt abonnement er det vanlige BOL-passordet riktig påloggingsopplysning."
+      "q": "Hvorfor virker ikke BOL-passordet mitt i en e-postklient?",
+      "a": "Bekreft først at passordet åpner BOL-webmailen; gjør det ikke det, tilbakestill det der. Gjør det det, prøv brukernavnet uten domenedelen, siden den offentlige autokonfigurasjonsoppføringen for BOL registrerer innloggingen i den kortere formen. Avvises begge formene i alle e-postprogrammer, har postkassen ingen klienttilgang på BOLs side, og bare BOL kan endre det."
     },
     {
       "q": "Er BOL det samme som UOL?",
-      "a": "BOL drives av UOL og kjører på den samme e-postplattformen, men de er separate tjenester med separate postkasser, separate vertsnavn og separate abonnementer. Innstillingene kan ikke byttes om, og særlig den utgående porten og krypteringen er forskjellige mellom de to, så å kopiere den ene konfigurasjonen over på den andre fungerer ikke."
+      "a": "BOL drives av UOL og kjører på samme e-postplattform, men de er separate tjenester med separate postkasser, separate vertsnavn og separate innstillinger. Særlig den utgående porten og krypteringen er forskjellige mellom de to, så å kopiere den ene konfigurasjonen over på den andre fungerer ikke."
     },
     {
       "q": "Trenger BOL et app-passord?",
-      "a": "Nei. BOL har ingen ordning med appspesifikke passord og utsteder ingen egen autorisasjonskode. På et betalt abonnement autentiserer det vanlige BOL-passordet ditt både IMAP og SMTP. Det betyr også at hvis du endrer BOL-passordet, slutter alle tilkoblede klienter å virke til du oppdaterer det lagrede passordet."
+      "a": "Nei. BOL har ingen ordning med appspesifikke passord og utsteder ingen egen autorisasjonskode. Det vanlige BOL-passordet ditt autentiserer både IMAP og SMTP. Det betyr også at endrer du BOL-passordet, slutter alle tilkoblede klienter å virke til du oppdaterer den lagrede påloggingen."
     },
     {
       "q": "Lagres BOL-e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra BOL over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart etter forespørselen som ba om det."
+      "a": "Nei. Meldinger hentes direkte fra BOL via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
     }
   ],
   "ctaBand": {
     "title": "Gi AI-en din en BOL-innboks",
-    "sub": "Koble til en betalt BOL-postkasse på få minutter. Én innboks gratis for alltid i MCPEmails, uten kort."
+    "sub": "Koble til en BOL-postkasse på minutter. Én innboks gratis for alltid i MCPEmails, uten kort."
   }
 }

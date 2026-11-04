@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.a1.net/faq/webmail/e-mail-einrichten/a1-e-mail-servereinstellungen",
+    "https://www.a1.net/faq/webmail/hilfe-fuer-e-mail-probleme/a1-sicherer-smtp-server-einrichten",
+    "https://autoconfig.thunderbird.net/v1.1/aon.at"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "A1-postkassepassord",
+    "helpUrl": "https://www.a1.net/faq/webmail/e-mail-einrichten/a1-e-mail-servereinstellungen",
+    "usernameForm": "Hele adressen din, name@a1.net eller name@aon.at. A1s egen serverside oppgir bare vertene; Mozilla-databaseoppføringen e-postklienter bruker for begge domenene, registrerer hele adressen som brukernavn.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "A1- og aon.at-e-post i Claude: securemail.a1.net over IMAP",
+    "description": "Koble en A1- eller aon.at-postkasse til Claude og enhver MCP-klient på securemail.a1.net:993. Én vert for IMAP med SSL og SMTP med STARTTLS på port 587, slik A1 dokumenterer det."
+  },
+  "hero": {
+    "eyebrow": "A1 + AI",
+    "titleLine1": "Koble A1- eller aon.at-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte A1-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med den ene sikre verten A1 publiserer for Østerrikes a1.net- og aon.at-adresser.",
+    "answer": "Claude når ikke en A1-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på securemail.a1.net port 993 og autentiserer med hele adressen din og A1-postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. A1 dokumenterer én enkelt vert, securemail.a1.net, for alt som er kryptert: IMAP på 993 med SSL og SMTP på 587 med STARTTLS. Det finnes ikke noe app-passord og ingenting som må aktiveres først. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, SMTP på 587 med STARTTLS",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler A1 seg til: én vert, IMAP på 993 og SMTP på 587",
+    "body": "A1 publiserer innstillingene sine bare for krypterte tilkoblinger, og alle peker mot samme navn. Innkommende server er <code>securemail.a1.net</code> port 993 med tilkoblingstypen <b>SSL</b>, og utgående server er <code>securemail.a1.net</code> port 587 med tilkoblingstypen <b>STARTTLS</b>. Port 465 tilbys ikke: den svarte ikke i det hele tatt ved testing, så en klient som insisterer på implisitt TLS for sending, venter på en hilsen som aldri kommer. Samme vert og porter betjener @a1.net- og @aon.at-adresser, som også er slik Mozilla-autokonfigurasjonsoppføringen Thunderbird bruker for begge domenene, beskriver dem, med hele adressen som brukernavn og vanlig passordautentisering. A1s SMTP-hjelp legger til én merknad: når du sender fra et nett som ikke er A1s eget, må SMTP-autentisering være slått på i kontoinnstillingene. MCPEmails autentiserer alltid på utgående server, så det vilkåret er oppfylt fra starten."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Ha A1-adressen og postkassepassordet klart",
+      "p": "Brukernavnet er hele adressen din, name@a1.net eller name@aon.at, og passordet er det til den postkassen. Det finnes ikke noe separat passord for e-postprogrammer å opprette, og ingenting som må slås på i A1 Webmail først."
+    },
+    {
+      "h": "Skriv dem inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn adressen og passordet. Verten <code>securemail.a1.net</code> er forhåndsutfylt i begge retninger, med 993 og SSL for IMAP og 587 og STARTTLS for SMTP, og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Utgående e-post er STARTTLS på 587, og 465 er stengt",
+      "p": "De fleste leverandørene på dette nettstedet godtar implisitt TLS på port 465 for sending. Det gjør ikke A1: den dokumenterte utgående innstillingen er port 587 med STARTTLS, og port 465 på <code>securemail.a1.net</code> svarte ikke da vi testet den. En klient satt opp for 465 henger til den tidsavbrytes i stedet for å få en feil om innstillingene. MCPEmails bruker 587 med STARTTLS, som er paret A1 publiserer."
+    },
+    {
+      "h": "Én vert, to navn: imap.a1.net er det gamle",
+      "p": "Eldre A1-konfigurasjonsveiledninger, inkludert PDF-er som fortsatt kan lastes ned fra a1.net, oppgir <code>imap.a1.net</code> for innkommende e-post og beskriver ukrypterte oppsett. A1s nåværende serverside oppgir bare <code>securemail.a1.net</code> og bare krypterte porter. Virker en eksisterende klient hos deg fortsatt med det gamle navnet, la den stå, men for en ny tilkobling bruker du navnet A1 dokumenterer i dag, som også er det vi validerte sertifikatet for."
+    },
+    {
+      "h": "Sending fra utenfor A1s nett krever SMTP-autentisering, som er standard her",
+      "p": "A1s hjelp om sending fra et fremmed Wi-Fi sier at du skal aktivere SMTP-autentisering i kontoinnstillingene, eller bruke A1 Webmail i stedet. Rådet finnes fordi et e-postprogram på en A1-linje hjemme kan sende uten å logge inn, og det slutter å virke andre steder. E-post agenten din sender gjennom MCPEmails, går ut fra MCPEmails sine servere, ikke fra en A1-linje, så den er alltid autentisert med adressen og passordet ditt. Ingen endring trengs hos deg."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, med tyske mappenavn",
+      "p": "Dovecot-serveren bak <code>securemail.a1.net</code> annonserer <code>IDLE</code>, men verken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv identifiseres etter navn og ikke etter en rolle serveren oppgir. Finner ikke en agent Gesendet- eller Papierkorb-mappen din, oppgi den i instruksjonen."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Brytes en tilkobling midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "SMTP-serveren godtar meldinger opptil 25 MB. En videresending med større vedlegg avvises ved sending.",
+    "Det finnes ikke noe app-passord og ingen OAuth-vei, så den lagrede påloggingen er A1-postkassepassordet ditt. Endrer du det, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med A1- eller aon.at-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd A1-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for A1?",
+      "a": "IMAP er securemail.a1.net på port 993 med SSL. SMTP er securemail.a1.net på port 587 med STARTTLS. Logg inn med hele adressen og postkassepassordet ditt. A1 dokumenterer samme vert for a1.net- og aon.at-adresser, og den ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Virker dette med aon.at-adresser?",
+      "a": "Ja. Mozilla-autokonfigurasjonsoppføringen for A1 fører a1.net og aon.at sammen, med securemail.a1.net på 993 for IMAP og 587 med STARTTLS for SMTP og hele adressen som brukernavn, som stemmer med A1s egen serverside."
+    },
+    {
+      "q": "Hvorfor feiler sending gjennom port 465 hos A1?",
+      "a": "Fordi A1 ikke tilbyr implisitt TLS på 465; porten svarte ikke ved testing, så en klient venter til den tidsavbrytes. A1 dokumenterer utgående e-post på port 587 med STARTTLS, som er det MCPEmails bruker."
+    },
+    {
+      "q": "Trenger A1 et app-passord?",
+      "a": "Nei. A1 har ingen ordning med appspesifikke passord. Postkassepassordet ditt autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres A1-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra A1 via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en A1-innboks",
+    "sub": "Koble til A1- eller aon.at-postkassen din på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

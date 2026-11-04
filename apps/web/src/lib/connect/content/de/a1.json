@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.a1.net/faq/webmail/e-mail-einrichten/a1-e-mail-servereinstellungen",
+    "https://www.a1.net/faq/webmail/hilfe-fuer-e-mail-probleme/a1-sicherer-smtp-server-einrichten",
+    "https://autoconfig.thunderbird.net/v1.1/aon.at"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "A1 Postfach-Passwort",
+    "helpUrl": "https://www.a1.net/faq/webmail/e-mail-einrichten/a1-e-mail-servereinstellungen",
+    "usernameForm": "Ihre vollständige Adresse, name@a1.net oder name@aon.at. Die Serverseite von A1 nennt nur die Hosts; der Eintrag in der Mozilla-Datenbank, den Mailprogramme für beide Domains nutzen, führt die vollständige Adresse als Benutzername.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "A1 und aon.at E-Mail in Claude: securemail.a1.net per IMAP",
+    "description": "A1- oder aon.at-Postfach mit Claude und jedem MCP-Client verbinden, über securemail.a1.net:993. Ein Host für IMAP mit SSL und SMTP mit STARTTLS auf Port 587, so wie A1 es dokumentiert."
+  },
+  "hero": {
+    "eyebrow": "A1 + KI",
+    "titleLine1": "Ihr A1- oder aon.at-Postfach verbinden",
+    "titleLine2": "mit Claude, Cursor und jedem MCP-Client",
+    "lead": "Geben Sie Ihrem KI-Agenten Zugriff auf Ihr echtes A1-Postfach. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP über den einen sicheren Host, den A1 für a1.net- und aon.at-Adressen in Österreich veröffentlicht.",
+    "answer": "Claude kann ein A1-Postfach nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über securemail.a1.net auf Port 993 anbindet. Die Anmeldung läuft über Ihre vollständige Adresse und Ihr A1 Postfach-Passwort. Danach können Claude, Cursor oder jeder MCP-Client die E-Mails lesen, suchen, senden und ordnen. A1 dokumentiert einen einzigen Host, securemail.a1.net, für alles Verschlüsselte: IMAP auf 993 mit SSL und SMTP auf 587 mit STARTTLS. Es gibt kein App-Passwort und nichts, das Sie vorher freischalten müssen. Ein Postfach ist dauerhaft kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Postfach-Passwort, SMTP auf 587 mit STARTTLS",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich A1: ein Host, IMAP auf 993 und SMTP auf 587",
+    "body": "A1 veröffentlicht seine Einstellungen nur für verschlüsselte Verbindungen, und alle zeigen auf denselben Namen. Der Posteingangsserver ist <code>securemail.a1.net</code> auf Port 993 mit dem Verbindungstyp <b>SSL</b>, der Postausgangsserver ist <code>securemail.a1.net</code> auf Port 587 mit dem Verbindungstyp <b>STARTTLS</b>. Port 465 wird nicht angeboten: Bei unserem Test hat er gar nicht geantwortet, ein Client, der zum Senden auf implizites TLS besteht, wartet also auf eine Begrüßung, die nie kommt. Derselbe Host und dieselben Ports gelten für @a1.net- und @aon.at-Adressen. So beschreibt sie auch der Mozilla-Autokonfigurationseintrag, den Thunderbird für beide Domains nutzt, mit der vollständigen Adresse als Benutzername und gewöhnlicher Passwort-Anmeldung. Die SMTP-Hilfe von A1 ergänzt einen Hinweis: Wer aus einem fremden Netz sendet, muss die SMTP-Authentifizierung in den Kontoeinstellungen einschalten. MCPEmails meldet sich am Postausgangsserver immer an, diese Bedingung ist also von Anfang an erfüllt."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails Konto erstellen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
+    },
+    {
+      "h": "A1-Adresse und Postfach-Passwort bereithalten",
+      "p": "Der Benutzername ist Ihre vollständige Adresse, name@a1.net oder name@aon.at, das Passwort ist das dieses Postfachs. Es gibt kein separates Passwort für Mailprogramme und nichts, das Sie vorher in A1 Webmail einschalten müssen."
+    },
+    {
+      "h": "In MCPEmails eingeben",
+      "p": "Wählen Sie IMAP / SMTP und geben Sie Adresse und Passwort ein. Der Host <code>securemail.a1.net</code> ist für beide Richtungen vorausgefüllt, mit 993 und SSL für IMAP und 587 und STARTTLS für SMTP, und wurde über eine echte TLS-Verbindung geprüft."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Versand läuft über STARTTLS auf 587, und 465 ist geschlossen",
+      "p": "Die meisten Anbieter auf dieser Website nehmen zum Senden implizites TLS auf Port 465 an. A1 nicht: Die dokumentierte Einstellung für den Postausgang ist Port 587 mit STARTTLS, und Port 465 auf <code>securemail.a1.net</code> hat bei unserem Test nicht geantwortet. Ein Client, der auf 465 eingestellt ist, hängt bis zum Timeout, statt einen Fehler zu den Einstellungen zu bekommen. MCPEmails nutzt 587 mit STARTTLS, das Paar, das A1 veröffentlicht."
+    },
+    {
+      "h": "Ein Host, zwei Namen: imap.a1.net ist der alte",
+      "p": "Ältere Einrichtungsanleitungen von A1, darunter PDFs, die sich noch von a1.net herunterladen lassen, nennen <code>imap.a1.net</code> für den Posteingang und beschreiben unverschlüsselte Einrichtungen. Die aktuelle Serverseite von A1 nennt nur <code>securemail.a1.net</code> und nur verschlüsselte Ports. Läuft ein bestehender Client bei Ihnen noch mit dem alten Namen, lassen Sie ihn. Für eine neue Verbindung nehmen Sie den Namen, den A1 heute dokumentiert, es ist auch der, dessen Zertifikat wir geprüft haben."
+    },
+    {
+      "h": "Senden außerhalb des A1-Netzes braucht SMTP-Authentifizierung, und die ist hier Standard",
+      "p": "Die A1-Hilfe zum Senden aus einem fremden WLAN sagt, man solle die SMTP-Authentifizierung in den Kontoeinstellungen aktivieren oder stattdessen A1 Webmail nutzen. Der Rat existiert, weil ein Mailprogramm an einem A1-Anschluss zu Hause ohne Anmeldung senden kann, und das anderswo nicht mehr funktioniert. E-Mails, die Ihr Agent über MCPEmails sendet, gehen von den Servern von MCPEmails aus, nicht von einem A1-Anschluss, und sind deshalb immer mit Ihrer Adresse und Ihrem Passwort authentifiziert. Auf Ihrer Seite ist nichts zu ändern."
+    },
+    {
+      "h": "Kein MOVE und kein SPECIAL-USE, bei deutschen Ordnernamen",
+      "p": "Der Dovecot-Server hinter <code>securemail.a1.net</code> kündigt <code>IDLE</code> an, aber weder <code>MOVE</code> noch <code>UIDPLUS</code> oder <code>SPECIAL-USE</code>. Das Einsortieren einer Nachricht läuft als Kopieren, Markieren und Löschen statt als ein Befehl, und die Ordner für Gesendet, Entwürfe und Papierkorb werden über ihre Namen erkannt, nicht über eine Rolle, die der Server meldet. Findet ein Agent Ihren Ordner Gesendet oder Papierkorb nicht, nennen Sie ihn in der Anweisung."
+    }
+  ],
+  "limits": [
+    "Weil der Server MOVE nicht ankündigt, ist ein Verschieben nicht atomar. Bricht die Verbindung mittendrin ab, kann eine Nachricht kurz in beiden Ordnern liegen.",
+    "Der SMTP-Server nimmt Nachrichten bis 25 MB an. Eine Weiterleitung mit größeren Anhängen wird beim Senden abgelehnt.",
+    "Es gibt kein App-Passwort und keinen OAuth-Weg, gespeichert wird also Ihr A1 Postfach-Passwort. Wenn Sie es ändern, ist das Postfach getrennt, bis Sie das neue eingeben."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit A1 oder aon.at E-Mail?",
+      "a": "Nicht von sich aus. Claude hat keinen eingebauten A1-Konnektor. Wenn Sie einen MCP-Server wie MCPEmails per IMAP mit dem Postfach verbinden, kann Claude E-Mails lesen, suchen, senden, beantworten, planen und ordnen. Dieselbe Verbindung funktioniert dann auch in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von A1?",
+      "a": "IMAP ist securemail.a1.net auf Port 993 mit SSL. SMTP ist securemail.a1.net auf Port 587 mit STARTTLS. Melden Sie sich mit Ihrer vollständigen Adresse und Ihrem Postfach-Passwort an. A1 dokumentiert denselben Host für a1.net- und aon.at-Adressen, und er wurde über eine echte TLS-Verbindung bestätigt, am Datum, das auf dieser Seite steht."
+    },
+    {
+      "q": "Funktioniert das auch mit aon.at-Adressen?",
+      "a": "Ja. Der Mozilla-Autokonfigurationseintrag für A1 führt a1.net und aon.at zusammen, mit securemail.a1.net auf 993 für IMAP und 587 mit STARTTLS für SMTP und der vollständigen Adresse als Benutzername. Das deckt sich mit der Serverseite von A1."
+    },
+    {
+      "q": "Warum scheitert das Senden über Port 465 bei A1?",
+      "a": "Weil A1 auf 465 kein implizites TLS anbietet; der Port hat bei unserem Test nicht geantwortet, ein Client wartet also bis zum Timeout. A1 dokumentiert den Postausgang auf Port 587 mit STARTTLS, und genau das nutzt MCPEmails."
+    },
+    {
+      "q": "Braucht A1 ein App-Passwort?",
+      "a": "Nein. A1 hat kein Verfahren für app-spezifische Passwörter. Ihr Postfach-Passwort meldet Sie an IMAP und SMTP an."
+    },
+    {
+      "q": "Werden meine A1-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von A1 abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein A1-Postfach",
+    "sub": "Ihr A1- oder aon.at-Postfach in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

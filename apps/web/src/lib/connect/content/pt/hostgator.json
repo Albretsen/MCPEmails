@@ -2,7 +2,9 @@
   "_sources": [
     "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
     "https://www.hostgator.com/help/article/email-connection-settings",
-    "https://www.hostgator.com/help/article/professional-email-product-overview"
+    "https://www.hostgator.com/help/article/professional-email-product-overview",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30811089087379-Como-usar-seu-e-mail-em-plataformas-externas-Gmail-Outlook-e-outros",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30820346865811-Como-saber-o-nome-do-seu-servidor-na-HostGator"
   ],
   "auth": {
     "method": "mail-password",
@@ -13,21 +15,21 @@
   },
   "meta": {
     "title": "E-mail da HostGator no Claude: configurações IMAP que funcionam",
-    "description": "O certificado curinga da HostGator cobre gator1234.hostgator.com, não o seu domínio. Use o hostname do servidor no IMAP 993 e conecte a caixa de correio ao Claude, grátis."
+    "description": "Na HostGator Brasil o servidor se chama brNNN.hostgator.com.br; na hostgator.com, gator1234.hostgator.com. Use o nome do seu servidor no IMAP 993 e conecte a caixa de correio ao Claude, grátis."
   },
   "hero": {
     "eyebrow": "HostGator + IA",
     "titleLine1": "Conecte o e-mail da HostGator ao Claude,",
-    "titleLine2": "Cursor, ChatGPT, qualquer cliente MCP",
-    "lead": "Dê ao seu agente de IA uma caixa de correio real da HostGator. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, usando o hostname do servidor que o certificado da HostGator realmente cobre.",
-    "answer": "O Claude não acessa uma caixa de correio da HostGator sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP comum na porta 993, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar esses e-mails. A HostGator não tem um único servidor de e-mail compartilhado: para uma conexão segura, você aponta para o hostname do seu próprio servidor, que é gatorNNNN.hostgator.com nos planos compartilhados e cloud e servername.websitewelcome.com nos planos de revenda, porque esses são os nomes que o certificado curinga deles cobre. A autenticação usa a senha definida na caixa de correio no cPanel, e uma caixa de entrada é grátis.",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de correio real da HostGator. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, usando o nome do servidor que o certificado da HostGator cobre de verdade.",
+    "answer": "O Claude não consegue acessar uma caixa de correio da HostGator sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP comum na porta 993, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. A HostGator não tem um único servidor de e-mail compartilhado: para uma conexão segura, você aponta para o nome do servidor do seu próprio plano. Na HostGator Brasil, ele tem o formato brNNN.hostgator.com.br e aparece no Portal do Cliente. Na hostgator.com, é gatorNNNN.hostgator.com nos planos compartilhados e cloud e servername.websitewelcome.com nos planos de revenda, porque esses são os nomes que o certificado curinga deles cobre. A autenticação usa a senha definida na caixa de correio, e uma caixa de entrada é grátis.",
     "meta0": "1 caixa de entrada grátis, para sempre",
-    "meta1": "Senha da caixa de correio do cPanel",
+    "meta1": "Senha definida na caixa de correio",
     "meta2": "E-mails buscados ao vivo, nunca armazenados"
   },
   "method": {
-    "title": "Como o e-mail da HostGator se conecta: o hostname do servidor, IMAP 993",
-    "body": "A HostGator usa cPanel, e as caixas de correio falam IMAP na porta 993 com SMTP na 465 para conexões seguras, ou 143 para IMAP e 25 ou 26 para SMTP sem criptografia. O que costuma dar errado é o hostname. <code>mail.yourdomain.com</code> funciona numa sessão sem criptografia, mas a HostGator protege o e-mail com certificados <b>curinga</b> que cobrem <code>.hostgator.com</code> em contas compartilhadas e cloud e <code>.websitewelcome.com</code> em contas de revenda. Seu próprio domínio não está em nenhum dos dois certificados. Por isso, para TLS você usa o hostname do próprio servidor, no formato <code>gator1234.hostgator.com</code> ou <code>servername.websitewelcome.com</code>. O artigo de SSL da própria HostGator diz exatamente isso e recomenda atualizar as configurações em vez de ignorar o aviso. O nome de usuário é sempre o endereço de e-mail completo."
+    "title": "Como o e-mail da HostGator se conecta: o nome do servidor, IMAP 993",
+    "body": "A HostGator usa cPanel, e as caixas de correio falam IMAP na porta 993 com SMTP na 465 em conexões seguras, ou 143 para IMAP e 25 ou 26 para SMTP sem criptografia. O que costuma dar errado é o nome do servidor. Na HostGator Brasil, o suporte recomenda o nome do servidor do seu plano de hospedagem, no formato brNNN.hostgator.com.br, e deixa mail.seudominio.com.br só como alternativa sem criptografia. Na hostgator.com, a lógica é a mesma com outros nomes: <code>mail.yourdomain.com</code> funciona numa sessão sem criptografia, mas a HostGator protege o e-mail com certificados <b>curinga</b> que cobrem <code>.hostgator.com</code> em contas compartilhadas e cloud e <code>.websitewelcome.com</code> em contas de revenda. Seu próprio domínio não está em nenhum dos dois certificados. Por isso, para TLS, você usa o hostname do próprio servidor, no formato <code>gator1234.hostgator.com</code> ou <code>servername.websitewelcome.com</code>. O artigo de SSL da própria HostGator diz exatamente isso e recomenda atualizar as configurações em vez de ignorar o aviso. O nome de usuário é sempre o endereço de e-mail completo."
   },
   "setup": [
     {
@@ -35,34 +37,38 @@
       "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada e não pede cartão."
     },
     {
-      "h": "Leia o hostname do servidor na URL do cPanel",
-      "p": "No Customer Portal da HostGator, escolha <b>Hosting</b>, depois <b>Manage</b> e depois <b>cPanel</b> em Quick Links (rótulos em inglês, como aparecem no portal). Quando o cPanel abrir, olhe a barra de endereços do navegador. O hostname nessa URL é o seu servidor: <code>gator1234.hostgator.com</code> em compartilhado e cloud, ou um nome <code>websitewelcome.com</code> em revenda. Esse é o valor a usar tanto no IMAP quanto no SMTP. Ele também aparece em Email Accounts, depois <b>Connect Devices</b>, no bloco <b>Mail Client Manual Settings</b>."
+      "h": "Descubra o nome do seu servidor",
+      "p": "Na HostGator Brasil, entre no Portal do Cliente, abra <b>Hospedagens e Servidores</b>, clique em <b>Gerenciar</b> e leia o campo <b>Nome do Servidor</b>: é um nome no formato brNNN.hostgator.com.br, como br100.hostgator.com.br. O mesmo nome está no e-mail de boas-vindas da hospedagem, aquele com assunto começando em Parabéns!, na seção <b>Informações Técnicas</b>. Em um plano da hostgator.com, escolha <b>Hosting</b>, depois <b>Manage</b> e depois <b>cPanel</b> em Quick Links no Customer Portal; quando o cPanel abrir, o hostname na barra de endereços do navegador é o seu servidor: <code>gator1234.hostgator.com</code> em compartilhado e cloud, ou um nome <code>websitewelcome.com</code> em revenda. Ele também aparece em Email Accounts, depois <b>Connect Devices</b>, no bloco <b>Mail Client Manual Settings</b>. Esse é o valor a usar tanto no IMAP quanto no SMTP."
     },
     {
-      "h": "Use a senha da caixa de correio, não a senha do cPanel",
-      "p": "O IMAP autentica com a senha definida no endereço específico. No cPanel, abra <b>Email Accounts</b> e clique em <b>Manage</b> ao lado do endereço para definir uma. Depois cole essa senha no MCPEmails junto com o endereço de e-mail completo como nome de usuário e o hostname do servidor que você acabou de copiar."
+      "h": "Use a senha da caixa de correio, não a senha do painel",
+      "p": "O IMAP autentica com a senha definida no endereço específico, a que você escolheu quando criou a caixa de correio. Se não lembra qual é, no cPanel abra <b>Email Accounts</b> e clique em <b>Manage</b> ao lado do endereço para definir uma nova. Depois cole essa senha no MCPEmails junto com o endereço de e-mail completo como nome de usuário e o nome do servidor que você acabou de anotar."
     },
     {
       "h": "Cole a URL do MCP na sua IA",
-      "p": "Coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
     }
   ],
   "gotchas": [
     {
-      "h": "Contas compartilhadas e de revenda usam famílias de certificado diferentes",
-      "p": "Uma conta compartilhada ou cloud é coberta pelo curinga em <code>.hostgator.com</code>; uma conta de revenda é coberta pelo de <code>.websitewelcome.com</code>. Isso significa que um revendedor que segue um guia da HostGator para hospedagem compartilhada e informa um hostname <code>gator</code> não recebe só um aviso de certificado: ele se conecta à máquina errada. Confira qual produto você tem antes de copiar as configurações de alguém, inclusive dos artigos da própria HostGator, vários dos quais foram escritos para um caso só."
+      "h": "Na hostgator.com, contas compartilhadas e de revenda usam famílias de certificado diferentes",
+      "p": "Uma conta compartilhada ou cloud da hostgator.com é coberta pelo curinga em <code>.hostgator.com</code>; uma conta de revenda é coberta pelo de <code>.websitewelcome.com</code>. Isso significa que um revendedor que segue um guia da HostGator para hospedagem compartilhada e informa um hostname <code>gator</code> não recebe só um aviso de certificado: ele se conecta à máquina errada. Confira qual produto você tem antes de copiar as configurações de alguém, inclusive dos artigos da própria HostGator, vários dos quais foram escritos para um caso só."
     },
     {
-      "h": "A barra de endereços do navegador é o jeito mais rápido de achar o nome do servidor",
-      "p": "A HostGator não mostra o hostname do servidor com destaque no portal, e o número em <code>gator1234</code> não pode ser deduzido do seu domínio, do número da sua conta nem de nada que você já saiba. O truque confiável é abrir o cPanel e ler o hostname direto na URL. O suporte e a página Connect Devices dizem a mesma coisa, mas a barra de endereços está a um clique e não tem como ser lida errado."
+      "h": "O nome do servidor está no Portal do Cliente, ou na barra de endereços do cPanel",
+      "p": "A HostGator não mostra o nome do servidor com destaque, e o número em <code>gator1234</code> ou em brNNN não pode ser deduzido do seu domínio, do número da sua conta nem de nada que você já saiba. Na HostGator Brasil, o caminho é o Portal do Cliente: Hospedagens e Servidores, Gerenciar, campo Nome do Servidor, ou a seção Informações Técnicas do e-mail de boas-vindas. Na hostgator.com, o truque confiável é abrir o cPanel e ler o hostname direto na URL. O suporte e a página Connect Devices dizem a mesma coisa, mas a barra de endereços está a um clique e não tem como ser lida errado."
     },
     {
       "h": "Aceitar o aviso de certificado é a correção errada, e esconde um problema real",
-      "p": "Como a divergência de nome é tão comum na HostGator, o contorno habitual é aceitar o certificado ou adicionar uma exceção. Um cliente de desktop deixa. Uma conexão IMAP automatizada a partir de um servidor, que é o que uma integração MCP é, em geral não deixa, e não deveria: quando você se acostuma a ignorar a divergência de nome, perde a chance de perceber uma divergência de verdade. Aponte para o hostname do servidor e o certificado é validado corretamente, sem exceção nenhuma."
+      "p": "Como a divergência de nome é tão comum na HostGator, o contorno habitual é aceitar o certificado ou adicionar uma exceção. Um cliente de desktop deixa. Uma conexão IMAP automatizada a partir de um servidor, que é o que uma integração MCP é, em geral não deixa, e não deveria: quando você se acostuma a ignorar a divergência de nome, perde a chance de perceber uma divergência de verdade. Aponte para o nome do servidor e o certificado é validado corretamente, sem exceção nenhuma."
+    },
+    {
+      "h": "A HostGator Brasil tem servidores próprios, chamados brNNN.hostgator.com.br",
+      "p": "Um plano contratado na HostGator Brasil não fica nos servidores gator. O site de suporte dela documenta as mesmas portas do cPanel, 993 para IMAP e 465 para SMTP com SSL, mas o nome de servidor recomendado é o nome do servidor do seu próprio plano de hospedagem, no formato <code>br100.hostgator.com.br</code>, com <code>mail.seudominio.com.br</code> como alternativa sem criptografia. O nome aparece no Portal do Cliente em <b>Hospedagens e Servidores</b>, <b>Gerenciar</b>, no campo <b>Nome do Servidor</b>, e no e-mail de boas-vindas em <b>Informações Técnicas</b>. O produto pago de caixa de correio da HostGator Brasil, vendido como E-mail Profissional, roda no Titan com <code>imap.titan.email</code> e <code>smtp.titan.email</code>, e o suporte diz que o Titan precisa ser habilitado para aplicativos externos antes de um cliente conseguir fazer login; conecte esse como Titan, não como cPanel."
     }
   ],
   "limits": [
-    "O Professional Email, o produto pago da HostGator baseado no Titan, é uma caixa de correio separada em servidores separados. As configurações dele não são as do cPanel desta página, e os dois não compartilham senhas.",
+    "O E-mail Profissional (Professional Email), o produto pago da HostGator baseado no Titan, é uma caixa de correio separada em servidores separados. As configurações dele não são as do cPanel desta página, e os dois não compartilham senhas.",
     "Um domínio migrado para o Google Workspace pela HostGator não tem mais e-mail no servidor da HostGator. Os registros MX apontam para o Google, e a caixa de correio precisa ser conectada como Gmail."
   ],
   "faq": [
@@ -72,15 +78,15 @@
     },
     {
       "q": "Quais são as configurações IMAP e SMTP da HostGator?",
-      "a": "O IMAP seguro é a porta 993 e o SMTP seguro é a porta 465, ambos com TLS implícito. O hostname é o nome do seu próprio servidor: gator seguido do número do seu servidor e hostgator.com nos planos compartilhados e cloud, ou um nome websitewelcome.com nos planos de revenda. Use o endereço de e-mail completo como nome de usuário tanto na entrada quanto na saída."
+      "a": "O IMAP seguro é a porta 993 e o SMTP seguro é a porta 465, ambos com TLS implícito. O hostname é o nome do seu próprio servidor: na HostGator Brasil, brNNN.hostgator.com.br; na hostgator.com, gator seguido do número do seu servidor e hostgator.com nos planos compartilhados e cloud, ou um nome websitewelcome.com nos planos de revenda. Use o endereço de e-mail completo como nome de usuário tanto na entrada quanto na saída."
     },
     {
       "q": "Por que o e-mail da HostGator dá erro de certificado SSL?",
-      "a": "Porque a HostGator protege o e-mail com certificados curinga para hostgator.com e websitewelcome.com, e o seu próprio domínio não está listado neles. Apontar um cliente para mail.yourdomain.com via TLS, portanto, falha na validação do nome. Troque o hostname pelo nome do seu servidor e o erro some, sem adicionar exceção nenhuma."
+      "a": "Porque o certificado da HostGator é do nome do servidor, não do seu domínio. Na hostgator.com são certificados curinga para hostgator.com e websitewelcome.com, e o seu próprio domínio não está listado neles; na HostGator Brasil, o suporte recomenda o nome brNNN.hostgator.com.br e deixa mail.seudominio.com.br só para conexões sem criptografia. Apontar um cliente para o seu próprio domínio via TLS, portanto, falha na validação do nome. Troque o hostname pelo nome do seu servidor e o erro some, sem adicionar exceção nenhuma."
     },
     {
       "q": "Como encontro o nome do meu servidor na HostGator?",
-      "a": "Entre no Customer Portal, escolha Hosting, depois Manage e depois cPanel. Quando o cPanel abrir, o hostname na barra de endereços do navegador é o nome do seu servidor. O mesmo valor aparece no cPanel em Email Accounts, depois Connect Devices, na seção Mail Client Manual Settings."
+      "a": "Na HostGator Brasil, entre no Portal do Cliente, abra Hospedagens e Servidores, clique em Gerenciar e leia o campo Nome do Servidor. O mesmo nome está na seção Informações Técnicas do e-mail de boas-vindas da hospedagem. Na hostgator.com, entre no Customer Portal, escolha Hosting, depois Manage e depois cPanel; quando o cPanel abrir, o hostname na barra de endereços do navegador é o nome do seu servidor, e o mesmo valor aparece em Email Accounts, depois Connect Devices, na seção Mail Client Manual Settings."
     },
     {
       "q": "Meus e-mails da HostGator ficam armazenados nos seus servidores?",

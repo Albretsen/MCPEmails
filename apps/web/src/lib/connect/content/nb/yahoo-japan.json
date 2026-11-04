@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.yahoo-net.jp/PccMail/s/article/H000007321"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passordet til Yahoo! JAPAN ID, etter at IMAP- og SMTP-tilgang er slått på",
+    "helpUrl": "https://support.yahoo-net.jp/PccMail/s/article/H000007321",
+    "usernameForm": "Yahoo! JAPAN-adressen din, name@yahoo.co.jp eller name@ymail.ne.jp, eller Yahoo! JAPAN ID-en din. Logger du inn med en hemmelig ID, bruker du den hemmelige ID-en.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo! JAPAN Mail i Claude: IMAP uten app-passord",
+    "description": "Koble Yahoo! JAPAN Mail (yahoo.co.jp) til Claude eller enhver MCP-klient på imap.mail.yahoo.co.jp:993. Slå på IMAP- og SMTP-tilgang først, og bruk så passordet til Yahoo! JAPAN ID-en din."
+  },
+  "hero": {
+    "eyebrow": "Yahoo! JAPAN Mail + AI",
+    "titleLine1": "Koble Yahoo! JAPAN Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte yahoo.co.jp-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med det vanlige passordet til Yahoo! JAPAN ID-en din, så snart tilgang fra andre enn Yahoo! JAPANs egne apper er slått på.",
+    "answer": "Claude når ikke Yahoo! JAPAN Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.mail.yahoo.co.jp port 993 og autentiserer med passordet til Yahoo! JAPAN ID-en din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Yahoo! JAPAN er et eget selskap og en egen e-postplattform, adskilt fra Yahoo Mail på yahoo.com: det finnes ingen app-passord, og en veiledning for yahoo.com gjelder ikke. Det du trenger i stedet, er én innstillingsside i Yahoo! JAPAN Mail der tilgang fra andre enn Yahoo! JAPANs egne tjenester tillates og IMAP og SMTP settes til på. Til det er gjort, avvises et riktig passord. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passordet til Yahoo! JAPAN ID, IMAP slått på først",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Yahoo! JAPAN Mail seg til: IMAP, en bryter og ID-passordet ditt",
+    "body": "Yahoo! JAPAN dokumenterer IMAP på <code>imap.mail.yahoo.co.jp</code> port 993 og SMTP på <code>smtp.mail.yahoo.co.jp</code> port 465, begge over SSL, og ber om at navnene skrives med små bokstaver. Brukernavnet er adressen du vil bruke eller Yahoo! JAPAN ID-en din, og passordet er <b>passordet til Yahoo! JAPAN ID-en</b>, det samme som du logger inn med på nettet. Det finnes ikke noe app-passord å generere. Det Yahoo! JAPAN krever i stedet, er en tillatelse: på siden <b>IMAP/POP/SMTPアクセス</b> (IMAP/POP/SMTP-tilgang) i e-postinnstillingene må tilgang fra andre enn Yahoo! JAPANs offisielle tjenester være tillatt, og IMAP og SMTP må hver for seg være satt til på. Yahoo! JAPANs hjelp nevner også at en konto som logger inn uten passord, med passnøkkel eller SMS, må sette et passord før noen ekstern e-postapp kan bruke den. Denne siden gjelder @yahoo.co.jp- og @ymail.ne.jp-adresser. En @yahoo.com-adresse er Yahoo Mail, en annen tjeneste med sin egen side."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort. La den stå åpen; Yahoo! JAPAN-delen tar omtrent ett minutt."
+    },
+    {
+      "h": "Tillat tilgang fra andre enn Yahoo! JAPAN, og slå på IMAP og SMTP",
+      "p": "I Yahoo! JAPAN Mail på nettet klikker du på tannhjulet (<b>設定</b>) øverst til høyre i meldingslisten og åpner siden <b>IMAP/POP/SMTPアクセス</b>. Under <b>Yahoo! JAPAN公式サービス以外からのアクセス</b> velger du <b>許可する</b>, setter <b>IMAP</b>, <b>POP</b> og <b>SMTP</b> til <b>利用する</b>, og klikker <b>保存</b>. Yahoo! JAPAN påpeker at SMTP ikke fungerer med mindre de andre også er på, så slå dem på samlet. Logger du inn med passnøkkel eller SMS og ikke har noe passord, setter du et først; den samme hjelpeartikkelen lenker til siden for det."
+    },
+    {
+      "h": "Skriv inn adressen og passordet til Yahoo! JAPAN ID-en i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn @yahoo.co.jp-adressen din og passordet til Yahoo! JAPAN ID-en. Vertene og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Avvises adressen, prøv Yahoo! JAPAN ID-en i brukernavnfeltet i stedet, som er den andre formen Yahoo! JAPAN dokumenterer."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere Yahoo! JAPAN-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo! JAPAN er ikke Yahoo, og et app-passord fra yahoo.com gjør ingenting her",
+      "p": "Yahoo! JAPAN driver sin egen e-posttjeneste på sine egne servere, under <code>yahoo.co.jp</code>, og det er ikke den Yahoo Mail som betjener yahoo.com. De to har ulike verter, ulike innstillingssider og ulike regler for e-postklienter. Yahoo Mail avviser kontopassordet og insisterer på et app-passord; Yahoo! JAPAN har ingen app-passord i det hele tatt og godtar det vanlige ID-passordet så snart tilgangen er slått på. En veiledning skrevet for yahoo.com, inkludert vår egen Yahoo Mail-side, sender deg til en innstillingsside Yahoo! JAPAN-kontoen din ikke har. Bruk denne siden for @yahoo.co.jp og @ymail.ne.jp, og Yahoo Mail-siden for @yahoo.com."
+    },
+    {
+      "h": "En avvist innlogging betyr som regel tilgangsbryteren, ikke passordet",
+      "p": "Yahoo! JAPAN leverer postkasser med tilgang fra andre enn egne apper slått av. Til <b>Yahoo! JAPAN公式サービス以外からのアクセス</b> er satt til <b>許可する</b> og IMAP og SMTP er satt til <b>利用する</b>, godtar serveren tilkoblingen og avviser påloggingsdetaljene, og ingenting i den feilen sier hvorfor. Yahoo! JAPAN dokumenterer også at de slår denne tilgangen av igjen på egen hånd, etter mistenkelig innloggingsaktivitet eller etter en lang periode der ingen e-postapp har brukt den. En tilkobling som har virket i månedsvis, kan dermed stoppe med en innloggingsfeil uten at noe er endret hos deg; åpne den samme innstillingssiden og slå den på igjen."
+    },
+    {
+      "h": "Yahoo! JAPAN vil helst at du lar være, og sier det rett ut",
+      "p": "Hjelpeartikkelen som dokumenterer disse innstillingene, sier også at passordautentisering over POP, IMAP og SMTP innebærer en risiko for kontokapring, anbefaler nett- og appversjonene av Yahoo! JAPAN Mail i stedet, og foreslår å slå av tilgangen fra e-postapper når du ikke lenger trenger den. Det er Yahoo! JAPANs holdning, og den er verdt å kjenne til før du gjør deg avhengig av tilkoblingen. På MCPEmails-siden er den lagrede påloggingen kryptert ved lagring, og slår du av bryteren hos Yahoo! JAPAN, brytes tilkoblingen umiddelbart i deres ende, som er den raskeste måten å trekke den tilbake på."
+    },
+    {
+      "h": "Ingen MOVE, ingen IDLE og ingen SPECIAL-USE, så mapper matches etter navn",
+      "p": "Ved testing annonserte <code>imap.mail.yahoo.co.jp</code> <code>UIDPLUS</code> og <code>SASL-IR</code>, men verken <code>MOVE</code>, <code>IDLE</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres derfor som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, ny e-post oppdages ved polling i stedet for å skyves ut, og mappene for sendt, utkast og papirkurv identifiseres etter navn og ikke etter en rolle serveren oppgir. Legger en agent noe på feil sted, oppgi mappen i instruksjonen."
+    }
+  ],
+  "limits": [
+    "Tilgang fra e-postapper er det Yahoo! JAPAN som styrer, og de slår den av etter mistenkelig aktivitet eller lang tid uten bruk. Når det skjer, feiler tilkoblingen til du slår den på igjen i e-postinnstillingene.",
+    "SMTP-serveren oppgir en maksimal meldingsstørrelse på omtrent 36 MB. En videresending med større vedlegg avvises ved sending.",
+    "Det finnes ingen OAuth-vei for eksterne apper og ikke noe app-passord, så den lagrede påloggingen er passordet til Yahoo! JAPAN ID-en din. Endrer du det, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Yahoo! JAPAN Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Yahoo! JAPAN-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Yahoo! JAPAN Mail?",
+      "a": "IMAP er imap.mail.yahoo.co.jp på port 993 med SSL. SMTP er smtp.mail.yahoo.co.jp på port 465 med SSL. Brukernavnet er yahoo.co.jp-adressen din eller Yahoo! JAPAN ID-en din, og passordet er passordet til Yahoo! JAPAN ID-en. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor avviser en e-postapp Yahoo! JAPAN-passordet mitt?",
+      "a": "Nesten alltid fordi tilgang fra andre enn Yahoo! JAPANs egne tjenester fortsatt er av. Åpne tannhjulet i Yahoo! JAPAN Mail, gå til IMAP/POP/SMTPアクセス, tillat tilgang fra ikke-offisielle tjenester, sett IMAP og SMTP til på og lagre. Logger kontoen din inn med passnøkkel eller SMS, må du sette et passord først. Har tilkoblingen virket før, kan Yahoo! JAPAN ha slått tilgangen av igjen etter en periode uten bruk."
+    },
+    {
+      "q": "Trenger Yahoo! JAPAN Mail et app-passord?",
+      "a": "Nei. Yahoo! JAPAN har ingen ordning med app-passord. E-postapper bruker passordet til Yahoo! JAPAN ID-en etter at tilgang er tillatt i innstillingene. Det er det motsatte av Yahoo Mail på yahoo.com, som bare godtar app-passord, så ikke følg en yahoo.com-veiledning for en yahoo.co.jp-adresse."
+    },
+    {
+      "q": "Kan jeg koble til en ymail.ne.jp-adresse?",
+      "a": "Ja. ymail.ne.jp er en Yahoo! JAPAN-adresse og bruker de samme serverne, den samme innstillingssiden og det samme passordet til Yahoo! JAPAN ID-en som yahoo.co.jp."
+    },
+    {
+      "q": "Lagres Yahoo! JAPAN-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Yahoo! JAPAN via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Slår du av tilgangen for e-postapper i Yahoo! JAPANs innstillinger, avsluttes tilkoblingen umiddelbart i deres ende."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Yahoo! JAPAN-innboks",
+    "sub": "Koble til Yahoo! JAPAN Mail på minutter når tilgangen er slått på. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Har du en @yahoo.com-adresse i stedet?",
+    "label": "Koble til Yahoo Mail, som bruker et app-passord",
+    "href": "/connect/yahoo"
+  }
+}

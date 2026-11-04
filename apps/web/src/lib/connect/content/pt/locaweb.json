@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "https://www.locaweb.com.br/ajuda/wiki/como-configurar-o-mx-e-mail-locaweb/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da caixa de correio, com o login SMTP igual ao remetente",
+    "helpUrl": "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "usernameForm": "Seu endereço de e-mail completo no domínio, por exemplo contato@suaempresa.com.br. O guia da Locaweb coloca a conta inteira no campo Nome de usuário.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail Locaweb no Claude: email-ssl.com.br para IMAP e SMTP",
+    "description": "Conecte uma caixa de correio da Locaweb (Email Locaweb) ao Claude ou a qualquer cliente MCP em email-ssl.com.br:993. Um único host para IMAP e SMTP com SSL/TLS, usando a senha da caixa de correio e o remetente como login SMTP."
+  },
+  "hero": {
+    "eyebrow": "Locaweb + IA",
+    "titleLine1": "Conecte o e-mail da Locaweb ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de correio real da Locaweb no seu próprio domínio. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, com o único host que a Locaweb publica para todas as contas.",
+    "answer": "O Claude não consegue acessar uma caixa de correio da Locaweb sozinho. O MCPEmails é um servidor MCP hospedado que a conecta via IMAP em email-ssl.com.br na porta 993, autenticando com o endereço completo e a senha da caixa de correio, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. A Locaweb usa um único host compartilhado, email-ssl.com.br, para entrada e saída em todos os domínios que hospeda, o que deixa a configuração simples. A regra que vale conhecer está no envio: a conta que autentica no SMTP precisa ser o mesmo endereço que aparece como remetente, ou a Locaweb rejeita a mensagem. Uma caixa de entrada é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha da caixa de correio, um host para tudo",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como a Locaweb se conecta: um host compartilhado e um remetente que precisa ser igual ao login",
+    "body": "A Locaweb documenta seu serviço de e-mail, vendido como Email Locaweb, em um único host. O IMAP é <code>email-ssl.com.br</code> na porta 993 com SSL/TLS, e o SMTP é o mesmo <code>email-ssl.com.br</code> na porta 465 com SSL/TLS, com o servidor de saída configurado para exigir autenticação. O guia também lista 143 e 587 sem criptografia para versões antigas do Outlook e avisa que podem parar de funcionar; o MCPEmails usa o par criptografado. O nome de usuário é o endereço de e-mail inteiro, e a senha é a definida naquela caixa de correio. Esse host é compartilhado por todos os domínios que a Locaweb hospeda, então o certificado que ele apresenta é de <code>email-ssl.com.br</code>, não do seu domínio. A única regra que a Locaweb aplica e outros provedores não aplicam está no envio: o login SMTP precisa ser a mesma conta do endereço De, e uma divergência é recusada com <code>503 5.0.3 Client host rejected</code>."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada para sempre e não pede cartão."
+    },
+    {
+      "h": "Use a senha da caixa de correio, não o login da sua conta Locaweb",
+      "p": "O IMAP autentica com a senha definida no endereço de e-mail específico, no painel da Locaweb, e não com a senha que você usa para entrar na própria Locaweb. Se não souber qual é, redefina a senha desse endereço no painel e use o novo valor."
+    },
+    {
+      "h": "Digite o endereço e a senha no MCPEmails",
+      "p": "Escolha IMAP / SMTP e digite o endereço completo, como contato@suaempresa.com.br, junto com a senha da caixa de correio. O host <code>email-ssl.com.br</code> e as portas já vêm preenchidos e foram confirmados em uma conexão TLS ao vivo. Use o mesmo endereço no lado de saída; a Locaweb exige que o login SMTP e o remetente sejam iguais."
+    },
+    {
+      "h": "Cole a URL do MCP no seu cliente de IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente consegue ler, pesquisar, enviar, responder, encaminhar, agendar e organizar a caixa de correio da Locaweb."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O host é email-ssl.com.br, não o seu domínio, e isso é proposital",
+      "p": "A Locaweb atende todos os domínios hospedados a partir dos mesmos servidores de e-mail, e o certificado TLS que esses servidores apresentam é de <code>email-ssl.com.br</code>. Apontar um cliente para <code>mail.suaempresa.com.br</code> via TLS falha na validação do nome, porque o seu domínio não está nesse certificado. Use <code>email-ssl.com.br</code> tanto no IMAP quanto no SMTP, como faz o próprio guia da Locaweb, e o certificado é validado sem precisar de exceção."
+    },
+    {
+      "h": "Envie como a conta com que fez login, ou a Locaweb recusa a mensagem",
+      "p": "O guia da Locaweb diz que a conta que autentica no servidor de saída precisa ser a mesma usada como remetente, e que uma divergência produz o erro <code>503 5.0.3 Client host rejected</code>. Na prática, isso significa que você não pode fazer login com uma caixa de correio e enviar como outro endereço do domínio, nem mesmo um alias da mesma caixa. O MCPEmails envia a partir do endereço que você conectou, então a regra é atendida desde que cada endereço remetente seja conectado como uma caixa de entrada própria."
+    },
+    {
+      "h": "Sem MOVE e sem SPECIAL-USE, com nomes de pasta em português",
+      "p": "O servidor Dovecot por trás de <code>email-ssl.com.br</code> anuncia <code>IDLE</code>, mas não <code>MOVE</code>, <code>UIDPLUS</code> nem <code>SPECIAL-USE</code>. Arquivar uma mensagem roda como uma cópia, uma atualização de flag e um expunge em vez de um único comando, e as pastas de enviados, rascunhos e lixeira são identificadas pelo nome e não por uma função declarada pelo servidor. Se um agente arquivar algo no lugar errado, informe a pasta na instrução."
+    },
+    {
+      "h": "A descoberta automática só funciona se o domínio tiver o registro SRV",
+      "p": "O guia da Locaweb diz que, quando a configuração automática de um cliente de e-mail falha em um domínio hospedado na Locaweb, a solução é um registro DNS chamado <code>_autodiscover._tcp</code> apontando para <code>autodiscover.email.locaweb.com.br</code> na porta 443, que leva até 48 horas para propagar. Você não precisa desse registro para conectar aqui, porque o MCPEmails já preenche o host, mas isso explica por que um cliente de desktop no mesmo domínio pode não ter encontrado nada sozinho."
+    }
+  ],
+  "limits": [
+    "Como o servidor não anuncia MOVE, mover uma mensagem não é atômico. Se a conexão cair no meio da operação, a mensagem pode existir brevemente nas duas pastas.",
+    "O servidor SMTP aceita mensagens de até cerca de 50 MB. Um encaminhamento com anexos maiores é recusado na hora do envio.",
+    "A Locaweb recusa um envio cujo endereço De seja diferente da conta autenticada. Cada endereço do qual você quer enviar precisa ser conectado como uma caixa de entrada própria."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o e-mail da Locaweb?",
+      "a": "Não sozinho. O Claude não tem um conector integrado para a Locaweb e não consegue abrir uma conexão IMAP por conta própria. Conectar um servidor MCP como o MCPEmails à caixa de correio via IMAP dá ao Claude acesso para ler, pesquisar, enviar, responder, encaminhar, agendar e organizar, e a mesma conexão funciona no Cursor, no ChatGPT e em outros clientes MCP."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP da Locaweb?",
+      "a": "O IMAP é email-ssl.com.br na porta 993 com SSL/TLS. O SMTP é email-ssl.com.br na porta 465 com SSL/TLS e autenticação obrigatória. O nome de usuário é seu endereço de e-mail completo, e a senha é a senha da caixa de correio. O host foi confirmado em uma conexão TLS ao vivo na data mostrada nesta página."
+    },
+    {
+      "q": "Por que a Locaweb rejeita meus e-mails de saída com 503 5.0.3?",
+      "a": "Porque o endereço do qual você está enviando não é a conta com que você autenticou. A Locaweb exige que o login SMTP e o remetente sejam a mesma conta. Conecte o endereço do qual quer enviar como uma caixa de entrada própria, com a senha dele."
+    },
+    {
+      "q": "Posso usar mail.meudominio.com.br como servidor?",
+      "a": "Não via TLS. O certificado da Locaweb cobre email-ssl.com.br, não o seu domínio, então um cliente apontado para o seu próprio nome falha na validação do certificado. Use email-ssl.com.br tanto no IMAP quanto no SMTP, que é o que a Locaweb documenta."
+    },
+    {
+      "q": "A Locaweb precisa de senha de app?",
+      "a": "Não. A Locaweb não tem esquema de senha específica de app. A senha definida na caixa de correio no painel autentica tanto o IMAP quanto o SMTP."
+    },
+    {
+      "q": "Meu e-mail da Locaweb fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo na Locaweb via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso, e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada da Locaweb",
+    "sub": "Conecte uma caixa de correio da Locaweb em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

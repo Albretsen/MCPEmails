@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "https://king.host/wiki/artigo/como-ativar-o-smtp-internacional/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password, with SMTP Internacional enabled for sending",
+    "helpUrl": "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "usernameForm": "Your full email address on the domain, for example contato@suaempresa.com.br. KingHost's guides start every setup with the complete address.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "KingHost Email in Claude: IMAP, and the SMTPi Switch for Sending",
+    "description": "Connect a KingHost mailbox to Claude or any MCP client at imap.kinghost.net:993. Sending from outside Brazil goes through smtpi.kinghost.net, which has to be enabled in the KingHost panel first."
+  },
+  "hero": {
+    "eyebrow": "KingHost + AI",
+    "titleLine1": "Connect KingHost email to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real KingHost mailbox on your own domain. Read, search, send, reply, schedule and organize mail over IMAP, with one panel switch so that sending works from outside Brazil.",
+    "answer": "Claude cannot reach a KingHost mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.kinghost.net on port 993, authenticating with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Reading is straightforward. Sending needs one thing KingHost documents for anyone outside Brazil: its ordinary SMTP host answers only from Brazilian networks, so mail sent from elsewhere, which includes MCPEmails' servers, goes through SMTP Internacional at smtpi.kinghost.net, and that has to be switched on for your domain in the KingHost panel first. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Mailbox password, SMTPi enabled in the panel",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How KingHost connects: IMAP on imap.kinghost.net, SMTP through SMTPi",
+    "body": "KingHost documents IMAP at <code>imap.kinghost.net</code> on port 993 with SSL/TLS, and SMTP at <code>smtp.kinghost.net</code> on port 465 with SSL/TLS, with 143 and 587 as the unencrypted alternatives. Domains registered under a KingHost reseller use <code>imap.uni5.net</code> and <code>smtp.uni5.net</code> instead. The username is the full email address and the password is the one set on that mailbox. The catch is geography. KingHost's guides say that if you are outside Brazil you must use <b>SMTPi</b>, the SMTP Internacional service, and from here <code>smtp.kinghost.net</code> did not answer at all while <code>smtpi.kinghost.net</code> did. MCPEmails sends from servers in Europe, so the SMTPi host is the one this page publishes. It is not on by default: KingHost's panel has a switch for it per domain, and KingHost says the change takes 30 minutes to 2 hours to apply. Enabling it changes nothing about receiving mail or about sending from machines in Brazil."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and asks for no card. Leave it open while you switch SMTPi on, because that part has a waiting time."
+    },
+    {
+      "h": "Enable SMTP Internacional for the domain in the KingHost panel",
+      "p": "Open the KingHost <b>Painel de Controle</b>, select the domain, and go to the e-mail section. Click the <b>SMTP INTERNACIONAL</b> icon, then <b>ATIVAR</b> on the page that opens. KingHost says to allow 30 minutes to 2 hours before the change takes effect on the domain. Without this, sends from MCPEmails are refused, because KingHost's ordinary SMTP host does not answer from outside Brazil."
+    },
+    {
+      "h": "Enter the address and the mailbox password in MCPEmails",
+      "p": "Choose IMAP / SMTP and enter the full address together with the password set on that mailbox in the KingHost panel, not your KingHost customer login. The incoming host <code>imap.kinghost.net</code> and the outgoing host <code>smtpi.kinghost.net</code> are prefilled and were confirmed from a live TLS connection. On a reseller domain, replace them with <code>imap.uni5.net</code> and <code>smtpi.uni5.net</code>."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the KingHost mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The SMTP host in KingHost's guides is unreachable from outside Brazil",
+      "p": "KingHost's setup articles name <code>smtp.kinghost.net</code> on port 465. From our servers that host did not answer on 465 or 587: the connection timed out rather than being refused, which is the signature of a network that only admits Brazilian traffic. KingHost's own SMTPi article says as much: outside Brazil, SMTP Internacional is mandatory. An agent that sends through MCPEmails is outside Brazil whatever your own location is, so use <code>smtpi.kinghost.net</code>, and make sure SMTPi is switched on for the domain, or every send hangs until it times out."
+    },
+    {
+      "h": "The switch is per domain, and it takes up to two hours",
+      "p": "SMTPi is enabled in the KingHost panel for each domain separately, under the e-mail section, with the <b>SMTP INTERNACIONAL</b> icon and the <b>ATIVAR</b> button. KingHost says the change takes between 30 minutes and 2 hours to apply. A send attempted in that window fails in the same way as before the switch, so if sending still does not work right after you enabled it, wait rather than change settings. Receiving mail and sending from Brazilian machines are unaffected either way."
+    },
+    {
+      "h": "Reseller domains use uni5.net, not kinghost.net",
+      "p": "A domain registered under a KingHost reseller account (Revenda) lives on a different cluster, and KingHost's guides give it its own names: <code>imap.uni5.net</code> for incoming mail and <code>smtpi.uni5.net</code> for SMTPi, with the same ports. The kinghost.net names are not aliases for those, so a reseller customer who copies the hosts from this page connects to the wrong servers. Ask whoever sold you the hosting whether the domain is on a reseller plan if you are not sure."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE, so folders are matched by name",
+      "p": "The Dovecot server behind <code>imap.kinghost.net</code> advertises <code>IDLE</code> but neither <code>MOVE</code>, <code>UIDPLUS</code> nor <code>SPECIAL-USE</code>. Filing a message runs as a copy, a flag update and an expunge rather than one command, and the sent, drafts and trash folders are identified by their names rather than by a role the server declares. If an agent files something in the wrong place, name the folder in the instruction."
+    }
+  ],
+  "limits": [
+    "Sending requires SMTP Internacional to be enabled for the domain in the KingHost panel. Until it is, sends from MCPEmails fail, and KingHost's ordinary SMTP host cannot be used from outside Brazil.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "The SMTPi server accepts messages up to 60 MB. A forward carrying larger attachments is refused at send time."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with KingHost email?",
+      "a": "Not on its own. Claude has no built-in KingHost connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the KingHost IMAP and SMTP settings?",
+      "a": "IMAP is imap.kinghost.net on port 993 with SSL/TLS. For sending from outside Brazil, which is where MCPEmails runs, SMTP is smtpi.kinghost.net on port 465 with SSL/TLS, after SMTP Internacional is enabled for the domain in the panel. KingHost's guides give smtp.kinghost.net for clients inside Brazil. Reseller domains use imap.uni5.net and smtpi.uni5.net. Both published hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why can MCPEmails read my KingHost mail but not send?",
+      "a": "Because SMTP Internacional is not enabled for the domain, or has been enabled for less than two hours. KingHost's ordinary SMTP host does not answer from outside Brazil, and sends from MCPEmails come from Europe. Open the KingHost panel, select the domain, go to the e-mail section, click SMTP INTERNACIONAL and then ATIVAR, and allow up to two hours."
+    },
+    {
+      "q": "Does enabling SMTPi change how I receive mail?",
+      "a": "No. KingHost states that enabling or disabling SMTP Internacional affects neither receiving nor sending from machines located in Brazil. It only opens the smtpi host for authenticated sending from elsewhere."
+    },
+    {
+      "q": "Does KingHost need an app password?",
+      "a": "No. KingHost has no app-specific password scheme. The password set on the mailbox in the panel authenticates both IMAP and SMTP."
+    },
+    {
+      "q": "Is my KingHost mail stored on your servers?",
+      "a": "No. Messages are fetched live from KingHost over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a KingHost inbox",
+    "sub": "Connect a KingHost mailbox in minutes, once SMTPi is on. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://support.ntt.com/ocn-business/support/detail/pid21000001uk9/",
+    "https://autoconfig.thunderbird.net/v1.1/ocn.ne.jp"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "OCN メールパスワード (contraseña de correo de OCN), no la contraseña de conexión de OCN",
+    "helpUrl": "https://support.ntt.com/ocn-business/support/detail/pid21000001uk9/",
+    "usernameForm": "Tu dirección completa de OCN, name@ocn.ne.jp, escrita entera. La guía de NTT dice expresamente que hay que escribir toda la dirección, no solo la parte anterior a la @.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de OCN en Claude: IMAP y la contraseña de correo aparte",
+    "description": "Conecta un buzón de OCN (ocn.ne.jp) a Claude o a cualquier cliente MCP en imap.ocn.ne.jp:993. Inicia sesión con la OCN メールパスワード de tu certificado de socio, no con la contraseña de conexión de OCN."
+  },
+  "hero": {
+    "eyebrow": "OCN + IA",
+    "titleLine1": "Conecta el correo de OCN a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de ocn.ne.jp. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña de correo que NTT emite para el correo de OCN, no con la que te conecta a internet.",
+    "answer": "Claude no puede acceder por sí solo al correo de OCN. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.ocn.ne.jp en el puerto 993, autenticándose con tu dirección completa de OCN y la OCN メールパスワード, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La credencial es lo que la gente confunde: NTT mantiene una contraseña de conexión aparte para la línea de OCN y una contraseña de correo aparte para el buzón, y aquí solo funciona la de correo. No hay contraseña de aplicación ni ningún interruptor que activar. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de correo de OCN, dirección completa como usuario",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta OCN: IMAP con SSL y la contraseña de correo de tu certificado de socio",
+    "body": "NTT documenta el correo de OCN en <code>imap.ocn.ne.jp</code> en el puerto 993 con SSL para el correo entrante, y <code>smtp.ocn.ne.jp</code> en el puerto 465 con SSL y autenticación para el saliente. El usuario en ambos es la dirección completa. La contraseña es la <b>メールパスワード</b> (contraseña de correo), una cadena de 6 a 32 caracteres impresa en el certificado de socio de OCN (OCN会員登録証) que se usa tanto para programas de correo como para el webmail de OCN. NTT dice con claridad que es distinta de la contraseña de conexión (接続用パスワード, también llamada 認証パスワード) que autentica la propia línea de OCN, y que los valores de servidor impresos en un certificado antiguo pueden estar desactualizados, así que los servidores de esta página vienen de la página de soporte actual de NTT y no del papel. La detección automática no ayuda con OCN: la base de datos pública de Mozilla solo lista POP para ocn.ne.jp, por eso un cliente de correo que rellena los ajustes por ti puede no ofrecer IMAP en absoluto."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Localiza tu contraseña de correo de OCN",
+      "p": "Es el valor del campo <b>メールパスワード</b> de tu certificado de socio de OCN, el documento que NTT envió cuando se dio de alta la línea. No es la contraseña de conexión impresa al lado. Si ya no tienes el certificado o la contraseña se ha cambiado, define una nueva contraseña de correo desde los ajustes de tu cuenta de OCN y usa el valor nuevo."
+    },
+    {
+      "h": "Introduce la dirección completa y la contraseña de correo en MCPEmails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como name@ocn.ne.jp, y pega la contraseña de correo. Los servidores y puertos de OCN ya vienen rellenados y se confirmaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de OCN."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Dos contraseñas en una misma cuenta, y el servidor de correo solo acepta una",
+      "p": "Una suscripción a OCN incluye una contraseña de conexión que da de alta la línea en la red y una contraseña de correo que abre el buzón. NTT las documenta como cosas separadas y el servidor de correo solo reconoce la segunda. Introducir la contraseña de conexión, o la del portal de clientes de OCN, produce un fallo de autenticación corriente sin nada que explique qué credencial estaba mal. Si se rechaza una contraseña que parece correcta, comprueba cuál de las dos pegaste antes de cambiar nada más."
+    },
+    {
+      "h": "La dirección va entera, no solo la parte anterior a la @",
+      "p": "La guía de NTT te indica que introduzcas la dirección de correo completa como usuario tanto en el servidor entrante como en el saliente. Varios proveedores japoneses aceptan solo la parte local, y los clientes que copian ajustes de un ISP a otro suelen arrastrar esa costumbre. En OCN, un usuario <code>name</code> a secas, o <code>name@ocn</code>, falla igual que lo haría una contraseña incorrecta. MCPEmails envía la dirección completa."
+    },
+    {
+      "h": "El correo saliente tiene un tope de 10 MB",
+      "p": "<code>smtp.ocn.ne.jp</code> anuncia un tamaño máximo de mensaje de 10.485.760 bytes, el más bajo de todos los proveedores de este sitio. Ese límite se aplica a todo el mensaje codificado, así que un adjunto en base64 cuenta aproximadamente un tercio más que su tamaño en disco; un adjunto de unos 7 MB ya está en el límite. Un agente al que se pida reenviar algo mayor recibe un rechazo rotundo al enviarlo. Comparte un enlace en su lugar."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, así que las carpetas se identifican por nombre",
+      "p": "Al sondearlo, <code>imap.ocn.ne.jp</code> anunció <code>IDLE</code>, pero ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un solo comando, y las carpetas de enviados, borradores y papelera se encuentran por su nombre y no por una función que declare el servidor. Si un agente no encuentra una carpeta, nómbrala en la instrucción."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP acepta mensajes de hasta 10 MB. Los reenvíos más grandes se rechazan en lugar de quedar en cola, así que adjunta un enlace en vez de un archivo grande.",
+    "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "No hay contraseña de aplicación ni vía OAuth, así que la credencial guardada es tu contraseña de correo de OCN. Cambiarla desconecta el buzón hasta que introduzcas la nueva."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de OCN?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para OCN y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de OCN?",
+      "a": "IMAP es imap.ocn.ne.jp en el puerto 993 con SSL. SMTP es smtp.ocn.ne.jp en el puerto 465 con SSL y autenticación. El usuario es tu dirección completa de OCN y la contraseña es la contraseña de correo de OCN. Ambos servidores se confirmaron con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Qué contraseña de OCN uso en una app de correo?",
+      "a": "La メールパスワード, la contraseña de correo impresa en su propio campo del certificado de socio de OCN y que se usa para el webmail de OCN. NTT la documenta como distinta de la contraseña de conexión que autentica la línea. Si no la tienes, define una nueva contraseña de correo desde los ajustes de tu cuenta de OCN."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo solo ofrece POP para OCN?",
+      "a": "Porque la base de datos pública de configuración automática que consultan muchos clientes solo lista POP3 para ocn.ne.jp. IMAP existe y NTT lo documenta; solo tienes que introducir imap.ocn.ne.jp, el puerto 993 y SSL a mano. MCPEmails rellena esos valores."
+    },
+    {
+      "q": "¿OCN necesita una contraseña de aplicación?",
+      "a": "No. OCN no tiene un sistema de contraseñas específicas de aplicación ni credenciales por cliente. La contraseña de correo de OCN autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de OCN en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de OCN por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de OCN",
+    "sub": "Conecta el correo de OCN en minutos con la contraseña de correo. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

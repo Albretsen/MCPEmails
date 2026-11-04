@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Puedo conectar una cuenta de correo gratuita de UOL?",
-      "a": "No existe un buzón gratuito de UOL que conectar. El correo de UOL viene con una suscripción de pago a UOL o con un plan independiente de UOL Mail. El servicio relacionado BOL sí ofrece cuentas gratuitas, pero son solo de webmail y no se puede acceder a ellas por IMAP en absoluto sin pasar a un plan superior."
+      "a": "No existe un buzón gratuito de UOL que conectar. El correo de UOL viene con una suscripción de pago a UOL o con un plan independiente de UOL Mail. El servicio relacionado BOL es un buzón aparte, con sus propios servidores y su propio puerto de salida, y tiene su propia página en este sitio."
     },
     {
       "q": "¿Se almacena mi correo de UOL en sus servidores?",

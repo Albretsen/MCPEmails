@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "https://king.host/wiki/artigo/como-ativar-o-smtp-internacional/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da caixa de correio, com o SMTP Internacional ativado para envio",
+    "helpUrl": "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "usernameForm": "Seu endereço de e-mail completo no domínio, por exemplo contato@suaempresa.com.br. Os guias da KingHost começam toda configuração pelo endereço completo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail KingHost no Claude: IMAP e o SMTPi para envio",
+    "description": "Conecte uma caixa de correio da KingHost ao Claude ou a qualquer cliente MCP em imap.kinghost.net:993. O envio de fora do Brasil passa por smtpi.kinghost.net, que precisa ser ativado antes no painel da KingHost."
+  },
+  "hero": {
+    "eyebrow": "KingHost + IA",
+    "titleLine1": "Conecte o e-mail da KingHost ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de correio real da KingHost no seu próprio domínio. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, com uma única ativação no painel para que o envio funcione de fora do Brasil.",
+    "answer": "O Claude não consegue acessar uma caixa de correio da KingHost sozinho. O MCPEmails é um servidor MCP hospedado que a conecta via IMAP em imap.kinghost.net na porta 993, autenticando com o endereço completo e a senha da caixa de correio, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. Ler é simples. Enviar precisa de uma coisa que a KingHost documenta para quem está fora do Brasil: o host SMTP comum dela só responde a redes brasileiras, então e-mails enviados de outro lugar, o que inclui os servidores do MCPEmails, passam pelo SMTP Internacional em smtpi.kinghost.net, e isso precisa ser ativado antes para o seu domínio no painel da KingHost. Uma caixa de entrada é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha da caixa de correio, SMTPi ativado no painel",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como a KingHost se conecta: IMAP em imap.kinghost.net, SMTP pelo SMTPi",
+    "body": "A KingHost documenta o IMAP em <code>imap.kinghost.net</code> na porta 993 com SSL/TLS, e o SMTP em <code>smtp.kinghost.net</code> na porta 465 com SSL/TLS, com 143 e 587 como alternativas sem criptografia. Domínios registrados em uma revenda da KingHost usam <code>imap.uni5.net</code> e <code>smtp.uni5.net</code> no lugar deles. O nome de usuário é o endereço de e-mail completo, e a senha é a definida naquela caixa de correio. O detalhe é geográfico. Os guias da KingHost dizem que, se você está fora do Brasil, precisa usar o <b>SMTPi</b>, o serviço de SMTP Internacional, e daqui o <code>smtp.kinghost.net</code> não respondeu de forma alguma, enquanto o <code>smtpi.kinghost.net</code> respondeu. O MCPEmails envia de servidores na Europa, então a regra da KingHost para quem está fora do Brasil vale para ele, e o host SMTPi é o que esta página publica. Ele não vem ligado: o painel da KingHost tem uma ativação por domínio, e a KingHost diz que a mudança leva de 30 minutos a 2 horas para valer. Ativá-lo não muda nada no recebimento nem no envio a partir de máquinas no Brasil."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada para sempre e não pede cartão. Deixe a página aberta enquanto ativa o SMTPi, porque essa parte tem um tempo de espera."
+    },
+    {
+      "h": "Ative o SMTP Internacional para o domínio no painel da KingHost",
+      "p": "Abra o <b>Painel de Controle</b> da KingHost, selecione o domínio e vá até a seção de e-mail. Clique no ícone <b>SMTP INTERNACIONAL</b> e depois em <b>ATIVAR</b> na página que abrir. A KingHost diz para aguardar de 30 minutos a 2 horas até a mudança valer no domínio. Sem isso, os envios do MCPEmails são recusados, porque o host SMTP comum da KingHost não responde de fora do Brasil."
+    },
+    {
+      "h": "Digite o endereço e a senha da caixa de correio no MCPEmails",
+      "p": "Escolha IMAP / SMTP e digite o endereço completo junto com a senha definida naquela caixa de correio no painel da KingHost, não o login de cliente da KingHost. O host de entrada <code>imap.kinghost.net</code> e o host de saída <code>smtpi.kinghost.net</code> já vêm preenchidos e foram confirmados em uma conexão TLS ao vivo. Em um domínio de revenda, troque-os por <code>imap.uni5.net</code> e <code>smtpi.uni5.net</code>."
+    },
+    {
+      "h": "Cole a URL do MCP no seu cliente de IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente consegue ler, pesquisar, enviar, responder, encaminhar, agendar e organizar a caixa de correio da KingHost."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O host SMTP dos guias da KingHost não responde de fora do Brasil",
+      "p": "Os artigos de configuração da KingHost indicam <code>smtp.kinghost.net</code> na porta 465. Dos nossos servidores, esse host não respondeu nem na 465 nem na 587: a conexão estourou o tempo em vez de ser recusada, que é a assinatura de uma rede que só admite tráfego brasileiro. O próprio artigo da KingHost sobre o SMTPi diz isso: fora do Brasil, o SMTP Internacional é obrigatório. Um agente que envia pelo MCPEmails está fora do Brasil, seja qual for a sua localização, então use <code>smtpi.kinghost.net</code> e confira se o SMTPi está ativado para o domínio, ou cada envio trava até estourar o tempo."
+    },
+    {
+      "h": "A ativação é por domínio, e leva até duas horas",
+      "p": "O SMTPi é ativado no painel da KingHost para cada domínio separadamente, na seção de e-mail, com o ícone <b>SMTP INTERNACIONAL</b> e o botão <b>ATIVAR</b>. A KingHost diz que a mudança leva entre 30 minutos e 2 horas para valer. Um envio tentado nesse intervalo falha do mesmo jeito que antes da ativação, então, se o envio ainda não funcionar logo depois de ativar, espere em vez de mudar as configurações. O recebimento e o envio a partir de máquinas brasileiras não são afetados de nenhuma forma."
+    },
+    {
+      "h": "Domínios de revenda usam uni5.net, não kinghost.net",
+      "p": "Um domínio registrado em uma conta de revenda da KingHost (Revenda) fica em outro cluster, e os guias da KingHost dão a ele nomes próprios: <code>imap.uni5.net</code> para entrada e <code>smtpi.uni5.net</code> para o SMTPi, com as mesmas portas. Os nomes kinghost.net não são aliases desses, então um cliente de revenda que copia os hosts desta página se conecta aos servidores errados. Se não tiver certeza, pergunte a quem vendeu a hospedagem se o domínio está em um plano de revenda."
+    },
+    {
+      "h": "Sem MOVE e sem SPECIAL-USE, então as pastas são localizadas pelo nome",
+      "p": "O servidor Dovecot por trás de <code>imap.kinghost.net</code> anuncia <code>IDLE</code>, mas não <code>MOVE</code>, <code>UIDPLUS</code> nem <code>SPECIAL-USE</code>. Arquivar uma mensagem roda como uma cópia, uma atualização de flag e um expunge em vez de um único comando, e as pastas de enviados, rascunhos e lixeira são identificadas pelos nomes e não por uma função declarada pelo servidor. Se um agente arquivar algo no lugar errado, informe a pasta na instrução."
+    }
+  ],
+  "limits": [
+    "O envio exige que o SMTP Internacional esteja ativado para o domínio no painel da KingHost. Até lá, os envios do MCPEmails falham, e o host SMTP comum da KingHost não pode ser usado de fora do Brasil.",
+    "Como o servidor não anuncia MOVE, mover uma mensagem não é atômico. Se a conexão cair no meio da operação, a mensagem pode existir brevemente nas duas pastas.",
+    "O servidor SMTPi aceita mensagens de até 60 MB. Um encaminhamento com anexos maiores é recusado na hora do envio."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o e-mail da KingHost?",
+      "a": "Não sozinho. O Claude não tem um conector integrado para a KingHost e não consegue abrir uma conexão IMAP por conta própria. Conectar um servidor MCP como o MCPEmails à caixa de correio via IMAP dá ao Claude acesso para ler, pesquisar, enviar, responder, encaminhar, agendar e organizar, e a mesma conexão funciona no Cursor, no ChatGPT e em outros clientes MCP."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP da KingHost?",
+      "a": "O IMAP é imap.kinghost.net na porta 993 com SSL/TLS. Para enviar de fora do Brasil, que é onde o MCPEmails roda, o SMTP é smtpi.kinghost.net na porta 465 com SSL/TLS, depois que o SMTP Internacional é ativado para o domínio no painel. Os guias da KingHost indicam smtp.kinghost.net para clientes dentro do Brasil. Domínios de revenda usam imap.uni5.net e smtpi.uni5.net. Os dois hosts publicados foram confirmados em uma conexão TLS ao vivo na data mostrada nesta página."
+    },
+    {
+      "q": "Por que o MCPEmails consegue ler meu e-mail da KingHost, mas não enviar?",
+      "a": "Porque o SMTP Internacional não está ativado para o domínio, ou foi ativado há menos de duas horas. O host SMTP comum da KingHost não responde de fora do Brasil, e os envios do MCPEmails saem da Europa. Abra o painel da KingHost, selecione o domínio, vá até a seção de e-mail, clique em SMTP INTERNACIONAL e depois em ATIVAR, e aguarde até duas horas."
+    },
+    {
+      "q": "Ativar o SMTPi muda como eu recebo e-mails?",
+      "a": "Não. A KingHost afirma que ativar ou desativar o SMTP Internacional não afeta nem o recebimento nem o envio a partir de máquinas localizadas no Brasil. Ele só abre o host smtpi para envio autenticado de outros lugares."
+    },
+    {
+      "q": "A KingHost precisa de senha de app?",
+      "a": "Não. A KingHost não tem esquema de senha específica de app. A senha definida na caixa de correio no painel autentica tanto o IMAP quanto o SMTP."
+    },
+    {
+      "q": "Meu e-mail da KingHost fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo na KingHost via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso, e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada da KingHost",
+    "sub": "Conecte uma caixa de correio da KingHost em minutos, depois de ativar o SMTPi. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

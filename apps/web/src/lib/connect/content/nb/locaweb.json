@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "https://www.locaweb.com.br/ajuda/wiki/como-configurar-o-mx-e-mail-locaweb/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord, SMTP-innlogging lik avsenderen",
+    "helpUrl": "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "usernameForm": "Hele e-postadressen din på domenet, for eksempel contato@suaempresa.com.br. Locawebs veiledning setter hele kontoen i feltet Nome de usuário.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Locaweb-e-post i Claude: email-ssl.com.br for IMAP og SMTP",
+    "description": "Koble en Locaweb-postkasse (Email Locaweb) til Claude eller enhver MCP-klient på email-ssl.com.br:993. Én vert for IMAP og SMTP over SSL/TLS, med postkassepassordet og avsenderen som SMTP-innlogging."
+  },
+  "hero": {
+    "eyebrow": "Locaweb + AI",
+    "titleLine1": "Koble Locaweb-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Locaweb-postkasse på ditt eget domene. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med den ene verten Locaweb publiserer for alle kontoer.",
+    "answer": "Claude når ikke en Locaweb-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på email-ssl.com.br port 993 og autentiserer med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Locaweb kjører én delt vert, email-ssl.com.br, for innkommende og utgående e-post på alle domenene de hoster, og det gjør innstillingene enkle. Regelen å kjenne til ligger på sendesiden: kontoen som autentiserer på SMTP, må være den samme adressen som står som avsender, ellers avviser Locaweb meldingen. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, én vert for alt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Locaweb seg til: én delt vert, og en avsender som må matche innloggingen",
+    "body": "Locaweb dokumenterer e-posttjenesten sin, solgt som Email Locaweb, på én enkelt vert. IMAP er <code>email-ssl.com.br</code> port 993 med SSL/TLS, og SMTP er den samme <code>email-ssl.com.br</code> port 465 med SSL/TLS, med utgående server satt til å kreve autentisering. Veiledningen oppgir også 143 og 587 ukryptert for gamle Outlook-versjoner og sier at de kan slutte å virke; MCPEmails bruker det krypterte paret. Brukernavnet er hele e-postadressen, og passordet er det som er satt på den postkassen. Verten deles av alle domenene Locaweb hoster, så sertifikatet den viser, er for <code>email-ssl.com.br</code> og ikke for domenet ditt. Den ene regelen Locaweb håndhever som andre leverandører ikke gjør, ligger på sendesiden: SMTP-innloggingen må være samme konto som Fra-adressen, og et avvik avvises med <code>503 5.0.3 Client host rejected</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Bruk postkassepassordet, ikke Locaweb-kontoinnloggingen",
+      "p": "IMAP autentiserer mot passordet som er satt på den enkelte e-postadressen i Locawebs kontrollpanel, ikke mot passordet du bruker for å logge inn hos Locaweb selv. Kjenner du det ikke, tilbakestiller du det på den adressen i panelet og bruker den nye verdien."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel contato@suaempresa.com.br, sammen med postkassepassordet. Verten <code>email-ssl.com.br</code> og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Bruk den samme adressen på utgående side; Locaweb krever at SMTP-innloggingen og avsenderen er like."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere Locaweb-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Verten er email-ssl.com.br, ikke domenet ditt, og det er med vilje",
+      "p": "Locaweb betjener alle hostede domener fra de samme e-postserverne, og TLS-sertifikatet de serverne viser, er for <code>email-ssl.com.br</code>. Peker du en klient mot <code>mail.suaempresa.com.br</code> over TLS, feiler navnevalideringen, fordi domenet ditt ikke står på det sertifikatet. Bruk <code>email-ssl.com.br</code> for både IMAP og SMTP, slik Locawebs egen veiledning gjør, så valideres sertifikatet uten at noe unntak trengs."
+    },
+    {
+      "h": "Send som kontoen du logget inn med, ellers avviser Locaweb meldingen",
+      "p": "Locawebs veiledning slår fast at kontoen som autentiserer på utgående server, må være den samme som brukes som avsender, og at et avvik gir feilen <code>503 5.0.3 Client host rejected</code>. I praksis betyr det at du ikke kan logge inn som én postkasse og sende som en annen adresse på domenet, ikke engang et alias for samme postkasse. MCPEmails sender fra adressen du koblet til, så regelen er oppfylt så lenge du kobler til hver sendeadresse som sin egen innboks."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, med portugisiske mappenavn",
+      "p": "Dovecot-serveren bak <code>email-ssl.com.br</code> annonserer <code>IDLE</code>, men verken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv identifiseres etter navn og ikke etter en rolle serveren oppgir. Legger en agent noe på feil sted, oppgi mappen i instruksjonen."
+    },
+    {
+      "h": "Autodiscover virker bare hvis domenet har SRV-posten",
+      "p": "Locawebs veiledning sier at når det automatiske oppsettet i en e-postklient feiler på et Locaweb-hostet domene, er løsningen en DNS-post kalt <code>_autodiscover._tcp</code> som peker mot <code>autodiscover.email.locaweb.com.br</code> på port 443, og som tar opptil 48 timer å spre. Du trenger ikke den posten for å koble til her, fordi MCPEmails forhåndsutfyller verten, men den forklarer hvorfor en skrivebordsklient på samme domene kanskje ikke fant noe på egen hånd."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Brytes en tilkobling midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "SMTP-serveren godtar meldinger opptil omtrent 50 MB. En videresending med større vedlegg avvises ved sending.",
+    "Locaweb avviser en sending der Fra-adressen avviker fra den autentiserte kontoen. Hver adresse du vil sende fra, må kobles til som sin egen innboks."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Locaweb-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Locaweb-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Locaweb?",
+      "a": "IMAP er email-ssl.com.br på port 993 med SSL/TLS. SMTP er email-ssl.com.br på port 465 med SSL/TLS og påkrevd autentisering. Brukernavnet er hele e-postadressen din, og passordet er postkassepassordet. Verten ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor avviser Locaweb utgående e-post med 503 5.0.3?",
+      "a": "Fordi adressen du sender fra, ikke er kontoen du autentiserte med. Locaweb krever at SMTP-innloggingen og avsenderen er samme konto. Koble til adressen du vil sende fra, som sin egen innboks, med sitt eget passord."
+    },
+    {
+      "q": "Kan jeg bruke mail.mittdomene.com.br som server?",
+      "a": "Ikke over TLS. Locawebs sertifikat dekker email-ssl.com.br, ikke domenet ditt, så en klient pekt mot ditt eget navn feiler på sertifikatvalideringen. Bruk email-ssl.com.br for både IMAP og SMTP, som er det Locaweb dokumenterer."
+    },
+    {
+      "q": "Trenger Locaweb et app-passord?",
+      "a": "Nei. Locaweb har ingen ordning med appspesifikke passord. Passordet som er satt på postkassen i kontrollpanelet, autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres Locaweb-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Locaweb via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Locaweb-innboks",
+    "sub": "Koble til en Locaweb-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

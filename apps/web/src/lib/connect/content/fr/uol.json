@@ -90,7 +90,7 @@
     },
     {
       "q": "Puis-je connecter un compte e-mail UOL gratuit ?",
-      "a": "Il n'existe pas de boîte UOL gratuite à connecter. Le courrier UOL est fourni avec un abonnement UOL payant ou avec une offre UOL Mail autonome. Le service apparenté BOL propose bien des comptes gratuits, mais ils sont limités au webmail et ne sont pas du tout accessibles en IMAP sans passer à une offre supérieure."
+      "a": "Il n'existe pas de boîte UOL gratuite à connecter. Le courrier UOL est fourni avec un abonnement UOL payant ou avec une offre UOL Mail autonome. Le service apparenté BOL est une boîte distincte, avec ses propres serveurs et son propre port sortant, et a sa propre page sur ce site."
     },
     {
       "q": "Mon courrier UOL est-il stocké sur vos serveurs ?",
