@@ -82,7 +82,7 @@ test('slugs from the dashboard, onboarding and /docs all resolve; unknown is nul
 });
 
 test('labels and the Claude note exist in every locale, no em dashes, fall back to English', () => {
-  for (const locale of ['en', 'de', 'fr', 'es', 'nb', 'zh']) {
+  for (const locale of ['en', 'de', 'pt', 'ja', 'fr', 'es', 'nb', 'zh']) {
     for (const slug of INSTALLABLE_CLIENTS) {
       const a = getInstallAction(slug, { locale });
       assert.ok(a.label && !a.label.includes('—'), `${locale} ${slug}`);
@@ -91,7 +91,7 @@ test('labels and the Claude note exist in every locale, no em dashes, fall back 
     assert.ok(note && !note.includes('—') && !note.includes('<'), locale);
   }
   assert.notEqual(getInstallAction('claude', { locale: 'de' }).label, 'Add to Claude');
-  assert.equal(getInstallAction('claude', { locale: 'pt-BR' }).label, 'Add to Claude');
+  assert.equal(getInstallAction('claude', { locale: 'it-IT' }).label, 'Add to Claude');
   assert.equal(getInstallAction('claude', { locale: 'nb-NO' }).label, 'Legg til i Claude');
 });
 

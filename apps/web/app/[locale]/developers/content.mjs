@@ -4,8 +4,8 @@
 // serialised into every marketing page, and this copy is only read here
 // (apps/web/CLAUDE.md).
 //
-// TRANSLATION: en, nb, es, fr, de and zh each have their own object of the
-// same shape. A copy change goes into all six.
+// TRANSLATION: en, nb, es, fr, de, pt, ja and zh each have their own object of
+// the same shape. A copy change goes into all eight.
 //
 // Every claim is traced to code. If one of these changes, change the page:
 //   providers              src/lib/email-providers/*, /docs/providers;
@@ -464,6 +464,182 @@ const de = {
   ],
 };
 
+const pt = {
+  meta: {
+    title: 'API de e-mail para agentes de IA, nas caixas de entrada que você já tem',
+    description:
+      'Dê aos seus scripts, fluxos do n8n e agentes de IA uma caixa de correio real do Gmail, Outlook ou IMAP por um único endpoint HTTPS. MCP e webhooks assinados na mesma chave, chaves com escopos, envios idempotentes e um preço de plano fixo.',
+  },
+  breadcrumb: 'Desenvolvedores',
+  hero: {
+    eyebrow: 'Desenvolvedores',
+    title: 'Uma API de e-mail para agentes de IA, nas caixas de entrada que você já tem',
+    lead:
+      'Conecte o Gmail, o Outlook ou qualquer caixa de correio IMAP uma única vez. A partir daí, seus scripts, fluxos de trabalho e agentes leem, pesquisam, escrevem rascunhos e enviam desses endereços reais por um único endpoint HTTPS, com MCP e webhooks na mesma chave.',
+    primary: 'Ler o guia para desenvolvedores',
+    secondary: 'Ver preços',
+  },
+  why: {
+    h: 'O que você ganha',
+    cards: [
+      {
+        h: 'Suas caixas de correio reais',
+        p: 'Gmail, Outlook e Microsoft 365, iCloud, Yahoo, Zoho, Fastmail com senha de app e qualquer servidor IMAP. Os agentes trabalham nos endereços que seus clientes já conhecem, com o histórico e a reputação de remetente deles. Nada para migrar.',
+      },
+      {
+        h: 'MCP e webhooks em uma só chave',
+        p: 'O endpoint ao qual o Claude e o ChatGPT se conectam também responde a HTTPS comum vindo do seu código. Nos planos Pro e Business, um webhook inicia seu fluxo de trabalho quando chega e-mail, normalmente em cerca de dois minutos.',
+      },
+      {
+        h: 'Um preço fixo',
+        p: 'Os planos pagos têm um preço mensal fixo e nenhuma cobrança por chamada, então um fluxo de trabalho movimentado custa o mesmo que um tranquilo. Comece grátis com uma caixa de entrada.',
+      },
+      {
+        h: 'Webhooks assinados',
+        p: 'Cada entrega é assinada com HMAC-SHA256 sobre um timestamp e o corpo, traz um id de evento para deduplicação e é reenviada até seis vezes quando seu endpoint não responde.',
+      },
+      {
+        h: 'Envios idempotentes',
+        p: 'Passe uma `idempotency_key` e tente de novo depois de uma conexão perdida sem enviar duas vezes. A nova tentativa devolve o id da mensagem original.',
+      },
+      {
+        h: 'Chaves com escopos',
+        p: 'Cada chave tem só as permissões e as caixas de entrada de que precisa, então um script de triagem pode ler a caixa de suporte e mais nada. Revogue uma chave sem mexer nas outras.',
+      },
+      {
+        h: 'Aprovação de envios',
+        p: 'Segure todos os envios de uma caixa de entrada até que uma pessoa os aprove. Um bom padrão enquanto uma automação nova ainda está provando seu valor.',
+      },
+      {
+        h: 'Código aberto',
+        p: 'O servidor é de código aberto, então você pode ler como cada chamada é tratada. Você também pode [rodá-lo por conta própria](/self-hosting).',
+      },
+    ],
+  },
+  how: {
+    h: 'Como funciona',
+    steps: [
+      'Conecte uma caixa de correio no painel. O Outlook entra com a conta Microsoft; a maioria dos outros provedores usa uma senha de app.',
+      'Crie uma chave de API, marque os escopos de que ela precisa e, se quiser, restrinja-a a algumas caixas de entrada.',
+      'Chame `tools/list` para ver o que a chave pode fazer e depois `tools/call` para ler, pesquisar, escrever rascunhos ou enviar.',
+      'No Pro ou no Business, adicione um endpoint de webhook para que e-mails novos cheguem ao seu fluxo de trabalho sem polling.',
+    ],
+    codeLabel: 'bash',
+  },
+  uses: {
+    h: 'O que os desenvolvedores constroem',
+    items: [
+      '**n8n e outras ferramentas de fluxo de trabalho:** inicie um fluxo quando chegar e-mail novo, leia a mensagem e arquive, escreva um rascunho ou responda.',
+      '**Agentes de programação:** dê ao Claude Code uma caixa de entrada real por HTTP com um comando e uma chave.',
+      '**Agentes de suporte e vendas:** faça a triagem de uma caixa compartilhada, escreva respostas para uma pessoa aprovar, faça follow-up no horário programado.',
+      '**Seu próprio agente:** chame as mesmas ferramentas de qualquer linguagem capaz de enviar uma requisição HTTPS.',
+    ],
+  },
+  cta: {
+    title: 'Conecte uma caixa de entrada e faça sua primeira chamada',
+    sub: 'Uma caixa de entrada é grátis, para sempre. Sem cartão.',
+    button: 'Comece grátis',
+    guide: 'Guia para desenvolvedores',
+    pricing: 'Ver preços',
+  },
+  featureList: [
+    'API de e-mail por HTTPS (JSON-RPC 2.0, Model Context Protocol)',
+    'Funciona com caixas de correio existentes do Gmail, Outlook, Microsoft 365 e IMAP',
+    'Webhooks assinados para e-mails novos',
+    'Chaves de idempotência para novas tentativas seguras',
+    'Chaves de API com escopos e acesso por caixa de entrada',
+    'Aprovação humana antes do envio',
+  ],
+};
+
+const ja = {
+  meta: {
+    title: 'AIエージェントのためのメールAPI。今お使いの受信トレイでそのまま使えます',
+    description:
+      'スクリプト、n8nのワークフロー、自作のAIエージェントに、Gmail、Outlook、IMAPの実際のメールボックスを1つのHTTPSエンドポイントで提供します。MCPと署名付きWebhookを同じキーで利用でき、スコープ付きキー、冪等な送信、定額のプラン料金に対応しています。',
+  },
+  breadcrumb: '開発者向け',
+  hero: {
+    eyebrow: '開発者向け',
+    title: 'AIエージェントのためのメールAPI。今お使いの受信トレイでそのまま使えます',
+    lead:
+      'Gmail、Outlook、または任意のIMAPメールボックスを一度接続するだけです。あとはスクリプト、ワークフロー、エージェントが、その実際のアドレスで読み取り、検索、下書き作成、送信を1つのHTTPSエンドポイント経由で行えます。MCPとWebhookは同じキーで使えます。',
+    primary: '開発者ガイドを読む',
+    secondary: '料金を見る',
+  },
+  why: {
+    h: '主な特長',
+    cards: [
+      {
+        h: '実際のメールボックス',
+        p: 'Gmail、OutlookとMicrosoft 365、iCloud、Yahoo、Zoho、アプリ パスワードでのFastmail、そしてあらゆるIMAPサーバーに対応します。エージェントは、お客様がすでに知っているアドレスで、その履歴と送信者としての信頼性を保ったまま動作します。移行は不要です。',
+      },
+      {
+        h: 'MCPとWebhookを1つのキーで',
+        p: 'ClaudeやChatGPTが接続するエンドポイントは、コードからの通常のHTTPSリクエストにも応答します。ProとBusinessでは、メールが届くとWebhookがワークフローを起動します。通常は約2分以内です。',
+      },
+      {
+        h: '定額の料金',
+        p: '有料プランは月額固定で、呼び出しごとの課金はありません。忙しいワークフローも静かなワークフローも料金は同じです。受信トレイ1つなら無料で始められます。',
+      },
+      {
+        h: '署名付きWebhook',
+        p: 'すべての配信は、タイムスタンプと本文に対するHMAC-SHA256で署名され、重複排除用のイベントIDを含みます。エンドポイントが応答しない場合は最大6回まで再試行されます。',
+      },
+      {
+        h: '冪等な送信',
+        p: '`idempotency_key`を渡せば、接続が切れた後に再試行しても二重送信になりません。再試行では元のメッセージIDが返されます。',
+      },
+      {
+        h: 'スコープ付きキー',
+        p: '各キーは必要な権限と受信トレイだけを持つため、仕分け用スクリプトにはサポート用の受信トレイだけを読ませることができます。キーは他のキーに影響を与えずに個別に取り消せます。',
+      },
+      {
+        h: '送信の承認',
+        p: '受信トレイからの送信をすべて保留し、担当者が承認してから送信できます。新しい自動化の動作を確かめている間の既定の設定として適しています。',
+      },
+      {
+        h: 'オープンソース',
+        p: 'サーバーはオープンソースなので、各呼び出しがどう処理されるかをコードで確認できます。[セルフホストする](/self-hosting)こともできます。',
+      },
+    ],
+  },
+  how: {
+    h: '使い方',
+    steps: [
+      'ダッシュボードでメールボックスを接続します。OutlookはMicrosoftでログインし、その他の多くのプロバイダーはアプリ パスワードを使います。',
+      'APIキーを作成し、必要なスコープにチェックを入れます。必要に応じて、特定の受信トレイだけに限定できます。',
+      '`tools/list`を呼び出してキーで何ができるかを確認し、`tools/call`で読み取り、検索、下書き作成、送信を行います。',
+      'ProまたはBusinessでは、Webhookエンドポイントを追加すると、ポーリングなしで新着メールがワークフローに届きます。',
+    ],
+    codeLabel: 'bash',
+  },
+  uses: {
+    h: '開発者による活用例',
+    items: [
+      '**n8nなどのワークフローツール:** 新着メールでワークフローを起動し、メールを読んで、振り分け、下書き作成、返信を行います。',
+      '**コーディングエージェント:** コマンド1つとキー1つで、Claude CodeにHTTP経由で実際の受信トレイを使わせます。',
+      '**サポートと営業のエージェント:** 共有の受信トレイを仕分けし、担当者が承認する返信の下書きを作り、スケジュールどおりにフォローアップします。',
+      '**自作のエージェント:** HTTPSリクエストを送れる言語なら、どれからでも同じツールを呼び出せます。',
+    ],
+  },
+  cta: {
+    title: '受信トレイを接続して、最初の呼び出しを試しましょう',
+    sub: '受信トレイ1つはずっと無料です。カードの登録は不要です。',
+    button: '無料で始める',
+    guide: '開発者ガイド',
+    pricing: '料金を見る',
+  },
+  featureList: [
+    'HTTPS経由のメールAPI (JSON-RPC 2.0、Model Context Protocol)',
+    '既存のGmail、Outlook、Microsoft 365、IMAPメールボックスで動作',
+    '新着メール向けの署名付きWebhook',
+    '安全な再試行のための冪等性キー',
+    '受信トレイ単位のアクセス制御ができるスコープ付きAPIキー',
+    '送信前の人による承認',
+  ],
+};
+
 const zh = {
   meta: {
     title: '面向 AI 代理的邮件 API，用你已有的收件箱',
@@ -552,7 +728,7 @@ const zh = {
   ],
 };
 
-export const DEVELOPERS = { en, nb, es, fr, de, zh };
+export const DEVELOPERS = { en, nb, es, fr, de, pt, ja, zh };
 
 export function developersCopy(locale) {
   return DEVELOPERS[locale] ?? en;

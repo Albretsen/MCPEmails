@@ -10,6 +10,8 @@
  */
 import en from '../../../messages/en/onboarding.json' with { type: 'json' };
 import de from '../../../messages/de/onboarding.json' with { type: 'json' };
+import pt from '../../../messages/pt/onboarding.json' with { type: 'json' };
+import ja from '../../../messages/ja/onboarding.json' with { type: 'json' };
 import fr from '../../../messages/fr/onboarding.json' with { type: 'json' };
 import es from '../../../messages/es/onboarding.json' with { type: 'json' };
 import nb from '../../../messages/nb/onboarding.json' with { type: 'json' };
@@ -27,7 +29,7 @@ export type OnboardingAssistCategory =
   | 'prompt_reply_radar' | 'prompt_draft_replies' | 'prompt_morning_brief'
   | 'link_add_to_ai' | 'link_help_steps';
 
-export const ASSIST_LOCALES = ['en', 'de', 'fr', 'es', 'nb', 'zh'] as const;
+export const ASSIST_LOCALES = ['en', 'de', 'pt', 'ja', 'fr', 'es', 'nb', 'zh'] as const;
 export type AssistLocale = (typeof ASSIST_LOCALES)[number];
 
 export function assistLocale(value: unknown): AssistLocale {
@@ -72,7 +74,7 @@ export function assistEvent(body: Record<string, unknown>): { stage: 'onboarding
 // ── Copy ────────────────────────────────────────────────────────────────────
 
 type Messages = typeof en;
-const MESSAGES: Record<AssistLocale, Messages> = { en, de, fr, es, nb, zh } as Record<AssistLocale, Messages>;
+const MESSAGES: Record<AssistLocale, Messages> = { en, de, pt, ja, fr, es, nb, zh } as Record<AssistLocale, Messages>;
 
 /** A dotted key out of onboarding.json, with {var} filled in. Falls back to English. */
 export function onboardingText(locale: AssistLocale, key: string, vars: Record<string, string> = {}): string {

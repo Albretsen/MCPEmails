@@ -1,0 +1,97 @@
+{
+  "cta": {
+    "primary": "Conectar {provider} grátis",
+    "secondary": "Ler a documentação"
+  },
+  "settings": {
+    "title": "As configurações exatas de IMAP e SMTP do {provider}",
+    "sub": "Copie estes dados no formulário de conexão. O MCPEmails preenche o que consegue e tenta o outro transporte padrão se o primeiro não responder.",
+    "colHost": "Servidor",
+    "colPort": "Porta",
+    "colProtocol": "Protocolo",
+    "colSecurity": "Segurança",
+    "imap": "IMAP (entrada)",
+    "smtp": "SMTP (saída)",
+    "security": {
+      "tls": "TLS (implícito)",
+      "starttls": "STARTTLS",
+      "plain": "Nenhuma"
+    },
+    "verified": "Verificado em {date}: {host} respondeu a uma conexão TLS e se identificou como servidor IMAP com esse nome.",
+    "mechs": "Ele anuncia autenticação {mechs}.",
+    "username": "Entre com:"
+  },
+  "caps": {
+    "eyebrow": "O que sua IA pode fazer",
+    "title": "{article, select, an {Uma} other {Uma}} caixa de entrada {provider} que seu agente consegue usar de verdade",
+    "sub": "{toolCount} ferramentas MCP baseadas em ações: enviar, responder, encaminhar, agendar e organizar. Seu agente termina o trabalho dentro do {provider}."
+  },
+  "capabilities": [
+    {
+      "tag": "Ler",
+      "h": "Ler e pesquisar e-mails",
+      "p": "Listar, ler e pesquisar em todas as pastas para achar aquela fatura, resumir uma conversa ou puxar o e-mail mais recente de um remetente."
+    },
+    {
+      "tag": "Enviar",
+      "h": "Enviar, responder e encaminhar",
+      "p": "Escrever e enviar mensagens de verdade, responder na conversa e encaminhar, direto da sua caixa de e-mail, não como um rascunho que você termina à mão."
+    },
+    {
+      "tag": "Agendar",
+      "h": "Agendar para depois",
+      "p": "Programar uma mensagem para sair na hora certa, para seu agente escrever agora e enviar no horário combinado."
+    },
+    {
+      "tag": "Organizar",
+      "h": "Mover, copiar, sinalizar, arquivar, excluir",
+      "p": "Manter a caixa de entrada em ordem: guardar e-mails em pastas, sinalizar o que importa, arquivar o resto ou excluir quando você pedir."
+    }
+  ],
+  "how": {
+    "eyebrow": "Configuração",
+    "title": "Conecte o {provider} em quatro etapas",
+    "sub": "Da criação da conta ao primeiro e-mail com IA em poucos minutos."
+  },
+  "gotchas": {
+    "eyebrow": "Antes de começar",
+    "title": "O que costuma dar errado com o {provider}"
+  },
+  "limits": {
+    "title": "Limites conhecidos com o {provider}"
+  },
+  "faq": {
+    "eyebrow": "Perguntas frequentes",
+    "title": "{provider} e IA: dúvidas comuns"
+  },
+  "related": {
+    "title": "Conectar outra caixa de e-mail",
+    "sub": "O mesmo servidor MCP, as mesmas {toolCount} ferramentas, outro provedor.",
+    "link": "Conectar {provider}",
+    "all": "Ver todos os provedores de e-mail compatíveis"
+  },
+  "matrix": {
+    "intro": "Comparando provedores primeiro?",
+    "label": "Ver a matriz de compatibilidade de provedores de e-mail"
+  },
+  "verificationNote": {
+    "title": "O Google mostra uma tela de app não verificado",
+    "body": "Isso vale só para o login com o Google, oferecido nos planos Pro e Business; a conexão padrão por senha de app não mostra nenhuma tela do Google. O Google analisa apps que pedem acesso ao Gmail, e o mcpemails.com não passou por essa análise, por isso o login com o Google mostra uma tela de <b>app não verificado</b>, com as etapas para continuar. A conexão em si não tem prazo: depois de conectada, uma caixa de entrada continua conectada até você revogar."
+  },
+  "hub": {
+    "meta": {
+      "title": "Conecte qualquer provedor de e-mail ao Claude e a clientes MCP",
+      "description": "Configurações de IMAP e SMTP de {count} provedores de e-mail, cada uma verificada em uma conexão real, e como dar ao Claude, Cursor ou ChatGPT acesso a essa caixa de e-mail."
+    },
+    "breadcrumb": "Provedores de e-mail",
+    "eyebrow": "Todos os provedores",
+    "title": "Conecte qualquer caixa de e-mail à sua IA",
+    "lead": "O MCPEmails fala IMAP e SMTP puros, então conecta quase qualquer caixa de e-mail. Abaixo está cada provedor com um guia de configuração: os hosts e portas exatos, se você precisa de senha de app e o que costuma dar errado.",
+    "answer": "O MCPEmails se conecta a qualquer provedor de e-mail que ofereça acesso IMAP e SMTP, ou seja, quase todos. Cada guia abaixo lista os nomes de host, as portas e os requisitos de autenticação verificados desse provedor, e uma caixa de entrada é grátis para sempre.",
+    "verifiedIntro": "Todos os nomes de host destas páginas foram verificados em {date} abrindo uma conexão TLS real com cada um.",
+    "countLabel": "{count} provedores",
+    "genericTitle": "Seu provedor não está na lista?",
+    "genericSub": "Qualquer caixa de e-mail com acesso IMAP funciona. O guia genérico mostra como encontrar seu host e porta.",
+    "genericCta": "Conectar qualquer caixa IMAP"
+  }
+}

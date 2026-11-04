@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.devin.ai/desktop/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Windsurf: configuração do servidor MCP no Cascade",
+    "description": "Adicione uma caixa de entrada real ao Cascade no Windsurf. Uma entrada no mcp_config.json usando serverUrl, depois autorize com OAuth. Sem chave de API. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Windsurf + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Windsurf",
+    "titleLine2": "e ao Cascade",
+    "lead": "Adicione uma caixa de correio real ao Cascade no Devin Desktop, antigo Windsurf. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails pelo editor, em todas as caixas de entrada que você conectou.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Devin Desktop é o novo nome do Windsurf. No painel do Cascade, abra o menu ... no canto superior direito e clique em Open MCP config file, na seção MCPs. Adicione uma entrada em mcpServers usando o campo serverUrl, não url, com https://mcpemails.com/api/mcp, salve o arquivo e faça login com o MCPEmails quando for pedido."
+  },
+  "method": {
+    "title": "Como o Windsurf se conecta: OAuth, sem chave de API",
+    "body": "O Devin Desktop (antigo Windsurf) executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra o arquivo de configuração MCP",
+      "p": "No painel do Cascade, clique no menu <b>...</b> no canto superior direito e, na seção <b>MCPs</b>, clique em <b>Open MCP config file</b> (abrir o arquivo de configuração MCP). O arquivo é <code>~/.config/devin/mcp_config.json</code> no macOS e no Linux, e <code>%APPDATA%\\devin\\mcp_config.json</code> no Windows."
+    },
+    {
+      "h": "Adicione o servidor",
+      "p": "Adicione a entrada abaixo. O nome do campo aqui é <code>serverUrl</code>, não <code>url</code>."
+    },
+    {
+      "h": "Salve e faça login",
+      "p": "Salve o arquivo e faça login com o MCPEmails quando for pedido. Aprove os escopos que você quer que o Cascade tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O campo é serverUrl, e url falha em silêncio",
+      "p": "Esse é o erro mais comum na configuração do Windsurf, e é totalmente compreensível: Cursor, Zed e VS Code leem <code>url</code>, então um trecho copiado de qualquer um deles parece certo. O Devin Desktop lê <code>serverUrl</code>. Com a chave errada, a entrada é lida, o servidor aparece na lista e nenhuma ferramenta chega."
+    },
+    {
+      "h": "Guias antigos apontam para o caminho de configuração do Windsurf",
+      "p": "O Windsurf guardava a configuração MCP em <code>~/.codeium/windsurf/mcp_config.json</code>, e muitos guias ainda dizem isso. O Devin Desktop usa <code>~/.config/devin/mcp_config.json</code> (<code>%APPDATA%\\devin\\mcp_config.json</code> no Windows). O item <b>Open MCP config file</b> no menu <b>...</b> do Cascade abre o arquivo que ele realmente lê, então comece por ali em vez de digitar um caminho."
+    },
+    {
+      "h": "Decida de antemão se o Cascade pode enviar",
+      "p": "É na tela de consentimento que isso se resolve. Escopos de leitura e rascunho combinam com um assistente de editor, e deixar <code>send:email</code> de fora significa que nenhum prompt, jailbreak ou loop confuso consegue disparar e-mails a partir desta conexão. A aprovação humana no painel é a proteção extra se você quiser mesmo poder enviar."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Windsurf?",
+      "a": "No Devin Desktop, antigo Windsurf, abra o menu ... no painel do Cascade e clique em Open MCP config file. Adicione uma entrada em mcpServers com serverUrl definido como https://mcpemails.com/api/mcp, salve e faça login com o MCPEmails quando for pedido. O Cascade passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Por que minha configuração do Windsurf não funciona se o mesmo JSON funciona no Cursor?",
+      "a": "Quase sempre é o nome do campo. O Cursor lê url, o Devin Desktop lê serverUrl. O resto da entrada é idêntico, e é exatamente por isso que o erro passa por uma leitura cuidadosa."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Windsurf?",
+      "a": "Não. O Devin Desktop (antigo Windsurf) executa o fluxo OAuth com este servidor, então o arquivo de configuração guarda só uma URL pública. Uma chave de API bearer continua disponível para uso em scripts ou headless."
+    },
+    {
+      "q": "Quais caixas de correio o Windsurf alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Cascade pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao Cascade uma caixa de entrada real",
+    "sub": "Uma entrada de configuração, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

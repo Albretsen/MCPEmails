@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Senha de app",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Seu endereço completo do Yahoo, incluindo o domínio: name@yahoo.com, ou a forma ymail.com ou rocketmail.com com a qual você se cadastrou.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "MCP do Yahoo Mail: conectar o Yahoo Mail ao Claude e ao ChatGPT",
+    "description": "Conecte o Yahoo Mail ao Claude ou ao ChatGPT com uma senha de app do Yahoo via IMAP, porta 993. A senha da sua conta não funciona. Uma caixa de entrada grátis, para sempre."
+  },
+  "hero": {
+    "eyebrow": "Yahoo Mail + IA",
+    "titleLine1": "Conecte o Yahoo Mail ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "Dê ao Claude ou ao ChatGPT sua caixa de entrada real do Yahoo em minutos. Leia, pesquise, envie, responda, agende e organize e-mails com uma única senha de app, e use a mesma caixa de entrada em todos os clientes MCP, não só em um.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha de app, sem configurar OAuth",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "O Claude não consegue acessar o Yahoo Mail sozinho. O MCPEmails é um servidor MCP hospedado que o conecta via IMAP na porta 993, autenticando com uma senha de app do Yahoo criada em Conexões externas, na página Segurança da conta, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. Sua senha comum do Yahoo nunca é aceita a partir de um cliente de e-mail. A configuração leva uns dois minutos, e uma caixa de entrada é grátis, para sempre."
+  },
+  "method": {
+    "title": "Como o Yahoo se conecta: uma senha de app",
+    "body": "O Yahoo Mail se conecta via IMAP/SMTP com uma <b>senha de app do Yahoo</b>. Gere uma em Segurança da conta do Yahoo, em Conexões externas, e cole no MCPEmails junto com seu endereço do Yahoo. Se a opção não aparecer, ative a verificação em duas etapas e procure de novo. Sem dança de OAuth, sem pop-ups no navegador."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Gere uma senha de app do Yahoo",
+      "p": "Em Segurança da conta do Yahoo, em Conexões externas, gere uma senha de app. Se a opção não estiver lá, ative primeiro a verificação em duas etapas."
+    },
+    {
+      "h": "Cole a senha no MCPEmails",
+      "p": "Adicione seu endereço do Yahoo e a senha de app para conectar a caixa de entrada com segurança."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O host que o Yahoo documenta e o host ao qual nos conectamos são dois nomes para um mesmo servidor",
+      "p": "O artigo de ajuda do Yahoo lista <code>imap.mail.yahoo.com</code>. A tabela de configurações desta página mostra <code>export.imap.mail.yahoo.com</code>. Nenhum dos dois está errado: ambos são aliases para o mesmo <code>jimap.imap.mail.yahoo.com</code>, resolvem para os mesmos endereços, e o certificado que o Yahoo apresenta é um curinga em <code>*.imap.mail.yahoo.com</code> que cobre os dois. Publicamos o nome com o qual abrimos uma conexão TLS ao vivo. Se um cliente de e-mail seu já está configurado com o nome documentado, deixe como está: ele fala com a mesma máquina."
+    },
+    {
+      "h": "A senha de app fica em Conexões externas, e sobrevive à troca da sua senha",
+      "p": "O Yahoo gera senhas de app na página Segurança da conta, em <b>Conexões externas</b>: Criar senha de aplicativo, dê um nome ao app, Gerar senha. O Yahoo mostra a senha uma única vez. O que as pessoas não percebem é o que acontece depois. Uma senha de app continua válida mesmo depois que você troca sua senha principal do Yahoo, então trocar a senha não revoga o acesso de um cliente de e-mail. A única forma de cortar uma conexão do lado do Yahoo é excluir aquela senha de app específica na mesma tela."
+    },
+    {
+      "h": "Yahoo e AOL compartilham a plataforma, mas não a conta, e as credenciais não cruzam",
+      "p": "Endereços em ymail.com e rocketmail.com são contas comuns do Yahoo e pertencem a esta página. O AOL Mail roda na mesma infraestrutura, e <code>imap.aol.com</code> resolve pelo mesmo serviço <code>yahoodns.net</code>, mas o AOL tem seus próprios hostnames e sua própria página de segurança da conta. Uma senha de app gerada em uma conta do Yahoo não abre uma caixa de correio do AOL, e vice-versa. Conecte um endereço do AOL como AOL."
+    },
+    {
+      "h": "O IMAP do Yahoo é mais capaz que o da maioria das caixas gratuitas, o que joga a seu favor",
+      "p": "Na sondagem, o Yahoo anunciou <code>SASL-IR</code>, <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> e <code>SPECIAL-USE</code>. Na prática, isso significa que mover é um único comando atômico em vez de uma cópia seguida de exclusão, e que Enviados, Rascunhos, Spam e Lixeira são identificados pela <b>função</b> e não pelo nome, então uma pasta de sistema renomeada ou em outro idioma ainda é encontrada corretamente. Ele não anuncia <code>AUTH=LOGIN</code> no IMAP, só PLAIN e os mecanismos OAuth, então ferramentas presas ao mecanismo LOGIN falham na autenticação mesmo com a senha de app correta."
+    }
+  ],
+  "limits": [
+    "O servidor de envio do Yahoo anuncia um tamanho máximo de mensagem de cerca de 41 MB. A leitura de anexos pelo MCPEmails é limitada a 25 MB por solicitação, então algo maior precisa ser buscado no próprio Yahoo Mail.",
+    "As senhas de app não expiram e sobrevivem à troca da sua senha do Yahoo. Excluir a senha de app em Segurança da conta é a única forma de revogar o acesso."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Yahoo Mail?",
+      "a": "Não diretamente. O Claude não tem um conector integrado para o Yahoo. Conectar um servidor MCP como o MCPEmails à sua caixa de correio do Yahoo via IMAP, com uma senha de app do Yahoo, dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar. A mesma conexão funciona sem mudanças no Cursor, no ChatGPT e em outros clientes MCP."
+    },
+    {
+      "q": "O ChatGPT consegue se conectar ao Yahoo Mail?",
+      "a": "Sim, adicionando o MCPEmails como servidor MCP personalizado. Em chatgpt.com, com o ChatGPT Go ou um plano pago, abra Plugins, Personal, Add, Add custom MCP server (adicionar servidor MCP personalizado), cole a URL do MCPEmails, escolha OAuth e faça login. Depois digite @ em um chat e escolha MCPEmails para acessar a caixa de entrada do Yahoo que você conectou aqui. A mesma senha de app serve para o Claude também."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do Yahoo Mail?",
+      "a": "O IMAP fica na porta 993 com TLS implícito, e o SMTP é smtp.mail.yahoo.com na porta 465, também com TLS implícito. O Yahoo documenta o host de entrada como imap.mail.yahoo.com; a tabela desta página mostra export.imap.mail.yahoo.com, que é um alias para o mesmo servidor e é o nome que verificamos ao vivo. Faça login com seu endereço completo e uma senha de app."
+    },
+    {
+      "q": "Por que minha senha do Yahoo é rejeitada?",
+      "a": "Porque o Yahoo não aceita a senha da sua conta vinda de um aplicativo de e-mail de terceiros. Você precisa de uma senha de app criada na página Segurança da conta do Yahoo, em Conexões externas. Copie-a quando aparecer, porque o Yahoo não a mostra de novo. Se uma senha de app antiga parou de funcionar, gere uma nova em vez de reutilizá-la."
+    },
+    {
+      "q": "Preciso da verificação em duas etapas para ter uma senha de app do Yahoo?",
+      "a": "O Yahoo cria senhas de app na página Segurança da conta, em Conexões externas. Se essa opção não aparece na sua conta, ative a verificação em duas etapas e procure de novo: o Yahoo já moveu e restringiu essa tela mais de uma vez ao longo dos anos. Gere a senha em um navegador no qual você já fez login antes, e não em uma janela anônima."
+    },
+    {
+      "q": "Meu e-mail do Yahoo fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Yahoo via IMAP a cada solicitação e entregues ao seu cliente de IA. As credenciais são criptografadas em repouso, e o conteúdo das mensagens não é retido. Excluir a senha de app em Segurança da conta do Yahoo encerra a conexão do lado do Yahoo imediatamente."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Yahoo",
+    "sub": "Conecte o Yahoo Mail em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Perplexity: configuração de conector MCP personalizado",
+    "description": "Adicione uma caixa de entrada real ao Perplexity com um conector remoto personalizado. Cole uma URL, escolha OAuth e faça login. Sem chave de API. Pro, Max e Enterprise."
+  },
+  "hero": {
+    "eyebrow": "Perplexity + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Perplexity",
+    "titleLine2": "como um conector personalizado",
+    "lead": "Pergunte ao Perplexity sobre seus próprios e-mails junto com a web. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails em todas as caixas de entrada que você conectou.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Num plano Perplexity Pro, Max ou Enterprise, abra Plugins, selecione Add custom, depois Connector e Add MCP connector. Escolha Remote, cole https://mcpemails.com/api/mcp como MCP Server URL, escolha OAuth em Authentication, clique em Add e depois clique no card do conector para fazer login no MCPEmails."
+  },
+  "method": {
+    "title": "Como o Perplexity se conecta: OAuth, sem chave de API",
+    "body": "Os conectores remotos personalizados do Perplexity suportam OAuth 2.0 com descoberta, e o MCPEmails publica seus endpoints em <code>/.well-known/oauth-authorization-server</code>. O Perplexity se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há Client ID nem Client Secret para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. O token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra Add custom no Perplexity",
+      "p": "Em perplexity.ai, abra <b>Plugins</b> na barra lateral e selecione <b>Add custom</b> (adicionar personalizado), depois <b>Connector</b> e depois <b>Add MCP connector</b>. Se você ainda vir o menu antigo, vá em <b>Customize</b>, <b>Connectors</b>."
+    },
+    {
+      "h": "Informe o servidor",
+      "p": "Selecione <b>Remote</b>, digite um <b>Name</b> como MCPEmails e cole <code>https://mcpemails.com/api/mcp</code> como <b>MCP Server URL</b>. Defina <b>Authentication</b> como <b>OAuth</b> e <b>Transport</b> como <b>Streamable HTTP</b>. O Perplexity descobre nossos endpoints OAuth e se registra sozinho, então não há Client ID nem Client Secret para preencher."
+    },
+    {
+      "h": "Adicione e faça login",
+      "p": "Marque a caixa de confirmação e clique em <b>Add</b>. Depois clique no card do conector para iniciar a autenticação, faça login no MCPEmails e aprove os escopos que você quer que o Perplexity tenha."
+    },
+    {
+      "h": "Escolha o conector para a sua pergunta",
+      "p": "Comece uma nova consulta e digite <code>@MCPEmails</code>, ou clique no ícone <b>+</b> na caixa de busca, abra <b>Connectors and sources</b> e selecione MCPEmails. Depois pergunte sobre seus e-mails, por exemplo quais mensagens chegaram hoje."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Contas gratuitas não têm conectores personalizados",
+      "p": "O Perplexity oferece servidores MCP personalizados nos planos Pro, Max e Enterprise. No Enterprise, os membros só conseguem adicionar os próprios conectores personalizados depois que um administrador ativa <b>Allow members to add custom connectors</b>, que vem desativado por padrão. Um administrador também pode adicionar o MCPEmails uma vez para a organização inteira."
+    },
+    {
+      "h": "Adicionar o conector não é o mesmo que usá-lo",
+      "p": "Algumas superfícies só chamam um conector que você seleciona para aquele chat, pelo seletor de conectores ou com uma menção @. Se Sources ou Focus estiver definido só como Web, Academic ou Social, o Perplexity não chama apps conectados, responde a partir da web e parece não enxergar sua caixa de entrada. Confira os dois antes de suspeitar da conexão."
+    },
+    {
+      "h": "Configure na web, não no celular",
+      "p": "O Perplexity avisa que um conector pode estar disponível na web e ainda não no celular. Adicione o MCPEmails em perplexity.ai num navegador. Se a autorização nunca terminar, permita pop-ups e cookies entre sites para perplexity.ai, já que um bloqueador de anúncios pode travar a janela do OAuth."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de 100 por minuto, 1.000 por hora e 10.000 por dia por chave.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Perplexity?",
+      "a": "Abra Plugins, selecione Add custom, depois Connector e Add MCP connector. Escolha Remote, cole https://mcpemails.com/api/mcp como MCP Server URL, defina Authentication como OAuth, clique em Add, depois clique no card do conector e faça login no MCPEmails. Numa consulta, digite @MCPEmails ou selecione o conector em Connectors and sources."
+    },
+    {
+      "q": "Qual plano do Perplexity eu preciso?",
+      "a": "Conectores MCP personalizados estão disponíveis no Pro, Max e Enterprise. No Enterprise, um administrador adiciona o conector para a organização ou permite que os membros adicionem os seus."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Perplexity?",
+      "a": "Não. O Perplexity executa o fluxo OAuth quando você clica no card do conector, e o MCPEmails suporta registro dinâmico de cliente, então não há Client ID, Client Secret nem chave para colar. Uma chave bearer está disponível para outros clientes que não conseguem fazer OAuth."
+    },
+    {
+      "q": "Quais caixas de correio o Perplexity alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O Perplexity vê todas pela mesma conexão: ele chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Perplexity pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Pesquise sua caixa de entrada como você pesquisa na web",
+    "sub": "Um conector, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

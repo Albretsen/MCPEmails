@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao JetBrains AI Assistant: configuração MCP",
+    "description": "Adicione uma caixa de entrada real ao AI Assistant no IntelliJ, PyCharm ou WebStorm. Streamable HTTP mais uma chave de API com escopo num header Authorization. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "JetBrains + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao JetBrains",
+    "titleLine2": "AI Assistant",
+    "lead": "Adicione uma caixa de correio real ao AI Assistant em qualquer IDE da JetBrains compatível. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails sem sair da IDE.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Chave de API com escopo, revogável com um clique",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Abra Settings, Tools, AI Assistant, Model Context Protocol. Adicione um servidor, escolha Streamable HTTP como tipo de conexão, cole https://mcpemails.com/api/mcp e adicione um header Authorization Bearer com uma chave de API do seu painel."
+  },
+  "method": {
+    "title": "Como o JetBrains AI Assistant se conecta: uma chave de API com escopo",
+    "body": "O JetBrains AI Assistant não executa o fluxo OAuth no navegador com um servidor MCP remoto, então ele autentica com um token bearer. Crie uma chave de API no seu painel, marque só os escopos de que o agente precisa e cole a chave no JetBrains AI Assistant como um header <code>Authorization: Bearer</code>. Conexões por chave e por OAuth chegam ao mesmo endpoint e recebem o mesmo catálogo de ferramentas; a diferença está só em como o token é obtido."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Crie uma chave de API com escopo",
+      "p": "No painel, em Chaves de API, clique em Criar chave. Dê um nome e marque só os escopos de que este agente precisa: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> e <code>manage:automations</code>. A chave tem o formato <code>mcpe_</code> seguido de 64 caracteres hexadecimais e aparece uma única vez, então copie antes de fechar a janela."
+    },
+    {
+      "h": "Abra as configurações de MCP",
+      "p": "Abra <b>Settings</b> (configurações), depois <b>Tools</b>, depois <b>AI Assistant</b> e depois <b>Model Context Protocol (MCP)</b>."
+    },
+    {
+      "h": "Adicione o servidor",
+      "p": "Clique em Add e selecione <b>Streamable HTTP</b> como tipo de conexão. Cole <code>https://mcpemails.com/api/mcp</code> e adicione um header chamado <code>Authorization</code> com o valor <code>Bearer</code> seguido de um espaço e da sua chave."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, não stdio e não SSE",
+      "p": "A lista de tipos de conexão mostra primeiro um servidor local baseado em comando, porque é isso que a maioria dos servidores MCP é. Este é remoto e hospedado, então não há comando para rodar. Escolha Streamable HTTP, que é o transporte que este servidor usa na revisão 2025-06-18."
+    },
+    {
+      "h": "Aqui, a chave é todo o modelo de permissão",
+      "p": "O AI Assistant não executa o fluxo de consentimento OAuth, então não existe uma segunda tela onde você restringe o que a conexão pode fazer. O que você marcar ao criar a chave é o que a IDE vai ter até você revogar. Para uma IDE, os escopos de leitura, pesquisa e rascunho cobrem quase tudo que vale a pena fazer."
+    },
+    {
+      "h": "As configurações da IDE sincronizam, e um token bearer é uma credencial",
+      "p": "Se você tem a sincronização de configurações ativada entre máquinas, trate a chave como qualquer outra credencial que viaja junto. Chaves são baratas: emita uma por máquina, dê nomes que deixem a lista legível e revogue a que você não reconhecer mais. Só um hash SHA-256 fica guardado do nosso lado, então a chave bruta não pode ser recuperada, e chaves perdidas são substituídas, não recuperadas."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao JetBrains AI Assistant?",
+      "a": "Abra Settings, Tools, AI Assistant, Model Context Protocol, adicione um servidor com o tipo de conexão Streamable HTTP, cole https://mcpemails.com/api/mcp e adicione um header Authorization Bearer com uma chave de API do seu painel. O AI Assistant passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Em quais IDEs da JetBrains isso funciona?",
+      "a": "Em qualquer IDE da JetBrains em que o AI Assistant consiga configurar um servidor MCP. O caminho das configurações e o tipo de conexão Streamable HTTP pertencem ao AI Assistant, não a uma IDE específica, então a configuração é a mesma onde quer que o plugin esteja disponível. Se a tela Model Context Protocol não aparece nas suas Settings, a questão é o plugin, não este servidor."
+    },
+    {
+      "q": "Por que uma chave de API e não OAuth?",
+      "a": "Porque o AI Assistant autentica um servidor MCP remoto com um header configurado, e não executando um fluxo OAuth no navegador. Uma chave bearer é o caminho que funciona ali. O endpoint e as ferramentas são idênticos aos dos clientes OAuth; só muda como o token é obtido."
+    },
+    {
+      "q": "Quais caixas de correio o AI Assistant alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O AI Assistant pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IDE uma caixa de entrada real",
+    "sub": "Um servidor MCP, uma chave com escopo. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

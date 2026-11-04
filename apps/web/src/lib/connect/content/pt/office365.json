@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
+    "https://mc.merill.net/message/MC1163922",
+    "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Entrar com a Microsoft (OAuth 2.0), pode exigir aprovação do administrador de TI",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "Nada para digitar. Você entra com sua conta Microsoft corporativa ou de estudante na própria página da Microsoft e aprova o acesso, então nenhuma senha nem senha de app é digitada aqui. As configurações de IMAP e SMTP publicadas para o Microsoft 365 não se aplicam: o MCPEmails se conecta pelo Microsoft Graph.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conectar o e-mail do Microsoft 365 ao Claude e ao ChatGPT",
+    "description": "Conecte uma caixa de correio corporativa ou de estudante do Microsoft 365 ao Claude, ao ChatGPT, ao Cursor ou a qualquer cliente MCP. Entre com a Microsoft; muitas organizações precisam que um administrador de TI aprove o app uma vez antes."
+  },
+  "hero": {
+    "eyebrow": "Microsoft 365 + IA",
+    "titleLine1": "Conecte o e-mail do Microsoft 365",
+    "titleLine2": "ao Claude, ao ChatGPT e ao Cursor",
+    "lead": "Dê ao seu agente de IA sua caixa de correio corporativa ou de estudante do Outlook. Entre com a Microsoft e, se sua organização exigir, envie ao administrador de TI um link para aprovar o MCPEmails para todo mundo.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Entre com a Microsoft, sem senha de app",
+    "meta2": "Link de aprovação para o administrador de TI incluído",
+    "answer": "Sim, com uma condição que depende da sua organização. O MCPEmails conecta caixas de correio corporativas e de estudante do Microsoft 365 pelo Microsoft Graph: você clica em Conectar com a Microsoft e entra com sua conta de trabalho. Muitas organizações, porém, precisam que um administrador de TI aprove o app uma vez antes, porque a política de consentimento padrão da Microsoft, em vigor desde o fim de 2025, impede que funcionários aprovem sozinhos permissões de leitura de e-mail. Se isso acontecer, o painel dá a você um link de aprovação para enviar ao administrador de TI. O administrador abre o link, entra com sua conta Microsoft de trabalho e aprova o MCPEmails uma vez para a organização inteira, sem precisar de conta no MCPEmails, e depois disso você e seus colegas se conectam normalmente. Então cole uma URL no Claude, no ChatGPT, no Cursor ou em qualquer cliente MCP. Uma caixa de entrada é grátis, para sempre."
+  },
+  "method": {
+    "title": "Como o Microsoft 365 se conecta: login da Microsoft, às vezes com aprovação do administrador",
+    "body": "O Microsoft 365 se conecta pelo <b>Microsoft Graph</b> com OAuth 2.0, não via IMAP. Você entra na própria página da Microsoft e aprova as permissões que o MCPEmails pede: ler e alterar e-mails (<b>Mail.ReadWrite</b>), enviar e-mails (<b>Mail.Send</b>), manter a conexão (<b>offline_access</b>) e seu perfil básico e endereço de e-mail. A Microsoft mostra o MCPEmails como vindo de um editor verificado. Se você pode aprovar essas permissões sozinho é algo decidido pela sua organização. Desde o fim de 2025, a política de consentimento padrão da Microsoft não deixa mais usuários comuns aprovarem permissões de e-mail para um app, então em muitas organizações a primeira pessoa a se conectar recebe um pedido de aprovação do administrador. Um administrador aprova uma vez para a organização inteira, não uma vez por pessoa."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Escolha Outlook e conecte com a Microsoft",
+      "p": "No painel, abra Conectar caixa de entrada, escolha Outlook, clique em Conectar com a Microsoft e entre com sua conta corporativa ou de estudante."
+    },
+    {
+      "h": "Aprove o acesso, ou envie o link do administrador",
+      "p": "Se a Microsoft deixar você aprovar, aceite as permissões e a caixa de entrada se conecta. Se sua organização exige aprovação do administrador, o painel dá a você um link de aprovação para enviar ao administrador de TI. O administrador abre o link, entra com a Microsoft e aprova o app uma vez para a organização inteira; ele não precisa de conta no MCPEmails. Depois clique em Conectar com a Microsoft de novo."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Senhas e senhas de app não funcionam, e é por isso que usamos o Microsoft Graph",
+      "p": "A Microsoft removeu a autenticação Básica para IMAP e POP de todos os locatários do Exchange Online em 2022, e ela não pode ser reativada. Um login com senha falha de um jeito que parece exatamente uma senha errada, e é por isso que as pessoas redefinem credenciais que estavam certas o tempo todo. O MCPEmails não usa IMAP para o Microsoft 365: ele entra com a Microsoft e fala com o Microsoft Graph, então não há senha para digitar nem configuração de servidor para errar."
+    },
+    {
+      "h": "A aprovação do administrador é definida pela sua organização, e um editor verificado não passa por cima dela",
+      "p": "Desde a mudança que a Microsoft começou a implantar no fim de outubro de 2025, as permissões de e-mail do Exchange ficam na política de consentimento padrão gerenciada pela Microsoft, então um usuário que tenta aprovar um app de e-mail vê um pedido de aprovação do administrador no lugar. Ser um editor verificado não muda isso. Seu administrador de TI pode aprovar o MCPEmails para a organização inteira pelo link de aprovação que o painel dá a você para enviar, e só precisa fazer isso uma vez."
+    },
+    {
+      "h": "Uma conta sem caixa de correio do Exchange Online é recusada",
+      "p": "Algumas contas do Microsoft 365 não têm caixa de correio do Exchange Online, por exemplo uma conta de administrador sem licença do Exchange, ou uma organização cujo e-mail está hospedado em outro lugar. O Microsoft Graph então não tem nada para abrir, e o MCPEmails recusa a conexão e avisa. Se seu e-mail fica em outro servidor, conecte o endereço via IMAP."
+    },
+    {
+      "h": "Se a aprovação não foi concluída, o administrador abre o link de novo",
+      "p": "O painel só considera sua organização aprovada quando a Microsoft confirma. Se a Microsoft não confirmar a aprovação, por exemplo porque o administrador fechou a página ou recusou, o Outlook continua bloqueado e o painel informa. Peça ao administrador de TI para abrir o link de aprovação de novo."
+    }
+  ],
+  "limits": [
+    "O Outlook organiza o e-mail em pastas, incluindo pastas aninhadas. As ferramentas de marcadores são só do Gmail, mas a ação de marcador de uma automação aplica uma categoria do Outlook à mensagem.",
+    "O Microsoft Graph não consegue combinar uma pesquisa por texto com os filtros de não lido, anexo, sinalizado ou data. Quando a pesquisa inclui texto, esses filtros não são aplicados, e o resultado informa quais ficaram de fora.",
+    "O envio aceita até 10 MB de anexos por mensagem; baixar anexos e encaminhar originais funciona até 25 MB.",
+    "A versão auto-hospedada se conecta apenas via IMAP e SMTP. Entrar com a Microsoft faz parte do serviço hospedado."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o e-mail do Microsoft 365?",
+      "a": "Sim. Conecte sua caixa de correio corporativa ou de estudante ao MCPEmails entrando com a Microsoft, cole uma URL de MCP no Claude, e o Claude consegue ler, pesquisar, enviar, responder, encaminhar, agendar e arquivar seus e-mails. Se sua organização exige aprovação do administrador, o administrador de TI aprova o MCPEmails uma vez antes, usando o link que o painel dá a você."
+    },
+    {
+      "q": "Por que me pedem aprovação do administrador?",
+      "a": "Por causa da política de consentimento da sua organização. Desde o fim de 2025, a política padrão da Microsoft impede que funcionários aprovem sozinhos permissões de leitura de e-mail para apps, então o login pede aprovação do administrador no lugar. Não é um problema com a sua conta. O painel dá a você um link de aprovação para enviar ao administrador de TI."
+    },
+    {
+      "q": "O que meu administrador de TI precisa fazer?",
+      "a": "Abrir o link de aprovação que você envia, entrar com a conta Microsoft de trabalho dele e aprovar o app para a organização na tela de consentimento da Microsoft, onde o MCPEmails aparece como editor verificado. Ele não precisa de conta no MCPEmails. É feito uma vez para a organização inteira. Depois disso, todo mundo na organização se conecta com Conectar com a Microsoft normalmente."
+    },
+    {
+      "q": "Preciso de senha de app ou de configurações de IMAP?",
+      "a": "Não. O MCPEmails conecta o Microsoft 365 pelo Microsoft Graph depois que você entra com a Microsoft, então não há senha de app para criar nem servidor IMAP ou SMTP para digitar. Uma senha nem funcionaria: a autenticação Básica foi removida do Exchange Online em 2022 e não pode ser reativada."
+    },
+    {
+      "q": "O que minha IA consegue fazer no Microsoft 365?",
+      "a": "Ler, pesquisar, enviar, responder e encaminhar; trabalhar com rascunhos; criar e usar pastas, incluindo aninhadas; mover, copiar e arquivar; sinalizar; excluir para a lixeira ou definitivamente; enviar até 10 MB de anexos por mensagem e baixar anexos ou encaminhar originais de até 25 MB; agendar envios; executar regras de automação; e gerenciar sua assinatura."
+    },
+    {
+      "q": "Meu e-mail fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo na Microsoft a cada solicitação e entregues ao seu cliente de IA. O token OAuth do seu login na Microsoft é criptografado em repouso, e o conteúdo das mensagens não é retido. Excluir a caixa de entrada no MCPEmails encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA a sua caixa de entrada do Microsoft 365",
+    "sub": "Entre com a Microsoft. Se sua organização precisa de aprovação do administrador, um link para o administrador de TI cobre todo mundo. Uma caixa de entrada grátis para sempre."
+  },
+  "seeAlso": {
+    "intro": "Endereço pessoal do Outlook.com, Hotmail ou Live?",
+    "label": "Conectar o Outlook.com",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "Prefere um passo a passo detalhado?",
+    "label": "Conectando o Outlook e o Microsoft 365 ao seu agente de IA via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

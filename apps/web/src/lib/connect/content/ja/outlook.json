@@ -1,0 +1,117 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Microsoftでサインイン（OAuth 2.0）",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "入力するものはありません。Microsoft自身のページでMicrosoftアカウントにサインインしてアクセスを承認するので、ここにパスワードやアプリ パスワードを入力することはありません。Outlook.com向けに公開されているIMAPやSMTPの設定は関係ありません。MCPEmailsはMicrosoft Graphを通じて接続します。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook.comをClaude、ChatGPT、Cursorに接続する",
+    "description": "Outlook.com、Hotmail、Live、MSNのメールをClaude、ChatGPT、CursorなどのMCPクライアントに接続。Microsoftでサインインするだけで、アプリ パスワードは不要。受信トレイ1つはずっと無料。"
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + AI",
+    "titleLine1": "Outlook.comをClaudeに接続、",
+    "titleLine2": "そしてChatGPT、Cursor、あらゆるMCPクライアントにも",
+    "lead": "Claude純正のMicrosoft 365コネクタは職場または学校のアカウントしか受け付けません。MCPEmailsは個人のOutlook.com、Hotmail、Live、MSNの受信トレイを接続します。Microsoftでサインインして一度アクセスを承認すれば、1つのURLですべてのMCPクライアントからメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Microsoftでサインイン、アプリ パスワード不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "はい。MCPEmailsはホスト型のMCPサーバーで、outlook.com、hotmail.com、live.com、msn.comで終わる個人のMicrosoftアカウントをMicrosoft Graph経由で接続します。「Microsoftで接続」をクリックしてサインインし、Microsoftの同意画面でアクセスを承認します。その画面でMCPEmailsは確認済み発行元として表示されます。アプリ パスワードもIMAP設定の入力もなく、個人アカウントでは管理者も関与しません。URLを1つClaude、ChatGPT、Cursor、その他のMCPクライアントに貼り付ければ、エージェントがメールの閲覧、検索、送信、返信、転送、予約送信、振り分けをできるようになります。受信トレイ1つはずっと無料です。"
+  },
+  "method": {
+    "title": "Outlook.comの接続方法: Microsoftでサインイン",
+    "body": "Outlook.comはIMAPではなく、OAuth 2.0を使って<b>Microsoft Graph</b>経由で接続します。Microsoft自身のページでサインインし、短い権限のリストを承認します。メールの読み取りと変更（<b>Mail.ReadWrite</b>）、メールの送信（<b>Mail.Send</b>）、接続の維持（<b>offline_access</b>）、基本プロフィールとメールアドレスです。Microsoftのパスワードを入力するのはMicrosoftのページだけで、私たちには届きません。切断するには、MCPEmailsで受信トレイを削除するか、Microsoftアカウントにアクセスできるアプリの一覧からMCPEmailsを削除してください。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Outlookを選び、Microsoftで接続する",
+      "p": "ダッシュボードで「受信トレイを接続」を開き、Outlookを選んで「Microsoftで接続」をクリックします。"
+    },
+    {
+      "h": "サインインしてアクセスを承認する",
+      "p": "Microsoftのページで、Outlook.com、Hotmail、Live、MSNのアドレスでサインインし、権限を承認します。受信トレイが接続された状態でダッシュボードに戻ります。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントが受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "アプリ パスワードもIMAPパスワードも使えません。だからMicrosoft Graphを使います",
+      "p": "Microsoftは2024年9月16日以降、Microsoft以外のアプリから接続する個人アカウントの基本認証を終了し、Outlook.comのIMAPサービスは今ではOAuthしか提供しません。古いガイドの多くはまだアプリ パスワードを生成するよう案内していますが、それではもうメールにログインできません。MCPEmailsはOutlook.comにIMAPをまったく使いません。Microsoftでサインインし、Microsoft Graphと通信するので、作成するパスワードも、間違えやすいサーバー設定もありません。"
+    },
+    {
+      "h": "hotmail.com、live.com、msn.comのアドレスは同じサービスです",
+      "p": "これらのドメインの背後にあるメールは、1つのMicrosoftコンシューマーサービスです。古いhotmail.comアドレスも、昨日作ったoutlook.comアドレスとまったく同じように接続します。Outlookを選び、そのアドレスでサインインしてください。"
+    },
+    {
+      "h": "OutlookメールボックスのないMicrosoftアカウントは拒否されます",
+      "p": "サインインしたMicrosoftアカウントの背後にExchange Onlineメールボックスがない場合、Microsoft Graphには開くものがないため、MCPEmailsは接続を拒否し、その旨を表示します。そのアドレスのメールが別のサーバーでホストされているなら、代わりにIMAPで接続してください。"
+    },
+    {
+      "h": "作りたてのOutlook.comアカウントは、しばらく送信がブロックされることがあります",
+      "p": "Microsoftの不正対策システムは、新しく作成されたOutlook.comアカウントが短時間に多数のメッセージを送ると、送信を一時的に止めることがあります。これはMicrosoftアカウント側の制限であって接続の不具合ではないので、受信トレイを再接続しても変わりません。"
+    }
+  ],
+  "limits": [
+    "Outlookはメールをフォルダー（入れ子のフォルダーを含む）で整理します。ラベルツールはGmail専用ですが、自動化のラベル操作はメッセージにOutlookの分類を適用します。",
+    "Microsoft Graphはテキスト検索を未読、添付ファイル、フラグ、日付のフィルターと組み合わせられません。検索にテキストが含まれる場合、それらのフィルターは適用されず、結果にどれが省かれたかが示されます。",
+    "送信ではメッセージあたり最大10 MBの添付ファイルを扱えます。添付ファイルのダウンロードと原本の転送は25 MBまで動作します。",
+    "セルフホスト版はIMAPとSMTPでのみ接続します。Microsoftでのサインインはホスト型サービスの一部です。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはOutlook.comで使えますか？",
+      "a": "使えます。Microsoftでサインインしてoutlook.comのメールボックスをMCPEmailsに接続し、MCP URLを1つClaudeに貼り付ければ、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信、振り分けをできるようになります。同じURLがChatGPT、Cursor、その他のMCPクライアントでも使えます。"
+    },
+    {
+      "q": "ClaudeのMicrosoft 365コネクタが私のOutlook.comアカウントを拒否するのはなぜですか？",
+      "a": "Claude内蔵のMicrosoft 365コネクタにはMicrosoft Entraテナント内の職場または学校のアカウントが必要で、Anthropicは個人のMicrosoftアカウントをサポートしないと明言しているため、Outlook.com、Hotmail、Live、MSNのアドレスは弾かれます。MCPEmailsはそうした個人アカウントを接続します。Microsoft自身のページでMicrosoftにサインインし、MCPEmailsをURL1つでカスタムコネクタとしてClaudeに追加してください。"
+    },
+    {
+      "q": "Hotmail、Live、MSNのアドレスでも使えますか？",
+      "a": "使えます。outlook.comと同じMicrosoftコンシューマーメールサービスなので、接続方法も同じです。ダッシュボードでOutlookを選び、そのアドレスでサインインしてください。"
+    },
+    {
+      "q": "アプリ パスワードやIMAP設定は必要ですか？",
+      "a": "不要です。MCPEmailsはMicrosoftでサインインした後、Microsoft Graph経由でOutlook.comに接続するので、作成するアプリ パスワードも、入力するIMAPやSMTPサーバーもありません。どのみちアプリ パスワードは使えません。Microsoftは2024年9月に、個人アカウントでMicrosoft以外のメールアプリからのパスワードを受け付けなくなりました。"
+    },
+    {
+      "q": "AIはOutlook.comで何ができますか？",
+      "a": "閲覧、検索、送信、返信、転送。下書きの操作。入れ子を含むフォルダーの作成と利用。移動、コピー、アーカイブ。フラグ。ゴミ箱への削除または完全削除。メッセージあたり最大10 MBの添付ファイル送信と、25 MBまでの添付ファイルのダウンロードや原本の転送。予約送信。自動化ルールの実行。署名の管理。"
+    },
+    {
+      "q": "職場のMicrosoft 365アカウントを接続するのと同じですか？",
+      "a": "サインインは同じですが、承認は違うことがあります。個人アカウントに管理者は不要です。職場または学校のMicrosoft 365アカウントでは、まずIT管理者が組織に対してMCPEmailsを一度承認する必要があることが多いです。その場合、ダッシュボードがIT管理者に送るための承認リンクを提示します。管理者がそれを使うのにMCPEmailsのアカウントは不要です。"
+    },
+    {
+      "q": "私のメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにMicrosoftからその場で取得し、AIクライアントに渡します。MicrosoftサインインのOAuthトークンは保存時に暗号化され、メッセージ本文は保持しません。MCPEmailsで受信トレイを削除すれば接続はすぐに終了し、Microsoftアカウントにアクセスできるアプリの一覧からMCPEmailsを削除することもできます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにOutlook.comの受信トレイを渡す",
+    "sub": "Microsoftでサインインして数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  },
+  "seeAlso": {
+    "intro": "職場または学校のMicrosoftアカウントをお使いですか？",
+    "label": "Microsoft 365のメールを接続する",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "手順を追った解説をご希望ですか？",
+    "label": "OutlookとMicrosoft 365をMCP経由でAIエージェントに接続する",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

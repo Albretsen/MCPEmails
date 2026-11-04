@@ -38,7 +38,7 @@ const { getAllPosts, getLocalizedPost, getPost, getPostLocales } = await import(
 const { renderMarkdown } = await import('./markdown.js');
 const { localizeHref } = await import('./links.mjs');
 
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'];
 const postLocales = (slug) => {
   const p = getPost(slug);
   return p ? getPostLocales(p) : [];
@@ -71,9 +71,13 @@ const GUIDE_LINKS = {
 for (const [slug, targets] of Object.entries(GUIDE_LINKS)) {
   for (const locale of LOCALES) {
     test(`${locale}/blog/${slug} links the provider pages that own the provider queries`, () => {
-      const prefix = locale === 'en' ? '' : `/${locale}`;
+      // A provider page the locale does not have (yandex in the scoped pt
+      // and ja) keeps its English path, so expect what the renderer resolves.
       const hrefs = new Set(internalHrefs(slug, locale));
-      for (const t of targets) assert.ok(hrefs.has(`${prefix}${t}`), `missing ${prefix}${t}`);
+      for (const t of targets) {
+        const expected = localizeHref(t, locale, { postLocales });
+        assert.ok(hrefs.has(expected), `missing ${expected}`);
+      }
     });
   }
 }

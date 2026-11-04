@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.titan.email/hc/en-us/articles/900000215446-Configure-Titan-on-other-apps-using-IMAP-POP",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "https://support.titan.email/hc/en-us/articles/59899461438233-Application-Password-in-Titan-for-Third-Party-Clients",
+    "https://support.titan.email/hc/en-us/articles/4406867379865-Configure-Titan-on-other-apps-using-IMAP-POP-for-EU-hosted-users",
+    "https://support.titan.email/hc/en-us/articles/9820407299737-Setting-up-and-editing-Two-Factor-Authentication-settings",
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Senha da caixa de correio Titan (senha de app se a 2FA estiver ativa)",
+    "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "usernameForm": "Seu endereço Titan completo no seu próprio domínio, como jack@yourdomain.com. O Titan orienta digitar o mesmo endereço no campo de nome de usuário quando um cliente pede esse dado separadamente.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecte o Titan Email ao Claude, Cursor e clientes MCP",
+    "description": "Conecte o Titan Email ao Claude, Cursor, ChatGPT e qualquer cliente MCP via IMAP em imap.titan.email:993. Ative antes o Titan em outros apps. Uma caixa de entrada grátis, para sempre."
+  },
+  "hero": {
+    "eyebrow": "Titan Email + IA",
+    "titleLine1": "Conecte o Titan Email ao Claude,",
+    "titleLine2": "e ao Cursor, ChatGPT, qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real do Titan. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, em todos os clientes MCP, não só em um.",
+    "answer": "O Claude não acessa o Titan Email sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP em imap.titan.email na porta 993, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar esses e-mails. O Titan recusa qualquer cliente de terceiros até você ativar Enable Titan on Other Apps nas configurações do webmail, e uma caixa de correio com autenticação de dois fatores precisa de uma senha de app do Titan em vez da senha normal. Uma caixa de entrada é grátis, para sempre.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "O acesso de terceiros precisa estar ativado",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o Titan Email se conecta: IMAP, depois de liberar o acesso de terceiros",
+    "body": "O Titan oferece IMAP em <code>imap.titan.email</code> na porta 993 com TLS, e SMTP em <code>smtp.titan.email</code> na porta 465, também com TLS implícito. Duas coisas vêm antes. O acesso de terceiros fica <b>desativado</b> numa caixa do Titan até alguém ativá-lo, e nada passa do login antes disso. E o Titan é vendido com a marca de outras empresas, então <b>onde você comprou a caixa de correio define quais hostnames usar</b>. Muita gente chega aqui sem ter certeza de que a caixa é Titan, porque a empresa que vendeu nunca mencionou o nome. Três verificações resolvem: o webmail do Titan fica em <code>app.titan.email</code>, os registros MX do seu domínio apontam para <code>mx1.titan.email</code> e <code>mx2.titan.email</code>, e o seu provedor vendeu o produto como Titan Email, como faz a Hostinger, ou como Professional Email, que é o nome que a GoDaddy dá ao mesmo produto."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. Não precisa de cartão, e o plano gratuito conecta uma caixa de entrada pelo tempo que você quiser."
+    },
+    {
+      "h": "Ative Enable Titan on Other Apps",
+      "p": "Entre no webmail do Titan em app.titan.email, clique no ícone <b>Settings</b> (configurações) no canto superior direito e clique em <b>Enable Titan on Other Apps</b> (ativar o Titan em outros apps). Um breve tour do recurso abre; clique no botão de novo para confirmar. Se essa opção não aparecer e você vir <b>Configure 3rd party apps</b> no lugar, o acesso de terceiros já está ativado para a caixa de correio."
+    },
+    {
+      "h": "Confirme seus hostnames e cole tudo no MCPEmails",
+      "p": "A maioria das caixas do Titan usa os hosts já preenchidos acima. Se o seu domínio é gerenciado pela GoDaddy, a GoDaddy documenta <code>imap.secureserver.net</code> na 993 e <code>smtpout.secureserver.net</code> na 465. Se você comprou o Titan pela Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central, o Titan documenta <code>imap0101.titan.email</code> e <code>smtp0101.titan.email</code>. Escolha IMAP / SMTP no MCPEmails e informe seu endereço Titan completo e a senha dele."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Titan recusa qualquer cliente de e-mail até você virar uma chave",
+      "p": "Uma caixa de correio do Titan vem com o acesso de terceiros desativado, e o próprio guia de configuração do Titan começa dizendo isso. IMAP, POP e SMTP falham no login com um erro idêntico ao de senha errada, então o primeiro impulso é redefinir a senha. A chave fica no webmail do Titan em <b>Settings</b>, depois <b>Enable Titan on Other Apps</b>. O Titan dá uma pista: se esse item do menu já foi substituído por <b>Configure 3rd party apps</b>, o acesso está ativado e o problema está em outro lugar."
+    },
+    {
+      "h": "Onde você comprou o Titan muda o hostname",
+      "p": "O Titan é vendido com marca própria por empresas de hospedagem, então a marca na sua fatura não é a marca do seu servidor de e-mail. A GoDaddy o revende como Professional Email e aponta os clientes para <code>imap.secureserver.net</code> e <code>smtpout.secureserver.net</code>. O Titan comprado pela Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central é hospedado na UE e responde em <code>imap0101.titan.email</code> e <code>smtp0101.titan.email</code>. Todo o resto usa o simples <code>imap.titan.email</code>. Um produto, três famílias de host, e a errada falha na conexão, não no login."
+    },
+    {
+      "h": "A solução de problemas do próprio Titan manda desligar a 2FA. Você não precisa",
+      "p": "A seção de solução de problemas do guia IMAP do Titan atribui a senha recusada à autenticação de dois fatores e manda desativá-la. O Titan oferece senhas de app, mas elas ficam escondidas: <b>Settings</b>, <b>Preferences</b>, <b>Account and Security</b>, <b>Security and Access</b>, depois <b>Manage</b> em Two-Factor Authentication, onde você digita de novo sua senha e um código de seis dígitos antes de <b>Generate App Password</b> sequer aparecer. Gere uma ali e deixe a 2FA ativada. O Titan mostra a senha uma única vez, e você pode revogá-la na mesma tela."
+    },
+    {
+      "h": "O servidor IMAP do Titan é incomumente enxuto, e isso muda o comportamento",
+      "p": "O banner de capacidades do Titan anuncia pouco além de IMAP4rev1, AUTH=PLAIN e SASL-IR. Ele não oferece MOVE, então mover uma mensagem vira cópia, flag e expunge em vez de um único comando atômico, e um movimento interrompido pode deixar o original para trás. Ele não oferece IDLE, então nenhum cliente consegue manter uma conexão aberta esperando novos e-mails; o MCPEmails busca ao vivo a cada solicitação, mas um cliente de desktop na mesma caixa vai fazer polling. UIDPLUS e SPECIAL-USE também faltam, e é por isso que as pastas aqui são reconhecidas pelo nome."
+    }
+  ],
+  "limits": [
+    "A tabela de configurações desta página traz o par de hosts padrão do Titan. Caixas do Professional Email da GoDaddy e de revendedores da UE precisam dos próprios hostnames, digitados à mão ao conectar em vez de aceitar os preenchidos.",
+    "Sem SPECIAL-USE, uma caixa do Titan com pastas renomeadas precisa que você diga o nome da pasta explicitamente quando pedir ao agente para arquivar algo.",
+    "O servidor SMTP do Titan aceita mensagens de até 50 MB, então um encaminhamento com um anexo muito grande é recusado no envio."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Titan Email?",
+      "a": "Não diretamente. O Claude não tem conector nativo para o Titan e não consegue abrir uma sessão IMAP sozinho. Conectar um servidor MCP como o MCPEmails à sua caixa do Titan dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar, e a mesma conexão funciona no Cursor e em qualquer outro cliente MCP, não só em um app."
+    },
+    {
+      "q": "Como sei se minha caixa de correio é mesmo Titan?",
+      "a": "Verifique três coisas. Seu webmail fica em app.titan.email, mesmo que o seu provedor coloque o link com o nome dele. Os registros MX do seu domínio apontam para mx1.titan.email e mx2.titan.email. E o seu provedor vende o produto como Titan Email, como faz a Hostinger, ou como Professional Email, o nome que a GoDaddy dá ao mesmo serviço."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP do Titan Email?",
+      "a": "O IMAP é imap.titan.email na porta 993 com TLS implícito. O SMTP é smtp.titan.email na porta 465, também com TLS implícito. Entre com seu endereço Titan completo e a senha da caixa de correio. Os dois hosts foram verificados com uma conexão TLS real na data mostrada nesta página."
+    },
+    {
+      "q": "Por que o Titan recusa minha senha?",
+      "a": "Quase sempre porque o acesso de terceiros nunca foi ativado na caixa de correio, o que gera um erro de autenticação nada esclarecedor. Ative primeiro Enable Titan on Other Apps nas configurações do webmail. Se já estiver ativado e o login continuar falhando, a caixa tem autenticação de dois fatores e precisa de uma senha de app gerada na tela Security and Access."
+    },
+    {
+      "q": "Isso funciona com o Professional Email da GoDaddy?",
+      "a": "Sim, com outros hostnames. O Professional Email da GoDaddy é Titan por baixo, mas a GoDaddy documenta imap.secureserver.net na porta 993 e smtpout.secureserver.net na porta 465, e o próprio guia do Titan manda os domínios gerenciados pela GoDaddy para lá. Digite esses hosts manualmente em vez do par preenchido."
+    },
+    {
+      "q": "Meus e-mails do Titan ficam armazenados nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Titan via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso; o conteúdo das mensagens não é retido depois da solicitação que o pediu."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Titan Email",
+    "sub": "Conecte o Titan em poucos minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

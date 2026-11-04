@@ -85,7 +85,7 @@ function amount(cents, locale) {
 
 // English reads "1 December 2026", the form the offer terms use, rather than
 // en-US "December 1, 2026". Other locales use their own order.
-const DATE_LOCALE = { en: 'en-GB', nb: 'nb-NO', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', zh: 'en-GB' };
+const DATE_LOCALE = { en: 'en-GB', nb: 'nb-NO', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', fr: 'fr-FR', es: 'es-ES', zh: 'en-GB' };
 
 /**
  * The end date and time as the offer states them: in Oslo time, because that

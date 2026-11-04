@@ -151,19 +151,49 @@ import t138 from './multiple-email-accounts-in-claude-cowork/es';
 import t139 from './multiple-email-accounts-in-claude-cowork/fr';
 import t140 from './multiple-email-accounts-in-claude-cowork/nb';
 import t141 from './multiple-email-accounts-in-claude-cowork/de';
+import t142 from './claude-imap-connector/pt';
+import t143 from './claude-imap-connector/ja';
+import t144 from './connect-email-to-ai-agent-under-2-minutes/pt';
+import t145 from './connect-email-to-ai-agent-under-2-minutes/ja';
+import t146 from './connect-gmail-to-claude/pt';
+import t147 from './connect-gmail-to-claude/ja';
+import t148 from './connect-claude-to-email/pt';
+import t149 from './connect-claude-to-email/ja';
+import t150 from './email-for-ai-agents-cursor-cline-vscode/pt';
+import t151 from './email-for-ai-agents-cursor-cline-vscode/ja';
+import t152 from './connect-chatgpt-to-email/pt';
+import t153 from './connect-chatgpt-to-email/ja';
+import t154 from './multiple-email-accounts-in-claude-and-chatgpt/pt';
+import t155 from './multiple-email-accounts-in-claude-and-chatgpt/ja';
+import t156 from './can-claude-read-my-email/pt';
+import t157 from './can-claude-read-my-email/ja';
+import t158 from './claude-custom-connectors-explained/pt';
+import t159 from './claude-custom-connectors-explained/ja';
+import t160 from './what-is-an-app-password/pt';
+import t161 from './what-is-an-app-password/ja';
+import t162 from './schedule-email-with-claude-and-chatgpt/pt';
+import t163 from './schedule-email-with-claude-and-chatgpt/ja';
+import t164 from './connect-claude-to-outlook-com-hotmail/pt';
+import t165 from './connect-claude-to-outlook-com-hotmail/ja';
+import t166 from './connect-claude-to-apple-mail/pt';
+import t167 from './connect-claude-to-apple-mail/ja';
+import t168 from './daily-email-briefing-with-claude-and-chatgpt/pt';
+import t169 from './daily-email-briefing-with-claude-and-chatgpt/ja';
+import t170 from './multiple-email-accounts-in-claude-cowork/pt';
+import t171 from './multiple-email-accounts-in-claude-cowork/ja';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
   'ai-agent-triage-summarize-inbox': { es: t4, fr: t5, nb: t6, zh: t7 },
   'best-ways-to-let-claude-manage-your-inbox': { es: t8, fr: t9, nb: t10, zh: t11 },
   'build-email-auto-responder-mcp-agent': { es: t12, fr: t13, nb: t14, zh: t15 },
-  'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78, de: t104 },
-  'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18, de: t107 },
-  'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22, de: t108 },
-  'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74, de: t103 },
+  'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78, de: t104, pt: t142, ja: t143 },
+  'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18, de: t107, pt: t144, ja: t145 },
+  'connect-gmail-to-claude': { es: t19, fr: t20, nb: t21, zh: t22, de: t108, pt: t146, ja: t147 },
+  'connect-claude-to-email': { es: t71, fr: t72, nb: t73, zh: t74, de: t103, pt: t148, ja: t149 },
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
-  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34, de: t109 },
+  'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34, de: t109, pt: t150, ja: t151 },
   'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70 },
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },
@@ -173,20 +203,20 @@ const TRANSLATIONS = {
   'oauth-vs-api-keys-ai-email-access': { es: t55, fr: t56, nb: t57, zh: t58 },
   'what-is-an-mcp-email-server': { es: t59, fr: t60, nb: t61, zh: t62 },
   'why-email-never-stored-matters': { es: t63, fr: t64, nb: t65, zh: t66 },
-  'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82, de: t105 },
+  'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82, de: t105, pt: t152, ja: t153 },
   'manage-multiple-email-accounts-with-ai': { es: t83, fr: t84, nb: t85, zh: t86 },
   'automated-email-triage-rules': { es: t87, fr: t88, nb: t89, zh: t90 },
   'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
   'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
-  'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102, de: t106 },
-  'can-claude-read-my-email': { es: t110, fr: t111, nb: t112, de: t113 },
-  'claude-custom-connectors-explained': { es: t114, fr: t115, nb: t116, de: t117 },
-  'what-is-an-app-password': { es: t118, fr: t119, nb: t120, de: t121 },
-  'schedule-email-with-claude-and-chatgpt': { es: t122, fr: t123, nb: t124, de: t125 },
-  'connect-claude-to-outlook-com-hotmail': { es: t126, fr: t127, nb: t128, de: t129 },
-  'connect-claude-to-apple-mail': { es: t130, fr: t131, nb: t132, de: t133 },
-  'daily-email-briefing-with-claude-and-chatgpt': { es: t134, fr: t135, nb: t136, de: t137 },
-  'multiple-email-accounts-in-claude-cowork': { es: t138, fr: t139, nb: t140, de: t141 },
+  'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102, de: t106, pt: t154, ja: t155 },
+  'can-claude-read-my-email': { es: t110, fr: t111, nb: t112, de: t113, pt: t156, ja: t157 },
+  'claude-custom-connectors-explained': { es: t114, fr: t115, nb: t116, de: t117, pt: t158, ja: t159 },
+  'what-is-an-app-password': { es: t118, fr: t119, nb: t120, de: t121, pt: t160, ja: t161 },
+  'schedule-email-with-claude-and-chatgpt': { es: t122, fr: t123, nb: t124, de: t125, pt: t162, ja: t163 },
+  'connect-claude-to-outlook-com-hotmail': { es: t126, fr: t127, nb: t128, de: t129, pt: t164, ja: t165 },
+  'connect-claude-to-apple-mail': { es: t130, fr: t131, nb: t132, de: t133, pt: t166, ja: t167 },
+  'daily-email-briefing-with-claude-and-chatgpt': { es: t134, fr: t135, nb: t136, de: t137, pt: t168, ja: t169 },
+  'multiple-email-accounts-in-claude-cowork': { es: t138, fr: t139, nb: t140, de: t141, pt: t170, ja: t171 },
 };
 
 export default TRANSLATIONS;

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.x.ai/grok/connectors",
+    "https://docs.x.ai/grok/connector-management",
+    "https://docs.x.ai/grok/connectors/custom-mcp-tunneling",
+    "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Grok: configuração de conector MCP personalizado",
+    "description": "Adicione uma caixa de entrada real ao Grok como conector MCP personalizado. Cole uma URL no grok.com, faça login com OAuth e leia, pesquise, envie e agende e-mails. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Grok + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Grok",
+    "titleLine2": "como um conector MCP personalizado",
+    "lead": "Adicione uma URL em Connectors no grok.com e o Grok passa a ler, pesquisar, enviar, responder, encaminhar, agendar e organizar e-mails em todas as caixas de entrada que você conectou.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Acesse grok.com/connectors, clique em New Connector, selecione Custom, cole https://mcpemails.com/api/mcp como URL do servidor MCP, depois faça login no MCPEmails quando o Grok pedir e aprove os escopos. No Grok Business e Enterprise, um administrador da equipe adiciona o servidor no console da nuvem antes."
+  },
+  "method": {
+    "title": "Como o Grok se conecta: OAuth, sem chave de API",
+    "body": "O Grok executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra Connectors no grok.com",
+      "p": "Acesse <code>grok.com/connectors</code> com o login feito no Grok."
+    },
+    {
+      "h": "Adicione um conector personalizado",
+      "p": "Clique em <b>New Connector</b> (novo conector) e selecione <b>Custom</b> (personalizado). Cole <code>https://mcpemails.com/api/mcp</code> como URL do servidor MCP."
+    },
+    {
+      "h": "Faça login e aprove",
+      "p": "Conclua a autenticação que o Grok pedir: ele leva você ao MCPEmails, onde você faz login e aprova os escopos que quer que o Grok tenha. O Grok então descobre as ferramentas que o servidor oferece."
+    },
+    {
+      "h": "Pergunte sobre seus e-mails",
+      "p": "Abra um chat e pergunte algo como \"quais caixas de entrada eu tenho?\" ou \"resuma meus e-mails não lidos\". O Grok usa as ferramentas de um conector quando a sua pergunta tem relação com ele."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "No Business e no Enterprise, um administrador adiciona antes",
+      "p": "Nos planos Grok Business e Enterprise, os membros não conseguem adicionar o servidor sozinhos até que um administrador da equipe o provisione. O administrador entra em <code>console.x.ai</code>, seleciona a equipe, abre <b>Grok Business</b>, <b>Connectors</b>, clica em <b>+ Add Connector</b>, seleciona <b>Other</b> e informa <code>https://mcpemails.com/api/mcp</code>. Isso exige permissões Team Read-Write. Depois, cada membro conecta a própria conta MCPEmails em <code>grok.com/connectors</code>."
+    },
+    {
+      "h": "Configure na web",
+      "p": "A xAI só documenta a adição de um conector personalizado em <code>grok.com/connectors</code>, sem passos para os apps de iOS ou Android. Adicione o conector por um navegador."
+    },
+    {
+      "h": "Somente leitura é uma opção real, e muitas vezes a primeira certa",
+      "p": "A tela de consentimento deixa você dar ao Grok só <code>read:email</code> e <code>search:email</code>. Isso basta para triagem, resumos e encontrar coisas, e tira da mesa toda ação irreversível enquanto você decide até onde quer ir. Se você conceder <code>send:email</code>, o dono de uma caixa de entrada pode ativar a aprovação humana para que cada envio espere por uma pessoa."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de 100 por minuto, 1.000 por hora e 10.000 por dia por chave.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Grok?",
+      "a": "Acesse grok.com/connectors, clique em New Connector, selecione Custom, cole https://mcpemails.com/api/mcp, depois faça login no MCPEmails e aprove os escopos. O Grok passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Grok?",
+      "a": "Não. O Grok executa o fluxo OAuth quando você adiciona o conector, então nada secreto é colado no Grok. Uma chave bearer está disponível para outros clientes que não conseguem fazer isso."
+    },
+    {
+      "q": "O conector de Gmail nativo do Grok é a mesma coisa?",
+      "a": "Não. Os conectores nativos do Grok para Gmail e Outlook alcançam esses dois provedores. O MCPEmails é um conector personalizado que alcança Outlook, Microsoft 365, Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex e qualquer caixa IMAP por uma única conexão, com escopos que você escolhe e aprovação humana opcional nos envios."
+    },
+    {
+      "q": "Quais caixas de correio o Grok alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O Grok vê todas pela mesma conexão: ele chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Grok pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao Grok sua caixa de entrada real",
+    "sub": "Uma URL, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

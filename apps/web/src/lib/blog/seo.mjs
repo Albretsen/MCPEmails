@@ -1,7 +1,9 @@
+import { languageTag } from '../../i18n/locale-policy.mjs';
+
 /** Build hreflang entries only for locales with real translated content. */
 export function blogPostLanguageAlternates(locales, pathname, localeUrl) {
   const languages = Object.fromEntries(
-    locales.map((locale) => [locale, localeUrl(locale, pathname)]),
+    locales.map((locale) => [languageTag(locale), localeUrl(locale, pathname)]),
   );
   languages['x-default'] = localeUrl('en', pathname);
   return languages;

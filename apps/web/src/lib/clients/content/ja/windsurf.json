@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.devin.ai/desktop/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Windsurfにメールを接続: CascadeのMCPサーバー設定",
+    "description": "WindsurfのCascadeに本物の受信トレイを追加できます。mcp_config.jsonにserverUrlを使ったエントリを1つ書き、OAuthで認可するだけ。APIキーは不要です。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Windsurf + メール",
+    "titleLine1": "受信トレイをWindsurfに接続",
+    "titleLine2": "Cascadeから使う",
+    "lead": "Devin Desktop（旧Windsurf）のCascadeに本物のメールボックスを追加できます。エディターから、接続済みのすべての受信トレイでメールの閲覧、検索、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Devin DesktopはWindsurfの新しい名前です。Cascadeパネル右上の...メニューを開き、MCPsセクションのOpen MCP config fileをクリックします。mcpServersの下に、urlではなくserverUrlフィールドでhttps://mcpemails.com/api/mcpを指定したエントリを1つ追加してファイルを保存し、求められたらMCPEmailsでログインします。"
+  },
+  "method": {
+    "title": "Windsurfの接続方法: OAuth、APIキー不要",
+    "body": "Devin Desktop（旧Windsurf）はこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "MCPの設定ファイルを開く",
+      "p": "Cascadeパネル右上の<b>...</b>メニューをクリックし、<b>MCPs</b>セクションの<b>Open MCP config file</b>をクリックします。ファイルはmacOSとLinuxでは<code>~/.config/devin/mcp_config.json</code>、Windowsでは<code>%APPDATA%\\devin\\mcp_config.json</code>です。"
+    },
+    {
+      "h": "サーバーを追加",
+      "p": "下のエントリを追加します。ここでのフィールド名は<code>url</code>ではなく<code>serverUrl</code>です。"
+    },
+    {
+      "h": "保存してログイン",
+      "p": "ファイルを保存し、求められたらMCPEmailsでログインします。Cascadeに持たせたいスコープを承認してください。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "フィールドはserverUrl、urlでは何も言われずに失敗する",
+      "p": "Windsurfの設定で最も多い間違いで、無理もないものです。Cursor、Zed、VS Codeはいずれも<code>url</code>を読むので、どこからコピーしたスニペットも正しく見えます。Devin Desktopが読むのは<code>serverUrl</code>です。キーを間違えてもエントリは読み込まれ、サーバーも一覧に表示されますが、ツールは一向に届きません。"
+    },
+    {
+      "h": "古いガイドはWindsurfの設定パスを案内している",
+      "p": "WindsurfはMCPの設定を<code>~/.codeium/windsurf/mcp_config.json</code>に置いていて、今もそう書いているガイドが多くあります。Devin Desktopが使うのは<code>~/.config/devin/mcp_config.json</code>（Windowsでは<code>%APPDATA%\\devin\\mcp_config.json</code>）です。Cascadeの<b>...</b>メニューにある<b>Open MCP config file</b>なら実際に読み込まれるファイルが開くので、パスを入力するよりそこから始めてください。"
+    },
+    {
+      "h": "Cascadeに送信させるかを最初に決める",
+      "p": "それを決めるのは同意画面です。エディターのアシスタントには読み取りと下書きのスコープが向いています。<code>send:email</code>を外しておけば、どんなプロンプトでも、ジェイルブレイクでも、混乱したループでも、この接続からメールが送られることはありません。送信を許可したい場合は、ダッシュボードで人による承認を有効にすると二重の備えになります。"
+    }
+  ],
+  "limits": [
+    "リクエストにはキーごとに、プランに応じた1分、1時間、1日単位のレート制限があります。429レスポンスにはRetry-Afterが付きます。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Windsurfにメールを接続するには？",
+      "a": "Devin Desktop（旧Windsurf）で、Cascadeパネルの...メニューを開いてOpen MCP config fileをクリックします。mcpServersの下に、serverUrlをhttps://mcpemails.com/api/mcpとしたエントリを追加して保存し、求められたらMCPEmailsでログインします。これでCascadeに、メールの閲覧、検索、送信、返信、転送、整理、予約送信を行うツールが加わります。"
+    },
+    {
+      "q": "Cursorで動く同じJSONが、Windsurfで動かないのはなぜですか？",
+      "a": "ほぼ間違いなくフィールド名です。Cursorはurlを、Devin DesktopはserverUrlを読みます。エントリのほかの部分はまったく同じなので、注意して読んでもこの間違いは見逃されがちです。"
+    },
+    {
+      "q": "WindsurfにはAPIキーが必要ですか？",
+      "a": "いいえ。Devin Desktop（旧Windsurf）はこのサーバーに対してOAuthフローを実行するので、設定ファイルには公開URLしか入りません。スクリプトやヘッドレスでの利用には、BearerのAPIキーも引き続き使えます。"
+    },
+    {
+      "q": "この方法でWindsurfが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。クライアントはこれらすべてを同じ接続で扱います。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Cascadeが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないキーやトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Cascadeに本物の受信トレイを",
+    "sub": "設定エントリ1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

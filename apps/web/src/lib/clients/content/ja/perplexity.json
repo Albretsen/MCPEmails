@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/api/oauth/register/route.ts",
+    "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+    "https://www.perplexity.ai/help-center/en/articles/11502712-local-and-remote-mcps-for-perplexity",
+    "https://www.perplexity.ai/help-center/en/articles/2026100703-where-did-connectors-and-skills-go",
+    "https://www.perplexity.ai/help-center/en/articles/2026091802-troubleshooting-connectors",
+    "https://www.perplexity.ai/changelog/what-we-shipped---march-13-2026",
+    "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
+  ],
+  "meta": {
+    "title": "Perplexityにメールを接続: カスタムMCPコネクタの設定",
+    "description": "カスタムリモートコネクタで、Perplexityに本物の受信トレイを追加できます。URLを1つ貼り付けてOAuthを選び、ログインするだけ。APIキーは不要です。Pro、Max、Enterpriseで使えます。"
+  },
+  "hero": {
+    "eyebrow": "Perplexity + メール",
+    "titleLine1": "受信トレイをPerplexityに接続",
+    "titleLine2": "カスタムコネクタとして",
+    "lead": "Webの情報と並べて、自分のメールについてもPerplexityに質問できます。接続済みのすべての受信トレイで、メールの閲覧、検索、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "PerplexityのPro、Max、Enterpriseプランで「Plugins」を開き、「Add custom」、「Connector」、「Add MCP connector」の順に選びます。「Remote」を選んで「MCP Server URL」にhttps://mcpemails.com/api/mcpを貼り付け、「Authentication」でOAuthを選んで「Add」をクリックします。最後にコネクタのカードをクリックしてMCPEmailsにログインします。"
+  },
+  "method": {
+    "title": "Perplexityの接続方法: OAuth、APIキー不要",
+    "body": "Perplexityのカスタムリモートコネクタは、ディスカバリー付きのOAuth 2.0に対応しています。MCPEmailsはエンドポイントを<code>/.well-known/oauth-authorization-server</code>で公開しています。Perplexityは<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、Client IDやClient Secretを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。トークンには同意画面で承認したスコープだけが含まれます。アクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "PerplexityでAdd customを開く",
+      "p": "perplexity.aiでサイドバーの<b>Plugins</b>（プラグイン）を開き、<b>Add custom</b>（カスタムを追加）、<b>Connector</b>（コネクタ）、<b>Add MCP connector</b>（MCPコネクタを追加）の順に選びます。以前のメニューが表示される場合は、代わりに<b>Customize</b>、<b>Connectors</b>に進んでください。"
+    },
+    {
+      "h": "サーバーを入力",
+      "p": "<b>Remote</b>（リモート）を選び、<b>Name</b>（名前）にMCPEmailsなどと入力して、<b>MCP Server URL</b>に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。<b>Authentication</b>（認証）を<b>OAuth</b>に、<b>Transport</b>を<b>Streamable HTTP</b>にします。PerplexityがこちらのOAuthエンドポイントを検出して自身を登録するので、Client IDやClient Secretを入力する必要はありません。"
+    },
+    {
+      "h": "追加してログイン",
+      "p": "確認のチェックボックスにチェックを入れて<b>Add</b>（追加）をクリックします。続けてコネクタのカードをクリックして認証を始め、MCPEmailsにログインして、Perplexityに持たせたいスコープを承認します。"
+    },
+    {
+      "h": "質問ごとに選ぶ",
+      "p": "新しい質問を始めて<code>@MCPEmails</code>と入力するか、検索ボックスの<b>+</b>アイコンをクリックし、<b>Connectors and sources</b>（コネクタとソース）を開いてMCPEmailsを選びます。あとは、今日届いたメッセージは何か、のようにメールについて質問します。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "無料アカウントではカスタムコネクタを使えない",
+      "p": "PerplexityのカスタムMCPサーバーは、Pro、Max、Enterpriseプランで使えます。Enterpriseでは、管理者が<b>Allow members to add custom connectors</b>（メンバーによるカスタムコネクタの追加を許可）を有効にしない限り、メンバーは自分のカスタムコネクタを追加できません。この設定は初期状態でオフです。管理者が組織全体のためにMCPEmailsを一度だけ追加することもできます。"
+    },
+    {
+      "h": "コネクタを追加しただけでは使われない",
+      "p": "画面によっては、コネクタの選択欄や@メンションでそのチャットに選んだコネクタしか呼び出しません。また、SourcesやFocusがWeb、Academic、Socialだけに設定されていると、Perplexityは接続済みのアプリを呼び出さずにWebから回答するため、受信トレイが見えていないように見えます。接続を疑う前に、この2点を確認してください。"
+    },
+    {
+      "h": "設定はモバイルではなくWebで",
+      "p": "Perplexityによると、コネクタはWebでは使えてもモバイルではまだ使えない場合があります。MCPEmailsはブラウザーでperplexity.aiから追加してください。認可がいつまでも完了しない場合は、perplexity.aiのポップアップとクロスサイトCookieを許可してください。広告ブロッカーがOAuthのウィンドウを止めることがあります。"
+    }
+  ],
+  "limits": [
+    "リクエストはキーごとに、1分あたり100件、1時間あたり1,000件、1日あたり10,000件までに制限されます。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Perplexityにメールを接続するには？",
+      "a": "「Plugins」を開き、「Add custom」、「Connector」、「Add MCP connector」の順に選びます。「Remote」を選んで「MCP Server URL」にhttps://mcpemails.com/api/mcpを貼り付け、「Authentication」をOAuthにして「Add」をクリックし、コネクタのカードをクリックしてMCPEmailsにログインします。質問するときは@MCPEmailsと入力するか、「Connectors and sources」で選びます。"
+    },
+    {
+      "q": "Perplexityのどのプランが必要ですか？",
+      "a": "カスタムMCPコネクタはPro、Max、Enterpriseで使えます。Enterpriseでは、管理者が組織のためにコネクタを追加するか、メンバーが自分で追加できるよう許可します。"
+    },
+    {
+      "q": "PerplexityにはAPIキーが必要ですか？",
+      "a": "いいえ。コネクタのカードをクリックするとPerplexityがOAuthフローを実行し、MCPEmailsは動的クライアント登録に対応しているので、Client ID、Client Secret、キーを貼り付ける必要はありません。OAuthに対応していない他のクライアント向けにはBearerキーも用意しています。"
+    },
+    {
+      "q": "この方法でPerplexityが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。Perplexityはこれらすべてを同じ接続で扱います。最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Perplexityが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Webを検索するように受信トレイを検索",
+    "sub": "コネクタ1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

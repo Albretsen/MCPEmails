@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ パスワード",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "ドメインを含むFastmailアドレス全体（例: name@fastmail.com、独自ドメインを使っている場合はそのアドレス）。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "FastmailをClaude、Cursor、MCPクライアントに接続",
+    "description": "Fastmailのアプリ パスワードでIMAP（imap.fastmail.com:993）接続し、Claude、Cursor、ChatGPTなどあらゆるMCPクライアントからFastmailを使えます。受信トレイ1つはずっと無料。"
+  },
+  "hero": {
+    "eyebrow": "Fastmail + AI",
+    "titleLine1": "FastmailをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のFastmail受信トレイを数分で渡せます。アプリ パスワード1つでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "アプリ パスワードで接続、OAuth設定は不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "ClaudeはそのままではFastmailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.fastmail.comのポート993にIMAPで接続します。認証にはアカウントのパスワードではなくFastmailのアプリ パスワードを使うので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。FastmailはFastmail専用の公式MCPサーバーを提供しています。それでもこちらを使う理由は、1つのURLでほかのメールボックスもまとめて扱えることです。受信トレイ1つはずっと無料です。"
+  },
+  "method": {
+    "title": "Fastmailの接続方法: アプリ パスワード",
+    "body": "FastmailはIMAP/SMTPを通じて<b>Fastmailのアプリ パスワード</b>で接続します。FastmailのSettings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password（設定、プライバシーとセキュリティ、連携アプリとAPIトークン、アプリ パスワードとアクセスの管理、新しいアプリ パスワード）で作成し、MCPEmailsに貼り付ければ接続完了です。OAuthの手順もブラウザーのポップアップもありません。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランで受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Fastmailのアプリ パスワードを作成",
+      "p": "FastmailでSettings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app passwordを開き、メール（IMAP/SMTP）用のパスワードを作成します。"
+    },
+    {
+      "h": "MCPEmailsに貼り付け",
+      "p": "Fastmailのアドレスとアプリ パスワードを入力し、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Fastmailには公式のMCPサーバーがあり、よくできています",
+      "p": "Fastmailは2026年4月に公式MCPサーバー<code>https://api.fastmail.com/mcp</code>を公開しました。OAuthで認証し、読み取り専用、書き込み、送信のいずれかのアクセスを選べ、メール、カレンダー、連絡先に対応しています。アシスタントに使わせたいのがFastmailだけなら、それが最も直接的な方法です。これははっきりお伝えします。MCPEmailsが応えるのは別のニーズです。Fastmailアカウントと、iCloud、Zoho、Yahoo、GMX、会社のIMAPメールボックスを<b>1つ</b>のMCP URLにまとめ、すべてに同じツールを使えるようにします。エージェントは複数のメールボックスを横断して検索でき、設定するサーバーも5つではなく1つで済みます。ここでは自社をよく見せることより、役に立つ情報をお伝えすることを優先しています。"
+    },
+    {
+      "h": "FastmailのBasicアカウントはIMAPをまったく使えません",
+      "p": "FastmailのBasicプランにはIMAP、POP、SMTP、CalDAV、CardDAVが含まれず、このプランのアカウントはアプリ パスワードを作成できません。使えるのはWebメールとFastmail純正アプリだけです。アプリ パスワードの画面で何も作成できない場合は、不具合ではなくプランによるもので、パスワードを入力し直しても解決しません。StandardとProfessionalのアカウントはこれらのプロトコルが使え、接続できます。"
+    },
+    {
+      "h": "アプリ パスワードのアクセスレベルにメールを含める必要があります",
+      "p": "アプリ パスワードは、Settings、Privacy & Security、Connected apps & API tokensセクション、Manage app passwords and access、New app passwordの順に進んで作成します。既定のアクセスレベルは<b>Mail, Contacts & Calendars</b>で、IMAPとSMTPに必要なのはこれです。代わりにFiles (WebDAV)を選ぶと、パスワード自体は問題なく作成されますが、メールへのログインに失敗します。Fastmailはパスワードを一度しか表示しないので、画面を離れる前にコピーしてください。また、通常のFastmailパスワードではメールクライアントの認証は一切できません。"
+    }
+  ],
+  "limits": [
+    "Fastmail BasicにはIMAPとSMTPが含まれないため、Basicのメールボックスは接続できません。StandardとProfessionalは接続できます。",
+    "Fastmailの送信サーバーが公表しているメッセージの上限は約71 MBです。MCPEmailsでの添付ファイルの読み取りは1リクエストあたり25 MBまでなので、それより大きいファイルはFastmail上で直接取得してください。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはFastmailで使えますか？",
+      "a": "はい、2通りの方法があります。Fastmailが運営する公式MCPサーバーに、ClaudeからOAuthで直接接続できます。もう1つはMCPEmailsで、同じメールボックスをアプリ パスワードでIMAP接続し、追加したほかのメールボックスと一緒に1つのMCP URLで公開します。このURLはCursorやChatGPTでも使えます。どちらの方法でも、Claudeはメールの閲覧、検索、送信、返信、整理ができます。"
+    },
+    {
+      "q": "Fastmail公式のMCPサーバーとこちら、どちらを使うべきですか？",
+      "a": "Fastmailが唯一のメールボックスで、お使いのクライアントが対応しているならFastmail公式を使ってください。公式サービスで、OAuthを使い、読み取り専用、書き込み、送信のアクセスを選べます。複数のプロバイダーを1つのURLにまとめたい場合、iCloud、Zoho、職場のIMAPメールボックスもある場合、複数のMCPクライアントで同じツールを同じように動かしたい場合はMCPEmailsを使ってください。"
+    },
+    {
+      "q": "FastmailのIMAPとSMTPの設定は？",
+      "a": "IMAPはimap.fastmail.com、ポート993、暗黙的TLSです。SMTPはsmtp.fastmail.com、ポート465で、こちらも暗黙的TLSです。ユーザー名はFastmailアドレス全体、パスワードはアプリ パスワードで、アカウントのパスワードは使えません。どちらのホストも、このページに記載の日付に実際のTLS接続で確認しています。"
+    },
+    {
+      "q": "Fastmailのパスワードが拒否されるのはなぜですか？",
+      "a": "原因は3つあり、可能性の高い順に挙げます。アプリ パスワードではなくアカウントのパスワードを使っている（FastmailはIMAPやSMTPでこれを受け付けません）。アプリ パスワードがMail, Contacts & CalendarsではなくFilesのアクセスレベルで作成されている。あるいは、アカウントがIMAPもSMTPも含まないBasicプランである。"
+    },
+    {
+      "q": "Fastmailの独自ドメインでも使えますか？",
+      "a": "はい。Fastmailでホストしている独自ドメインのアドレスも、fastmail.comのアドレスと同じimap.fastmail.comとsmtp.fastmail.comのホスト、同じアプリ パスワードを使います。ユーザー名には独自ドメインのアドレス全体を入力してください。別のホスト名を調べる必要も、追加で有効にする設定もありません。"
+    },
+    {
+      "q": "Fastmailのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにFastmailからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文は保持しません。Fastmailでアプリ パスワードを削除すれば、Fastmail側で接続がすぐに切断されます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにFastmailの受信トレイを",
+    "sub": "Fastmailを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

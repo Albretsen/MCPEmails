@@ -1,0 +1,361 @@
+{
+  "shell": {
+    "title": "MCPEmailsをセットアップ",
+    "progress": "ステップ {current}/{total}",
+    "exit": "セットアップを閉じる",
+    "loading": "セットアップを読み込んでいます",
+    "statusError": "セットアップを読み込めませんでした。ページを再読み込みしてもう一度お試しください。",
+    "skip": "セットアップをスキップ"
+  },
+  "chip": {
+    "using": "{client}を使用中",
+    "change": "変更",
+    "label": "MCPEmailsと組み合わせて使うAIアプリ",
+    "more": "その他のアプリ"
+  },
+  "steps": {
+    "inbox": {
+      "title": "受信トレイを接続",
+      "reuseTitle": "接続済みの受信トレイがあります",
+      "reuse": "{address}を使う",
+      "connectAnother": "別の受信トレイを接続",
+      "lead": "AIに読ませて、返信させたい受信トレイを選びます。",
+      "emailLabel": "メールアドレス",
+      "useSignup": "{address}を使う",
+      "detecting": "プロバイダーを調べています",
+      "detected": "{provider}",
+      "notRight": "変更",
+      "chooseLead": "プロバイダーはどれですか",
+      "kinds": {
+        "gmail": "Gmail",
+        "google_workspace": "Google Workspace",
+        "icloud": "iCloud",
+        "yahoo": "Yahoo",
+        "aol": "AOL",
+        "gmx": "GMX",
+        "web_de": "WEB.DE",
+        "outlook": "Outlook.com",
+        "microsoft365": "Microsoft 365",
+        "fastmail": "Fastmail",
+        "zoho": "Zoho",
+        "yandex": "Yandex",
+        "proton": "Proton Mail",
+        "imap": "その他（IMAP）"
+      },
+      "gmail": {
+        "step1Title": "2 段階認証プロセスをオンにします。",
+        "step1Body": "すでにオンならこのステップは不要です。",
+        "step1Link": "2 段階認証プロセスを開く",
+        "step2Title": "アプリ パスワードを作成します。",
+        "step2Body": "名前にMCPEmailsと入力して「作成」を押します。Googleが16文字のパスワードを表示するのは一度だけなので、ページを閉じる前にコピーしてください。",
+        "step2Link": "アプリ パスワードを作成",
+        "step3Title": "下に貼り付けます。",
+        "missingTitle": "アプリ パスワードのページが見つからない場合",
+        "missingBody": "考えられる原因は3つです。2 段階認証プロセスがオフになっている（ステップ1）、職場または学校の管理者がアプリ パスワードを無効にしている、あるいはアカウントが高度な保護機能またはセキュリティキーのみを使っている。",
+        "workspace": "このアカウントは会社が管理しています。ステップ2で設定が利用できないと表示される場合は、管理者が2 段階認証プロセスとアプリ パスワードを許可する必要があります。"
+      },
+      "icloud": {
+        "step1Title": "Apple Accountを開きます。",
+        "step1Link": "account.apple.comを開く",
+        "step2Title": "「サインインとセキュリティ」から「アプリ用パスワード」を選びます。",
+        "step2Body": "新しいパスワードを作成し、名前をMCPEmailsにします。",
+        "step3Title": "下に貼り付けます。",
+        "step3Body": "Appleが表示するのは一度だけで、形式は xxxx-xxxx-xxxx-xxxx です。",
+        "missingTitle": "項目が見当たらない場合",
+        "missingBody": "2ファクタ認証がオンになっている必要があります。最近Apple Accountのパスワードをリセットした場合、以前のアプリ用パスワードは無効になっているので、新しく作成してください。"
+      },
+      "yahoo": {
+        "step1Title": "{provider}のAccount Security（アカウントセキュリティ）を開きます。",
+        "step1Link": "アプリ パスワードを作成",
+        "step2Title": "External connectionsの下にあるCreate app password（アプリ パスワードを作成）を選びます。",
+        "step2Body": "MCPEmailsと入力し、Generate password（パスワードを生成）を押します。",
+        "step3Title": "16文字を下に貼り付けます。",
+        "missingTitle": "項目がない、または現在利用できないと表示される場合",
+        "missingBody": "2段階認証をオンにしてページを再読み込みしてください。新しいアカウントでは最大2週間待つ必要があります。プライベートウィンドウではなく、普段ログインに使っているブラウザーで開いてください。"
+      },
+      "gmx": {
+        "step1Title": "{provider}でIMAPをオンにします。",
+        "step1Body": "ウェブメールでE-Mail-Einstellungenを開き、POP3/IMAPに進んで、POP3- und IMAP-Zugriff erlauben（POP3とIMAPのアクセスを許可）をオンにします。",
+        "step1Link": "IMAPをオンにする方法",
+        "step2Title": "2段階認証はオンですか",
+        "step2Body": "Sicherheit（セキュリティ）でアプリ用のパスワードを作成します。表示されるのは一度だけです。2段階認証がオフの場合は、通常の{provider}のパスワードを使います。",
+        "step3Title": "下に貼り付けます。",
+        "missingTitle": "以前は使えていたのに止まった場合",
+        "missingBody": "{provider}はIMAPを再びオフにすることがあります。ステップ1を確認してください。"
+      },
+      "microsoft": {
+        "step1Title": "「Microsoftで接続」を押して、Microsoftのページでログインします。",
+        "step2Title": "アクセス許可の画面で承諾します。",
+        "note": "ここではパスワードは不要です。ログインはMicrosoftのページで行います。",
+        "connect": "Microsoftで接続",
+        "adminTitle": "職場または学校のアカウントですか",
+        "adminBody": "多くの組織では、ログインする前に管理者が新しいアプリを承認する必要があります。Microsoftから管理者の承認を求められたら、このリンクを管理者に送ってください。管理者にMCPEmailsのアカウントは必要ありません。",
+        "adminLink": "管理者用のリンクを取得",
+        "adminCopy": "リンクをコピー",
+        "adminCopied": "コピーしました",
+        "adminError": "リンクを作成できませんでした。もう一度お試しください。"
+      },
+      "proton": {
+        "title": "Proton MailにはProton Bridgeが必要です",
+        "body": "Proton Mailがメールアプリと連携するには、ご自身のパソコン上で動くProton Bridgeが必要です。MCPEmailsはクラウドで動作していてそこには到達できないため、Protonのメールボックスは接続できません。"
+      },
+      "imap": {
+        "step1": "完全なメールアドレスと、メールボックス自体のパスワードを使います。ホスティングやコントロールパネルのログイン情報ではありません。",
+        "step2": "メールボックスに2段階認証がある場合は、プロバイダーのセキュリティ設定でアプリ パスワードを作成し、それを使います。",
+        "appPasswordLink": "{provider}のアプリ パスワードを作成",
+        "servers": "サーバー: {host}",
+        "manualLead": "メールサーバーを特定できませんでした。プロバイダーのヘルプページに記載されています。",
+        "imapHost": "受信サーバー（IMAP）",
+        "smtpHost": "送信サーバー（SMTP）",
+        "port": "ポート",
+        "username": "ログイン名（メールアドレスと異なる場合）",
+        "advanced": "詳細設定"
+      },
+      "password": {
+        "labelApp": "アプリ パスワード",
+        "labelMailbox": "パスワード",
+        "spaces": "スペースが入っていても問題ありません。",
+        "show": "表示",
+        "hide": "隠す",
+        "warnAccount": "通常のパスワードのようです。{provider}ではここに16文字のアプリ パスワードが必要です。",
+        "warnLength": "アプリ パスワードは16文字です。すべてコピーできているか確認してください。",
+        "warnNote": "このまま試すこともできます。"
+      },
+      "trust": {
+        "appPassword": "アプリ パスワードで開けるのはメールだけです。ストックホルムで暗号化して保存され、いつでも取り消せます。",
+        "mailboxPassword": "ストックホルムで暗号化して保存されます。接続解除はいつでも可能です。"
+      },
+      "connect": "接続",
+      "progress": {
+        "title": "{address}を接続しています",
+        "server": "メールサーバーを確認",
+        "signedIn": "ログイン完了",
+        "read": "メールボックスを読み取り"
+      },
+      "proof": {
+        "title": "接続しました",
+        "count": "受信トレイに{count, plural, other {# 件のメッセージ}}",
+        "newest": "最新",
+        "noSubject": "（件名なし）",
+        "private": "メールボックスからリアルタイムに読み取り、あなただけに表示しています。",
+        "ready": "受信トレイの接続が完了し、使える状態になりました。",
+        "continue": "続行"
+      },
+      "fail": {
+        "reason": {
+          "imap_disabled": "{provider}でこのメールボックスのIMAPアクセスがオフになっています。オンにしてから、もう一度お試しください。",
+          "app_password_required": "{provider}ではここに通常のパスワードではなく、アプリ パスワードが必要です。",
+          "account_password_used": "{provider}の通常のパスワードのようです。代わりにアプリ パスワードを使ってください。",
+          "app_password_length": "アプリ パスワードが不完全なようです。16文字のはずです。",
+          "provider_refused_signin": "{provider}がパスワードではなくログイン自体を拒否しました。ブラウザーで{provider}にログインし、セキュリティの確認画面があれば済ませてから、もう一度お試しください。",
+          "login_username_required": "このサーバーはメールアドレスとは別のログイン名を求めています。プロバイダーの設定で確認し、「詳細設定」に入力してください。",
+          "password_rejected": "{provider}がそのパスワードを受け付けませんでした。確認して、もう一度貼り付けてください。"
+        },
+        "network": "MCPEmailsに接続できませんでした。接続状況を確認して、もう一度お試しください。",
+        "limit": "このワークスペースは、プランに含まれる数の受信トレイをすでに接続しています。",
+        "sessionExpired": "ログアウトされました。もう一度ログインしてから、このページに戻ってください。",
+        "notAllowed": "受信トレイを接続できるのはワークスペースのオーナーと管理者のみです。",
+        "alreadyConnected": "このメールボックスはこのワークスペースにすでに接続されています。",
+        "useMicrosoft": "これはMicrosoftのメールボックスです。パスワードではなく、Microsoftのログインで接続します。",
+        "smtpRejected": "読み取りはできますが、サーバーが送信用のログインを拒否しました。",
+        "blocked": "メールサーバーが接続を拒否しました。クラウドサーバーをブロックするプロバイダーもあります。",
+        "hostNotFound": "そのメールサーバーが見つかりませんでした。サーバー名を確認してください。",
+        "unreachable": "メールサーバーから応答がありませんでした。サーバー名とポートを確認してください。",
+        "tls": "メールサーバーとの安全な接続に失敗しました。別のポートをお試しください。",
+        "hostRefused": "そのサーバー名またはポートに接続できません。サーバー設定を確認してください。",
+        "saveFailed": "ログインはできましたが、保存に失敗しました。しばらくしてからもう一度お試しください。",
+        "generic": "うまくいきませんでした。もう一度試すか、別の受信トレイを接続してください。",
+        "link": {
+          "twoStep": "2 段階認証プロセスを開く",
+          "appPasswords": "{provider}のアプリ パスワードのページを開く",
+          "imapSetting": "{provider}でIMAPをオンにする方法",
+          "providerHelp": "{provider}のヘルプページ",
+          "adminGuide": "管理者向けのGoogleのガイド"
+        },
+        "kept": "アドレスは保持されるので、再試行は貼り付け1回で済みます。",
+        "readOnly": "読み取り専用で接続",
+        "readOnlyNote": "AIは読み取りと検索ができますが、送信はできません。",
+        "different": "別の受信トレイを接続",
+        "support": "このエラーをサポートに送信",
+        "supportNote": "送られるのはエラー内容とプロバイダー名だけで、パスワードは含まれません。",
+        "signIn": "もう一度ログイン",
+        "seePlans": "プランを見る"
+      },
+      "outlookError": {
+        "admin_consent_required": "ログインする前に、ご所属の組織の管理者がMCPEmailsを承認する必要があります。下のリンクを管理者に送ってください。",
+        "outlook_cancelled": "Microsoftのページでキャンセルされました。「Microsoftで接続」を押して、もう一度お試しください。",
+        "generic": "Microsoftのログインが完了しませんでした。もう一度お試しください。"
+      },
+      "emailPlaceholder": "you@example.com"
+    },
+    "add_to_ai": {
+      "title": "{client}にMCPEmailsを追加",
+      "lead": "{client}が接続すると、自動的に次へ進みます。",
+      "urlLabel": "MCPEmailsのサーバーURL",
+      "linkAfter": "{client}で確認し、MCPEmailsにログインします。",
+      "claudeAfter": "Claudeで、「続行」、「追加」、「接続」の順にクリックします。",
+      "commandAfter": "次に{client}を起動し、求められたらMCPEmailsにログインします。",
+      "configLead": "これを{file}に追加し、{client}を再読み込みして、求められたらMCPEmailsにログインします。",
+      "genericOauth": "{client}でHTTPタイプのMCPサーバーを追加し、下のURLを貼り付けて、求められたらMCPEmailsにログインします。",
+      "manual": "手動でセットアップ",
+      "continue": "追加しました",
+      "chatgpt": {
+        "step1": "chatgpt.comで「プラグイン」を開き、右上のAdd（追加）をクリックします。",
+        "step2": "「カスタム MCP サーバーを追加」を選び、名前をMCPEmailsにして、下のURLをServer URLに貼り付けます。",
+        "step3": "「理解したうえで続行します」にチェックを入れ、「プラグインとして作成」をクリックし、続いてConnect MCPEmailsをクリックしてアクセスを許可します。",
+        "step4": "チャットで @MCPEmails と入力すると使えます。",
+        "note": "カスタムMCPサーバーは、Goプランとすべての有料プランで、chatgpt.comのブラウザー版で利用できます。"
+      },
+      "key": {
+        "creating": "{client}用のAPIキーを作成しています",
+        "ready": "{client}用に標準アクセス（読み取り、下書き、送信）のAPIキーを作成しました。表示されるのは一度だけなので、今すぐコピーしてください。",
+        "failed": "APIキーを作成できませんでした。ダッシュボードの「APIキー」から作成してください。",
+        "limit": "このプランではこれ以上APIキーを追加できません。ダッシュボードで1つ削除してから、このページを再読み込みしてください。",
+        "retry": "もう一度試す",
+        "header": "ヘッダー",
+        "label": "APIキー"
+      },
+      "cline": {
+        "step1": "Clineで MCP Servers を開き、Remote Servers タブに移動します。",
+        "step2": "名前をMCPEmailsにし、URLを貼り付けて、Transport Type を Streamable HTTP に設定します。",
+        "step3": "下のヘッダーを追加し、Add Server をクリックします。"
+      },
+      "jetbrains": {
+        "step1": "設定を開き、Tools、AI Assistant、Model Context Protocol (MCP) の順に進みます。",
+        "step2": "Add をクリックし、Streamable HTTP を選んでURLを貼り付けます。",
+        "step3": "下のヘッダーを追加して保存します。"
+      },
+      "curl": "このキーでサーバーを呼び出します。次のステップで最初のリクエストを用意します。",
+      "phone": {
+        "claudeTitle": "スマートフォンでは、ブラウザーから追加してください",
+        "claudeBody": "このリンクをコピーして、SafariまたはChromeに貼り付けます。タップするとClaudeアプリが開くことがありますが、アプリからはコネクタを追加できません。一度追加すれば、MCPEmailsはアプリでも使えます。",
+        "copyLink": "リンクをコピー",
+        "otherBody": "{client}のセットアップはパソコンで行います。このステップをメールでお送りすれば、パソコンで開けます。",
+        "showHere": "ここで手順を表示する"
+      }
+    },
+    "first_prompt": {
+      "title": "{client}で試す",
+      "lead": "新しいチャットに貼り付けてください。",
+      "leadCode": "{client}に貼り付けてください。",
+      "leadApi": "最初のリクエストを送信:",
+      "open": "{client}を開く"
+    },
+    "wait": {
+      "title": "{client}を待っています"
+    },
+    "it_works": {
+      "title": "動いています",
+      "success": {
+        "read": "{client}が受信トレイを読み取りました。",
+        "search": "{client}が受信トレイを検索しました。",
+        "draft": "{client}が受信トレイに下書きを保存しました。",
+        "organize": "{client}が受信トレイを整理しました。",
+        "generic": "{client}が受信トレイを使いました。",
+        "connected": "{client}が受信トレイに接続されています。"
+      },
+      "finish": "完了",
+      "secondInbox": {
+        "title": "もう1つの受信トレイを接続",
+        "lead": "多くの方が2つ目の受信トレイを接続しています。仕事用と個人用を1つのチャットで扱えます。",
+        "cta": "別の受信トレイを接続",
+        "paidNote": "Freeに含まれる受信トレイは1つです。次を接続するとプランの選択肢が表示され、そのすぐ横でFreeのまま続行することもできます。"
+      }
+    }
+  },
+  "nav": {
+    "continue": "続行",
+    "back": "戻る",
+    "done": "完了"
+  },
+  "placeholder": "このステップは準備中です。",
+  "actions": {
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "emailMe": "このリンクをメールで受け取る",
+    "emailSent": "{email}に送信しました。",
+    "emailFailed": "メールを送信できませんでした。1分ほど待ってからもう一度お試しください。"
+  },
+  "ladder": {
+    "waiting": "{client}を待っています",
+    "connected": "{client}を接続しました",
+    "ask": "何か聞いてみる",
+    "works": "動いています",
+    "listening": "{client}からの接続を待機中",
+    "stopped": "待機を終了しました。プロンプトを試したら、このページを再読み込みしてください。"
+  },
+  "help": {
+    "noHandshake": {
+      "title": "{client}がまだ接続していません",
+      "claude": "claude.aiを再読み込みして新しいチャットを始めてください。Claude Desktopでは、アプリを完全に終了してから開き直します。",
+      "chatgpt": "chatgpt.comで新しいチャットを開き、@ と入力してMCPEmailsを選びます。",
+      "editor": "{client}のウィンドウを再読み込みし、MCPの一覧でMCPEmailsが接続済みと表示されているか確認してください。表示されない場合は、URLをもう一度貼り付けます。",
+      "cli": "{client}を終了して再起動し、MCPEmailsが一覧にあり接続済みになっているか確認してください。",
+      "api": "リクエストをもう一度送り、AuthorizationヘッダーにAPIキーが含まれているか確認してください。"
+    },
+    "noCall": {
+      "title": "{client}は接続済みですが、まだMCPEmailsを使っていません",
+      "claude": "このチャットでMCPEmailsをオンにする（+ > コネクタ）か、新しいチャットを始めてから、プロンプトをもう一度貼り付けてください。",
+      "chatgpt": "チャットで @ と入力してMCPEmailsを選び、プロンプトをもう一度貼り付けてください。",
+      "other": "新しいチャットを始めて、プロンプトをもう一度貼り付けてください。プロンプトにMCPEmailsの名前が入っているので、{client}はそれを使うと判断できます。"
+    },
+    "reconnect": {
+      "title": "それでも反応がない場合",
+      "body": "{client}からMCPEmailsを削除し、もう一度追加してから、新しいチャットを始めてください。",
+      "docs": "{client}のセットアップガイド",
+      "back": "セットアップのステップをもう一度表示",
+      "email": "手順をメールで受け取る"
+    }
+  },
+  "failure": {
+    "auth": "メールプロバイダーが受信トレイのパスワードを拒否しました。ダッシュボードで受信トレイを再接続してください。",
+    "timeout": "メールサーバーの応答に時間がかかりすぎました。期間を短くしてもう一度聞いてみてください。",
+    "provider": "メールプロバイダーがエラーを返しました。1分ほど待ってからもう一度お試しください。",
+    "scope": "{client}に与えたアクセス権ではその操作はできません。別のことを頼むか、より広いアクセス権で再接続してください。",
+    "inbox": "{client}が接続済みの受信トレイを見つけられませんでした。ダッシュボードで受信トレイを確認してください。",
+    "params": "{client}が送ったリクエストをMCPEmailsが読み取れませんでした。通常は自動的に再試行されます。",
+    "generic": "{client}からの直前のリクエストが失敗しました。もう一度聞いてみてください。"
+  },
+  "prompts": {
+    "replyRadar": {
+      "chat": "MCPEmailsを使って、過去2日間の受信トレイを見て、今日中に私が返信すべきメールを教えてください。1件につき1行で、相手、用件、期限をまとめてください。送信、下書き、移動、削除は一切しないでください。",
+      "code": "MCPEmailsのツールを使って、過去2日間の受信トレイを見て、今日中に私が返信すべきメールを教えてください。1件につき1行で、相手、用件、期限をまとめてください。送信、下書き、移動、削除は一切しないでください。"
+    },
+    "draftReplies": {
+      "drafts": "そのリストから特に返信が必要なメールを3件選び、それぞれへの返信を私のいつもの口調で書いて、下書きフォルダーに下書きとして保存してください。送信はしないでください。",
+      "readOnly": "そのリストから特に返信が必要なメールを3件選び、それぞれへの短い返信をこのチャットに書いてください。送信も保存もしないでください。"
+    },
+    "morningBrief": {
+      "chat": "MCPEmailsを使って、朝のブリーフィングをください。昨日以降に届いたもの、今日返信が必要なもの、今週締め切りのあるものをまとめてください。10行以内で。何も変更しないでください。",
+      "code": "MCPEmailsのツールを使って、朝のブリーフィングをください。昨日以降に届いたもの、今日返信が必要なもの、今週締め切りのあるものをまとめてください。10行以内で。何も変更しないでください。"
+    }
+  },
+  "emails": {
+    "setupLink": {
+      "subject": "MCPEmailsのセットアップリンク",
+      "intro": "パソコンでこのリンクを開き、{client}にMCPEmailsを追加してください:"
+    },
+    "helpSteps": {
+      "subject": "{client}にMCPEmailsを接続する方法",
+      "intro": "{client}でMCPEmailsを使えるようにする手順です:",
+      "prompt": "次に、このプロンプトを新しいチャットに貼り付けます:",
+      "guide": "セットアップガイド:",
+      "resume": "続きから再開:"
+    },
+    "morning": {
+      "subject": "朝のブリーフィング用プロンプト",
+      "intro": "おはようございます。これを{client}に貼り付けると、朝のブリーフィングが届きます:"
+    },
+    "footer": "このメールは、MCPEmailsのセットアップ中にご自身でリクエストされたものです。送信は1回のみです。"
+  },
+  "chatReturn": {
+    "title": "接続しました。{client}に戻って、もう一度聞いてみてください。",
+    "lead": "メールボックスの準備ができました。{client}に同じ質問をもう一度するか、これから始めてみてください:",
+    "prompt": "過去24時間の受信トレイを見て、私が返信すべきメールを教えてください。",
+    "copy": "プロンプトをコピー",
+    "copied": "コピーしました",
+    "open": "{client}を開く",
+    "yourApp": "お使いのAIアプリ",
+    "dashboard": "ダッシュボードへ"
+  }
+}

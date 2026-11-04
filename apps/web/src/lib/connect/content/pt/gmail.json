@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://developers.google.com/gmail/api/guides",
+    "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
+    "https://support.google.com/a/answer/7281227"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Senha de app",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "Seu endereço completo do Gmail, por exemplo you@gmail.com. A senha de app substitui sua senha normal do Google; a senha normal não funciona.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP do Gmail para Claude, Cursor e ChatGPT",
+    "description": "Um servidor MCP do Gmail hospedado. Conecte o Gmail com uma senha de app do Google via IMAP e leia, pesquise, envie e agende e-mails no Claude, no Cursor ou em qualquer cliente MCP. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Gmail + IA",
+    "titleLine1": "O servidor MCP do Gmail",
+    "titleLine2": "para Claude, Cursor e ChatGPT",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real do Gmail em minutos. Leia, pesquise, envie, responda, agende e organize e-mails com uma senha de app do Google, e use a mesma caixa de entrada em todos os clientes MCP, não só em um.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Conecta com uma senha de app do Google",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "A URL do servidor MCP do Gmail é https://mcpemails.com/api/mcp. O MCPEmails é um servidor MCP hospedado: crie uma senha de app do Google, conecte o Gmail uma vez no painel e cole essa URL no Claude, no ChatGPT ou no Cursor. No Cursor, adicione a URL em mcpServers no arquivo ~/.cursor/mcp.json, no campo url, e o Cursor pede para você fazer login, sem chave de API. O plano Free conecta uma caixa de entrada do Gmail, para sempre, sem cartão, e funciona com uma conta pessoal do Google ou com o Google Workspace."
+  },
+  "method": {
+    "title": "Como o Gmail se conecta: com uma senha de app do Google",
+    "body": "O Gmail se conecta com uma <b>senha de app do Google</b> via IMAP e SMTP. O Google só oferece senhas de app em contas com a <b>verificação em duas etapas ativada</b>, então ative essa opção primeiro e depois crie a senha em <b>myaccount.google.com/apppasswords</b>. Ela tem 16 letras minúsculas em quatro grupos, e você a cola no lugar da sua senha normal do Google, que não funciona aqui. Revogue a senha quando quiser na mesma página do Google, ou exclua a caixa de entrada no MCPEmails."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Crie uma senha de app do Google",
+      "p": "Ative a verificação em duas etapas na sua Conta do Google, se ainda não estiver ativa, depois abra myaccount.google.com/apppasswords e crie uma senha. Cole os 16 caracteres no MCPEmails junto com seu endereço completo do Gmail. Os espaços no código não fazem diferença."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Google publica seu próprio servidor MCP do Gmail, e só para o Gmail ele é o caminho mais curto",
+      "p": "O Google anunciou suporte oficial a MCP para seus serviços, incluindo um servidor MCP do Workspace que cobre o Gmail junto com Drive, Agenda e Chat. Não vamos fingir o contrário. Se o Gmail é a única caixa de correio que você quer que um assistente acesse, e seu cliente fala com o servidor do Google, use esse servidor. O motivo para apontar o MCPEmails para o Gmail é que o mesmo servidor também guarda sua caixa do iCloud, Fastmail, Zoho, Yahoo ou IMAP da empresa, expõe todas elas por <b>uma</b> URL de MCP e se comporta do mesmo jeito no Claude, no Cursor e no ChatGPT. Um conector por provedor, cada um com sua própria autenticação e seus próprios nomes de ferramentas, é justamente o que isso evita."
+    },
+    {
+      "h": "Enviar de outro endereço exige um endereço Send As verificado",
+      "p": "Uma caixa de correio conectada com senha de app envia a partir do próprio endereço. Para deixar seu agente enviar de um alias ou de outro endereço seu, adicione-o em <b>Endereços Send As</b> nas configurações da caixa de entrada no MCPEmails. Enviamos um código de 6 dígitos para esse endereço, e ele passa a funcionar assim que você digita o código. O Gmail também precisa aceitar o endereço, então configure-o antes como endereço em <b>Enviar e-mail como</b> no Gmail. Um endereço de remetente que não é o da própria caixa nem está verificado é recusado, não reescrito em silêncio."
+    },
+    {
+      "h": "O Gmail tem marcadores, não pastas, então mover não é bem mover",
+      "p": "O Gmail armazena marcadores, não pastas. Via IMAP, cada marcador aparece como uma pasta, então uma mensagem pode ter vários marcadores ao mesmo tempo e aparecer em várias pastas. Mover significa adicionar um marcador e remover outro, e arquivar é simplesmente remover <code>INBOX</code>. Excluir coloca a mensagem na Lixeira do Gmail em vez de apagá-la. Se você pedir a um agente para arquivar e-mails em uma pasta que ainda não existe, o marcador precisa ser criado primeiro, e depois ele aparece no Gmail em todos os dispositivos."
+    },
+    {
+      "h": "Um administrador do Google Workspace pode desativar as senhas de app",
+      "p": "Em uma conta pessoal do Google, o único pré-requisito é a verificação em duas etapas. Em uma conta do Google Workspace, um administrador pode desativar as senhas de app para o domínio inteiro, e nesse caso myaccount.google.com/apppasswords simplesmente não fica disponível para você, e não há nada a fazer de dentro da caixa de correio. Fale com o administrador ou conecte outra caixa de correio."
+    }
+  ],
+  "limits": [
+    "O MCPEmails alcança só o e-mail: a senha de app é usada apenas para IMAP e SMTP. Drive, Agenda, Chat e Documentos não são acessados.",
+    "Um administrador do Google Workspace pode desativar as senhas de app para o domínio no Admin Console. Só um administrador pode mudar essa decisão.",
+    "Excluir move a mensagem para a Lixeira do Gmail. A exclusão definitiva segue as configurações de IMAP do Gmail: por padrão, ela só remove o marcador do qual a mensagem foi excluída, e um expunge na Lixeira a apaga."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Gmail?",
+      "a": "Sim, desde que exista algo entre os dois que fale com o Gmail em nome do Claude. O MCPEmails é uma dessas opções: você cria uma senha de app do Google, cola uma URL de MCP, e o Claude consegue ler, pesquisar, enviar, responder, encaminhar e agendar e-mails. O Google também publica um servidor MCP oficial do Workspace que cobre o Gmail. A diferença prática é que o MCPEmails não é só para o Google, então a mesma URL serve também para suas outras caixas de correio."
+    },
+    {
+      "q": "Qual é a URL do servidor MCP do Gmail, e ele é gratuito?",
+      "a": "A URL é https://mcpemails.com/api/mcp, a mesma no Claude, no ChatGPT, no Cursor e em todos os outros clientes MCP. O plano Free conecta uma caixa de entrada do Gmail sem cartão, para sempre. Os planos pagos adicionam mais caixas de entrada."
+    },
+    {
+      "q": "Existe um servidor MCP oficial do Gmail feito pelo Google?",
+      "a": "Sim. O Google anunciou suporte oficial a MCP para seus serviços, com um servidor MCP do Workspace que abrange Gmail, Drive, Agenda e Chat. Use-o quando o Gmail for a única caixa de correio envolvida e seu cliente for compatível com ele. Escolha um servidor de terceiros como o MCPEmails quando quiser vários provedores atrás de uma única URL de MCP, ou quando quiser o mesmo comportamento no Claude, no Cursor e no ChatGPT."
+    },
+    {
+      "q": "Preciso de uma senha de app para o Gmail?",
+      "a": "Sim. O Gmail se conecta via IMAP e SMTP com uma senha de app do Google, não com sua senha normal do Google. O Google só mostra as senhas de app em contas com a verificação em duas etapas ativada, então ative-a primeiro e depois crie a senha em myaccount.google.com/apppasswords. Leva cerca de um minuto."
+    },
+    {
+      "q": "Por que não consigo criar uma senha de app na minha conta de trabalho?",
+      "a": "O Google só oferece senhas de app em contas com a verificação em duas etapas ativada, então confira isso primeiro. Em uma conta do Google Workspace, um administrador também pode desativar as senhas de app para o domínio inteiro, e aí myaccount.google.com/apppasswords continua indisponível, faça o que fizer dentro da caixa de correio. Só o administrador pode mudar isso. Uma conta pessoal do Gmail não precisa de nada além da verificação em duas etapas."
+    },
+    {
+      "q": "Funciona com um domínio próprio no Google Workspace?",
+      "a": "Sim. Uma caixa de correio do Workspace no seu próprio domínio se conecta com uma senha de app exatamente como um endereço gmail.com e se comporta de forma idêntica depois. A única condição é a política do administrador: o domínio precisa permitir senhas de app e acesso IMAP."
+    },
+    {
+      "q": "Meu Gmail fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Google a cada solicitação e entregues ao seu cliente de IA. Sua senha de app é criptografada em repouso, e o conteúdo das mensagens não é retido. Revogar a senha de app na sua Conta do Google, ou excluir a caixa de entrada no MCPEmails, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Gmail",
+    "sub": "Conecte o Gmail em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  },
+  "guide": {
+    "intro": "Prefere um passo a passo com capturas de tela?",
+    "label": "Como conectar o Gmail ao Claude",
+    "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "Caixa de correio da empresa no Google Workspace, no seu próprio domínio?",
+    "label": "Conectar o Google Workspace, e as configurações de administrador que decidem isso",
+    "href": "/connect/google-workspace"
+  }
+}

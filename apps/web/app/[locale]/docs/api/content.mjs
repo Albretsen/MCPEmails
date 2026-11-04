@@ -4,8 +4,8 @@
 // serialised into every marketing page, and this copy is only read here
 // (apps/web/CLAUDE.md). Same pattern as docs/read-only-access/content.mjs.
 //
-// TRANSLATION: en, nb, es, fr, de and zh each have their own object of the
-// same shape. A copy change goes into all six. The code samples in CODE are
+// TRANSLATION: en, nb, es, fr, de, pt, ja and zh each have their own object of
+// the same shape. A copy change goes into all eight. The code samples in CODE are
 // shared by every locale and are not translated.
 //
 // Every claim is traced to code. If one of these changes, change the page:
@@ -1476,6 +1476,496 @@ const de = {
   },
 };
 
+const pt = {
+  meta: {
+    title: 'API de e-mail para desenvolvedores: guia HTTP do MCPEmails',
+    description:
+      'Chame o MCPEmails a partir de scripts, do n8n e dos seus próprios agentes: chaves de API e escopos, as chamadas JSON-RPC com curl, erros, paginação, chaves de idempotência, limites de taxa e webhooks assinados para e-mails novos.',
+  },
+  breadcrumb: 'Guia para desenvolvedores',
+  eyebrow: 'Documentação',
+  title: 'Construa sobre o MCPEmails',
+  lead:
+    'Tudo o que um cliente MCP faz, um script pode fazer com HTTPS comum. Um endpoint, uma chave de API, JSON na entrada e JSON na saída. Este guia cobre autenticação, as três chamadas de que você precisa, erros, novas tentativas, limites e webhooks para e-mails novos.',
+  toc: 'Nesta página',
+  codeLabels: {
+    bash: 'bash',
+    http: 'HTTP',
+    json: 'JSON',
+    js: 'JavaScript',
+  },
+  sections: [
+    {
+      id: 'endpoint',
+      h: 'O endpoint',
+      blocks: [
+        { p: 'Toda requisição é um `POST` JSON-RPC 2.0 para `https://mcpemails.com/api/mcp`. É o mesmo endpoint que o claude.ai, o ChatGPT e outros clientes MCP usam, com as mesmas ferramentas e as mesmas permissões, então um script e um assistente de chat enxergam um único produto.' },
+        {
+          items: [
+            'Envie `Content-Type: application/json` e `Accept: application/json`. A resposta é um único objeto JSON.',
+            'O servidor não mantém sessão. Não há nada para abrir ou fechar, e cada requisição leva seu próprio cabeçalho `Authorization`.',
+            'Os resultados bem-sucedidos das ferramentas trazem um objeto tipado `structuredContent`, então você nunca precisa interpretar texto corrido. Os mesmos dados estão em `content[0].text` como uma string JSON.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'auth',
+      h: 'Autenticação',
+      blocks: [
+        { h3: 'Chaves de API' },
+        {
+          items: [
+            'Crie uma chave no painel em **Chaves de API** → **Nova chave**. Dê a ela o nome do script ou fluxo de trabalho que vai usá-la.',
+            'Uma chave é `mcpe_` seguido de 64 caracteres hexadecimais. Ela aparece uma única vez, quando você a cria, e só um hash fica armazenado. Copie-a nesse momento; uma chave perdida não pode ser recuperada, só substituída.',
+            'Envie-a em toda requisição como `Authorization: Bearer mcpe_...`. Nunca coloque uma chave em uma URL ou em uma query string.',
+            'Todos os planos podem criar quantas chaves precisarem. Use uma chave por script ou fluxo de trabalho, para poder revogar uma sem mexer nas outras.',
+            'Revogar uma chave na página **Chaves de API** encerra o acesso na hora.',
+          ],
+        },
+        { h3: 'Escopos' },
+        { p: 'Cada chave tem só as permissões que você marca ao criá-la. Você pode alterá-las depois em **Editar acesso**, e a mudança vale a partir da próxima chamada, sem reconectar.' },
+        {
+          table: {
+            head: ['Escopo', 'Permite'],
+            rows: [
+              ['`read:email`', 'Listar, ler e pesquisar mensagens, baixar anexos, listar caixas de entrada e pastas.'],
+              ['`search:email`', 'Mantido para chaves antigas. A pesquisa já está coberta por `read:email`.'],
+              ['`send:email`', 'Enviar, responder e encaminhar.'],
+              ['`manage:drafts`', 'Criar, atualizar e excluir rascunhos. Enviar um rascunho também exige `send:email`.'],
+              ['`manage:folders`', 'Mover, copiar, sinalizar e arquivar mensagens; criar, renomear e excluir pastas.'],
+              ['`delete:email`', 'Excluir mensagens, uma a uma ou em massa.'],
+              ['`manage:contacts`', 'Pesquisar contatos nos seus e-mails recentes.'],
+              ['`schedule:email`', 'Agendar envios e gerenciar e-mails agendados.'],
+              ['`manage:automations`', 'Criar regras que rodam em um horário programado sem ninguém acompanhando.'],
+            ],
+          },
+        },
+        { p: 'Comece com `read:email` e adicione um escopo de escrita só quando o fluxo de trabalho precisar. Uma chamada fora dos escopos da chave é recusada antes de entrarmos em contato com o seu servidor de e-mail. Visualizadores de um espaço de trabalho só podem ter escopos de leitura.' },
+        { h3: 'Acesso às caixas de entrada' },
+        { p: 'Por padrão, uma chave alcança todas as caixas de entrada do espaço de trabalho. Para restringi-la a algumas delas, abra **Editar acesso** na chave e escolha as caixas em **Acesso às caixas de entrada**. O limite é verificado em toda chamada, então uma chave restrita à caixa de suporte não consegue ler a do financeiro, diga o que disser a requisição.' },
+        { h3: 'OAuth para apps de conector' },
+        { p: 'Apps que as próprias pessoas conectam, como o claude.ai, o ChatGPT e outros clientes MCP, entram com OAuth em vez de uma chave: registro dinâmico de cliente, código de autorização com PKCE e uma tela de consentimento onde o usuário escolhe os escopos e as caixas de entrada. Veja [Conexão OAuth](/docs#oauth). Para os seus próprios scripts, servidores e fluxos de trabalho, uma chave de API é mais simples.' },
+      ],
+    },
+    {
+      id: 'calls',
+      h: 'As três chamadas',
+      blocks: [
+        { h3: '1. initialize (opcional)' },
+        { p: 'Clientes MCP começam com `initialize`. Um script pode pular essa etapa, porque o servidor não mantém sessão, mas ela é uma forma barata de conferir se a chave funciona e de ler as instruções do servidor.' },
+        { code: 'initialize', lang: 'bash' },
+        { h3: '2. tools/list' },
+        { p: '`tools/list` retorna todas as ferramentas que essa chave pode chamar, com a descrição, o schema de entrada e o schema de saída de cada uma. Leia a lista na inicialização em vez de fixar nomes de ferramentas ou argumentos no código: ela é filtrada pelos escopos da chave, e as ferramentas ganham argumentos com o tempo.' },
+        { code: 'toolsList', lang: 'bash' },
+        { h3: '3. tools/call' },
+        { p: 'Chame uma ferramenta pelo nome com seus argumentos. A maioria das ferramentas recebe uma `action` que define o que ela faz, como `list`, `read` ou `search` em `email_read`. Indique a caixa de correio com `inbox` (o endereço) ou `inbox_id`; `inbox_list` retorna os dois.' },
+        { code: 'toolsCall', lang: 'bash' },
+        { p: 'Um resultado bem-sucedido:' },
+        { code: 'result', lang: 'json' },
+        { p: 'A [referência de ferramentas](/docs#tools) descreve cada ferramenta, e o [guia de curl](/docs/curl) tem mais exemplos.' },
+      ],
+    },
+    {
+      id: 'errors',
+      h: 'Erros',
+      blocks: [
+        { p: 'Há dois tipos. Uma requisição que nem chegou a rodar volta como um `error` JSON-RPC com um status HTTP. Uma requisição que chegou a uma ferramenta e foi recusada por ela volta como um `result` normal com `isError: true`, para que um modelo de IA leia o motivo. Tome decisões com base em `data.error_code` ou no código em `_meta`, não no texto da mensagem.' },
+        {
+          table: {
+            head: ['Resposta', 'Quando', 'O que fazer'],
+            rows: [
+              ['HTTP 401, `-32001`', 'Chave ausente, malformada, revogada ou expirada.', 'Corrija o cabeçalho `Authorization` ou crie uma chave nova. Tentar de novo não resolve.'],
+              ['HTTP 403, `-32004`, `insufficient_scope`', 'Falta à chave um escopo de que essa ação da ferramenta precisa. `data.required_scopes` lista o que a permitiria.', 'Adicione o escopo em **Editar acesso** ou use outra chave.'],
+              ['HTTP 429, `-32003`, `rate_limit_exceeded`', 'Requisições demais. `data.window` diz qual janela encheu.', 'Espere os segundos de `Retry-After` (também em `data.retry_after`) e repita a mesma requisição.'],
+              ['`-32602`', 'Nome de ferramenta desconhecido. `data.available_tools` lista os nomes que essa chave pode chamar.', 'Use um nome de `tools/list`.'],
+              ['`isError: true`, `invalid_arguments`', 'Os argumentos não passaram no schema da ferramenta. Nada foi executado. O texto aponta cada argumento inválido e, quando o nome de um argumento foi chutado, indica o que existe.', 'Corrija os argumentos. Os mesmos argumentos são rejeitados do mesmo jeito.'],
+              ['`isError: true`, `usage_limit_reached`', 'Um espaço de trabalho Free usou suas ações de e-mail do mês.', 'Espere a data de renovação em `_meta` ou faça upgrade. Os planos pagos têm ações de e-mail ilimitadas.'],
+              ['`isError: true`, outro', 'A ferramenta rodou e falhou: mensagem não encontrada, provedor recusou, destinatário inválido e assim por diante.', 'Leia `content[0].text`. Ele diz o que aconteceu e se algo foi enviado.'],
+            ],
+          },
+        },
+        { code: 'scopeError', lang: 'http' },
+        { code: 'rateError', lang: 'http' },
+        { code: 'invalidArgs', lang: 'json' },
+      ],
+    },
+    {
+      id: 'pagination',
+      h: 'Paginação',
+      blocks: [
+        { p: 'Todo resultado de listagem e de pesquisa termina com os mesmos quatro campos:' },
+        {
+          items: [
+            '`has_more`: true quando existe outra página. Só `has_more: false` significa que você viu tudo.',
+            '`next_offset`: devolva-o como `offset`, com todos os outros argumentos iguais, para obter a próxima página. É `null` quando `has_more` é false.',
+            '`total`: o número de resultados, ou `null` quando o provedor não consegue contá-los. Nunca contradiz a página que você tem em mãos.',
+            '`total_is_estimate`: true quando `total` é uma estimativa ou um valor mínimo, e não uma contagem exata.',
+          ],
+        },
+        { p: 'Corpos de mensagem longos são divididos em janelas da mesma forma: quando `body_truncated` é true, leia de novo passando `body_next_offset` como `body_offset`.' },
+      ],
+    },
+    {
+      id: 'idempotency',
+      h: 'Novas tentativas e chaves de idempotência',
+      blocks: [
+        { p: 'Uma conexão que cai depois de um envio deixa você sem saber se o e-mail saiu. Passe uma `idempotency_key` e tente de novo com a mesma chave: o trabalho é executado uma única vez.' },
+        { code: 'send', lang: 'bash' },
+        {
+          items: [
+            'Aceita em envios, respostas, encaminhamentos, envios agendados, gravação de rascunhos e alterações na caixa de correio, como mover, sinalizar e excluir. `tools/list` mostra `idempotency_key` no schema de entrada de toda ferramenta que a aceita.',
+            'Até 200 caracteres. Use algo do seu próprio sistema, como um número de pedido e um nome de evento.',
+            'As chaves valem só para a chave de API que as enviou e ficam guardadas por 24 horas.',
+            'Uma nova tentativa com a mesma chave e os mesmos argumentos não é executada de novo. Ela retorna `idempotent_replay: true`, o `status` original e o resultado original em `result`, incluindo o `message_id` que você pode ter perdido.',
+            'A mesma chave com argumentos diferentes é recusada com `idempotency_key_conflict`. Use uma chave nova para uma operação nova.',
+            'Uma nova tentativa enquanto a primeira chamada ainda está rodando retorna `status: "processing"`. Tente de novo em instantes.',
+            'Quando o provedor de e-mail recusou um envio antes de aceitá-lo, nada foi enviado e a chave é liberada, então a nova tentativa idêntica envia de fato.',
+            'Quando o resultado é incerto, a resposta repetida diz `status: "unknown"`. Confira os Enviados antes de enviar de novo com uma chave nova.',
+          ],
+        },
+        { code: 'replay', lang: 'json' },
+      ],
+    },
+    {
+      id: 'approval',
+      h: 'Aprovação de envios',
+      blocks: [
+        { p: 'Qualquer caixa de entrada pode segurar todos os envios até que uma pessoa os aprove. Um envio do seu script passa então a retornar um `approval_id` com `status: "pending_approval"` em vez de sair, e ele sai quando alguém o aprova no painel. Isso funciona em todos os planos e é um bom padrão enquanto uma automação nova ainda está provando seu valor. Uma nova tentativa com a mesma `idempotency_key` informa a aprovação existente em vez de criar uma segunda.' },
+      ],
+    },
+    {
+      id: 'rate-limits',
+      h: 'Limites de taxa',
+      blocks: [
+        { p: 'Cada plano tem um teto por minuto para o espaço de trabalho inteiro. Uma única chave pode usar todo o limite por minuto do plano; várias chaves o compartilham.' },
+        { planTable: true },
+        {
+          items: [
+            'As respostas de `tools/call` trazem `RateLimit-Limit`, `RateLimit-Remaining` e `RateLimit-Reset` (em segundos) para a janela que estiver mais perto de encher, para que o cliente possa regular o ritmo antes de atingir o limite.',
+            'Cada chave também tem janelas por hora e por dia. Um 429 indica em `data.window` a janela que encheu.',
+            'Um 429 traz `Retry-After` em segundos. Espere esse tempo e repita a mesma requisição.',
+            'O Free inclui uma cota mensal de ações de e-mail. Os planos pagos têm ações de e-mail ilimitadas e nenhuma cobrança por chamada.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'webhooks',
+      h: 'Webhooks para e-mails novos',
+      blocks: [
+        { p: 'No Pro e no Business, o MCPEmails pode fazer um POST na sua URL quando chega e-mail em uma caixa de entrada, para que um fluxo de trabalho comece com o e-mail novo em vez de fazer polling. Crie um endpoint no painel, escolha as caixas de entrada dele e copie o segredo de assinatura, que aparece uma única vez. A URL precisa ser HTTPS, na porta 443 ou 8443. Use o botão de teste para enviar um evento `ping` assinado.' },
+        { h3: 'O evento' },
+        { code: 'webhookPayload', lang: 'http' },
+        {
+          items: [
+            '`type` é `message.received`. `message_ids` lista as mensagens novas na pasta `INBOX` daquela caixa de entrada, até 10 por evento; `count` é quantas chegaram, o que pode ser mais.',
+            'Por padrão, o payload traz só ids, sem conteúdo. Um endpoint configurado para incluir cabeçalhos também recebe uma lista `messages` com o `id`, o `from` e o `subject` de cada mensagem.',
+            'Busque a mensagem com `email_read` (`action: "read"`, o `inbox_id` e um `message_id`) usando uma chave de API. Os escopos e o acesso às caixas de entrada dessa chave valem normalmente.',
+            'A entrega costuma acontecer em cerca de dois minutos depois que a mensagem chega. As caixas de entrada são verificadas em intervalos programados, então não é instantâneo.',
+          ],
+        },
+        { h3: 'Verifique a assinatura' },
+        { p: 'Cada entrega traz `MCPEmails-Signature: t=<unix seconds>,v1=<hex>`, em que `v1` é o HMAC-SHA256 do timestamp, um ponto e o corpo bruto da requisição, com o segredo do endpoint como chave. A chave é o segredo inteiro como aparece, prefixo `whsec_` incluído. Recalcule a assinatura sobre o corpo bruto, compare em tempo constante e rejeite um timestamp com mais de cinco minutos.' },
+        { code: 'webhookVerify', lang: 'js' },
+        { h3: 'Novas tentativas' },
+        {
+          items: [
+            'Responda com qualquer status 2xx em até 10 segundos. Qualquer outra coisa conta como falha, inclusive um redirecionamento, que não é seguido.',
+            'Uma entrega que falhou é reenviada depois de 1 minuto, 5 minutos, 30 minutos, 2 horas, 6 horas e 24 horas. Cada nova tentativa é assinada de novo com um timestamp novo.',
+            'Um endpoint que falhou por 24 horas, ou 50 vezes seguidas, é desativado e o dono do espaço de trabalho é avisado por e-mail. Você pode reativá-lo pelo painel.',
+            'Use `MCPEmails-Event-Id` para ignorar uma entrega que você já processou. Uma nova tentativa traz o mesmo id de evento.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'recipes',
+      h: 'Receitas',
+      blocks: [
+        { h3: 'n8n: rode um fluxo de trabalho quando chegar e-mail novo' },
+        {
+          items: [
+            'Adicione um nó de gatilho **Webhook** com o método HTTP `POST` e registre a URL de produção dele como endpoint de webhook no painel do MCPEmails.',
+            'Adicione um nó **HTTP Request**: método `POST`, URL `https://mcpemails.com/api/mcp`, autenticação **Generic Credential Type** → **Header Auth** com nome `Authorization` e valor `Bearer mcpe_...`.',
+            'Ative **Send Body**, escolha **JSON** e use o corpo abaixo para ler a mensagem nova. Os nós seguintes recebem a mensagem em `result.structuredContent`.',
+            'Para verificar a assinatura no n8n, ative **Raw Body** no nó Webhook e rode a verificação acima em um nó **Code**. No n8n auto-hospedado, libere o módulo crypto com `NODE_FUNCTION_ALLOW_BUILTIN=crypto`.',
+          ],
+        },
+        { code: 'n8nBody', lang: 'json' },
+        { p: 'Para um nó AI Agent que lê e envia e-mails por conta própria, veja o [guia do n8n](/docs/n8n).' },
+        { h3: 'Claude Code' },
+        { p: 'Adicione o servidor com uma chave em um cabeçalho. Isso serve para máquinas sem interface e para CI, onde não há navegador para o login OAuth:' },
+        { code: 'claudeCode', lang: 'bash' },
+        { p: 'O [guia do Claude Code](/docs/claude-code) cobre o login OAuth e a escolha de escopos.' },
+        { h3: 'Um script curto em Node' },
+        { p: 'Lista todas as mensagens não lidas de uma caixa de entrada, página por página, e espera passar um 429:' },
+        { code: 'node', lang: 'js' },
+        { h3: 'OpenClaw' },
+        { p: 'O OpenClaw entra com OAuth por padrão; o [guia do OpenClaw](/docs/openclaw) mostra o passo a passo. Para usar uma chave com escopos, coloque-a no mapa `headers` da entrada do servidor e deixe `auth` sem valor, porque o OpenClaw ignora um cabeçalho `Authorization` estático em uma entrada configurada para OAuth.' },
+        { code: 'openclaw', lang: 'json' },
+      ],
+    },
+  ],
+  planTable: {
+    head: ['Plano', 'Requisições por minuto', 'Webhooks'],
+    yes: 'Sim',
+    no: 'Não',
+  },
+  cta: {
+    title: 'Comece com uma caixa de entrada, grátis',
+    sub: 'Crie uma chave, chame tools/list e veja seus próprios e-mails voltarem como JSON.',
+    button: 'Começar',
+    pricing: 'Ver preços',
+    developers: 'Por que desenvolvedores usam o MCPEmails',
+  },
+};
+
+const ja = {
+  meta: {
+    title: '開発者向けメールAPI: MCPEmails HTTPガイド',
+    description:
+      'スクリプト、n8n、自作のエージェントからMCPEmailsを呼び出す方法です。APIキーとスコープ、curlによるJSON-RPC呼び出し、エラー、ページネーション、冪等性キー、レート制限、新着メール向けの署名付きWebhookを解説します。',
+  },
+  breadcrumb: '開発者ガイド',
+  eyebrow: 'ドキュメント',
+  title: 'MCPEmailsで開発する',
+  lead:
+    'MCPクライアントにできることは、すべて通常のHTTPSを使ってスクリプトからも実行できます。エンドポイントは1つ、APIキーも1つ、入力も出力もJSONです。このガイドでは、認証、必要な3つの呼び出し、エラー、再試行、制限、新着メール向けのWebhookを説明します。',
+  toc: 'このページの内容',
+  codeLabels: {
+    bash: 'bash',
+    http: 'HTTP',
+    json: 'JSON',
+    js: 'JavaScript',
+  },
+  sections: [
+    {
+      id: 'endpoint',
+      h: 'エンドポイント',
+      blocks: [
+        { p: 'すべてのリクエストは、`https://mcpemails.com/api/mcp`へのJSON-RPC 2.0の`POST`です。claude.ai、ChatGPT、その他のMCPクライアントが使うのと同じエンドポイントで、ツールも権限も同じです。スクリプトとチャットアシスタントは同じ1つの製品を扱うことになります。' },
+        {
+          items: [
+            '`Content-Type: application/json`と`Accept: application/json`を送信してください。応答は1つのJSONオブジェクトです。',
+            'サーバーはセッションを保持しません。開いたり閉じたりするものはなく、各リクエストがそれぞれ`Authorization`ヘッダーを持ちます。',
+            'ツールの実行に成功すると、型付きの`structuredContent`オブジェクトが返されるため、文章を解析する必要はありません。同じデータがJSON文字列として`content[0].text`にも入っています。',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'auth',
+      h: '認証',
+      blocks: [
+        { h3: 'APIキー' },
+        {
+          items: [
+            'ダッシュボードの**APIキー** → **新しいキー**でキーを作成します。使用するスクリプトやワークフローにちなんだ名前を付けてください。',
+            'キーは`mcpe_`に続く64文字の16進数です。表示されるのは作成時の1回だけで、保存されるのはハッシュのみです。その場でコピーしてください。紛失したキーは復元できず、新しいキーに置き換えるしかありません。',
+            'すべてのリクエストで`Authorization: Bearer mcpe_...`として送信します。キーをURLやクエリ文字列に含めないでください。',
+            'どのプランでも必要な数だけキーを作成できます。スクリプトやワークフローごとに1つのキーを使えば、他に影響を与えずに1つだけ取り消せます。',
+            '**APIキー**ページでキーを取り消すと、アクセスは即座に終了します。',
+          ],
+        },
+        { h3: 'スコープ' },
+        { p: '各キーが持つのは、作成時にチェックを入れた権限だけです。後から**アクセスを編集**で変更でき、変更は再接続なしで次の呼び出しから適用されます。' },
+        {
+          table: {
+            head: ['スコープ', '許可される操作'],
+            rows: [
+              ['`read:email`', 'メッセージの一覧表示、読み取り、検索、添付ファイルのダウンロード、受信トレイとフォルダーの一覧表示。'],
+              ['`search:email`', '古いキーのために残しています。検索は`read:email`に含まれます。'],
+              ['`send:email`', '送信、返信、転送。'],
+              ['`manage:drafts`', '下書きの作成、更新、削除。下書きを送信するには`send:email`も必要です。'],
+              ['`manage:folders`', 'メッセージの移動、コピー、フラグ設定、アーカイブ。フォルダーの作成、名前の変更、削除。'],
+              ['`delete:email`', 'メッセージの削除と一括削除。'],
+              ['`manage:contacts`', '最近のメールから連絡先を検索。'],
+              ['`schedule:email`', '予約送信の設定と、予約済みメールの管理。'],
+              ['`manage:automations`', '誰も見ていなくてもスケジュールどおりに実行されるルールの作成。'],
+            ],
+          },
+        },
+        { p: 'まずは`read:email`から始め、ワークフローに必要になった時点で書き込み系のスコープを追加してください。キーのスコープ外の呼び出しは、メールサーバーに接続する前に拒否されます。ワークスペースの閲覧者が持てるのは読み取り系のスコープだけです。' },
+        { h3: '受信トレイへのアクセス' },
+        { p: '既定では、キーはワークスペース内のすべての受信トレイにアクセスできます。一部に限定するには、キーの**アクセスを編集**を開き、**受信トレイへのアクセス**で受信トレイを選びます。この制限は呼び出しのたびに確認されるため、サポート用の受信トレイに限定したキーは、リクエストの内容にかかわらず経理用の受信トレイを読めません。' },
+        { h3: 'コネクタアプリのOAuth' },
+        { p: 'claude.ai、ChatGPT、その他のMCPクライアントなど、ユーザーが自分で接続するアプリは、キーではなくOAuthでログインします。動的クライアント登録、PKCE付きの認可コード、そしてユーザーがスコープと受信トレイを選ぶ同意画面を使います。詳しくは[OAuth接続](/docs#oauth)をご覧ください。自分のスクリプト、サーバー、ワークフローには、APIキーのほうが簡単です。' },
+      ],
+    },
+    {
+      id: 'calls',
+      h: '3つの呼び出し',
+      blocks: [
+        { h3: '1. initialize (省略可)' },
+        { p: 'MCPクライアントは`initialize`から始めます。サーバーはセッションを保持しないため、スクリプトでは省略できますが、キーが有効か確認し、サーバーの説明を読む手軽な方法として使えます。' },
+        { code: 'initialize', lang: 'bash' },
+        { h3: '2. tools/list' },
+        { p: '`tools/list`は、このキーで呼び出せるすべてのツールを、説明、入力スキーマ、出力スキーマとともに返します。ツール名や引数をハードコードせず、起動時にこの一覧を読み込んでください。一覧はキーのスコープで絞り込まれ、ツールの引数は今後も追加されていきます。' },
+        { code: 'toolsList', lang: 'bash' },
+        { h3: '3. tools/call' },
+        { p: 'ツールを名前と引数で呼び出します。多くのツールは、動作を指定する`action`を受け取ります。たとえば`email_read`の`list`、`read`、`search`です。メールボックスは`inbox` (アドレス) または`inbox_id`で指定します。`inbox_list`は両方を返します。' },
+        { code: 'toolsCall', lang: 'bash' },
+        { p: '成功した場合の結果:' },
+        { code: 'result', lang: 'json' },
+        { p: '各ツールの説明は[ツールリファレンス](/docs#tools)に、その他の例は[curlガイド](/docs/curl)にあります。' },
+      ],
+    },
+    {
+      id: 'errors',
+      h: 'エラー',
+      blocks: [
+        { p: 'エラーには2種類あります。まったく実行できなかったリクエストは、HTTPステータス付きのJSON-RPC `error`として返ります。ツールまで届いたものの、ツールに拒否されたリクエストは、AIモデルが理由を読めるように、`isError: true`付きの通常の`result`として返ります。分岐はメッセージの文面ではなく、`data.error_code`または`_meta`のコードで行ってください。' },
+        {
+          table: {
+            head: ['レスポンス', '発生する状況', '対処'],
+            rows: [
+              ['HTTP 401、`-32001`', 'キーがない、形式が不正、取り消し済み、または期限切れ。', '`Authorization`ヘッダーを修正するか、新しいキーを作成します。再試行しても解決しません。'],
+              ['HTTP 403、`-32004`、`insufficient_scope`', 'このツール操作に必要なスコープがキーにない。許可に必要なスコープは`data.required_scopes`に一覧されます。', '**アクセスを編集**でスコープを追加するか、別のキーを使います。'],
+              ['HTTP 429、`-32003`、`rate_limit_exceeded`', 'リクエストが多すぎる。どの時間枠が上限に達したかは`data.window`に示されます。', '`Retry-After`の秒数 (`data.retry_after`にも記載) だけ待ってから、同じリクエストを再試行します。'],
+              ['`-32602`', '不明なツール名。このキーで呼び出せる名前は`data.available_tools`に一覧されます。', '`tools/list`にある名前を使います。'],
+              ['`isError: true`、`invalid_arguments`', '引数がツールのスキーマに合わない。何も実行されていません。テキストに問題のある引数がそれぞれ示され、引数名が推測で付けられていた場合は、実在する引数名も示されます。', '引数を修正します。同じ引数は同じように拒否されます。'],
+              ['`isError: true`、`usage_limit_reached`', 'Freeのワークスペースが月間のメール操作回数を使い切った。', '`_meta`にあるリセット日まで待つか、アップグレードします。有料プランではメール操作は無制限です。'],
+              ['`isError: true`、その他', 'ツールは実行されたが失敗した。メッセージが見つからない、プロバイダーに拒否された、宛先が無効、など。', '`content[0].text`を読んでください。何が起きたか、何かが送信されたかどうかが書かれています。'],
+            ],
+          },
+        },
+        { code: 'scopeError', lang: 'http' },
+        { code: 'rateError', lang: 'http' },
+        { code: 'invalidArgs', lang: 'json' },
+      ],
+    },
+    {
+      id: 'pagination',
+      h: 'ページネーション',
+      blocks: [
+        { p: '一覧と検索の結果は、すべて同じ4つのフィールドで終わります。' },
+        {
+          items: [
+            '`has_more`: 次のページがあるときはtrue。すべて確認したことを意味するのは`has_more: false`だけです。',
+            '`next_offset`: 他の引数はすべてそのままで、この値を`offset`として渡すと次のページを取得できます。`has_more`がfalseのときは`null`です。',
+            '`total`: 一致した件数。プロバイダーが件数を数えられない場合は`null`です。手元のページと矛盾することはありません。',
+            '`total_is_estimate`: `total`が正確な件数ではなく、推定値または下限値のときにtrue。',
+          ],
+        },
+        { p: '長いメッセージ本文も同じように分割されます。`body_truncated`がtrueの場合は、`body_next_offset`を`body_offset`として渡して再度読み取ってください。' },
+      ],
+    },
+    {
+      id: 'idempotency',
+      h: '再試行と冪等性キー',
+      blocks: [
+        { p: '送信後に接続が切れると、メールが送られたかどうかわからなくなります。`idempotency_key`を渡し、同じキーで再試行すれば、処理は1回だけ実行されます。' },
+        { code: 'send', lang: 'bash' },
+        {
+          items: [
+            '送信、返信、転送、予約送信、下書きの書き込み、そして移動、フラグ設定、削除などのメールボックスの変更で使えます。`tools/list`では、対応するすべてのツールの入力スキーマに`idempotency_key`が表示されます。',
+            '最大200文字です。注文番号とイベント名など、自分のシステムにある値を使ってください。',
+            'キーは送信元のAPIキーごとに区別され、24時間保持されます。',
+            '同じキーと同じ引数で再試行しても、処理は再実行されません。`idempotent_replay: true`、元の`status`、そして`result`に元の結果が返されます。失われたかもしれない`message_id`もここに含まれます。',
+            '同じキーで引数が異なる場合は、`idempotency_key_conflict`で拒否されます。新しい操作には新しいキーを使ってください。',
+            '最初の呼び出しがまだ実行中のときに再試行すると、`status: "processing"`が返ります。少し待ってから再試行してください。',
+            'メールプロバイダーが受け付ける前に送信を拒否した場合は、何も送信されずキーが解放されるため、同じ内容で再試行すると実際に送信されます。',
+            '結果が不確かな場合、再実行の応答は`status: "unknown"`になります。新しいキーで送り直す前に、送信済みフォルダーを確認してください。',
+          ],
+        },
+        { code: 'replay', lang: 'json' },
+      ],
+    },
+    {
+      id: 'approval',
+      h: '送信の承認',
+      blocks: [
+        { p: 'どの受信トレイでも、すべての送信を保留して担当者の承認を待つように設定できます。その場合、スクリプトからの送信はすぐには送られず、`status: "pending_approval"`とともに`approval_id`が返ります。誰かがダッシュボードで承認すると送信されます。この機能はすべてのプランで使え、新しい自動化の動作を確かめている間の既定の設定として適しています。同じ`idempotency_key`で再試行すると、2つ目の承認を作らずに既存の承認が返されます。' },
+      ],
+    },
+    {
+      id: 'rate-limits',
+      h: 'レート制限',
+      blocks: [
+        { p: '各プランには、ワークスペース全体での1分あたりの上限があります。1つのキーでプランの1分あたりの上限をすべて使うことができ、複数のキーがある場合はその上限を共有します。' },
+        { planTable: true },
+        {
+          items: [
+            '`tools/call`のレスポンスには、上限に近いほうの時間枠について`RateLimit-Limit`、`RateLimit-Remaining`、`RateLimit-Reset` (秒単位) が含まれるため、クライアントは上限に達する前にペースを調整できます。',
+            '各キーには1時間ごとと1日ごとの時間枠もあります。429では、上限に達した時間枠が`data.window`に示されます。',
+            '429には秒単位の`Retry-After`が含まれます。その時間だけ待ってから、同じリクエストを再試行してください。',
+            'Freeには月間のメール操作回数の枠があります。有料プランではメール操作は無制限で、呼び出しごとの課金はありません。',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'webhooks',
+      h: '新着メール向けのWebhook',
+      blocks: [
+        { p: 'ProとBusinessでは、受信トレイにメールが届いたときにMCPEmailsから指定のURLへPOSTできます。ワークフローはポーリングせずに新着メールで起動します。ダッシュボードでエンドポイントを作成し、対象の受信トレイを選んで、署名シークレットをコピーしてください。シークレットが表示されるのは1回だけです。URLはHTTPSで、ポートは443または8443である必要があります。テストボタンを使うと、署名付きの`ping`イベントを送信できます。' },
+        { h3: 'イベント' },
+        { code: 'webhookPayload', lang: 'http' },
+        {
+          items: [
+            '`type`は`message.received`です。`message_ids`には、その受信トレイの`INBOX`フォルダーに届いた新しいメッセージが、1イベントあたり最大10件まで含まれます。`count`は届いた件数で、それより多いこともあります。',
+            '既定では、ペイロードに含まれるのはIDだけで、内容は含まれません。ヘッダーを含めるよう設定したエンドポイントには、各メッセージの`id`、`from`、`subject`を含む`messages`リストも届きます。',
+            'メッセージはAPIキーを使い、`email_read` (`action: "read"`、`inbox_id`、`message_id`) で取得します。そのキーのスコープと受信トレイへのアクセスは通常どおり適用されます。',
+            '配信は通常、メッセージの到着から約2分以内です。受信トレイは一定の間隔で確認されるため、即時ではありません。',
+          ],
+        },
+        { h3: '署名を検証する' },
+        { p: 'すべての配信には`MCPEmails-Signature: t=<unix seconds>,v1=<hex>`が含まれます。`v1`は、タイムスタンプ、ドット、生のリクエスト本文をつなげたものに対する、エンドポイントのシークレットをキーとしたHMAC-SHA256です。キーには表示されたとおりのシークレット全体を、`whsec_`の接頭辞も含めて使います。生の本文から署名を再計算し、定数時間で比較して、5分より古いタイムスタンプは拒否してください。' },
+        { code: 'webhookVerify', lang: 'js' },
+        { h3: '再試行' },
+        {
+          items: [
+            '10秒以内に任意の2xxステータスで応答してください。それ以外はすべて失敗とみなされます。リダイレクトも失敗扱いで、追跡されません。',
+            '失敗した配信は、1分後、5分後、30分後、2時間後、6時間後、24時間後に再試行されます。再試行のたびに新しいタイムスタンプで署名し直されます。',
+            '24時間にわたって失敗し続けた、または50回連続で失敗したエンドポイントは無効になり、ワークスペースのオーナーにメールで通知されます。ダッシュボードから再び有効にできます。',
+            '処理済みの配信を無視するには`MCPEmails-Event-Id`を使います。再試行では同じイベントIDが送られます。',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'recipes',
+      h: 'レシピ',
+      blocks: [
+        { h3: 'n8n: 新着メールでワークフローを実行する' },
+        {
+          items: [
+            'HTTPメソッドを`POST`にした**Webhook**トリガーノードを追加し、その本番URLをMCPEmailsのダッシュボードでWebhookエンドポイントとして登録します。',
+            '**HTTP Request**ノードを追加します。メソッドは`POST`、URLは`https://mcpemails.com/api/mcp`、認証は**Generic Credential Type** → **Header Auth**で、名前を`Authorization`、値を`Bearer mcpe_...`にします。',
+            '**Send Body**をオンにして**JSON**を選び、下の本文を使って新しいメッセージを読み取ります。後続のノードは`result.structuredContent`でメッセージを受け取ります。',
+            'n8nで署名を確認するには、Webhookノードで**Raw Body**を有効にし、**Code**ノードで上記の検証を実行します。セルフホストのn8nでは、`NODE_FUNCTION_ALLOW_BUILTIN=crypto`でcryptoモジュールを許可してください。',
+          ],
+        },
+        { code: 'n8nBody', lang: 'json' },
+        { p: 'メールの読み取りと送信を自分で行うAI Agentノードについては、[n8nガイド](/docs/n8n)をご覧ください。' },
+        { h3: 'Claude Code' },
+        { p: 'ヘッダーにキーを入れてサーバーを追加します。OAuthログイン用のブラウザーがないヘッドレス環境やCIに適しています。' },
+        { code: 'claudeCode', lang: 'bash' },
+        { p: 'OAuthログインとスコープの選び方は[Claude Codeガイド](/docs/claude-code)で説明しています。' },
+        { h3: '短いNodeスクリプト' },
+        { p: '1つの受信トレイの未読メッセージをページごとにすべて一覧表示し、429が返ったら待機します。' },
+        { code: 'node', lang: 'js' },
+        { h3: 'OpenClaw' },
+        { p: 'OpenClawは既定でOAuthを使ってログインします。手順は[OpenClawガイド](/docs/openclaw)で説明しています。代わりにスコープ付きキーを使うには、サーバーエントリの`headers`マップにキーを入れ、`auth`は設定しないでください。OpenClawは、OAuthに設定されたエントリでは静的な`Authorization`ヘッダーを無視するためです。' },
+        { code: 'openclaw', lang: 'json' },
+      ],
+    },
+  ],
+  planTable: {
+    head: ['プラン', '1分あたりのリクエスト数', 'Webhook'],
+    yes: 'あり',
+    no: 'なし',
+  },
+  cta: {
+    title: '受信トレイ1つから、無料で始めましょう',
+    sub: 'キーを作成してtools/listを呼び出し、自分のメールがJSONで返ってくるのを確かめてください。',
+    button: '始める',
+    pricing: '料金を見る',
+    developers: '開発者がMCPEmailsを選ぶ理由',
+  },
+};
+
 const zh = {
   meta: {
     title: '面向开发者的邮件 API：MCPEmails HTTP 指南',
@@ -1721,7 +2211,7 @@ const zh = {
   },
 };
 
-export const DEVELOPER_DOCS = { en, nb, es, fr, de, zh };
+export const DEVELOPER_DOCS = { en, nb, es, fr, de, pt, ja, zh };
 
 export function developerDocsCopy(locale) {
   return DEVELOPER_DOCS[locale] ?? en;

@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "JetBrains AI Assistantにメールを接続: MCPの設定",
+    "description": "IntelliJ、PyCharm、WebStormのAI Assistantに本物の受信トレイを追加できます。Streamable HTTPと、Authorizationヘッダーに入れたスコープ付きAPIキーで接続します。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "JetBrains + メール",
+    "titleLine1": "受信トレイをJetBrainsの",
+    "titleLine2": "AI Assistantに接続",
+    "lead": "AI Assistantに対応したJetBrains IDEなら、どれでも本物のメールボックスを追加できます。IDEから離れずに、メールの閲覧、検索、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "スコープ付きAPIキー、ワンクリックで無効化",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Settings、Tools、AI Assistant、Model Context Protocolの順に開きます。サーバーを追加し、接続タイプにStreamable HTTPを選んでhttps://mcpemails.com/api/mcpを貼り付け、ダッシュボードで作成したAPIキーを入れたAuthorization Bearerヘッダーを追加します。"
+  },
+  "method": {
+    "title": "JetBrains AI Assistantの接続方法: スコープ付きAPIキー",
+    "body": "JetBrains AI AssistantはリモートMCPサーバーに対してOAuthのブラウザーフローを実行しないため、代わりにBearerトークンで認証します。ダッシュボードでAPIキーを作成し、エージェントに必要なスコープだけを選んで、<code>Authorization: Bearer</code>ヘッダーとしてJetBrains AI Assistantに貼り付けます。キーによる接続とOAuthによる接続は同じエンドポイントにつながり、使えるツールも同じです。違うのはトークンの取得方法だけです。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "スコープ付きAPIキーを作成",
+      "p": "ダッシュボードの「APIキー」でCreate key（キーを作成）をクリックします。名前を付け、このエージェントに必要なスコープだけを選びます: <code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、表示されるのは一度だけです。ダイアログを閉じる前にコピーしてください。"
+    },
+    {
+      "h": "MCPの設定を開く",
+      "p": "<b>Settings</b>（設定）、<b>Tools</b>（ツール）、<b>AI Assistant</b>、<b>Model Context Protocol (MCP)</b>の順に開きます。"
+    },
+    {
+      "h": "サーバーを追加",
+      "p": "Add（追加）をクリックし、接続タイプに<b>Streamable HTTP</b>を選びます。<code>https://mcpemails.com/api/mcp</code>を貼り付け、<code>Authorization</code>という名前のヘッダーを追加して、値には<code>Bearer</code>、半角スペース1つ、キーの順に入力します。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "stdioでもSSEでもなくStreamable HTTP",
+      "p": "接続タイプの一覧では、ローカルでコマンドを実行するサーバーが最初に表示されます。ほとんどのMCPサーバーがその形だからです。このサーバーはリモートのホスト型なので、実行するコマンドはありません。このサーバーがリビジョン2025-06-18で使うトランスポート、Streamable HTTPを選んでください。"
+    },
+    {
+      "h": "ここではキーが権限のすべて",
+      "p": "AI AssistantはOAuthの同意フローを実行しないので、接続でできることを絞り込む2つ目の画面はありません。キーの作成時に選んだものが、無効化するまでIDEが持つ権限になります。IDEでやる価値のあることは、読み取り、検索、下書きのスコープでほぼすべてまかなえます。"
+    },
+    {
+      "h": "IDEの設定は同期され、Bearerトークンは認証情報",
+      "p": "複数のマシン間で設定の同期をオンにしている場合は、キーを、同期とともに移動する他の認証情報と同じように扱ってください。キーは気軽に発行できます。マシンごとに1つ発行し、一覧で見分けられる名前を付け、心当たりのないものは無効化してください。こちらで保存するのはSHA-256ハッシュだけなので、キーそのものは復元できず、紛失したキーは取り戻すのではなく作り直すことになります。"
+    }
+  ],
+  "limits": [
+    "リクエストにはキーごとに、プランに応じた1分、1時間、1日単位のレート制限があります。429レスポンスにはRetry-Afterが付きます。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "JetBrains AI Assistantにメールを接続するには？",
+      "a": "Settings、Tools、AI Assistant、Model Context Protocolの順に開き、接続タイプをStreamable HTTPにしてサーバーを追加します。https://mcpemails.com/api/mcpを貼り付け、ダッシュボードで作成したAPIキーを入れたAuthorization Bearerヘッダーを追加します。これでAI Assistantに、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが加わります。"
+    },
+    {
+      "q": "どのJetBrains IDEで使えますか？",
+      "a": "AI AssistantでMCPサーバーを設定できるJetBrains IDEなら、どれでも使えます。設定のパスとStreamable HTTPの接続タイプは特定のIDEではなくAI Assistantのものなので、プラグインが使えるところならどこでも同じ手順です。SettingsにModel Context Protocolの画面がない場合、原因はこのサーバーではなくプラグインです。"
+    },
+    {
+      "q": "OAuthではなくAPIキーなのはなぜですか？",
+      "a": "AI Assistantは、ブラウザーでOAuthフローを実行するのではなく、設定したヘッダーでリモートMCPサーバーを認証するためです。そこで使えるのがBearerキーです。エンドポイントとツールはOAuthのクライアントとまったく同じで、違うのはトークンの取得方法だけです。"
+    },
+    {
+      "q": "この方法でAI Assistantが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。クライアントはこれらすべてを同じ接続で扱います。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "AI Assistantが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないキーやトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "IDEに本物の受信トレイを",
+    "sub": "MCPサーバー1つ、スコープ付きキー1つ。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

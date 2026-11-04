@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared limits and FAQ copy)",
+    "https://docs.openclaw.ai/tools/mcp",
+    "https://docs.openclaw.ai/cli/mcp",
+    "https://docs.openclaw.ai/cli/mcp/registry",
+    "https://docs.openclaw.ai/cli/mcp/transports",
+    "https://docs.openclaw.ai/cli/mcp/control-ui",
+    "https://docs.openclaw.ai/cli/gateway/service",
+    "https://docs.openclaw.ai/gateway/configuration",
+    "https://github.com/openclaw/openclaw",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-provider.ts",
+    "https://github.com/openclaw/openclaw/blob/main/src/agents/mcp-oauth-store.mutations.ts",
+    "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
+  ],
+  "meta": {
+    "title": "OpenClawにメールを接続: リモートMCPサーバーの設定",
+    "description": "OpenClawのエージェントに本物の受信トレイを。OAuth付きのStreamable HTTP MCPサーバーを1つ追加して一度ログインすれば、メールの閲覧、検索、下書き、送信ができます。"
+  },
+  "hero": {
+    "eyebrow": "OpenClaw + メール",
+    "titleLine1": "受信トレイをOpenClawに接続",
+    "titleLine2": "リモートMCPサーバーとして",
+    "lead": "いつもメッセージを送っているパーソナルエージェントが、接続済みのすべての受信トレイでメールの閲覧、検索、下書き、送信、返信、転送、整理を行えるようになります。MCPエンドポイントは1つ、ログインも1回だけです。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "openclaw gateway stopでGatewayを停止し、openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauthを実行します。続けてopenclaw mcp login mcpemailsを実行し、ブラウザーで承認します。最後にopenclaw gateway startでGatewayを再起動します。"
+  },
+  "method": {
+    "title": "OpenClawの接続方法: OAuth、APIキー不要",
+    "body": "OpenClaw組み込みのMCPクライアントは、<code>auth: \"oauth\"</code>で保存したHTTPサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。トークンには同意画面で承認したスコープだけが含まれ、有効期間は1時間で、自動で更新されます。トークンはOpenClawがGateway上に保存し、ダッシュボードの「APIキー」に<code>OAuth: OpenClaw MCP</code>として表示されます。接続はそこから取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "OAuthでサーバーを保存",
+      "p": "Gatewayを動かしているマシンで<code>openclaw gateway stop</code>を実行し、続けて<code>openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauth</code>を実行します。これで<code>~/.openclaw/openclaw.json</code>の<code>mcp.servers</code>にエントリが書き込まれます。Gatewayの実行中は、OpenClawは保存済みサーバーの変更を受け付けません。"
+    },
+    {
+      "h": "ターミナルからログイン",
+      "p": "Gatewayを停止したまま<code>openclaw mcp login mcpemails</code>を実行します。表示された認可URLを開き、OpenClawに持たせたいスコープを承認してください。OpenClawがブラウザーからのコールバックを受け取って認証情報を保存したら、<code>openclaw gateway start</code>を実行します。"
+    },
+    {
+      "h": "またはControl UIからログイン",
+      "p": "ターミナルでログインする代わりに、Gatewayを起動し、Control UIをGatewayのループバックアドレスか公開HTTPSアドレスで開いて、<b>Settings → MCP</b>に進む方法もあります。管理者として<code>mcpemails</code>サーバーの<b>Sign in</b>を選び、ブラウザーでアクセスを承認してからSettingsに戻ります。プライベートアドレスやTailscale専用のアドレスでは、ターミナルからログインしてください。"
+    },
+    {
+      "h": "接続を確認",
+      "p": "<code>openclaw mcp status --verbose</code>を実行します。このコマンドはGatewayの実行中でも使えます。<code>authorization-required</code>と表示されたら、もう一度ログインしてください。あとは任意のチャネルで、エージェントに受信トレイの一覧を頼んでみましょう。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "transportを指定しないとSSEになる",
+      "p": "HTTPエントリで<code>transport</code>を省略すると、OpenClawは<code>sse</code>を使います。このサーバーはStreamable HTTPで通信するので、必ず<code>--transport streamable-http</code>を指定するか、Settingsで<b>Streamable HTTP</b>を選んでください。設定を手で書く場合、OpenClawが読むのは<code>transport: \"streamable-http\"</code>という表記です。CLI流の<code>type: \"http\"</code>は、<code>openclaw mcp set</code>経由でのみ受け付けられるか、<code>openclaw doctor --fix</code>で修正されます。"
+    },
+    {
+      "h": "CLIでの変更にはGatewayの停止が必要",
+      "p": "<code>openclaw mcp add</code>、<code>login</code>、<code>probe</code>、<code>doctor --probe</code>は、ローカルのGatewayがOpenClawの状態を握っている間は実行を拒否します。先に停止し、終わったら再起動してください。Gatewayがサーバー上にあり、ブラウザーが別のマシンにある場合、ループバックのコールバックはGatewayに届きません。ブラウザーに表示されたコードをコピーし、表示される<code>openclaw mcp login mcpemails --code</code>コマンドで完了してください。"
+    },
+    {
+      "h": "ログインの共有はメールボックスの共有",
+      "p": "初期設定では、OAuthの認証情報は共有され、オペレーターが管理します。そのGateway上のすべてのエージェントが同じログインを使うため、エージェントにメッセージを送れる人なら誰でも、あなたのメールを読むよう頼めてしまいます。自分しか使わないチャネルに限定する、エージェントに読むだけをさせたいなら同意画面で<code>send:email</code>を外す、または受信トレイで人による承認を有効にして送信をすべて人の許可待ちにする、のいずれかを行ってください。OpenClawには、送信者ごとに自分のアカウントを接続するリクエスター単位のログインもあります。これには<code>gateway.publicOrigin</code>にGatewayの公開HTTPSアドレスを設定する必要があります。"
+    },
+    {
+      "h": "保存できても動くとは限らない",
+      "p": "OpenClawは、定義が動作するかを確かめずに保存します。また、まだログインが必要なサーバーは、そのターンをエラーにするのではなく、エージェントのツールから外されるだけです。エージェントがメールのツールがないと言う場合は<code>openclaw mcp status --verbose</code>を実行してください。<code>authorization-required</code>なら、ログインの手順をやり直します。"
+    }
+  ],
+  "limits": [
+    "リクエストはキーごとに、1分あたり100件、1時間あたり1,000件、1日あたり10,000件までに制限されます。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "OpenClawにメールを接続するには？",
+      "a": "Gatewayのマシンで、Gatewayを停止してからopenclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauthを実行し、openclaw mcp login mcpemailsでログインしてGatewayを再起動します。Control UIのSettingsにあるMCPからログインすることもできます。これでエージェントに、メールの閲覧、検索、下書き、送信、返信、転送、整理、予約送信を行うツールが加わります。"
+    },
+    {
+      "q": "OpenClawにはAPIキーが必要ですか？",
+      "a": "いいえ。OpenClawは自分でMCP OAuthフローを実行し、トークンをGateway上に保存します。HTTPエントリには静的なheadersマップも指定できるので、スコープを絞ったキーをAuthorization Bearerヘッダーで送る方法も使えます。ただし、auth oauthに設定したエントリでは静的なAuthorizationヘッダーは無視されるため、どちらか一方を使ってください。"
+    },
+    {
+      "q": "メールのツールの一部だけをエージェントに見せられますか？",
+      "a": "はい。openclaw mcp addの実行時に、ツール名のカンマ区切りリストか'email_*'のようなパターンを--includeで指定するか、設定のサーバーの下でtoolFilterを設定します。これでエージェントに見えるツールが絞られます。実際に何ができるかは、引き続き同意画面で承認したスコープで決まります。"
+    },
+    {
+      "q": "この方法でOpenClawが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "OpenClawが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。チャットのチャネルをまたいで無人で動くエージェントなら、両方を使う価値があります。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままエージェントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "OpenClawのエージェントに本物の受信トレイを",
+    "sub": "サーバー1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

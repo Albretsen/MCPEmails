@@ -1,0 +1,16 @@
+{
+  "links": {
+    "compare": "比較",
+    "connectHeading": "接続",
+    "connectAll": "すべてのメールプロバイダー",
+    "connectImap": "あらゆるIMAP受信トレイを接続",
+    "connectGmail": "Gmailを接続",
+    "connectOutlook": "Outlookを接続",
+    "connectFastmail": "Fastmailを接続",
+    "connectIcloud": "iCloudを接続",
+    "connectYahoo": "Yahooを接続",
+    "connectZoho": "Zohoを接続",
+    "connectYandex": "Yandexを接続",
+    "vsNative": "ネイティブコネクタとの比較"
+  }
+}

@@ -28,13 +28,15 @@ const TIME_ZONE = 'Europe/Oslo';
 const MONEY = {
   en: (n) => `$${n}`,
   de: (n) => `$${n}`,
+  pt: (n) => `$${n}`,
+  ja: (n) => `$${n}`,
   es: (n) => `$${n.replace('.', ',')}`,
   nb: (n) => `$${n.replace('.', ',')}`,
   fr: (n) => `${n.replace('.', ',')} $`,
 };
 
 /** BCP 47 tags for the date formatter: British English writes "8 December". */
-const DATE_LOCALE = { en: 'en-GB', de: 'de-DE', es: 'es-ES', nb: 'nb-NO', fr: 'fr-FR' };
+const DATE_LOCALE = { en: 'en-GB', de: 'de-DE', pt: 'pt-BR', ja: 'ja-JP', es: 'es-ES', nb: 'nb-NO', fr: 'fr-FR' };
 
 const COPY = {
   en: {
@@ -81,6 +83,24 @@ const COPY = {
     faqQ: () => 'Ändert sich der Preis von Pro?',
     faqA: ({ next, nextYear, cur, curYear, switchDate }) =>
       `Ja. Ab dem ${switchDate} kosten neue Pro-Abonnements ${next} pro Monat oder ${nextYear} pro Jahr. Wenn Sie Pro vorher abonnieren, behalten Sie ${cur} pro Monat (oder ${curYear} pro Jahr), solange Ihr Abonnement aktiv bleibt, auch wenn Sie zwischen monatlicher und jährlicher Zahlung wechseln. Wenn Sie kündigen und das Abonnement endet, oder in einen anderen Tarif wechseln und später zu Pro zurückkehren, gilt der Preis zu diesem Zeitpunkt. Bestehende Pro-Abonnenten müssen nichts tun.`,
+  },
+  pt: {
+    pricing: ({ next, nextYear, cur, curYear, switchDate, lastDate }) =>
+      `Para novas assinaturas, o Pro passa a custar ${next} por mês (${nextYear} por ano) a partir de ${switchDate}. Assine até ${lastDate} e mantenha ${cur} por mês (${curYear} por ano) enquanto sua assinatura continuar ativa.`,
+    app: ({ next, cur, switchDate, lastDate }) =>
+      `A partir de ${switchDate}, novas assinaturas do Pro custam ${next} por mês. Assine até ${lastDate} para manter ${cur} enquanto continuar assinante.`,
+    faqQ: () => 'O preço do Pro vai mudar?',
+    faqA: ({ next, nextYear, cur, curYear, switchDate }) =>
+      `Sim. A partir de ${switchDate}, novas assinaturas do Pro custam ${next} por mês ou ${nextYear} por ano. Se você assinar o Pro antes disso, mantém ${cur} por mês (ou ${curYear} por ano) enquanto sua assinatura continuar ativa, inclusive se trocar entre cobrança mensal e anual. Se você cancelar e a assinatura terminar, ou mudar para outro plano e depois voltar ao Pro, vale o preço daquele momento. Quem já assina o Pro não precisa fazer nada.`,
+  },
+  ja: {
+    pricing: ({ next, nextYear, cur, curYear, switchDate, lastDate }) =>
+      `${switchDate}から、Proの新規サブスクリプションは月額${next}（年額${nextYear}）になります。${lastDate}までにお申し込みいただくと、サブスクリプションが有効な限り月額${cur}（年額${curYear}）のままご利用いただけます。`,
+    app: ({ next, cur, switchDate, lastDate }) =>
+      `${switchDate}から、Proの新規サブスクリプションは月額${next}になります。${lastDate}までにお申し込みいただくと、契約を続ける限り${cur}のままご利用いただけます。`,
+    faqQ: () => 'Proの料金は変わりますか？',
+    faqA: ({ next, nextYear, cur, curYear, switchDate }) =>
+      `はい。${switchDate}から、Proの新規サブスクリプションは月額${next}または年額${nextYear}になります。それまでにProをお申し込みいただくと、サブスクリプションが有効な限り月額${cur}（または年額${curYear}）のままご利用いただけます。月払いと年払いを切り替えた場合も同じです。解約してサブスクリプションが終了した場合や、別のプランに変更した後にProに戻った場合は、その時点の料金が適用されます。すでにProをご利用中の方は、手続きは不要です。`,
   },
 };
 

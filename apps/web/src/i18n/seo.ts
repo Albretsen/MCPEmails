@@ -1,4 +1,5 @@
 import { routing } from './routing';
+import { languageTag } from './locale-policy.mjs';
 import { PLANS } from '@/lib/stripe/plans';
 import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
@@ -16,7 +17,7 @@ export function localePath(locale: string, pathname: string): string {
 /** hreflang language map (incl. x-default) for a marketing path. */
 export function languageAlternates(pathname: string): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const l of routing.locales) languages[l] = localePath(l, pathname);
+  for (const l of routing.locales) languages[languageTag(l)] = localePath(l, pathname);
   languages['x-default'] = localePath(routing.defaultLocale, pathname);
   return languages;
 }
@@ -47,7 +48,7 @@ export function languageAlternatesFor(
 ): Record<string, string> {
   const languages: Record<string, string> = {};
   for (const l of routing.locales) {
-    if (locales.includes(l)) languages[l] = localePath(l, pathname);
+    if (locales.includes(l)) languages[languageTag(l)] = localePath(l, pathname);
   }
   const fallback = locales.includes(routing.defaultLocale)
     ? routing.defaultLocale
@@ -87,6 +88,8 @@ export const OG_LOCALE: Record<string, string> = {
   fr: 'fr_FR',
   zh: 'zh_CN',
   de: 'de_DE',
+  pt: 'pt_BR',
+  ja: 'ja_JP',
 };
 
 /**

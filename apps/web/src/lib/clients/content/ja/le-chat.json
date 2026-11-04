@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors",
+    "https://docs.mistral.ai/le-chat/knowledge-integrations/connectors",
+    "https://mistral.ai/news/le-chat-mcp-connectors-memories/",
+    "https://mistral.ai/products/vibe/",
+    "https://docs.mistral.ai/vibe/work/connectors/mcp-connectors",
+    "https://docs.mistral.ai/vibe/work/safety-and-approvals",
+    "https://docs.mistral.ai/vibe/choose-chat-work-code",
+    "https://help.mistral.ai/en/articles/393572-configuring-a-custom-connector",
+    "https://developers.make.com/mcp-server/connect-using-oauth/usage-with-mistral-ai (third party: Authentication Method dropdown, OAuth2.1)",
+    "https://docs.bko.finologee.com/docs/mcp-mistral (third party: empty client secret makes Le Chat use dynamic client registration)",
+    "https://docs.qonto.com/mcp/install/mistral (third party: workspace Admin adds custom connectors)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
+  ],
+  "meta": {
+    "title": "Mistral Le Chatにメールを接続: MCPコネクタの設定",
+    "description": "Custom MCP Connectorで、MistralのLe Chatに本物の受信トレイを追加します。URLを1つ貼り付けてログインするだけ。APIキーは不要です。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Le Chat + メール",
+    "titleLine1": "受信トレイをLe Chatに接続",
+    "titleLine2": "Custom MCP Connectorで",
+    "lead": "Mistralのアシスタントにメールについて質問し、そのまま操作を任せられます。接続したすべての受信トレイで、メールの閲覧、検索、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Le ChatでConnectorsを開き、+ Add Connectorをクリックして、Custom MCP Connectorタブを選びます。Server URLにhttps://mcpemails.com/api/mcpを貼り付け、Connectをクリックして、MCPEmailsにログインします。"
+  },
+  "method": {
+    "title": "Le Chatの接続方法: OAuth、APIキー不要",
+    "body": "Server URLを入力すると、Le Chatはサーバーの認証方式を検出します。MistralはOAuthサーバーに対し、未認証のリクエストには<b>401</b>と<code>WWW-Authenticate</code>ヘッダーで応答するよう求めており、このサーバーはそのとおりにOAuthメタデータを示して応答します。そのためLe ChatはBearerトークンを求めるのではなく、OAuth 2.1を実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "Add Connectorを開く",
+      "p": "chat.mistral.aiで、サイドバーから<b>Connectors</b>（コネクタ）ページを開き、<b>+ Add Connector</b>をクリックして<b>Custom MCP Connector</b>タブを選びます。追加は管理者向けの機能です。Free、Pro、Studentプランでは、アカウントのオーナーが管理者です。"
+    },
+    {
+      "h": "サーバーを入力",
+      "p": "<b>Connector name</b>には、スペースや特殊文字を含まない一意の名前（例: MCPEmails）を入力し、<b>Server URL</b>に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。<b>Description</b>は任意です。"
+    },
+    {
+      "h": "接続してログイン",
+      "p": "<b>Connect</b>をクリックします。Le ChatがOAuthを検出してMCPEmailsのログイン画面を開くので、持たせたいスコープを承認します。<b>Authentication Method</b>の項目が表示された場合は、OAuth 2.1を選び、クライアントIDとシークレットは空欄のままにします。"
+    },
+    {
+      "h": "チャットでオンにする",
+      "p": "会話の中で<b>+</b>アイコンをクリックするか<code>/</code>を入力し、<b>Tools</b>を選んでMCPEmailsコネクタをオンにします。あとは受信トレイの一覧を表示するよう頼んでみてください。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le Chatの名前はVibeに変わりました",
+      "p": "MistralはLe ChatをVibeに改名し、ドキュメントではコネクタをWorkの下に分類しています。アドレスは今もchat.mistral.aiで、Connectorsページとそのラベルも同じなので、どちらの名前が表示されていても上記の手順が当てはまります。"
+    },
+    {
+      "h": "TeamやEnterpriseプランでは管理者が追加します",
+      "p": "Custom MCP Connectorは管理者専用の機能です。Free、Pro、Studentプランではアカウントのオーナーが管理者なので、自分で追加できます。TeamやEnterpriseのワークスペースでは、ワークスペースの管理者にコネクタの追加を依頼してください。追加されると組織の一覧に表示され、メンバーがそれぞれのチャットでオンにできます。組織の管理者は、ワークスペースでMCP Connectorsをオフにすることもできます。"
+    },
+    {
+      "h": "送信は手動承認のままに",
+      "p": "Le Chatはコネクタが操作する前に、<b>Continue</b>、<b>Always allow</b>、<b>Decline</b>で確認を求めます。ある関数を恒久的に許可するには、Connectors、My Connectors、コネクタのカード、Functionsの順に開き、その<b>Always allow</b>の切り替えをオンにします。読み取り系のツールを許可すればクリックが減ります。送信、返信、転送のツールは手動承認のままにするか、この接続では<code>send:email</code>を一切付与しないでください。"
+    }
+  ],
+  "limits": [
+    "リクエストはキーごとに1分あたり100件、1時間あたり1,000件、1日あたり10,000件に制限されています。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Le Chatにメールを接続するには？",
+      "a": "Le ChatでConnectorsを開き、+ Add Connectorをクリックして、Custom MCP Connectorタブを選びます。Server URLにhttps://mcpemails.com/api/mcpを貼り付けてConnectをクリックします。MCPEmailsにログインしたら、チャットの+メニューのToolsからコネクタをオンにします。"
+    },
+    {
+      "q": "Le ChatにはAPIキーが必要ですか？",
+      "a": "いいえ。Le Chatは動的クライアント登録を使ってOAuthフローを実行するので、コネクタのフォームに秘密情報を入力することはありません。それができないほかのクライアント向けに、BearerのAPIキーも用意しています。"
+    },
+    {
+      "q": "Le Chatの無料プランでも使えますか？",
+      "a": "Mistralは、コネクタはすべてのLe Chatユーザーが使えるとしています。Free、Pro、Studentプランでは、アカウントのオーナーがCustom MCP Connectorを追加できる管理者です。TeamとEnterpriseプランでは、ワークスペースの管理者が組織向けに追加します。"
+    },
+    {
+      "q": "この方法でLe Chatが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Le Chatが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。また、その関数にAlways allowを選んでいない限り、Le Chatはコネクタが操作する前に承認を求めます。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。すべてのメッセージは、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに終わります。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Le Chatに受信トレイを",
+    "sub": "コネクタ1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

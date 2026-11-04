@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
+    "https://mc.merill.net/message/MC1163922",
+    "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Microsoftでサインイン（OAuth 2.0）、IT管理者の承認が必要な場合あり",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "入力するものはありません。Microsoft自身のページで職場または学校のMicrosoftアカウントにサインインしてアクセスを承認するので、ここにパスワードやアプリ パスワードを入力することはありません。Microsoft 365向けに公開されているIMAPやSMTPの設定は関係ありません。MCPEmailsはMicrosoft Graphを通じて接続します。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Microsoft 365のメールをClaudeとChatGPTに接続する",
+    "description": "職場または学校のMicrosoft 365メールボックスをClaude、ChatGPT、CursorなどのMCPクライアントに接続。Microsoftでサインイン。多くの組織では、まずIT管理者がアプリを一度承認する必要があります。"
+  },
+  "hero": {
+    "eyebrow": "Microsoft 365 + AI",
+    "titleLine1": "Microsoft 365のメールを",
+    "titleLine2": "Claude、ChatGPT、Cursorに接続する",
+    "lead": "AIエージェントに職場または学校のOutlookメールボックスを渡せます。Microsoftでサインインし、組織が求める場合はIT管理者にリンクを1つ送って、全員分のMCPEmailsを承認してもらいます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Microsoftでサインイン、アプリ パスワード不要",
+    "meta2": "IT管理者向けの承認リンクを内蔵",
+    "answer": "はい。ただし組織次第の条件が1つあります。MCPEmailsは職場および学校のMicrosoft 365メールボックスをMicrosoft Graph経由で接続します。「Microsoftで接続」をクリックし、職場アカウントでサインインします。ただし多くの組織では、まずIT管理者がアプリを一度承認する必要があります。2025年後半から有効なMicrosoftの既定の同意ポリシーが、メール読み取り権限を従業員自身が承認することを止めているためです。その場合、ダッシュボードがIT管理者に送るための承認リンクを提示します。管理者がそれを開き、職場のMicrosoftアカウントでサインインして組織全体に対してMCPEmailsを一度承認すれば（MCPEmailsのアカウントは不要）、その後はあなたも同僚も通常どおり接続できます。あとはURLを1つClaude、ChatGPT、Cursor、その他のMCPクライアントに貼り付けるだけです。受信トレイ1つはずっと無料です。"
+  },
+  "method": {
+    "title": "Microsoft 365の接続方法: Microsoftでサインイン、場合によっては管理者の承認",
+    "body": "Microsoft 365はIMAPではなく、OAuth 2.0を使って<b>Microsoft Graph</b>経由で接続します。Microsoft自身のページでサインインし、MCPEmailsが求める権限を承認します。メールの読み取りと変更（<b>Mail.ReadWrite</b>）、メールの送信（<b>Mail.Send</b>）、接続の維持（<b>offline_access</b>）、基本プロフィールとメールアドレスです。MicrosoftはMCPEmailsを確認済み発行元のアプリとして表示します。その権限を自分で承認できるかどうかは組織が決めます。2025年後半以降、Microsoftの既定の同意ポリシーでは一般ユーザーがアプリのメール権限を承認できなくなったため、多くの組織では最初に接続する人が代わりに管理者の承認を求められます。管理者は一人ずつではなく、組織全体に対して一度承認します。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Outlookを選び、Microsoftで接続する",
+      "p": "ダッシュボードで「受信トレイを接続」を開き、Outlookを選んで「Microsoftで接続」をクリックし、職場または学校のアカウントでサインインします。"
+    },
+    {
+      "h": "アクセスを承認するか、管理者用リンクを送る",
+      "p": "Microsoftが承認を許可していれば、権限を受け入れると受信トレイが接続されます。組織が管理者の承認を求める場合は、ダッシュボードがIT管理者に送るための承認リンクを提示します。管理者がそれを開き、Microsoftでサインインして組織全体に対してアプリを一度承認します。MCPEmailsのアカウントは不要です。その後、もう一度「Microsoftで接続」をクリックしてください。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントが受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "パスワードもアプリ パスワードも使えません。だからMicrosoft Graphを使います",
+      "p": "Microsoftは2022年にすべてのExchange OnlineテナントでIMAPとPOPの基本認証を廃止し、元に戻すことはできません。パスワードでのログインは、パスワードを間違えたときとまったく同じ形で失敗するため、正しかった認証情報をリセットしてしまう人が出ます。MCPEmailsはMicrosoft 365にIMAPを使いません。Microsoftでサインインし、Microsoft Graphと通信するので、入力するパスワードも、間違えやすいサーバー設定もありません。"
+    },
+    {
+      "h": "管理者の承認は組織が決めるもので、確認済み発行元でも回避できません",
+      "p": "Microsoftが2025年10月下旬から展開した変更以降、Exchangeのメール権限はMicrosoftが管理する既定の同意ポリシーに含まれており、メールアプリを承認しようとするユーザーには代わりに管理者承認の要求が表示されます。確認済み発行元であってもそれは変わりません。IT管理者は、ダッシュボードが提示する承認リンク（あなたが管理者に送るもの）から組織全体に対してMCPEmailsを承認でき、必要なのは一度だけです。"
+    },
+    {
+      "h": "Exchange Onlineメールボックスのないアカウントは拒否されます",
+      "p": "Microsoft 365アカウントの中にはExchange Onlineメールボックスを持たないものがあります。たとえばExchangeライセンスのない管理者アカウントや、メールを別の場所でホストしている組織です。その場合Microsoft Graphには開くものがないため、MCPEmailsは接続を拒否し、その旨を表示します。メールが別のサーバーにあるなら、そのアドレスをIMAPで接続してください。"
+    },
+    {
+      "h": "承認が通らなかったら、管理者がリンクをもう一度開きます",
+      "p": "ダッシュボードは、Microsoftが確認して初めて組織を承認済みとして扱います。管理者がページを閉じたり拒否したりしてMicrosoftが承認を確認しなかった場合、Outlookはブロックされたままで、ダッシュボードにその旨が表示されます。IT管理者に承認リンクをもう一度開いてもらってください。"
+    }
+  ],
+  "limits": [
+    "Outlookはメールをフォルダー（入れ子のフォルダーを含む）で整理します。ラベルツールはGmail専用ですが、自動化のラベル操作はメッセージにOutlookの分類を適用します。",
+    "Microsoft Graphはテキスト検索を未読、添付ファイル、フラグ、日付のフィルターと組み合わせられません。検索にテキストが含まれる場合、それらのフィルターは適用されず、結果にどれが省かれたかが示されます。",
+    "送信ではメッセージあたり最大10 MBの添付ファイルを扱えます。添付ファイルのダウンロードと原本の転送は25 MBまで動作します。",
+    "セルフホスト版はIMAPとSMTPでのみ接続します。Microsoftでのサインインはホスト型サービスの一部です。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはMicrosoft 365のメールで使えますか？",
+      "a": "使えます。Microsoftでサインインして職場または学校のメールボックスをMCPEmailsに接続し、MCP URLを1つClaudeに貼り付ければ、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信、振り分けをできるようになります。組織が管理者の承認を求める場合は、ダッシュボードが提示するリンクを使って、まずIT管理者がMCPEmailsを一度承認します。"
+    },
+    {
+      "q": "なぜ管理者の承認を求められるのですか？",
+      "a": "組織の同意ポリシーのためです。2025年後半以降、Microsoftの既定のポリシーは従業員がアプリのメール読み取り権限を自分で承認することを止めているので、サインイン時に代わりに管理者の承認を求められます。あなたのアカウントの問題ではありません。ダッシュボードがIT管理者に送るための承認リンクを提示します。"
+    },
+    {
+      "q": "IT管理者は何をすればよいですか？",
+      "a": "あなたが送った承認リンクを開き、職場のMicrosoftアカウントでサインインし、Microsoftの同意画面で組織に対してアプリを承認します。その画面でMCPEmailsは確認済み発行元として表示されます。MCPEmailsのアカウントは不要です。組織全体に対して一度行えば終わりです。その後は組織の全員が通常どおり「Microsoftで接続」で接続できます。"
+    },
+    {
+      "q": "アプリ パスワードやIMAP設定は必要ですか？",
+      "a": "不要です。MCPEmailsはMicrosoftでサインインした後、Microsoft Graph経由でMicrosoft 365に接続するので、作成するアプリ パスワードも、入力するIMAPやSMTPサーバーもありません。どのみちパスワードは使えません。基本認証は2022年にExchange Onlineから廃止され、元に戻すことはできません。"
+    },
+    {
+      "q": "AIはMicrosoft 365で何ができますか？",
+      "a": "閲覧、検索、送信、返信、転送。下書きの操作。入れ子を含むフォルダーの作成と利用。移動、コピー、アーカイブ。フラグ。ゴミ箱への削除または完全削除。メッセージあたり最大10 MBの添付ファイル送信と、25 MBまでの添付ファイルのダウンロードや原本の転送。予約送信。自動化ルールの実行。署名の管理。"
+    },
+    {
+      "q": "私のメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにMicrosoftからその場で取得し、AIクライアントに渡します。MicrosoftサインインのOAuthトークンは保存時に暗号化され、メッセージ本文は保持しません。MCPEmailsで受信トレイを削除すれば、接続はすぐに終了します。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにMicrosoft 365の受信トレイを渡す",
+    "sub": "Microsoftでサインイン。組織が管理者の承認を必要とする場合も、IT管理者へのリンク1つで全員分が済みます。受信トレイ1つはずっと無料。"
+  },
+  "seeAlso": {
+    "intro": "個人のOutlook.com、Hotmail、Liveのアドレスですか？",
+    "label": "Outlook.comを接続する",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "手順を追った解説をご希望ですか？",
+    "label": "OutlookとMicrosoft 365をMCP経由でAIエージェントに接続する",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
+  }
+}

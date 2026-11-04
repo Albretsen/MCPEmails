@@ -299,7 +299,7 @@ const nextConfig = {
       // Google ranks the guessed /docs/claude-desktop URL (a 404) for "MCP
       // servers for Claude Desktop email". Send it, in every locale, there.
       { source: '/docs/claude-desktop', destination: '/docs/claude', permanent: true },
-      { source: '/:locale(nb|es|fr|de|zh)/docs/claude-desktop', destination: '/:locale/docs/claude', permanent: true },
+      { source: '/:locale(nb|es|fr|de|zh|pt|ja)/docs/claude-desktop', destination: '/:locale/docs/claude', permanent: true },
     ];
   },
 };

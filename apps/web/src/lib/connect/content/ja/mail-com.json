@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.mail.com/pop-imap/index.html",
+    "https://support.mail.com/pop-imap/imap/index.html",
+    "https://support.mail.com/pop-imap/imap/server.html",
+    "https://support.mail.com/pop-imap/imap/outlook.html",
+    "https://support.mail.com/pop-imap/setup-emailprogram-fails.html",
+    "https://support.mail.com/security/2fa/index.html",
+    "https://support.mail.com/security/2fa/application-specific-passwords.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "アカウントのパスワード（2段階認証がオンならアプリケーション固有のパスワード）",
+    "helpUrl": "https://support.mail.com/pop-imap/index.html",
+    "usernameForm": "発行されたとおりのmail.comアドレス全体。mail.comグループのどのドメインで終わるアドレスでも構いません（例: you@email.com、you@usa.com）。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Mail.comをClaude、Cursor、MCPクライアントに接続",
+    "description": "mail.comをIMAP（imap.mail.com:993）でClaude、Cursor、ChatGPTなどあらゆるMCPクライアントに接続します。POP3/IMAPはmail.com Premiumの機能で、初期状態ではオフです。"
+  },
+  "hero": {
+    "eyebrow": "Mail.com + AI",
+    "titleLine1": "Mail.comをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のmail.com受信トレイを渡せます。クライアントからのアクセスをオンにすれば、IMAPでメールの閲覧、検索、送信、返信、予約送信、整理ができ、1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "answer": "Claudeはそのままではmail.comにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.mail.comのポート993にIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。先にmail.com側の条件が2つあります。POP3、IMAP、SMTPはPremiumの機能であること、そしてPremiumでもEmail、Settings、POP3 and IMAPで有効にするまでアクセスはオフになっていることです。オンにすれば、受信トレイ1つはずっと無料で接続できます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Premiumアカウント、IMAPをオンに",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "mail.comの接続方法: PremiumのIMAPを手動でオンに",
+    "body": "mail.comは<code>imap.mail.com</code>のポート993でTLS経由のIMAPを提供しています。送信については、ヘルプセンターに<code>smtp.mail.com</code>のポート587（STARTTLS）が記載され、代替としてポート465（SSL/TLS）も案内されています。MCPEmailsが使うのは465です。mail.comはGMXやWEB.DEと同じグループの1&1 Mail and Mediaが運営しており、同じ社内ルールを引き継いでいます。つまり<b>ブラウザー以外からのアクセスは有料機能で、初期状態ではオフ</b>です。mail.comのサードパーティアプリのページには、POP、IMAP、SMTPはPremium専用の機能だと書かれており、トラブルシューティングのページにも、POP3やIMAPでの受信はメールボックスで初期状態ではオフになっていると別途記載されています。無料のmail.comアドレスは、アカウントをアップグレードするまで、このクライアントでもほかのメールクライアントでも接続できません。アップグレードした後も、チェックボックスをオンにする必要があります。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成",
+      "p": "mcpemails.comで新規登録します。カードは不要で、Freeプランでは受信トレイ1つを期限なく接続できます。"
+    },
+    {
+      "h": "mail.comでPOP3とIMAPをオンにする",
+      "p": "mail.comにログインし、<b>Email</b>、<b>Settings</b>、<b>POP3 and IMAP</b>の順に開きます。<b>Enable access to this account via POP3 and IMAP</b>（POP3とIMAPによるこのアカウントへのアクセスを有効にする）にチェックを入れ、<b>Save</b>をクリックします。この項目がない、または保存できない場合は、メールボックスがまだ無料プランです。無料プランにはPOP3、IMAP、SMTPが一切ありません。"
+    },
+    {
+      "h": "2段階認証がオンならアプリケーション固有のパスワードを作成して接続",
+      "p": "2段階認証を有効にすると、通常のmail.comパスワードはクライアントで使えなくなります。<b>プロフィールアイコン</b>、<b>Security Options</b>、<b>Manage application-specific passwords</b>、<b>Create new application-specific password</b>の順にクリックします。mail.comはこのパスワードを一度しか表示しません。次にMCPEmailsでIMAP / SMTPを選び、mail.comグループのどのドメインであってもアドレス全体と、このパスワードを入力します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAPはPremium限定で、その記載は見落としがちです",
+      "p": "mail.comのヘルプセンターでこの制限が書かれているのは、サードパーティアプリのページの1文だけです: POP、IMAP、SMTPはPremium専用の機能。試用期間も部分的なアクセスもなく、クライアントに説明が表示されることもありません。無料のメールボックスは、パスワード間違いと同じ形でログインを拒否します。解決策はアップグレードだけで、当社を含めどのMCPサーバーでも回避できません。mail.comの接続が失敗する最も多い原因がこれです。"
+    },
+    {
+      "h": "2段階認証をオンにすると、IMAPが知らないうちにオフに戻ります",
+      "p": "mail.comの2段階認証のドキュメントには、2段階認証を有効にした後はメール設定でPOP3とIMAPによるアクセスを再度有効にする必要がある、と記載されています。つまり、接続して問題なく動いていたメールボックスも、アカウントのセキュリティを強化した瞬間に止まり、数週間前にオンにした設定がいつの間にか外れています。<b>Email</b>、<b>Settings</b>、<b>POP3 and IMAP</b>に戻ってチェックを入れ直して保存し、接続をアプリケーション固有のパスワードに切り替えてください。通常のパスワードでも認証できなくなっているためです。"
+    },
+    {
+      "h": "アドレスはおそらく@mail.comで終わっていません",
+      "p": "mail.comは登録時に100以上のドメインから選べるため、実際に使われているmail.comのメールボックスは<code>@email.com</code>、<code>@usa.com</code>、<code>@engineer.com</code>、<code>@dr.com</code>といったアドレスです。どれも<code>imap.mail.com</code>で認証します。アドレスはドメインを含め、発行されたとおりに入力してください。ユーザー名が@より前の部分だけになることはなく、ホスト名もドメインに合わせて変わらないので、imap.usa.comのようなホストを探す必要はありません。"
+    },
+    {
+      "h": "接続できない原因が、Webメールでしか表示されないブロックの場合があります",
+      "p": "mail.comのトラブルシューティングには、一部のエラー、特にアカウントの一時的なブロックは、サードパーティのクライアントでは正しく表示されないと注意書きがあります。接続は役に立つ情報もなくただ失敗します。mail.comの案内では、パソコンのブラウザーでmail.comにログインし、ログイン直後に表示される通知を確認するよう求めています。そこに本当の理由と解除の手順が書かれています。認証情報が正しくIMAPもオンなのに接続できない場合は、ほかの設定を変える前にWebメールを確認してください。"
+    }
+  ],
+  "limits": [
+    "POP3、IMAP、SMTPはPremiumアカウント専用のため、無料のmail.comメールボックスは当社からもほかのどのメールクライアントからも接続できません。",
+    "mail.comのIMAPサーバー情報のページにはポート143も記載されていますが、クライアントがSTARTTLSをネゴシエートしない限り暗号化されません。MCPEmailsは暗黙的TLSのポート993でのみ接続し、平文のポートは提供しません。"
+  ],
+  "faq": [
+    {
+      "q": "Claudeはmail.comで使えますか？",
+      "a": "直接は使えず、無料のmail.comアカウントではまったく使えません。Claudeにはmail.com用のコネクタが組み込まれていません。POP3とIMAPを有効にしたPremiumのメールボックスなら、MCPEmailsのようなMCPサーバーを接続することで、Claudeからメールの閲覧、検索、送信、返信、予約送信、整理ができるようになり、同じ接続をCursor、ChatGPTなどあらゆるMCPクライアントで使えます。"
+    },
+    {
+      "q": "IMAPを使うにはmail.com Premiumが必要ですか？",
+      "a": "はい。mail.comのヘルプセンターには、POP、IMAP、SMTPはPremium専用の機能だとはっきり書かれており、無料ユーザーはアップグレードのページに案内されます。この制限はmail.com自身のサーバーで適用されているため、無料プランではブラウザーとmail.comのモバイルアプリだけが利用手段です。"
+    },
+    {
+      "q": "mail.comのIMAPとSMTPの設定は？",
+      "a": "IMAPはimap.mail.com、ポート993、暗黙的TLSです。SMTPについて、mail.comはsmtp.mail.comのポート587（STARTTLS）と、同等の代替としてポート465（SSL/TLS）を案内しています。MCPEmailsは465を使います。ログインにはmail.comアドレス全体とアカウントのパスワード、2段階認証がオンならアプリケーション固有のパスワードを使います。"
+    },
+    {
+      "q": "2段階認証をオンにしたらmail.comの接続が切れました。なぜですか？",
+      "a": "2段階認証を有効にすると、クライアントからのアクセスがリセットされるためです。mail.comでは、その後メール設定でPOP3とIMAPを再度有効にする必要があり、通常のパスワードではクライアントの認証ができなくなります。Email、Settings、POP3 and IMAPで設定を有効にし直し、Security Optionsでアプリケーション固有のパスワードを生成して、そちらを使ってください。"
+    },
+    {
+      "q": "@email.com、@usa.comなど、mail.comのほかのドメインでも使えますか？",
+      "a": "はい。mail.comは100以上のドメインでアドレスを発行していますが、どれも1組のホスト名の背後にある同じメールボックス基盤です。アドレスは発行されたとおりに入力し、ドメインに関係なくimap.mail.comに接続してください。Premiumの要件とオン/オフの設定は、すべてのドメインで同じように適用されます。"
+    },
+    {
+      "q": "mail.comのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにmail.comからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文はそれを求めたリクエストの後には保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにMail.comの受信トレイを",
+    "sub": "mail.com Premiumを数分で接続。MCPEmailsなら受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

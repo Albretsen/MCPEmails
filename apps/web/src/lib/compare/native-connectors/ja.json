@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "title": "ClaudeとChatGPTのメールコネクタとMCPサーバーの比較",
+    "description": "ClaudeとChatGPTに組み込まれたメールコネクタ、FastmailとZohoの独自MCPサーバーでできることを、MCPEmailsと比較します。出典と確認日付き。"
+  },
+  "hero": {
+    "eyebrow": "ネイティブコネクタとMCPの比較",
+    "titleLine1": "組み込みコネクタは、もうメールを送信できます。",
+    "titleLine2": "ただし、できることには限りがあります。",
+    "lead": "ClaudeとChatGPTはGmailとMicrosoftのメールを読み書きでき、FastmailとZohoは独自のMCPサーバーを提供しています。どれも対応するのは1つのプロバイダーか、1つのアプリの中だけです。MCPEmailsなら、お持ちのすべてのメールボックスを1つの接続にまとめ、どのMCPクライアントからでも使えます。",
+    "updated": "他社に関する情報は{date}に確認しました。すべての記述に出典へのリンクがあります。",
+    "ctaPrimary": "受信トレイを無料で接続",
+    "ctaSecondary": "ドキュメントを読む"
+  },
+  "kinds": {
+    "title": "2種類の「ネイティブ」",
+    "sub": "よく一緒くたにされますが、重要な2つの点で異なります。どのメールボックスに届くか、そしてどのアプリで使えるかです。",
+    "apps": {
+      "h": "AIアプリに組み込まれたコネクタ",
+      "p": "ClaudeのGmailコネクタとMicrosoft 365コネクタ、ChatGPTのGmailアプリとOutlookアプリです。インストール不要で、現在はメールの送信もできます。ただし使えるのはそのアプリの中だけで、ClaudeのMicrosoft 365コネクタは個人のOutlook.comやHotmailのアカウントを接続できません。"
+    },
+    "provider": {
+      "h": "メールプロバイダー独自のMCPサーバー",
+      "p": "FastmailとZoho Mailはそれぞれ公式のMCPサーバーを提供しており、GoogleのGmail MCPサーバーは開発者向けプレビュー中です。どのMCPクライアントでも使えますが、それぞれ自社のメールボックスにしか届きません。"
+    }
+  },
+  "axes": {
+    "title": "マネージドMCPサーバーがまだ異なる点",
+    "sub": "私たちが確認したページで裏付けられた3つの違いです。組み込みの選択肢が追いついた点は、下の表に記載しています。",
+    "items": {
+      "coverage": {
+        "tag": "対応範囲",
+        "h": "すべてのメールボックスを1つの接続で",
+        "p": "MCPEmailsは、Gmail、Outlook（個人のOutlook.comを含む）、iCloud、Yahoo、Fastmail、Zoho、Yandex、そしてあらゆるIMAPメールボックスを、1つのMCP URLでまとめて接続します。組み込みコネクタが届くのはGmailとMicrosoftのメール、プロバイダー独自のサーバーが届くのはそのプロバイダーだけです。"
+      },
+      "actions": {
+        "tag": "コントロール",
+        "h": "予約、保留、整理",
+        "p": "組み込みコネクタは送信、返信、転送ができます。MCPEmailsはさらに、送信の予約、受信トレイごとに送信メールを承認まで保留する設定、そして接続したすべてのメールボックスでの移動、コピー、フラグ付け、アーカイブ、削除に対応しています。"
+      },
+      "portable": {
+        "tag": "移植性",
+        "h": "1回の設定で、すべてのAIアプリに",
+        "p": "ClaudeとChatGPTのコネクタは、それぞれのアプリの中でしか使えません。MCPEmailsは、OAuth 2.1、動的クライアント登録、PKCEに対応した標準のstreamable-http MCPサーバーです。そのため同じメールボックスを、Claude、ChatGPT、Cursor、VS Code、n8nなど、どのMCPクライアントでも使えます。"
+      }
+    }
+  },
+  "table": {
+    "title": "比較表",
+    "featureCol": "機能",
+    "appsCol": "ClaudeとChatGPTのコネクタ",
+    "providerCol": "プロバイダー独自のMCPサーバー",
+    "usCol": "MCPEmails",
+    "notStated": "記載なし",
+    "rows": {
+      "reach": "対応するメールボックス",
+      "several": "1つの接続で複数のプロバイダー",
+      "send": "送信、返信、転送",
+      "organize": "移動、ラベル付け、アーカイブ、削除",
+      "schedule": "送信の予約",
+      "approval": "送信前の承認",
+      "portable": "他のAIアプリでの利用"
+    },
+    "values": {
+      "reachApps": "Gmail。ClaudeではMicrosoft 365の職場アカウント、ChatGPTではOutlook。",
+      "reachProvider": "そのプロバイダーのみ: Fastmail、Zoho、またはGoogleのプレビュー版でのGmail。",
+      "reachUs": "Gmail、OutlookとOutlook.com、iCloud、Yahoo、Fastmail、Zoho、Yandex、あらゆるIMAP。",
+      "sendProvider": "FastmailとZohoは送信可能。Googleのプレビュー版サーバーは下書きの作成のみ。",
+      "organizeApps": "ClaudeのGmailコネクタではラベルとゴミ箱。",
+      "organizeProvider": "FastmailとZohoは対応。",
+      "approvalApps": "Claudeは既定で送信のたびに確認します。ChatGPTは操作の前に確認することがあります。",
+      "approvalUs": "受信トレイごとの任意の保留（全プラン）と、それとは別の送信権限。"
+    },
+    "footnote": "他社の欄は、{date}に下記の出典で確認した内容です。「記載なし」は、確認したページに答えがなかったという意味で、その機能がないという意味ではありません。これらの製品は頻繁に変わります。内容が古くなっている場合は、出典のリンク先でご確認ください。"
+  },
+  "faq": {
+    "title": "ネイティブコネクタとMCPに関するよくある質問",
+    "sub": "MCPEmailsをおすすめしない回答も含めています。",
+    "items": [
+      {
+        "q": "ClaudeやChatGPTは、すでに私のGmailからメールを送信できますか？",
+        "a": "はい。ClaudeのGmailコネクタは送信、返信、転送ができ、既定ではそのたびに承認を求めます。ChatGPTは、Plus、Pro、Business、Enterpriseプランのウェブ版で、接続したGmailまたはOutlookのアカウントからメールを作成して送信できます。使っているメールボックスがGmailだけで、そのどちらか1つのアプリしか使わないなら、組み込みコネクタで十分かもしれません。"
+      },
+      {
+        "q": "使っているメールプロバイダーに独自のMCPサーバーがあります。ほかに何か必要ですか？",
+        "a": "必要ないかもしれません。FastmailとZoho Mailは、どのMCPクライアントでも使える公式のMCPサーバーを提供しており、GoogleのGmail MCPサーバーは開発者向けプレビュー中です。ただし、それぞれ自社のメールボックスにしか届きません。MCPEmailsは、複数のメールボックスを1つの接続にまとめたい場合、iCloud、Yahoo、YandexなどのIMAPホストを使う場合、そしてClaudeのMicrosoft 365コネクタでは接続できない個人のOutlook.comアカウントを使う場合のためのものです。"
+      },
+      {
+        "q": "組み込みコネクタにはできなくて、MCPEmailsにできることは何ですか？",
+        "a": "複数のプロバイダーのメールボックスに1つのMCP URLでアクセスできること、送信を予約できること、受信トレイごとに送信メールを人の承認まで保留できること、そしてClaude、ChatGPT、Cursor、VS Code、n8nで同じように使えることです。確認した組み込みの選択肢には、予約送信について記載しているものはありませんでした。"
+      },
+      {
+        "q": "Claude用に設定すれば、CursorやChatGPTでも使えますか？",
+        "a": "はい。MCPEmailsは、OAuth 2.1、動的クライアント登録、PKCEに対応した標準のstreamable-http MCPサーバーなので、1回の設定でClaude、ChatGPT、Cursor、VS Code、Windsurf、n8nなど、どのMCPクライアントでも使えます。ClaudeとChatGPTの組み込みコネクタは、それぞれのアプリの中でしか使えません。"
+      },
+      {
+        "q": "MCPEmailsで受信トレイを接続すると、メールは保存されますか？",
+        "a": "いいえ。メッセージはリクエストのたびにプロバイダーからその場で取得し、レスポンスを返した時点で破棄します。保存するのは、次回以降のリクエストでログインするための暗号化されたOAuthトークンまたはアプリ パスワードと、予約したメッセージ（送信されるまで暗号化して保管）だけです。アクセスはいつでも取り消せます。"
+      }
+    ]
+  },
+  "sources": {
+    "title": "出典",
+    "sub": "以下の各ページは{date}に確認しました。",
+    "items": {
+      "claudeGoogle": "Claudeヘルプセンター: Google Workspaceコネクタ",
+      "claudeGmailListing": "ClaudeのGmailコネクタの掲載ページ",
+      "claudeM365": "Claudeヘルプセンター: Microsoft 365コネクタ",
+      "chatgptReleaseNotes": "ChatGPTのリリースノート（GmailまたはOutlookからの送信）",
+      "chatgptApps": "OpenAIヘルプセンター: ChatGPTのアプリ",
+      "fastmailMcp": "Fastmail: FastmailのMCPサーバーを通じたAIツールの接続",
+      "zohoMcp": "Zoho Mail MCP: はじめに",
+      "googleGmailMcp": "Google for Developers: Gmail MCPサーバーの設定"
+    }
+  },
+  "ctaBand": {
+    "title": "お持ちのすべての受信トレイをAIに",
+    "sub": "メールボックスは数分で接続できます。受信トレイ1つは無料、カードは不要です。",
+    "ctaPrimary": "受信トレイを無料で接続",
+    "ctaSecondary": "ドキュメントを読む"
+  }
+}

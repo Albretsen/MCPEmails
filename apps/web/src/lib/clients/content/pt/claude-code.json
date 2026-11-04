@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Claude Code: configuração MCP com um comando",
+    "description": "Adicione uma caixa de entrada real ao Claude Code CLI com claude mcp add. OAuth no terminal, sem chave de API, e depois leia, pesquise, envie e agende e-mails do seu shell. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Claude Code",
+    "titleLine2": "com um único comando",
+    "lead": "Dê ao CLI em que você já vive uma caixa de correio real. Faça a triagem dos e-mails da madrugada antes da daily, envie uma nota de versão ou transforme uma conversa numa issue, sem sair do terminal.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth no terminal, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Rode claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp e autentique no navegador quando o Claude Code pedir. Essa é a configuração inteira: sem chave de API, sem arquivo de configuração para editar à mão."
+  },
+  "method": {
+    "title": "Como o Claude Code se conecta: OAuth, sem chave de API",
+    "body": "O Claude Code executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Adicione o servidor",
+      "p": "Rode o comando abaixo. <code>--transport http</code> é o transporte Streamable HTTP, que é o que este servidor usa."
+    },
+    {
+      "h": "Autentique",
+      "p": "Rode <code>/mcp</code> dentro de uma sessão do Claude Code, escolha este servidor e siga o fluxo no navegador. Se o navegador não abrir sozinho, copie a URL que ele mostra."
+    },
+    {
+      "h": "Peça alguma coisa",
+      "p": "Experimente \"resuma tudo o que chegou hoje e não foi lido\". O Claude Code chama <code>inbox_list</code> primeiro para descobrir suas caixas de correio, então não há ids para colar."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Claude Code adia as definições das ferramentas MCP, e aqui isso é uma vantagem",
+      "p": "Por padrão, o Claude Code carrega só os nomes das ferramentas e as instruções do servidor no início da sessão, e busca o schema completo quando precisa. Na prática, adicionar este servidor custa uma fração do contexto que um servidor MCP ingênuo custaria, e uma ferramenta que você nunca usa nunca custa o schema dela."
+    },
+    {
+      "h": "Limite a conexão ao propósito da sessão",
+      "p": "A tela de consentimento do OAuth define o que o CLI pode fazer durante a vida do token. Uma sessão de código que deve ler e-mails mas nunca enviar é um token sem <code>send:email</code>. Se depois você quiser mais, reconecte e aprove o conjunto maior; nada se amplia sozinho."
+    },
+    {
+      "h": "Um loop de agente com escopo de envio é uma combinação que vale pensar",
+      "p": "O Claude Code roda sem supervisão por longos períodos, e é justamente aí que um envio acidental dói mais. Existem duas chaves para isso: deixe <code>send:email</code> fora do token, ou ative a aprovação humana no painel para que todo envio, resposta, encaminhamento e envio agendado espere por uma pessoa. A aprovação é por caixa de entrada e vale para qualquer cliente que fizer a chamada."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora.",
+    "O fluxo OAuth precisa de um navegador uma vez. Numa máquina headless, adicione o servidor com uma chave de API num header Authorization e pule o fluxo inteiro. Se você quiser mesmo OAuth ali, <code>--callback-port</code> fixa o callback numa porta que você pode redirecionar."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Claude Code?",
+      "a": "Adicione este servidor MCP pela URL: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Depois rode /mcp numa sessão e conclua o login no navegador. O Claude Code passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Posso usar uma chave de API em vez de OAuth?",
+      "a": "Sim. O Claude Code aceita um header no comando add, então passar um header Authorization com uma chave bearer do painel, em Chaves de API, dispensa o navegador por completo. Essa é a escolha certa numa máquina headless ou em CI, onde não há onde concluir um login."
+    },
+    {
+      "q": "Funciona num devcontainer ou via SSH?",
+      "a": "Sim, com a ressalva de que o fluxo OAuth quer um navegador uma vez. Ou você conclui o login onde houver um navegador, ou adiciona o servidor com um header de chave de API bearer e pula o fluxo. Tudo depois disso é HTTPS simples para um único endpoint."
+    },
+    {
+      "q": "Quais caixas de correio o Claude Code alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Claude Code pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Leve sua caixa de entrada para o terminal",
+    "sub": "Um comando, um login no navegador. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "現在のプラン：Free",
+    "lead": "今行った操作はFreeの範囲内です。さらに必要になったとき、各プランで何が増えるかをご紹介します。",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {受信トレイ#件} other {受信トレイ最大#件}}",
+    "freeGrace": "{date}まで無制限",
+    "freeCap": "月{cap}件のメール操作",
+    "noCap": "メール操作無制限",
+    "emailSupport": "優先メールサポート",
+    "everythingPersonal": "Personalのすべて",
+    "perMonth": "{price}/月",
+    "perYear": "{price}/年",
+    "intervalLabel": "請求サイクル",
+    "monthly": "月払い",
+    "annual": "年払い",
+    "recommended": "おすすめ",
+    "choose": "{plan}を選ぶ",
+    "continueFree": "Freeのまま続ける",
+    "dismiss": "プラン概要を閉じる"
+  },
+  "graceNote": {
+    "today": "MCPEmailsを{days, plural, other {#日}}利用しました。本日から、Freeでは月ごとのメール操作数をカウントします。",
+    "since": "MCPEmailsを{days, plural, other {#日}}利用しました。{date}以降、Freeでは月ごとのメール操作数をカウントしています。",
+    "seeUsage": "利用状況を見る",
+    "dismiss": "閉じる"
+  },
+  "meter": {
+    "level50": "今月のメール操作{cap}件のうち、半分を使用しました。カウントは{date}にリセットされます。",
+    "level80": "今月のメール操作を{cap}件中{used}件使用しました。カウントは{date}にリセットされます。Personalなら月の上限がなくなります。",
+    "level100": "メール操作{cap}件をすべて使用しました。{date}まで読み取りと書き込みは拒否されます。Personalなら月の上限がなくなります。",
+    "seePlans": "プランを見る"
+  },
+  "multiInbox": {
+    "title": "もう1つの受信トレイを接続",
+    "desc": "別のGmail、iCloud、Outlookもお使いですか？接続すれば、AIが1つのチャットから両方の受信トレイを扱えます。",
+    "descUpgrade": "別のGmail、iCloud、Outlookもお使いですか？AIは1つのチャットから両方の受信トレイを扱えます。2つ目の受信トレイには有料プランが必要です。"
+  }
+}

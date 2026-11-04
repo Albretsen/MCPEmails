@@ -1,0 +1,121 @@
+{
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da caixa de correio",
+    "helpUrl": null,
+    "usernameForm": "Quase sempre seu endereço de e-mail completo. Alguns provedores querem só a parte antes do @, e o iCloud da Apple é documentado assim.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conectar qualquer caixa IMAP ao Claude, ao Cursor e a clientes MCP",
+    "description": "Conecte qualquer caixa de correio IMAP da sua empresa ao Claude, ao Cursor e a qualquer cliente MCP. Traga host e senha: IMAP na 993 ou 143, SMTP na 465 ou 587, detectados para você."
+  },
+  "hero": {
+    "eyebrow": "IMAP + IA",
+    "titleLine1": "O servidor MCP IMAP para qualquer caixa de correio,",
+    "titleLine2": "no Claude, no Cursor, no ChatGPT e em qualquer cliente MCP",
+    "lead": "Conecte todas as caixas de correio da sua empresa, seja quem for o provedor: contato@, vendas@, financeiro@ e a sua. Seu agente de IA lê, pesquisa, envia, responde, agenda e organiza esses e-mails via IMAP e SMTP comuns, e as mesmas caixas funcionam em todos os clientes MCP, não só em um.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Qualquer host IMAP, sem configurar OAuth",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "O Claude não tem um cliente IMAP próprio. O MCPEmails é um servidor MCP IMAP hospedado que faz login no seu servidor de e-mail via IMAP e SMTP com o endereço, o host e a senha que seu provedor já deu a você, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. Qualquer host que fale IMAP funciona, os endereços de função de uma empresa se conectam do mesmo jeito que um endereço pessoal, e uma caixa de entrada é grátis."
+  },
+  "persona": {
+    "intro": "Gerencia várias caixas de correio da empresa?",
+    "label": "Veja como uma pessoa cuida de todos os endereços da empresa a partir de um agente",
+    "href": "/for/business"
+  },
+  "method": {
+    "title": "Como uma caixa de correio IMAP genérica se conecta",
+    "body": "Você precisa de quatro coisas: seu endereço, o host de e-mail, sua senha e, se o provedor exigir, uma senha de app. Digite o endereço primeiro: o MCPEmails reconhece os provedores de hospedagem mais comuns e preenche os dois hosts, as duas portas e os modos de segurança para você. Se o transporte que ele tenta não responder, ele tenta sozinho o outro padrão, <b>993 ou 143</b> para IMAP e <b>465 ou 587</b> para SMTP, então ninguém precisa adivinhar o STARTTLS."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre. Os planos pagos adicionam o resto: três caixas de correio no Personal, até 10 no Pro e quantas você precisar no Business."
+    },
+    {
+      "h": "Reúna suas configurações de IMAP e SMTP",
+      "p": "Seu provedor as publica, quase sempre como imap.yourdomain.com e smtp.yourdomain.com nas portas 993 e 465. Se o provedor exige uma senha de app para clientes de e-mail, gere uma agora."
+    },
+    {
+      "h": "Cole tudo no MCPEmails",
+      "p": "Escolha IMAP / SMTP, adicione seu endereço, os dois hosts e a senha. As portas e os modos de segurança ficam em Avançado, já preenchidos com os valores padrão."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Como encontrar seu hostname de verdade, na ordem que funciona",
+      "p": "Há quatro lugares para procurar, do mais fácil ao mais difícil. <b>Um</b>, a página de ajuda do seu provedor, pesquisando o nome dele mais as palavras configurações IMAP; é para isso que existem as outras páginas de provedores deste site. <b>Dois</b>, o painel de controle: no cPanel é Contas de E-mail, depois Conectar Dispositivos, depois o bloco de configurações manuais; no Plesk é Correio, depois o endereço, depois a tela de conexão à caixa de correio; a maioria dos painéis de hospedagem tem uma tela equivalente, e ela é a referência definitiva para a sua conta. <b>Três</b>, o DNS: um provedor que segue a RFC 6186 publica um registro SRV <code>_imaps._tcp.yourdomain.com</code> que informa o host e a porta diretamente. <b>Quatro</b>, seu registro MX, que nomeia a máquina que recebe seus e-mails e muitas vezes está na mesma família de nomes que o host IMAP. O que não funciona é chutar <code>imap.yourdomain.com</code> e torcer: muitos provedores servem seu e-mail em um nome que não tem nada a ver com o seu domínio."
+    },
+    {
+      "h": "É o certificado que quebra um hostname personalizado",
+      "p": "A maioria das empresas de hospedagem deixa você apontar <code>mail.yourdomain.com</code> para o servidor de e-mail delas sem problema, e isso funciona em um cliente que não verifica com cuidado. O servidor apresenta um certificado emitido para o nome da própria empresa de hospedagem, algo como <code>server24.hostingprovider.net</code> ou um curinga no domínio dela, não para o seu. Um cliente que valida TLS corretamente recusa a conexão com um erro de <b>hostname mismatch</b>, que é uma falha diferente de uma senha rejeitada, embora a maioria das interfaces misture as duas. Desligar a validação não é uma correção aceitável para uma caixa de correio da qual um agente de IA pode enviar e-mails. A solução é conectar ao hostname compartilhado para o qual o certificado foi realmente emitido, que é o nome que seu provedor documenta, e que é o nome que usamos."
+    },
+    {
+      "h": "993 ou 143, 465 ou 587, e o que um provedor quer dizer com \"SSL\" ou \"TLS\"",
+      "p": "A RFC 8314 orienta os provedores a preferir TLS implícito, o que significa que a conexão é criptografada desde o primeiro byte: porta <code>993</code> para IMAP e <code>465</code> para envio. Configurações mais antigas usam <code>143</code> e <code>587</code>, que começam sem criptografia e fazem o upgrade com STARTTLS. Os provedores rotulam isso de forma inconsistente, e os rótulos são a principal fonte de confusão: \"SSL/TLS\" em uma tabela de configurações quase sempre significa TLS implícito na 993 ou 465, enquanto \"TLS\" ou \"STARTTLS\" quase sempre significa 143 ou 587. Você não precisa descobrir. Digite seu endereço e o MCPEmails preenche os dois hosts, as duas portas e os dois modos de segurança para os hosts que reconhece, e se o transporte que ele tenta não responder, ele tenta sozinho o outro padrão."
+    },
+    {
+      "h": "Três capacidades do servidor decidem como sua caixa de correio se comporta, e nenhum servidor concorda com o outro",
+      "p": "<b>SASL-IR</b> (RFC 4959): um servidor que não a anuncia rejeita credenciais enviadas na mesma linha do comando <code>AUTHENTICATE</code> e responde com um <code>BAD</code> seco, sem explicação, o que parece exatamente uma senha errada. O MCPEmails detecta isso e repete a troca em duas etapas, e é por isso que alguns hosts funcionam aqui e falham em outras ferramentas. <b>MOVE</b> (RFC 6851): sem ela, uma mensagem não pode ser movida de forma atômica, então mover vira uma cópia, uma atualização de flag e um expunge, e uma conexão derrubada no meio pode deixar a mensagem nas duas pastas. <b>SPECIAL-USE</b> (RFC 6154): sem ela, o servidor não identifica Enviados, Rascunhos, Lixeira e Spam pela função, então as pastas são localizadas pelo nome, e uma caixa de correio criada em alemão, norueguês ou russo tem pastas de sistema com nomes que seu agente não reconhece, a menos que você os informe. Quando uma operação de pasta se comporta de forma estranha, uma dessas três costuma ser o motivo."
+    }
+  ],
+  "limits": [
+    "O servidor precisa estar acessível pela internet pública. Uma caixa de correio em rede privada, atrás de VPN ou em um endereço IP privado é recusada de propósito: o hostname é resolvido e qualquer endereço em faixa privada é rejeitado.",
+    "Só as portas de e-mail padrão são discadas: 143 e 993 para IMAP, e 25, 465 e 587 para SMTP. Um servidor que escuta em uma porta personalizada não pode ser conectado.",
+    "Uma caixa de correio que exige OAuth e não aceita senha via IMAP não pode ser conectada assim. Microsoft 365 e Outlook.com são os casos mais comuns: conecte-os com a opção Outlook (Entrar com a Microsoft) em vez de IMAP."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com qualquer caixa de correio IMAP?",
+      "a": "O Claude não tem um cliente IMAP próprio, então não diretamente. Aponte um servidor MCP como o MCPEmails para a caixa de correio com seu endereço, host e senha, e o Claude consegue ler, pesquisar, enviar, responder, agendar e organizar esses e-mails. Qualquer servidor que fale IMAP e SMTP nas portas padrão funciona, seja quem for o provedor, e a mesma conexão funciona depois no Cursor e no ChatGPT também."
+    },
+    {
+      "q": "Como encontro as configurações do meu servidor IMAP?",
+      "a": "Comece pela página de ajuda do seu provedor, depois pelo painel de controle da hospedagem, onde cPanel e Plesk mostram os hosts e portas exatos de cada endereço. Se nenhum dos dois estiver disponível, um provedor que segue a RFC 6186 publica um registro SRV _imaps._tcp para o seu domínio, e seu registro MX nomeia a máquina que recebe seus e-mails, que costuma estar relacionada ao host IMAP. Não chute a partir do nome do domínio."
+    },
+    {
+      "q": "Devo usar a porta 993 ou a 143?",
+      "a": "Use a 993, a menos que seu provedor diga o contrário. A porta 993 é TLS implícito, criptografada desde o primeiro byte, e é o que os padrões atuais recomendam. A porta 143 começa sem criptografia e faz o upgrade com STARTTLS, o que ainda funciona, mas é o padrão mais antigo. Para envio, a mesma distinção é 465 para TLS implícito e 587 para STARTTLS. O MCPEmails tenta o par padrão e recorre ao outro sozinho."
+    },
+    {
+      "q": "Por que meu cliente de e-mail conecta, mas este login falha?",
+      "a": "Três causas comuns. Seu cliente aponta para um hostname personalizado cujo certificado foi emitido para outro nome, e não está validando de forma estrita. Seu provedor exige uma senha de app para tudo que não seja o app dele. Ou o servidor rejeita a autenticação SASL em uma etapa e responde com um BAD seco que parece credencial errada. Tente o hostname que seu provedor documenta em vez de um montado a partir do seu domínio."
+    },
+    {
+      "q": "Preciso de uma senha de app?",
+      "a": "Depende totalmente do provedor. iCloud da Apple, Yahoo, AOL, Fastmail, Yandex e Mail.ru recusam a senha da conta vinda de um cliente de e-mail e exigem uma senha dedicada. O Zoho exige uma quando a autenticação de dois fatores está ativa. A maioria dos provedores de hospedagem independentes e servidores cPanel aceita a senha da caixa de correio diretamente. Se uma senha aparentemente correta é recusada, a exigência de senha de app é a primeira coisa a verificar."
+    },
+    {
+      "q": "Meu e-mail fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no seu servidor via IMAP a cada solicitação e entregues ao seu cliente de IA. As credenciais são criptografadas em repouso, e o conteúdo das mensagens não é retido. Trocar a senha da caixa de correio no provedor desconecta a caixa de entrada até você digitar a nova, e essa é a forma mais rápida de cortar o acesso."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA as caixas de correio que sua empresa já usa",
+    "sub": "Conecte qualquer caixa IMAP em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  },
+  "guide": {
+    "intro": "Prefere um passo a passo com capturas de tela?",
+    "label": "Conector IMAP do Claude: conecte qualquer caixa de entrada IMAP ao Claude",
+    "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Caixa de correio do Outlook.com, Hotmail ou Microsoft 365?",
+    "label": "Conecte-a com Entrar com a Microsoft em vez de IMAP",
+    "href": "/connect/outlook"
+  }
+}

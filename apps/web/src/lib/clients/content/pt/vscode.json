@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao VS Code: configuração MCP do agente do Copilot",
+    "description": "Adicione uma caixa de entrada real ao modo agente do GitHub Copilot no VS Code. Rode MCP: Add Server, escolha HTTP e autorize com OAuth. Sem chave de API. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "VS Code + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao VS Code",
+    "titleLine2": "e ao modo agente do Copilot",
+    "lead": "Adicione uma caixa de correio real ao editor que você já tem aberto. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails pelo modo agente do Copilot.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Rode MCP: Add Server na Paleta de Comandos, escolha HTTP (HTTP or Server-Sent Events), cole https://mcpemails.com/api/mcp e escolha Global e depois Copilot Global. Aprove o pedido de login para autorizar com o MCPEmails. Nenhuma chave de API entra na história."
+  },
+  "method": {
+    "title": "Como o VS Code se conecta: OAuth, sem chave de API",
+    "body": "O VS Code executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Rode MCP: Add Server",
+      "p": "Abra a Paleta de Comandos com Shift Cmd P, ou Shift Ctrl P no Windows e no Linux, e rode <b>MCP: Add Server</b> (adicionar servidor; o nome do comando aparece em inglês na interface em inglês)."
+    },
+    {
+      "h": "Escolha HTTP e Global",
+      "p": "Escolha <b>HTTP (HTTP or Server-Sent Events)</b>, cole <code>https://mcpemails.com/api/mcp</code> e digite <code>mcpemails</code> como ID do servidor. Como destino, escolha <b>Global</b> e depois <b>Copilot Global</b>. O VS Code grava a entrada abaixo em <code>~/.copilot/mcp-config.json</code>."
+    },
+    {
+      "h": "Autorize",
+      "p": "Aprove o pedido de login e autorize com o MCPEmails. Aprove os escopos que você quer que o Copilot tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O transporte é mesmo HTTP, não stdio, e escolher errado falha em silêncio",
+      "p": "O fluxo Add Server oferece primeiro um servidor stdio baseado em comando, que é o que a maioria dos servidores MCP é. Este é remoto e hospedado, então não tem comando para rodar. Escolha HTTP, e repare que a chave de configuração é <code>type</code> definida como <code>http</code>. Uma entrada stdio apontada para uma URL gera um servidor que nunca inicia, sem motivo aparente."
+    },
+    {
+      "h": "As ferramentas só aparecem no modo agente",
+      "p": "As ferramentas MCP ficam disponíveis para o Copilot no modo agente. Se as ferramentas de e-mail não aparecem no seletor de ferramentas depois de uma conexão bem-sucedida, a causa comum é estar no modo de pergunta ou de edição, e não no modo agente. A visão MCP é onde você confirma que o servidor está mesmo rodando."
+    },
+    {
+      "h": "Escolha Global e mantenha as chaves fora dos repositórios",
+      "p": "O destino Global grava <code>~/.copilot/mcp-config.json</code> na sua pasta pessoal, fora de qualquer projeto. O antigo <code>.vscode/mcp.json</code>, com um objeto <code>servers</code> no nível de cima, ainda funciona, mas o fluxo guiado o marca como obsoleto, e ele fica dentro do projeto, onde pode ser commitado. A URL é pública e os tokens OAuth não são gravados em nenhum dos dois arquivos. Isso deixa de valer no momento em que alguém escreve uma chave de API bearer direto no arquivo. Qualquer chave que chegue a um repositório deve ser revogada no painel, em Chaves de API."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao VS Code?",
+      "a": "Rode MCP: Add Server na Paleta de Comandos, escolha HTTP, cole https://mcpemails.com/api/mcp, escolha Global e depois Copilot Global, e aprove o pedido de login. O modo agente do Copilot passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Preciso de uma chave de API para o VS Code?",
+      "a": "Não. O VS Code executa o fluxo OAuth no navegador com este servidor, então nenhum token é gravado na sua configuração. Uma chave de API bearer continua disponível para uso headless ou em scripts."
+    },
+    {
+      "q": "Funciona com o Copilot em outros editores?",
+      "a": "Esta página trata especificamente do VS Code, porque o fluxo Add Server é um recurso do VS Code. O JetBrains AI Assistant tem uma configuração separada e usa uma chave de API bearer em vez de OAuth; há uma página para ele."
+    },
+    {
+      "q": "Quais caixas de correio o VS Code alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O VS Code pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao VS Code uma caixa de entrada real",
+    "sub": "Um comando, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

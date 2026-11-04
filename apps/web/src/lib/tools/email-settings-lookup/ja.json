@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "メールアドレスからIMAP・SMTP設定を調べるツール",
+    "description": "メールアドレスを入力すると、IMAPとSMTPのサーバー、ポート、セキュリティ設定を表示します。独自ドメインのメールをどのプロバイダーが扱っているかもわかります。無料で、ブラウザー内で動作します。"
+  },
+  "hero": {
+    "eyebrow": "無料ツール",
+    "title": "IMAP・SMTP設定の検索",
+    "lead": "どのメールアドレスでも、IMAPとSMTPの設定を調べられます。アドレス、ドメイン、またはメールサーバー名を入力すると、受信 (IMAP) と送信 (SMTP) のサーバー、ポート、セキュリティ設定を表示します。会社のドメインのアドレスなら、ドメインのMXレコードを読み取り、実際にメールボックスを運用しているプロバイダーを示します。",
+    "updated": "規格と外部サービスの情報は{date}に確認しました。"
+  },
+  "tool": {
+    "label": "メールアドレス、ドメイン、またはメールサーバー",
+    "placeholder": "you@yourcompany.com",
+    "submit": "設定を調べる",
+    "checking": "DNSレコードを確認しています...",
+    "privacy": "ブラウザー内で動作します。@より前の部分がこのページの外に送られることはありません。ドメインが当社の一覧にない場合に限り、ドメイン名だけをCloudflareの公開DNSリゾルバーと、MozillaのThunderbird自動設定データベースに送信します。",
+    "invalid": "you@example.comのようなメールアドレス、ドメイン、またはサーバー名を入力してください。",
+    "examplesLabel": "例:",
+    "examples": ["you@gmx.net", "ex4.mail.ovh.net", "you@purelymail.com"],
+    "provider": "プロバイダー",
+    "providerUnknown": "特定できません",
+    "incoming": "受信メール (IMAP)",
+    "outgoing": "送信メール (SMTP)",
+    "server": "サーバー",
+    "port": "ポート",
+    "security": "セキュリティ",
+    "securityTls": "SSL/TLS",
+    "securityStarttls": "STARTTLS",
+    "username": "ユーザー名",
+    "usernameValue": "通常はメールアドレス全体",
+    "mxTitle": "{domain}のMXレコード",
+    "mxNote": "これらはドメイン宛てのメールを受け取るサーバーです。メールアプリがログインするサーバーではありません。",
+    "source": {
+      "registry": "MCPEmailsがこのプロバイダーのサーバーにTLSで接続して確認した設定です。",
+      "host": "入力されたサーバー名から判別しました。",
+      "table": "MCPEmailsのプロバイダー設定一覧によるものです。",
+      "srv": "{domain}自身がDNSのサービスレコード (RFC 6186) で公開している設定です。",
+      "mx": "{provider}を指しているMXレコードから判断しました。",
+      "ispdb": "Mozilla Thunderbirdの自動設定データベースによるものです。"
+    },
+    "appPassword": "{provider}では、メールアプリからの接続にアプリ パスワードが必要です。通常のパスワードが拒否される場合は、アプリ パスワードを作成してそちらを使ってください。",
+    "appPasswordCreate": "アプリ パスワードを作成",
+    "appPasswordGeneric": "この設定で通常のパスワードが拒否される場合、プロバイダーはアプリ パスワードを求めている可能性が高いです。",
+    "appPasswordLearn": "アプリ パスワードとは",
+    "microsoftOutlook": "これは個人用のMicrosoftアカウント (Outlook.com、Hotmail、Live、MSN) です。Microsoftは2024年9月16日以降、これらのアカウントでメールアプリからのパスワードを受け付けていないため、パスワードを使ったサーバー設定ではログインできません。現在、メールアプリやコネクタはMicrosoftアカウントでサインインします。",
+    "microsoftOffice365": "{domain}のMXレコードはMicrosoftを指しているため、このメールボックスはMicrosoft 365にあります。Exchange OnlineはIMAPでのパスワード認証を受け付けなくなったため、メールアプリやコネクタはMicrosoftでサインインします。",
+    "microsoftCta": "Microsoftで接続",
+    "limited": "{provider}には、別のコンピューター上のアプリからログインできるIMAPサーバーやSMTPサーバーがないため、表示できる設定はありません。",
+    "limitedLink": "{provider}を接続できない理由",
+    "notFound": "{domain}の設定は見つかりませんでした。メールサービスのレコードを公開しておらず、Mozillaのデータベースにも載っておらず、MXレコードも当社が把握しているプロバイダーを指していません。",
+    "notFoundMx": "ドメインの管理者に、どのホストがメールボックスを運用しているかを確認するか、そのホストのコントロールパネルを確認してください。",
+    "notFoundNoMx": "{domain}はMXレコードを公開していないため、設定を読み取れるメールプロバイダーがありません。綴りを確認してください。",
+    "dnsFailed": "{domain}のDNS検索に応答がなかったため、現時点ではメールについて何もわかりません。しばらくしてからもう一度お試しください。",
+    "ctaTitle": "このメールボックスをClaude、ChatGPT、Cursorから使う",
+    "ctaBody": "MCPEmailsはこの設定で{provider}をAIアシスタントに接続し、接続時にIMAPとSMTPのログインを確認します。サーバー情報は接続フォームに自動で入力されます。",
+    "ctaBodyGeneric": "MCPEmailsはあらゆるIMAPメールボックスをAIアシスタントに接続し、接続時にIMAPとSMTPのログインを確認します。サーバー情報は接続フォームに自動で入力されます。",
+    "ctaButton": "{provider}を接続",
+    "ctaButtonGeneric": "このメールボックスを接続",
+    "guideLink": "{provider}の設定ガイド"
+  },
+  "explain": {
+    "title": "各設定の意味",
+    "sub": "どのメールアプリやコネクタも、同じ6つの値を求めます。それぞれの役割は次のとおりです。",
+    "items": [
+      {
+        "h": "IMAPは読むため、SMTPは送るため",
+        "p": "IMAP (Internet Message Access Protocol) を使うと、アプリはメールボックスをサーバー上に置いたまま読み取れます。フォルダー、既読・未読、移動はWebメールやスマートフォンと同期されます。SMTP (Simple Mail Transfer Protocol) は、アプリが新しいメッセージをプロバイダーに渡して配信してもらうための仕組みです。メールボックスには両方が必要で、<code>imap.gmx.net</code>と<code>mail.gmx.net</code>のように別々のサーバーで動いていることもよくあります。"
+      },
+      {
+        "h": "ポートとセキュリティ",
+        "p": "ポートとセキュリティ設定は組み合わせで決まります。<b>SSL/TLS</b> (暗黙的TLSとも呼ばれます) は最初の1バイトから接続を暗号化し、IMAPは993番、SMTPは465番ポートを使います。<b>STARTTLS</b>は143番または587番ポートに接続してから暗号化に切り替えます。RFC 8314は、受信と送信の両方で暗黙的TLSを推奨しています。ポートとセキュリティ設定の組み合わせを誤ると、わかりやすいエラーではなく、タイムアウトやあいまいなTLSエラーになることがほとんどです。"
+      },
+      {
+        "h": "ユーザー名とパスワード",
+        "p": "ユーザー名はほぼ必ずメールアドレス全体です。接続の失敗で最も多い原因はパスワードです。Gmail、iCloud、Yahoo、AOL、Fastmail、Yandexは、メールアプリからの通常のアカウントパスワードを拒否し、代わりに[アプリ パスワード](appPassword)を求めます。Zohoも、2要素認証やシングルサインオンを有効にしている場合は同様です。個人用のMicrosoftアカウントはどちらも受け付けず、Microsoftでのサインインが必要です。"
+      },
+      {
+        "h": "独自ドメインとMXレコード",
+        "p": "独自ドメインのアドレスからは、メールボックスがどこにあるかはわかりません。それを示すのはドメインのMXレコードです。MXレコードはドメイン宛てのメールを受け取るサーバーを示し、そのサーバーの運営者がIMAPとSMTPのサーバーも運用しているのがほとんどです。<code>aspmx.l.google.com</code>ならGoogle Workspace、<code>*.mail.protection.outlook.com</code>ならMicrosoft 365、<code>aspmx1.migadu.com</code>ならMigaduです。MXがスパムフィルターを指している場合、メールボックスのホストはその背後に隠れているため、ドメインの管理者に確認する必要があります。主なホストについては[独自ドメインのガイド](customDomain)で説明しています。"
+      },
+      {
+        "h": "この検索のしくみ",
+        "p": "次の順に確認します。MCPEmailsが各サーバーに接続して確認した[プロバイダー設定](providers)、実際の接続失敗をもとに作成したホスティングプロバイダーの一覧、ドメイン自身のRFC 6186サービスレコード、それらの一覧と照合したMXレコード、そしてMozilla Thunderbirdの自動設定データベースです。IMAPとSMTPの両方が見つかった場合にのみ結果を表示します。プロバイダー設定はオープンな[データセット](dataset)としても公開しています。"
+      }
+    ]
+  },
+  "ports": {
+    "title": "メールの標準ポート",
+    "colPort": "ポート",
+    "colProtocol": "プロトコル",
+    "colSecurity": "セキュリティ",
+    "colUse": "用途",
+    "rows": [
+      { "port": "993", "protocol": "IMAP", "security": "SSL/TLS", "use": "メールの受信。ほぼすべてのプロバイダーで標準です。" },
+      { "port": "143", "protocol": "IMAP", "security": "STARTTLS", "use": "993番ポートがないサーバーでのメールの受信。" },
+      { "port": "465", "protocol": "SMTP", "security": "SSL/TLS", "use": "メールアプリからの送信。RFC 8314で推奨されています。" },
+      { "port": "587", "protocol": "SMTP", "security": "STARTTLS", "use": "メールアプリからの送信 (メッセージサブミッション、RFC 6409)。" },
+      { "port": "25", "protocol": "SMTP", "security": "STARTTLSまたはなし", "use": "メールサーバー間の配信。外向きの接続でこのポートをブロックしているネットワークもあります。" }
+    ],
+    "note": "MCPEmailsはSSL/TLSまたはSTARTTLSでのみ接続し、暗号化なしの平文で接続することはありません。"
+  },
+  "faq": {
+    "title": "よくある質問",
+    "items": [
+      {
+        "q": "自分のメールアドレスのIMAP・SMTP設定はどうやって調べますか？",
+        "a": "上の検索欄にアドレスを入力してください。@gmx.netや@yahoo.comのようなプロバイダーのアドレスなら、そのプロバイダーのIMAPとSMTPのサーバー、ポート、セキュリティ設定をすぐに表示します。独自ドメインのアドレスなら、ドメインのDNSレコードを読み取ってメールボックスを運用しているプロバイダーを特定し、そのプロバイダーの設定を表示します。何も見つからない場合は、表示されるMXレコードから、ドメイン宛てのメールを受け取っている相手、つまり問い合わせ先がわかります。"
+      },
+      {
+        "q": "OVH Hosted Exchange (ex4.mail.ovh.net) のSMTP設定は？",
+        "a": "送信には受信と同じ番号付きのホスト (例: <code>ex4.mail.ovh.net</code>) を使い、587番ポートでSTARTTLSを使います。IMAPは同じホストの993番ポートでSSL/TLSを使います。Hosted Exchangeでは465番ポートが応答しないため、OVHの共有ホスティング向けの設定 (<code>ssl0.ovh.net</code>、465番ポート) をそのまま使うと、タイムアウトするまで止まったままになります。ホスト名の番号は契約しているサービスごとに異なり、OVHcloud Control Panelに表示されます。詳しくは[OVHのページ](ovh)をご覧ください。"
+      },
+      {
+        "q": "PurelymailのIMAP・SMTP設定は？",
+        "a": "IMAPは<code>imap.purelymail.com</code>の993番ポートでSSL/TLS、SMTPは<code>smtp.purelymail.com</code>の465番ポートでSSL/TLSです。ユーザー名はメールボックスのメールアドレス全体です。設定方法は[Purelymailのページ](purelymail)にあります。"
+      },
+      {
+        "q": "SMTPには465番と587番のどちらのポートを使うべきですか？",
+        "a": "プロバイダーが案内しているほうを使ってください。465番ポートは最初から暗号化され、RFC 8314が推奨しています。587番ポートは平文で始まり、STARTTLSで暗号化に切り替わります。多くのプロバイダーは両方に対応しています。大事なのは、それぞれのポートを対応するセキュリティ設定と組み合わせることです。465番はSSL/TLS、587番はSTARTTLSです。"
+      },
+      {
+        "q": "設定は正しいのにパスワードが拒否されます。なぜですか？",
+        "a": "多くのプロバイダーは、メールアプリからの通常のアカウントパスワードを拒否します。Gmail、iCloud、Yahoo、AOL、Fastmail、Yandexでは、アカウントのセキュリティ設定で作成する[アプリ パスワード](appPassword)が必要です。Zohoも、2要素認証やシングルサインオンを有効にしている場合は同様です。個人用のMicrosoftアカウントは2024年9月16日以降、メールアプリからのパスワードを受け付けておらず、Microsoftでのサインインが必要です。"
+      },
+      {
+        "q": "このツールでログインをテストできますか？",
+        "a": "いいえ。WebページからはIMAPやSMTPの接続を開けません。そもそも、検索用のページにメールボックスのパスワードを入力するべきではありません。MCPEmailsは、AIアシスタントに[メールボックスを接続](imap)するときにIMAPとSMTPのログインをテストし、どちらが失敗したかをお知らせします。"
+      }
+    ]
+  },
+  "related": {
+    "title": "関連ガイド",
+    "items": {
+      "imap": "あらゆるIMAPメールボックスをClaudeやChatGPTに接続する",
+      "customDomain": "独自ドメインのメールをAIエージェントに接続する",
+      "appPassword": "アプリ パスワードとは",
+      "providers": "プロバイダー対応表",
+      "dataset": "IMAP・SMTPプロバイダーのオープンデータセット",
+      "connect": "すべてのプロバイダーの設定ガイド"
+    }
+  },
+  "sources": {
+    "title": "出典",
+    "sub": "{date}に確認。",
+    "items": {
+      "rfc8314": "RFC 8314: メールの送信とアクセスにおけるTLSの使用",
+      "rfc6186": "RFC 6186: メールサービスの検出におけるSRVレコードの使用",
+      "rfc6409": "RFC 6409: メールのメッセージサブミッション",
+      "rfc5068": "RFC 5068: メール送信の運用",
+      "msBasicAuth": "Microsoftサポート: 他のアプリでOutlook.comを使うには先進認証が必要に",
+      "msExchangeOnline": "Microsoft Learn: Exchange Onlineにおける基本認証の廃止",
+      "ispdb": "Mozilla Thunderbird自動設定データベース (ISPDB)",
+      "cloudflareDoh": "Cloudflare: DNS over HTTPS JSON API"
+    }
+  },
+  "ctaBand": {
+    "title": "設定が見つかったら、メールボックスをAIアシスタントに任せましょう。",
+    "sub": "MCPEmailsは、Gmail、Outlook、iCloud、あらゆるIMAPメールボックスを、Claude、ChatGPT、CursorなどのMCPクライアントに接続します。メールはその都度取得され、保存されることはありません。",
+    "ctaPrimary": "メールボックスを接続",
+    "ctaSecondary": "プロバイダー一覧を見る"
+  }
+}

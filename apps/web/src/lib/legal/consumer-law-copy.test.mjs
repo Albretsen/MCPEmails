@@ -16,7 +16,7 @@ import { WITHDRAWAL_COPY } from '../../../app/[locale]/withdrawal/content.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const messagesDir = join(here, '../../../messages');
-const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de'];
+const LOCALES = ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'];
 
 function leaves(value, path = '', out = new Map()) {
   if (Array.isArray(value)) value.forEach((v, i) => leaves(v, `${path}[${i}]`, out));
@@ -105,7 +105,7 @@ test('the legal entity is Albretsen AS everywhere, with no sole-proprietorship w
 });
 
 test('the in-app plan change button states the obligation to pay in every locale', () => {
-  const pay = { en: /pay/i, nb: /betal/i, es: /pagar/i, fr: /payer/i, zh: /付款/, de: /zahlungspflichtig|bezahlen/i };
+  const pay = { en: /pay/i, nb: /betal/i, es: /pagar/i, fr: /payer/i, zh: /付款/, de: /zahlungspflichtig|bezahlen/i, pt: /pagar/i, ja: /支払/ };
   for (const locale of LOCALES) {
     assert.match(messages(locale, 'dashboard').billing.confirmChange, pay[locale], locale);
   }
@@ -148,6 +148,8 @@ const RETENTION = {
   fr: /pause|r[ée]trograd|remise|r[ée]duction|[êe]tes-vous s[ûu]r/i,
   zh: /暂停|降级|折扣|优惠|确定吗/,
   de: /pause|pausier|downgrade|herabstuf|rabatt|nachlass|sind sie sicher/i,
+  pt: /pausa|pausar|rebaixa|downgrade|desconto|tem certeza/i,
+  ja: /一時停止|ダウングレード|割引|よろしいですか/,
 };
 
 test('cancel: no locale offers a pause, a downgrade or a discount', () => {
@@ -181,6 +183,8 @@ test('footer: the withdrawal link names the function and opens the form with wit
     fr: 'Se rétracter du contrat ici',
     es: 'Desistir del contrato aquí',
     zh: '在此撤回合同',
+    pt: 'Desistir do contrato aqui',
+    ja: '契約の撤回はこちら',
   };
   for (const locale of LOCALES) {
     assert.equal(messages(locale, 'home').footer.linkWithdrawal, expected[locale], locale);

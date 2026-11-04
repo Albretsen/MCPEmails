@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Senha do Terra Mail, em um plano pago ativo",
+    "helpUrl": null,
+    "usernameForm": "Seu endereço completo, incluindo o domínio: nome@terra.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Terra Mail (Brasil) no Claude: IMAP em um plano pago",
+    "description": "Conecte uma caixa de correio terra.com.br ao Claude ou a qualquer cliente MCP em imap.terra.com.br:993. O Terra encerrou o nível gratuito, então é preciso ter um plano pago ativo."
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + IA",
+    "titleLine1": "Conecte o Terra Mail ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real do Terra. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP, em uma caixa de correio brasileira terra.com.br com um plano pago ativo.",
+    "answer": "O Claude não consegue acessar o Terra Mail sozinho. O MCPEmails é um servidor MCP hospedado que o conecta via IMAP em imap.terra.com.br na porta 993, autenticando com seu endereço completo e sua senha do Terra Mail, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. O Terra encerrou as caixas de correio gratuitas, então um endereço sem um pacote pago ativo do Terra Mail é bloqueado, e não apenas limitado, e os domínios do Terra fora do Brasil foram desligados anos atrás e não têm servidor algum. Só o terra.com.br continua no ar. Uma caixa de entrada é grátis no MCPEmails.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Pacote pago ativo do Terra Mail",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o Terra Mail se conecta: IMAP em terra.com.br, e em nenhum outro lugar",
+    "body": "O Terra serve IMAP em <code>imap.terra.com.br</code> na porta 993 com TLS implícito, e SMTP em <code>smtp.terra.com.br</code> na porta 465. A autenticação é comum: o endereço completo como nome de usuário e a senha da caixa de correio. Não há senha de app, nem código de autorização, nem chave de protocolo escondida no webmail. As complicações no Terra são sobre quais caixas de correio ainda existem. O Terra fechou seus domínios de e-mail internacionais e, separadamente, parou de vender os pacotes sem custo nos quais as caixas gratuitas <code>terra.com.br</code> se apoiavam, o que deixou essas contas bloqueadas até o cliente contratar um pacote pago do Terra Mail. Se seu endereço está em um plano brasileiro ativo, a conexão é uma das mais simples desta região. Se não está, nenhuma configuração de cliente vai ajudar, e a página explica abaixo como distinguir os dois casos."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. O plano gratuito conecta uma caixa de entrada e continua grátis, sem cartão."
+    },
+    {
+      "h": "Confira se a caixa de correio do Terra está em um pacote pago ativo",
+      "p": "Entre no webmail do Terra. Se o próprio webmail recusar você ou disser que o pacote precisa ser atualizado, a caixa de correio é uma das contas atingidas pelo fim do nível gratuito do Terra, e nenhum cliente de e-mail vai se conectar até um pacote pago do Terra Mail estar ativo nela. Se o webmail abrir normalmente, a conta está ativa e você pode seguir."
+    },
+    {
+      "h": "Digite seu endereço e senha no MCPEmails",
+      "p": "Escolha IMAP / SMTP e digite o endereço completo, como <code>nome@terra.com.br</code>, com a senha da caixa de correio. Os hosts e portas do Terra já vêm preenchidos e foram confirmados em uma conexão TLS ao vivo. O Terra não emite senha específica de app, então, se você estava caçando uma nas configurações, não há nada para encontrar."
+    },
+    {
+      "h": "Cole a URL do MCP no seu cliente de IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente consegue ler, pesquisar, enviar, responder, encaminhar, agendar e organizar a caixa de correio do Terra."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "As caixas de correio gratuitas do Terra foram encerradas, e o bloqueio parece uma falha de senha",
+      "p": "O Terra parou de oferecer seus pacotes de e-mail sem custo, e contas que foram gratuitas por anos foram bloqueadas em vez de rebaixadas. O acesso só é restaurado contratando um pacote pago do Terra Mail. A parte importante para quem configura um cliente é que isso não se anuncia: o login é recusado no servidor do mesmo jeito que uma senha errada. Endereços brasileiros antigos, alguns com décadas, pararam de funcionar sem nenhuma mudança do lado do cliente. Antes de gastar tempo com hostnames e portas, confirme que a caixa de correio ainda abre no webmail do Terra."
+    },
+    {
+      "h": "Só o terra.com.br ainda existe, e os outros domínios do Terra não têm servidor",
+      "p": "O Terra operava e-mail em uma família de domínios por país, incluindo <code>terra.com</code>, <code>terra.com.ar</code>, <code>mi.terra.cl</code>, <code>terra.com.co</code>, <code>terra.com.mx</code>, <code>terra.com.pe</code>, <code>terra.com.ve</code> e <code>terra.com.ec</code>. Esses serviços foram descontinuados, e tanto as contas quanto as mensagens armazenadas ficaram inacessíveis. O domínio brasileiro <code>terra.com.br</code> não fez parte desse encerramento e é o que esta página cobre. Se seu endereço está em qualquer um dos outros, não há host para apontar um cliente nem configuração que recupere os e-mails: eles se foram, não estão mal configurados."
+    },
+    {
+      "h": "O servidor oferece IDLE, mas não UIDPLUS, uma combinação incomum",
+      "p": "A linha de capacidades do Terra inclui <code>IDLE</code>, então um cliente pode manter uma conexão aberta e ser avisado de e-mails novos em vez de consultar periodicamente, o que é melhor do que vários vizinhos brasileiros conseguem. Ela omite <code>UIDPLUS</code> e <code>MOVE</code>. Essa combinação tem uma consequência prática ao arquivar e-mails: mover roda como uma cópia, uma atualização de flag e um expunge, e como o UIDPLUS está ausente, o servidor não informa o novo identificador da mensagem copiada, então ela precisa ser localizada pesquisando a pasta de destino depois. Arquivar funciona, só é mais lento e menos certeiro do que em um servidor que devolve o novo UID."
+    }
+  ],
+  "limits": [
+    "É preciso ter um pacote pago do Terra Mail. Não sobrou caixa de correio terra.com.br gratuita para conectar, e o MCPEmails não consegue contornar um bloqueio aplicado no próprio servidor do Terra.",
+    "Como MOVE e UIDPLUS estão ambos ausentes, arquivar uma mensagem não é atômico e o resultado precisa ser confirmado por uma pesquisa. Uma operação interrompida pode deixar uma mensagem brevemente presente em duas pastas.",
+    "SPECIAL-USE está ausente, então as pastas são localizadas pelo nome e não pela função. Em uma caixa de correio em português, os nomes costumam ser Enviados, Rascunhos, Lixeira e Spam."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Terra Mail?",
+      "a": "Não diretamente. O Claude não tem um conector integrado para o Terra e não consegue abrir uma conexão IMAP sozinho. Conectar um servidor MCP como o MCPEmails à sua caixa de correio terra.com.br dá ao Claude acesso para ler, pesquisar, enviar, responder, encaminhar, agendar e organizar, e a mesma conexão funciona no Cursor e em outros clientes MCP."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do Terra?",
+      "a": "O IMAP é imap.terra.com.br na porta 993 com TLS implícito. O SMTP é smtp.terra.com.br na porta 465, também com TLS implícito. Faça login com seu endereço terra.com.br completo e a senha da caixa de correio. Os dois hosts foram verificados em uma conexão TLS ao vivo na data mostrada nesta página."
+    },
+    {
+      "q": "O Terra Mail ainda é gratuito?",
+      "a": "Não. O Terra parou de vender os pacotes sem custo dos quais as caixas gratuitas dependiam, e essas contas ficam bloqueadas até o cliente contratar um pacote pago do Terra Mail. Isso afeta o webmail tanto quanto os clientes de e-mail, então uma caixa que você não consegue abrir no navegador também não vai se conectar via IMAP, independentemente das configurações que usar."
+    },
+    {
+      "q": "Por que minha senha do Terra é rejeitada?",
+      "a": "Confira o plano antes da senha. Uma caixa de correio deixada para trás pelo fim do nível gratuito do Terra é recusada no login exatamente como uma senha errada. Se o webmail deixa você entrar normalmente, a conta está ativa e as causas prováveis são um endereço digitado errado ou uma senha trocada em outro lugar, já que o Terra não emite senha de app separada."
+    },
+    {
+      "q": "Posso conectar um endereço terra.com ou terra.com.mx?",
+      "a": "Não. Os domínios de e-mail internacionais do Terra foram descontinuados, e as caixas de correio e mensagens armazenadas foram junto. Não há servidor por trás desses endereços para autenticar. Só o serviço brasileiro terra.com.br continua funcionando, e é o único ao qual estas configurações se aplicam."
+    },
+    {
+      "q": "Meu e-mail do Terra fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Terra via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso, e o conteúdo das mensagens não é retido depois da solicitação que o pediu."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Terra",
+    "sub": "Conecte uma caixa de correio terra.com.br ativa em minutos. Uma caixa de entrada grátis para sempre no MCPEmails, sem cartão."
+  }
+}

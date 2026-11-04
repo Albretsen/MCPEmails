@@ -338,7 +338,9 @@
     "es": "Español",
     "fr": "Français",
     "zh": "中文",
-    "de": "Deutsch"
+    "de": "Deutsch",
+  "pt": "Português (Brasil)",
+  "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Vista del producto",

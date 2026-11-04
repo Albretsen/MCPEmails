@@ -5,6 +5,7 @@ import '../styles/marketing.css';
 import { preloadFonts } from './fonts';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
+import { languageTag } from '../src/i18n/locale-policy.mjs';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import AcquisitionCapture from '../components/analytics/AcquisitionCapture';
@@ -75,7 +76,7 @@ export default async function RootLayout({ children }) {
   preloadFonts();
   const locale = await getLocale();
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={languageTag(locale)} suppressHydrationWarning>
       <head>
         {/*
           Sets data-theme before first paint so a dark-theme visitor never sees

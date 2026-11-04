@@ -32,7 +32,7 @@
  */
 
 export const REASSURANCE_KINDS = /** @type {const} */ (['subscription', 'pass', 'deferred']);
-export const REASSURANCE_LOCALES = /** @type {const} */ (['en', 'de', 'fr', 'es', 'nb', 'zh']);
+export const REASSURANCE_LOCALES = /** @type {const} */ (['en', 'de', 'pt', 'ja', 'fr', 'es', 'nb', 'zh']);
 
 const COPY = {
   en: {
@@ -44,6 +44,16 @@ const COPY = {
     subscription: 'Heute abgebucht. Jederzeit kündbar. 14 Tage volle Erstattung.',
     pass: 'Einmalig heute abgebucht. Nichts zu kündigen. 14 Tage volle Erstattung.',
     deferred: 'Heute keine Abbuchung. Jederzeit kündbar. 14 Tage volle Erstattung.',
+  },
+  pt: {
+    subscription: 'Cobrado hoje. Cancele quando quiser. 14 dias para pedir reembolso.',
+    pass: 'Cobrança única hoje. Nada para cancelar. 14 dias para pedir reembolso.',
+    deferred: 'Nenhuma cobrança hoje. Cancele quando quiser. 14 dias para pedir reembolso.',
+  },
+  ja: {
+    subscription: '本日請求されます。いつでも解約できます。14日以内なら返金できます。',
+    pass: '本日1回のみ請求されます。解約の手続きは不要です。14日以内なら返金できます。',
+    deferred: '本日の請求はありません。いつでも解約できます。14日以内なら返金できます。',
   },
   fr: {
     subscription: "Débité aujourd'hui. Résiliable à tout moment. Remboursable pendant 14 jours.",
