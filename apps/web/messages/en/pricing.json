@@ -88,7 +88,7 @@
   },
   "enterprise": {
     "title": "Enterprise: talk to us",
-    "body": "A DPA, invoice billing, and help getting Microsoft 365 approved by your IT admin. Write to <contact>hello@mcpemails.com</contact>."
+    "body": "A <dpa>DPA</dpa>, invoice billing, and help getting Microsoft 365 approved by your IT admin. Write to <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Full comparison",

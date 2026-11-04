@@ -88,7 +88,7 @@
   },
   "enterprise": {
     "title": "Enterprise : parlons-en",
-    "body": "Un accord de traitement des données (DPA), le paiement sur facture et de l'aide pour faire approuver Microsoft 365 par votre administrateur informatique. Écrivez à <contact>hello@mcpemails.com</contact>."
+    "body": "Un <dpa>accord de traitement des données (DPA)</dpa>, le paiement sur facture et de l'aide pour faire approuver Microsoft 365 par votre administrateur informatique. Écrivez à <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Comparatif complet",

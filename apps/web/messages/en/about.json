@@ -29,7 +29,7 @@
   "why": {
     "title": "Why I built it",
     "p1": "I wanted my own agents working my inbox. Every option I found wanted a copy of my mail first: sync it, index it, keep it in someone else's database for as long as the account exists. For a mailbox full of invoices, contracts and password resets, that is a lot to give up for something I only needed now and then.",
-    "p2": "So I built the version I was willing to use. Mail is fetched live when your agent asks for it and dropped once the response is sent, so there is no stored copy. The only thing kept is the mailbox credential, encrypted at rest, because the next call needs it. I run my own mail through it every day."
+    "p2": "So I built the version I was willing to use. Mail is fetched live when your agent asks for it and dropped once the response is sent, so there is no stored copy. What is kept per inbox is the mailbox credential, encrypted at rest, because the next call needs it, plus the few details a feature you turn on needs, such as a scheduled message waiting to go out. I run my own mail through it every day."
   },
   "trusting": {
     "title": "What you are trusting",

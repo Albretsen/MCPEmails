@@ -83,7 +83,7 @@ Claude har også en egen Gmail-kobling, og den kan også sende. [Kan Claude lese
 
 Kortversjonen: ja, og designet er bygget rundt det.
 
-- **E-posten din lagres aldri.** Innhold, emner og vedlegg hentes live ved hvert kall, overleveres til Claude og slippes umiddelbart. Det eneste som lagres per innboks, er den krypterte legitimasjonen, apppassordet ditt. Her er [hvorfor «e-post lagres aldri» faktisk betyr noe](/blog/why-email-never-stored-matters).
+- **E-posten din lagres aldri.** Innhold, emner og vedlegg hentes live ved hvert kall, overleveres til Claude og slippes umiddelbart. Det som lagres per innboks, er den krypterte legitimasjonen, apppassordet ditt, pluss de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt. Her er [hvorfor «e-post lagres aldri» faktisk betyr noe](/blog/why-email-never-stored-matters).
 - **Du kontrollerer scope.** Godkjenn kun lesing, og Claude kan bokstavelig talt ikke sende. Godkjenn begge, og du kan fortsatt tilbakekalle hvilken som helst av dem når som helst.
 - **Ingen passorddeling.** Det vanlige Google-passordet ditt når aldri MCPEmails. Et apppassord er en egen legitimasjon du kan tilbakekalle på myaccount.google.com/apppasswords når som helst, eller du kan slette innboksen i MCPEmails.
 
@@ -95,7 +95,7 @@ Hele trusselmodellen (hva som er kryptert, hva en angriper ville og ikke ville s
 Nei. Claude støtter OAuth, så du limer inn endepunkt-URL-en og godkjenner en innlogging. API-nøkler er bare for klienter uten innebygd OAuth.
 
 **Lagrer Claude Gmail-meldingene mine?**
-Nei. E-post hentes live fra Gmail ved hver forespørsel og forkastes rett etter at Claude har lest den. Ingenting beholdes bortsett fra den krypterte legitimasjonen din (apppassordet).
+Nei. E-post hentes live fra Gmail ved hver forespørsel og forkastes rett etter at Claude har lest den. Ingenting fra e-posten Claude leser, beholdes; det som lagres, er den krypterte legitimasjonen din (apppassordet).
 
 **Kan Claude sende e-post fra Gmailen min?**
 Ja, hvis du gir \`send:email\`-scopet. Sendinger går ut gjennom Gmail som vanlige meldinger fra din egen konto. Gi kun lesetilgang hvis du heller vil at Claude aldri skal sende.

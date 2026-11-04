@@ -58,9 +58,9 @@ Velg OAuth, ikke "ingen autentisering". Denne serveren avviser anonyme kall, så
 
 ## Steg 3: Godkjenn bare de tilgangene du trenger
 
-Samtykkeskjermen er vår, ikke OpenAIs. Det første samtykket starter på \`read:email\`, som er nok til triagering, oppsummering og til å finne ting, og det tar hver eneste irreversible handling av bordet mens du bestemmer deg for hvor langt du vil gå. De andre tilgangene er \`send:email\`, \`search:email\` og \`manage:automations\`.
+Samtykkeskjermen er vår, ikke OpenAIs. For ChatGPT åpner den på **Full tilgang**, fordi ChatGPT ikke kommer tilbake senere for å be om mer tilgang. Velg et smalere nivå før du klikker **Gi tilgang** hvis du vil det: **Skrivebeskyttet** er nok til triagering, oppsummering og til å finne ting, og tar hver eneste irreversible handling av bordet. **Tilpass tillatelser** viser alle ni tillatelsene (lese, søke, sende, mapper, slette, utkast, kontakter, planlegging og automatiseringer). Skjermen gir også som standard tilgang til alle innbokser i arbeidsområdet, også dem du kobler til senere; velg bestemte innbokser der for å begrense det.
 
-Å gi for lite er til å rette opp i: et kall som trenger en tilgang tokenet ditt mangler, kommer tilbake som en 403 med en insufficient scope-feil, så klienten kan be om samtykke på nytt for den tilgangen og prøve igjen. En innbokseier kan også kreve [menneskelig godkjenning](/blog/approve-ai-agent-email-sends) i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hver utkastsending og hver planlagt sending til en person slipper den gjennom.
+Å gi for lite er til å rette opp i. Når et verktøy trenger en tillatelse ChatGPT-tilkoblingen mangler, sier verktøyresultatet hvilken som mangler og ber ChatGPT koble til på nytt. En innbokseier kan også kreve [menneskelig godkjenning](/blog/approve-ai-agent-email-sends) i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hver utkastsending og hver planlagt sending til en person slipper den gjennom.
 
 ## Steg 4: Gi ChatGPT en trygg første oppgave
 

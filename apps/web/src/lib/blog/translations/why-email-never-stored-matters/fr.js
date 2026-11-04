@@ -1,9 +1,9 @@
 const translation = {
   title: "Pourquoi le « courriel jamais stocké » compte quand vous connectez l’IA à votre boîte mail",
   description:
-    'Jamais stocké : MCPEmails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
+    'Jamais stocké : MCPEmails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré par boîte. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
   coverAlt: 'Un courriel récupéré en direct puis jeté, face à une seconde copie stockée dans la base de données d’un fournisseur',
-  content: `Quand vous connectez un agent IA à votre boîte mail, la question la plus importante de toutes est de savoir où finissent vos courriels. Avec MCPEmails, la réponse est : nulle part. Chaque appel d’outil récupère vos messages en direct depuis Gmail, Microsoft Graph ou votre serveur IMAP, les transmet à l’agent, puis les jette. La seule chose que nous conservons, c’est un jeton chiffré pour que l’appel suivant puisse avoir lieu.
+  content: `Quand vous connectez un agent IA à votre boîte mail, la question la plus importante de toutes est de savoir où finissent vos courriels. Avec MCPEmails, la réponse est : nulle part. Chaque appel d’outil récupère vos messages en direct depuis Gmail, Microsoft Graph ou votre serveur IMAP, les transmet à l’agent, puis les jette. Ce que nous conservons pour chaque boîte, c’est un jeton chiffré pour que l’appel suivant puisse avoir lieu, plus les quelques informations dont a besoin une fonctionnalité que vous activez, comme un message programmé en attente d’envoi.
 
 Cela ressemble à un petit détail d’implémentation. Ça n’en est pas un. C’est la différence entre confier à un agent *une clé de votre maison* et lui confier *une photocopie de tout ce qu’elle contient*, gardée à jamais dans le classeur de quelqu’un d’autre. Beaucoup d’outils « IA pour courriel » font discrètement la seconde chose. Cet article explique pourquoi ça compte et en quoi l’architecture diffère vraiment.
 
@@ -50,7 +50,7 @@ agent  ←  résultat analysé  ←  serveur MCP
                          (corps jeté, rien écrit)
 \`\`\`
 
-L’identifiant est la seule chose au repos, et il est chiffré avec **AES-256-GCM**. Il est déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin et n’est jamais envoyé à votre agent, et la clé de chiffrement est conservée comme secret serveur, séparée de la base de données, de sorte qu’un vidage de base seul est inutile. Le message lui-même ne touche jamais de stockage durable. Il est analysé, renvoyé à votre agent, et disparaît.
+L’identifiant est le seul secret stocké au repos, et il est chiffré avec **AES-256-GCM**. Il est déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin et n’est jamais envoyé à votre agent, et la clé de chiffrement est conservée comme secret serveur, séparée de la base de données, de sorte qu’un vidage de base seul est inutile. Le message lui-même ne touche jamais de stockage durable. Il est analysé, renvoyé à votre agent, et disparaît.
 
 L’envoi fonctionne de la même manière et ajoute une garantie de plus : le courrier sortant passe par *votre* fournisseur : Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook. Nous ne relayons jamais depuis notre propre domaine, donc votre délivrabilité et votre réputation de domaine restent entièrement les vôtres. Il n’y a pas de pool d’envoi partagé pour vous faire atterrir dans la réputation de spam de quelqu’un d’autre.
 
