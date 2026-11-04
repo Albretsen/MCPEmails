@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.google.com/accounts/answer/185833",
+    "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
+    "https://knowledge.workspace.google.com/admin/sync/transition-from-less-secure-apps-to-oauth",
+    "https://knowledge.workspace.google.com/admin/users/add-or-delete-an-alternate-email-address-email-alias",
+    "https://support.google.com/a/answer/7281227",
+    "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
+    "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
+    "apps/web/src/lib/inboxes/send-as.ts (Send As addresses for IMAP inboxes, including Gmail and Google Workspace by app password, verified by a code emailed to the address)"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "アプリ パスワード",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "独自ドメインのアドレス全体（例: info@yourcompany.com）。アプリ パスワードはアカウントのパスワードの代わりに使います。アカウントのパスワードでは接続できません。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Google WorkspaceのメールをClaude、ChatGPT、MCPクライアントに接続する",
+    "description": "独自ドメインのGoogle WorkspaceメールボックスをClaude、ChatGPT、CursorなどのMCPクライアントに接続。アプリ パスワードでIMAP接続、それを左右する管理者設定、そして会社の全メールボックスを1つのエージェントで。"
+  },
+  "hero": {
+    "eyebrow": "Google Workspace + AI",
+    "titleLine1": "Google WorkspaceをClaudeに接続、",
+    "titleLine2": "そしてChatGPT、Cursor、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに、独自ドメインのGoogle Workspaceにある会社のメールボックスを渡せます。自分のもの、sales@、support@、その他すべて。アプリ パスワードを使ったIMAPでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じメールボックスが1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Googleのアプリ パスワードで接続",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "独自ドメインのGoogle Workspaceメールボックスは中身がGmailのメールボックスなので、MCPEmailsにはGmailと同じ方法で接続します。Googleのアプリ パスワードを使い、imap.gmail.comとsmtp.gmail.comでIMAPとSMTP接続します。MCPEmailsはホスト型のMCPサーバーなので、メールボックスを接続すればClaude、ChatGPT、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。アプリ パスワードが使えるか、IMAPが許可されているかは、Workspace管理者の設定が決めます。"
+  },
+  "method": {
+    "title": "Google Workspaceの接続方法: IMAPでのアプリ パスワード",
+    "body": "IMAPフォームにアドレスを入力すると、MCPEmailsはドメインのMXレコードを読みます。メールがGoogle（<code>aspmx.l.google.com</code>または<code>smtp.google.com</code>）に向いているドメインはGoogle Workspaceとして認識され、フォームは<b>imap.gmail.com</b>の993と<b>smtp.gmail.com</b>の465を埋め、アプリ パスワードが必要だと表示します。Gmailのカードを選んでも同じです。Googleは2025年にWorkspaceアプリのパスワードによるログインを、アプリ パスワードを例外として無効にしたので、アカウントのパスワードはここでは決して使えません。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Googleのアプリ パスワードを作成する",
+      "p": "接続したいメールボックスでログインした状態で、2 段階認証プロセスがまだ有効でなければ有効にし、myaccount.google.com/apppasswordsでアプリ パスワードを作成します。項目がなければ、管理者の設定が原因である可能性が高いです（下記参照）。"
+    },
+    {
+      "h": "MCPEmailsに貼り付ける",
+      "p": "「IMAP / SMTP」またはGmailを選び、独自ドメインのアドレス全体を入力し、16文字のアプリ パスワードを貼り付けます。ホストはドメインから自動で埋まります。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、ChatGPT、Cursorに貼り付けて認可すれば、エージェントがメールボックスを使えるようになります。届かせたい会社のメールボックスごとに、アプリ パスワードの手順を繰り返してください。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Workspaceアカウントではアプリ パスワードの項目がないことがあります",
+      "p": "Googleは2 段階認証プロセスが有効なアカウントにしかアプリ パスワードを提供せず、それでも項目が表示されない理由としてGoogle自身のヘルプページは3つを挙げています。2 段階認証プロセスを<b>セキュリティ キーだけ</b>で設定している、<b>高度な保護機能</b>が有効、または設定で許可されていない<b>仕事用、学校用、その他の組織のアカウント</b>にログインしている。最後のものは管理者の判断で、メールボックス内の設定では変えられません。管理者に、あなたのアカウントでアプリ パスワードを許可するよう依頼してください。"
+    },
+    {
+      "h": "IMAPを有効にするのはあなたではなく管理者です",
+      "p": "Google Workspaceでは、ユーザーは自分のGmail設定でIMAPを有効にも無効にもできません。管理者がGoogle管理コンソールの<b>アプリ、Google Workspace、Gmail、エンドユーザー アクセス</b>にある<b>POP と IMAP アクセス</b>セクションで、全員または組織部門ごとに設定します。そこにある2つの設定がアプリ パスワードが使えるかどうかを決めます。あなたの組織部門でIMAPが有効であること、そして管理者が<b>任意のメール クライアントの使用を許可します</b>を選んでいることです。IMAPを指定のOAuthメールクライアントだけに制限していると、アプリ パスワードでのログインはどれだけ正しくても拒否されます。"
+    },
+    {
+      "h": "エイリアスはメールボックスではなく、グループも同様です",
+      "p": "Workspaceでは管理者が1人のユーザーに最大30個のエイリアスを追加でき、エイリアス宛のメールはそのユーザー自身の受信トレイに届きます。エイリアスに独自のログインはないので、所属するユーザーを接続すればエイリアスのメールはすでにそこにあります。Googleグループのアドレス（メーリングリストや共同受信トレイ）もログインできるアカウントではないので、接続するためのアプリ パスワードがありません。メンバーのメールボックスを接続してください。接続できるのは実在するユーザーのメールボックスだけで、それぞれに独自のアプリ パスワードがあり、それぞれが接続済み受信トレイ1つとして数えられます。"
+    },
+    {
+      "h": "エイリアスからの返信は、エイリアスを確認すれば動きます",
+      "p": "アプリ パスワードでは、メールボックスは既定で自分のアドレスから送信します。エイリアス、たとえばGmailの<b>他のメール アドレスを追加</b>（Send mail as）で設定したアドレスから返信するには、MCPEmailsの受信トレイ設定にある<b>Send Asアドレス</b>に追加してください。エイリアスに6桁のコードをメールで送り、入力するとエージェントがそのアドレスから送信できるようになります。メールボックス自身のアドレスでも確認済みのSend Asアドレスでもないアドレスは拒否され、黙って書き換えられることはありません。"
+    }
+  ],
+  "limits": [
+    "MCPEmailsが触れるのはメールだけです。アプリ パスワードはIMAPとSMTPにしか使いません。Drive、カレンダー、Chat、ドキュメントには届きません。",
+    "Google Workspaceの管理者はこの経路を閉じられます。アカウントでアプリ パスワードが使えないこともあれば、IMAPが無効または指定のOAuthクライアントに限定されていることもあります。それらの設定を変えられるのは管理者だけです。",
+    "Gmailが保存するのはフォルダーではなくラベルなので、移動は1つのラベルを付けて別のラベルを外すことで、削除はメッセージをGmailのゴミ箱に移動します。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはGoogle Workspaceのメールで使えますか？",
+      "a": "使えます。MCPEmailsのようなMCPサーバーがメールボックスを接続すればです。独自ドメインのWorkspaceメールボックスはgmail.comアドレスとまったく同じようにGoogleのアプリ パスワードでIMAP接続し、Claudeがそのメールの閲覧、検索、送信、返信、整理をできるようになります。同じ接続がChatGPT、Cursor、その他どのMCPクライアントでも使えます。"
+    },
+    {
+      "q": "Google WorkspaceのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはimap.gmail.comのポート993でSSL/TLS、SMTPはsmtp.gmail.comのポート465でSSL/TLSです。ユーザー名は独自ドメインのアドレス全体で、パスワードはGoogleのアプリ パスワードです。ドメインのMXレコードがGoogleを指していれば、MCPEmailsがこれらを自動で埋めます。"
+    },
+    {
+      "q": "Workspaceアカウントでアプリ パスワードを作成できないのはなぜですか？",
+      "a": "Googleは3つの理由を挙げています。2 段階認証プロセスをセキュリティ キーだけで設定している、アカウントに高度な保護機能が有効、または設定でアプリ パスワードが許可されていない仕事用、学校用、組織のアカウントである。最初の2つは自分で変えられます。3つ目は管理者の判断です。"
+    },
+    {
+      "q": "正しいアプリ パスワードが拒否されるのはなぜですか？",
+      "a": "多くの場合、アカウントでIMAPが許可されていないからです。WorkspaceでIMAPを有効にできるのは管理者だけで、組織部門ごとに設定でき、指定のOAuthメールクライアントに制限することもできます。その場合アプリ パスワードでのログインは拒否されます。あなたの組織部門で「任意のメール クライアントの使用を許可します」を選んでIMAPを有効にするよう、管理者に依頼してください。"
+    },
+    {
+      "q": "同じWorkspaceのinfo@、sales@、support@を接続できますか？",
+      "a": "それぞれが実在するユーザーのメールボックスなら、できます。それぞれを独自のアプリ パスワードで接続すれば、エージェントは1つのMCP URLですべてに届きます。エイリアスやGoogleグループのアドレスは独立したメールボックスではないので、そのメールが配信されるユーザーのメールボックスを接続してください。"
+    },
+    {
+      "q": "私のGoogle Workspaceのメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにGoogleからその場で取得し、AIクライアントに渡します。アプリ パスワードは保存時に暗号化され、メッセージ本文は保持しません。Googleアカウントでアプリ パスワードを取り消すか、MCPEmailsで受信トレイを削除すれば、接続は終了します。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIに会社のGoogle Workspaceメールボックスを渡す",
+    "sub": "最初の1つは数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  },
+  "seeAlso": {
+    "intro": "個人の@gmail.comアドレスですか？",
+    "label": "Gmailを接続する",
+    "href": "/connect/gmail"
+  }
+}

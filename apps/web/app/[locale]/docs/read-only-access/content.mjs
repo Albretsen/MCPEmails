@@ -491,7 +491,157 @@ const de = {
   cta: { title: 'Postfach mit Nur-Lese-Zugriff verbinden', sub: 'Ein Postfach ist kostenlos, für immer.', button: 'Jetzt starten', providers: 'Unterstützte Anbieter' },
 };
 
-export const READ_ONLY_ACCESS = { en, nb, es, fr, zh, de };
+const pt = {
+  meta: {
+    title: 'Acesso somente leitura ao e-mail para agentes de IA',
+    description:
+      'O que uma conexão somente leitura do MCPEmails pode e não pode fazer, como alterações são recusadas pelo nosso servidor e pelo seu provedor de e-mail, por que ler nunca marca o e-mail como lido e o que acontece quando você conecta.',
+  },
+  breadcrumb: 'Acesso somente leitura',
+  eyebrow: 'Documentação',
+  title: 'Acesso somente leitura',
+  lead:
+    'Uma conexão somente leitura permite que uma IA leia e pesquise seus e-mails, e nada mais. Esta página mostra o que ela pode fazer, o que não pode e como cada limite é aplicado.',
+  sections: [
+    {
+      id: 'what',
+      h: 'O que uma conexão somente leitura pode fazer',
+      items: [
+        'Ela tem a permissão `read:email` e, opcionalmente, `search:email`, que não acrescenta nada além disso.',
+        'Ela pode listar, ler e pesquisar mensagens, baixar anexos e listar caixas de entrada e pastas.',
+        'Ela não pode enviar, responder, criar rascunhos, mover, sinalizar, marcar como lido, excluir, agendar nem criar automações.',
+      ],
+    },
+    {
+      id: 'choose',
+      h: 'Como escolher esse acesso',
+      items: [
+        'Quando você conecta um cliente de IA, a tela de consentimento oferece níveis de acesso. Escolha **Somente leitura** ("Lê e pesquisa seus e-mails. Não envia, altera nem exclui nada.") ou abra **Personalizar permissões** e conceda só leitura. Você também pode limitar a conexão a algumas das suas caixas de entrada.',
+        'O ChatGPT abre essa tela em **Acesso total**, porque não consegue voltar depois para pedir mais acesso. Selecione **Somente leitura** antes de clicar em **Permitir acesso**.',
+        'Chaves de API criadas no painel podem ser limitadas às mesmas permissões.',
+      ],
+    },
+    {
+      id: 'enforced',
+      h: 'Como os limites são aplicados',
+      items: [
+        'Cada chamada de ferramenta é verificada contra as permissões da conexão antes de entrarmos em contato com o seu servidor de e-mail. Uma chamada fora do que foi concedido é recusada com `insufficient_scope`.',
+        'Em caixas de correio IMAP, uma conexão somente leitura abre cada pasta com `EXAMINE`, a forma somente leitura de `SELECT`. Assim, o próprio provedor de e-mail recusa qualquer mudança de sinalização, movimentação ou exclusão nessa sessão, independentemente do que o nosso código faça.',
+        'As mensagens são buscadas com `BODY.PEEK`, então ler uma mensagem nunca a marca como lida. Isso vale para todas as conexões, não só as somente leitura.',
+        'A ferramenta de leitura nunca altera sua caixa de correio. A antiga opção `mark_as_read` foi removida; marcar como lido é uma ação separada que exige a permissão `manage:folders`.',
+        'Clientes de IA que entram com OAuth veem a lista completa de ferramentas, para poderem pedir mais acesso a você. Essas chamadas continuam falhando até você conceder o acesso.',
+      ],
+    },
+    {
+      id: 'connect',
+      h: 'O que acontece quando você conecta',
+      items: [
+        'Abrimos uma conexão TLS, verificamos o certificado do servidor, fazemos login uma vez para conferir sua senha ou senha de app e saímos.',
+        'Nada é baixado, copiado ou indexado. As mensagens são buscadas no seu provedor só quando uma ferramenta as solicita.',
+        'Só há trabalho em segundo plano para automações e envios agendados, e os dois exigem permissões de escrita que uma conexão somente leitura não tem.',
+        'Se você nunca quiser enviar a partir do endereço, escolha **Configurações avançadas** → **Tipo de conexão** → **Só receber (IMAP)** ao conectá-lo. Nenhum servidor SMTP é configurado ou contatado.',
+      ],
+    },
+    {
+      id: 'search',
+      h: 'Pesquisa em caixas de correio grandes',
+      items: [
+        'Em caixas de correio IMAP, a pesquisa roda no servidor do seu provedor com o `SEARCH` do IMAP. Baixamos só a página de resultados solicitada, com até 100 mensagens, e a IA percorre o restante página por página.',
+        'A pesquisa cobre a caixa de entrada, a menos que uma pasta seja indicada, porque pesquisar todas as pastas de uma conta grande é lento.',
+        'Cada pesquisa tem um limite de 30 segundos. Em uma caixa de correio com dezenas de milhares de mensagens, refine uma pesquisa ampla por remetente, assunto ou data.',
+      ],
+    },
+  ],
+  evidence: {
+    h: 'Confira você mesmo',
+    intro: 'O MCPEmails é de código aberto. Estes arquivos implementam e testam o que esta página descreve:',
+    labels: {
+      examine: 'EXAMINE para conexões somente leitura',
+      examineTests: 'Testes do EXAMINE, incluindo o provedor recusando uma mudança de sinalização',
+      scopes: 'A lista de permissões',
+      markAsRead: 'Remoção do mark_as_read da ferramenta de leitura',
+      peek: 'O cliente IMAP: toda busca de conteúdo usa BODY.PEEK',
+    },
+  },
+  cta: { title: 'Conecte uma caixa de correio em modo somente leitura', sub: 'Uma caixa de entrada é grátis, para sempre.', button: 'Começar', providers: 'Provedores compatíveis' },
+};
+
+const ja = {
+  meta: {
+    title: 'AIエージェント向けの読み取り専用メールアクセス',
+    description:
+      'MCPEmailsの読み取り専用接続でできること、できないこと。書き込みが当社のサーバーとメールプロバイダーの両方で拒否される仕組み、読んでも既読にならない理由、接続時に行われる処理を説明します。',
+  },
+  breadcrumb: '読み取り専用アクセス',
+  eyebrow: 'ドキュメント',
+  title: '読み取り専用アクセス',
+  lead:
+    '読み取り専用接続では、AIはメールの読み取りと検索だけを行えます。このページでは、できること、できないこと、そして各制限がどのように適用されるかを説明します。',
+  sections: [
+    {
+      id: 'what',
+      h: '読み取り専用接続でできること',
+      items: [
+        '`read:email` 権限を持ち、オプションで `search:email` も持ちます。`search:email` で追加される操作はありません。',
+        'メッセージの一覧表示、閲覧、検索、添付ファイルのダウンロード、受信トレイとフォルダーの一覧表示ができます。',
+        '送信、返信、下書きの作成、移動、フラグ付け、既読にする操作、削除、予約送信、自動化の作成はできません。',
+      ],
+    },
+    {
+      id: 'choose',
+      h: '選び方',
+      items: [
+        'AIクライアントを接続すると、同意画面でアクセスレベルを選べます。**読み取り専用**（「メールの読み取りと検索。送信、変更、削除はできません。」）を選ぶか、**権限を個別に設定**を開いて読み取りだけを許可してください。接続を一部の受信トレイに限定することもできます。',
+        'ChatGPTでは、この画面は**フルアクセス**が選択された状態で開きます。ChatGPTは後から追加のアクセスを求めることができないためです。**アクセスを許可**をクリックする前に**読み取り専用**を選んでください。',
+        'ダッシュボードで作成したAPIキーも、同じ権限に限定できます。',
+      ],
+    },
+    {
+      id: 'enforced',
+      h: '制限の適用方法',
+      items: [
+        'ツールの呼び出しはすべて、メールサーバーに接続する前に接続の権限と照合されます。許可された範囲外の呼び出しは `insufficient_scope` で拒否されます。',
+        'IMAPのメールボックスでは、読み取り専用接続は各フォルダーを `SELECT` の読み取り専用版である `EXAMINE` で開きます。そのため、当社のコードの動作にかかわらず、そのセッションでのフラグ変更、移動、削除はメールプロバイダー自身が拒否します。',
+        'メッセージは `BODY.PEEK` で取得するため、読んでも既読になりません。これは読み取り専用に限らず、すべての接続に当てはまります。',
+        '読み取りツールがメールボックスを変更することはありません。以前の `mark_as_read` オプションは削除されました。既読にする操作は別のアクションで、`manage:folders` 権限が必要です。',
+        'OAuthでログインするAIクライアントには、追加のアクセスを求められるよう、ツールの一覧がすべて表示されます。ただし、アクセスを許可するまで、それらの呼び出しは失敗します。',
+      ],
+    },
+    {
+      id: 'connect',
+      h: '接続時に行われること',
+      items: [
+        'TLS接続を開き、サーバーの証明書を検証し、パスワードまたはアプリ パスワードを確認するために一度ログインしてから、ログアウトします。',
+        'ダウンロード、コピー、インデックス作成は一切行いません。メッセージは、ツールが要求したときにだけプロバイダーから取得します。',
+        'バックグラウンドで動くのは自動化と予約送信だけで、どちらも読み取り専用接続にはない書き込み権限が必要です。',
+        'そのアドレスから送信することがない場合は、接続時に**詳細設定** → **接続の種類** → **受信のみ (IMAP)** を選んでください。SMTPサーバーの設定も接続も行われません。',
+      ],
+    },
+    {
+      id: 'search',
+      h: '大きなメールボックスの検索',
+      items: [
+        'IMAPのメールボックスでは、検索はIMAPの `SEARCH` を使ってプロバイダーのサーバー上で実行されます。ダウンロードするのは要求された結果の1ページ分（最大100件）だけで、残りはAIがページ単位で取得します。',
+        'フォルダーを指定しない限り、検索対象は受信トレイです。大きなアカウントのすべてのフォルダーを検索すると時間がかかるためです。',
+        '1回の検索には30秒の制限があります。数万件のメッセージがあるメールボックスでは、差出人、件名、日付で広い検索を絞り込んでください。',
+      ],
+    },
+  ],
+  evidence: {
+    h: 'ご自身で確認する',
+    intro: 'MCPEmailsはオープンソースです。このページで説明している内容は、次のファイルで実装とテストが行われています。',
+    labels: {
+      examine: '読み取り専用接続でのEXAMINE',
+      examineTests: 'EXAMINEのテスト（プロバイダーがフラグ変更を拒否するケースを含む）',
+      scopes: '権限の一覧',
+      markAsRead: '読み取りツールからのmark_as_readの削除',
+      peek: 'IMAPクライアント: 本文の取得にはすべてBODY.PEEKを使用',
+    },
+  },
+  cta: { title: 'メールボックスを読み取り専用で接続', sub: '受信トレイ1つは、ずっと無料です。', button: '始める', providers: '対応プロバイダー' },
+};
+
+export const READ_ONLY_ACCESS = { en, nb, es, fr, zh, de, pt, ja };
 
 export function readOnlyAccessCopy(locale) {
   return READ_ONLY_ACCESS[locale] ?? en;

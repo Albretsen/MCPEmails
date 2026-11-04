@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://manual.raycast.com/ai/model-context-protocol"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Raycast AI: configuração do servidor MCP",
+    "description": "Adicione uma caixa de entrada real ao Raycast AI. Instale o MCP Server, defina o transporte como HTTP, cole uma URL e faça login. Sem chave de API. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Raycast + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Raycast AI",
+    "titleLine2": "pela barra de comandos",
+    "lead": "Faça triagem, pesquise e envie e-mails pelo launcher que você já usa. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails em todas as caixas de entrada que você conectou.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Rode o comando Install MCP Server no Raycast, defina Transport como HTTP, cole https://mcpemails.com/api/mcp, instale e depois clique em Sign In para autorizar com o MCPEmails."
+  },
+  "method": {
+    "title": "Como o Raycast se conecta: OAuth, sem chave de API",
+    "body": "O Raycast executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Rode Install MCP Server",
+      "p": "Rode o comando <b>Install MCP Server</b>, ou <b>Manage MCP Servers</b> se você já tiver algum."
+    },
+    {
+      "h": "Informe o servidor",
+      "p": "Digite um nome, defina Transport como <b>HTTP</b> e cole <code>https://mcpemails.com/api/mcp</code>."
+    },
+    {
+      "h": "Instale e faça login",
+      "p": "Pressione <b>Install MCP Server</b> e depois clique em <b>Sign In</b> para autorizar com o MCPEmails. Aprove os escopos que você quer que o Raycast tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sign In é um passo separado do Install",
+      "p": "Instalar o servidor e autorizá-lo são duas ações no Raycast, e o servidor já aparece na lista depois da primeira. Um servidor recém-instalado mas não autorizado gera chamadas de ferramenta que falham com 401, o que parece um servidor quebrado e não uma configuração incompleta. Clique em Sign In."
+    },
+    {
+      "h": "Um launcher é rápido, e isso tem dois lados",
+      "p": "A graça do Raycast é que uma ação acontece duas teclas depois do pensamento. Isso é ótimo para pesquisa e triagem, e é por isso que o envio merece uma segunda olhada aqui mais do que num cliente mais lento. Deixe <code>send:email</code> fora desta conexão, ou ative a aprovação humana para que um envio espere por uma pessoa."
+    },
+    {
+      "h": "Nada chega sozinho",
+      "p": "O servidor funciona só com solicitação e resposta, sem webhooks e sem push. O Raycast vê os e-mails quando você pede que ele olhe, o que combina com um launcher: você abre, pergunta e recebe uma resposta. Mas isso significa que ele não é um notificador, e um \"me avise quando X chegar\" permanente não é algo que a conexão consiga fazer."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Raycast?",
+      "a": "Rode o comando Install MCP Server, defina Transport como HTTP, cole https://mcpemails.com/api/mcp, instale, depois clique em Sign In e autorize com o MCPEmails. O Raycast AI passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Raycast?",
+      "a": "Não. O Raycast executa o fluxo OAuth pela ação Sign In, então nada secreto é digitado no comando. Uma chave bearer está disponível para outros clientes que não conseguem fazer isso."
+    },
+    {
+      "q": "Quais caixas de correio o Raycast alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Raycast pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Leve sua caixa de entrada para a barra de comandos",
+    "sub": "Um servidor, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

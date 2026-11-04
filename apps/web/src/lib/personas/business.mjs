@@ -11,7 +11,7 @@
  */
 export const BUSINESS_PATH = '/for/business';
 
-export const BUSINESS_LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de'];
+export const BUSINESS_LOCALES = ['en', 'es', 'fr', 'nb', 'zh', 'de', 'pt', 'ja'];
 
 export async function getBusinessCopy(locale) {
   const safe = BUSINESS_LOCALES.includes(locale) ? locale : 'en';

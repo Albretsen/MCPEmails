@@ -2,6 +2,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { localePath, OG_LOCALE, APP_URL } from '@/i18n/seo';
 import { routing } from '@/i18n/routing';
+import { languageTag } from '@/i18n/locale-policy.mjs';
 import { getAllPosts, getPost, getPostLocales, getLocalizedPost, getAuthor } from '@/lib/blog/posts';
 import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
 import { localizeHref } from '@/lib/blog/links.mjs';
@@ -34,7 +35,7 @@ function postLocales(slug) {
  */
 function buildAlternates(post, locale, path) {
   const languages = {};
-  for (const l of post.locales) languages[l] = localePath(l, path);
+  for (const l of post.locales) languages[languageTag(l)] = localePath(l, path);
   languages['x-default'] = localePath('en', path);
   const canonicalLocale = post.translated ? locale : 'en';
   return { canonical: localePath(canonicalLocale, path), languages, canonicalLocale };

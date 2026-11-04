@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.zoho.com/mail/help/imap-access.html",
+    "https://www.zoho.com/mail/help/zoho-smtp.html",
+    "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Zohoのパスワード、または2段階認証やSSOの場合はアプリケーション固有のパスワード",
+    "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
+    "usernameForm": "ドメインを含むZohoアドレス全体（独自ドメインならname@yourdomain.com、無料の個人アカウントならname@zohomail.com）。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Zoho MailをClaude、Cursor、MCPクライアントに接続",
+    "description": "Zoho MailをIMAP（imap.zoho.com:993）でClaude、CursorなどあらゆるMCPクライアントに接続します。IMAPは初期状態でオフになっており、ホスト名はZohoのデータセンターによって変わります。"
+  },
+  "hero": {
+    "eyebrow": "Zoho Mail + AI",
+    "titleLine1": "Zoho MailをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のZoho受信トレイを数分で渡せます。IMAPとZohoのパスワード（またはアプリケーション固有のパスワード）でメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "アカウントまたはアプリのパスワードで接続、OAuth設定は不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "ClaudeはそのままではZoho Mailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、imap.zoho.comのポート993にIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。事前に確認すべき点が2つあります。新しいZohoメールボックスではIMAPアクセスが有効にするまでオフになっていること、そしてホスト名がZohoのデータセンターによって変わるため、EUやインドで作成したアカウントでは別のホスト名を使うことです。受信トレイ1つはずっと無料です。"
+  },
+  "method": {
+    "title": "Zohoの接続方法: IMAPとパスワード",
+    "body": "Zoho MailはIMAP/SMTPで接続します。まずZohoでIMAPアクセスを有効にし（初期状態ではオフです）、ZohoのアドレスとパスワードをMCPEmailsに貼り付けます。2段階認証、フェデレーションログイン、SAMLを使っている場合は、アプリケーション固有のパスワードを作成してそちらを使ってください。MCPEmailsはZohoのすべてのデータセンター地域に対応しています。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランで受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "IMAPを有効にし、必要ならアプリ パスワードを作成",
+      "p": "Zoho MailでIMAPアクセスをオンにします（Settings、Mail Accounts、IMAP Access）。2段階認証、フェデレーションログイン、SAMLを使っている場合は、Zoho AccountのSecurityでアプリケーション固有のパスワードを作成します。"
+    },
+    {
+      "h": "MCPEmailsに貼り付け",
+      "p": "Zohoのアドレスとパスワードを入力し、求められたらZohoの地域を選んで、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Zohoには6つのデータセンターがあり、ホスト名は登録したデータセンターで決まります",
+      "p": "Zohoは地域ごとに別々のデータセンターを運営しており、<code>zoho.com</code>、<code>zoho.eu</code>、<code>zoho.in</code>、<code>zoho.com.au</code>、<code>zoho.jp</code>、<code>zohocloud.ca</code>でアクセスします。あるデータセンターで作成したメールボックスには、別のデータセンターのホスト名では接続できません。このページの表の設定は米国のものです。5秒でできる確認方法: mail.zoho.comにログインし、アドレスバーがどう変わるかを見てください。<code>zoho.eu</code>になれば、IMAPとSMTPのホストも<code>.eu</code>で終わります。ZohoはSettings、Mail AccountsのServer Configuration Details（サーバー設定の詳細）に、そのアカウント用の正確なホストの組み合わせも表示しています。<b>地域の不一致はZoho接続が失敗する最も多い原因</b>で、サーバー違いのエラーではなく認証エラーとして表示されます。そのため、原因にたどり着くまでにパスワードを4回リセットしてしまう人が少なくありません。"
+    },
+    {
+      "h": "IMAPは誰かがオンにするまでオフのままで、設定はメールボックスごとです",
+      "p": "ZohoのメールボックスはIMAPアクセスが無効の状態で提供されます。Settings、Mail Accountsの順に開いてアドレスをクリックし、<b>IMAP Access</b>にチェックを入れて保存すると有効になります。つまずきやすい点が2つあります。設定はメールボックスごとなので、自分のアドレスで有効にしても同僚のアドレスには反映されません。また、有効にするまでZohoはログインをそのまま拒否し、その失敗はパスワード間違いと見分けがつきません。"
+    },
+    {
+      "h": "Zohoの無料アカウントと有料アカウントでは、案内されているホスト名が異なります",
+      "p": "Zohoの設定ページでは、個人および無料アカウントには<code>imap.zoho.com</code>と<code>smtp.zoho.com</code>、有料の組織アカウントには<code>imappro.zoho.com</code>と<code>smtppro.zoho.com</code>が記載されており、どちらにも上記の地域ごとのドメイン末尾のルールが加わります。このページで確認したホストは<code>imap.zoho.com</code>です。有料プランの独自ドメインのアドレスを使っている場合は、汎用のホスト名を前提にせず、Server Configuration Detailsに表示される組み合わせを使ってください。それがお使いのアカウントにとって確実な答えです。"
+    },
+    {
+      "h": "SPECIAL-USEもAUTH=LOGINもありません",
+      "p": "ZohoのIMAPサーバーは<code>MOVE</code>、<code>UIDPLUS</code>、<code>IDLE</code>、<code>SASL-IR</code>を通知しているので、移動はアトミックに行われ、認証も1往復で済みます。一方で<code>SPECIAL-USE</code>は通知していないため、送信済み、下書き、ごみ箱、迷惑メールは役割ではなく名前で照合されます。システムフォルダーの名前を変えたり、英語以外の画面でメールボックスを作成したりすると、「Sent」を探すエージェントは、フォルダー名を明示しない限りそれを見つけられません。認証方式も少なく、<code>AUTH=PLAIN</code>と<code>AUTH=XOAUTH2</code>だけで<code>AUTH=LOGIN</code>はありません。そのため、LOGIN方式に固定されたクライアントは、正しいパスワードを持っていても認証の段階で失敗します。"
+    }
+  ],
+  "limits": [
+    "Zohoの送信サーバーが公表しているメッセージサイズの上限は約31 MBで、一般向けの多くのプロバイダーより小さめです。",
+    "IMAPは各Zohoメールボックスで、そのメールボックス自身の設定から有効にする必要があります。外部から代わりにオンにすることはできません。",
+    "2段階認証、フェデレーションログイン、SAMLを使っているアカウントでは、アプリケーション固有のパスワードが必要です。通常のアカウントのパスワードでは認証できません。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはZoho Mailで使えますか？",
+      "a": "そのままでは使えません。ClaudeにはZoho用のコネクタが組み込まれていません。MCPEmailsのようなMCPサーバーをZohoのメールボックスにIMAPで接続すると、Claudeからメールの閲覧、検索、送信、返信、予約送信、整理ができるようになり、同じ接続をCursor、ChatGPTなどのMCPクライアントからも使えます。先にメールボックスでIMAPアクセスを有効にしておく必要があります。"
+    },
+    {
+      "q": "Zoho MailのIMAPとSMTPの設定は？",
+      "a": "米国の無料アカウントの場合、IMAPはimap.zoho.com、ポート993、暗黙的TLS、SMTPはsmtp.zoho.com、ポート465で、こちらも暗黙的TLSです。どちらも実際のTLS接続で確認しています。有料の組織アカウントにはimappro、smtpproのホスト名が案内されており、地域のデータセンターごとにドメインの末尾が変わります。ユーザー名はアドレス全体です。"
+    },
+    {
+      "q": "自分のアカウントはどのZohoデータセンターにありますか？",
+      "a": "mail.zoho.comにログインし、ブラウザーの移動先を確認してください。zoho.eu、zoho.in、zoho.com.au、zoho.jp、zohocloud.caへリダイレクトされれば、それが地域で、メールのホスト名にも同じ末尾が付きます。正確に知りたい場合は、Settings、Mail Accountsの順に開いてServer Configuration Detailsを確認してください。Zohoがクライアントに使ってほしいホストとポートが表示されています。"
+    },
+    {
+      "q": "Zohoのパスワードが拒否されるのはなぜですか？",
+      "a": "原因は3つあり、次の順に確認してください。Settings、Mail AccountsでそのメールボックスのIMAPアクセスが有効になっていない。ホスト名が、アカウントのあるZohoデータセンターとは別のものになっている。あるいは、アカウントで2段階認証、フェデレーションログイン、SAMLを使っており、Zohoが通常のパスワードではなくアプリケーション固有のパスワードを求めている。"
+    },
+    {
+      "q": "Zohoの独自ドメインやZoho Workplaceでも使えますか？",
+      "a": "はい。独自ドメインのメールボックスも、IMAPアクセスを有効にすれば同じ方法で接続でき、ユーザー名はアドレス全体です。有料の組織アカウントや米国以外の地域ではホスト名が変わるため、汎用の手順ではなく、そのアカウント内のServer Configuration Detailsに表示されるホスト名を使ってください。"
+    },
+    {
+      "q": "Zohoのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにZohoからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文は保持しません。Zohoでアプリケーション固有のパスワードを取り消すか、IMAPアクセスをオフに戻せば、メールボックスはすぐに切断されます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにZohoの受信トレイを",
+    "sub": "Zoho Mailを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

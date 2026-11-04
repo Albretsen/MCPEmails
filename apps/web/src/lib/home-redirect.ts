@@ -15,7 +15,7 @@
  */
 
 /** Locale prefixes the homepage is served under (en has none). */
-const HOME_LOCALES = ['nb', 'es', 'fr', 'zh', 'de'];
+const HOME_LOCALES = ['nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'];
 
 /**
  * Query parameters that mean the homepage is part of a flow and has to load

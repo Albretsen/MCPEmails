@@ -36,7 +36,7 @@ const messagesDir = path.join(webDir, 'messages');
 const ALLOWED = [
   /<code>[\s\S]*?<\/code>/g, // code samples and literal values
   /\\?`[^`\n]*\\?`/g, // inline code in markdown
-  /\bhttps?:\/\/\S+/g, // URLs
+  /\bhttps?:\/\/[^\s\u0080-\uffff]+/g, // URLs (ending at Japanese text, which follows a URL with no space)
   /[\w.+-]*@?(?:www\.)?mcpemails\.com\b/g, // the domain and addresses on it
   /\bcom\.mcpemails\/[\w-]+/g, // MCP registry id / _meta keys
   /\bnpx -y mcpemails\b/g, // npm package

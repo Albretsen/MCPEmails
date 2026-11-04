@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "n8nにメールを接続: AI Agent用のMCP Client Tool",
+    "description": "MCP Client Toolノードでn8nのAI Agentにメールを接続します。HTTP Streamable、Bearer Auth、スコープを絞ったAPIキーで、メールの閲覧、検索、下書き作成、送信ができます。"
+  },
+  "hero": {
+    "eyebrow": "n8n + メール",
+    "titleLine1": "受信トレイをn8nに接続",
+    "titleLine2": "MCP Client Toolで",
+    "lead": "n8nワークフローのAI Agentに本物のメールボックスを渡せます。1つのMCPエンドポイントを通じて、メールの閲覧、検索、下書き作成、送信、返信、転送、整理ができ、キーのスコープはワークフローに必要な操作だけに絞れます。",
+    "meta0": "標準のMCP Client Toolノードで動作",
+    "meta1": "スコープを絞ったAPIキー、ワンクリックで無効化",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "n8nのワークフローで、AI AgentのTool入力にMCP Client Toolノードを追加します。Endpointをhttps://mcpemails.com/api/mcp、Server TransportをHTTP Streamable、AuthenticationをBearer Authに設定し、MCPEmailsのダッシュボードで作成したAPIキーをBearer Tokenに貼り付けます。"
+  },
+  "method": {
+    "title": "n8nの接続方法: スコープを絞ったキーを入れたBearer Auth認証情報",
+    "body": "MCP Client Toolノードは、接続した認証情報をそのまま送信します。このガイドではn8nの<b>Bearer Auth</b>認証情報を使います。これはすべてのリクエストの<code>Authorization</code>ヘッダーにキーを付けるものです。キーはダッシュボードで作成し、ワークフローに必要なスコープだけにチェックを入れてください。ワークフローは誰も見ていないところでスケジュール実行されることが多いので、このスコープが重要な境界になります。キーによる接続とOAuthによる接続は同じエンドポイントにアクセスし、同じツール一覧を受け取ります。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。"
+    },
+    {
+      "h": "スコープを絞ったAPIキーを作成",
+      "p": "ダッシュボードの「APIキー」で「キーを作成」をクリックします。ワークフローの名前を付け、必要なスコープだけにチェックを入れます: <code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、一度しか表示されないので、ダイアログを閉じる前にコピーしてください。"
+    },
+    {
+      "h": "AI AgentにMCP Client Toolを追加",
+      "p": "ワークフローを開き、AI Agentノードの<b>Tool</b>入力の下にあるプラスをクリックして<b>MCP Client Tool</b>を選びます。<b>Endpoint</b>に<code>https://mcpemails.com/api/mcp</code>を貼り付け、<b>Server Transport</b>を<b>HTTP Streamable</b>に設定します。"
+    },
+    {
+      "h": "Bearer Auth認証情報を接続",
+      "p": "<b>Authentication</b>を<b>Bearer Auth</b>に設定し、新しい認証情報を作成して、<b>Bearer Token</b>にキーを貼り付けます。前には何も付けません。<b>Tools to Include</b>はAllのままにするか、Selectedに切り替えてこのワークフローに見せるツールだけを選びます。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "キーはBearerという単語を付けずに貼り付ける",
+      "p": "n8nのBearer Auth認証情報は、<code>Bearer</code>と半角スペースを自動で付けます。自分で入力すると単語が2回送られ、呼び出しは401で失敗します。代わりに<b>Header Auth</b>を使う場合は逆で、Nameを<code>Authorization</code>、Valueを<code>Bearer</code>、半角スペース、キーの順にします。"
+    },
+    {
+      "h": "SSE Endpointという項目があれば古いノード",
+      "p": "MCP Client Toolノードのバージョン1には<b>SSE Endpoint</b>の項目が1つだけあり、トランスポートは選べませんでした。現在のバージョンでは<b>Endpoint</b>と<b>Server Transport</b>が表示されます。このサーバーはStreamable HTTPを使うので、SSE Endpointしか表示されない場合は新しいノードを追加するか、n8nを更新してください。Server TransportがServer Sent Events (Deprecated)になっている場合は、HTTP Streamableに切り替えてください。"
+    },
+    {
+      "h": "タイムアウトは既定値のままに",
+      "p": "ノードはツール呼び出しを60,000 ms待ちます。これはOptionsの<b>Timeout</b>で設定します。大量の処理でもこれで足ります。大きなフォルダーにまたがる移動や削除は、それより前にサーバー側の制限時間で止まり、<code>partial</code>と記された結果を返します。未処理のメッセージは<code>remaining_message_ids</code>に列挙されるので、エージェントはそのIDで再度呼び出せます。Timeoutを大幅に短くすると、その結果が届く前に呼び出しが打ち切られ、エージェントは何が処理されたのかわからなくなります。"
+    },
+    {
+      "h": "Tools to Includeはツールを隠すだけ、禁止するのはキーのスコープ",
+      "p": "サーバーはキーのスコープ外のツールを<code>tools/list</code>から除外するため、ノードに表示されるのは常にキーのスコープ内のツールだけです。Tools to Includeで一部を選ぶとさらに絞り込まれ、モデルが選びやすくなりますが、キーにできることは変わりません。境界はキーで設定し、Tools to Includeはエージェントの焦点を絞るために使ってください。"
+    }
+  ],
+  "limits": [
+    "リクエストにはキーごとに、プランに応じた1分、1時間、1日単位のレート制限があります。1つのキーでプランの1分あたりの上限をすべて使え、複数のキーではそれを分け合います。多くのアイテムをループ処理するワークフローは、Retry-Afterに従ってペースを調整してください。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがワークフローを自動で開始することはありません。届いたメールに反応するには、Schedule Triggerでワークフローを開始し、エージェントに未読メッセージを確認させてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "n8nのAI Agentにメールを接続するには？",
+      "a": "AI AgentのTool入力にMCP Client Toolノードを追加します。Endpointをhttps://mcpemails.com/api/mcp、Server TransportをHTTP Streamableに設定し、Bearer Authを選んで、ダッシュボードの「APIキー」で作成したAPIキーをBearer Tokenに貼り付けます。これでエージェントに、メールの閲覧、検索、下書き作成、送信、返信、転送、整理、予約送信のツールが加わります。"
+    },
+    {
+      "q": "AI Agentを使わずにメールのツールを呼び出せますか？",
+      "a": "はい。n8nの単体のMCP Clientノードは、1つのMCPツールを通常のワークフローのステップとして実行し、何を呼び出すかをモデルが決めることはありません。MCP Endpoint URLを同じアドレスにし、同じBearer Auth認証情報を接続して、ツールを選びパラメーターを入力します。たとえばemail_readで、actionをlist、unreadをtrueにします。手順が変わらない固定のパイプラインに向いています。"
+    },
+    {
+      "q": "MCP OAuth2の認証情報ではなくBearer Authを使うのはなぜですか？",
+      "a": "n8nにはMCP OAuth2の認証情報もあります。このガイドでBearer Authを使うのは、キーのスコープが作成時に固定され、ダッシュボードで確認できるためです。無人で動くワークフローでは、そのほうが把握しやすくなります。ダッシュボードの「APIキー」でキーを無効化すれば、ワークフローは次の呼び出しで止まります。"
+    },
+    {
+      "q": "ワークフローが誰の確認もなくメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないキーでは一切送信できません。ダッシュボードで受信トレイの承認をオンにすることもできます。その場合、送信、返信、転送、下書きの送信、予約送信は保留され、エージェントには保留中の結果が返り、何かが送信される前にワークスペースのメンバーが1件ずつ承認または却下します。"
+    },
+    {
+      "q": "n8nのワークフローが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。複数の受信トレイを接続している場合、エージェントはinbox_listを呼び出してそれぞれのIDを取得するので、ワークフローにUUIDをハードコードする必要はありません。"
+    },
+    {
+      "q": "メールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。すべてのメッセージは、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままn8nに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに終わります。"
+    }
+  ],
+  "ctaBand": {
+    "title": "n8nのエージェントに本物の受信トレイを",
+    "sub": "エンドポイント1つ、Bearer Auth認証情報1つ、スコープを絞ったキー1つ。カード登録は不要です。"
+  }
+}

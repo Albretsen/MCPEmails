@@ -1,5 +1,5 @@
-// Copy for /docs/microsoft-365-admin-consent. English is here; nb, es, fr and
-// de are in content.<locale>.mjs with the same shape. zh falls back to
+// Copy for /docs/microsoft-365-admin-consent. English is here; nb, es, fr, de,
+// pt and ja are in content.<locale>.mjs with the same shape. zh falls back to
 // English (zh is frozen, src/i18n/locale-policy.mjs).
 //
 // Kept next to the page rather than in messages/: a messages/ namespace is
@@ -35,6 +35,8 @@ import nb from './content.nb.mjs';
 import es from './content.es.mjs';
 import fr from './content.fr.mjs';
 import de from './content.de.mjs';
+import pt from './content.pt.mjs';
+import ja from './content.ja.mjs';
 
 const REPO = 'https://github.com/Albretsen/MCPEmails/blob/main';
 
@@ -148,7 +150,7 @@ const en = {
   },
 };
 
-export const ADMIN_CONSENT = { en, nb, es, fr, de };
+export const ADMIN_CONSENT = { en, nb, es, fr, de, pt, ja };
 
 export function adminConsentCopy(locale) {
   return ADMIN_CONSENT[locale] ?? en;

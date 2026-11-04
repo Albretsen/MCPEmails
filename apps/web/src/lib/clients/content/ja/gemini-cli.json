@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+  ],
+  "meta": {
+    "title": "Gemini CLIにメールを接続: httpUrlでMCPを設定",
+    "description": "Gemini CLIに本物の受信トレイを追加できます。settings.jsonにhttpUrlのエントリを1つ書けば、CLIがOAuthを検出してブラウザーでの認証を開始します。受信トレイ1つは無料。"
+  },
+  "hero": {
+    "eyebrow": "Gemini CLI + メール",
+    "titleLine1": "受信トレイをGemini CLIに接続",
+    "titleLine2": "設定エントリ1つで",
+    "lead": "Gemini CLIに本物のメールボックスを渡せます。ターミナルから、接続済みのすべての受信トレイでメールの閲覧、検索、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "OAuthを自動で検出",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "~/.gemini/settings.jsonのmcpServersに、httpUrlフィールドでhttps://mcpemails.com/api/mcpを指定したエントリを1つ追加します。初回接続時にCLIがOAuthのメタデータを検出し、ブラウザーでの認証を自動で開始します。または、gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcpを実行し、/mcp auth mcpemailsでログインします。"
+  },
+  "method": {
+    "title": "Gemini CLIの接続方法: OAuth、APIキー不要",
+    "body": "Gemini CLIはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "settings.jsonを開く",
+      "p": "すべてのプロジェクトで使うなら<code>~/.gemini/settings.json</code>を、1つのプロジェクトだけなら<code>.gemini/settings.json</code>を編集します。"
+    },
+    {
+      "h": "サーバーを追加",
+      "p": "下のエントリを<code>mcpServers</code>の中に追加します。ここでStreamable HTTPサーバーを指定するフィールドは<code>httpUrl</code>です。または<code>gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcp</code>の1行で追加することもできます。"
+    },
+    {
+      "h": "接続",
+      "p": "初回接続時に、CLIがサーバーのメタデータからOAuthを自動で検出し、ブラウザーでの認証を開始します。CLIに持たせたいスコープを承認してください。ログインはCLI内で<code>/mcp auth mcpemails</code>を実行すれば、いつでもできます。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "httpUrlはurlとは別のフィールドで、違いはトランスポート",
+      "p": "Gemini CLIの設定では、<code>httpUrl</code>はStreamable HTTPサーバーを意味し、このサーバーはそれにあたります。同じオブジェクト内の他のキーは別のトランスポートを選びます。<code>url</code>を使うCursor向けガイドからコピーしたスニペットでは、ここで動くStreamable HTTP接続にはなりません。"
+    },
+    {
+      "h": "設定不要にしているのはディスカバリーで、それは401から始まる",
+      "p": "CLIに認証先を教える必要はありません。認証なしの呼び出しには401が返り、その<code>WWW-Authenticate</code>ヘッダーが保護リソースのメタデータを指します。そのメタデータが認可サーバーを示し、認可サーバーのメタデータが登録、認可、トークンの各エンドポイントを示します。この連鎖のおかげで、クライアントIDの作成は不要で、URL以外に貼り付けるものもありません。"
+    },
+    {
+      "h": "共有マシンやヘッドレスマシンのCLIでは、キーを使う方法を",
+      "p": "ブラウザーでの認証にはブラウザーが必要です。ビルドエージェントや共有マシンでは、その自動処理に必要な範囲だけにスコープを絞ったBearer APIキーを、コミットする設定ファイルではなく環境変数に置くのが適切な設定です。"
+    },
+    {
+      "h": "無料版とGoogle OneのアカウントはAntigravity CLIに移行",
+      "p": "2026年6月18日以降、Googleは無料ティアとGoogle OneのアカウントをGemini CLIからAntigravity CLIに移しました。Antigravity CLIでは<code>/mcp</code>と入力してMCPマネージャーを開くか、<code>serverUrl</code>フィールドを使って<code>mcp_config.json</code>にサーバーを追加します。"
+    }
+  ],
+  "limits": [
+    "リクエストにはキーごとに、プランに応じた1分、1時間、1日単位のレート制限があります。429レスポンスにはRetry-Afterが付きます。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "Gemini CLIにメールを接続するには？",
+      "a": "~/.gemini/settings.jsonのmcpServersに、httpUrlをhttps://mcpemails.com/api/mcpとしたエントリを追加します。初回接続時にCLIがサーバーのメタデータからOAuthを検出し、ブラウザーでの認証を開始します。これで、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールが使えるようになります。"
+    },
+    {
+      "q": "urlとhttpUrlのどちらを使えばよいですか？",
+      "a": "httpUrlです。Gemini CLIの設定ではこのキーがStreamable HTTPトランスポートを選び、このサーバーが使うのはそのトランスポートです。他のクライアントからurlのエントリをコピーすると、サーバーは一覧に表示されてもツールが現れない、というのがよくある原因です。"
+    },
+    {
+      "q": "Googleが公開しているGmail MCPサーバーと同じものですか？",
+      "a": "いいえ。Googleは他のサービスと並んでGmailも扱うWorkspace MCPサーバーを公開しており、GoogleだけのワークフローでGmailのみを使うなら、そちらのほうが手早く済みます。MCPEmailsは、メールボックスがすべてGoogleとは限らず、同じURLをClaude、Cursor、ChatGPTでも使う必要がある場合のためのものです。"
+    },
+    {
+      "q": "この方法でGemini CLIが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。クライアントはこれらすべてを同じ接続で扱います。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Gemini CLIが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないキーやトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Gemini CLIに本物の受信トレイを",
+    "sub": "設定エントリ1つ、ログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

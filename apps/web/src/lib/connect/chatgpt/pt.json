@@ -1,0 +1,24 @@
+{
+  "eyebrow": "ChatGPT",
+  "title": "Use o {provider} no ChatGPT",
+  "sub": "O ChatGPT acessa o {provider} por meio de um servidor MCP personalizado, que você adiciona no chatgpt.com com o ChatGPT Go ou um plano pago.",
+  "steps": [
+    "Conecte o {provider} ao MCPEmails com os passos acima.",
+    "No chatgpt.com, abra Plugins, Personal, clique em Add e depois em Add custom MCP server (adicionar servidor MCP personalizado).",
+    "Dê o nome MCPEmails, cole <code>https://mcpemails.com/api/mcp</code> em Connection (conexão), escolha OAuth, confirme, clique em Create as a plugin (criar como plugin) e entre no MCPEmails.",
+    "Em um chat, digite <b>@</b> e escolha MCPEmails. Repita quando uma pergunta seguinte precisar dos seus e-mails."
+  ],
+  "docsLink": "Guia completo de configuração do ChatGPT",
+  "blogLink": "Como conectar o ChatGPT ao seu e-mail",
+  "faqQ": "O ChatGPT consegue ler meus e-mails do {provider}?",
+  "faqQMailName": "O ChatGPT consegue ler meu {provider}?",
+  "faqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. No chatgpt.com, adicione um servidor MCP personalizado com a URL https://mcpemails.com/api/mcp e login via OAuth. Isso funciona com o ChatGPT Go e os planos pagos. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados.",
+  "directorySub": "O ChatGPT acessa o {provider} pelo app Any Mailbox, do MCPEmails.",
+  "directorySteps": [
+    "Conecte o {provider} ao MCPEmails com os passos acima.",
+    "Abra o Any Mailbox no diretório de apps do ChatGPT e clique em Connect (conectar).",
+    "Entre no MCPEmails e aprove o acesso que você quer dar ao ChatGPT."
+  ],
+  "directoryLink": "Any Mailbox no diretório de apps do ChatGPT",
+  "directoryFaqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. Instale o Any Mailbox pelo diretório de apps do ChatGPT e entre no MCPEmails. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados."
+}

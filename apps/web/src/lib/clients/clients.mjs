@@ -59,7 +59,7 @@ export const ALL_CLIENTS = [
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
     post: { key: 'claude', href: '/blog/connect-claude-to-email' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'claude-code',
@@ -72,7 +72,7 @@ export const ALL_CLIENTS = [
     configFile: 'terminal',
     config: (url) => `claude mcp add --transport http mcpemails ${url}`,
     guide: 'https://code.claude.com/docs/en/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'codex',
@@ -86,7 +86,7 @@ export const ALL_CLIENTS = [
     configFile: 'terminal',
     config: (url) => `codex mcp add mcpemails --url ${url}`,
     guide: 'https://learn.chatgpt.com/docs/extend/mcp?surface=cli',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'chatgpt',
@@ -100,7 +100,7 @@ export const ALL_CLIENTS = [
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
     post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'cowork',
@@ -113,7 +113,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'gemini',
@@ -126,7 +126,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.google.com/gemini/answer/17209137',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'grok',
@@ -139,7 +139,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.x.ai/grok/connectors',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'le-chat',
@@ -152,7 +152,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.mistral.ai/le-chat/knowledge-integrations/connectors/mcp-connectors',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'perplexity',
@@ -165,7 +165,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'cursor',
@@ -185,7 +185,7 @@ export const ALL_CLIENTS = [
 }`,
     guide: 'https://cursor.com/docs/mcp',
     post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'vscode',
@@ -206,7 +206,7 @@ export const ALL_CLIENTS = [
 }`,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
     post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'cline',
@@ -220,7 +220,7 @@ export const ALL_CLIENTS = [
     config: null,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
     post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'windsurf',
@@ -242,7 +242,7 @@ export const ALL_CLIENTS = [
 }`,
     guide: 'https://docs.devin.ai/desktop/cascade/mcp',
     post: { key: 'editors', href: '/blog/email-for-ai-agents-cursor-cline-vscode' },
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'gemini-cli',
@@ -261,7 +261,7 @@ export const ALL_CLIENTS = [
   }
 }`,
     guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'zed',
@@ -280,7 +280,7 @@ export const ALL_CLIENTS = [
   }
 }`,
     guide: 'https://zed.dev/docs/ai/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'jetbrains',
@@ -293,7 +293,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'raycast',
@@ -306,7 +306,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://manual.raycast.com/ai/model-context-protocol',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'warp',
@@ -319,7 +319,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
   {
     slug: 'n8n',
@@ -332,7 +332,7 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'openclaw',
@@ -345,7 +345,7 @@ export const ALL_CLIENTS = [
     configFile: 'terminal',
     config: (url) => `openclaw mcp add mcpemails --url ${url} --transport streamable-http --auth oauth`,
     guide: 'https://docs.openclaw.ai/tools/mcp',
-    locales: ['en', 'nb', 'es', 'fr', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja'],
   },
   {
     slug: 'curl',
@@ -362,7 +362,7 @@ export const ALL_CLIENTS = [
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
     guide: null,
-    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },
 ];
 

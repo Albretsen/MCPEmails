@@ -12,7 +12,7 @@
  * and no lifecycle suppression applies (the person asked for this action).
  * createResend() keeps it inside EMAIL_RECIPIENT_ALLOWLIST off production.
  *
- * LOCALES. en, nb, de, es, fr, zh, the set the activation help emails use.
+ * LOCALES. en, nb, de, pt, ja, es, fr, zh, the set the activation help emails use.
  * The dashboard sends its interface locale with the request; otherwise the
  * landing-page locale of the user's workspace is used, then en. German uses
  * formal Sie, French vous, Spanish tu, as the rest of the site does. Every
@@ -28,7 +28,7 @@
 import { createResend } from '@/lib/email/resend';
 import { SUPPORT_FROM, SUPPORT_INBOX } from '@/lib/support/emails';
 
-export const ACCOUNT_DELETED_LOCALES = ['en', 'nb', 'de', 'es', 'fr', 'zh'] as const;
+export const ACCOUNT_DELETED_LOCALES = ['en', 'nb', 'de', 'pt', 'ja', 'es', 'fr', 'zh'] as const;
 export type AccountDeletedLocale = (typeof ACCOUNT_DELETED_LOCALES)[number];
 
 /** Days after deletion by which the remaining records are erased. */
@@ -46,6 +46,8 @@ const DATE_LOCALE: Record<AccountDeletedLocale, string> = {
   en: 'en-GB',
   nb: 'nb-NO',
   de: 'de-DE',
+  pt: 'pt-BR',
+  ja: 'ja-JP',
   es: 'es-ES',
   fr: 'fr-FR',
   zh: 'zh-CN',
@@ -97,6 +99,30 @@ const COPY: Record<AccountDeletedLocale, Copy> = {
       `Die übrigen Kontodaten, darunter Workspace- und Postfacheinstellungen, das Aktivitätsprotokoll und Ihr Versandverlauf, werden bis zum ${date} gelöscht. Danach lassen sie sich nicht wiederherstellen.`,
     payments: 'Rechnungen und Zahlungsbelege bewahrt unser Zahlungsdienstleister Stripe auf, wie es das Buchhaltungsrecht verlangt.',
     notYou: (support) => `Falls Sie das nicht veranlasst haben, antworten Sie auf diese E-Mail oder schreiben Sie an ${support}.`,
+    signoff: 'MCPEmails',
+  },
+  pt: {
+    subject: 'Sua conta do MCPEmails foi excluída',
+    greeting: 'Olá,',
+    deleted: (email, date) => `Sua conta do MCPEmails (${email}) foi excluída em ${date}.`,
+    immediate:
+      'Já excluímos as senhas e os tokens salvos das suas caixas de entrada conectadas, revogamos suas chaves de API e as conexões com apps de IA, cancelamos os e-mails agendados que estavam na fila, cancelamos qualquer assinatura e, para as caixas do Gmail conectadas com o login do Google, pedimos ao Google que encerrasse nosso acesso.',
+    rest: (date) =>
+      `O restante dos dados da sua conta, incluindo as configurações de espaços de trabalho e de caixas de entrada, o registro de atividades e o seu histórico de envios, será apagado até ${date}. Depois disso, não poderá ser recuperado.`,
+    payments: 'As faturas e os registros de pagamento ficam guardados com o nosso processador de pagamentos, a Stripe, como exige a legislação contábil.',
+    notYou: (support) => `Se não foi você quem pediu isso, responda a este e-mail ou escreva para ${support}.`,
+    signoff: 'MCPEmails',
+  },
+  ja: {
+    subject: 'MCPEmailsのアカウントを削除しました',
+    greeting: 'こんにちは。',
+    deleted: (email, date) => `MCPEmailsのアカウント（${email}）は${date}に削除されました。`,
+    immediate:
+      '接続済みの受信トレイについて保存していたパスワードとトークンはすでに削除しました。あわせて、APIキーとAIアプリとの接続を取り消し、送信待ちの予約送信メールとサブスクリプションをキャンセルし、Googleログインで接続したGmailの受信トレイについては、当社のアクセスを終了するようGoogleに依頼しました。',
+    rest: (date) =>
+      `ワークスペースと受信トレイの設定、アクティビティログ、送信履歴など、アカウントの残りのデータは${date}までに消去されます。消去後は復元できません。`,
+    payments: '請求書と支払い記録は、会計法令の定めにより、決済代行会社のStripeが保管します。',
+    notYou: (support) => `このご依頼に心当たりがない場合は、このメールに返信するか、${support} までご連絡ください。`,
     signoff: 'MCPEmails',
   },
   es: {

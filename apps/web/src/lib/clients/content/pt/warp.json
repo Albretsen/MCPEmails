@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.warp.dev/agent-platform/capabilities/mcp/"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Warp: configuração do servidor MCP para agentes",
+    "description": "Adicione uma caixa de entrada real aos agentes do Warp. Settings, Agents, MCP servers, adicione um servidor Streamable HTTP pela URL e conclua o OAuth no navegador. Sem chave de API. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Warp + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Warp",
+    "titleLine2": "e aos agentes dele",
+    "lead": "Dê ao terminal uma caixa de correio real. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails a partir de um agente do Warp, em todas as caixas de entrada que você conectou.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Abra Settings, Agents, MCP servers, clique em Add, escolha a aba Streamable HTTP or SSE Server (URL), cole https://mcpemails.com/api/mcp e confirme. O Warp conclui o fluxo OAuth no navegador quando pedir."
+  },
+  "method": {
+    "title": "Como o Warp se conecta: OAuth, sem chave de API",
+    "body": "O Warp executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra as configurações de MCP",
+      "p": "Abra <b>Settings</b> (configurações), depois <b>Agents</b> e depois <b>MCP servers</b>, e clique em <b>+ Add</b>."
+    },
+    {
+      "h": "Escolha a aba da URL",
+      "p": "Selecione a aba <b>Streamable HTTP or SSE Server (URL)</b>, e não a baseada em comando."
+    },
+    {
+      "h": "Cole e autorize",
+      "p": "Cole <code>https://mcpemails.com/api/mcp</code> e confirme, depois conclua o fluxo OAuth no navegador quando pedir. Aprove os escopos que você quer que o agente tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Escolha a aba da URL, não a do comando",
+      "p": "O Warp oferece um servidor baseado em comando e um baseado em URL. Este servidor é hospedado, então não tem comando para rodar nem pacote para instalar. A aba da URL é a única que pode funcionar, e escolher a outra gera um servidor que nunca inicia."
+    },
+    {
+      "h": "Um agente de terminal roda por muito tempo e sem supervisão",
+      "p": "Essa é a graça, e é também por isso que a decisão de escopo importa aqui. Um agente trabalhando numa lista de tarefas com <code>send:email</code> pode mandar e-mail para alguém em qualquer ponto dessa lista. Deixar o escopo de fora, ou ativar a aprovação humana para que os envios esperem por uma pessoa, mantém a parte útil sem a surpresa."
+    },
+    {
+      "h": "Nada chega sozinho",
+      "p": "O servidor funciona só com solicitação e resposta, sem webhooks nem push. Um agente do Warp vê os e-mails quando olha, então uma verificação agendada ou pedida explicitamente é o que transforma isso num monitor. Fique atento aos limites de taxa se fizer polling com muita frequência."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Warp?",
+      "a": "Abra Settings, Agents, MCP servers, clique em Add, escolha a aba Streamable HTTP or SSE Server (URL), cole https://mcpemails.com/api/mcp, confirme e conclua o fluxo OAuth no navegador. Os agentes do Warp passam a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Warp?",
+      "a": "Não. O Warp conclui um fluxo OAuth no navegador com este servidor, então nada secreto vai para as configurações. Uma chave bearer continua disponível para scripts e máquinas headless."
+    },
+    {
+      "q": "Quais caixas de correio o Warp alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "Um agente do Warp pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao seu terminal uma caixa de entrada real",
+    "sub": "Uma URL, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

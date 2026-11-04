@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.google.com/accounts/answer/185833",
+    "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
+    "https://knowledge.workspace.google.com/admin/sync/transition-from-less-secure-apps-to-oauth",
+    "https://knowledge.workspace.google.com/admin/users/add-or-delete-an-alternate-email-address-email-alias",
+    "https://support.google.com/a/answer/7281227",
+    "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
+    "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
+    "apps/web/src/lib/inboxes/send-as.ts (Send As addresses for IMAP inboxes, including Gmail and Google Workspace by app password, verified by a code emailed to the address)"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Senha de app",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "O endereço completo no seu próprio domínio, por exemplo info@yourcompany.com. A senha de app substitui a senha da conta, que não funciona.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conectar o e-mail do Google Workspace ao Claude, ao ChatGPT e a clientes MCP",
+    "description": "Conecte caixas de correio do Google Workspace no seu próprio domínio ao Claude, ao ChatGPT, ao Cursor e a qualquer cliente MCP. Senha de app via IMAP, as configurações de administrador que decidem isso, e todas as caixas da empresa em um agente."
+  },
+  "hero": {
+    "eyebrow": "Google Workspace + IA",
+    "titleLine1": "Conecte o Google Workspace ao Claude,",
+    "titleLine2": "ao ChatGPT, ao Cursor e a qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA as caixas de correio da empresa que ficam no Google Workspace, no seu próprio domínio: a sua, vendas@, suporte@ e as demais. Ele lê, pesquisa, envia, responde, agenda e organiza e-mails via IMAP com uma senha de app, e as mesmas caixas funcionam em todos os clientes MCP, não só em um.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Conecta com uma senha de app do Google",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Uma caixa de correio do Google Workspace no seu próprio domínio é, por baixo, uma caixa do Gmail, então ela se conecta ao MCPEmails como o Gmail: com uma senha de app do Google via IMAP e SMTP em imap.gmail.com e smtp.gmail.com. O MCPEmails é um servidor MCP hospedado, então, com a caixa conectada, o Claude, o ChatGPT, o Cursor ou qualquer cliente MCP consegue ler, pesquisar, enviar e organizar esses e-mails. As configurações do administrador do seu Workspace decidem se a senha de app está disponível e se o IMAP é permitido."
+  },
+  "method": {
+    "title": "Como o Google Workspace se conecta: uma senha de app via IMAP",
+    "body": "Digite seu endereço no formulário IMAP e o MCPEmails lê os registros MX do seu domínio: um domínio cujo e-mail vai para o Google (<code>aspmx.l.google.com</code> ou <code>smtp.google.com</code>) é reconhecido como Google Workspace, e o formulário preenche <b>imap.gmail.com</b> na 993 e <b>smtp.gmail.com</b> na 465 e avisa que uma senha de app é necessária. Escolher o cartão do Gmail faz o mesmo. O Google desligou o login por senha para apps do Workspace em 2025, com exceção das senhas de app, então a senha da conta nunca vai funcionar aqui."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Crie uma senha de app do Google",
+      "p": "Com login feito na caixa de correio que você quer conectar, ative a verificação em duas etapas se ela não estiver ativa, depois crie uma senha de app em myaccount.google.com/apppasswords. Se a opção não aparecer, as configurações do administrador são o motivo mais provável (veja abaixo)."
+    },
+    {
+      "h": "Cole a senha no MCPEmails",
+      "p": "Escolha IMAP / SMTP ou Gmail, digite o endereço completo no seu domínio e cole a senha de app de 16 caracteres. Os hosts são preenchidos a partir do seu domínio."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no ChatGPT ou no Cursor, autorize, e seu agente passa a ter a caixa de correio. Repita a etapa da senha de app para cada caixa da empresa que você quer que ele alcance."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A opção de senha de app pode não aparecer em uma conta do Workspace",
+      "p": "O Google só oferece senhas de app em contas com a verificação em duas etapas ativa, e a própria página de ajuda dele lista três motivos para a opção não aparecer mesmo assim: verificação em duas etapas configurada <b>apenas com chaves de segurança</b>, <b>Proteção Avançada</b>, ou login em <b>uma conta de trabalho, escolar ou de outra organização</b> cujas configurações não permitem. O último é decisão do seu administrador, e nada dentro da caixa de correio muda isso. Peça ao administrador para permitir senhas de app na sua conta."
+    },
+    {
+      "h": "O IMAP é ativado pelo administrador, não por você",
+      "p": "No Google Workspace, os usuários não conseguem ativar ou desativar o IMAP nas próprias configurações do Gmail. Um administrador faz isso no Google Admin Console em <b>Apps, Google Workspace, Gmail, Acesso do usuário final</b>, na seção <b>Acesso POP e IMAP</b>, para todo mundo ou por unidade organizacional. Duas configurações ali decidem se uma senha de app funciona: o IMAP precisa estar ativado para a sua unidade, e o administrador precisa ter escolhido <b>Permitir qualquer cliente de e-mail</b>. Se ele restringiu o IMAP a clientes de e-mail OAuth específicos, um login com senha de app é recusado por mais correto que esteja."
+    },
+    {
+      "h": "Um alias não é uma caixa de correio, e um grupo também não",
+      "p": "O Workspace permite que um administrador adicione até 30 aliases a um usuário, e o e-mail enviado a um alias cai na caixa de entrada desse usuário. Um alias não tem login próprio, então você conecta o usuário dono dele, e os e-mails do alias já estão lá. Um endereço de Grupo do Google (uma lista de e-mails ou uma caixa de entrada colaborativa) também não é uma conta na qual dá para fazer login, então não tem senha de app para conectar: conecte a caixa de correio de um membro. Só caixas de correio de usuários reais se conectam, cada uma com sua própria senha de app, e cada uma conta como uma caixa de entrada conectada."
+    },
+    {
+      "h": "Responder a partir de um alias funciona depois que o alias é verificado",
+      "p": "Com uma senha de app, a caixa de correio envia a partir do próprio endereço por padrão. Para responder a partir de um alias, como um configurado em <b>Enviar e-mail como</b> no Gmail, adicione-o em <b>Endereços Send As</b> nas configurações da caixa de entrada no MCPEmails. Enviamos um código de 6 dígitos para o alias, e assim que você digita o código, seu agente pode enviar a partir desse endereço. Um endereço de remetente que não é o da própria caixa nem um endereço Send As verificado é recusado, não reescrito em silêncio."
+    }
+  ],
+  "limits": [
+    "O MCPEmails alcança só o e-mail: a senha de app é usada apenas para IMAP e SMTP. Drive, Agenda, Chat e Documentos não são acessados.",
+    "Um administrador do Google Workspace pode fechar esse caminho: as senhas de app podem ficar indisponíveis para a sua conta, e o IMAP pode estar desligado ou limitado a clientes OAuth específicos. Só um administrador pode mudar essas configurações.",
+    "O Gmail armazena marcadores, não pastas, então mover adiciona um marcador e remove outro, e excluir move a mensagem para a Lixeira do Gmail."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o e-mail do Google Workspace?",
+      "a": "Sim, assim que um servidor MCP como o MCPEmails conecta a caixa de correio. Uma caixa do Workspace no seu próprio domínio se conecta com uma senha de app do Google via IMAP, exatamente como um endereço gmail.com, e o Claude consegue então ler, pesquisar, enviar, responder e organizar esses e-mails. A mesma conexão funciona no ChatGPT, no Cursor e em qualquer outro cliente MCP."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do Google Workspace?",
+      "a": "O IMAP é imap.gmail.com na porta 993 com SSL/TLS, e o SMTP é smtp.gmail.com na porta 465 com SSL/TLS. O nome de usuário é seu endereço completo no seu próprio domínio, e a senha é uma senha de app do Google. O MCPEmails preenche tudo isso quando os registros MX do seu domínio apontam para o Google."
+    },
+    {
+      "q": "Por que não consigo criar uma senha de app na minha conta do Workspace?",
+      "a": "O Google lista três motivos: a verificação em duas etapas está configurada apenas com chaves de segurança, a conta tem Proteção Avançada, ou é uma conta de trabalho, escolar ou de organização cujas configurações não permitem senhas de app. Os dois primeiros você mesmo pode mudar; o terceiro é decisão do administrador."
+    },
+    {
+      "q": "Por que minha senha de app é rejeitada se está correta?",
+      "a": "Quase sempre porque o IMAP não está permitido para a sua conta. No Workspace, só o administrador pode ativar o IMAP, por unidade organizacional, e ele pode restringi-lo a clientes de e-mail OAuth específicos, o que recusa logins com senha de app. Peça a ele para ativar o IMAP com Permitir qualquer cliente de e-mail para a sua unidade."
+    },
+    {
+      "q": "Posso conectar contato@, vendas@ e suporte@ do mesmo Workspace?",
+      "a": "Sim, quando cada um é uma caixa de correio de usuário real: conecte cada uma com sua própria senha de app, e seu agente alcança todas por uma única URL de MCP. Um alias ou um endereço de Grupo do Google não é uma caixa própria, então conecte a caixa de usuário na qual os e-mails dele são entregues."
+    },
+    {
+      "q": "Meu e-mail do Google Workspace fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Google a cada solicitação e entregues ao seu cliente de IA. A senha de app é criptografada em repouso, e o conteúdo das mensagens não é retido. Revogar a senha de app na sua Conta do Google, ou excluir a caixa de entrada no MCPEmails, encerra a conexão."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA as caixas de correio do Google Workspace da sua empresa",
+    "sub": "Conecte a primeira em minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  },
+  "seeAlso": {
+    "intro": "Endereço pessoal @gmail.com?",
+    "label": "Conectar o Gmail",
+    "href": "/connect/gmail"
+  }
+}

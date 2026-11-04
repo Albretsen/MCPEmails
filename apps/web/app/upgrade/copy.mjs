@@ -21,7 +21,7 @@
  * STYLE. Straight quotes, no em dashes, no angle brackets.
  */
 
-export const UPGRADE_LOCALES = /** @type {const} */ (['en', 'nb', 'es', 'fr', 'de', 'zh']);
+export const UPGRADE_LOCALES = /** @type {const} */ (['en', 'nb', 'es', 'fr', 'de', 'pt', 'ja', 'zh']);
 
 const COPY = {
   en: {
@@ -109,6 +109,40 @@ const COPY = {
     errorBody: 'Bei uns ist etwas schiefgelaufen. Alle Tarife finden Sie auf der Preisseite, oder Sie melden sich an und upgraden im Dashboard.',
     seePlans: 'Tarife ansehen',
   },
+  pt: {
+    doneMetaTitle: 'Upgrade',
+    expiredMetaTitle: 'Link de pagamento expirado',
+    activeTitle: 'Personal está ativo',
+    activeBody: 'Volte para o seu chat e escreva "continuar". A solicitação que foi interrompida vai rodar agora.',
+    activatingTitle: 'Pagamento recebido, ativando...',
+    activatingBody: 'Isso costuma levar alguns segundos. Quando o Personal estiver ativo, volte para o seu chat e escreva "continuar".',
+    slowBody: 'Está demorando mais que o normal. Atualize a página daqui a um minuto ou entre na sua conta para conferir o seu plano.',
+    signIn: 'Entrar no painel',
+    expiredTitle: 'Este link de pagamento expirou',
+    expiredBody: 'Links de pagamento enviados em um chat valem por 30 minutos. Todos os planos estão na página de preços, e você pode fazer o upgrade pelo painel.',
+    subscribedTitle: 'Esta conta já tem um plano',
+    subscribedBody: 'Entre na sua conta para gerenciá-lo pelo painel.',
+    errorTitle: 'Não foi possível abrir o pagamento',
+    errorBody: 'Algo deu errado do nosso lado. Os planos estão na página de preços, ou entre na sua conta e faça o upgrade pelo painel.',
+    seePlans: 'Ver planos',
+  },
+  ja: {
+    doneMetaTitle: 'アップグレード',
+    expiredMetaTitle: 'お支払いリンクの有効期限切れ',
+    activeTitle: 'Personalが有効になりました',
+    activeBody: 'チャットに戻って「続けて」と入力してください。止まっていたリクエストがこれで実行されます。',
+    activatingTitle: 'お支払いを確認しました。有効化しています...',
+    activatingBody: '通常は数秒で完了します。Personalが有効になったら、チャットに戻って「続けて」と入力してください。',
+    slowBody: '通常より時間がかかっています。1分ほどしてからページを再読み込みするか、ログインしてプランを確認してください。',
+    signIn: 'ダッシュボードにログイン',
+    expiredTitle: 'このお支払いリンクは有効期限が切れています',
+    expiredBody: 'チャットから届くお支払いリンクの有効期間は30分です。すべてのプランは料金ページに掲載しており、ダッシュボードからアップグレードできます。',
+    subscribedTitle: 'このアカウントにはすでにプランがあります',
+    subscribedBody: 'ログインして、ダッシュボードから管理してください。',
+    errorTitle: 'お支払いページを開けませんでした',
+    errorBody: '当社側で問題が発生しました。プランは料金ページでご確認いただけます。ログインしてダッシュボードからアップグレードすることもできます。',
+    seePlans: 'プランを見る',
+  },
   zh: {
     doneMetaTitle: '升级',
     expiredMetaTitle: '付款链接已过期',
@@ -142,6 +176,8 @@ export function upgradeLocale(header) {
     if (low.startsWith('es')) return 'es';
     if (low.startsWith('fr')) return 'fr';
     if (low.startsWith('de')) return 'de';
+    if (low.startsWith('pt')) return 'pt';
+    if (low.startsWith('ja')) return 'ja';
     if (low.startsWith('zh')) return 'zh';
     if (low.startsWith('en')) return 'en';
   }

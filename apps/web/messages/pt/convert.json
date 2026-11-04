@@ -1,0 +1,39 @@
+{
+  "planSummary": {
+    "title": "Seu plano: Free",
+    "lead": "O Free cobre o que você acabou de fazer. Veja o que cada plano acrescenta quando você quiser mais.",
+    "freeName": "Free",
+    "inboxes": "{count, plural, =1 {# caixa de entrada} other {Até # caixas de entrada}}",
+    "freeGrace": "Ilimitado até {date}",
+    "freeCap": "{cap} ações de e-mail por mês",
+    "noCap": "Ações de e-mail ilimitadas",
+    "emailSupport": "Suporte prioritário por e-mail",
+    "everythingPersonal": "Tudo do Personal",
+    "perMonth": "{price}/mês",
+    "perYear": "{price}/ano",
+    "intervalLabel": "Período de cobrança",
+    "monthly": "Mensal",
+    "annual": "Anual",
+    "recommended": "Recomendado",
+    "choose": "Escolher {plan}",
+    "continueFree": "Continuar no Free",
+    "dismiss": "Ocultar o resumo de planos"
+  },
+  "graceNote": {
+    "today": "Você usou o MCPEmails por {days, plural, one {# dia} other {# dias}}. A partir de hoje, o Free conta suas ações de e-mail mensais.",
+    "since": "Você usou o MCPEmails por {days, plural, one {# dia} other {# dias}}. Desde {date}, o Free conta suas ações de e-mail mensais.",
+    "seeUsage": "Ver uso",
+    "dismiss": "Fechar"
+  },
+  "meter": {
+    "level50": "Metade das {cap} ações de e-mail deste mês já foi usada. O contador zera em {date}.",
+    "level80": "{used} de {cap} ações de e-mail usadas este mês. O contador zera em {date}. O Personal remove o limite mensal.",
+    "level100": "Todas as {cap} ações de e-mail foram usadas. Leituras e escritas são recusadas até {date}. O Personal remove o limite mensal.",
+    "seePlans": "Ver planos"
+  },
+  "multiInbox": {
+    "title": "Conecte sua outra caixa de entrada",
+    "desc": "Tem outro Gmail, iCloud ou Outlook? Conecte e sua IA trabalha nas duas caixas de entrada a partir de um só chat.",
+    "descUpgrade": "Tem outro Gmail, iCloud ou Outlook? Sua IA pode trabalhar nas duas caixas de entrada a partir de um só chat. Uma segunda caixa de entrada exige um plano pago."
+  }
+}

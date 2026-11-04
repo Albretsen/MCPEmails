@@ -167,7 +167,59 @@ const zh = {
   },
 };
 
-export const FEEDBACK_COPY = { en, de, nb, fr, es, zh };
+const pt = {
+  meta: { title: 'Por que você cancelou' },
+  title: 'Por que você cancelou',
+  lead: 'Seu cancelamento já foi feito e nada nesta página muda isso. Se quiser nos contar o motivo, escolha uma opção e clique em Enviar.',
+  reasonsLegend: 'Motivo',
+  reasons: {
+    too_expensive: 'Caro demais',
+    not_using_enough: 'Não uso o suficiente',
+    missing_feature: 'Falta um recurso',
+    reliability: 'Problemas de conexão ou estabilidade',
+    switched_tool: 'Mudei para outra ferramenta',
+    temporary_need: 'Só precisei por um tempo',
+    other: 'Outro',
+  },
+  detailLabel: 'Quer acrescentar algo? (opcional)',
+  send: 'Enviar',
+  sending: 'Enviando',
+  thanks: 'Obrigado, isso ajuda.',
+  invalid: 'Este link expirou ou não é válido. Seu cancelamento não é afetado.',
+  dashboard: 'Ir para o painel',
+  errors: {
+    rate_limited: 'Muitas tentativas a partir desta conexão. Tente de novo daqui a uma hora.',
+    unknown: 'Não deu certo. Tente de novo ou responda ao e-mail.',
+  },
+};
+
+const ja = {
+  meta: { title: '解約の理由' },
+  title: '解約の理由',
+  lead: '解約はすでに完了しており、このページで何をしても変わりません。理由を教えていただける場合は、1つ選んで「送信」を押してください。',
+  reasonsLegend: '理由',
+  reasons: {
+    too_expensive: '料金が高い',
+    not_using_enough: 'あまり使っていない',
+    missing_feature: '必要な機能がない',
+    reliability: '接続や安定性に問題がある',
+    switched_tool: '別のツールに乗り換えた',
+    temporary_need: '一時的に必要だっただけ',
+    other: 'その他',
+  },
+  detailLabel: '補足があればご記入ください（任意）',
+  send: '送信',
+  sending: '送信中',
+  thanks: 'ありがとうございます。参考にさせていただきます。',
+  invalid: 'このリンクは期限切れか無効です。解約には影響しません。',
+  dashboard: 'ダッシュボードへ',
+  errors: {
+    rate_limited: 'この接続からの試行回数が多すぎます。1時間後にもう一度お試しください。',
+    unknown: '送信できませんでした。もう一度お試しいただくか、メールに直接返信してください。',
+  },
+};
+
+export const FEEDBACK_COPY = { en, de, pt, ja, nb, fr, es, zh };
 
 export function feedbackCopy(locale) {
   return FEEDBACK_COPY[locale] ?? en;

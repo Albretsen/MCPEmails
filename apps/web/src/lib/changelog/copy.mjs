@@ -91,6 +91,30 @@ const COPY = {
     kinds: { added: 'Neu', improved: 'Verbessert', fixed: 'Behoben', changed: 'Geändert' },
     footnote: 'Fehlt etwas oder funktioniert etwas nicht? Schreiben Sie an',
   },
+  pt: {
+    meta: {
+      title: 'Novidades',
+      description:
+        'Tudo o que já foi lançado no MCPEmails, do mais recente ao mais antigo: novos recursos, correções por provedor e mudanças de preço e cobrança, com a data em que cada uma entrou no ar.',
+    },
+    eyebrow: 'Novidades',
+    title: 'O que já foi lançado',
+    lead: 'Cada mudança visível para o usuário, da mais recente à mais antiga, com a data em que entrou no ar. O trabalho interno fica de fora.',
+    kinds: { added: 'Novo', improved: 'Melhorado', fixed: 'Corrigido', changed: 'Alterado' },
+    footnote: 'Falta algo ou alguma coisa não funciona? Escreva para',
+  },
+  ja: {
+    meta: {
+      title: '更新履歴',
+      description:
+        'MCPEmailsでリリースしたすべての変更を新しい順に掲載しています。新機能、プロバイダーごとの修正、料金と請求の変更を、それぞれ公開日とともにまとめています。',
+    },
+    eyebrow: '更新履歴',
+    title: 'リリース済みの変更',
+    lead: 'ユーザーに見えるすべての変更を新しい順に、公開した日付つきで掲載しています。内部的な作業は含みません。',
+    kinds: { added: '新規', improved: '改善', fixed: '修正', changed: '変更' },
+    footnote: '抜けている項目や不具合がありましたら、こちらまでご連絡ください：',
+  },
 };
 
 /** Chrome copy for a locale, falling back to English for anything unknown. */

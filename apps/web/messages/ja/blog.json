@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "title": "AIメールエージェントのガイド、MCPチュートリアルとセキュリティ",
+    "description": "ClaudeやMCPクライアントとメールを接続し、AIエージェントのアクセスを安全に保ち、Gmail、Outlook、IMAP、メールワークフローを安心して使うための実践ガイド。"
+  },
+  "blogName": "MCPEmailsブログ",
+  "index": {
+    "eyebrow": "MCPEmailsブログ",
+    "title": "エージェント、メール、MCPについての覚え書き",
+    "lead": "Gmail、Outlook、Fastmail、あらゆるIMAP受信トレイをClaude、Cursor、MCP対応クライアントに接続するためのガイド、詳しい解説、現場のメモ。",
+    "filterAria": "トピックで記事を絞り込む",
+    "all": "すべて",
+    "empty": "「{tag}」のタグが付いた記事はまだありません。",
+    "minRead": "{minutes}分"
+  },
+  "post": {
+    "home": "ホーム",
+    "blog": "ブログ",
+    "toc": "このページの内容",
+    "writtenBy": "執筆",
+    "back": "← 記事一覧に戻る",
+    "minRead": "読了まで{minutes}分",
+    "cta": {
+      "title": "エージェントに受信トレイを",
+      "sub": "Gmail、Outlook、Fastmail、あらゆるIMAPアカウントを、数分でAIエージェントに接続できます。",
+      "primary": "無料で始める",
+      "secondary": "ドキュメントを読む"
+    }
+  }
+}

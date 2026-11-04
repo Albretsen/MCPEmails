@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "title": "Ajuda e suporte",
+    "description": "Respostas para as dúvidas mais comuns sobre conexão, clientes e cobrança, e um formulário para falar com as pessoas que criam o MCPEmails."
+  },
+  "hero": {
+    "eyebrow": "Ajuda",
+    "title": "Como podemos ajudar?",
+    "lead": "Pesquise nos guias, abra um dos tópicos abaixo ou escreva para a gente."
+  },
+  "search": {
+    "label": "Pesquisar na ajuda",
+    "placeholder": "Digite uma pergunta ou uma palavra",
+    "empty": "Nenhum resultado.",
+    "emptyLink": "Escreva para a gente abaixo",
+    "kinds": {
+      "provider": "Provedor",
+      "client": "Cliente",
+      "docs": "Docs",
+      "faq": "FAQ",
+      "article": "Artigo"
+    }
+  },
+  "nav": {
+    "label": "Tópicos de ajuda",
+    "contact": "Fale conosco"
+  },
+  "feedback": {
+    "question": "Isso ajudou?",
+    "yes": "Sim",
+    "no": "Não",
+    "thanks": "Obrigado pelo retorno.",
+    "thanksNo": "Obrigado. Conte para a gente o que faltou e vamos corrigir.",
+    "contactLink": "Escreva para a gente",
+    "change": "Mudar resposta"
+  },
+  "hints": {
+    "provider": "{category} · {domain}",
+    "providerNoDomain": "{category}",
+    "clientOauth": "Guia de configuração · login com OAuth, sem chave de API",
+    "clientKey": "Guia de configuração · chave de API com escopo",
+    "docs": "Documentação",
+    "docsProviders": "Configurações e suporte para todos os provedores",
+    "docsClients": "Guias de configuração para todos os clientes MCP",
+    "faq": "FAQ de preços"
+  },
+  "providerCategories": {
+    "generic": "Qualquer caixa de correio IMAP",
+    "consumer": "Webmail",
+    "privacy": "E-mail focado em privacidade",
+    "business": "E-mail corporativo",
+    "hosting": "Hospedagem de sites com e-mail",
+    "cpanel": "cPanel e hospedagem compartilhada",
+    "selfhost": "Servidor de e-mail próprio",
+    "isp": "Provedor de internet",
+    "regional": "E-mail regional",
+    "blocked": "Limitado ou sem suporte"
+  },
+  "articlesHeading": "Soluções comuns",
+  "articlesLead": "Os problemas sobre os quais mais recebemos mensagens, e o que resolve cada um.",
+  "articles": [
+    {
+      "id": "imap-password-rejected",
+      "title": "O servidor de e-mail recusa minha senha",
+      "summary": "Quase sempre é a senha ou o nome de usuário errado. Use o login da própria caixa de correio.",
+      "keywords": "imap smtp senha recusada rejeitada errada login usuário nome de usuário cpanel plesk hospedagem domínio próprio autenticação falhou erro smtp envio falhou erro password rejected wrong username auth failed",
+      "steps": [
+        "Use a senha da caixa de correio, não o login da hospedagem ou do painel de controle.",
+        "Use o endereço de e-mail completo como nome de usuário.",
+        "Se a caixa de correio tiver login em duas etapas, use uma senha de app.",
+        "Redefina a senha onde a sua hospedagem lista as contas de e-mail (no cPanel: Email Accounts).",
+        "Compare os nomes dos servidores com os nossos guias de provedores."
+      ],
+      "links": [
+        {
+          "label": "Guia IMAP genérico",
+          "href": "/connect/imap"
+        },
+        {
+          "label": "Compatibilidade de provedores",
+          "href": "/docs/providers"
+        }
+      ]
+    },
+    {
+      "id": "app-password-required",
+      "title": "Senha de app necessária (Yahoo, iCloud, Gmail, Zoho)",
+      "summary": "Esses provedores recusam a sua senha normal aqui. Crie uma senha de app e cole-a.",
+      "keywords": "senha de app senha específica de app senha específica do aplicativo yahoo icloud apple gmail google zoho verificação em duas etapas dois fatores 2fa mfa app password app-specific two-step",
+      "steps": [
+        "Yahoo: Account Security (segurança da conta), depois Generate app password (gerar senha de app).",
+        "iCloud: account.apple.com, Sign-In and Security (login e segurança), depois App-Specific Passwords (senhas de app).",
+        "Gmail: ative a Verificação em duas etapas e depois acesse myaccount.google.com/apppasswords.",
+        "Zoho: crie uma senha específica de aplicativo e ative o IMAP nas configurações do Zoho Mail.",
+        "Cole a senha como ela aparece. Os espaços são ignorados."
+      ],
+      "links": [
+        {
+          "label": "Guia do Yahoo Mail",
+          "href": "/connect/yahoo"
+        },
+        {
+          "label": "Guia do iCloud Mail",
+          "href": "/connect/icloud"
+        },
+        {
+          "label": "Guia do Gmail",
+          "href": "/connect/gmail"
+        },
+        {
+          "label": "Guia do Zoho Mail",
+          "href": "/connect/zoho"
+        }
+      ]
+    },
+    {
+      "id": "yandex-imap-disabled",
+      "title": "Yandex: o acesso IMAP está desativado",
+      "summary": "O Yandex recusa apps de e-mail até que o IMAP seja ativado. Parece uma senha errada.",
+      "keywords": "yandex imap desativado desligado senha de app programas de e-mail clientes de e-mail yandex 360 disabled app password mail clients",
+      "steps": [
+        "No Yandex Mail, abra Settings (configurações) e depois Mail clients (clientes de e-mail).",
+        "Ative o acesso IMAP, além das senhas de app e dos tokens OAuth.",
+        "Em id.yandex.com, crie uma senha de app do tipo Mail.",
+        "Conecte com o seu endereço completo e essa senha de app."
+      ],
+      "links": [
+        {
+          "label": "Guia do Yandex Mail",
+          "href": "/connect/yandex"
+        }
+      ]
+    },
+    {
+      "id": "assistant-sees-nothing",
+      "title": "Conectado, mas o assistente não vê nenhum e-mail",
+      "summary": "A caixa de correio está conectada, mas o seu assistente diz que não tem ferramentas de e-mail ou não encontra nada.",
+      "keywords": "sem ferramentas nada vazio conector não funciona claude chatgpt cursor modo desenvolvedor escopo permissão inbox_list no tools developer mode scope plugin @",
+      "steps": [
+        "Abra Caixas de entrada no painel e confira se a caixa de correio aparece sem erro. Se aparecer um erro, conecte-a de novo.",
+        "Comece um novo chat depois de adicionar o conector. No Claude, confira se o MCPEmails está ativado em + e Conectores. No ChatGPT, digite @ e escolha MCPEmails, e mencione-o de novo com @ quando uma pergunta seguinte precisar dos seus e-mails.",
+        "Autorize o conector com a mesma conta MCPEmails em que está a caixa de correio.",
+        "O seu assistente só vê as ferramentas incluídas no escopo do seu conector ou da sua chave de API. Se você deixou um escopo desmarcado, remova o conector e adicione-o de novo.",
+        "Peça primeiro ao assistente para listar as suas caixas de entrada. Os e-mails são buscados quando o assistente pede, então nada chega sozinho."
+      ],
+      "links": [
+        {
+          "label": "Guias de configuração de clientes",
+          "href": "/docs/clients"
+        },
+        {
+          "label": "Códigos de erro",
+          "href": "/docs#errors"
+        }
+      ]
+    },
+    {
+      "id": "usage-limit-reached",
+      "title": "Limite de uso atingido",
+      "summary": "O Free inclui 150 ações de e-mail por mês. Depois disso, as ações esperam até o dia 1º (UTC).",
+      "keywords": "limite de uso franquia teto 150 ações plano free grátis recusado reiniciar cota usage limit quota",
+      "steps": [
+        "Veja quantas ações você já usou em Uso, no painel.",
+        "Listar as suas caixas de entrada e tudo o que você faz no painel nunca é contado, e nada é contado nos seus 3 primeiros dias após criar a conta.",
+        "Tentar de novo não ajuda. A franquia reinicia no dia 1º do mês seguinte (UTC), e as automações pausadas voltam a rodar sozinhas.",
+        "Personal, Pro e Business têm ações de e-mail ilimitadas, sujeitas a uso justo."
+      ],
+      "links": [
+        {
+          "label": "FAQ de preços",
+          "href": "/pricing#faq"
+        },
+        {
+          "label": "Limites de taxa",
+          "href": "/docs#rate-limits"
+        }
+      ]
+    },
+    {
+      "id": "change-or-cancel-plan",
+      "title": "Mudar ou cancelar o seu plano",
+      "summary": "Mude ou cancele quando quiser em Configurações, em Cobrança e plano.",
+      "keywords": "plano upgrade downgrade mudar cancelar assinatura cobrança fatura nota reembolso stripe portal pagamento cartão plan cancel subscription refund",
+      "steps": [
+        "Abra Configurações e depois Cobrança e plano.",
+        "Escolha Gerenciar cobrança para cancelar, trocar o cartão ou baixar faturas.",
+        "Cancelar interrompe a renovação. Você continua com o seu plano até o fim do período.",
+        "Primeira cobrança inesperada? Escreva para a gente em até 14 dias e devolvemos o valor integral."
+      ],
+      "links": [
+        {
+          "label": "Configurações do painel",
+          "href": "/dashboard/settings"
+        },
+        {
+          "label": "Planos e preços",
+          "href": "/pricing"
+        }
+      ]
+    },
+    {
+      "id": "disconnect-or-delete",
+      "title": "Desconectar uma caixa de correio ou excluir a sua conta",
+      "summary": "Remova uma caixa de correio, um espaço de trabalho ou a conta inteira pelo painel.",
+      "keywords": "desconectar remover caixa de entrada caixa de correio excluir apagar conta espaço de trabalho encerrar zona de perigo disconnect delete account workspace",
+      "steps": [
+        "Caixa de correio: em Caixas de entrada, clique nela e escolha Desconectar. A credencial armazenada é removida.",
+        "Espaço de trabalho: em Configurações, na seção Espaço de trabalho, escolha Excluir espaço de trabalho.",
+        "Conta: em Configurações, na seção Zona de perigo, escolha Excluir conta. Isso não pode ser desfeito.",
+        "Qualquer uma dessas ações cancela os e-mails agendados que ainda esperam envio a partir das caixas de correio removidas. Excluir a conta também pede ao Google que encerre o nosso acesso a qualquer caixa do Gmail conectada com o login do Google, e enviamos uma confirmação por e-mail.",
+        "Excluir a conta cancela um plano pago na hora. O tempo não usado não é reembolsado automaticamente: em até 14 dias após a primeira cobrança, escreva para a gente. Para aproveitar o tempo que você pagou, cancele primeiro e exclua depois."
+      ],
+      "links": [
+        {
+          "label": "Caixas de entrada no painel",
+          "href": "/dashboard/inboxes"
+        },
+        {
+          "label": "Configurações do painel",
+          "href": "/dashboard/settings"
+        }
+      ]
+    }
+  ],
+  "contact": {
+    "heading": "Escreva para a gente",
+    "lead": "Respondemos por e-mail em até um dia útil.",
+    "emailLine": "Mande um e-mail para {email} ou envie uma mensagem por aqui.",
+    "openForm": "Escrever uma mensagem"
+  },
+  "categories": {
+    "connect": "Conectar uma caixa de correio",
+    "client": "Configurar um cliente de IA",
+    "billing": "Cobrança e planos",
+    "bug": "Algo não está funcionando",
+    "feature": "Sugestão de recurso",
+    "other": "Outro assunto"
+  },
+  "form": {
+    "category": "Tópico",
+    "subject": "Assunto",
+    "message": "Mensagem",
+    "email": "Seu e-mail",
+    "emailSignedIn": "Responderemos para",
+    "submit": "Enviar mensagem",
+    "sending": "Enviando…",
+    "subjectConnect": "Problema ao conectar {provider}",
+    "aboutProvider": "Sobre: {provider}"
+  },
+  "attach": {
+    "summary": "O que anexamos à sua mensagem",
+    "intro": "Para podermos ajudar sem ficar perguntando de volta, isto é enviado junto com a sua mensagem:",
+    "workspace": "Espaço de trabalho",
+    "plan": "Plano",
+    "mailboxes": "Caixas de correio",
+    "noMailboxes": "Nenhuma caixa de correio conectada",
+    "lastError": "último erro: {code}",
+    "from": "Aberto a partir de",
+    "provider": "Provedor",
+    "code": "Código de erro",
+    "never": "Nunca anexamos: senhas, tokens ou o conteúdo dos seus e-mails.",
+    "healthConnected": "Conectada",
+    "healthPending": "Pendente",
+    "healthNeedsReconnect": "Precisa reconectar",
+    "healthUnavailable": "Não pode ser usada"
+  },
+  "errors": {
+    "invalid_json": "Algo deu errado ao enviar o formulário. Recarregue a página e tente de novo.",
+    "invalid_email": "Digite um endereço de e-mail válido para podermos responder.",
+    "invalid_category": "Escolha um tópico.",
+    "subject_required": "Adicione um assunto.",
+    "subject_too_long": "O assunto está longo demais. Use menos de 150 caracteres.",
+    "message_required": "Escreva uma mensagem.",
+    "message_too_long": "A mensagem está longa demais. Use menos de 5.000 caracteres.",
+    "invalid_form_token": "Esta página ficou aberta por tempo demais. Recarregue e envie de novo.",
+    "rate_limited": "Muitas mensagens em pouco tempo. Espere um pouco ou escreva para support@mcpemails.com.",
+    "server_error": "Não conseguimos salvar a sua mensagem. Tente de novo ou escreva para support@mcpemails.com.",
+    "not_found": "O formulário de contato não está disponível agora. Escreva para support@mcpemails.com.",
+    "network": "Não foi possível falar com a gente. Verifique a sua conexão e tente de novo.",
+    "unknown": "Algo deu errado. Tente de novo ou escreva para support@mcpemails.com."
+  },
+  "success": {
+    "withRef": "Obrigado, recebemos a sua mensagem. A sua referência é {ref}. Respondemos por e-mail.",
+    "noRef": "Obrigado, recebemos a sua mensagem. Respondemos por e-mail."
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "title": "E-mail com IA para empresas: todas as caixas da empresa em um só agente",
+    "description": "Uma pessoa, todas as caixas de e-mail da empresa. Conecte info@, sales@ e invoices@ por IMAP, Gmail, Microsoft 365 ou qualquer host de e-mail e trabalhe em todas a partir do Claude ou de qualquer cliente MCP."
+  },
+  "hero": {
+    "eyebrow": "Para quem cuida do e-mail da empresa",
+    "titleLine1": "Todas as caixas da empresa,",
+    "titleLine2": "uma pessoa, um agente",
+    "lead": "info@, sales@, invoices@, support@ e o seu próprio endereço costumam cair na mesma pessoa. O MCPEmails conecta todos eles ao Claude, Cursor, ChatGPT ou qualquer cliente MCP, para você ler, responder, encaminhar e arquivar em todos os endereços a partir de uma só conversa. Funciona com quem quer que hospede seu e-mail, e você pode reter toda mensagem de saída para sua aprovação.",
+    "ctaPrimary": "Conecte sua primeira caixa grátis",
+    "ctaSecondary": "Veja o que ele faz"
+  },
+  "pains": {
+    "eyebrow": "O trabalho",
+    "title": "Cinco endereços, uma pessoa respondendo",
+    "sub": "Uma empresa pequena tem mais caixas de e-mail do que gente. Cada uma é um login separado, uma aba separada e mais um lugar onde um cliente pode ficar sem resposta.",
+    "items": {
+      "coverage": {
+        "tag": "Cobertura",
+        "h": "Peça uma vez, confira todos os endereços",
+        "p": "Peça ao seu agente para <b>passar por sales@, info@ e support@ e listar o que ainda está esperando resposta</b>. Ele lê cada caixa conectada ao vivo e traz uma lista única, para nada ficar esquecido no endereço que ninguém abriu hoje."
+      },
+      "sender": {
+        "tag": "Remetente certo",
+        "h": "As respostas saem do endereço certo",
+        "p": "Cada caixa de e-mail mantém <b>o próprio nome de remetente e a própria assinatura</b>, e seus e-mails saem pelo provedor ou servidor SMTP daquela caixa. Uma resposta a uma dúvida sobre fatura sai de invoices@, assinada do jeito que invoices@ assina."
+      },
+      "routine": {
+        "tag": "Rotina",
+        "h": "Coloque a rotina em uma programação",
+        "p": "Tarefas recorrentes podem rodar como <b>automações de triagem</b>: uma pesquisa salva mais uma ação fixa (mover, rotular, marcar como lido, encaminhar ou rascunhar uma resposta) em uma frequência definida, sem nenhum modelo de IA no meio. Uma automação nunca pode excluir e-mails, e um encaminhamento que ela enfileira sempre espera sua aprovação."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Um dia nas caixas de e-mail da empresa",
+    "title": "Prompts reais que operadores digitam",
+    "sub": "Nenhum app novo para aprender. Você fala com seu cliente de IA, e ele trabalha dentro das caixas de e-mail de verdade.",
+    "prompts": [
+      "Passe por sales@ e info@ e liste todas as consultas desta semana que ninguém respondeu.",
+      "Encaminhe as faturas deste mês de invoices@ para o nosso contador, com os anexos.",
+      "Rascunhe uma resposta de support@ para a reclamação sobre a entrega, no mesmo tom da nossa última resposta a esse cliente.",
+      "Pesquise em todas as caixas qualquer coisa de northwind-supplies.example e me diga em que pé está o pedido.",
+      "Mova todos os extratos de fornecedores em invoices@ para uma pasta Extratos.",
+      "Agende o aviso de reajuste de preços para sair de sales@ na segunda-feira às 8h."
+    ]
+  },
+  "does": {
+    "eyebrow": "O que ele faz de verdade",
+    "title": "Caixas de e-mail de verdade, não uma espiada somente leitura",
+    "sub": "As mesmas ferramentas funcionam em todas as caixas que você conectar. Com várias conectadas, cada chamada indica a caixa em que atua.",
+    "items": {
+      "read": {
+        "h": "Ler e pesquisar",
+        "p": "Listar, ler e pesquisar cada caixa conectada, buscada ao vivo do provedor a cada vez."
+      },
+      "send": {
+        "h": "Enviar, responder e encaminhar",
+        "p": "Enviar e-mails novos, responder na conversa ou encaminhar com os anexos originais intactos, a partir do endereço ao qual o e-mail pertence."
+      },
+      "schedule": {
+        "h": "Agendar",
+        "p": "Programar uma mensagem para sair depois e cancelar a qualquer momento antes do envio."
+      },
+      "organize": {
+        "h": "Organizar",
+        "p": "Mover, copiar, sinalizar, arquivar e rotular mensagens, e criar as pastas para guardá-las."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Controle",
+    "title": "Quem aperta enviar continua sendo você",
+    "sub": "Deixar um agente entrar no e-mail da empresa só funciona se os limites forem reais. Estes são aplicados no nosso servidor, não sugeridos ao modelo.",
+    "items": {
+      "approval": {
+        "h": "Retenção para aprovação dos e-mails de saída",
+        "p": "Ative por caixa de e-mail e todo envio, resposta, encaminhamento, envio de rascunho e envio agendado fica esperando no seu painel até você aprovar ou rejeitar. Está incluído em todos os planos, inclusive no Free."
+      },
+      "stored": {
+        "h": "Os e-mails que ele lê nunca são armazenados",
+        "p": "As mensagens são buscadas ao vivo do seu provedor a cada requisição e entregues ao seu cliente de IA, sem nada guardado entre as chamadas. O que armazenamos por caixa de e-mail é o token ou a senha, criptografados. Uma mensagem que você agenda para depois é a exceção: guardamos até o envio e mantemos um registro no seu histórico depois."
+      },
+      "keys": {
+        "h": "Chaves limitadas às caixas que você escolher",
+        "p": "Uma chave de API pode ser restrita a caixas de e-mail selecionadas e às permissões de que precisa. Uma chave criada para triar support@ não alcança invoices@, e uma chave sem a permissão de envio não envia nada."
+      },
+      "server": {
+        "h": "Seu servidor de e-mail continua no comando",
+        "p": "Os e-mails são enviados pelo seu próprio provedor ou servidor SMTP, nunca por um servidor de e-mail nosso. Trocar a senha de uma caixa, revogar a senha de app dela ou remover o acesso na sua conta Google ou Microsoft corta o agente na hora."
+      }
+    },
+    "link": "Leia como funciona a segurança"
+  },
+  "providers": {
+    "eyebrow": "Qualquer host",
+    "title": "Conecte todas as caixas de e-mail da empresa, seja quem for o host",
+    "sub": "A maioria dos e-mails de empresa fica no provedor de hospedagem ou no registrador do domínio, e tudo bem. Qualquer caixa que fale IMAP e SMTP nas portas padrão se conecta com endereço, host e senha. IONOS, Hostinger, OVH, Namecheap e outros hosts comuns são reconhecidos pelo endereço e preenchidos para você. Gmail e Google Workspace se conectam com uma senha de app do Google. Microsoft 365 e Outlook se conectam pelo login da Microsoft; em uma conta Microsoft 365 da empresa, seu administrador de TI pode precisar aprovar o MCPEmails uma vez para toda a organização. iCloud, Fastmail, Yahoo, Zoho e Yandex se conectam com senha de app.",
+    "ctaImap": "Conectar qualquer caixa IMAP",
+    "ctaGmail": "Conectar Gmail ou Google Workspace",
+    "ctaMicrosoft": "Conectar Microsoft 365",
+    "ctaIonos": "Conectar IONOS",
+    "ctaMatrix": "Veja como cada provedor se conecta"
+  },
+  "pricing": {
+    "eyebrow": "Preços",
+    "title": "Escolha o plano contando as caixas de e-mail",
+    "sub": "Free, Personal e Pro são todos um único login. O que muda é quantas caixas de e-mail esse login pode conectar.",
+    "items": {
+      "free": {
+        "h": "Free: uma caixa de e-mail",
+        "p": "Comece pelo endereço mais movimentado. 150 ações de e-mail por mês, os 3 primeiros dias sem contar, sem cartão."
+      },
+      "personal": {
+        "h": "Personal, $9 por mês: até três",
+        "p": "Para uma empresa com dois ou três endereços. Ações de e-mail ilimitadas, um limite de pico maior e suporte prioritário por e-mail."
+      },
+      "pro": {
+        "h": "Pro, $15 por mês: de quatro a dez",
+        "p": "Até 10 caixas de e-mail, ainda em um único login. O plano para uma pessoa que toca um negócio com um endereço por departamento."
+      }
+    },
+    "note": "O Business, a $39 por mês, inclui 10 caixas de e-mail e cobra $3 por mês por cada uma além disso. Membros com funções não custam nada a mais, e você pode manter um espaço de trabalho separado por empresa ou cliente.",
+    "cta": "Comparar todos os planos"
+  },
+  "faq": {
+    "eyebrow": "Perguntas de operadores",
+    "title": "O que operadores perguntam antes de conectar",
+    "sub": "As objeções práticas, respondidas sem rodeios.",
+    "items": [
+      {
+        "q": "Somos uma empresa, não uma pessoa física. O Pro é mesmo o plano certo?",
+        "a": "Sim, se uma pessoa opera as caixas de e-mail. O Pro é um login com até 10 caixas conectadas, então um único operador pode cuidar de info@, sales@, invoices@ e support@ a partir de um agente. O Business é para mais de 10 caixas ou várias pessoas que fazem login cada uma por si, com funções e um espaço de trabalho separado por cliente."
+      },
+      {
+        "q": "Nosso e-mail fica na nossa hospedagem, não no Gmail. Vai funcionar?",
+        "a": "Quase com certeza. Qualquer caixa que fale IMAP e SMTP nas portas padrão se conecta com endereço, host e senha, e hosts comuns são reconhecidos pelo endereço para as configurações se preencherem sozinhas. O servidor precisa estar acessível pela internet pública, e uma caixa que só aceita login OAuth por IMAP não pode ser conectada desse jeito. Se o e-mail da sua empresa está no Microsoft 365, conecte como Outlook: você entra com a Microsoft, e seu administrador de TI pode precisar aprovar o MCPEmails uma vez para toda a organização."
+      },
+      {
+        "q": "O agente envia do endereço certo?",
+        "a": "Sim. Com mais de uma caixa conectada, cada chamada de ferramenta indica a caixa em que atua, e cada caixa tem o próprio nome de remetente e a própria assinatura. Uma resposta a uma conversa em sales@ sai de sales@, pelo servidor de e-mail daquela caixa."
+      },
+      {
+        "q": "Posso impedir que ele envie qualquer coisa sem mim?",
+        "a": "Sim. Ative a retenção para aprovação em uma caixa de e-mail e toda mensagem de saída dela fica esperando no seu painel até você aprovar ou rejeitar. Você também pode dar a um cliente de IA uma chave de API sem nenhuma permissão de envio. As duas opções estão em todos os planos."
+      },
+      {
+        "q": "O e-mail da empresa fica armazenado nos seus servidores?",
+        "a": "Não. Os e-mails que seu agente lê são buscados ao vivo do seu provedor a cada requisição e não são guardados. O que armazenamos é o token ou a senha de cada caixa, criptografados. Uma mensagem que você agenda para depois é a exceção: guardamos até o envio e mantemos um registro no seu histórico depois."
+      },
+      {
+        "q": "E se um colega também precisar de acesso?",
+        "a": "Free, Personal e Pro são planos de login único. Quando uma segunda pessoa precisar do próprio login, o Business adiciona membros com funções sem custo extra por pessoa. Até lá, um operador no Pro cobre até 10 caixas de e-mail."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Coloque todas as caixas da empresa em um só agente",
+    "sub": "Conecte a primeira caixa grátis, sem cartão. Adicione as outras quando quiser: três no Personal, todas no Pro.",
+    "ctaPrimary": "Conecte sua primeira caixa grátis",
+    "ctaSecondary": "Ler a documentação"
+  }
+}

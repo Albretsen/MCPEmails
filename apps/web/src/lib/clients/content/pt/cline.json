@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Cline: configuração de servidor MCP remoto",
+    "description": "Adicione uma caixa de entrada real ao Cline como servidor remoto Streamable HTTP com uma chave de API com escopo. Leia, pesquise, envie e agende e-mails no VS Code. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Cline + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Cline",
+    "titleLine2": "como um servidor MCP remoto",
+    "lead": "Adicione uma caixa de correio real ao Cline no VS Code. Leia, pesquise, envie, responda, encaminhe, agende e organize e-mails, com uma chave limitada exatamente ao que você quer que o agente faça.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Chave de API com escopo, revogável com um clique",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "No painel do Cline, abra MCP Servers e depois Remote Servers. Cole https://mcpemails.com/api/mcp, defina o tipo de transporte como Streamable HTTP, adicione o servidor e depois adicione um header Authorization Bearer com uma chave de API do seu painel."
+  },
+  "method": {
+    "title": "Como o Cline se conecta: uma chave de API com escopo",
+    "body": "O Cline não executa o fluxo OAuth no navegador com um servidor MCP remoto, então ele autentica com um token bearer. Crie uma chave de API no seu painel, marque só os escopos de que o agente precisa e cole a chave no Cline como um header <code>Authorization: Bearer</code>. Conexões por chave e por OAuth chegam ao mesmo endpoint e recebem o mesmo catálogo de ferramentas; a diferença está só em como o token é obtido."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Crie uma chave de API com escopo",
+      "p": "No painel, em Chaves de API, clique em Criar chave. Dê um nome e marque só os escopos de que este agente precisa: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> e <code>manage:automations</code>. A chave tem o formato <code>mcpe_</code> seguido de 64 caracteres hexadecimais e aparece uma única vez, então copie antes de fechar a janela."
+    },
+    {
+      "h": "Adicione o servidor remoto",
+      "p": "No painel do Cline, clique no ícone MCP Servers, abra a aba <b>Remote Servers</b> (servidores remotos), digite um nome e cole <code>https://mcpemails.com/api/mcp</code>. Defina Transport Type como <b>Streamable HTTP</b> e clique em Add Server."
+    },
+    {
+      "h": "Adicione o header Authorization",
+      "p": "Adicione um header chamado <code>Authorization</code> com o valor <code>Bearer</code> seguido de um espaço e da sua chave. O servidor só aceita tokens bearer nesse header."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, não SSE",
+      "p": "A aba Remote Servers oferece mais de um transporte. Este servidor usa Streamable HTTP na revisão de protocolo 2025-06-18. Escolher SSE gera um servidor que parece ter sido adicionado sem erro e depois nunca responde, um jeito lento de descobrir um erro de um campo só."
+    },
+    {
+      "h": "A palavra Bearer faz parte do valor",
+      "p": "O valor do header é <code>Bearer</code>, um espaço e depois a chave. Colar só a chave é a causa mais comum de um 401 aqui, e um 401 deste endpoint traz um ponteiro de descoberta OAuth em vez de uma mensagem dizendo que o header estava malformado, o que não ajuda você a adivinhar."
+    },
+    {
+      "h": "Limite a chave ao agente, porque a chave é todo o modelo de permissão",
+      "p": "O Cline não executa o fluxo de consentimento OAuth, então os escopos que você marca ao criar a chave são o limite inteiro. Uma chave com <code>read:email</code>, <code>search:email</code> e <code>manage:drafts</code> deixa o Cline fazer triagem e rascunhos, e não consegue enviar nem excluir nada. Para ampliar depois, emita uma segunda chave em vez de afrouxar a primeira."
+    },
+    {
+      "h": "A chave bruta aparece uma única vez",
+      "p": "Só um hash SHA-256 da chave é armazenado, então não há como mostrá-la de novo. Se você perder, revogue e crie outra. A revogação no painel, em Chaves de API, vale a partir da próxima chamada."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Cline?",
+      "a": "Adicione o MCPEmails como servidor remoto: MCP Servers, Remote Servers, cole https://mcpemails.com/api/mcp, defina Transport Type como Streamable HTTP e adicione um header Authorization Bearer com uma chave de API do seu painel. O Cline passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Por que o Cline precisa de uma chave de API e o Cursor não?",
+      "a": "Porque os dois clientes tratam a autenticação MCP remota de formas diferentes. O Cursor executa o fluxo OAuth no navegador e guarda o token ele mesmo. O Cline autentica com qualquer header que você configurar, então uma chave bearer é o caminho que funciona. Os dois chegam ao mesmo endpoint e recebem as mesmas ferramentas; só muda como o token é obtido."
+    },
+    {
+      "q": "O que posso fazer se a chave vazar?",
+      "a": "Revogue. As chaves ficam listadas no painel, em Chaves de API, e a revogação vale a partir da próxima chamada, sem espera. Como uma chave carrega só os escopos que você marcou, uma chave somente leitura que vazou também não pode ter enviado nem excluído nada."
+    },
+    {
+      "q": "Quais caixas de correio o Cline alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Cline pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao Cline uma caixa de entrada real",
+    "sub": "Um servidor remoto, uma chave com escopo. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

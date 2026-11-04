@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://cursor.com/docs/mcp"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao Cursor: configuração do servidor MCP no mcp.json",
+    "description": "Adicione uma caixa de entrada real ao Cursor com quatro linhas no mcp.json. O Cursor pede o login OAuth, sem chave de API, e depois lê, pesquisa, envia e agenda e-mails. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Cursor + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao Cursor",
+    "titleLine2": "com quatro linhas de mcp.json",
+    "lead": "Dê ao editor uma caixa de correio real. Responda a um relatório de bug a partir do arquivo que causou o problema, envie a correção a um cliente ou limpe uma caixa de entrada sem trocar de janela.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "Adicione uma entrada em mcpServers no ~/.cursor/mcp.json com a url https://mcpemails.com/api/mcp. O Cursor então pede que você faça login por OAuth, e nenhuma chave de API entra na história."
+  },
+  "method": {
+    "title": "Como o Cursor se conecta: OAuth, sem chave de API",
+    "body": "O Cursor executa o fluxo OAuth padrão do MCP com este servidor. Ele se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar, e autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "answerSection": {
+    "title": "Exemplo: Gmail no Cursor",
+    "body": "Conecte o Gmail no painel do MCPEmails com uma senha de app do Google, adicione a entrada <code>mcpemails</code> mostrada abaixo ao <code>~/.cursor/mcp.json</code> e faça login quando o Cursor pedir. Depois peça ao agente do Cursor algo como \"encontre o relatório de bug que a Anna mandou para o meu Gmail ontem e escreva um rascunho de resposta dizendo que a correção sai hoje\". Ele pesquisa seu Gmail, lê a conversa e salva a resposta como rascunho no Gmail para você conferir antes que ela vá para qualquer lugar."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra o seu mcp.json",
+      "p": "Edite <code>~/.cursor/mcp.json</code> para todos os projetos, ou <code>.cursor/mcp.json</code> dentro de um projeto."
+    },
+    {
+      "h": "Adicione o servidor",
+      "p": "Adicione a entrada abaixo em <code>mcpServers</code>. O campo que o Cursor espera aqui é <code>url</code>."
+    },
+    {
+      "h": "Autorize",
+      "p": "O Cursor pede que você faça login por OAuth. Autorize com o MCPEmails e aprove os escopos que você quer que o editor tenha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Configuração do projeto e configuração global são arquivos diferentes, e os dois existem",
+      "p": "Um servidor em <code>~/.cursor/mcp.json</code> acompanha você em todos os projetos; um em <code>.cursor/mcp.json</code> pertence só àquele repositório. E-mail costuma ser uma coisa sua, não do repositório, então o arquivo global é o lugar melhor, e ele mantém a entrada fora de um repositório que outras pessoas clonam."
+    },
+    {
+      "h": "Um mcp.json de projeto é um arquivo que você pode commitar sem querer",
+      "p": "A entrada em si não guarda segredo nenhum, só uma URL pública, e os tokens OAuth são armazenados pelo Cursor, não escritos ali. Isso muda no momento em que alguém troca a entrada OAuth por uma chave de API bearer escrita direto no arquivo. Se você for pelo caminho da chave, mantenha-a fora de arquivos commitados e revogue qualquer chave que já tenha ido para um push: as chaves são revogáveis no painel, em Chaves de API, com um clique."
+    },
+    {
+      "h": "Dê ao editor menos do que você daria a um app de e-mail",
+      "p": "Um agente de código com <code>delete:email</code> é um poder estranho para entregar a uma ferramenta cuja função principal é refatorar. Os escopos de leitura, pesquisa e rascunho cobrem quase todo fluxo de trabalho de editor. Você sempre pode emitir uma segunda conexão, mais ampla, para o assistente em que você realmente faz a triagem dos e-mails."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano. Uma resposta 429 traz Retry-After.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao Cursor?",
+      "a": "Adicione uma entrada em mcpServers no ~/.cursor/mcp.json com a url https://mcpemails.com/api/mcp e conclua o login OAuth que o Cursor pedir. O Cursor passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails em todas as caixas de correio que você conectou."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Cursor?",
+      "a": "Não. O Cursor executa o fluxo OAuth no navegador com este servidor, registrando-se dinamicamente e autorizando com PKCE, então o arquivo de configuração não guarda nada secreto. Uma chave de API bearer continua sendo uma opção para configurações automatizadas ou headless."
+    },
+    {
+      "q": "Por que o campo se chama url aqui e serverUrl no Windsurf?",
+      "a": "Porque os dois clientes escolheram schemas de configuração diferentes para a mesma ideia. O Cursor lê url em mcpServers, o Windsurf lê serverUrl, o VS Code quer type e url em servers, e o Gemini CLI quer httpUrl. O endpoint é idêntico nos quatro; só muda o nome da chave, e copiar um trecho de um cliente para outro é o motivo mais comum de uma configuração simplesmente não fazer nada."
+    },
+    {
+      "q": "Quais caixas de correio o Cursor alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Cursor pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então uma chave ou um token sem esse escopo não consegue enviar nada. Além disso, o dono de uma caixa de entrada pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao Cursor uma caixa de entrada real",
+    "sub": "Quatro linhas de configuração, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

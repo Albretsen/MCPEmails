@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "supabase/functions/mcp-server/web-ingress.ts",
+    "supabase/functions/mcp-server/index.ts (RATE_LIMIT_WINDOWS, search_and_move partial output schema)",
+    "apps/web/messages/en/docs.json (approval, automation)",
+    "https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolmcp/",
+    "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-langchain.mcpclient/",
+    "https://docs.n8n.io/integrations/builtin/credentials/mcp/",
+    "https://github.com/n8n-io/n8n/blob/master/packages/@n8n/nodes-langchain/nodes/mcp/McpClientTool/McpClientTool.node.ts",
+    "https://github.com/n8n-io/n8n/blob/master/packages/nodes-base/credentials/HttpBearerAuth.credentials.ts"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao n8n: MCP Client Tool para o AI Agent",
+    "description": "Conecte o e-mail a um AI Agent do n8n com o node MCP Client Tool: HTTP Streamable, Bearer Auth e uma chave de API com escopo. Leia, pesquise, rascunhe e envie e-mails."
+  },
+  "hero": {
+    "eyebrow": "n8n + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao n8n",
+    "titleLine2": "com o MCP Client Tool",
+    "lead": "Dê ao AI Agent do seu workflow no n8n uma caixa de correio real. Ele pode ler, pesquisar, rascunhar, enviar, responder, encaminhar e arquivar e-mails por um único endpoint MCP, com uma chave limitada exatamente ao que o workflow deve fazer.",
+    "meta0": "Funciona com o node MCP Client Tool nativo",
+    "meta1": "Chave de API com escopo, revogável com um clique",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "No seu workflow do n8n, adicione um node MCP Client Tool à entrada Tool do AI Agent. Defina Endpoint como https://mcpemails.com/api/mcp, Server Transport como HTTP Streamable e Authentication como Bearer Auth, depois cole uma chave de API do seu painel do MCPEmails como Bearer Token."
+  },
+  "method": {
+    "title": "Como o n8n se conecta: uma credencial Bearer Auth com uma chave com escopo",
+    "body": "O node MCP Client Tool envia qualquer credencial que você anexar a ele. Este guia usa a credencial <b>Bearer Auth</b> do n8n, que coloca sua chave no header <code>Authorization</code> de cada solicitação. Crie a chave no seu painel e marque só os escopos de que o workflow precisa. Um workflow muitas vezes roda num agendamento sem ninguém olhando, então esses escopos são o limite que importa. Conexões por chave e por OAuth chegam ao mesmo endpoint e recebem o mesmo catálogo de ferramentas."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada."
+    },
+    {
+      "h": "Crie uma chave de API com escopo",
+      "p": "No painel, em Chaves de API, clique em Criar chave. Dê a ela o nome do workflow e marque só os escopos de que ele precisa: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> e <code>manage:automations</code>. A chave tem o formato <code>mcpe_</code> seguido de 64 caracteres hexadecimais e aparece uma única vez, então copie antes de fechar a janela."
+    },
+    {
+      "h": "Adicione o MCP Client Tool ao seu AI Agent",
+      "p": "Abra o workflow, clique no mais abaixo da entrada <b>Tool</b> do node AI Agent e escolha <b>MCP Client Tool</b>. Cole <code>https://mcpemails.com/api/mcp</code> em <b>Endpoint</b> e defina <b>Server Transport</b> como <b>HTTP Streamable</b>."
+    },
+    {
+      "h": "Anexe uma credencial Bearer Auth",
+      "p": "Defina <b>Authentication</b> como <b>Bearer Auth</b>, crie uma credencial nova e cole a chave em <b>Bearer Token</b>, sem nada na frente. Deixe <b>Tools to Include</b> em All, ou mude para Selected e escolha só as ferramentas que este workflow deve ver."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Cole a chave sem a palavra Bearer",
+      "p": "A credencial Bearer Auth do n8n adiciona <code>Bearer</code> e um espaço para você. Digitar isso por conta própria envia a palavra duas vezes e a chamada falha com um 401. Se você usar <b>Header Auth</b>, é o contrário: Name é <code>Authorization</code> e Value é <code>Bearer</code>, um espaço e depois a chave."
+    },
+    {
+      "h": "Um campo chamado SSE Endpoint indica um node antigo",
+      "p": "A versão 1 do node MCP Client Tool tinha um único campo <b>SSE Endpoint</b> e nenhuma escolha de transporte. As versões atuais mostram <b>Endpoint</b> mais <b>Server Transport</b>. Este servidor usa Streamable HTTP, então se você só vê SSE Endpoint, adicione um node novo ou atualize o n8n. Se Server Transport estiver em Server Sent Events (Deprecated), mude para HTTP Streamable."
+    },
+    {
+      "h": "Mantenha o timeout padrão",
+      "p": "O node espera 60.000 ms por uma chamada de ferramenta, definido em Options, <b>Timeout</b>. Isso basta até para trabalho em massa: mover ou excluir numa pasta grande para no limite de tempo do próprio servidor antes disso e devolve um resultado marcado como <code>partial</code>, com as mensagens não processadas listadas em <code>remaining_message_ids</code>, para que o agente chame de novo com esses ids. Baixar muito o Timeout pode cortar uma chamada antes de esse resultado chegar, e o agente fica sem saber o que foi feito."
+    },
+    {
+      "h": "Tools to Include esconde ferramentas; os escopos da chave as proíbem",
+      "p": "O node só lista as ferramentas para as quais sua chave tem escopo, porque o servidor deixa o resto fora de <code>tools/list</code>. Escolher um subconjunto em Tools to Include restringe isso ainda mais, o que ajuda o modelo a escolher, mas não muda o que a chave pode fazer. Defina o limite na chave e use Tools to Include para manter o agente focado."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de taxa por chave, em janelas por minuto, por hora e por dia dimensionadas para o seu plano, então uma chave pode usar todo o teto por minuto do plano e várias chaves o dividem. Um workflow que percorre muitos itens em loop deve respeitar o Retry-After e controlar o próprio ritmo.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca inicia um workflow sozinho. Para reagir a e-mails que chegam, inicie o workflow com um Schedule Trigger e faça o agente verificar as mensagens não lidas.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail a um AI Agent do n8n?",
+      "a": "Adicione um node MCP Client Tool à entrada Tool do AI Agent. Defina Endpoint como https://mcpemails.com/api/mcp e Server Transport como HTTP Streamable, escolha Bearer Auth e cole uma chave de API do painel, em Chaves de API, como Bearer Token. O agente passa a ter ferramentas para ler, pesquisar, rascunhar, enviar, responder, encaminhar, organizar e agendar e-mails."
+    },
+    {
+      "q": "Posso chamar uma ferramenta de e-mail sem um AI Agent?",
+      "a": "Sim. O node MCP Client avulso do n8n executa uma ferramenta MCP como um passo comum do workflow, sem um modelo decidindo o que chamar. Aponte o MCP Endpoint URL dele para o mesmo endereço, anexe a mesma credencial Bearer Auth, escolha uma ferramenta e preencha os parâmetros, por exemplo email_read com action definido como list e unread como true. Isso serve para pipelines fixos em que os passos nunca mudam."
+    },
+    {
+      "q": "Por que Bearer Auth e não a credencial MCP OAuth2?",
+      "a": "O n8n também oferece uma credencial MCP OAuth2. Este guia usa Bearer Auth porque os escopos de uma chave são fixados quando você a cria e ficam visíveis no seu painel, o que é mais fácil de acompanhar num workflow que roda sem supervisão. Revogar a chave no painel, em Chaves de API, para o workflow na próxima chamada."
+    },
+    {
+      "q": "O workflow pode enviar e-mails sem ninguém conferir?",
+      "a": "Só se você deixar. Enviar exige o escopo send:email, então uma chave sem ele não consegue enviar nada. Você também pode ativar a aprovação para uma caixa de entrada no painel: envios, respostas, encaminhamentos, envios de rascunho e envios agendados ficam retidos, o agente recebe um resultado pendente e um membro do espaço de trabalho aprova ou rejeita cada um antes que qualquer coisa saia."
+    },
+    {
+      "q": "Quais caixas de correio um workflow do n8n alcança?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. Com várias caixas de entrada conectadas, o agente chama inbox_list para encontrar o id de cada uma, então não há UUIDs para fixar no workflow."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao n8n. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Excluir a caixa de entrada no painel, ou revogar o acesso no seu provedor, encerra a conexão na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê ao seu agente do n8n uma caixa de entrada real",
+    "sub": "Um endpoint, uma credencial Bearer Auth, uma chave com escopo. Sem cartão."
+  }
+}

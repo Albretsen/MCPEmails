@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://support.google.com/gemini/answer/17209137?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://support.google.com/gemini/answer/17094507?hl=en&co=GENIE.Platform%3DDesktop",
+    "https://blog.google/innovation-and-ai/products/gemini-app/gemini-spark-updates-june-2026/"
+  ],
+  "meta": {
+    "title": "Conecte o e-mail ao app Gemini: configuração de app MCP personalizado",
+    "description": "Adicione uma caixa de entrada real ao app Gemini como app personalizado. Cole a URL de um servidor MCP em Connected Apps e faça login. Sem chave de API. Uma caixa de entrada grátis."
+  },
+  "hero": {
+    "eyebrow": "Gemini + e-mail",
+    "titleLine1": "Conecte sua caixa de entrada ao app Gemini",
+    "titleLine2": "como um app conectado personalizado",
+    "lead": "Adicione uma URL em Connected Apps no gemini.google.com e o Gemini passa a ler, pesquisar, enviar, responder, encaminhar, agendar e organizar seus e-mails de verdade, na web e no app para celular.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "OAuth, sem chave de API",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "No gemini.google.com, abra Settings, Connected Apps e, em Custom apps, adicione um app personalizado com a URL do servidor MCP https://mcpemails.com/api/mcp. Clique em Next e siga o login na tela para autorizar com o MCPEmails. Hoje o Google oferece apps personalizados a usuários com 18 anos ou mais nos EUA, conectados com uma Conta do Google pessoal, com Keep Activity ativado, em inglês."
+  },
+  "method": {
+    "title": "Como o app Gemini se conecta: OAuth, sem chave de API",
+    "body": "O formulário de configuração do Google espera um servidor MCP compatível com <b>Dynamic Client Registration</b>, e este é: o app Gemini se registra com <b>registro dinâmico de cliente RFC 7591</b>, então não há client ID para criar nem nada para preencher em Advanced features. Depois ele autoriza com <b>authorization code mais PKCE</b> usando S256. Nenhum client secret é transmitido, e o token carrega só os escopos que você aprova na nossa tela de consentimento. O token de acesso que ele recebe dura uma hora e se renova sozinho; ele aparece no painel, em Chaves de API, como <code>OAuth:</code> seguido do nome do cliente, e é ali que você revoga a conexão."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis e conecte uma caixa de correio",
+      "p": "Crie sua conta em mcpemails.com, sem cartão, e conecte sua caixa de correio no painel, em Caixas de entrada. Uma caixa de entrada é grátis, para sempre."
+    },
+    {
+      "h": "Abra Connected Apps na web",
+      "p": "No computador, acesse gemini.google.com. Na parte de baixo, clique em <b>Settings</b> (configurações) e depois em <b>Connected Apps</b> (apps conectados). Apps personalizados só podem ser adicionados no app da web."
+    },
+    {
+      "h": "Adicione um app personalizado",
+      "p": "Em <b>Custom apps</b> (apps personalizados), use o campo <b>Add a custom app link to get started</b>, ou clique em <b>Add a custom app</b> se você já tiver um. Informe <code>https://mcpemails.com/api/mcp</code> como URL do servidor MCP e deixe Advanced features fechado."
+    },
+    {
+      "h": "Clique em Next e autorize",
+      "p": "Clique em <b>Next</b> e siga as instruções na tela. Você é enviado ao MCPEmails para fazer login e aprovar os escopos que quer que o Gemini tenha."
+    },
+    {
+      "h": "Chame com @",
+      "p": "Num chat, digite <b>@</b> e selecione o app MCPEmails para garantir que o Gemini o use naquele prompt. Depois de conectado, ele também fica disponível no app Gemini para celular."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Por enquanto, apps personalizados são só nos EUA, para contas pessoais e em inglês",
+      "p": "O Google lista como requisitos ter 18 anos ou mais e estar nos EUA, estar conectado com uma Conta do Google pessoal e ter o Keep Activity ativado. Contas do Google de trabalho e de escola ainda não podem adicionar um app personalizado, e o recurso existe só em inglês. Se Custom apps não aparecer em Connected Apps, confira esses pontos primeiro. A página de ajuda do Google não cita nenhum plano pago para apps personalizados."
+    },
+    {
+      "h": "Não preencha Advanced features",
+      "p": "O formulário oferece um lugar para credenciais em <b>Show more</b>, ao lado de Advanced features. Isso é para servidores sem Dynamic Client Registration. Este servidor tem suporte, então deixe vazio e deixe o Gemini se registrar sozinho. Não há client ID nem secret para criar no MCPEmails."
+    },
+    {
+      "h": "O Gemini confirma ações de escrita, e você ainda pode restringir os escopos",
+      "p": "O Google diz que hoje o Gemini pede confirmação manual antes de qualquer ação de escrita. Além disso, a tela de consentimento deixa você dar ao Gemini só <code>read:email</code> e <code>search:email</code>, o que basta para triagem e para encontrar coisas, ou você pode ativar a aprovação humana no painel para que todo envio espere por uma pessoa."
+    }
+  ],
+  "limits": [
+    "As solicitações têm limite de 100 por minuto, 1.000 por hora e 10.000 por dia por chave.",
+    "O servidor funciona só com solicitação e resposta. Não há webhooks nem eventos iniciados pelo servidor, então um e-mail novo nunca acorda seu agente sozinho. Para reagir a e-mails que chegam, faça polling em intervalos programados.",
+    "Os e-mails são buscados ao vivo no seu provedor a cada chamada e nunca armazenados. Só o token OAuth ou a senha de app criptografados ficam guardados, então um token revogado ou uma senha da caixa de correio alterada encerra o acesso na hora."
+  ],
+  "faq": [
+    {
+      "q": "Como conecto o e-mail ao app Gemini?",
+      "a": "No gemini.google.com, abra Settings, Connected Apps e, em Custom apps, adicione um app personalizado com a URL https://mcpemails.com/api/mcp. Clique em Next, faça login no MCPEmails e aprove os escopos. O Gemini passa a ter ferramentas para ler, pesquisar, enviar, responder, encaminhar, organizar e agendar e-mails, na web e no app para celular."
+    },
+    {
+      "q": "Preciso de uma chave de API para o Gemini?",
+      "a": "Não. O app Gemini se registra por Dynamic Client Registration e faz seu login com OAuth, então nada secreto é digitado no formulário. Uma chave bearer está disponível para outros clientes que não conseguem fazer isso."
+    },
+    {
+      "q": "Por que não vejo Custom apps em Connected Apps?",
+      "a": "Hoje o Google oferece apps personalizados só a usuários com 18 anos ou mais nos EUA, conectados com uma Conta do Google pessoal, com Keep Activity ativado, em inglês. Contas de trabalho e de escola ainda não são compatíveis. Apps personalizados são adicionados no app da web em gemini.google.com, não no app para celular."
+    },
+    {
+      "q": "Quais caixas de correio o Gemini alcança assim?",
+      "a": "Outlook.com e Microsoft 365 com Entrar com a Microsoft, em que uma conta de trabalho pode precisar que um administrador de TI aprove o app uma vez; Gmail, iCloud, Fastmail, Yahoo, Zoho e Yandex com uma senha específica de app; e qualquer outra caixa de correio que fale IMAP e SMTP nas portas padrão. O cliente vê todas pela mesma conexão: seu agente chama inbox_list primeiro para descobrir cada caixa conectada e o id dela, então não há UUIDs para colar em lugar nenhum."
+    },
+    {
+      "q": "O Gemini pode enviar e-mails sem eu ver?",
+      "a": "Só se você deixar. O envio depende do escopo send:email, então um token sem esse escopo não consegue enviar nada, e o Google diz que o Gemini pede que você confirme ações de escrita. O dono de uma caixa de entrada também pode exigir aprovação humana no painel, que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere."
+    },
+    {
+      "q": "Meus e-mails ficam armazenados nos seus servidores?",
+      "a": "Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e entregue direto ao seu cliente. Só o token OAuth ou a senha de app criptografados ficam guardados, para que as próximas chamadas possam autenticar. Revogar a entrada OAuth no painel, em Chaves de API, ou excluir a caixa de entrada, encerra a conexão na hora. No Gemini, More details, Remove app também desvincula o servidor da sua Conta do Google."
+    }
+  ],
+  "ctaBand": {
+    "title": "Leve sua caixa de entrada para o app Gemini",
+    "sub": "Uma URL, um login. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

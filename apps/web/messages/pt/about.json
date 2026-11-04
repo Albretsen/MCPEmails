@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "title": "Sobre o MCPEmails e Asgeir Albretsen",
+    "description": "O MCPEmails é criado e operado por Asgeir Albretsen, desenvolvedor de software em Bergen, Noruega: uma pessoa, uma empresa norueguesa registrada e código aberto."
+  },
+  "hero": {
+    "eyebrow": "Sobre",
+    "title": "Quem está por trás do MCPEmails",
+    "lead": "Você está dando a um agente de IA acesso aos seus e-mails. Aqui está quem opera o serviço no meio do caminho: uma pessoa, uma empresa registrada, código que você pode ler."
+  },
+  "who": {
+    "title": "Quem eu sou",
+    "p1": "Meu nome é Asgeir Albretsen. Sou desenvolvedor de software em Bergen, Noruega, com bacharelado em Tecnologia da Computação pela Universidade de Bergen. Construo e opero o MCPEmails sozinho.",
+    "p2": "Histórico profissional:",
+    "thPeriod": "Período",
+    "thRole": "Função",
+    "rows": [
+      { "period": "Ago 2019 a fev 2022", "role": "Desenvolvedor de apps na Chess.com" },
+      { "period": "Fev 2022 a jan 2023", "role": "Engenheiro de QA de software na GlobeTech (contrato)" },
+      { "period": "Jan 2023 a set 2024", "role": "Consultoria de TI na BI Norwegian Business School" },
+      { "period": "Set 2024 até hoje", "role": "Desenvolvedor de software, tempo integral" }
+    ],
+    "p3": "Continuo trabalhando em tempo integral como desenvolvedor de software em outra empresa. O MCPEmails é independente, financiado por mim e construído no meu próprio tempo.",
+    "linksIntro": "Em outros lugares:",
+    "linkGithubNote": "código, incluindo o MCPEmails",
+    "linkSiteNote": "site pessoal",
+    "linkLinkedinNote": "histórico profissional"
+  },
+  "why": {
+    "title": "Por que eu criei",
+    "p1": "Eu queria meus próprios agentes trabalhando na minha caixa de entrada. Toda opção que encontrei queria primeiro uma cópia dos meus e-mails: sincronizar, indexar, guardar no banco de dados de outra empresa enquanto a conta existisse. Para uma caixa cheia de faturas, contratos e redefinições de senha, é muito a entregar por algo que eu só precisava de vez em quando.",
+    "p2": "Então construí a versão que eu toparia usar. Os e-mails são buscados ao vivo quando seu agente pede e descartados assim que a resposta é enviada, por isso não existe cópia armazenada. A única coisa guardada é a credencial da caixa de e-mail, criptografada em repouso, porque a próxima chamada precisa dela. Uso com meus próprios e-mails todos os dias."
+  },
+  "trusting": {
+    "title": "Em que você está confiando",
+    "intro": "Três coisas:",
+    "points": [
+      "<b>Uma pessoa com nome.</b> Eu, não um alias de suporte. Se algo der errado, você sabe de quem é o nome em cima.",
+      "<b>Uma empresa registrada.</b> O MCPEmails é operado pela Albretsen AS, uma sociedade limitada norueguesa (aksjeselskap) registrada no Foretaksregisteret, no Brønnøysundregistrene. Sou o dono da empresa e presido o conselho.",
+      "<b>Código que você pode ler.</b> O servidor é público no GitHub sob a licença AGPL-3.0, e o serviço hospedado roda o mesmo código."
+    ],
+    "entityTitle": "Pessoa jurídica",
+    "entityName": "Albretsen AS (aksjeselskap)",
+    "entityOrgNo": "Número de registro 938 702 373",
+    "entityAddress": "Håsteins gate 9, 5160 Laksevåg, Noruega",
+    "entityRegistry": "Registrada no Foretaksregisteret, Brønnøysundregistrene",
+    "entityNote": "Os dados legais completos estão nos <terms>termos de serviço</terms> e na <privacy>política de privacidade</privacy>."
+  },
+  "busFactor": {
+    "title": "Se eu for atropelado por um ônibus",
+    "p1": "Uma pessoa só operando um serviço de e-mail é um risco real. Posso ficar doente, perder o interesse ou ser atropelado por um ônibus. Com um serviço fechado, seus agentes ficariam ligados a algo que ninguém mantém.",
+    "p2": "É para isso que serve a licença. O MCPEmails é código aberto sob AGPL-3.0, e o serviço hospedado roda o mesmo servidor que você pode clonar. Se eu parar, você clona o repositório, sobe a stack com um comando, aponta seu agente para a sua própria instância e segue em frente. Os nomes das ferramentas continuam os mesmos. Suas credenciais são suas, e seus e-mails nunca foram armazenados aqui.",
+    "p3": "Percorra o caminho da auto-hospedagem uma vez enquanto está tudo bem, para saber que funciona antes de precisar.",
+    "ctaSelfHost": "Guia de auto-hospedagem",
+    "ctaSource": "Código-fonte"
+  },
+  "contact": {
+    "title": "Contato",
+    "p1": "Não existe fila de suporte. Sua mensagem chega para mim, e eu respondo.",
+    "points": [
+      "<hello>support@mcpemails.com</hello> para o produto, sua conta, cobrança ou um bug. Espere uma resposta em até um dia útil.",
+      "<securityEmail>security@mcpemails.com</securityEmail> para relatos de vulnerabilidade. Espere uma confirmação em até 24 horas. O processo de divulgação, incluindo o safe harbour, está na <security>página de segurança</security>.",
+      "Estou em Bergen, Noruega. Uma mensagem enviada no fim do dia na América costuma ser respondida na manhã seguinte, no horário europeu."
+    ]
+  },
+  "cta": {
+    "title": "Ainda em dúvida?",
+    "sub": "Leia o que o serviço acessa e o que ele guarda, ou rode você mesmo.",
+    "primary": "Como seus e-mails são tratados",
+    "secondary": "Rode você mesmo"
+  },
+  "portraitAlt": "Asgeir Albretsen"
+}

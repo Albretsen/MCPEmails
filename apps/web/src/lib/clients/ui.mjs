@@ -534,7 +534,181 @@ const DE = {
   },
 };
 
-const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH, de: DE };
+const PT = {
+  hub: {
+    eyebrow: 'Clientes MCP',
+    title: 'Conecte sua caixa de entrada a qualquer cliente MCP',
+    lead: 'Um servidor MCP hospedado, {count} guias de configuração. Escolha o cliente que você realmente usa e siga os passos escritos para ele, não um modelo genérico.',
+    answer: 'O MCPEmails é um servidor MCP hospedado para e-mail. Você conecta uma caixa de correio uma vez e depois cola uma URL no cliente em que já trabalha. {oauth} dos {count} clientes daqui usam o fluxo OAuth no navegador e não precisam de chave de API nenhuma; os demais usam uma chave de API com permissões limitadas em um cabeçalho Authorization.',
+    meta: {
+      title: 'Conecte o e-mail ao Claude, Cursor, ChatGPT e {count} clientes MCP',
+      description: 'Guias de configuração por cliente para o servidor MCP do MCPEmails. Conecte uma caixa de entrada real ao Claude, Claude Code, Cursor, VS Code, ChatGPT, Cline, Windsurf, Gemini CLI, Zed, JetBrains, Raycast, Warp, n8n ou curl.',
+    },
+    genericTitle: 'Seu cliente não está na lista?',
+    genericSub: 'Qualquer cliente que fale MCP via Streamable HTTP funciona. O endpoint, o handshake e o catálogo de ferramentas estão na documentação.',
+    genericCta: 'Ler a documentação',
+    breadcrumb: 'Clientes MCP',
+    authOauth: 'OAuth',
+    authKey: 'Chave de API',
+  },
+  page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: 'O {client} abre com o MCPEmails já preenchido. Confirme e, na página do navegador que vem em seguida, crie sua conta e escolha sua caixa de entrada.',
+      command: 'Ou rode isto no seu terminal',
+      copy: 'Copiar',
+      copied: 'Copiado',
+    },
+    breadcrumb: 'Clientes MCP',
+    ctaPrimary: 'Conectar sua caixa de entrada',
+    ctaSecondary: 'Ler a documentação',
+    endpoint: {
+      title: 'O único valor de que você precisa',
+      sub: 'Tudo nesta página é uma forma de colocar esta URL no {client}.',
+      colField: 'Campo',
+      colValue: 'Valor',
+      fieldUrl: 'URL do servidor MCP',
+      fieldTransport: 'Transporte',
+      transport: 'Streamable HTTP (MCP 2025-06-18)',
+      fieldAuth: 'Autenticação',
+      authOauth: 'OAuth 2.1, código de autorização com PKCE. Sem chave de API.',
+      authKey: 'Authorization: Bearer, com uma chave de API de permissões limitadas do seu painel.',
+    },
+    how: {
+      eyebrow: 'Configuração',
+      title: 'Como conectar o {client} à sua caixa de entrada',
+      sub: 'Quatro passos. Os dois primeiros são iguais para todos os clientes, os demais são específicos deste.',
+    },
+    config: {
+      title: 'Configuração',
+      terminal: 'terminal',
+      json: 'json',
+    },
+    gotchas: {
+      eyebrow: 'Antes de começar',
+      title: 'Onde as pessoas costumam tropeçar no {client}',
+    },
+    limits: {
+      title: 'Limites que vale a pena conhecer',
+    },
+    faq: {
+      eyebrow: 'Perguntas frequentes',
+      title: '{client} e e-mail: perguntas e respostas',
+    },
+    related: {
+      title: 'Configure outro cliente',
+      sub: 'A mesma caixa de entrada, a mesma URL. Conecte quantos clientes quiser.',
+      link: 'Conectar o {client}',
+      all: 'Todos os guias de configuração de clientes MCP',
+    },
+    guideLink: {
+      intro: 'Documentação oficial do {client} sobre servidores MCP remotos:',
+    },
+    postLink: {
+      intro: 'Prefere um passo a passo completo?',
+      claude: 'Como conectar o Claude ao seu e-mail',
+      chatgpt: 'Como conectar o ChatGPT ao seu e-mail',
+      editors: 'E-mail para agentes de IA no Cursor, Cline e VS Code',
+    },
+    providers: {
+      intro: 'Na dúvida sobre qual caixa de correio conectar primeiro?',
+      label: 'Veja a tabela de compatibilidade de provedores',
+    },
+    connect: {
+      intro: 'Vai conectar uma caixa de correio específica?',
+      label: 'Guias de configuração por provedor',
+    },
+  },
+};
+
+const JA = {
+  hub: {
+    eyebrow: 'MCPクライアント',
+    title: 'あらゆるMCPクライアントに受信トレイを接続',
+    lead: 'ホスト型のMCPサーバーが1つ、セットアップガイドが{count}件。汎用のテンプレートではなく、実際に使っているクライアント向けに書かれた手順に従ってください。',
+    answer: 'MCPEmailsはメール用のホスト型MCPサーバーです。メールボックスを一度接続したら、普段使っているクライアントにURLを1つ貼り付けるだけです。ここにある{count}件のクライアントのうち{oauth}件はブラウザーでのOAuthフローを使うため、APIキーは一切不要です。それ以外は、権限を絞ったAPIキーをAuthorizationヘッダーで渡します。',
+    meta: {
+      title: 'メールをClaude、Cursor、ChatGPTなど{count}種類のMCPクライアントに接続',
+      description: 'MCPEmailsのMCPサーバーのクライアント別セットアップガイドです。実際の受信トレイをClaude、Claude Code、Cursor、VS Code、ChatGPT、Cline、Windsurf、Gemini CLI、Zed、JetBrains、Raycast、Warp、n8n、curlに接続できます。',
+    },
+    genericTitle: 'お使いのクライアントが一覧にない場合',
+    genericSub: 'Streamable HTTPでMCPに対応したクライアントなら動作します。エンドポイント、ハンドシェイク、ツールの一覧はドキュメントに記載しています。',
+    genericCta: 'ドキュメントを読む',
+    breadcrumb: 'MCPクライアント',
+    authOauth: 'OAuth',
+    authKey: 'APIキー',
+  },
+  page: {
+    // The one-click install in the hero (install-links.mjs), on pages whose client has one.
+    install: {
+      after: 'MCPEmailsが入力済みの状態で{client}が開きます。確認したら、続いて開くブラウザーのページでアカウントを作成し、受信トレイを選んでください。',
+      command: 'またはターミナルで次を実行',
+      copy: 'コピー',
+      copied: 'コピーしました',
+    },
+    breadcrumb: 'MCPクライアント',
+    ctaPrimary: '受信トレイを接続',
+    ctaSecondary: 'ドキュメントを読む',
+    endpoint: {
+      title: '必要な値は1つだけ',
+      sub: 'このページの内容はすべて、このURLを{client}に設定するための方法です。',
+      colField: '項目',
+      colValue: '値',
+      fieldUrl: 'MCPサーバーURL',
+      fieldTransport: 'トランスポート',
+      transport: 'Streamable HTTP (MCP 2025-06-18)',
+      fieldAuth: '認証',
+      authOauth: 'OAuth 2.1、PKCE付き認可コード。APIキーは不要です。',
+      authKey: 'Authorization: Bearer。ダッシュボードで発行した、権限を絞ったAPIキーを使います。',
+    },
+    how: {
+      eyebrow: 'セットアップ',
+      title: '{client}を受信トレイに接続する方法',
+      sub: '手順は4つです。最初の2つはどのクライアントでも同じで、残りはこのクライアント固有の手順です。',
+    },
+    config: {
+      title: '設定',
+      terminal: 'terminal',
+      json: 'json',
+    },
+    gotchas: {
+      eyebrow: '始める前に',
+      title: '{client}でつまずきやすいポイント',
+    },
+    limits: {
+      title: '知っておきたい制限',
+    },
+    faq: {
+      eyebrow: 'よくある質問',
+      title: '{client}とメールに関するよくある質問',
+    },
+    related: {
+      title: 'ほかのクライアントを設定する',
+      sub: '同じ受信トレイ、同じURLです。クライアントはいくつでも接続できます。',
+      link: '{client}を接続',
+      all: 'MCPクライアントのセットアップガイド一覧',
+    },
+    guideLink: {
+      intro: 'リモートMCPサーバーに関する{client}の公式ドキュメント：',
+    },
+    postLink: {
+      intro: '詳しい手順をまとめた記事もあります。',
+      claude: 'Claudeをメールに接続する方法',
+      chatgpt: 'ChatGPTをメールに接続する方法',
+      editors: 'Cursor、Cline、VS CodeのAIエージェントでメールを使う',
+    },
+    providers: {
+      intro: 'どのメールボックスから接続するか迷っていますか。',
+      label: 'プロバイダー互換性の一覧を見る',
+    },
+    connect: {
+      intro: '特定のメールボックスを接続しますか。',
+      label: 'プロバイダー別セットアップガイド',
+    },
+  },
+};
+
+const UI = { en: EN, nb: NB, es: ES, fr: FR, zh: ZH, de: DE, pt: PT, ja: JA };
 
 export function clientUi(locale) {
   return UI[locale] ?? EN;

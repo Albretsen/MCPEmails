@@ -44,7 +44,7 @@ export const INSTALL_DISPLAY_NAME = 'MCPEmails';
 /** Server id written into client configs: lowercase, as in every snippet we publish. */
 export const INSTALL_SERVER_ID = INSTALL_DISPLAY_NAME.toLowerCase();
 
-const LOCALES = ['en', 'de', 'fr', 'es', 'nb', 'zh'];
+const LOCALES = ['en', 'de', 'pt', 'ja', 'fr', 'es', 'nb', 'zh'];
 
 /**
  * Button labels and notes. Product names stay untranslated. Kept here rather
@@ -65,6 +65,20 @@ const COPY = {
     command: 'Im Terminal ausführen',
     steps: 'Folgen Sie diesen Schritten',
     claudeFreeNote: 'Claude Free erlaubt einen benutzerdefinierten Konnektor. Wenn Sie schon einen haben, entfernen Sie ihn zuerst.',
+  },
+  pt: {
+    addTo: (name) => `Adicionar ao ${name}`,
+    installIn: (name) => `Instalar no ${name}`,
+    command: 'Rode isto no seu terminal',
+    steps: 'Siga estes passos',
+    claudeFreeNote: 'O Claude Free permite um conector personalizado. Se você já tem um, remova-o primeiro.',
+  },
+  ja: {
+    addTo: (name) => `${name}に追加`,
+    installIn: (name) => `${name}にインストール`,
+    command: 'ターミナルで実行',
+    steps: '次の手順に従ってください',
+    claudeFreeNote: 'Claude Freeで追加できるカスタムコネクタは1つです。すでに追加している場合は、先にそれを削除してください。',
   },
   fr: {
     addTo: (name) => `Ajouter à ${name}`,

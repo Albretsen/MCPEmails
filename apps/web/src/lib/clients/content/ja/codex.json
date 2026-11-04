@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=cli (final URL; https://developers.openai.com/codex/mcp 308-redirects here; checked 2026-10-24)",
+    "https://learn.chatgpt.com/docs/extend/mcp?surface=app",
+    "https://learn.chatgpt.com/docs/auth (redirect target of https://developers.openai.com/codex/auth)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_cmd.rs (latest release: --url, --bearer-token-env-var, codex mcp login --scopes and --no-browser)",
+    "https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/cli/src/mcp_login.rs (--no-browser prints the authorization URL and asks for the callback URL to be pasted)",
+    "https://github.com/openai/codex/blob/main/codex-rs/cli/src/mcp_cmd.rs (codex mcp add --url detects OAuth and starts the flow)",
+    "https://github.com/openai/codex/blob/main/codex-rs/rmcp-client/src/auth_status.rs (scopes taken from the 401 challenge first)",
+    "supabase/functions/mcp-server/web-ingress.ts (401 challenge with scope=\"read:email\")",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts (DCR, PKCE S256, client_id_metadata_document_supported)",
+    "apps/web/src/lib/oauth/consent-presets.ts (Codex observed in oauth_consents; default card per client)",
+    "apps/web/messages/en/auth.json (consent card titles Read-only, Standard, Full access)",
+    "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
+  ],
+  "meta": {
+    "title": "OpenAI Codexにメールを接続: MCPサーバーの設定",
+    "description": "codex mcp add --urlで、OpenAI Codexに受信トレイを追加できます。CodexがOAuthを検出してブラウザーを開くので、APIキーは不要。CLI、IDE拡張機能、デスクトップアプリで使えます。"
+  },
+  "hero": {
+    "eyebrow": "Codex + メール",
+    "titleLine1": "受信トレイをOpenAI Codexに接続",
+    "titleLine2": "コマンド1つで",
+    "lead": "Codexに本物のメールボックスを渡せます。Codex CLI、IDE拡張機能、ChatGPTデスクトップアプリから、接続済みのすべての受信トレイでメールの閲覧、検索、下書き、送信、返信、転送、予約送信、整理ができます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "ブラウザーでOAuth認証、APIキー不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "codex mcp add mcpemails --url https://mcpemails.com/api/mcpを実行します。CodexがサーバーのOAuth対応を検出してブラウザーを開くので、MCPEmailsの同意画面でアクセスを承認します。CLI、IDE拡張機能、ChatGPTデスクトップアプリは同じ設定を共有するため、一度の設定で3つすべてに反映されます。"
+  },
+  "method": {
+    "title": "Codexの接続方法: OAuth、APIキー不要",
+    "body": "Codexはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>クライアントIDメタデータドキュメント</b>または<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成してメールボックスを接続",
+      "p": "mcpemails.comで新規登録し（カード登録は不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+    },
+    {
+      "h": "CLIからサーバーを追加",
+      "p": "下のコマンドを実行します。<code>~/.codex/config.toml</code>に<code>url</code>を含む<code>[mcp_servers.mcpemails]</code>エントリが書き込まれ、<b>Detected OAuth support. Starting OAuth flow…</b>と表示されてブラウザーが開きます。"
+    },
+    {
+      "h": "またはデスクトップアプリやIDE拡張機能で追加",
+      "p": "ChatGPTデスクトップアプリでは<b>Settings</b>（設定）、<b>MCP servers</b>（MCPサーバー）の順に開きます。IDE拡張機能では歯車メニューから<b>MCP servers</b>を開きます。<b>Add server</b>（サーバーを追加）を選び、名前を入力して<b>Streamable HTTP</b>を選択し、<code>https://mcpemails.com/api/mcp</code>を貼り付けて保存します。続けて<b>Restart</b>（再起動）または<b>Restart extension</b>（拡張機能を再起動）を選び、<b>Authenticate</b>（認証）を選びます。"
+    },
+    {
+      "h": "アクセスを承認",
+      "p": "ブラウザーでMCPEmailsにログインし、同意画面で<b>読み取り専用</b>、<b>標準</b>、<b>フルアクセス</b>のいずれかを選んで、<b>アクセスを許可</b>をクリックします。ブラウザーでの手順が始まらなかった場合は、<code>codex mcp login mcpemails</code>を実行してください。"
+    },
+    {
+      "h": "確認して何か頼んでみる",
+      "p": "<code>codex mcp list</code>を実行するか、Codexのセッション内で<code>/mcp</code>を実行してサーバーを確認します。次に「今日の未読メールをすべて要約して」と試してください。Codexは最初に<code>inbox_list</code>を呼び出してメールボックスを見つけるので、IDを貼り付ける必要はありません。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "デスクトップアプリでAuthenticateが表示されない場合",
+      "p": "2026年10月27日時点で、デスクトップアプリは手動で追加したサーバー（現在のビルドでは<b>Plugins</b>（プラグイン）、<b>Add</b>（追加）、<b>Add MCP server</b>（MCPサーバーを追加）の順）に必ずしもログインできるとは限りません。フォームにログインの手順がなく、ビルドによっては再起動後に<b>Authenticate</b>ボタンが表示されなかったり、ツールがチャットに現れなかったりします。OpenAIにはこの件の報告が上がっているため、お読みの時点では修正されているかもしれません。それまではターミナルからログインしてください。CLIがなければ<code>npm i -g @openai/codex</code>でインストールし、<code>codex mcp login mcpemails</code>を実行して（<b>Name</b>（名前）欄に入力した名前を使います）、ブラウザーでアクセスを承認し、アプリを再起動して新しいチャットを始めます。アプリとCLIは1つの設定を共有するので、アプリでもそのログインが使われます。"
+    },
+    {
+      "h": "同意画面がどのカードで開くかを確認",
+      "p": "Codexは401チャレンジに含まれるスコープ（<code>read:email</code>）を要求するため、登録によっては同意画面が<b>読み取り専用</b>で開きます。仕分けにはそれで十分です。Codexに下書きや送信をさせたい場合は、「アクセスを許可」をクリックする前に<b>標準</b>か<b>フルアクセス</b>を選んでください。後から広げるには、<code>codex mcp login mcpemails</code>をもう一度実行してより広いカードを選ぶか、<code>--scopes</code>でスコープを指定します。例: <code>--scopes read:email,search:email,manage:drafts</code>。"
+    },
+    {
+      "h": "CLI、IDE拡張機能、デスクトップアプリは1つの設定を共有",
+      "p": "同じマシンでは3つとも同じ<code>~/.codex/config.toml</code>を読むので、どれか1つでサーバーを追加すれば他にも表示されます。プロジェクトに独自の<code>.codex/config.toml</code>を置くこともでき、Codexはこれを信頼済みのプロジェクトでのみ読み込みます。Web版のChatGPTはこのファイルを一切読まないので、そちらはChatGPT向けの設定手順を使ってください。"
+    },
+    {
+      "h": "ヘッドレスのマシンではローカルのブラウザーを使わない",
+      "p": "SSHで接続するサーバーでは<code>codex mcp login mcpemails --no-browser</code>を実行します。Codexがログイン用のリンクを表示するので、任意のマシンでそれを開き、ブラウザーが最終的に表示したアドレスを貼り付けます。CIでは、ダッシュボードの「APIキー」でスコープ付きキーを作成して環境変数にexportし、サーバーエントリの<code>bearer_token_env_var</code>にその変数名を設定します（または<code>codex mcp add</code>に<code>--bearer-token-env-var</code>を渡します）。Codexはそのキーを<code>Authorization</code>ヘッダーで送るので、キーが設定ファイルに書かれることはありません。"
+    },
+    {
+      "h": "ツールのタイムアウトは既定のままに",
+      "p": "Codexは既定でツール呼び出しを60秒待ちます（<code>tool_timeout_sec</code>）。一括処理でもこれで足ります。大きなフォルダー全体の移動や削除は、その前にサーバー自身の時間制限で止まり、<code>partial</code>と記された結果を返します。手付かずのメッセージは<code>remaining_message_ids</code>に列挙されるので、Codexはそのidで再度呼び出せます。タイムアウトを大幅に短くすると、その結果が届く前に呼び出しが打ち切られることがあります。"
+    }
+  ],
+  "limits": [
+    "リクエストのレート制限は、キーごとに1分あたり100件、1時間あたり1,000件、1日あたり10,000件です。",
+    "サーバーはリクエストとレスポンスだけで動作します。Webhookもサーバー発のイベントもないため、新着メールがエージェントを自動で起動することはありません。届いたメールに反応するには、定期的にポーリングしてください。",
+    "メールは呼び出しのたびにプロバイダーからその場で取得され、保存されることはありません。保存するのは暗号化したOAuthトークンまたはアプリ パスワードだけなので、トークンを取り消すかメールボックスのパスワードを変更すれば、アクセスはすぐに終わります。"
+  ],
+  "faq": [
+    {
+      "q": "OpenAI Codexにメールを接続するには？",
+      "a": "codex mcp add mcpemails --url https://mcpemails.com/api/mcpを実行します。CodexがOAuth対応を検出してブラウザーを開くので、MCPEmailsの同意画面でアクセスを承認します。これでCodexに、メールの閲覧、検索、下書き、送信、返信、転送、整理、予約送信のツールが加わります。"
+    },
+    {
+      "q": "config.tomlのエントリはどのようになりますか？",
+      "a": "~/.codex/config.tomlに2行です。[mcp_servers.mcpemails]という名前のテーブルと、url = \"https://mcpemails.com/api/mcp\"です。urlを持つサーバーではOAuthが既定なので、他には何も要りません。エントリを手で書いた場合は、codex mcp login mcpemailsを実行してログインしてください。"
+    },
+    {
+      "q": "CodexにはAPIキーが必要ですか？",
+      "a": "いいえ。CodexはOAuthでログインするので、設定ファイルに秘密情報を入力することはありません。スコープ付きキーはブラウザーのないマシン向けです。環境変数に入れて、bearer_token_env_varでその変数を指定します。"
+    },
+    {
+      "q": "この方法でCodexが使えるメールボックスは？",
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で接続します（職場アカウントでは、IT管理者による一度きりのアプリ承認が必要な場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで接続でき、標準ポートでIMAPとSMTPに対応するその他のメールボックスも使えます。クライアントはこれらすべてを同じ接続で扱います。エージェントは最初にinbox_listを呼び出して、接続済みのすべてのメールボックスとそのIDを取得するので、UUIDをどこかに貼り付ける必要はありません。"
+    },
+    {
+      "q": "Codexが私の知らないうちにメールを送信することはありますか？",
+      "a": "許可した場合に限ります。送信にはsend:emailスコープが必要なので、このスコープを持たないトークンでは一切送信できません。さらに、受信トレイのオーナーはダッシュボードで人による承認を必須にでき、その場合は送信、返信、転送、下書きの送信、予約送信のすべてが、人が許可するまで保留されます。"
+    },
+    {
+      "q": "メールはサーバーに保存されますか？",
+      "a": "いいえ。メッセージはすべて、それを求めたリクエストのためにプロバイダーからその場で取得され、そのままクライアントに渡されます。保存するのは、以降の呼び出しで認証するための暗号化したOAuthトークンまたはアプリ パスワードだけです。ダッシュボードで受信トレイを削除するか、プロバイダー側でアクセスを取り消せば、接続はすぐに切れます。"
+    }
+  ],
+  "ctaBand": {
+    "title": "Codexに本物の受信トレイを",
+    "sub": "コマンド1つ、ブラウザーでのログイン1回。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

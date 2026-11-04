@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Senha de app",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "Seu endereço Fastmail completo, incluindo o domínio: name@fastmail.com, ou o seu próprio domínio, se você usar um.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecte o Fastmail ao Claude, Cursor e clientes MCP",
+    "description": "Conecte o Fastmail ao Claude, Cursor, ChatGPT e qualquer cliente MCP via IMAP em imap.fastmail.com:993 com uma senha de app do Fastmail. Uma caixa de entrada grátis, para sempre."
+  },
+  "hero": {
+    "eyebrow": "Fastmail + IA",
+    "titleLine1": "Conecte o Fastmail ao Claude,",
+    "titleLine2": "e ao Cursor, ChatGPT, qualquer cliente MCP",
+    "lead": "Dê ao seu agente de IA uma caixa de entrada real do Fastmail em poucos minutos. Leia, pesquise, envie, responda, agende e organize e-mails com uma única senha de app, e use a mesma caixa de entrada em todos os clientes MCP, não só em um.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha de app, sem configurar OAuth",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "O Claude não acessa o Fastmail sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP em imap.fastmail.com na porta 993, autenticando com uma senha de app do Fastmail e não com a senha da sua conta, para que o Claude, o Cursor ou qualquer cliente MCP possa ler, pesquisar, enviar e organizar os e-mails. O Fastmail tem um servidor MCP próprio, só para o Fastmail; o motivo para usar este é que uma única URL cobre também as suas outras caixas de correio. Uma caixa de entrada é grátis, para sempre."
+  },
+  "method": {
+    "title": "Como o Fastmail se conecta: uma senha de app",
+    "body": "O Fastmail se conecta via IMAP/SMTP usando uma <b>senha de app do Fastmail</b>. Gere uma no Fastmail em Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password (rótulos em inglês, como aparecem no Fastmail), cole no MCPEmails e pronto, está conectado. Sem dança de OAuth, sem pop-ups no navegador."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Gere uma senha de app do Fastmail",
+      "p": "No Fastmail, vá em Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password e crie uma para e-mail (IMAP/SMTP)."
+    },
+    {
+      "h": "Cole no MCPEmails",
+      "p": "Adicione seu endereço do Fastmail e a senha de app para conectar a caixa de entrada com segurança."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Coloque https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Fastmail tem seu próprio servidor MCP, e ele é bom",
+      "p": "Em abril de 2026 o Fastmail lançou um servidor MCP próprio em <code>https://api.fastmail.com/mcp</code>, autenticado com OAuth, com acesso somente leitura, de escrita ou de envio, cobrindo e-mail, calendário e contatos. Se o Fastmail é a única caixa de correio que você quer que um assistente alcance, esse é o caminho mais direto disponível, e dizemos isso sem rodeios. O MCPEmails responde a outra pergunta: <b>uma</b> URL MCP que reúne sua conta Fastmail e sua caixa iCloud, Zoho, Yahoo, GMX ou IMAP da empresa ao mesmo tempo, com as mesmas ferramentas em todas, para que um agente pesquise em várias caixas e você configure um servidor em vez de cinco. Aqui, ser útil para você importa mais do que nos elogiar."
+    },
+    {
+      "h": "Contas Fastmail Basic não podem usar IMAP de jeito nenhum",
+      "p": "O plano Basic do Fastmail não inclui IMAP, POP, SMTP, CalDAV nem CardDAV, e as contas nele não podem criar senhas de app. Webmail e os apps do próprio Fastmail são tudo o que há. Então, se a tela de senhas de app não oferece nada para criar, é o plano e não um bug, e digitar a senha de novo não vai adiantar. Contas Standard e Professional têm os protocolos e podem se conectar."
+    },
+    {
+      "h": "O nível de acesso da senha de app precisa incluir e-mail",
+      "p": "As senhas de app são criadas em Settings, depois Privacy & Security, depois a seção Connected apps & API tokens, depois Manage app passwords and access e, por fim, New app password. O nível de acesso padrão é <b>Mail, Contacts & Calendars</b>, que é o que o IMAP e o SMTP precisam. Escolha Files (WebDAV) e a senha é criada sem problema nenhum e depois falha ao entrar no e-mail. O Fastmail mostra a senha uma única vez, então copie antes de sair da tela, e saiba que a sua senha normal do Fastmail nunca autentica um cliente de e-mail."
+    }
+  ],
+  "limits": [
+    "O Fastmail Basic não inclui IMAP nem SMTP, então uma caixa Basic não pode ser conectada. Standard e Professional podem.",
+    "O servidor de envio do Fastmail anuncia um teto de mensagem de cerca de 71 MB. A leitura de anexos pelo MCPEmails tem limite de 25 MB por solicitação, então qualquer coisa maior precisa ser baixada no próprio Fastmail."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Fastmail?",
+      "a": "Sim, por dois caminhos diferentes. O Fastmail tem um servidor MCP próprio para o qual o Claude pode ser apontado diretamente com OAuth. Como alternativa, o MCPEmails conecta a mesma caixa de correio via IMAP com uma senha de app e a expõe, junto com quaisquer outras caixas que você adicionar, por uma única URL MCP que também funciona no Cursor e no ChatGPT. Nos dois casos o Claude pode ler, pesquisar, enviar, responder e organizar os e-mails."
+    },
+    {
+      "q": "Devo usar o servidor MCP do próprio Fastmail ou este?",
+      "a": "Use o do Fastmail se o Fastmail é sua única caixa de correio e o seu cliente for compatível: ele é oficial, usa OAuth e deixa você escolher acesso somente leitura, de escrita ou de envio. Use o MCPEmails se quiser mais de um provedor por trás de uma única URL, se você também tem uma caixa iCloud, Zoho ou IMAP do trabalho, ou se quiser que as mesmas ferramentas se comportem igual em vários clientes MCP."
+    },
+    {
+      "q": "Quais são as configurações IMAP e SMTP do Fastmail?",
+      "a": "O IMAP é imap.fastmail.com na porta 993 com TLS implícito. O SMTP é smtp.fastmail.com na porta 465, também com TLS implícito. O nome de usuário é o seu endereço Fastmail completo e a senha é uma senha de app, nunca a senha da sua conta. Os dois hosts foram confirmados com uma conexão TLS real na data mostrada nesta página."
+    },
+    {
+      "q": "Por que minha senha do Fastmail é recusada?",
+      "a": "Três causas, da mais para a menos provável. Você está usando a senha da conta em vez de uma senha de app, que o Fastmail nunca aceita em IMAP ou SMTP. A senha de app foi criada com o nível de acesso Files em vez de Mail, Contacts & Calendars. Ou a conta está no plano Basic, que não inclui IMAP nem SMTP."
+    },
+    {
+      "q": "Funciona com domínio próprio no Fastmail?",
+      "a": "Sim. Um endereço no seu próprio domínio hospedado no Fastmail usa os mesmos hosts imap.fastmail.com e smtp.fastmail.com e a mesma senha de app que um endereço fastmail.com. Informe o endereço completo no seu domínio como nome de usuário. Não há hostname separado para procurar nem nada extra para ativar."
+    },
+    {
+      "q": "Meus e-mails do Fastmail ficam armazenados nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no Fastmail via IMAP a cada solicitação e entregues ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido. Excluir a senha de app no Fastmail corta a conexão do lado deles na hora."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Fastmail",
+    "sub": "Conecte o Fastmail em poucos minutos. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

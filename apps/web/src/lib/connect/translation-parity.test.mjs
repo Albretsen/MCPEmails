@@ -39,7 +39,9 @@ function leaves(value, path = '', out = new Map()) {
 
 const sorted = (xs) => [...xs].sort();
 const codeSpans = (s) => sorted(s.match(/<code>[\s\S]*?<\/code>/g) ?? []);
-const urls = (s) => sorted((s.match(/https?:\/\/[^\s<"')]+/g) ?? []).map((u) => u.replace(/[.,;:]+$/, '')));
+// A URL ends at the first non-ASCII character too: Japanese puts no space
+// between a URL and the text after it (https://mcpemails.com/api/mcpを...).
+const urls = (s) => sorted((s.match(/https?:\/\/[^\s<"')\u0080-\uffff]+/g) ?? []).map((u) => u.replace(/[.,;:]+$/, '')));
 const isVerbatim = (path) => [...VERBATIM].some((v) => path === v || path.startsWith(`${v}[`));
 
 for (const { name, dir, registry } of SETS) {
@@ -88,7 +90,7 @@ for (const { name, dir, registry } of SETS) {
   });
 
   // The locale policy (src/i18n/locale-policy.mjs): every page ships in every
-  // full locale, and may leave out a scoped (de) or frozen (zh) one, which then has no page,
+  // full locale, and may leave out a scoped (de, pt, ja) or frozen (zh) one, which then has no page,
   // no hreflang and no switcher link for it. Nothing outside the two lists.
   test(`${name}: every entry lists every full locale, and only known locales`, () => {
     const known = new Set([...FULL_LOCALES, ...SCOPED_LOCALES, ...FROZEN_LOCALES]);

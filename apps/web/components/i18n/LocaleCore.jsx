@@ -70,6 +70,22 @@ const LOADERS = {
     onboarding: () => import('../../messages/de/onboarding.json'),
     convert: () => import('../../messages/de/convert.json'),
   },
+  pt: {
+    dashboard: () => import('../../messages/pt/dashboard.json'),
+    dashboardChrome: () => import('../../messages/pt/dashboardChrome.json'),
+    auth: () => import('../../messages/pt/auth.json'),
+    common: () => import('../../messages/pt/common.json'),
+    onboarding: () => import('../../messages/pt/onboarding.json'),
+    convert: () => import('../../messages/pt/convert.json'),
+  },
+  ja: {
+    dashboard: () => import('../../messages/ja/dashboard.json'),
+    dashboardChrome: () => import('../../messages/ja/dashboardChrome.json'),
+    auth: () => import('../../messages/ja/auth.json'),
+    common: () => import('../../messages/ja/common.json'),
+    onboarding: () => import('../../messages/ja/onboarding.json'),
+    convert: () => import('../../messages/ja/convert.json'),
+  },
 };
 
 /** `${locale}/${namespace}` -> the loaded catalog file. */
@@ -150,6 +166,8 @@ function detectBrowserLocale() {
     if (low.startsWith('fr')) return 'fr';
     if (low.startsWith('zh')) return 'zh';
     if (low.startsWith('de')) return 'de';
+    if (low.startsWith('pt')) return 'pt';
+    if (low.startsWith('ja')) return 'ja';
     if (low.startsWith('en')) return 'en';
   }
   return routing.defaultLocale;

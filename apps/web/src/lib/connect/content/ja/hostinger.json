@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "独自ドメインのメールアドレス全体。Hostingerアカウントのログイン情報ではありません。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "HostingerをClaude、Cursor、MCPクライアントに接続",
+    "description": "Hostinger EmailをIMAP（imap.hostinger.com:993）でClaude、CursorなどあらゆるMCPクライアントに接続します。TitanベースのBusiness Emailはまったく別のホストを使います。"
+  },
+  "hero": {
+    "eyebrow": "Hostinger + AI",
+    "titleLine1": "HostingerをClaudeに接続",
+    "titleLine2": "Cursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のHostinger受信トレイを数分で渡せます。IMAPとメールボックスのパスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じ受信トレイを1つのクライアントだけでなく、すべてのMCPクライアントで使えます。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "メールボックスのパスワードで接続、OAuth設定は不要",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "ClaudeはそのままではHostingerにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、メールボックスのパスワードを使ってIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。設定は数分で終わり、受信トレイ1つは無料です。"
+  },
+  "method": {
+    "title": "Hostingerの接続方法: IMAPとメールボックスのパスワード",
+    "body": "Hostinger Emailは、hPanelのEmailsで設定したメールボックスのパスワードを使ってIMAP/SMTPで接続します。アプリ パスワードもOAuthの手順もありません。Hostinger Emailのホストは、どのドメインでも<code>imap.hostinger.com</code>と<code>smtp.hostinger.com</code>です。Business EmailとEnterprise EmailのプランはTitan上で動いており、別のホストを使います（後述）。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランで受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "Hostingerのメールボックスのパスワードを用意",
+      "p": "hPanelでEmailsを開き、アドレスを選んでパスワードを設定またはリセットします。MCPEmailsはこのパスワードで認証します。"
+    },
+    {
+      "h": "MCPEmailsに貼り付け",
+      "p": "IMAP / SMTPを選び、Hostingerのアドレス、上記のホスト、パスワードを入力して、受信トレイを安全に接続します。"
+    },
+    {
+      "h": "MCPのURLをAIに貼り付け",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて承認すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hostingerにはメール基盤が2つあり、どちらになるかは購入時期によります",
+      "p": "<b>Hostinger Email</b>はHostinger独自の基盤で、<code>imap.hostinger.com</code>のポート993、<code>smtp.hostinger.com</code>のポート465、POP3用に<code>pop.hostinger.com</code>のポート995が案内されています。Hostingerの<b>Business Email</b>と<b>Enterprise Email</b>のプランはTitanで動いており、代わりに<code>imap.titan.email</code>と<code>smtp.titan.email</code>で応答します。HostingerはIMAPに993、SMTPに465または587を案内しています。アドレスを見てもどちらかはわかりません。わかるのはhPanelです。<b>Emails</b>を開き、ドメインの横の<b>Manage</b>をクリックして<b>Connect Apps & Devices</b>（アプリとデバイスの接続）を選ぶと、そのメールボックスが実際に載っている基盤の値が表示されます。Titanのメールボックスなら、Titan WebmailのSettings、Configure 3rd party appsにも同じ値が表示されます。"
+    },
+    {
+      "h": "メールボックスのパスワードはhPanelのログイン情報とは別で、2段階認証でさらに変わります",
+      "p": "IMAPの認証には、個々のメールアドレスに設定したパスワードを使います。これはhPanelの<b>Emails</b>にあるメールボックス一覧で設定またはリセットします。ホスティングや請求を管理するHostingerアカウントのログイン情報は別の認証情報で、拒否されます。またHostingerは、パスワードはメールボックスのパスワード<b>（メールボックスで2段階認証を使っている場合はアプリ パスワード）</b>だと案内しているため、2段階認証をオンにしたメールボックスでは、設定したパスワードではなくアプリ パスワードが必要です。どちらの失敗も、ただの認証エラーとして表示されます。"
+    },
+    {
+      "h": "SMTPサーバーのメッセージ上限は約46 MBで、多くのプロバイダーより小さめです",
+      "p": "Hostingerの送信サーバーが通知しているメッセージサイズの上限は48,811,212バイト、約46 MBです。これはファイルのサイズではなくエンコード後のメッセージのサイズで、MIMEエンコードで添付ファイルは約3分の1大きくなるため、実際の添付ファイルの上限は34 MB程度です。ほかのいくつかのホストが通知している上限より目に見えて低く、大きな添付ファイルを転送しようとしたエージェントは、後からバウンスされるのではなく送信時点ではっきり拒否されます。ファイルがこのサイズに近い場合は、代わりにリンクを送ってください。"
+    },
+    {
+      "h": "Hostinger EmailはMOVE、UIDPLUS、SPECIAL-USEを提供していません",
+      "p": "応答では<code>SASL-IR</code>、<code>IDLE</code>、<code>LITERAL+</code>、<code>AUTH=PLAIN</code>、<code>AUTH=LOGIN</code>が通知されますが、MOVE、UIDPLUS、SPECIAL-USEはありません。そのため、メッセージの移動は1つのアトミックなコマンドではなく、コピー、フラグ更新、expungeの組み合わせで行われます。コピーのIDは返されないので移動先フォルダーを検索して見つける必要があり、送信済み、下書き、ごみ箱、迷惑メールは役割ではなく名前で照合されます。Hostingerのメールボックスでエージェントがアーカイブフォルダーを見つけられない場合は、フォルダー名を明示すれば見つけられます。"
+    }
+  ],
+  "limits": [
+    "送信メッセージはエンコード後で約46 MBまでなので、約34 MBを大きく超える添付ファイルは送信時に拒否されます。",
+    "MOVEが通知されていないため、移動はアトミックではありません。途中で接続が切れると、メッセージが一時的に両方のフォルダーに存在することがあります。",
+    "Business EmailとEnterprise EmailのプランはHostinger独自の基盤ではなくTitanで動いており、Titanのホスト名を使います。接続するメールボックスのConnect Apps and Devicesに表示される設定を使ってください。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはHostingerのメールで使えますか？",
+      "a": "そのままでは使えません。ClaudeにはHostinger用のコネクタが組み込まれていません。MCPEmailsのようなMCPサーバーをIMAPでメールボックスに接続すると、Claudeからメールの閲覧、検索、送信、返信、予約送信、整理ができるようになり、同じ接続を1つだけでなくCursor、ChatGPTなどのMCPクライアントからも使えます。"
+    },
+    {
+      "q": "HostingerのIMAPとSMTPの設定は？",
+      "a": "Hostinger Emailの場合、IMAPはimap.hostinger.com、ポート993、SSL、SMTPはsmtp.hostinger.com、ポート465、SSLで、送信の代替として587とSTARTTLSも案内されています。ユーザー名はメールアドレス全体です。どちらのホストも、このページに記載の日付に実際のTLS接続で確認しています。"
+    },
+    {
+      "q": "hPanelでHostingerのメール設定を確認するには？",
+      "a": "hPanelでEmailsを開き、ドメインの横のManageをクリックして、サイドバーからConnect Apps and Devicesを選びます。この画面には個々のアプリ向けの案内タブがあり、その下にサーバー設定がそのまま表示されています。表示されるのはメールボックスが実際に載っている基盤の値なので、Titanベースのプランをお使いの場合に特に役立ちます。"
+    },
+    {
+      "q": "Hostingerのメールパスワードが拒否されるのはなぜですか？",
+      "a": "多くの場合、メールアドレス自体に設定したパスワードではなく、Hostingerアカウントのログイン情報を使っていることが原因です。hPanelのEmailsでメールボックスのパスワードをリセットし、それを試してください。メールボックスで2段階認証が有効な場合、Hostingerはメールクライアントにアプリ パスワードを求めます。その拒否はパスワード間違いとまったく同じに見えます。"
+    },
+    {
+      "q": "プランがTitan Emailの場合はどうなりますか？",
+      "a": "その場合、Hostingerのホスト名は当てはまりません。Titanで動くBusiness EmailとEnterprise Emailのメールボックスは、imap.titan.emailのポート993と、smtp.titan.emailのポート465または587を使います。正確な値は、hPanelのConnect Apps and Devices、またはTitan WebmailのSettings、Configure 3rd party appsで確認してください。"
+    },
+    {
+      "q": "Hostingerのメールはそちらのサーバーに保存されますか？",
+      "a": "いいえ。メッセージはリクエストのたびにHostingerからIMAPでその場で取得され、AIクライアントに渡されます。認証情報は暗号化して保存し、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにHostingerの受信トレイを",
+    "sub": "Hostingerを数分で接続。受信トレイ1つはずっと無料、カード登録は不要です。"
+  }
+}

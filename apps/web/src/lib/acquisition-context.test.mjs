@@ -497,8 +497,12 @@ test('the directory migration changes only the five allowlist lines of the signu
 
 const LOCALE_MIGRATION = '20261020130000_acquisition_locale_de.sql';
 
+// The newest locale migration (pt and ja, 2026-11-03). The de one above is
+// kept for its trigger-diff test below; this one pins the live list.
+const LOCALE_PT_JA_MIGRATION = '20261103150000_acquisition_locale_pt_ja.sql';
+
 test('the SQL locale allowlists match the JS LOCALES set', () => {
-  const lists = inLists(migration(LOCALE_MIGRATION), 'nb');
+  const lists = inLists(migration(LOCALE_PT_JA_MIGRATION), 'nb');
   // One CHECK constraint and one trigger guard.
   assert.equal(lists.length, 2);
   for (const members of lists) assert.deepEqual([...members].sort(), [...LOCALES].sort());
@@ -568,6 +572,34 @@ test('the referral migration changes only the three source allowlist lines of th
 test('the referral migration pins the source list in exactly three CHECKs and three trigger guards', () => {
   assert.equal(inLists(migration(REFERRAL_MIGRATION), 'direct').length, 6);
   for (const members of inLists(migration(REFERRAL_MIGRATION), 'direct')) assert.ok(members.includes('referral'));
+});
+
+test('the pt/ja locale migration copies the referral trigger and changes only its locale line', () => {
+  // The trigger body only, up to its closing $$ (the referral migration has
+  // more after it).
+  const body = (sql) => {
+    const from = sql.indexOf('CREATE OR REPLACE FUNCTION public.handle_new_user()');
+    return sql.slice(from, sql.indexOf('\n$$;', from) + 4).split('\n');
+  };
+  const before = body(migration(REFERRAL_MIGRATION));
+  const after = body(migration(LOCALE_PT_JA_MIGRATION));
+
+  assert.equal(after.length, before.length);
+  const changed = before.flatMap((line, index) => (line === after[index] ? [] : [index]));
+  assert.deepEqual(
+    changed.map((index) => before[index].match(/^ {2}IF (v_[a-z_]+) NOT IN /)?.[1]),
+    ['v_locale'],
+  );
+  for (const index of changed) {
+    assert.equal(after[index], before[index].replace("'zh', 'de')", "'zh', 'de', 'pt', 'ja')"));
+  }
+});
+
+test('the pt/ja locale migration only re-pins the locale CHECK and the trigger, and changes no row', () => {
+  const code = migration(LOCALE_PT_JA_MIGRATION).split('\n').filter((line) => !line.trimStart().startsWith('--')).join('\n');
+  assert.equal(/\b(UPDATE|DELETE|INSERT INTO public\.workspaces)\b/.test(code.slice(0, code.indexOf('CREATE OR REPLACE'))), false);
+  // The trigger's source guards are untouched copies of the referral ones.
+  assert.equal(inLists(migration(LOCALE_PT_JA_MIGRATION), 'direct').length, 3);
 });
 
 test('acq=referral on the landing URL files the visit as a referral', () => {
