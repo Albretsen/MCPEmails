@@ -721,3 +721,10 @@ html[data-theme="dark"] .auth-consent input { color-scheme: dark; }
     padding-top: 32px;
   }
 }
+
+/* Japanese has no spaces, so headings would otherwise break mid-word
+   (受信トレ / イ). auto-phrase breaks at phrase boundaries in Chromium;
+   other browsers ignore it and keep the default. */
+:lang(ja) :is(h1, h2, h3) {
+  word-break: auto-phrase;
+}
