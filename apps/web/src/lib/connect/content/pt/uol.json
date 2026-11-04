@@ -90,7 +90,7 @@
     },
     {
       "q": "Posso conectar uma conta de e-mail gratuita do UOL?",
-      "a": "Não existe caixa de correio gratuita do UOL para conectar. O e-mail do UOL vem com uma assinatura UOL paga ou com um plano UOL Mail avulso. O serviço irmão BOL oferece contas gratuitas, mas elas são só webmail e não podem ser acessadas via IMAP de forma alguma sem upgrade."
+      "a": "Não existe caixa de correio gratuita do UOL para conectar. O e-mail do UOL vem com uma assinatura UOL paga ou com um plano UOL Mail avulso. O serviço relacionado BOL é uma caixa de correio separada, com hosts próprios e porta de saída própria, e tem a própria página neste site."
     },
     {
       "q": "Meu e-mail do UOL fica armazenado nos seus servidores?",

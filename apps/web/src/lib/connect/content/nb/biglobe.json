@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "https://autoconfig.thunderbird.net/v1.1/biglobe.ne.jp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "BIGLOBE-passord",
+    "helpUrl": "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "usernameForm": "Hele BIGLOBE-adressen din, name@xxx.biglobe.ne.jp, i feltet BIGLOBEs veiledning kaller アカウント.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BIGLOBE Mail i Claude: én vert for IMAP og SMTP",
+    "description": "Koble en BIGLOBE-postkasse til Claude eller enhver MCP-klient på mail.biglobe.ne.jp:993. Én vert betjener IMAP og SMTP over SSL, med BIGLOBE-adressen og BIGLOBE-passordet ditt."
+  },
+  "hero": {
+    "eyebrow": "BIGLOBE + AI",
+    "titleLine1": "Koble BIGLOBE-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte BIGLOBE-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene BIGLOBE publiserer og ingenting som må slås på først.",
+    "answer": "Claude når ikke BIGLOBE-e-post på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på mail.biglobe.ne.jp port 993 og autentiserer med BIGLOBE-adressen og BIGLOBE-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. BIGLOBE er en av de enklere japanske leverandørene å koble til: samme vert betjener innkommende og utgående e-post, passordet er det vanlige BIGLOBE-passordet, og det finnes ingen bryter å lete etter i webmailen først. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "BIGLOBE-passord, ingenting å aktivere",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler BIGLOBE seg til: mail.biglobe.ne.jp i begge retninger",
+    "body": "BIGLOBE dokumenterer ett servernavn for alt. IMAP er <code>mail.biglobe.ne.jp</code> port 993 med SSL, og SMTP er den samme <code>mail.biglobe.ne.jp</code> port 465 med SSL. Veiledningen oppgir også 143 og 587 uten SSL; MCPEmails bruker det krypterte paret. Brukernavnet, i feltet BIGLOBE kaller <b>アカウント</b> (konto), er BIGLOBE-e-postadressen din, og passordet er <b>BIGLOBEパスワード</b>, BIGLOBE-passordet ditt. BIGLOBEs IMAP-veiledning oppgir ingen forutsetning og ikke noe separat e-postpassord, noe som skiller den fra flere andre japanske leverandører. Én ting å vite om selve serveren: før du logger inn, sier den ingenting om hvordan den autentiserer, så en klient som venter på en annonsert liste over mekanismer, ser en tom liste. MCPEmails spør, får <code>PLAIN</code>, <code>LOGIN</code> og <code>CRAM-MD5</code> tilbake, og logger inn. Automatisk oppdaging feiler også for BIGLOBE, fordi den offentlige Mozilla-databasen bare oppgir POP for biglobe.ne.jp."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Ha BIGLOBE-adressen og -passordet klart",
+      "p": "Brukernavnet er BIGLOBE-e-postadressen din, og passordet er BIGLOBE-passordet ditt, det samme som BIGLOBEs veiledning ber deg skrive inn i et e-postprogram. Det finnes ingen egen pålogging å opprette og ingen innstilling å aktivere i webmailen først."
+    },
+    {
+      "h": "Skriv dem inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn adressen og passordet. BIGLOBE-verten og -portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere BIGLOBE-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hilsenen annonserer ingen funksjoner, og noen verktøy gir opp der",
+      "p": "Hilsenen fra <code>mail.biglobe.ne.jp</code> er en naken <code>* OK IMAP4rev1 server ready</code>, uten funksjonsliste og uten <code>SASL-IR</code>. Først etter en eksplisitt CAPABILITY-forespørsel lister serveren <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> og <code>AUTH=CRAM-MD5</code>. Biblioteker som bare leser hilsenen og nekter å fortsette når den ikke nevner noen mekanisme, melder at BIGLOBE ikke kan nås, mens Thunderbird logger inn uten problemer. MCPEmails spør før den bestemmer seg, så dette er håndtert for deg."
+    },
+    {
+      "h": "MOVE finnes, IDLE gjør det ikke",
+      "p": "Ved testing annonserte BIGLOBE <code>MOVE</code> og <code>UIDPLUS</code>, så arkivering av en melding er én atomisk kommando i stedet for en kopi, en flaggoppdatering og en expunge. Den annonserte ikke <code>IDLE</code>, så ny e-post oppdages ved polling i stedet for å skyves ut: en agent ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer. Den mangler også <code>SPECIAL-USE</code>, så mappene for sendt, utkast og papirkurv matches etter navn. Legger en agent noe i feil mappe, oppgi mappen i instruksjonen."
+    },
+    {
+      "h": "E-postklienten din kan tilby bare POP, fordi den offentlige databasen gjør det",
+      "p": "Mozillas autokonfigurasjonsdatabase, som mange klienter slår opp i, oppgir bare POP3 for biglobe.ne.jp, så en klient som fyller inn innstillinger for deg, kan i stillhet sette opp en last-ned-og-slett-konto i stedet for IMAP. BIGLOBEs egen veiledning dokumenterer IMAP på port 993. Skriv det inn for hånd, eller la MCPEmails forhåndsutfylle det."
+    }
+  ],
+  "limits": [
+    "Det finnes ingen IDLE-støtte, så e-post hentes ved polling i stedet for å skyves ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
+    "SMTP-serveren godtar meldinger opptil 100 MB, som er romslig, men mottakerserveren har sin egen grense. De fleste ligger mellom 10 MB og 50 MB, så et stort vedlegg BIGLOBE godtar, kan fortsatt returneres fra den andre enden.",
+    "Det finnes ikke noe app-passord og ingen OAuth-vei, så den lagrede påloggingen er BIGLOBE-passordet ditt. Endrer du det, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med BIGLOBE-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd BIGLOBE-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for BIGLOBE?",
+      "a": "IMAP er mail.biglobe.ne.jp på port 993 med SSL. SMTP er mail.biglobe.ne.jp på port 465 med SSL. Brukernavnet er BIGLOBE-e-postadressen din, og passordet er BIGLOBE-passordet ditt. Verten ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvilket passord bruker BIGLOBE-e-post?",
+      "a": "BIGLOBE-passordet, det som BIGLOBEs IMAP-veiledning ber deg skrive inn i et e-postprogram. BIGLOBEs veiledning oppgir ikke noe separat e-postpassord og ikke noe app-passord."
+    },
+    {
+      "q": "Må jeg aktivere IMAP hos BIGLOBE først?",
+      "a": "BIGLOBEs IMAP-veiledning oppgir ingen forutsetning: den gir serveren, portene og påloggingsdetaljene, og ingenting som må slås på. Avvises en innlogging, sjekk adressen og passordet før du leter etter en innstilling."
+    },
+    {
+      "q": "Hvorfor foreslår e-postklienten min POP for BIGLOBE?",
+      "a": "Fordi den offentlige autokonfigurasjonsdatabasen bare oppgir POP3 for biglobe.ne.jp. IMAP finnes og er dokumentert av BIGLOBE på mail.biglobe.ne.jp port 993 med SSL. Skriv det inn for hånd, eller la MCPEmails fylle det inn."
+    },
+    {
+      "q": "Lagres BIGLOBE-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra BIGLOBE via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en BIGLOBE-innboks",
+    "sub": "Koble til BIGLOBE-e-post på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

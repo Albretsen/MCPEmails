@@ -90,7 +90,7 @@
     },
     {
       "q": "Kan jeg koble til en gratis UOL-e-postkonto?",
-      "a": "Det finnes ingen gratis UOL-postkasse å koble til. UOL-e-post følger med et betalt UOL-abonnement eller et frittstående UOL Mail-abonnement. Den beslektede BOL-tjenesten tilbyr gratiskontoer, men de er bare webmail og kan ikke nås via IMAP i det hele tatt uten oppgradering."
+      "a": "Det finnes ingen gratis UOL-postkasse å koble til. UOL-e-post følger med et betalt UOL-abonnement eller et frittstående UOL Mail-abonnement. Den beslektede BOL-tjenesten er en egen postkasse med egne verter og egen utgående port, og har sin egen side på dette nettstedet."
     },
     {
       "q": "Lagres UOL-e-posten min på serverne deres?",

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "https://king.host/wiki/artigo/como-ativar-o-smtp-internacional/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord, med SMTP Internacional aktivert for sending",
+    "helpUrl": "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "usernameForm": "Hele e-postadressen din på domenet, for eksempel contato@suaempresa.com.br. KingHosts veiledninger starter hvert oppsett med hele adressen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "KingHost-e-post i Claude: IMAP, og SMTPi-bryteren for sending",
+    "description": "Koble en KingHost-postkasse til Claude eller enhver MCP-klient på imap.kinghost.net:993. Sending fra utenfor Brasil går gjennom smtpi.kinghost.net, som først må aktiveres i KingHost-panelet."
+  },
+  "hero": {
+    "eyebrow": "KingHost + AI",
+    "titleLine1": "Koble KingHost-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte KingHost-postkasse på ditt eget domene. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med én bryter i panelet slik at sending virker fra utenfor Brasil.",
+    "answer": "Claude når ikke en KingHost-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.kinghost.net port 993 og autentiserer med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Lesing er enkelt. Sending trenger én ting KingHost dokumenterer for alle utenfor Brasil: den vanlige SMTP-verten svarer bare fra brasilianske nett, så e-post sendt fra andre steder, og det inkluderer MCPEmails sine servere, går gjennom SMTP Internacional på smtpi.kinghost.net, og det må først slås på for domenet ditt i KingHost-panelet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, SMTPi aktivert i panelet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler KingHost seg til: IMAP på imap.kinghost.net, SMTP gjennom SMTPi",
+    "body": "KingHost dokumenterer IMAP på <code>imap.kinghost.net</code> port 993 med SSL/TLS, og SMTP på <code>smtp.kinghost.net</code> port 465 med SSL/TLS, med 143 og 587 som de ukrypterte alternativene. Domener registrert under en KingHost-forhandler bruker <code>imap.uni5.net</code> og <code>smtp.uni5.net</code> i stedet. Brukernavnet er hele e-postadressen, og passordet er det som er satt på den postkassen. Haken er geografi. KingHosts veiledninger sier at du må bruke <b>SMTPi</b>, tjenesten SMTP Internacional, hvis du er utenfor Brasil, og herfra svarte <code>smtp.kinghost.net</code> ikke i det hele tatt, mens <code>smtpi.kinghost.net</code> gjorde det. MCPEmails sender fra servere i Europa, så SMTPi-verten er den denne siden oppgir. Den er ikke på som standard: KingHost-panelet har en bryter for den per domene, og KingHost sier at endringen tar 30 minutter til 2 timer å tre i kraft. Å aktivere den endrer ingenting ved mottak av e-post eller ved sending fra maskiner i Brasil."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort. La den stå åpen mens du slår på SMTPi, for den delen har en ventetid."
+    },
+    {
+      "h": "Aktiver SMTP Internacional for domenet i KingHost-panelet",
+      "p": "Åpne KingHosts <b>Painel de Controle</b> (kontrollpanel), velg domenet og gå til e-postseksjonen. Klikk på ikonet <b>SMTP INTERNACIONAL</b> og deretter <b>ATIVAR</b> på siden som åpnes. KingHost sier at du må regne med 30 minutter til 2 timer før endringen trer i kraft på domenet. Uten dette avvises sendinger fra MCPEmails, fordi KingHosts vanlige SMTP-vert ikke svarer fra utenfor Brasil."
+    },
+    {
+      "h": "Skriv inn adressen og postkassepassordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen sammen med passordet som er satt på den postkassen i KingHost-panelet, ikke KingHost-kundeinnloggingen din. Den innkommende verten <code>imap.kinghost.net</code> og den utgående verten <code>smtpi.kinghost.net</code> er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. På et forhandlerdomene bytter du dem ut med <code>imap.uni5.net</code> og <code>smtpi.uni5.net</code>."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere KingHost-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SMTP-verten i KingHosts veiledninger kan ikke nås fra utenfor Brasil",
+      "p": "KingHosts oppsettsartikler oppgir <code>smtp.kinghost.net</code> på port 465. Fra våre servere svarte den verten verken på 465 eller 587: tilkoblingen tidsavbrøt i stedet for å bli avvist, som er kjennetegnet på et nett som bare slipper inn brasiliansk trafikk. KingHosts egen SMTPi-artikkel sier det samme: utenfor Brasil er SMTP Internacional obligatorisk. En agent som sender gjennom MCPEmails, er utenfor Brasil uansett hvor du selv befinner deg, så bruk <code>smtpi.kinghost.net</code>, og pass på at SMTPi er slått på for domenet, ellers henger hver sending til den tidsavbrytes."
+    },
+    {
+      "h": "Bryteren gjelder per domene, og den tar opptil to timer",
+      "p": "SMTPi aktiveres i KingHost-panelet for hvert domene for seg, under e-postseksjonen, med ikonet <b>SMTP INTERNACIONAL</b> og knappen <b>ATIVAR</b>. KingHost sier at endringen tar mellom 30 minutter og 2 timer å tre i kraft. En sending forsøkt i det tidsrommet feiler på samme måte som før bryteren, så virker sending fortsatt ikke rett etter at du aktiverte den, vent heller enn å endre innstillinger. Mottak av e-post og sending fra brasilianske maskiner påvirkes ikke uansett."
+    },
+    {
+      "h": "Forhandlerdomener bruker uni5.net, ikke kinghost.net",
+      "p": "Et domene registrert under en KingHost-forhandlerkonto (Revenda) ligger på en annen klynge, og KingHosts veiledninger gir det egne navn: <code>imap.uni5.net</code> for innkommende e-post og <code>smtpi.uni5.net</code> for SMTPi, med de samme portene. kinghost.net-navnene er ikke aliaser for disse, så en forhandlerkunde som kopierer vertene fra denne siden, kobler seg til feil servere. Spør den som solgte deg hostingen om domenet er på en forhandlerplan hvis du er usikker."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, så mapper matches etter navn",
+      "p": "Dovecot-serveren bak <code>imap.kinghost.net</code> annonserer <code>IDLE</code>, men verken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv identifiseres etter navn og ikke etter en rolle serveren oppgir. Legger en agent noe på feil sted, oppgi mappen i instruksjonen."
+    }
+  ],
+  "limits": [
+    "Sending krever at SMTP Internacional er aktivert for domenet i KingHost-panelet. Til det er gjort, feiler sendinger fra MCPEmails, og KingHosts vanlige SMTP-vert kan ikke brukes fra utenfor Brasil.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Brytes en tilkobling midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "SMTPi-serveren godtar meldinger opptil 60 MB. En videresending med større vedlegg avvises ved sending."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med KingHost-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd KingHost-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for KingHost?",
+      "a": "IMAP er imap.kinghost.net på port 993 med SSL/TLS. For sending fra utenfor Brasil, som er der MCPEmails kjører, er SMTP smtpi.kinghost.net på port 465 med SSL/TLS, etter at SMTP Internacional er aktivert for domenet i panelet. KingHosts veiledninger oppgir smtp.kinghost.net for klienter i Brasil. Forhandlerdomener bruker imap.uni5.net og smtpi.uni5.net. Begge de oppgitte vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor kan MCPEmails lese KingHost-e-posten min, men ikke sende?",
+      "a": "Fordi SMTP Internacional ikke er aktivert for domenet, eller har vært aktivert i mindre enn to timer. KingHosts vanlige SMTP-vert svarer ikke fra utenfor Brasil, og sendinger fra MCPEmails kommer fra Europa. Åpne KingHost-panelet, velg domenet, gå til e-postseksjonen, klikk SMTP INTERNACIONAL og deretter ATIVAR, og regn med opptil to timer."
+    },
+    {
+      "q": "Endrer aktivering av SMTPi hvordan jeg mottar e-post?",
+      "a": "Nei. KingHost slår fast at aktivering eller deaktivering av SMTP Internacional verken påvirker mottak eller sending fra maskiner som befinner seg i Brasil. Det åpner bare smtpi-verten for autentisert sending fra andre steder."
+    },
+    {
+      "q": "Trenger KingHost et app-passord?",
+      "a": "Nei. KingHost har ingen ordning med appspesifikke passord. Passordet som er satt på postkassen i panelet, autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres KingHost-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra KingHost via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en KingHost-innboks",
+    "sub": "Koble til en KingHost-postkasse på minutter, når SMTPi er på. Én innboks gratis for alltid, uten kort."
+  }
+}

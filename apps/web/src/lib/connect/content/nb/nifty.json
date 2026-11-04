@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://mail.nifty.com/cs/mail-faq/detail/200326000044/",
+    "https://autoconfig.thunderbird.net/v1.1/nifty.com"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "@nifty-e-postpassord, med メールソフト接続許可（IMAP） satt til 許可中",
+    "helpUrl": "https://mail.nifty.com/cs/mail-faq/detail/200326000044/",
+    "usernameForm": "Hele @nifty-adressen din, for eksempel abc12345@nifty.com, slik @niftys egen veiledning viser den.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "@nifty Mail i Claude: IMAP etter tilkoblingstillatelsen",
+    "description": "Koble en @nifty-postkasse til Claude eller enhver MCP-klient på imap.nifty.com:993. Sett メールソフト接続許可（IMAP） til 許可中 og bruk det egne e-postpassordet, ikke passordet til @nifty ID."
+  },
+  "hero": {
+    "eyebrow": "@nifty + AI",
+    "titleLine1": "Koble @nifty-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte nifty.com-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, så snart IMAP-tilkoblingstillatelsen er på og du har e-postpassordet @nifty utsteder for e-postprogrammer.",
+    "answer": "Claude når ikke @nifty-e-post på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.nifty.com port 993 og autentiserer med hele @nifty-adressen din og @nifty-e-postpassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. To ting avgjør om innloggingen virker, og @nifty dokumenterer begge: en innstilling som heter メールソフト接続許可（IMAP） (tilkoblingstillatelse for e-postprogrammer) må stå på 許可中 (tillatt) i e-postinnstillingene dine, og passordet må være det egne e-postpassordet, ikke det til @nifty ID-en din. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-postpassord, IMAP-tillatelse slått på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler @nifty seg til: IMAP, en tillatelse og et passord laget for e-postprogrammer",
+    "body": "@nifty dokumenterer IMAP på <code>imap.nifty.com</code> port 993 med SSL/TLS, og SMTP på <code>smtp.nifty.com</code> port 465 med SSL/TLS og påkrevd SMTP-autentisering. Brukernavnet er hele adressen, og autentiseringsmetoden på begge er vanlig passordautentisering, som @niftys veiledning kaller <b>通常のパスワード（PLAIN/LOGIN）</b>. Passordet er <b>メールパスワード</b>, en pålogging @nifty utsteder spesielt for e-postprogrammer; kjenner du det ikke, sier veiledningen at du skal sette et nytt på siden for passordendring. Før noe av dette virker, må innstillingen <b>メールソフト接続許可（IMAP）</b> i listen over e-postinnstillinger vise <b>許可中</b>. For en standardadresse ligger den under <b>@niftyメール</b>; for tilleggspostkasser ligger den under <b>セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント</b>. Ikke stol på at en e-postklient fyller dette inn: den offentlige autokonfigurasjonsdatabasen beskriver fortsatt @nifty som ukryptert POP på port 110, som er feil på alle punkter."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort. La den stå åpen; @nifty-delen tar et par minutter."
+    },
+    {
+      "h": "Sett IMAP-tilkoblingstillatelsen til 許可中",
+      "p": "I listen over @nifty-e-postinnstillinger finner du <b>メールソフト接続許可（IMAP）</b> og passer på at den viser <b>許可中</b>. For en standardkonto ligger den under <b>@niftyメール</b>; for en andre postkasse eller tilleggspostkasse ligger den under <b>セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント</b>. Til dette er på, avvises hver eneste IMAP-innlogging."
+    },
+    {
+      "h": "Skriv inn hele adressen og e-postpassordet i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel abc12345@nifty.com, og lim inn @nifty-e-postpassordet. Kjenner du ikke e-postpassordet, setter du et nytt på @niftys side for passordendring først. Vertene og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere @nifty-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tillatelsen og passordet feiler på nøyaktig samme måte",
+      "p": "En innlogging som avvises fordi <b>メールソフト接続許可（IMAP）</b> er av, ser helt lik ut som en innlogging som avvises fordi du limte inn passordet til @nifty ID-en i stedet for e-postpassordet. Serveren returnerer den samme autentiseringsfeilen for begge og nevner ingen av dem. Sjekk tillatelsen først, siden det er den som leveres avslått, og bekreft deretter at du bruker e-postpassordet og ikke ID-passordet. @nifty utsteder e-postpassordet separat nettopp for at e-postprogrammer aldri skal sitte med ID-påloggingen."
+    },
+    {
+      "h": "Før innlogging tilbyr serveren bare CRAM-MD5",
+      "p": "Funksjonslisten <code>imap.nifty.com</code> returnerer før autentisering, nevner én enkelt mekanisme, <code>AUTH=CRAM-MD5</code>, og ingen <code>SASL-IR</code>. @niftys egen veiledning ber deg likevel velge vanlig passordautentisering, og funksjonslisten inneholder ingen <code>LOGINDISABLED</code>, så den vanlige IMAP-kommandoen <code>LOGIN</code> er fortsatt tilgjengelig over SSL. Klientbiblioteker som bare autentiserer gjennom en annonsert SASL-mekanisme, og ikke implementerer CRAM-MD5, stopper før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at @nifty ikke kan nås, mens Outlook og Thunderbird kobler til samme postkasse. MCPEmails håndterer den nakne LOGIN-veien."
+    },
+    {
+      "h": "Engelske mappenavn, et tak på 50 mapper, og to mapper som ikke lar seg flytte fra",
+      "p": "@niftys IMAP-veiledning kaller spesialmappene <b>Draft</b>, <b>Sent</b> og <b>Trash</b>, og sier at arkivet og IMAP-stiprefikset skal stå tomme. Fordi serveren ikke annonserer <code>SPECIAL-USE</code>, er det de navnene MCPEmails finner dem etter. Den samme veiledningen setter en grense på 50 mapper i webmailen og i e-postprogrammer, sier at mapper opprettet i webmailen kan måtte vises manuelt i et e-postprogram, og påpeker at e-post i mappene Sent og Draft ikke kan flyttes ut av dem og at ingenting kan flyttes inn. En agent som blir bedt om å arkivere en sendt melding et annet sted, avvises av serveren, ikke av oss."
+    },
+    {
+      "h": "Autokonfigurasjonsdataene for @nifty er utdaterte og ville satt deg opp ukryptert",
+      "p": "Den offentlige Mozilla-databasen beskriver nifty.com som ren POP3 på port 110 med SMTP på 587, en konfigurasjon @nifty ikke lenger dokumenterer. En klient som fyller inn innstillinger fra den kilden, gir deg en ukryptert konto som bare laster ned, ikke IMAP-postkassen @nifty publiserer. Skriv inn <code>imap.nifty.com</code>, port 993 og SSL/TLS for hånd, eller la MCPEmails forhåndsutfylle dem."
+    }
+  ],
+  "limits": [
+    "Postkassen tillater høyst 50 mapper, og meldinger i mappene Sent og Draft kan ikke flyttes til andre mapper. Begge grensene håndheves av @nifty.",
+    "Det finnes ingen IDLE-støtte, så e-post hentes ved polling i stedet for å skyves ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
+    "SMTP-serveren godtar meldinger opptil 20 MB. En videresending med større vedlegg avvises ved sending."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med @nifty-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd @nifty-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for @nifty?",
+      "a": "IMAP er imap.nifty.com på port 993 med SSL/TLS. SMTP er smtp.nifty.com på port 465 med SSL/TLS og autentisering. Brukernavnet er hele @nifty-adressen din, og passordet er @nifty-e-postpassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor avviser en e-postapp @nifty-passordet mitt?",
+      "a": "Enten er メールソフト接続許可（IMAP） ikke satt til 許可中 i e-postinnstillingene dine, eller så skrev du inn passordet til @nifty ID-en i stedet for det egne e-postpassordet. Sjekk tillatelsen først. Kjenner du ikke e-postpassordet, setter du et nytt på @niftys side for passordendring og bruker det."
+    },
+    {
+      "q": "Hvor finner jeg IMAP-tilkoblingstillatelsen hos @nifty?",
+      "a": "I listen over e-postinnstillinger. For en standardadresse ligger den under @niftyメール; for en andre postkasse eller tilleggspostkasse ligger den under セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント. Innstillingen heter メールソフト接続許可（IMAP） og må vise 許可中."
+    },
+    {
+      "q": "Trenger @nifty et app-passord?",
+      "a": "Ikke i Gmail-forstand, men den bruker en egen pålogging: @nifty-e-postpassordet, som er adskilt fra passordet til @nifty ID-en og er det e-postprogrammer må bruke. Det finnes ingen token per app."
+    },
+    {
+      "q": "Lagres @nifty-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra @nifty via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en @nifty-innboks",
+    "sub": "Koble til @nifty-e-post på minutter når IMAP-tillatelsen er på. Én innboks gratis for alltid, uten kort."
+  }
+}

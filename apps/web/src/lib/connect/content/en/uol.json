@@ -90,7 +90,7 @@
     },
     {
       "q": "Can I connect a free UOL email account?",
-      "a": "There is no free UOL mailbox to connect. UOL mail comes with a paid UOL subscription or with a standalone UOL Mail plan. The related BOL service does offer free accounts, but those are webmail only and cannot be reached over IMAP at all without upgrading."
+      "a": "There is no free UOL mailbox to connect. UOL mail comes with a paid UOL subscription or with a standalone UOL Mail plan. The related BOL service is a separate mailbox with its own hosts and its own outgoing port, and has its own page on this site."
     },
     {
       "q": "Is my UOL mail stored on your servers?",

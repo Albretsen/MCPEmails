@@ -52,11 +52,16 @@ export const RELEASE_WAVES = {
   // moved to the consumer and business categories; the wave is unchanged.
   8: '2026-09-15',
   9: '2026-09-15',
+  // Brazilian, Japanese and DACH hosts researched and probed on 2026-11-04:
+  // Yahoo! JAPAN, OCN, BIGLOBE, @nifty, Locaweb, KingHost, Vodafone and A1.
+  // Numbered below the held cohort because a dated wave may not follow a held
+  // one; the held set was wave 10 until this cohort was added.
+  10: '2026-11-04',
   // HELD, not scheduled. These seven need a human spot-check first: SFR and
   // StartMail are sourced more weakly than the rest of the set, and Rogers has
   // app-password availability contradicted between two live vendor pages. Set
   // a date here once someone has read them.
-  10: null,
+  11: null,
 };
 
 /**
