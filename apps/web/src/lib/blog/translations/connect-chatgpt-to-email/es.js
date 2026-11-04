@@ -58,9 +58,9 @@ Elige OAuth, no la opción sin autenticación. Este servidor rechaza las llamada
 
 ## Paso 3: Aprueba solo los permisos necesarios
 
-La pantalla de consentimiento es nuestra, no de OpenAI. El primer consentimiento empieza en \`read:email\`, que basta para clasificar, resumir y encontrar cosas, y deja fuera toda acción irreversible mientras decides hasta dónde quieres llegar. Los demás permisos son \`send:email\`, \`search:email\` y \`manage:automations\`.
+La pantalla de consentimiento es nuestra, no de OpenAI. Para ChatGPT se abre en **Acceso completo**, porque ChatGPT no vuelve más tarde a pedir más acceso. Si quieres un nivel más limitado, elígelo antes de hacer clic en **Permitir acceso**: **Solo lectura** basta para clasificar, resumir y encontrar cosas, y deja fuera toda acción irreversible. **Personalizar permisos** muestra los nueve permisos (leer, buscar, enviar, carpetas, eliminar, borradores, contactos, programación y automatizaciones). Además, la pantalla deja acceder por defecto a todas las bandejas del espacio de trabajo, incluidas las que conectes más adelante; elige ahí bandejas concretas para limitarlo.
 
-Conceder de menos tiene arreglo: una llamada que necesita un permiso que el token no tiene devuelve un 403 con un error de permiso insuficiente, así que el cliente puede volver a pedir ese permiso y reintentar. El propietario de la bandeja también puede exigir [aprobación humana](/blog/approve-ai-agent-email-sends) en el panel, lo que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera.
+Conceder de menos tiene arreglo. Cuando una herramienta necesita un permiso que le falta a la conexión de ChatGPT, el resultado de la herramienta indica cuál falta y pide a ChatGPT que vuelva a conectarse. El propietario de la bandeja también puede exigir [aprobación humana](/blog/approve-ai-agent-email-sends) en el panel, lo que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera.
 
 ## Paso 4: Dale a ChatGPT una primera tarea segura
 

@@ -95,7 +95,7 @@ MCPEmails does not push new mail to Claude. Claude checks when you ask it to, wh
 
 ## Is my Outlook.com mail stored anywhere?
 
-No. Each time Claude asks for a message, MCPEmails fetches it live from Microsoft, hands it to Claude, and discards it. The only thing kept for the inbox is the OAuth token from your Microsoft sign-in, encrypted at rest. To disconnect, delete the inbox in MCPEmails, or remove MCPEmails from the apps that have access to your Microsoft account. [Why "email is never stored" matters](/blog/why-email-never-stored-matters) explains the model, and [is it safe to give an AI agent email access?](/blog/is-it-safe-to-give-ai-agent-email-access) covers what to watch for, such as instructions hidden inside an email.
+No. Each time Claude asks for a message, MCPEmails fetches it live from Microsoft, hands it to Claude, and discards it. What is kept for the inbox is the OAuth token from your Microsoft sign-in, encrypted at rest, plus the few details a feature you turn on needs, such as a scheduled message waiting to go out. To disconnect, delete the inbox in MCPEmails, or remove MCPEmails from the apps that have access to your Microsoft account. [Why "email is never stored" matters](/blog/why-email-never-stored-matters) explains the model, and [is it safe to give an AI agent email access?](/blog/is-it-safe-to-give-ai-agent-email-access) covers what to watch for, such as instructions hidden inside an email.
 
 ## FAQ
 

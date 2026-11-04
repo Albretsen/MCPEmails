@@ -29,7 +29,7 @@
   "why": {
     "title": "Hvorfor jeg laget MCPEmails",
     "p1": "Jeg ville at mine egne agenter skulle ta seg av innboksen min. Alle løsningene jeg fant, ville først ha en kopi av e-posten min: synkronisere den, indeksere den og lagre den i noen andres database så lenge kontoen finnes. En innboks full av fakturaer, kontrakter og e-poster om nytt passord er mye å gi fra seg for noe jeg bare trengte av og til.",
-    "p2": "Så jeg laget en versjon jeg selv ville bruke. E-posten hentes først når agenten ber om den, og kastes så snart svaret er sendt. Det finnes ingen lagret kopi. Det eneste som lagres, er innloggingsopplysningene til e-postkontoen. De er kryptert og trengs til neste kall. Min egen e-post går gjennom tjenesten hver dag."
+    "p2": "Så jeg laget en versjon jeg selv ville bruke. E-posten hentes først når agenten ber om den, og kastes så snart svaret er sendt. Det finnes ingen lagret kopi. Det som lagres per innboks, er innloggingsopplysningene til e-postkontoen. De er kryptert og trengs til neste kall. I tillegg lagres de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt. Min egen e-post går gjennom tjenesten hver dag."
   },
   "trusting": {
     "title": "Det du stoler på",

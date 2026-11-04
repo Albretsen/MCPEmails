@@ -84,7 +84,7 @@ Eines sollten Sie vorab wissen: MCPEmails arbeitet mit Abfragen. Es gibt keine P
 
 Kurz gesagt: ja, und das Design ist darauf ausgelegt.
 
-- **Ihre E-Mails werden nie gespeichert.** Texte, Betreffzeilen und Anhänge werden bei jedem Aufruf live abgerufen, an Claude übergeben und sofort verworfen. Pro Postfach bleibt nur die verschlüsselte Zugangsberechtigung gespeichert, Ihr App-Passwort. Hier steht, [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
+- **Ihre E-Mails werden nie gespeichert.** Texte, Betreffzeilen und Anhänge werden bei jedem Aufruf live abgerufen, an Claude übergeben und sofort verworfen. Pro Postfach bleibt die verschlüsselte Zugangsberechtigung gespeichert, Ihr App-Passwort, dazu die wenigen Angaben, die eine von Ihnen eingeschaltete Funktion braucht, etwa eine geplante Nachricht, die noch auf den Versand wartet. Hier steht, [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
 - **Sie bestimmen die Berechtigungen.** Genehmigen Sie nur Lesezugriff, kann Claude schlicht nicht senden. Genehmigen Sie beides, können Sie trotzdem jeden Zugriff jederzeit widerrufen.
 - **Kein Teilen von Passwörtern.** Ihr normales Google-Passwort erreicht MCPEmails nie. Ein App-Passwort ist eine separate Zugangsberechtigung, die Sie jederzeit unter myaccount.google.com/apppasswords widerrufen können, oder Sie löschen das Postfach in MCPEmails.
 
@@ -96,7 +96,7 @@ Das vollständige Bedrohungsmodell (was verschlüsselt ist, was ein Angreifer se
 Nein. Claude unterstützt OAuth, Sie fügen also die Endpunkt-URL ein und bestätigen eine Anmeldung. API-Schlüssel sind nur für Clients ohne eingebautes OAuth gedacht.
 
 **Speichert Claude meine Gmail-Nachrichten?**
-Nein. E-Mails werden bei jeder Anfrage live von Gmail abgerufen und direkt verworfen, nachdem Claude sie gelesen hat. Gespeichert bleibt nur Ihre verschlüsselte Zugangsberechtigung (das App-Passwort).
+Nein. E-Mails werden bei jeder Anfrage live von Gmail abgerufen und direkt verworfen, nachdem Claude sie gelesen hat. Von den E-Mails, die Claude liest, bleibt nichts gespeichert; gespeichert bleibt Ihre verschlüsselte Zugangsberechtigung (das App-Passwort).
 
 **Kann Claude E-Mails von meinem Gmail senden?**
 Ja, wenn Sie die Berechtigung \`send:email\` gewähren. Gesendet wird über Gmail als normale Nachricht von Ihrem eigenen Konto. Gewähren Sie nur Lesezugriff, wenn Claude nie senden soll.

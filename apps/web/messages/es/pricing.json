@@ -88,7 +88,7 @@
   },
   "enterprise": {
     "title": "Enterprise: hablemos",
-    "body": "Un acuerdo de tratamiento de datos (DPA), pago por factura y ayuda para que tu administrador de TI apruebe Microsoft 365. Escribe a <contact>hello@mcpemails.com</contact>."
+    "body": "Un <dpa>acuerdo de tratamiento de datos (DPA)</dpa>, pago por factura y ayuda para que tu administrador de TI apruebe Microsoft 365. Escribe a <contact>hello@mcpemails.com</contact>."
   },
   "comparison": {
     "eyebrow": "Comparación completa",

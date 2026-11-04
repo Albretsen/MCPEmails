@@ -88,7 +88,7 @@ MCPEmails schickt neue E-Mails nicht von sich aus an Claude. Claude sieht nach, 
 
 ## Werden meine E-Mails von Outlook.com irgendwo gespeichert?
 
-Nein. Jedes Mal, wenn Claude eine Nachricht anfordert, ruft MCPEmails sie live bei Microsoft ab, übergibt sie an Claude und verwirft sie. Für das Postfach bleibt nur das OAuth-Token aus Ihrer Anmeldung bei Microsoft gespeichert, im Ruhezustand verschlüsselt. Zum Trennen löschen Sie das Postfach in MCPEmails oder entfernen MCPEmails aus den Apps, die Zugriff auf Ihr Microsoft-Konto haben. [Warum „E-Mails werden nie gespeichert“ wichtig ist](/blog/why-email-never-stored-matters) erklärt das Modell, und [Ist es sicher, einem KI-Agenten E-Mail-Zugriff zu geben?](/blog/is-it-safe-to-give-ai-agent-email-access) zeigt, worauf Sie achten sollten, etwa auf Anweisungen, die in einer E-Mail versteckt sind.
+Nein. Jedes Mal, wenn Claude eine Nachricht anfordert, ruft MCPEmails sie live bei Microsoft ab, übergibt sie an Claude und verwirft sie. Für das Postfach bleibt das OAuth-Token aus Ihrer Anmeldung bei Microsoft gespeichert, im Ruhezustand verschlüsselt, dazu die wenigen Angaben, die eine von Ihnen eingeschaltete Funktion braucht, etwa eine geplante Nachricht, die noch auf den Versand wartet. Zum Trennen löschen Sie das Postfach in MCPEmails oder entfernen MCPEmails aus den Apps, die Zugriff auf Ihr Microsoft-Konto haben. [Warum „E-Mails werden nie gespeichert“ wichtig ist](/blog/why-email-never-stored-matters) erklärt das Modell, und [Ist es sicher, einem KI-Agenten E-Mail-Zugriff zu geben?](/blog/is-it-safe-to-give-ai-agent-email-access) zeigt, worauf Sie achten sollten, etwa auf Anweisungen, die in einer E-Mail versteckt sind.
 
 ## FAQ
 

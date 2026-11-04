@@ -58,9 +58,9 @@ Wählen Sie OAuth, nicht „keine Authentifizierung“. Dieser Server lehnt anon
 
 ## Schritt 3: Nur die nötigen Berechtigungen genehmigen
 
-Der Zustimmungsbildschirm gehört uns, nicht OpenAI. Die erste Zustimmung beginnt bei \`read:email\`. Das reicht für Triage, Zusammenfassungen und das Finden von Dingen und schließt jede unumkehrbare Aktion aus, während Sie entscheiden, wie weit Sie gehen möchten. Die weiteren Berechtigungen sind \`send:email\`, \`search:email\` und \`manage:automations\`.
+Der Zustimmungsbildschirm gehört uns, nicht OpenAI. Für ChatGPT öffnet er mit **Vollzugriff**, weil ChatGPT später nicht zurückkommt, um mehr Zugriff anzufragen. Wählen Sie eine engere Stufe, bevor Sie auf **Zugriff erlauben** klicken, wenn Sie das möchten: **Nur-Lese-Zugriff** reicht für Triage, Zusammenfassungen und das Finden von Dingen und schließt jede unumkehrbare Aktion aus. **Berechtigungen anpassen** listet alle neun Berechtigungen auf (Lesen, Suchen, Senden, Ordner, Löschen, Entwürfe, Kontakte, Planen und Automatisierungen). Standardmäßig erlaubt der Bildschirm außerdem den Zugriff auf jedes Postfach im Workspace, auch auf später verbundene; wählen Sie dort bestimmte Postfächer aus, um das einzuschränken.
 
-Zu wenig zu gewähren lässt sich beheben: Ein Aufruf, der eine Berechtigung braucht, die Ihrem Token fehlt, kommt als 403 mit einem Fehler wegen unzureichender Berechtigung zurück, sodass der Client für diese Berechtigung erneut um Zustimmung bitten und es nochmals versuchen kann. Der Inhaber eines Postfachs kann im Dashboard außerdem eine [Freigabe durch einen Menschen](/blog/approve-ai-agent-email-sends) verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt.
+Zu wenig zu gewähren lässt sich beheben. Braucht ein Tool eine Berechtigung, die der Verbindung von ChatGPT fehlt, nennt das Tool-Ergebnis die fehlende Berechtigung und bittet ChatGPT, sich neu zu verbinden. Der Inhaber eines Postfachs kann im Dashboard außerdem eine [Freigabe durch einen Menschen](/blog/approve-ai-agent-email-sends) verlangen. Dann wartet jedes Senden, Antworten, Weiterleiten, Senden eines Entwurfs und geplante Senden, bis eine Person es freigibt.
 
 ## Schritt 4: ChatGPT eine sichere erste Aufgabe geben
 
