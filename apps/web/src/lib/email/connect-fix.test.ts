@@ -95,8 +95,51 @@ const ROWS: RowCase[] = [
   },
   {
     name: 'T-Online', input: { email: 'a@t-online.de', imapHost: 'secureimap.t-online.de' }, row: 't_online_password_rejected', provider: 't_online',
-    steps: ['connect.fix.tOnline.password', 'connect.fix.tOnline.where'], links: ['t_online_help'],
+    steps: ['connect.fix.tOnline.password', 'connect.fix.tOnline.where'], links: ['t_online_help', 't_online_email_center'],
   },
+  {
+    name: 'IONOS US host: the European platform is named', input: { email: 'a@shop.example', imapHost: 'imap.ionos.com' }, row: 'ionos_password_rejected', provider: 'ionos',
+    steps: ['connect.fix.ionos.password', 'connect.authHelpWhereIonos', 'connect.fix.fullAddress', 'connect.fix.ionos.platform'],
+  },
+  {
+    name: 'IONOS Exchange', input: { email: 'a@shop.example', imapHost: 'exchange.ionos.eu' }, row: 'ionos_password_rejected', provider: 'ionos',
+    steps: ['connect.fix.ionos.password', 'connect.authHelpWhereIonos', 'connect.fix.fullAddress'],
+  },
+  // Brazil
+  {
+    name: 'UOL Host', input: { email: 'a@empresa.example', imapHost: 'imap.uhserver.com' }, row: 'uol_host_password_rejected', provider: 'uol_host',
+    steps: ['connect.fix.mailbox.password', 'connect.fix.fullAddress'], links: [],
+  },
+  {
+    name: 'Locaweb', input: { email: 'a@empresa.example', imapHost: 'email-ssl.com.br' }, row: 'locaweb_password_rejected', provider: 'locaweb',
+    steps: ['connect.fix.mailbox.password', 'connect.fix.fullAddress'], links: ['locaweb_help'],
+  },
+  { name: 'KingHost', input: { email: 'a@empresa.example', imapHost: 'imap.kinghost.net' }, row: 'kinghost_password_rejected', provider: 'kinghost', links: [] },
+  { name: 'UOL', input: { email: 'a@uol.com.br', imapHost: 'imap.uol.com.br' }, row: 'uol_password_rejected', provider: 'uol', steps: ['connect.fix.uol.imap'] },
+  { name: 'UOL, IMAP disabled', input: { email: 'a@uol.com.br', imapHost: 'imap.uol.com.br', reason: 'imap_disabled' }, row: 'uol_imap_disabled', provider: 'uol' },
+  // Japan
+  {
+    name: 'Yahoo! JAPAN', input: { email: 'a@yahoo.co.jp', imapHost: 'imap.mail.yahoo.co.jp' }, row: 'yahoo_jp_password_rejected', provider: 'yahoo_jp',
+    steps: ['connect.fix.yahooJapan.access', 'connect.fix.yahooJapan.password'], links: ['yahoo_jp_imap'],
+  },
+  { name: 'Yahoo! JAPAN, IMAP disabled', input: { email: 'a@yahoo.co.jp', imapHost: 'imap.mail.yahoo.co.jp', reason: 'imap_disabled' }, row: 'yahoo_jp_imap_disabled', provider: 'yahoo_jp', steps: ['connect.fix.yahooJapan.access'] },
+  {
+    name: 'docomo', input: { email: 'a@docomo.ne.jp', imapHost: 'imap.spmode.ne.jp' }, row: 'docomo_password_rejected', provider: 'docomo',
+    steps: ['connect.fix.docomo.setting', 'connect.fix.docomo.login'], links: ['docomo_help'],
+  },
+  { name: 'SoftBank', input: { email: 'a@i.softbank.jp', imapHost: 'imap.softbank.jp' }, row: 'softbank_password_rejected', provider: 'softbank', links: ['softbank_help'] },
+  { name: 'OCN', input: { email: 'a@ocn.ne.jp', imapHost: 'imap.ocn.ne.jp' }, row: 'ocn_password_rejected', provider: 'ocn', steps: ['connect.fix.mailbox.password', 'connect.fix.fullAddress'] },
+  { name: 'BIGLOBE', input: { email: 'a@biglobe.ne.jp', imapHost: 'mail.biglobe.ne.jp' }, row: 'biglobe_password_rejected', provider: 'biglobe' },
+  { name: '@nifty, IMAP disabled', input: { email: 'a@nifty.com', imapHost: 'imap.nifty.com', reason: 'imap_disabled' }, row: 'nifty_imap_disabled', provider: 'nifty', steps: ['connect.fix.nifty.imap'] },
+  { name: 'So-net', input: { email: 'a@so-net.ne.jp', imapHost: 'imap.so-net.ne.jp' }, row: 'so_net_password_rejected', provider: 'so_net', steps: ['connect.fix.soNet.option', 'connect.fix.mailbox.password'] },
+  { name: 'plala, IMAP disabled', input: { email: 'a@plala.or.jp', imapHost: 'imap.plala.or.jp', reason: 'imap_disabled' }, row: 'plala_imap_disabled', provider: 'plala', links: ['plala_imap'] },
+  // Germany, Austria, Switzerland
+  { name: 'Hetzner', input: { email: 'a@firma.example', imapHost: 'mail.your-server.de' }, row: 'hetzner_password_rejected', provider: 'hetzner' },
+  { name: 'freenet', input: { email: 'a@freenet.de', imapHost: 'mx.freenet.de' }, row: 'freenet_password_rejected', provider: 'freenet', steps: ['connect.fix.freenet.imap', 'connect.fix.fullAddress'], links: ['freenet_imap'] },
+  { name: 'Vodafone (Arcor address)', input: { email: 'a@arcor.de', imapHost: 'imap.vodafonemail.de' }, row: 'vodafone_password_rejected', provider: 'vodafone', links: ['vodafone_help'] },
+  { name: 'Hostpoint', input: { email: 'a@firma.example', imapHost: 'imap.mail.hostpoint.ch' }, row: 'hostpoint_password_rejected', provider: 'hostpoint', links: ['hostpoint_help'] },
+  { name: 'cyon', input: { email: 'a@firma.example', imapHost: 'mail.cyon.ch' }, row: 'cyon_password_rejected', provider: 'cyon' },
+  { name: 'World4You', input: { email: 'a@firma.example', imapHost: 'imap.world4you.com' }, row: 'world4you_password_rejected', provider: 'world4you' },
   {
     name: 'mail.ru', input: { email: 'a@bk.ru', imapHost: 'imap.mail.ru' }, row: 'mail_ru_password_rejected', provider: 'mail_ru',
     steps: ['connect.fix.appPassword.normalRejected', 'connect.fix.mailRu.create', 'connect.fix.appPassword.paste'], links: ['mail_ru_help'],
@@ -226,13 +269,13 @@ test('codes that are not about the mailbox get no fix row', () => {
 
 test('the suggested host carries the whole documented transport and is not offered when it is the host tried', () => {
   const typo = fix({ errorCode: 'host_not_found', reason: null, phase: 'tcp', host: 'imap.gmx.nt', email: 'a@gmx.net' });
-  assert.equal(typo?.suggestedHost?.host, 'imap.gmx.com');
-  assert.equal(typo?.suggestedHost?.smtpPort, 587);
-  const same = fix({ errorCode: 'connection_timeout', reason: null, phase: 'tcp', host: 'imap.gmx.com', email: 'a@gmx.net' });
+  assert.equal(typo?.suggestedHost?.host, 'imap.gmx.net');
+  assert.equal(typo?.suggestedHost?.smtpPort, 465);
+  const same = fix({ errorCode: 'connection_timeout', reason: null, phase: 'tcp', host: 'imap.gmx.net', email: 'a@gmx.net' });
   assert.equal(same?.suggestedHost, null);
   // The send half suggests the sending host.
   const smtp = fix({ errorCode: 'connection_timeout', reason: null, phase: 'smtp_tcp', host: 'smtp.gmx.example', email: 'a@gmx.net' });
-  assert.equal(smtp?.suggestedHost?.host, 'mail.gmx.com');
+  assert.equal(smtp?.suggestedHost?.host, 'mail.gmx.net');
   // A branded card has no host fields to fill.
   assert.equal(fix({ card: 'gmail', errorCode: 'connection_timeout', reason: null, phase: 'tcp', host: 'imap.gmail.com', email: 'a@gmail.com' })?.suggestedHost, null);
 });
@@ -275,6 +318,23 @@ test('every preset a fix provider names exists, and every link is https', () => 
       assert.ok(link.url.startsWith('https://'), link.url);
     }
   }
+});
+
+test('docomo points at the Username field, because its login is not the address', () => {
+  assert.equal(fix({ email: 'a@docomo.ne.jp', imapHost: 'imap.spmode.ne.jp' })?.showsUsernameField, true);
+  // Only on the generic form, the one with that field.
+  assert.equal(fix({ email: 'a@ocn.ne.jp', imapHost: 'imap.ocn.ne.jp' })?.showsUsernameField, false);
+});
+
+test('the IONOS platform line is only for the US host', () => {
+  for (const imapHost of ['imap.ionos.de', 'imap.ionos.co.uk', 'exchange.ionos.eu']) {
+    assert.equal(keys(fix({ email: 'a@shop.example', imapHost })).includes('connect.fix.ionos.platform'), false, imapHost);
+  }
+  assert.equal(keys(fix({ email: 'a@shop.example', imapHost: 'smtp.ionos.com', smtpHost: 'smtp.ionos.com' })).includes('connect.fix.ionos.platform'), true);
+});
+
+test('the Yahoo card refusing a Yahoo! JAPAN address gets no fix row of its own', () => {
+  assert.equal(fix({ card: 'yahoo', errorCode: 'yahoo_japan_use_generic', email: 'a@yahoo.co.jp' }), null);
 });
 
 test('the card a user clicked wins over what the address says', () => {

@@ -2,6 +2,7 @@ import * as net from 'net';
 import * as tls from 'tls';
 import type { ConnectionPhase, MailSecurity } from './validate-imap.ts';
 import { sanitizeAuthDiagnostic } from './connection-config.ts';
+import { legacyTlsOptions } from './legacy-tls.ts';
 
 export const SMTP_VALIDATION_TIMEOUT_MS = 10_000;
 export type SmtpValidationResult =
@@ -194,14 +195,15 @@ function secure(host: string, port: number, servername: string, setSocket: (s: n
   return new Promise((resolve, reject) => {
     // `host` is the address dialled, `servername` the name the certificate must
     // match. Node's checkServerIdentity prefers `servername`, so pinning an IP
-    // here does not weaken validation.
-    const socket = tls.connect({ host, port, servername, rejectUnauthorized: true }); setSocket(socket);
+    // here does not weaken validation. legacyTlsOptions is empty except for
+    // docomo's exact hosts (legacy-tls.ts).
+    const socket = tls.connect({ host, port, servername, rejectUnauthorized: true, ...legacyTlsOptions(servername) }); setSocket(socket);
     socket.once('secureConnect', () => { socket.removeListener('error', reject); resolve(socket); }); socket.once('error', reject);
   });
 }
 function upgrade(host: string, plain: net.Socket, setSocket: (s: net.Socket) => void): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
-    const socket = tls.connect({ socket: plain, servername: host, rejectUnauthorized: true }); setSocket(socket);
+    const socket = tls.connect({ socket: plain, servername: host, rejectUnauthorized: true, ...legacyTlsOptions(host) }); setSocket(socket);
     socket.once('secureConnect', () => { socket.removeListener('error', reject); resolve(socket); }); socket.once('error', reject);
   });
 }

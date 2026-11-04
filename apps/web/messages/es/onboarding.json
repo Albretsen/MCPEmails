@@ -109,7 +109,9 @@
         "smtpHost": "Servidor de salida (SMTP)",
         "port": "Puerto",
         "username": "Nombre de usuario, si no es tu dirección de correo",
-        "advanced": "Avanzado"
+        "advanced": "Avanzado",
+        "noteTOnline": "T-Online solo acepta aquí la Passwort für E-Mail-Programme, no la contraseña de Telekom Login. Configúrala en el E-Mail Center, en Einstellungen, luego Passwörter.",
+        "noteYahooJapan": "Yahoo! JAPAN no tiene contraseñas de aplicación. En los ajustes de correo de Yahoo! JAPAN, permite otras apps de correo y activa IMAP y SMTP; luego usa la contraseña de tu Yahoo! JAPAN ID."
       },
       "password": {
         "labelApp": "Contraseña de aplicación",

@@ -52,6 +52,7 @@ const KIND_BY_PRESET: Record<string, InboxKind> = {
   yahoo: 'yahoo',
   aol: 'aol',
   gmx: 'gmx',
+  'gmx-com': 'gmx',
   'web-de': 'web_de',
   fastmail: 'fastmail',
   zoho: 'zoho',
@@ -277,6 +278,23 @@ export function detectionForChoice(kind: InboxKind, email: string, detected: Inb
     settings: preset?.settings ?? null,
     customDomain: kind === 'google_workspace' ? true : !onOwnDomain,
   };
+}
+
+/**
+ * A provider-specific line for the generic IMAP panel, keyed by the preset the
+ * detection found: `onboarding.steps.inbox.imap.<key>`. Only for providers
+ * where the panel's general advice ("the mailbox password, or an app password")
+ * would send the user to the wrong password. T-Online had 30 rejected logins
+ * and no connected inbox: people paste their Telekom Login password. Yahoo!
+ * JAPAN has no app passwords at all.
+ */
+const PANEL_NOTE_BY_PRESET: Readonly<Record<string, string>> = {
+  't-online': 'noteTOnline',
+  'yahoo-jp': 'noteYahooJapan',
+};
+
+export function panelNoteKey(settings: MailHostPrefill | null | undefined): string | null {
+  return settings ? PANEL_NOTE_BY_PRESET[settings.provider] ?? null : null;
 }
 
 export type PanelLinkId = 'two_step' | 'app_passwords' | 'imap_setting';

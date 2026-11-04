@@ -388,7 +388,8 @@
         "create": "På account.apple.com åpner du Pålogging og sikkerhet, deretter Appspesifikke passord, og oppretter ett som heter MCPEmails. Tofaktorautentisering må være på."
       },
       "ionos": {
-        "password": "IONOS vil ha passordet til denne e-postadressen, ikke det du bruker for å logge inn hos IONOS."
+        "password": "IONOS vil ha passordet til denne e-postadressen, ikke det du bruker for å logge inn hos IONOS.",
+        "platform": "IONOS har egne e-postservere for USA og for Europa. Hvis IONOS-avtalen din er europeisk, bruk serveren for ditt land, for eksempel imap.ionos.de eller imap.ionos.co.uk, i stedet for imap.ionos.com."
       },
       "fullAddress": "Bruk hele e-postadressen din som brukernavn.",
       "tOnline": {
@@ -453,7 +454,8 @@
         "appPasswords": "Åpne siden for appassord hos {provider}",
         "imapSetting": "Slik slår du på IMAP hos {provider}",
         "providerHelp": "Hjelpesiden til {provider}",
-        "adminGuide": "Googles veiledning for administratoren din"
+        "adminGuide": "Googles veiledning for administratoren din",
+        "emailCenter": "Åpne E-Mail Center hos {provider}"
       },
       "outlookConsent": {
         "line1": "Microsoft viser en samtykkeside med det MCPEmails får lov til: lese og endre e-post, sende e-post og holde seg tilkoblet.",
@@ -471,10 +473,37 @@
         "bodyClient": "Koble nå til {client}, så den kan bruke denne innboksen.",
         "openGuide": "Vis meg hvordan",
         "later": "Senere"
+      },
+      "mailbox": {
+        "password": "{provider} vil ha passordet til denne e-postadressen, ikke det du bruker for å logge inn på {provider}-kontoen din."
+      },
+      "uol": {
+        "imap": "UOL avviser e-postapper til IMAP er slått på. Åpne Configurações i UOL-webmailen og velg Ativar IMAP, og test på nytt."
+      },
+      "yahooJapan": {
+        "access": "Yahoo! JAPAN har ikke apppassord. I e-postinnstillingene hos Yahoo! JAPAN tillater du tilgang fra andre e-postapper og slår på både IMAP og SMTP.",
+        "password": "Bruk deretter det vanlige passordet til Yahoo! JAPAN ID-en din. Logger du inn uten passord (passnøkkel eller SMS), må du først lage et passord."
+      },
+      "docomo": {
+        "setting": "Åpne メール設定 i My docomo, deretter dアカウントの利用設定, og slå på dアカウントでドコモメールを利用する. Dette fungerer bare over mobilnettet, ikke Wi-Fi.",
+        "login": "Skriv deretter inn IMAP専用ID fra My docomo i Brukernavn (valgfritt) under Avanserte innstillinger, og IMAP専用パスワード som passord."
+      },
+      "nifty": {
+        "imap": "Sett メールソフト接続許可（IMAP） til 許可中 (tillatt) i e-postinnstillingene hos @nifty, og test på nytt."
+      },
+      "soNet": {
+        "option": "So-net-e-post fungerer i e-postapper over IMAP bare med betalingstillegget IMAP-tjeneste (IMAPサービス). Legg det til So-net-avtalen din først."
+      },
+      "plala": {
+        "imap": "Slå på IMAPを利用する (bruk IMAP) i plala Webmail først, og test på nytt."
+      },
+      "freenet": {
+        "imap": "freenet avviser e-postapper til POP3, IMAP og SMTP er aktivert i innstillingene for freenet Mail. Slå dem på, og test på nytt."
       }
     },
     "businessCapBodyFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
-    "businessCapCtaFounder": "Oppgrader til Business, ${price}/md"
+    "businessCapCtaFounder": "Oppgrader til Business, ${price}/md",
+    "errorYahooJapanShort": "Yahoo! JAPAN-e-post er en annen tjeneste enn Yahoo Mail og har ikke apppassord. Gå tilbake og velg IMAP / SMTP i stedet."
   },
   "commandPalette": {
     "pageOverview": "Oversikt",

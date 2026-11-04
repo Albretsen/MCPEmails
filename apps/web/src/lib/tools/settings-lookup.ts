@@ -157,7 +157,9 @@ export function parseLookupInput(raw: unknown): { domain: string; isAddress: boo
 
 /**
  * host-presets.ts ids that have a /connect page, and its slug. Ids not listed
- * (OpenSRS) have none. IONOS runs one page for all its country platforms.
+ * (OpenSRS, UOL Host, Locaweb, KingHost, the Japanese ISPs, ...) have none
+ * yet; a slug is added here when its registry entry exists. IONOS runs one
+ * page for all its country platforms.
  */
 export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
   'ionos-de': 'ionos',
@@ -166,6 +168,7 @@ export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
   'ionos-es': 'ionos',
   'ionos-it': 'ionos',
   ionos: 'ionos',
+  'ionos-exchange': 'ionos',
   hostinger: 'hostinger',
   'ovh-exchange': 'ovh',
   ovh: 'ovh',
@@ -173,25 +176,40 @@ export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
   titan: 'titan',
   privateemail: 'namecheap',
   migadu: 'migadu',
-  uhserver: 'inmotion',
   zoho: 'zoho',
   gmx: 'gmx',
+  'gmx-com': 'gmx',
   mailcom: 'mail-com',
   fastmail: 'fastmail',
   gmail: 'gmail',
   icloud: 'icloud',
   yahoo: 'yahoo',
   yandex: 'yandex',
+  aol: 'aol',
+  'mail-ru': 'mail-ru',
+  qq: 'qq',
+  't-online': 't-online',
+  infomaniak: 'infomaniak',
+  orange: 'orange-fr',
+  seznam: 'seznam',
+  'web-de': 'web-de',
+  uol: 'uol',
+  bol: 'bol',
+  terra: 'terra',
+  strato: 'strato',
+  hetzner: 'hetzner',
+  freenet: 'freenet',
+  bluewin: 'bluewin',
 });
 
 /**
  * Presets whose host carries a per-customer cluster number (ex4.mail.ovh.net,
- * secure12.uhserver.com, mail.b.hostedemail.com). When the visitor typed such
+ * mail.b.hostedemail.com). When the visitor typed such
  * a host, it is their server and must be shown back unchanged: the preset's
  * own host is only a generic fallback, and OVH's connect page says the number
  * "works for one customer and returns nothing for the next".
  */
-const CLUSTER_PRESETS = new Set(['ovh-exchange', 'uhserver', 'hostedemail']);
+const CLUSTER_PRESETS = new Set(['ovh-exchange', 'hostedemail']);
 
 /**
  * Addresses of the providers the registry marks `limited`, beyond the single
