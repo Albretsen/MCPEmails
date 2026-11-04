@@ -48,7 +48,7 @@ https://mcpemails.com/api/mcp
 5. MCPEmailsアカウントでログインし、必要なスコープを承認します。\`read:email\`、\`send:email\`、またはその両方です。
 6. チャットで左下の**+**をクリックし、**コネクタ**を選んでMCPEmailsをオンにします。
 
-TeamプランまたはEnterpriseプランでは、Ownerが**組織設定 → コネクタ**でコネクタを一度追加します。メンバーは**カスタマイズ → コネクタ**を開いてMCPEmailsを見つけ、**接続**をクリックします。
+TeamプランまたはEnterpriseプランでは、オーナーが**組織設定 → コネクタ**でコネクタを一度追加します。メンバーは**カスタマイズ → コネクタ**を開いてMCPEmailsを見つけ、**接続**をクリックします。
 
 クライアント側はこれで完了です。接続は承認した内容そのものに限定され、ダッシュボードからクリック1つで取り消せます。APIキーの経路（ClineやカスタムスクリプトなどOAuthを内蔵していないクライアント向け）を理解しておきたい場合は、[AIのメールアクセスにおけるOAuthとAPIキー](/blog/oauth-vs-api-keys-ai-email-access)をお読みください。別の受信トレイも接続しますか。[Claudeメール設定のステップバイステップ](/blog/connect-claude-to-email)がOutlook、iCloud、Fastmail、IMAPをカバーしています。
 

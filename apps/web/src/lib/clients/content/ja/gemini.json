@@ -6,7 +6,7 @@
     "https://blog.google/innovation-and-ai/products/gemini-app/gemini-spark-updates-june-2026/"
   ],
   "meta": {
-    "title": "Geminiアプリにメールを接続: カスタムMCPアプリの設定",
+    "title": "Geminiアプリにメールを接続：カスタムMCPアプリの設定",
     "description": "Geminiアプリに本物の受信トレイをカスタムアプリとして追加できます。Connected AppsにMCPサーバーのURLを1つ貼り付けてログインするだけ。APIキーは不要。受信トレイ1つは無料。"
   },
   "hero": {
@@ -20,7 +20,7 @@
     "answer": "gemini.google.comでSettings、Connected Appsの順に開き、Custom appsでMCPサーバーURLをhttps://mcpemails.com/api/mcpとしたカスタムアプリを追加します。Nextをクリックし、画面のログイン手順に従ってMCPEmailsで認可します。現在Googleがカスタムアプリを提供しているのは、米国在住の18歳以上で、個人のGoogleアカウントでログインし、Keep Activity（アクティビティを保持）をオンにして、英語で利用しているユーザーです。"
   },
   "method": {
-    "title": "Geminiアプリの接続方法: OAuth、APIキー不要",
+    "title": "Geminiアプリの接続方法：OAuth、APIキー不要",
     "body": "Googleの設定フォームは<b>Dynamic Client Registration</b>（動的クライアント登録）に対応したMCPサーバーを想定しており、このサーバーは対応しています。Geminiアプリは<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、Advanced featuresに入力するものもありません。続いてS256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

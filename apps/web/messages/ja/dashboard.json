@@ -22,7 +22,7 @@
       "step1": "claude.aiまたはClaude Desktopで「カスタマイズ」→「コネクタ」を開き、「+ 追加」をクリックしてから「カスタムコネクタを追加」をクリックします。",
       "step2": "名前をMCPEmailsにして上のURLを貼り付け、「続行」をクリックします。",
       "step3": "ログイン設定を確認し（初期値のままで問題ありません）、「追加」をクリックします。",
-      "step4": "MCPEmailsでログインして承認します。APIキーは不要です。TeamとEnterpriseでは、Ownerが「組織設定」→「コネクタ」で追加し、その後メンバーが「カスタマイズ」→「コネクタ」で「接続」をクリックします。"
+      "step4": "MCPEmailsでログインして承認します。APIキーは不要です。TeamとEnterpriseでは、オーナーが「組織設定」→「コネクタ」で追加し、その後メンバーが「カスタマイズ」→「コネクタ」で「接続」をクリックします。"
     },
     "chatgpt": {
       "step1": "chatgpt.comで「プラグイン」→「Personal」を開き、右上の「Add」をクリックしてから「カスタム MCP サーバーを追加」をクリックします。モバイルアプリでは設定できません。",
@@ -76,7 +76,7 @@
     "warp": {
       "step1": "Settings → Agents → MCP serversを開き、「+ Add」をクリックします。",
       "step2": "「Streamable HTTP or SSE Server (URL)」タブを選びます。",
-      "step3": "上のURLを貼り付けて確定し、求められたらブラウザでOAuthを完了します。"
+      "step3": "上のURLを貼り付けて確定し、求められたらブラウザーでOAuthを完了します。"
     },
     "api": {
       "step1": "ダッシュボード →「APIキー」でAPIキーを作成し、コピーします（表示は一度だけです）。",
@@ -265,7 +265,7 @@
         "title": "送信者名",
         "help": "受信者のメール画面でアドレスの横に表示される名前です。",
         "placeholder": "例：Acme サポート",
-        "previewLabel": "差出人:",
+        "previewLabel": "差出人：",
         "emptyHint": "名前がない場合、一部のメールアプリでは\"{localPart}\"だけが表示されます。",
         "save": "名前を保存",
         "saving": "保存中…",
@@ -314,7 +314,7 @@
         "htmlSourcePlaceholder": "既存のHTML署名をここに貼り付けてください（ほかのメールアプリや署名作成ツールから書き出したものなど）。",
         "htmlSourceTableHint": "表などの高度なマークアップはここでは保持されますが、リッチテキストに切り替えると簡略化されます。",
         "htmlSourceTooLarge": "署名が大きすぎます（最大100KB）。リッチテキストに切り替える前に短くしてください。",
-        "replyModeLabel": "返信と転送では:",
+        "replyModeLabel": "返信と転送では：",
         "replyModeAlways": "常に追加",
         "replyModeFirstOnly": "最初の返信のみ",
         "replyModeNever": "追加しない",
@@ -322,7 +322,7 @@
         "saving": "保存中…",
         "tooLarge": "署名が大きすぎます。短くするか、小さい画像を使ってください。",
         "previewTitle": "プレビュー",
-        "previewReplyQuote": "On Mon, someone '<someone@example.com>' wrote:",
+        "previewReplyQuote": "月曜日、someone '<someone@example.com>' のメッセージ：",
         "previewTooLarge": "署名が大きすぎるためプレビューできません。",
         "imageNote": "一部のメールアプリ（Gmailなど）では、受信者が「画像を表示」をクリックするまで画像が表示されない場合があります。これはWeb上の画像を使う署名では通常の動作です。代わりにメール内に画像を含めて送るには、下の「画像をメッセージに埋め込む」をオンにしてください。",
         "embedImages": "画像をメッセージに埋め込む",
@@ -747,7 +747,7 @@
       "help": "1行に1つのアドレスまたはドメインを入力します。VIPからのメールは先頭に表示されます。ブリーフはメールとして送信されず、受信トレイに直接追加されます。新着がない日はスキップされます。",
       "save": "保存",
       "saved": "保存しました。次回のブリーフからこの設定が使われます。",
-      "loading": "読み込み中...",
+      "loading": "読み込み中…",
       "proOnly": "モーニングブリーフはProの機能です。",
       "upgrade": "プランを見る",
       "roleNote": "モーニングブリーフを変更できるのは、ワークスペースのオーナーと管理者だけです。",
@@ -1742,7 +1742,7 @@
     "statusActive": "オン",
     "statusDisabled": "オフ",
     "statusDraft": "未設定",
-    "loading": "シングルサインオンの設定を読み込み中...",
+    "loading": "シングルサインオンの設定を読み込み中…",
     "notAvailable": "シングルサインオンの設定はまだ利用できません。有効にするにはサポートにお問い合わせください。",
     "step1Title": "1. Microsoft Entraでアプリを作成",
     "step1Hint": "Entraで「エンタープライズ アプリケーション」を追加し、SAMLを選んで、「基本的な SAML 構成」にこれらの値を貼り付けます。名前識別子にはユーザーのメールアドレスを設定してください。",
@@ -1834,7 +1834,7 @@
     "statusQualifiedPersonal": "{date}まで{plan}を1か月利用",
     "statusCapped": "年間上限を超えています",
     "statusVoided": "対象外",
-    "loading": "読み込み中...",
+    "loading": "読み込み中…",
     "loadError": "招待を読み込めませんでした。ページを再読み込みしてもう一度お試しください。",
     "tileTitle": "MCPEmailsを使いそうな知り合いはいますか？",
     "tileBody": "友だちを招待しましょう。友だちが支払うと、2人とも1か月無料になります。",

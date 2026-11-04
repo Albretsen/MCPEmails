@@ -1,15 +1,15 @@
 {
-  "intro": "ステップごとのガイド:",
+  "intro": "ステップごとのガイド：",
   "claude": "Claudeをメールに接続する方法",
   "imap": "Claude IMAPコネクタのガイド",
-  "moreIntro": "その他のガイド:",
+  "moreIntro": "その他のガイド：",
   "personal": "個人アカウント向けの手順",
   "connectors": "Claudeのカスタムコネクタの解説",
   "schedule": "チャットからメールを予約送信する",
   "inboxZero": "AIで受信トレイをゼロにする",
   "agentInbox": "AIエージェントに受信トレイを持たせる",
-  "clientsIntro": "この受信トレイをAIアプリで使う:",
+  "clientsIntro": "この受信トレイをAIアプリで使う：",
   "clientsAll": "対応しているすべてのアプリ",
-  "lookupIntro": "サーバー名とポートが必要ですか?",
+  "lookupIntro": "サーバー名とポートが必要ですか？",
   "lookupLabel": "IMAPとSMTPの設定を調べる"
 }

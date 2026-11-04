@@ -16,7 +16,7 @@
     "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
   ],
   "meta": {
-    "title": "OpenClawにメールを接続: リモートMCPサーバーの設定",
+    "title": "OpenClawにメールを接続：リモートMCPサーバーの設定",
     "description": "OpenClawのエージェントに本物の受信トレイを。OAuth付きのStreamable HTTP MCPサーバーを1つ追加して一度ログインすれば、メールの閲覧、検索、下書き、送信ができます。"
   },
   "hero": {
@@ -30,7 +30,7 @@
     "answer": "openclaw gateway stopでGatewayを停止し、openclaw mcp add mcpemails --url https://mcpemails.com/api/mcp --transport streamable-http --auth oauthを実行します。続けてopenclaw mcp login mcpemailsを実行し、ブラウザーで承認します。最後にopenclaw gateway startでGatewayを再起動します。"
   },
   "method": {
-    "title": "OpenClawの接続方法: OAuth、APIキー不要",
+    "title": "OpenClawの接続方法：OAuth、APIキー不要",
     "body": "OpenClaw組み込みのMCPクライアントは、<code>auth: \"oauth\"</code>で保存したHTTPサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。トークンには同意画面で承認したスコープだけが含まれ、有効期間は1時間で、自動で更新されます。トークンはOpenClawがGateway上に保存し、ダッシュボードの「APIキー」に<code>OAuth: OpenClaw MCP</code>として表示されます。接続はそこから取り消せます。"
   },
   "setup": [

@@ -13,7 +13,7 @@
     "method": "app-password",
     "label": "アプリ パスワード",
     "helpUrl": "https://support.google.com/accounts/answer/185833",
-    "usernameForm": "独自ドメインのアドレス全体（例: info@yourcompany.com）。アプリ パスワードはアカウントのパスワードの代わりに使います。アカウントのパスワードでは接続できません。",
+    "usernameForm": "独自ドメインのアドレス全体（例：info@yourcompany.com）。アプリ パスワードはアカウントのパスワードの代わりに使います。アカウントのパスワードでは接続できません。",
     "status": "active"
   },
   "meta": {
@@ -31,7 +31,7 @@
     "answer": "独自ドメインのGoogle Workspaceメールボックスは中身がGmailのメールボックスなので、MCPEmailsにはGmailと同じ方法で接続します。Googleのアプリ パスワードを使い、imap.gmail.comとsmtp.gmail.comでIMAPとSMTP接続します。MCPEmailsはホスト型のMCPサーバーなので、メールボックスを接続すればClaude、ChatGPT、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。アプリ パスワードが使えるか、IMAPが許可されているかは、Workspace管理者の設定が決めます。"
   },
   "method": {
-    "title": "Google Workspaceの接続方法: IMAPでのアプリ パスワード",
+    "title": "Google Workspaceの接続方法：IMAPでのアプリ パスワード",
     "body": "IMAPフォームにアドレスを入力すると、MCPEmailsはドメインのMXレコードを読みます。メールがGoogle（<code>aspmx.l.google.com</code>または<code>smtp.google.com</code>）に向いているドメインはGoogle Workspaceとして認識され、フォームは<b>imap.gmail.com</b>の993と<b>smtp.gmail.com</b>の465を埋め、アプリ パスワードが必要だと表示します。Gmailのカードを選んでも同じです。Googleは2025年にWorkspaceアプリのパスワードによるログインを、アプリ パスワードを例外として無効にしたので、アカウントのパスワードはここでは決して使えません。"
   },
   "setup": [

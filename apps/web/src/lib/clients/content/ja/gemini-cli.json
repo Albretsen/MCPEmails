@@ -6,7 +6,7 @@
     "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
   ],
   "meta": {
-    "title": "Gemini CLIにメールを接続: httpUrlでMCPを設定",
+    "title": "Gemini CLIにメールを接続：httpUrlでMCPを設定",
     "description": "Gemini CLIに本物の受信トレイを追加できます。settings.jsonにhttpUrlのエントリを1つ書けば、CLIがOAuthを検出してブラウザーでの認証を開始します。受信トレイ1つは無料。"
   },
   "hero": {
@@ -20,7 +20,7 @@
     "answer": "~/.gemini/settings.jsonのmcpServersに、httpUrlフィールドでhttps://mcpemails.com/api/mcpを指定したエントリを1つ追加します。初回接続時にCLIがOAuthのメタデータを検出し、ブラウザーでの認証を自動で開始します。または、gemini mcp add --transport http mcpemails https://mcpemails.com/api/mcpを実行し、/mcp auth mcpemailsでログインします。"
   },
   "method": {
-    "title": "Gemini CLIの接続方法: OAuth、APIキー不要",
+    "title": "Gemini CLIの接続方法：OAuth、APIキー不要",
     "body": "Gemini CLIはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

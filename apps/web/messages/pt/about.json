@@ -59,7 +59,7 @@
     "p1": "Não existe fila de suporte. Sua mensagem chega para mim, e eu respondo.",
     "points": [
       "<hello>support@mcpemails.com</hello> para o produto, sua conta, cobrança ou um bug. Espere uma resposta em até um dia útil.",
-      "<securityEmail>security@mcpemails.com</securityEmail> para relatos de vulnerabilidade. Espere uma confirmação em até 24 horas. O processo de divulgação, incluindo o safe harbour, está na <security>página de segurança</security>.",
+      "<securityEmail>security@mcpemails.com</securityEmail> para relatos de vulnerabilidade. Espere uma confirmação em até 24 horas. O processo de divulgação, incluindo a cláusula de porto seguro (safe harbor), está na <security>página de segurança</security>.",
       "Estou em Bergen, Noruega. Uma mensagem enviada no fim do dia na América costuma ser respondida na manhã seguinte, no horário europeu."
     ]
   },

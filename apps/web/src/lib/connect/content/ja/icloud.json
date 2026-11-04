@@ -25,7 +25,7 @@
     "answer": "AppleはiCloud MailにOAuthを提供していないため、Claudeは直接接続できません。MCPEmailsはAppleのアプリ用パスワードを使ってiCloudの受信トレイにIMAPで接続し、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができるようにします。セットアップは2分ほどで、受信トレイ1つは無料です。"
   },
   "method": {
-    "title": "iCloudの接続方法: アプリ用パスワード",
+    "title": "iCloudの接続方法：アプリ用パスワード",
     "body": "iCloud MailはIMAP/SMTPを通じて<b>Appleのアプリ用パスワード</b>で接続します。account.apple.comの「サインインとセキュリティ」→「アプリ用パスワード」で生成し（2ファクタ認証が必要）、iCloudアドレスとともにMCPEmailsに貼り付けてください。"
   },
   "setup": [

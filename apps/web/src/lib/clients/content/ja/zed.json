@@ -5,7 +5,7 @@
     "https://zed.dev/docs/ai/mcp"
   ],
   "meta": {
-    "title": "Zedにメールを接続: Agent PanelのMCP設定",
+    "title": "Zedにメールを接続：Agent PanelのMCP設定",
     "description": "ZedのAgent Panelに、コンテキストサーバーとして本物の受信トレイを追加できます。URLを1つ貼り付けてOAuthで認可するだけ、APIキーは不要です。メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "Agent Panelの設定でAdd Custom Serverをクリックするか、settings.jsonのcontext_serversの下に、urlをhttps://mcpemails.com/api/mcpとしたエントリを追加します。Authorizationヘッダーが設定されていなければ、ZedがOAuthフローを開始します。"
   },
   "method": {
-    "title": "Zedの接続方法: OAuth、APIキー不要",
+    "title": "Zedの接続方法：OAuth、APIキー不要",
     "body": "Zedはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

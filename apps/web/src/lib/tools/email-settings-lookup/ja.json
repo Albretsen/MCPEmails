@@ -16,7 +16,7 @@
     "checking": "DNSレコードを確認しています...",
     "privacy": "ブラウザー内で動作します。@より前の部分がこのページの外に送られることはありません。ドメインが当社の一覧にない場合に限り、ドメイン名だけをCloudflareの公開DNSリゾルバーと、MozillaのThunderbird自動設定データベースに送信します。",
     "invalid": "you@example.comのようなメールアドレス、ドメイン、またはサーバー名を入力してください。",
-    "examplesLabel": "例:",
+    "examplesLabel": "例：",
     "examples": ["you@gmx.net", "ex4.mail.ovh.net", "you@purelymail.com"],
     "provider": "プロバイダー",
     "providerUnknown": "特定できません",
@@ -109,7 +109,7 @@
       },
       {
         "q": "OVH Hosted Exchange (ex4.mail.ovh.net) のSMTP設定は？",
-        "a": "送信には受信と同じ番号付きのホスト (例: <code>ex4.mail.ovh.net</code>) を使い、587番ポートでSTARTTLSを使います。IMAPは同じホストの993番ポートでSSL/TLSを使います。Hosted Exchangeでは465番ポートが応答しないため、OVHの共有ホスティング向けの設定 (<code>ssl0.ovh.net</code>、465番ポート) をそのまま使うと、タイムアウトするまで止まったままになります。ホスト名の番号は契約しているサービスごとに異なり、OVHcloud Control Panelに表示されます。詳しくは[OVHのページ](ovh)をご覧ください。"
+        "a": "送信には受信と同じ番号付きのホスト (例：<code>ex4.mail.ovh.net</code>) を使い、587番ポートでSTARTTLSを使います。IMAPは同じホストの993番ポートでSSL/TLSを使います。Hosted Exchangeでは465番ポートが応答しないため、OVHの共有ホスティング向けの設定 (<code>ssl0.ovh.net</code>、465番ポート) をそのまま使うと、タイムアウトするまで止まったままになります。ホスト名の番号は契約しているサービスごとに異なり、OVHcloud Control Panelに表示されます。詳しくは[OVHのページ](ovh)をご覧ください。"
       },
       {
         "q": "PurelymailのIMAP・SMTP設定は？",
@@ -148,7 +148,7 @@
       "rfc6186": "RFC 6186: メールサービスの検出におけるSRVレコードの使用",
       "rfc6409": "RFC 6409: メールのメッセージサブミッション",
       "rfc5068": "RFC 5068: メール送信の運用",
-      "msBasicAuth": "Microsoftサポート: 他のアプリでOutlook.comを使うには先進認証が必要に",
+      "msBasicAuth": "Microsoftサポート：他のアプリでOutlook.comを使うには先進認証が必要に",
       "msExchangeOnline": "Microsoft Learn: Exchange Onlineにおける基本認証の廃止",
       "ispdb": "Mozilla Thunderbird自動設定データベース (ISPDB)",
       "cloudflareDoh": "Cloudflare: DNS over HTTPS JSON API"

@@ -78,7 +78,7 @@
         "step1Body": "ウェブメールでE-Mail-Einstellungenを開き、POP3/IMAPに進んで、POP3- und IMAP-Zugriff erlauben（POP3とIMAPのアクセスを許可）をオンにします。",
         "step1Link": "IMAPをオンにする方法",
         "step2Title": "2段階認証はオンですか",
-        "step2Body": "Sicherheit（セキュリティ）でアプリ用のパスワードを作成します。表示されるのは一度だけです。2段階認証がオフの場合は、通常の{provider}のパスワードを使います。",
+        "step2Body": "Sicherheit（セキュリティ）でアプリ パスワードを作成します。表示されるのは一度だけです。2段階認証がオフの場合は、通常の{provider}のパスワードを使います。",
         "step3Title": "下に貼り付けます。",
         "missingTitle": "以前は使えていたのに止まった場合",
         "missingBody": "{provider}はIMAPを再びオフにすることがあります。ステップ1を確認してください。"
@@ -103,7 +103,7 @@
         "step1": "完全なメールアドレスと、メールボックス自体のパスワードを使います。ホスティングやコントロールパネルのログイン情報ではありません。",
         "step2": "メールボックスに2段階認証がある場合は、プロバイダーのセキュリティ設定でアプリ パスワードを作成し、それを使います。",
         "appPasswordLink": "{provider}のアプリ パスワードを作成",
-        "servers": "サーバー: {host}",
+        "servers": "サーバー：{host}",
         "manualLead": "メールサーバーを特定できませんでした。プロバイダーのヘルプページに記載されています。",
         "imapHost": "受信サーバー（IMAP）",
         "smtpHost": "送信サーバー（SMTP）",
@@ -134,7 +134,7 @@
       },
       "proof": {
         "title": "接続しました",
-        "count": "受信トレイに{count, plural, other {# 件のメッセージ}}",
+        "count": "受信トレイに{count, plural, other {#件のメッセージ}}",
         "newest": "最新",
         "noSubject": "（件名なし）",
         "private": "メールボックスからリアルタイムに読み取り、あなただけに表示しています。",
@@ -238,7 +238,7 @@
       "title": "{client}で試す",
       "lead": "新しいチャットに貼り付けてください。",
       "leadCode": "{client}に貼り付けてください。",
-      "leadApi": "最初のリクエストを送信:",
+      "leadApi": "最初のリクエストを送信：",
       "open": "{client}を開く"
     },
     "wait": {
@@ -333,24 +333,24 @@
   "emails": {
     "setupLink": {
       "subject": "MCPEmailsのセットアップリンク",
-      "intro": "パソコンでこのリンクを開き、{client}にMCPEmailsを追加してください:"
+      "intro": "パソコンでこのリンクを開き、{client}にMCPEmailsを追加してください："
     },
     "helpSteps": {
       "subject": "{client}にMCPEmailsを接続する方法",
-      "intro": "{client}でMCPEmailsを使えるようにする手順です:",
-      "prompt": "次に、このプロンプトを新しいチャットに貼り付けます:",
-      "guide": "セットアップガイド:",
-      "resume": "続きから再開:"
+      "intro": "{client}でMCPEmailsを使えるようにする手順です：",
+      "prompt": "次に、このプロンプトを新しいチャットに貼り付けます：",
+      "guide": "セットアップガイド：",
+      "resume": "続きから再開："
     },
     "morning": {
       "subject": "朝のブリーフィング用プロンプト",
-      "intro": "おはようございます。これを{client}に貼り付けると、朝のブリーフィングが届きます:"
+      "intro": "おはようございます。これを{client}に貼り付けると、朝のブリーフィングが届きます："
     },
     "footer": "このメールは、MCPEmailsのセットアップ中にご自身でリクエストされたものです。送信は1回のみです。"
   },
   "chatReturn": {
     "title": "接続しました。{client}に戻って、もう一度聞いてみてください。",
-    "lead": "メールボックスの準備ができました。{client}に同じ質問をもう一度するか、これから始めてみてください:",
+    "lead": "メールボックスの準備ができました。{client}に同じ質問をもう一度するか、これから始めてみてください：",
     "prompt": "過去24時間の受信トレイを見て、私が返信すべきメールを教えてください。",
     "copy": "プロンプトをコピー",
     "copied": "コピーしました",

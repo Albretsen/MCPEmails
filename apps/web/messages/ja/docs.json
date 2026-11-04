@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "MCPメールサーバーのドキュメント: Gmail、Outlook、IMAP、OAuth",
+    "title": "MCPメールサーバーのドキュメント：Gmail、Outlook、IMAP、OAuth",
     "description": "MCPEmailsをGmail、Outlook、IMAPで設定し、ClaudeなどのMCPクライアントをOAuthまたはAPIキーで接続する方法と、メールツールの完全なリファレンスです。"
   },
   "hero": {
@@ -57,11 +57,11 @@
     "eyebrow": "エンドポイント",
     "heading": "URLは1つ、標準のMCPです。",
     "sub": "すべての通信は単一のStreamable HTTPエンドポイントに送られます。ダッシュボードで発行したBearerトークンで認証します。",
-    "bodyMethods": "JSON-RPC 2.0のリクエストボディを送信します。対応メソッド: <code>initialize</code>、<code>tools/list</code>、<code>tools/call</code>、<code>prompts/list</code>、<code>prompts/get</code>。",
-    "infoTransport": "トランスポート: <b>Streamable HTTP</b> (MCP 2025-06-18)",
-    "infoAuth": "認証: <b>Authorization: Bearer &lt;api-key&gt;</b>",
-    "infoRateLimits": "レート制限: <b>キーごとの1分、1時間、1日の各ウィンドウ</b> (プランに応じたサイズ) と、プランのワークスペース上限",
-    "infoFormat": "レスポンス形式: <b>JSON-RPC 2.0</b>。成功した結果には型付きの<code>structuredContent</code>オブジェクトも含まれます",
+    "bodyMethods": "JSON-RPC 2.0のリクエストボディを送信します。対応メソッド：<code>initialize</code>、<code>tools/list</code>、<code>tools/call</code>、<code>prompts/list</code>、<code>prompts/get</code>。",
+    "infoTransport": "トランスポート：<b>Streamable HTTP</b> (MCP 2025-06-18)",
+    "infoAuth": "認証：<b>Authorization: Bearer &lt;api-key&gt;</b>",
+    "infoRateLimits": "レート制限：<b>キーごとの1分、1時間、1日の各ウィンドウ</b> (プランに応じたサイズ) と、プランのワークスペース上限",
+    "infoFormat": "レスポンス形式：<b>JSON-RPC 2.0</b>。成功した結果には型付きの<code>structuredContent</code>オブジェクトも含まれます",
     "handshakeLabel": "initializeハンドシェイク",
     "pollingHeading": "プッシュではなくポーリング",
     "pollingBody": "MCPEmailsはリクエスト/レスポンス方式のみです。すべての結果は、エージェントが行うツール呼び出しから返されます。<b>Webhook、プッシュ通知、サーバー起点のイベントはありません</b>。そのため、メールが届いただけでエージェントが呼び出されることはありません。新着メールに対応するには、エージェントに定期的に<b>ポーリング</b>させてください。たとえば、ワークフローに合った間隔で<code>email_read</code>を<code>action: \"list\"</code>と<code>unread: true</code>で呼び出します (上記のレート制限に注意してください)。"
@@ -107,14 +107,14 @@
     "howTitle": "内部の仕組み",
     "howP1": "claude.aiは<b>RFC 7591 Dynamic Client Registration</b>で自身を登録するため、クライアントIDを事前に登録する必要はありません。",
     "howP2": "認可には<b>OAuth 2.0 Authorization Code + PKCE</b> (RFC 7636) を使うため、クライアントシークレットが送信されることはありません。",
-    "howP3": "トークンのスコープは、承認した権限に厳密に限定されます: <code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。",
-    "noOauthNote": "<b>OAuthに対応していないクライアントをお使いですか?</b> ダッシュボード → APIキー でAPIキーを作成し、Bearerトークンとして渡してください。APIキーによる接続とOAuthによる接続は、同じMCPエンドポイントと同じツールカタログを使います。"
+    "howP3": "トークンのスコープは、承認した権限に厳密に限定されます：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。",
+    "noOauthNote": "<b>OAuthに対応していないクライアントをお使いですか？</b> ダッシュボード → APIキー でAPIキーを作成し、Bearerトークンとして渡してください。APIキーによる接続とOAuthによる接続は、同じMCPエンドポイントと同じツールカタログを使います。"
   },
   "tools": {
     "eyebrow": "ツールリファレンス",
     "heading": "{toolCount}個のツール。エージェントに必要なメール操作をすべて。",
     "sub": "<b>受信トレイの指定は任意です。</b>キーに受信トレイが1つだけの場合、受信トレイごとのツールはすべて自動でそれを選ぶため、<code>inbox_id</code>は不要です。受信トレイが複数ある場合は、<code>inbox_id</code> (<code>inbox_list</code>が返すUUID) か<code>inbox</code> (受信トレイのメールアドレス) のどちらかを渡します。ほとんどのツールは操作を選ぶ<code>action</code>引数を取ります。バッジは各操作に必要なスコープを示し、<code>tools/list</code>はキー (またはOAuthトークン) のスコープで使えるツールだけを返します。すべてのスコープを持つキーでは、<code>tools/list</code>に{listedToolCount}個のツールが表示されます。この{toolCount}個に加えて、承認、一括操作、下書きエディター、自動化カード用の{appOnlyToolCount}個のツールです。後者は手で組み立てるものではなく、MCPクライアントが表示するカードから操作するものです。「リクエストとレスポンスの例を表示」をクリックすると、リクエストとレスポンスの全体を確認できます。",
-    "noParams": "パラメーターはありません。空の引数オブジェクトで呼び出します:",
+    "noParams": "パラメーターはありません。空の引数オブジェクトで呼び出します：",
     "showExample": "リクエストとレスポンスの例を表示",
     "hideExample": "リクエストとレスポンスの例を隠す",
     "labelRequest": "リクエスト",
@@ -129,22 +129,22 @@
       "title": "受信トレイの一覧",
       "desc": "現在のAPIキーまたはOAuthトークンでアクセスできるすべての受信トレイを返します。最初にこれを呼び出してinbox_idの値を把握すれば、ダッシュボードからUUIDをコピー＆ペーストする必要はありません。各結果には、メールアドレス、プロバイダー、任意のサービスブランド (icloud/yahoo/zoho/yandex/generic/fastmail)、capabilitiesオブジェクト、バージョン付きの互換性プロファイルが含まれます。プロファイルは正規化された各操作にexact、different、unavailableのラベルを付けるため、エージェントはプロバイダーの違いを隠さずに移植性のあるワークフローを選べます。",
       "params": {
-        "provider": "任意のフィルター: このプロバイダーが提供する受信トレイだけを返します。gmail、outlook、fastmail、imapのいずれか。省略すると、キーでアクセスできるすべての受信トレイを一覧表示します。",
+        "provider": "任意のフィルター：このプロバイダーが提供する受信トレイだけを返します。gmail、outlook、fastmail、imapのいずれか。省略すると、キーでアクセスできるすべての受信トレイを一覧表示します。",
         "include_capabilities": "各受信トレイにcapabilitiesオブジェクトと互換性プロファイルを含めるかどうか。既定値はtrue。falseにすると、inbox_id、メールアドレス、表示名、プロバイダー、サービスブランドだけの簡潔な一覧になります。"
       }
     },
     "email_read": {
       "title": "メールの読み取り",
-      "desc": "受信トレイ内のメッセージを読み取り、一覧表示し、検索します。actionを指定します: 'list'は最近のメッセージの概要 (新しい順、フォルダー/未読での絞り込みとページング付き)、'read'は1つのmessage_idの全内容 (テキスト本文、任意でサニタイズ済みHTMLと添付ファイル)、'read_batch'は1回の呼び出しで最大50件のmessage_idを取得、'search'はプロバイダーに依存しない構造化フィルター (from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before)、'attachment'は添付ファイルを1つダウンロード (attachment_indexまたはfilenameで指定) し、その種類に応じたMCPネイティブのコンテンツブロック (image/audio/埋め込みリソース) で最大25 MBまで返します。'extract'は選んだ添付ファイル1つから、バイトを返さずに読み取れるテキストを返し、'original'はプロバイダーに保存された完全なMIMEメッセージを移植可能な.emlファイルとして最大25 MBまでダウンロードします。元のメッセージは保存可能なリソースとして返され、モデル向けのテキストとしてレンダリングやサニタイズをされることはありません。抽出は一時的なもので、テキスト、JSON、CSV/TSV、HTML、テキストレイヤーのあるPDF (ベストエフォート) に対応します。OCRや埋め込みコードの実行は行いません。読み取り専用で、何も変更しません。'search'アクションは、より限定的なsearch:emailスコープだけでも利用できます。長い本文は区切って返されます。body_truncatedを確認し、body_next_offsetをbody_offsetとして渡すと続きを取得できます。Outlookでは、テキスト条件 (from、to、cc、subject、body、text、query) をunread、has_attachment、flagged、since、beforeと組み合わせられません。その場合これらのフィルターは適用されず、どれが適用されなかったかが結果に示されます。",
+      "desc": "受信トレイ内のメッセージを読み取り、一覧表示し、検索します。actionを指定します：'list'は最近のメッセージの概要 (新しい順、フォルダー/未読での絞り込みとページング付き)、'read'は1つのmessage_idの全内容 (テキスト本文、任意でサニタイズ済みHTMLと添付ファイル)、'read_batch'は1回の呼び出しで最大50件のmessage_idを取得、'search'はプロバイダーに依存しない構造化フィルター (from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before)、'attachment'は添付ファイルを1つダウンロード (attachment_indexまたはfilenameで指定) し、その種類に応じたMCPネイティブのコンテンツブロック (image/audio/埋め込みリソース) で最大25 MBまで返します。'extract'は選んだ添付ファイル1つから、バイトを返さずに読み取れるテキストを返し、'original'はプロバイダーに保存された完全なMIMEメッセージを移植可能な.emlファイルとして最大25 MBまでダウンロードします。元のメッセージは保存可能なリソースとして返され、モデル向けのテキストとしてレンダリングやサニタイズをされることはありません。抽出は一時的なもので、テキスト、JSON、CSV/TSV、HTML、テキストレイヤーのあるPDF (ベストエフォート) に対応します。OCRや埋め込みコードの実行は行いません。読み取り専用で、何も変更しません。'search'アクションは、より限定的なsearch:emailスコープだけでも利用できます。長い本文は区切って返されます。body_truncatedを確認し、body_next_offsetをbody_offsetとして渡すと続きを取得できます。Outlookでは、テキスト条件 (from、to、cc、subject、body、text、query) をunread、has_attachment、flagged、since、beforeと組み合わせられません。その場合これらのフィルターは適用されず、どれが適用されなかったかが結果に示されます。",
       "params": {
-        "action": "実行する操作: \"list\" (最近のメッセージの概要)、\"read\" (1つのmessage_idの全内容)、\"read_batch\" (複数のmessage_id)、\"search\" (構造化フィルター)、\"attachment\" (添付ファイル1つをbase64でダウンロード)、\"extract\" (添付ファイル1つをバイトを返さずテキストとして読み取り)、\"original\" (プロバイダーに保存された完全なMIMEメッセージ1件を.emlファイルとしてダウンロード)。どの引数が使われるかはこれで決まります。",
-        "inbox_id": "読み取る受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。受信トレイIDはinbox_listで確認できます。",
+        "action": "実行する操作：\"list\" (最近のメッセージの概要)、\"read\" (1つのmessage_idの全内容)、\"read_batch\" (複数のmessage_id)、\"search\" (構造化フィルター)、\"attachment\" (添付ファイル1つをbase64でダウンロード)、\"extract\" (添付ファイル1つをバイトを返さずテキストとして読み取り)、\"original\" (プロバイダーに保存された完全なMIMEメッセージ1件を.emlファイルとしてダウンロード)。どの引数が使われるかはこれで決まります。",
+        "inbox_id": "読み取る受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。受信トレイIDはinbox_listで確認できます。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "message_id": "読み取るプロバイダーのメッセージID (アクション'read'、'attachment'、'original')。事前のlistまたはsearchで取得します。",
         "message_ids": "読み取るプロバイダーのメッセージID (アクション'read_batch')。事前のlistまたはsearchで取得します。1回の呼び出しにつき最大50件。",
         "attachment_index": "ダウンロードする添付ファイルの0始まりのインデックス (アクション'attachment')。'read'の添付ファイル一覧の順序に対応します。filenameより優先されます。メッセージの添付ファイルが1つだけなら、両方とも省略できます。",
         "filename": "ダウンロードする添付ファイルの名前 (アクション'attachment')。大文字と小文字を区別しない完全一致。attachment_indexを指定した場合は無視されます。",
-        "folder": "一覧表示するフォルダー (アクション'list')。既定値は\"INBOX\"。ほかの値: \"SENT\"、\"DRAFTS\"、\"TRASH\"。",
+        "folder": "一覧表示するフォルダー (アクション'list')。既定値は\"INBOX\"。ほかの値：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
         "limit": "返す結果の最大数 (アクション'list'または'search')。既定値20、最大100。",
         "offset": "0始まりのページングオフセット (アクション'list'または'search')。既定値0。",
         "include_html": "サニタイズ済みのHTML本文を含めます (アクション'read'/'read_batch')。既定値はfalse。",
@@ -153,7 +153,7 @@
         "body_max_chars": "メッセージごとに返す本文の文字数。既定値は'read'で8000、'read_batch'で2000。最大50000。",
         "include_attachments": "添付ファイルのデータをbase64で含めます (アクション'read'/'read_batch')。'read_batch'では、合計10 MBを呼び出し内のすべてのメッセージで共有します。既定値はfalse。",
         "mark_as_read": "取得後にメッセージを既読にします (アクション'read'/'read_batch')。既定値はfalse。",
-        "from": "一致させる送信者 (アクション'search'): メールアドレス、表示名、またはその一部 (例: \"alice@example.com\"や\"Alice\")。",
+        "from": "一致させる送信者 (アクション'search'): メールアドレス、表示名、またはその一部 (例：\"alice@example.com\"や\"Alice\")。",
         "to": "一致させる主な宛先 (To) (アクション'search'): メールアドレス、表示名、またはその一部。",
         "cc": "一致させるCc宛先 (アクション'search'): メールアドレス、表示名、またはその一部。",
         "subject": "件名で一致させるテキスト (書かれたとおり) (アクション'search')。Gmail (APIまたはIMAP) とOutlookは単語単位で一致させるため、単語の一部では何も見つかりません。ほかのIMAPサーバーは部分文字列で一致させます。",
@@ -162,7 +162,7 @@
         "unread": "アクション'list'と'search': true = 未読メッセージのみ、false = 既読メッセージのみ、省略すると両方。",
         "has_attachment": "アクション'search': true = 添付ファイルのあるメッセージのみ。汎用IMAPでは非対応 (無視されます)。",
         "flagged": "アクション'search': true = フラグ付き/スター付きのメッセージのみ。",
-        "since": "ISO 8601の日付または日時 (アクション'search')。この時点以降 (>=) に受信したメッセージを返します。例: \"2026-06-01\"。",
+        "since": "ISO 8601の日付または日時 (アクション'search')。この時点以降 (>=) に受信したメッセージを返します。例：\"2026-06-01\"。",
         "before": "ISO 8601の日付または日時 (アクション'search')。この時点より前 (<) に受信したメッセージを返します。",
         "query": "プロバイダー固有の生のクエリ文字列 (アクション'search'、エスケープハッチ)。上の構造化フィールドを優先してください。対応している場合はそれらと組み合わされます。Fastmailでは無視されます。",
         "include_folders": "検索をこれらのフォルダー名に限定します (アクション'search')。汎用IMAPでは、省略するとINBOXだけを検索します。範囲を広げるにはアーカイブや送信済みのフォルダーを指定してください。GmailとOutlookはゴミ箱 (Outlookでは削除済みアイテム、Gmailは迷惑メールも除外) 以外のすべてのフォルダーを検索します。含めたい場合は名前を指定してください。"
@@ -170,27 +170,27 @@
     },
     "email_organize": {
       "title": "メールの整理",
-      "desc": "message_idで指定したメッセージを移動、コピー、フラグ設定、アーカイブします。actionを指定します: 'move'/'move_batch' (destination_folder_idへ移動)、'copy'/'copy_batch' (destination_folder_idに複製し、元のメッセージはそのまま残す。inbox_listがcapabilities.copyをtrueと報告する受信トレイで利用可能: IMAPで接続したGmailアドレスを含むすべてのIMAP受信トレイとOutlook)、'flag' (message_idsに対しflag_actionで既読/未読/フラグを設定)、'archive' (メッセージ1件を受信トレイから移動)。IDは先にemail_readで取得してください。どのアクションも渡したIDだけを対象とし、別の呼び出しで元に戻せます。移動は移動し直せば、アーカイブは受信トレイへ移動すれば、フラグは逆のフラグで戻り、コピーは元のメッセージをそのまま残します。Gmailでは、移動すると移動先のラベルが追加され、INBOXが外れます。ほかのラベルは残ります。ゴミ箱や迷惑メールから移動するとTRASH/SPAMも外れるため、確実に復元されます。Gmail APIコネクタ (プロバイダー'gmail') にはネイティブのコピーがありません。IMAPで接続したGmailメールボックスは、ほかのIMAP受信トレイと同じようにコピーできます。IDの一覧ではなく検索に一致するすべてを移動するには、email_search_and_moveを使います。フィルターを1つ誤るだけで受信トレイ全体が移動してしまうため、独立したツールになっています。どのアクションにもmanage:foldersが必要です。メッセージの削除は独立したemail_deleteツールで行います。",
+      "desc": "message_idで指定したメッセージを移動、コピー、フラグ設定、アーカイブします。actionを指定します：'move'/'move_batch' (destination_folder_idへ移動)、'copy'/'copy_batch' (destination_folder_idに複製し、元のメッセージはそのまま残す。inbox_listがcapabilities.copyをtrueと報告する受信トレイで利用可能：IMAPで接続したGmailアドレスを含むすべてのIMAP受信トレイとOutlook)、'flag' (message_idsに対しflag_actionで既読/未読/フラグを設定)、'archive' (メッセージ1件を受信トレイから移動)。IDは先にemail_readで取得してください。どのアクションも渡したIDだけを対象とし、別の呼び出しで元に戻せます。移動は移動し直せば、アーカイブは受信トレイへ移動すれば、フラグは逆のフラグで戻り、コピーは元のメッセージをそのまま残します。Gmailでは、移動すると移動先のラベルが追加され、INBOXが外れます。ほかのラベルは残ります。ゴミ箱や迷惑メールから移動するとTRASH/SPAMも外れるため、確実に復元されます。Gmail APIコネクタ (プロバイダー'gmail') にはネイティブのコピーがありません。IMAPで接続したGmailメールボックスは、ほかのIMAP受信トレイと同じようにコピーできます。IDの一覧ではなく検索に一致するすべてを移動するには、email_search_and_moveを使います。フィルターを1つ誤るだけで受信トレイ全体が移動してしまうため、独立したツールになっています。どのアクションにもmanage:foldersが必要です。メッセージの削除は独立したemail_deleteツールで行います。",
       "params": {
-        "action": "実行する操作: \"move\"、\"move_batch\"、\"copy\"、\"copy_batch\"、\"flag\"、\"archive\"。どの引数が使われるかはこれで決まります。検索に一致するすべてのメッセージの移動は、独立したemail_search_and_moveツールで行います。",
-        "inbox_id": "メッセージを保持する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"move\"、\"move_batch\"、\"copy\"、\"copy_batch\"、\"flag\"、\"archive\"。どの引数が使われるかはこれで決まります。検索に一致するすべてのメッセージの移動は、独立したemail_search_and_moveツールで行います。",
+        "inbox_id": "メッセージを保持する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "message_id": "単一メッセージのアクション (move、copy、archive) に使うプロバイダーのメッセージID。事前のlist、read、searchで取得します。",
         "message_ids": "一括アクション (move_batch、copy_batch、flag) に使うプロバイダーのメッセージID。1回の呼び出しにつき最大500件。",
-        "destination_folder_id": "移動先またはコピー先のフォルダー (move、move_batch、copy、copy_batch): 正規のエイリアス (inbox、sent、drafts、trash、archive、spam)、フォルダー/ラベル名 (例: 'Receipts')、またはfolder_listで取得したプロバイダー固有のフォルダーID。名前とエイリアスは自動で解決されます。",
-        "flag_action": "アクション'flag'で、すべてのメッセージに適用する変更: \"read\"または\"unread\"で既読状態を設定、\"flag\"/\"unflag\"でスターやフォローアップのフラグを追加/削除します。"
+        "destination_folder_id": "移動先またはコピー先のフォルダー (move、move_batch、copy、copy_batch): 正規のエイリアス (inbox、sent、drafts、trash、archive、spam)、フォルダー/ラベル名 (例：'Receipts')、またはfolder_listで取得したプロバイダー固有のフォルダーID。名前とエイリアスは自動で解決されます。",
+        "flag_action": "アクション'flag'で、すべてのメッセージに適用する変更：\"read\"または\"unread\"で既読状態を設定、\"flag\"/\"unflag\"でスターやフォローアップのフラグを追加/削除します。"
       }
     },
     "email_search_and_move": {
       "title": "検索して移動",
       "desc": "検索に一致するすべてのメッセージを、サーバー側の1回の操作で移動先フォルダーへ移動します。そのため、使う時点でメッセージIDが古くなっていることはありません。email_readと同じ、プロバイダーに依存しない構造化フィールド (from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before) で検索し、サーバーが受信トレイ固有の構文に変換します。queryは生のエスケープハッチです。これはemail_organizeとは別のツールで、MCPクライアントに対して破壊的 (destructive) と示されるのはこちらです。選んだIDではなくフィルターに一致するすべてに作用するため、フィルターを1つ誤るだけで受信トレイ全体が移動してしまいます。すでに一覧表示したメッセージを移動するには、代わりにemail_organize (アクション'move'または'move_batch') を使います。件数はlimitで制限され、既定値と最大値は500です。メールボックスをすべて処理したと報告する前に結果のhas_moreを確認し、残りはemail_organize (アクション'move_batch') で処理してください。Gmailでは、移動すると移動先のラベルが追加され、INBOXが外れます。成功/失敗の件数と、メッセージごとの結果を返します。manage:foldersが必要です。",
       "params": {
-        "inbox_id": "処理する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "inbox_id": "処理する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
-        "destination_folder_id": "一致したすべてのメッセージの移動先: 正規のエイリアス (inbox、sent、drafts、trash、archive、spam)、フォルダー/ラベル名 (例: 'Receipts')、またはfolder_listで取得したプロバイダー固有のフォルダーID。名前とエイリアスは自動で解決されます。",
-        "from": "一致させる送信者: メールアドレス、表示名、またはその一部。",
+        "destination_folder_id": "一致したすべてのメッセージの移動先：正規のエイリアス (inbox、sent、drafts、trash、archive、spam)、フォルダー/ラベル名 (例：'Receipts')、またはfolder_listで取得したプロバイダー固有のフォルダーID。名前とエイリアスは自動で解決されます。",
+        "from": "一致させる送信者：メールアドレス、表示名、またはその一部。",
         "to": "一致させる主な宛先 (To): メールアドレス、表示名、またはその一部。",
-        "cc": "一致させるCc宛先: メールアドレス、表示名、またはその一部。",
+        "cc": "一致させるCc宛先：メールアドレス、表示名、またはその一部。",
         "subject": "件名で一致させるテキスト。",
         "body": "メッセージ本文で探すフリーテキスト。(Gmailではメッセージ全体が対象になります。)",
         "text": "ヘッダーと本文を含むメッセージ内の任意の場所で一致させるフリーテキスト。",
@@ -207,10 +207,10 @@
     },
     "email_delete": {
       "title": "メールの削除",
-      "desc": "メッセージを削除します。削除は破壊的な操作なので、email_organizeとは別の独立したツールです。actionを指定します: 'delete'/'delete_batch' (既定ではゴミ箱へ、または完全削除)、'search_and_delete' (構造化検索に一致するすべてのメッセージを削除。古いメッセージIDの問題を避けられます)。permanent: trueを渡さない限り、削除したメッセージはゴミ箱に移動します。permanent: trueは元に戻せません。どのアクションにもdelete:emailスコープが必要で、ツール全体がMCPクライアントに対して破壊的と示されます。何かが削除される前のユーザー確認はクライアントが行います。",
+      "desc": "メッセージを削除します。削除は破壊的な操作なので、email_organizeとは別の独立したツールです。actionを指定します：'delete'/'delete_batch' (既定ではゴミ箱へ、または完全削除)、'search_and_delete' (構造化検索に一致するすべてのメッセージを削除。古いメッセージIDの問題を避けられます)。permanent: trueを渡さない限り、削除したメッセージはゴミ箱に移動します。permanent: trueは元に戻せません。どのアクションにもdelete:emailスコープが必要で、ツール全体がMCPクライアントに対して破壊的と示されます。何かが削除される前のユーザー確認はクライアントが行います。",
       "params": {
-        "action": "実行する操作: \"delete\"、\"delete_batch\"、\"search_and_delete\"。どの引数が使われるかはこれで決まります。",
-        "inbox_id": "メッセージを保持する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"delete\"、\"delete_batch\"、\"search_and_delete\"。どの引数が使われるかはこれで決まります。",
+        "inbox_id": "メッセージを保持する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "message_id": "単一の削除 (アクション'delete') に使うプロバイダーのメッセージID。事前のlist、read、searchで取得します。",
         "message_ids": "一括削除 (アクション'delete_batch') に使うプロバイダーのメッセージID。1回の呼び出しにつき最大500件。",
@@ -221,9 +221,9 @@
         "subject": "件名で一致させるテキスト (search_and_delete)。",
         "body": "メッセージ本文で探すフリーテキスト (search_and_delete)。(Gmailではメッセージ全体が対象になります。)",
         "text": "ヘッダーと本文を含むメッセージ内の任意の場所で一致させるフリーテキスト (search_and_delete)。",
-        "unread": "検索アクション: true = 未読のみ、false = 既読のみ、省略するとどちらも。",
-        "has_attachment": "検索アクション: true = 添付ファイルのあるメッセージのみ。汎用IMAPでは非対応 (無視されます)。",
-        "flagged": "検索アクション: true = フラグ付き/スター付きのメッセージのみ。",
+        "unread": "検索アクション：true = 未読のみ、false = 既読のみ、省略するとどちらも。",
+        "has_attachment": "検索アクション：true = 添付ファイルのあるメッセージのみ。汎用IMAPでは非対応 (無視されます)。",
+        "flagged": "検索アクション：true = フラグ付き/スター付きのメッセージのみ。",
         "since": "ISO 8601の日付または日時 (検索アクション)。この時点以降 (>=) に受信したメッセージに一致します。",
         "before": "ISO 8601の日付または日時 (検索アクション)。この時点より前 (<) に受信したメッセージに一致します。",
         "query": "プロバイダー固有の生のクエリ文字列 (検索アクション、エスケープハッチ)。上の構造化フィールドを優先してください。Fastmailでは無視されます。",
@@ -233,10 +233,10 @@
     },
     "email_compose": {
       "title": "メールの作成",
-      "desc": "新しいメールを送信したり、既存のメッセージに応答したりします。actionを指定します: 'send'は新しいメール (to/subject/body、任意でcc/bcc/html_body/reply_to/attachments)、'reply'はmessage_idへの返信 (スレッド用ヘッダーは自動で設定、任意でreply_all)、'forward'はmessage_idを新しい宛先に転送し、元のメッセージをバイト単位でそのまま中継します (HTML、インライン画像、添付ファイルもそのまま)。受信トレイの署名は自動で追加されます。返信と転送では、署名は本文のあとに、引用ブロックの前に入り、署名の返信モードに従います。簡潔なメッセージ1通だけ署名を省くには、include_signature: falseを渡します。自動送信を安全に再試行するには、論理的なメール1通ごとにidempotency_keyを1つ指定し、同じリクエストを24時間以内に再試行する場合にだけ再利用してください。3つのアクションはいずれも、送信後は取り消せません。'forward'はmessage_idsも受け付け、1回の呼び出しで最大50件のメッセージを転送し、1件ずつ結果を報告します。この受信トレイにすでにあるファイルを添付するには、読み取って再エンコードするのではなく、'{' source_message_id, attachment_index '}'として参照してください。",
+      "desc": "新しいメールを送信したり、既存のメッセージに応答したりします。actionを指定します：'send'は新しいメール (to/subject/body、任意でcc/bcc/html_body/reply_to/attachments)、'reply'はmessage_idへの返信 (スレッド用ヘッダーは自動で設定、任意でreply_all)、'forward'はmessage_idを新しい宛先に転送し、元のメッセージをバイト単位でそのまま中継します (HTML、インライン画像、添付ファイルもそのまま)。受信トレイの署名は自動で追加されます。返信と転送では、署名は本文のあとに、引用ブロックの前に入り、署名の返信モードに従います。簡潔なメッセージ1通だけ署名を省くには、include_signature: falseを渡します。自動送信を安全に再試行するには、論理的なメール1通ごとにidempotency_keyを1つ指定し、同じリクエストを24時間以内に再試行する場合にだけ再利用してください。3つのアクションはいずれも、送信後は取り消せません。'forward'はmessage_idsも受け付け、1回の呼び出しで最大50件のメッセージを転送し、1件ずつ結果を報告します。この受信トレイにすでにあるファイルを添付するには、読み取って再エンコードするのではなく、'{' source_message_id, attachment_index '}'として参照してください。",
       "params": {
-        "action": "実行する操作: \"send\"、\"reply\"、\"forward\"。どの引数が使われるかはこれで決まります。",
-        "inbox_id": "送信元の受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"send\"、\"reply\"、\"forward\"。どの引数が使われるかはこれで決まります。",
+        "inbox_id": "送信元の受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "message_id": "元のメッセージのプロバイダーのメッセージID (アクション'reply'または'forward')。事前のlist、read、searchで取得します。",
         "message_ids": "1回の呼び出しで同じ宛先に転送する、最大50件のプロバイダーのメッセージID (アクション'forward')。message_idの代わりに使います。1件ずつ転送され、結果も個別に報告されるため、途中で失敗しても送信済みのものが分かります。重複は除外されます。",
@@ -259,16 +259,16 @@
       "title": "フォルダーの一覧",
       "desc": "1つの受信トレイのすべてのフォルダー (Gmailではすべてのラベル) を一覧表示します。各項目には、プロバイダー固有のID、表示名、種類 (階層型のプロバイダーでは'folder'、Gmailでは'label')、メッセージ数 (合計と未読) が含まれます。返されたIDは、email_readでメールを一覧表示するときのfolder引数や、email_organizeの移動先として使います。action引数のない読み取り専用ツールで、指定するのは対象の受信トレイだけです。read:emailが必要です。フォルダー名やラベル名は作成者が自由に付けたテキストで、共有、委任、移行されたメールボックスではアカウント所有者以外が付けたものもあります。そのため結果にはuntrusted_contentが付き、指示ではなくデータとして扱われます。",
       "params": {
-        "inbox_id": "フォルダーを一覧表示する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "inbox_id": "フォルダーを一覧表示する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。"
       }
     },
     "folder": {
       "title": "フォルダーとラベル",
-      "desc": "メールボックスのフォルダーやGmailのラベルを作成、名前変更、削除します。パラメーターはプロバイダー間の互換性のために'folder'という名前を使いますが、Gmailが管理するのはフォルダーではなくラベル (type: 'label') です。actionを指定します: 'create' (name)、'rename' (folder_id、new_name)、'delete' (folder_id、元に戻せません。Gmailではそのラベルが付いたすべてのメッセージからラベルが外れ、ほかのプロバイダーでは中のメッセージが失われる場合があります)。既存のフォルダーの読み取りは独立した読み取り専用のfolder_listツールで行い、これらのアクションが取るfolder_idもそこで取得します。どのアクションにもmanage:foldersが必要で、このツールはMCPクライアントに対して破壊的と示されます。",
+      "desc": "メールボックスのフォルダーやGmailのラベルを作成、名前変更、削除します。パラメーターはプロバイダー間の互換性のために'folder'という名前を使いますが、Gmailが管理するのはフォルダーではなくラベル (type: 'label') です。actionを指定します：'create' (name)、'rename' (folder_id、new_name)、'delete' (folder_id、元に戻せません。Gmailではそのラベルが付いたすべてのメッセージからラベルが外れ、ほかのプロバイダーでは中のメッセージが失われる場合があります)。既存のフォルダーの読み取りは独立した読み取り専用のfolder_listツールで行い、これらのアクションが取るfolder_idもそこで取得します。どのアクションにもmanage:foldersが必要で、このツールはMCPクライアントに対して破壊的と示されます。",
       "params": {
-        "action": "実行する操作: \"create\"、\"rename\"、\"delete\"。どの引数が使われるかはこれで決まります。フォルダーの一覧表示は独立したfolder_listツールで行います。",
-        "inbox_id": "フォルダーを管理する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"create\"、\"rename\"、\"delete\"。どの引数が使われるかはこれで決まります。フォルダーの一覧表示は独立したfolder_listツールで行います。",
+        "inbox_id": "フォルダーを管理する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "name": "新しいフォルダーまたはラベルの名前 (アクション'create')。1〜255文字。",
         "folder_id": "プロバイダー固有のフォルダー/ラベルID (アクション'rename'または'delete')。folder_listで取得します。",
@@ -279,17 +279,17 @@
       "title": "下書きの一覧",
       "desc": "受信トレイの下書きフォルダーに保存された下書きメッセージを返します。各項目にはdraft_id、件名、宛先、作成日時が含まれます。下書きを更新、送信、削除するには、draft_idをdraftツールに渡します。action引数のない読み取り専用ツールです。manage:draftsが必要です。返信の下書きの件名と宛先は返信先のメッセージから決まるため、結果にはuntrusted_contentが付き、指示ではなくデータとして扱われます。",
       "params": {
-        "inbox_id": "下書きを保持する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "inbox_id": "下書きを保持する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "limit": "返す下書きの最大数。既定値20、最大50。"
       }
     },
     "draft": {
       "title": "下書き",
-      "desc": "受信トレイの下書きフォルダーにある未送信の下書きを作成、更新、送信、削除します。actionを指定します: 'create' (subject/bodyが必須、任意でto/cc/bcc/html_body)、'reply' (message_id/bodyが必須、任意でreply_all。元の会話の中に未送信の返信を作成)、'update' (draft_idと上書きするフィールド)、'send' (draft_id。下書きを削除して送信し、元に戻せません)、'delete' (draft_id)。既存の下書きの読み取りは、独立した読み取り専用のdraft_listツールで行います。受信トレイの署名は下書きの作成時または更新時に埋め込まれるため、下書きフォルダーの時点ですでに含まれており、送信時に再度追加されることはありません。署名なしで下書きを作成するには、include_signature: falseを渡します。IMAPベースの受信トレイでは更新のたびにdraft_idが変わるため、常に最新のものを使ってください。GmailとOutlookではdraft_idは変わりません。'reply'にはread:emailも必要で、メールを送信することはありません。'send'にはsend:emailが必要なので、下書き専用のキーで下書きを使って送信の同意を回避することはできません。それ以外にはmanage:draftsが必要です。下書きにはemail_composeと同じように添付ファイルを付けられます。インラインのbase64か、source_message_idによるこの受信トレイ内の既存ファイルです。'update'ではファイルが追加され、下書きにすでにあるファイルは残ります。",
+      "desc": "受信トレイの下書きフォルダーにある未送信の下書きを作成、更新、送信、削除します。actionを指定します：'create' (subject/bodyが必須、任意でto/cc/bcc/html_body)、'reply' (message_id/bodyが必須、任意でreply_all。元の会話の中に未送信の返信を作成)、'update' (draft_idと上書きするフィールド)、'send' (draft_id。下書きを削除して送信し、元に戻せません)、'delete' (draft_id)。既存の下書きの読み取りは、独立した読み取り専用のdraft_listツールで行います。受信トレイの署名は下書きの作成時または更新時に埋め込まれるため、下書きフォルダーの時点ですでに含まれており、送信時に再度追加されることはありません。署名なしで下書きを作成するには、include_signature: falseを渡します。IMAPベースの受信トレイでは更新のたびにdraft_idが変わるため、常に最新のものを使ってください。GmailとOutlookではdraft_idは変わりません。'reply'にはread:emailも必要で、メールを送信することはありません。'send'にはsend:emailが必要なので、下書き専用のキーで下書きを使って送信の同意を回避することはできません。それ以外にはmanage:draftsが必要です。下書きにはemail_composeと同じように添付ファイルを付けられます。インラインのbase64か、source_message_idによるこの受信トレイ内の既存ファイルです。'update'ではファイルが追加され、下書きにすでにあるファイルは残ります。",
       "params": {
-        "action": "実行する操作: \"create\"、\"reply\"、\"update\"、\"send\"、\"delete\"。どの引数が使われるかはこれで決まります。下書きの一覧表示は独立したdraft_listツールで行います。",
-        "inbox_id": "下書きを保持する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"create\"、\"reply\"、\"update\"、\"send\"、\"delete\"。どの引数が使われるかはこれで決まります。下書きの一覧表示は独立したdraft_listツールで行います。",
+        "inbox_id": "下書きを保持する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "draft_id": "プロバイダーの下書きID (アクション'update'または'send')。直近のcreateやupdate、またはdraft_listで取得します。IMAPの受信トレイでは更新のたびに変わるため、常に最新のものを使ってください。",
         "message_id": "アクション'reply'の元になるメッセージのID。事前のlist、read、searchアクションで取得します。",
@@ -315,20 +315,20 @@
     },
     "schedule": {
       "title": "予約送信",
-      "desc": "サーバー側のキューでメールを将来の配信用に登録するか、登録済みの送信をキャンセルします。actionを指定します: 'create' (to/subject/bodyと、タイムゾーン付きのISO 8601タイムスタンプsend_at。宛先と本文はすぐに検証され、無効なメッセージがキューに入ることはありません)、'cancel' (id。キャンセルできるのはまだ'pending'の送信だけです)。キューの内容の読み取りは独立した読み取り専用のschedule_listツールで行い、'cancel'が取るidもそこで取得します。今すぐ送るにはemail_composeを使い、このツールは後の時刻が指定されたときだけ使ってください。ディスパッチャーは毎分実行されるため、配信はsend_atから最大60秒遅れることがあります。どのアクションにもschedule:emailが必要です。",
+      "desc": "サーバー側のキューでメールを将来の配信用に登録するか、登録済みの送信をキャンセルします。actionを指定します：'create' (to/subject/bodyと、タイムゾーン付きのISO 8601タイムスタンプsend_at。宛先と本文はすぐに検証され、無効なメッセージがキューに入ることはありません)、'cancel' (id。キャンセルできるのはまだ'pending'の送信だけです)。キューの内容の読み取りは独立した読み取り専用のschedule_listツールで行い、'cancel'が取るidもそこで取得します。今すぐ送るにはemail_composeを使い、このツールは後の時刻が指定されたときだけ使ってください。ディスパッチャーは毎分実行されるため、配信はsend_atから最大60秒遅れることがあります。どのアクションにもschedule:emailが必要です。",
       "params": {
-        "action": "実行する操作: \"create\"または\"cancel\"。どの引数が使われるかはこれで決まります。キューに入った送信の一覧表示は独立したschedule_listツールで行います。",
-        "inbox_id": "送信元の受信トレイのUUID (アクション'create')。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"create\"または\"cancel\"。どの引数が使われるかはこれで決まります。キューに入った送信の一覧表示は独立したschedule_listツールで行います。",
+        "inbox_id": "送信元の受信トレイのUUID (アクション'create')。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "to": "宛先のメールアドレス (アクション'create')。最大50件。",
         "subject": "メールの件名 (アクション'create')。最大998文字。",
         "body": "プレーンテキストのメール本文 (アクション'create')。",
-        "send_at": "送信するタイムゾーン付きのISO 8601日時 (アクション'create')。未来の日時である必要があります。例: \"2026-06-02T09:00:00Z\"。",
+        "send_at": "送信するタイムゾーン付きのISO 8601日時 (アクション'create')。未来の日時である必要があります。例：\"2026-06-02T09:00:00Z\"。",
         "cc": "Cc宛先 (アクション'create')。既定値は[]。",
         "bcc": "Bcc宛先 (アクション'create')。既定値は[]。",
         "html_body": "任意のHTML版の本文 (アクション'create')。",
         "reply_to": "任意のReply-Toヘッダーのアドレス (アクション'create')。",
-        "attachments": "添付ファイル (アクション'create')。インラインのバイトのみ: '{' filename, mime_type, data (base64) '}'。source_message_idによる参照形式はemail_composeで使えますが、ここでは使えません。最大20項目、合計10 MB。",
+        "attachments": "添付ファイル (アクション'create')。インラインのバイトのみ：'{' filename, mime_type, data (base64) '}'。source_message_idによる参照形式はemail_composeで使えますが、ここでは使えません。最大20項目、合計10 MB。",
         "id": "キャンセルする予約送信のUUID (アクション'cancel')。'create'またはschedule_listが返したものです。",
         "idempotency_key": "1回の予約送信の作成に対する任意の不透明キー。まったく同じ作成リクエストを24時間以内に再試行する場合にだけ再利用してください。"
       }
@@ -340,16 +340,16 @@
         "inbox_id": "絞り込む受信トレイのUUID。省略可能。省略すると、キーのすべての受信トレイのリマインダーを一覧表示します。",
         "inbox": "同じ絞り込みをメールアドレスで指定します。省略可能。inbox_idを指定した場合は無視されます。",
         "show": "'due' (既定値)、'upcoming'、'all'のいずれか。",
-        "kind": "任意: 'follow_up'のみ、または'snooze'のみ。",
+        "kind": "任意：'follow_up'のみ、または'snooze'のみ。",
         "limit": "結果の最大数。既定値25、最大100。"
       }
     },
     "reminder": {
       "title": "リマインダー",
-      "desc": "チャットを閉じている間もサーバー上で動くフォローアップとスヌーズです。モデルは関与しません。actionを指定します: 'follow_up' (送信済みメッセージのmessage_idと、daysまたはdue_at。その時点までに誰も返信しなければreminder_listで期限到来として表示され、返信があれば解除されます)、'snooze' (message_idとuntil。メッセージは受信トレイから移動し、その時刻にサーバーが戻します。誰も返信していない場合だけ戻すことも可能)、'done' (id。リマインダーを停止し、スヌーズ中のメッセージはそのままの場所に残します)、'cancel' (id。停止し、スヌーズ中のメッセージをすぐに戻します)。email_composeまたはdraft (アクション'send') でfollow_up_daysを指定すると、送信と同じ呼び出しでフォローアップを開始できます。このツールがメールを送信することはありません。ProとBusinessの機能で、ほかのプランでは対象プランを示すメッセージが返ります。manage:automationsが必要です。スヌーズとスヌーズのキャンセルにはmanage:foldersも必要です。",
+      "desc": "チャットを閉じている間もサーバー上で動くフォローアップとスヌーズです。モデルは関与しません。actionを指定します：'follow_up' (送信済みメッセージのmessage_idと、daysまたはdue_at。その時点までに誰も返信しなければreminder_listで期限到来として表示され、返信があれば解除されます)、'snooze' (message_idとuntil。メッセージは受信トレイから移動し、その時刻にサーバーが戻します。誰も返信していない場合だけ戻すことも可能)、'done' (id。リマインダーを停止し、スヌーズ中のメッセージはそのままの場所に残します)、'cancel' (id。停止し、スヌーズ中のメッセージをすぐに戻します)。email_composeまたはdraft (アクション'send') でfollow_up_daysを指定すると、送信と同じ呼び出しでフォローアップを開始できます。このツールがメールを送信することはありません。ProとBusinessの機能で、ほかのプランでは対象プランを示すメッセージが返ります。manage:automationsが必要です。スヌーズとスヌーズのキャンセルにはmanage:foldersも必要です。",
       "params": {
-        "action": "実行する操作: \"follow_up\"、\"snooze\"、\"done\"、\"cancel\"。一覧表示は独立したreminder_listツールで行います。",
-        "inbox_id": "メッセージがある受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "action": "実行する操作：\"follow_up\"、\"snooze\"、\"done\"、\"cancel\"。一覧表示は独立したreminder_listツールで行います。",
+        "inbox_id": "メッセージがある受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "message_id": "追跡またはスヌーズするメッセージ (アクション'follow_up'と'snooze')。送信結果またはemail_readが返したidで指定します。",
         "days": "フォローアップの期限を今から何日後 (整数) にするか。1〜365 (アクション'follow_up')。これかdue_atを指定します。",
@@ -364,49 +364,49 @@
       "title": "署名の取得",
       "desc": "1つの受信トレイに設定された署名を読み取ります。プレーンテキストとHTML、有効かどうか、返信/転送のモード、ソース ('manual'、'gmail_import'、未設定の場合はnull)、そしてsender_name (宛先がFromヘッダーで目にする表示名) が返ります。署名は、すべての送信、返信、転送、下書き、予約メッセージにサーバー側で追加されます。action引数のない読み取り専用ツールです。read:emailが必要です。",
       "params": {
-        "inbox_id": "署名を読み取る受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "inbox_id": "署名を読み取る受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。"
       }
     },
     "signature_set": {
       "title": "署名の設定",
-      "desc": "1つの受信トレイの署名を書き込みます。署名は、すべての送信、返信、転送、下書き、予約メッセージにサーバー側で追加されます。signature_text、signature_html、またはその両方を渡し、任意でsignature_enabled、signature_reply_mode、sender_nameを指定します。署名を消去するには、両方の本文に空文字列を渡します。署名はリッチなHTMLに対応しています。太字、斜体、見出し、リスト、色、配置、リンク、そしてhttpsのURLで参照するホスト済みのロゴや画像です。そのためエージェントはsignature_htmlを渡すだけで、書式の整った署名を設定できます。同じリッチエディターはダッシュボードでも使えます。署名を設定するとソースが'manual'になり、その受信トレイではGmailからの自動インポートが恒久的に上書きされます。sender_nameは宛先がFromヘッダーで目にする表示名を設定します (例: アドレスの前に表示される\"Acme Support\")。署名に触れずに単独で設定することもできます。現在の署名の読み取りは独立したsignature_getツールで行います。action引数はありません。send:emailが必要です。",
+      "desc": "1つの受信トレイの署名を書き込みます。署名は、すべての送信、返信、転送、下書き、予約メッセージにサーバー側で追加されます。signature_text、signature_html、またはその両方を渡し、任意でsignature_enabled、signature_reply_mode、sender_nameを指定します。署名を消去するには、両方の本文に空文字列を渡します。署名はリッチなHTMLに対応しています。太字、斜体、見出し、リスト、色、配置、リンク、そしてhttpsのURLで参照するホスト済みのロゴや画像です。そのためエージェントはsignature_htmlを渡すだけで、書式の整った署名を設定できます。同じリッチエディターはダッシュボードでも使えます。署名を設定するとソースが'manual'になり、その受信トレイではGmailからの自動インポートが恒久的に上書きされます。sender_nameは宛先がFromヘッダーで目にする表示名を設定します (例：アドレスの前に表示される\"Acme Support\")。署名に触れずに単独で設定することもできます。現在の署名の読み取りは独立したsignature_getツールで行います。action引数はありません。send:emailが必要です。",
       "params": {
-        "inbox_id": "署名を設定する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
+        "inbox_id": "署名を設定する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。利用可能な受信トレイIDはinbox_listで取得します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "signature_text": "プレーンテキストの署名本文。省略すると変更しません。空文字列を渡すと消去します。テキストだけを指定した場合、HTML版は送信時に自動で生成されます。",
         "signature_html": "任意のリッチなHTML署名本文。書式 (太字、斜体、下線、見出し、リスト、色、配置、リンク) と、srcがhttpsのURLであるHTMLのimgタグによるホスト済み画像 (base64やCIDは不可) を使えます。保存時にサニタイズされます。省略すると変更しません。空文字列を渡すと消去します。",
         "signature_enabled": "送信メールに署名を追加するかどうか。既定値はtrue。falseにすると、テキストを削除せずに追加だけを止めます。",
-        "signature_reply_mode": "返信と転送に署名を含めるタイミング: \"always\" (すべての返信/転送)、\"first_only\" (既定値。スレッドの最初のメッセージだけで、署名の重複を防ぎます)、\"never\"。",
-        "sender_name": "宛先がFromヘッダーで目にする表示名 (例: 'Acme Support')。アドレスの前に表示されます。省略すると変更しません。空文字列を渡すと消去します。連続する空白はまとめられ、制御文字と山括弧は削除されます。結果は最大100文字です。sender_nameだけを設定しても、署名やそのソースは変わりません。"
+        "signature_reply_mode": "返信と転送に署名を含めるタイミング：\"always\" (すべての返信/転送)、\"first_only\" (既定値。スレッドの最初のメッセージだけで、署名の重複を防ぎます)、\"never\"。",
+        "sender_name": "宛先がFromヘッダーで目にする表示名 (例：'Acme Support')。アドレスの前に表示されます。省略すると変更しません。空文字列を渡すと消去します。連続する空白はまとめられ、制御文字と山括弧は削除されます。結果は最大100文字です。sender_nameだけを設定しても、署名やそのソースは変わりません。"
       }
     },
     "automation_read": {
       "title": "自動化の読み取り",
-      "desc": "無人で動く予約仕分けルールと、その実行状況を確認します。ルールは保存された検索と1つの固定アクションの組み合わせで、決まった間隔で再評価され、モデルは関与しません。メールは照合されるだけで、解釈されることはありません。actionを指定します: 'list' (すべてのルール)、'get' (automation_id。1つのルールの全内容)、'runs' (1つのルールの最近の実行カウンター)、'preview' (ドライラン。フィルターに現在一致するものを報告し、何も適用せず、何も送信せず、重複排除の記録にも何も登録しません)。このツールでルールが変わったり、メールボックスに触れたりすることはありません。ルールの作成と変更は独立したautomationツールで行います。どのアクションにもmanage:automationsが必要です。",
+      "desc": "無人で動く予約仕分けルールと、その実行状況を確認します。ルールは保存された検索と1つの固定アクションの組み合わせで、決まった間隔で再評価され、モデルは関与しません。メールは照合されるだけで、解釈されることはありません。actionを指定します：'list' (すべてのルール)、'get' (automation_id。1つのルールの全内容)、'runs' (1つのルールの最近の実行カウンター)、'preview' (ドライラン。フィルターに現在一致するものを報告し、何も適用せず、何も送信せず、重複排除の記録にも何も登録しません)。このツールでルールが変わったり、メールボックスに触れたりすることはありません。ルールの作成と変更は独立したautomationツールで行います。どのアクションにもmanage:automationsが必要です。",
       "params": {
-        "action": "実行する操作: \"list\"、\"get\"、\"runs\"、\"preview\"。どの引数が使われるかはこれで決まります。4つとも読み取り専用です。",
+        "action": "実行する操作：\"list\"、\"get\"、\"runs\"、\"preview\"。どの引数が使われるかはこれで決まります。4つとも読み取り専用です。",
         "automation_id": "読み取るルールのUUID。automationの'create'または'list'が返したものです。getとrunsでは必須。previewでは任意で、渡すとその場のフィルターではなく保存済みのルールをドライランします。",
         "inbox_id": "プレビューの対象とする受信トレイのUUID。キーに受信トレイが1つだけの場合は省略できます。それ以外の場合は、これかinboxを指定します。",
         "inbox": "受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
-        "filter": "ドライランする検索 (アクション'preview')。email_readの'search'アクションと同じ構造化条件を使います: from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。空のフィルターはメールボックス全体に一致してしまうため、条件が少なくとも1つ必要です。",
-        "max_messages_per_run": "プレビューで報告する一致件数: 1〜200、既定値25。実際の実行で適用される上限と同じなので、ルールが影響する範囲をそのままプレビューで確認できます。",
+        "filter": "ドライランする検索 (アクション'preview')。email_readの'search'アクションと同じ構造化条件を使います：from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。空のフィルターはメールボックス全体に一致してしまうため、条件が少なくとも1つ必要です。",
+        "max_messages_per_run": "プレビューで報告する一致件数：1〜200、既定値25。実際の実行で適用される上限と同じなので、ルールが影響する範囲をそのままプレビューで確認できます。",
         "limit": "アクション'runs'で返す実行の数 (新しい順)。既定値20、最大100。"
       }
     },
     "automation": {
       "title": "自動化",
-      "desc": "無人で動く予約仕分けルールを作成、変更、有効化、無効化、削除します。ルールは保存された検索と1つの固定アクションの組み合わせで、決まった間隔で再評価され、モデルは関与しません。メールは照合されるだけで、解釈されることはありません。actionを指定します: 'create' (name、filter、rule_action、interval_minutes。ルールは常に無効の状態で作成されます)、'update' (automation_idと変更するフィールド)、'enable'、'disable'、'delete' (automation_id。実行履歴は残ります)。ルールの一覧表示、1つのルールの全内容の読み取り、実行履歴の確認、フィルターのドライランは、独立した読み取り専用のautomation_readツールで行います。使えるルールアクションはmove、label (Gmailのラベル、Outlookの分類項目、IMAPのキーワード)、mark_read、forward、draft_replyです。自動化でメールを削除することはできません。転送は受信トレイの承認設定にかかわらず、人の承認を待つために保留されます。例外は、オーナーまたは管理者がダッシュボードの承認不要ルールですべてのアドレスを許可している場合で、このルールはツールやAPIキーからは設定できません。draft_replyは下書きを書くだけです。有効にする前にプレビューしてください。どのアクションにもmanage:automationsが必要です。",
+      "desc": "無人で動く予約仕分けルールを作成、変更、有効化、無効化、削除します。ルールは保存された検索と1つの固定アクションの組み合わせで、決まった間隔で再評価され、モデルは関与しません。メールは照合されるだけで、解釈されることはありません。actionを指定します：'create' (name、filter、rule_action、interval_minutes。ルールは常に無効の状態で作成されます)、'update' (automation_idと変更するフィールド)、'enable'、'disable'、'delete' (automation_id。実行履歴は残ります)。ルールの一覧表示、1つのルールの全内容の読み取り、実行履歴の確認、フィルターのドライランは、独立した読み取り専用のautomation_readツールで行います。使えるルールアクションはmove、label (Gmailのラベル、Outlookの分類項目、IMAPのキーワード)、mark_read、forward、draft_replyです。自動化でメールを削除することはできません。転送は受信トレイの承認設定にかかわらず、人の承認を待つために保留されます。例外は、オーナーまたは管理者がダッシュボードの承認不要ルールですべてのアドレスを許可している場合で、このルールはツールやAPIキーからは設定できません。draft_replyは下書きを書くだけです。有効にする前にプレビューしてください。どのアクションにもmanage:automationsが必要です。",
       "params": {
-        "action": "実行する操作: \"create\"、\"update\"、\"enable\"、\"disable\"、\"delete\"。どの引数が使われるかはこれで決まります。ルールの読み取りとフィルターのプレビューは独立したautomation_readツールで行います。",
+        "action": "実行する操作：\"create\"、\"update\"、\"enable\"、\"disable\"、\"delete\"。どの引数が使われるかはこれで決まります。ルールの読み取りとフィルターのプレビューは独立したautomation_readツールで行います。",
         "automation_id": "対象のルールのUUID。'create'またはautomation_readの'list'が返したものです。update、enable、disable、deleteでは必須。",
         "inbox_id": "ルールが監視する受信トレイのUUID (アクション'create')。キーに受信トレイが1つだけの場合は省略できます。それ以外の場合は、これかinboxを指定します。",
         "inbox": "受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "name": "ルールの分かりやすい名前。1〜80文字。'create'では必須。",
-        "filter": "保存する検索。email_readの'search'アクションと同じ構造化条件を使います: from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。空のフィルターはメールボックス全体に一致してしまうため、条件が少なくとも1つ必要です。プロバイダー固有の生のクエリ文字列はここでは使えません。ルールは何か月も無人で再実行されるため、何も検証しない独自構文の生の文字列は受け付けません。",
+        "filter": "保存する検索。email_readの'search'アクションと同じ構造化条件を使います：from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before。空のフィルターはメールボックス全体に一致してしまうため、条件が少なくとも1つ必要です。プロバイダー固有の生のクエリ文字列はここでは使えません。ルールは何か月も無人で再実行されるため、何も検証しない独自構文の生の文字列は受け付けません。",
         "rule_action": "一致したすべてのメッセージに適用する1つの固定アクション。typeを持つタグ付きオブジェクトで、typeはmove (とfolder)、label (とlabel。Gmailのラベル、Outlookの分類項目、IMAPのキーワードとして書き込まれます)、mark_read、forward (とto、任意のnote)、draft_reply (とtemplate) のいずれかです。actionはすでに操作の選択に使われているため、rule_actionという名前になっています。削除に当たるアクションはなく、指定すると無視されるのではなく拒否されます。転送は、人がダッシュボードで設定した承認不要ルールがすべてのアドレスをカバーしていない限り承認待ちとして保留され、draft_replyは下書きを書くだけです。テンプレートで置き換えられるのは'{{sender_name}}'、'{{sender_email}}'、'{{subject}}'、'{{date}}'だけで、それぞれHTMLエスケープされます。それ以外はすべてそのままのテキストとして扱われ、メッセージ本文が差し込まれることはありません。",
         "interval_minutes": "実行間隔 (分)。15、30、60、180、360、720、1440の固定の段階から選びます。'create'では必須。自由な整数ではなく段階制にしているのは、1分ごとのルールがプロバイダーに負荷をかけてレート制限を招くのを防ぐためです。",
-        "max_messages_per_run": "1回の実行で処理できる一致メッセージの数: 1〜200、既定値25。これが影響範囲となり、人が実行ログを読む前に、誤ったフィルターが触れられるメールの量を制限します。"
+        "max_messages_per_run": "1回の実行で処理できる一致メッセージの数：1〜200、既定値25。これが影響範囲となり、人が実行ログを読む前に、誤ったフィルターが触れられるメールの量を制限します。"
       }
     },
     "contact_search": {
@@ -423,7 +423,7 @@
       "title": "下書きの読み取り",
       "desc": "未送信の下書き1件の現在の内容 (宛先、件名、body_text、添付ファイル名) を返します。下書きを修正する前に呼び出してください。エージェントが最後に書いたあとに、ユーザーが下書きエディターカードで編集、保存、送信している可能性があるためです。すでに送信された下書きの場合は、送信済みであることが返ります。読み取り専用で、何も書き込まず、何も送信しません。read:emailとmanage:draftsの両方が必要です。下書きの内容は他人が送ったメッセージに由来することがあるため、結果にはuntrusted_contentが付き、指示ではなくデータとして扱われます。",
       "params": {
-        "inbox_id": "下書きがある受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。",
+        "inbox_id": "下書きがある受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "draft_id": "読み取る下書きのID。draft_listまたはdraftツールの結果から取得します。"
       }
@@ -432,7 +432,7 @@
       "title": "下書きエディターを隠す",
       "desc": "ユーザーの求めに応じて、チャット内の下書きエディターカードを1つの受信トレイまたはワークスペース全体で非表示にするか、再表示します。表示上の設定にすぎず、下書き、送信、その他のツールはすべてそのまま動作し、下書きの結果はプレーンテキストで返ります。カードを再表示するにはhidden: falseを渡します。ワークスペース単位の変更はすべてのメンバーに適用されるため、ワークスペースのオーナーまたは管理者である必要があります。manage:draftsが必要です。",
       "params": {
-        "inbox_id": "設定を適用する受信トレイのUUID。省略可能: キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。",
+        "inbox_id": "設定を適用する受信トレイのUUID。省略可能：キーに受信トレイが1つだけの場合は自動で決まります。それ以外の場合は、これかinboxを指定します。",
         "inbox": "使用する受信トレイのメールアドレス。inbox_idの代わりに使える分かりやすい指定方法です。省略可能。inbox_idを指定した場合は無視されます。",
         "scope": "\"inbox\"はこの受信トレイだけのカードを変更し、\"workspace\"はワークスペース内のすべての受信トレイのカードを変更します (オーナーまたは管理者のみ)。",
         "hidden": "trueでカードを非表示にします (既定値)。falseで再表示します。"
@@ -496,11 +496,11 @@
     "rows": {
       "auth": "APIキーがない、形式が不正、失効済み、または期限切れ (HTTP 401)。",
       "scope": "キーは有効だが、呼び出したツールアクションに必要なスコープがない (HTTP 403)。data.error_codeは\"insufficient_scope\"で、data.required_scopesに呼び出しを許可するのに必要なスコープが示されます。OAuthクライアントが権限を引き上げられるよう、WWW-Authenticateヘッダーでも同じ内容が返ります。",
-      "method": "不明なJSON-RPCメソッド (例: initialize、tools/list、tools/call以外のメソッドの呼び出し)",
+      "method": "不明なJSON-RPCメソッド (例：initialize、tools/list、tools/call以外のメソッドの呼び出し)",
       "param": "不明なツール名、またはtools/callのパラメーターが欠落/無効",
       "rate": "キーごとまたはワークスペースごとのレート制限を超過 (HTTP 429)。data.error_codeは常に\"rate_limit_exceeded\"です。再試行する前に、data.retry_afterの秒数だけ待つか、Retry-Afterヘッダーを確認してください。",
       "tool": "ツールは実行されたがエラーが発生 (受信トレイが見つからない、メッセージが見つからない、プロバイダーの認証失敗、無効な宛先、添付ファイルが大きすぎる、プロバイダーの5xx)。エラーの説明はcontent[0].textに入ります。",
-      "cap": "ワークスペースがメールアクションの月間上限を使い切った状態です。Freeでは暦月あたり150回で、新規登録後の最初の3日間はカウントされません。Personal、Pro、Businessはフェアユースの範囲でメールアクションが無制限です。JSON-RPCエラーではなく、isError: trueを含む通常のツール結果として返ります。content[0].textは件数とリセット日 (翌月1日、UTC) から始まり、_meta[\"com.mcpemails/usage_limit\"]にerror_code \"usage_limit_reached\"とreset_atが入ります。inbox_listは引き続き使えます。reset_atより前に再試行しても成功しません。"
+      "cap": "ワークスペースがメール操作の月間上限を使い切った状態です。Freeでは暦月あたり150件で、新規登録後の最初の3日間はカウントされません。Personal、Pro、Businessはフェアユースの範囲でメールアクションが無制限です。JSON-RPCエラーではなく、isError: trueを含む通常のツール結果として返ります。content[0].textは件数とリセット日 (翌月1日、UTC) から始まり、_meta[\"com.mcpemails/usage_limit\"]にerror_code \"usage_limit_reached\"とreset_atが入ります。inbox_listは引き続き使えます。reset_atより前に再試行しても成功しません。"
     }
   },
   "rateLimits": {
@@ -513,14 +513,14 @@
     "planHeading": "Free 60 / 分 · Personal 120 / 分 · Pro 300 / 分 · Business 1,000 / 分",
     "planBody": "ワークスペースごとのフェアユースのバースト制限で、すべてのAPIキーの合計に適用されます。超えると、呼び出しはエラーコード<code>-32003</code>と<code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code>、<code>data.retry_after</code>のカウントダウン (秒) を返します。Personal、Pro、Businessでは上限が引き上げられます。",
     "capTag": "月間上限",
-    "capHeading": "Free 月150回のメールアクション · Personal、Pro、Businessは無制限",
-    "capBody": "Freeのワークスペースでは、暦月 (UTC) あたり150回のメールアクションを使えます。新規登録後の最初の3日間は何もカウントされず、<code>inbox_list</code>とダッシュボードは常にカウントされません。Personal、Pro、Businessはフェアユースの範囲でメールアクションが無制限です。上限に達してもJSON-RPCエラーにはならず、呼び出しは<code>isError: true</code>を含む通常のツール結果とともにHTTP 200を返します。<code>content[0].text</code>のテキストは件数とリセット日 (翌月1日) から始まり、再試行しても解決しないことが記載されています。<code>_meta[\"com.mcpemails/usage_limit\"]</code>には<code>error_code: \"usage_limit_reached\"</code>と<code>reset_at</code>が入ります。<code>retry_after</code>はありません。リセットまでほかのメールアクションはすべて拒否され、無人の自動化は一時停止して1日に自動で再開します。ワークスペースのオーナーには80%と100%の時点でメールが届きます。バックオフではなく停止として扱ってください。",
+    "capHeading": "Free 月150件のメール操作 · Personal、Pro、Businessは無制限",
+    "capBody": "Freeのワークスペースでは、暦月 (UTC) あたり150件のメール操作を使えます。新規登録後の最初の3日間は何もカウントされず、<code>inbox_list</code>とダッシュボードは常にカウントされません。Personal、Pro、Businessはフェアユースの範囲でメールアクションが無制限です。上限に達してもJSON-RPCエラーにはならず、呼び出しは<code>isError: true</code>を含む通常のツール結果とともにHTTP 200を返します。<code>content[0].text</code>のテキストは件数とリセット日 (翌月1日) から始まり、再試行しても解決しないことが記載されています。<code>_meta[\"com.mcpemails/usage_limit\"]</code>には<code>error_code: \"usage_limit_reached\"</code>と<code>reset_at</code>が入ります。<code>retry_after</code>はありません。リセットまでほかのメールアクションはすべて拒否され、無人の自動化は一時停止して1日に自動で再開します。ワークスペースのオーナーには80%と100%の時点でメールが届きます。バックオフではなく停止として扱ってください。",
     "retryTag": "安全な再試行",
     "retryHeading": "retry_afterを必ず守り、送信をむやみに再試行しない",
     "retryBody": "<code>rate_limit_exceeded</code>エラーでは、再試行の前に<code>data.retry_after</code>の秒数だけ待ってください。<code>provider_error</code>には指数バックオフを使います。<code>provider_error</code>のときに<code>email_compose</code>の送信を自動で再試行しないでください。メッセージがすでにプロバイダーに受け付けられている可能性があります。<code>usage_limit_reached</code>は決して再試行しないでください。解除されるのは<code>reset_at</code>の時点だけです。"
   },
   "cta": {
-    "heading": "受信トレイを接続する準備はできましたか?",
+    "heading": "受信トレイを接続する準備はできましたか？",
     "sub": "まずはFreeプランから。接続できる受信トレイは1つ、期限なし、カード登録は不要です。Personalは3つのメールボックス、Proは最大10個を接続でき、Businessではメンバー、ロール、クライアントごとのワークスペースが加わります。",
     "primary": "無料で始める",
     "secondary": "料金を見る"
@@ -528,7 +528,7 @@
   "providers": {
     "meta": {
       "title": "AIエージェント向けメールプロバイダー互換性 (Gmail、Outlook、iCloud、Yahoo、Zoho)",
-      "description": "MCP経由でAIエージェントと連携できるメールプロバイダーと、それぞれの接続に必要なもの: OAuthまたはアプリ専用パスワード、IMAPとSMTPのホストとポート、TLSまたはSTARTTLS、よくある不具合、接続後にエージェントができること。Gmail、Fastmail、iCloudメール、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365、汎用IMAPに対応しています。"
+      "description": "MCP経由でAIエージェントと連携できるメールプロバイダーと、それぞれの接続に必要なもの：OAuthまたはアプリ専用パスワード、IMAPとSMTPのホストとポート、TLSまたはSTARTTLS、よくある不具合、接続後にエージェントができること。Gmail、Fastmail、iCloudメール、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365、汎用IMAPに対応しています。"
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",
@@ -591,16 +591,16 @@
     },
     "notes": {
       "gmail": "<b>Gmailのフォルダーとラベル:</b> Gmailは階層型のフォルダーではなく、フラットなラベルの仕組みを使います。「移動」はラベルの追加/削除として実装されています。Gmail REST APIではネイティブのコピーは使えません。これらのGmailの行はGmail APIコネクタについてのものです。アプリ パスワードを使ってIMAPで接続したGmailメールボックスは、コピーを含めてIMAPの列に従います。",
-      "outlook": "<b>Outlook (Microsoft Graph):</b> 検索にはKQLを使います。テキスト条件 (from、to、cc、subject、body、text、query) は、unread、has_attachment、flagged、日付のフィルターと組み合わせられません。両方を送った場合、それらのフィルターは適用されず、どれが外されたかが結果に示されます。一致するすべてに作用するツールでは、代わりにその組み合わせが拒否されます。Outlookにはラベルではなくフォルダーがあるため、ラベル用のツールはGmail専用です。自動化のlabelアクションはOutlookの分類項目を適用します。添付ファイル: 送信時はメッセージあたり最大10 MB、添付ファイルのダウンロードや元のメッセージの転送では最大25 MBです。",
+      "outlook": "<b>Outlook (Microsoft Graph):</b> 検索にはKQLを使います。テキスト条件 (from、to、cc、subject、body、text、query) は、unread、has_attachment、flagged、日付のフィルターと組み合わせられません。両方を送った場合、それらのフィルターは適用されず、どれが外されたかが結果に示されます。一致するすべてに作用するツールでは、代わりにその組み合わせが拒否されます。Outlookにはラベルではなくフォルダーがあるため、ラベル用のツールはGmail専用です。自動化のlabelアクションはOutlookの分類項目を適用します。添付ファイル：送信時はメッセージあたり最大10 MB、添付ファイルのダウンロードや元のメッセージの転送では最大25 MBです。",
       "permanentDelete": "<b>完全削除:</b> Gmail APIでは、削除したメッセージはゴミ箱に移動し、完全なexpungeは提供されていません。Microsoft Graphでは可能で、Outlookの受信トレイでpermanent: trueを指定するとpermanentDeleteを使い、削除済みアイテムを経由しません。すべてのIMAP受信トレイ (アプリ パスワードのGmail、Fastmail、iCloud、Yahoo、Zoho、Yandex、汎用) は、ゴミ箱への移動と完全なexpungeの両方に対応しています。",
       "contacts_db": "<b>連絡先の検索 (ライブスキャン):</b> すべてのプロバイダーが<code>contact_search</code>に対応しています。一致するメールの最近の範囲をヘッダーのみでその場でスキャンし、一致するやり取りの相手を見つけます。連絡先テーブルはありません。呼び出しの間に何も保存されず、件数はスキャンした範囲で一致したメッセージだけを反映します。",
       "scheduling": "<b>予約送信:</b> サーバー側の<code>scheduled_sends</code>キューにより、すべてのプロバイダーで利用できます。<code>schedule</code>ツールの<code>create</code>、<code>list</code>、<code>cancel</code>アクションを使います。配信には各プロバイダーの既存の送信経路を使うため、プロバイダー独自の予約送信APIは必要ありません。",
-      "signatures": "<b>署名:</b> 受信トレイごとの署名が、すべての送信、返信、転送、下書き、予約メッセージにサーバー側で追加されます。これは<b>すべての</b>プロバイダーで動作します。署名はリッチなHTMLの書式 (太字、斜体、見出し、リスト、色、配置、リンク) とホスト済みのロゴ/画像に対応しています。ダッシュボードのリッチエディターか、<code>signature</code> MCPツール (<code>signature_html</code>を受け付けます) で設定します。画像はホスト済みのhttps URLで参照され、どのプロバイダーでも表示されます。ただし一部のクライアント (例: Gmail) では、受信者が「画像を表示」をクリックするまで非表示になることがあります。これはホスト済み画像を使う署名では一般的な動作です。返信と転送に署名を表示するかどうかは<code>signature_reply_mode</code>で制御します。呼び出しごとに省くには、<code>email_compose</code>または<code>draft</code>で<code>include_signature: false</code>を渡します。ダッシュボードの同じ受信トレイパネルには送信者名のフィールドもあり、受信トレイが送るすべてのメールでアドレスの横に表示される名前を設定できます。",
+      "signatures": "<b>署名:</b> 受信トレイごとの署名が、すべての送信、返信、転送、下書き、予約メッセージにサーバー側で追加されます。これは<b>すべての</b>プロバイダーで動作します。署名はリッチなHTMLの書式 (太字、斜体、見出し、リスト、色、配置、リンク) とホスト済みのロゴ/画像に対応しています。ダッシュボードのリッチエディターか、<code>signature</code> MCPツール (<code>signature_html</code>を受け付けます) で設定します。画像はホスト済みのhttps URLで参照され、どのプロバイダーでも表示されます。ただし一部のクライアント (例：Gmail) では、受信者が「画像を表示」をクリックするまで非表示になることがあります。これはホスト済み画像を使う署名では一般的な動作です。返信と転送に署名を表示するかどうかは<code>signature_reply_mode</code>で制御します。呼び出しごとに省くには、<code>email_compose</code>または<code>draft</code>で<code>include_signature: false</code>を渡します。ダッシュボードの同じ受信トレイパネルには送信者名のフィールドもあり、受信トレイが送るすべてのメールでアドレスの横に表示される名前を設定できます。",
       "forward": "<b>転送:</b> どのプロバイダーでも、転送は元のメッセージをバイト単位でそのまま中継します。HTML、インライン画像、添付ファイル、MIME構造が、送信されたときのまま、あなたのメモと通常の転送ヘッダーの下に届きます。元のメッセージは最大25 MBまでです。<code>as_attachment</code>を使うと元のメッセージ全体を.emlパートとして送り、<code>include_attachments: false</code>では添付ファイルを含めません。"
     },
     "cta": {
-      "heading": "受信トレイを接続する準備はできましたか?",
-      "sub": "Freeプラン: 接続できる受信トレイは1つ、期限なし、カード登録は不要です。",
+      "heading": "受信トレイを接続する準備はできましたか？",
+      "sub": "Freeプラン：接続できる受信トレイは1つ、期限なし、カード登録は不要です。",
       "primary": "無料で始める",
       "secondary": "ドキュメントを読む"
     },
@@ -649,7 +649,7 @@
     },
     "capabilities": {
       "title": "接続後にエージェントができること",
-      "lead": "MCPクライアントがプロバイダーごとに実行できる操作: 読み取り、検索、送信、返信、転送、移動、フラグ、フォルダー、下書き、予約送信、添付ファイル。"
+      "lead": "MCPクライアントがプロバイダーごとに実行できる操作：読み取り、検索、送信、返信、転送、移動、フラグ、フォルダー、下書き、予約送信、添付ファイル。"
     }
   }
 }

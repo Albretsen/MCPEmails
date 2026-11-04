@@ -17,14 +17,14 @@
       "starttls": "STARTTLS",
       "plain": "なし"
     },
-    "verified": "{date}に検証: {host}はTLS接続に応答し、この名前でIMAPサーバーであると名乗りました。",
+    "verified": "{date}に検証：{host}はTLS接続に応答し、この名前でIMAPサーバーであると名乗りました。",
     "mechs": "認証方式として{mechs}を提示しています。",
-    "username": "ログインに使うもの:"
+    "username": "ログインに使うもの："
   },
   "caps": {
     "eyebrow": "AIにできること",
     "title": "エージェントが実際に使える{provider}の受信トレイ",
-    "sub": "{toolCount}個のアクション型MCPツール: 送信、返信、転送、予約送信、整理。エージェントは{provider}の中で作業を完了します。"
+    "sub": "{toolCount}個のアクション型MCPツール：送信、返信、転送、予約送信、整理。エージェントは{provider}の中で作業を完了します。"
   },
   "capabilities": [
     {
@@ -71,7 +71,7 @@
     "all": "対応しているメールプロバイダーをすべて見る"
   },
   "matrix": {
-    "intro": "まずプロバイダーを比較しますか",
+    "intro": "まずプロバイダーを比較しますか？",
     "label": "メールプロバイダーの互換性マトリクスを見る"
   },
   "verificationNote": {

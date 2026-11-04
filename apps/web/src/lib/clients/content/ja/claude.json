@@ -7,7 +7,7 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "メールをClaudeに接続する: Gmail、Outlook、IMAPのMCP設定",
+    "title": "メールをClaudeに接続する：Gmail、Outlook、IMAPのMCP設定",
     "description": "claude.aiとClaude Desktopにカスタムコネクタとして本物の受信トレイを追加。URLを1つ貼り付けてOAuthで認可すれば、Claudeがメールの閲覧、検索、送信、予約送信をできます。受信トレイ1つは無料。"
   },
   "hero": {
@@ -21,7 +21,7 @@
     "answer": "claude.aiまたはClaude Desktopで「カスタマイズ」、「コネクタ」を開き、「+ 追加」、「カスタムコネクタを追加」の順にクリックします。名前をMCPEmailsにし、https://mcpemails.com/api/mcpを貼り付けて「続行」をクリックし、検出されたログイン設定をそのままにして「追加」をクリックし、MCPEmailsでログインします。作成するAPIキーも、編集する設定ファイルもありません。"
   },
   "method": {
-    "title": "Claudeの接続方法: OAuth、APIキー不要",
+    "title": "Claudeの接続方法：OAuth、APIキー不要",
     "body": "Claudeはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するので作成するクライアントIDはなく、S256を使った<b>認可コード＋PKCE</b>で認可します。クライアントシークレットは一切送信されず、トークンには私たちの同意画面であなたが承認したスコープだけが含まれます。受け取るアクセストークンは1時間有効で自動更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名で表示され、接続の取り消しもそこで行います。"
   },
   "answerSection": {
@@ -80,7 +80,7 @@
     },
     {
       "q": "この方法でClaudeはどのメールボックスに届きますか？",
-      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で（職場アカウントではIT管理者がアプリを一度承認する必要がある場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ用のパスワードで。そして標準ポートでIMAPとSMTPを話す他のあらゆるメールボックス。クライアントはそれらすべてを同じ接続で見ます。エージェントはまずinbox_listを呼んで接続済みの全メールボックスとそのidを見つけるので、どこかにUUIDを貼り付ける必要はありません。"
+      "a": "Outlook.comとMicrosoft 365は「Microsoftでサインイン」で（職場アカウントではIT管理者がアプリを一度承認する必要がある場合があります）。Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ パスワードで。そして標準ポートでIMAPとSMTPを話す他のあらゆるメールボックス。クライアントはそれらすべてを同じ接続で見ます。エージェントはまずinbox_listを呼んで接続済みの全メールボックスとそのidを見つけるので、どこかにUUIDを貼り付ける必要はありません。"
     },
     {
       "q": "Claudeは私に見えないところでメールを送れますか？",

@@ -25,7 +25,7 @@
     "answer": "はい。MCPEmailsはホスト型のMCPサーバーで、outlook.com、hotmail.com、live.com、msn.comで終わる個人のMicrosoftアカウントをMicrosoft Graph経由で接続します。「Microsoftで接続」をクリックしてサインインし、Microsoftの同意画面でアクセスを承認します。その画面でMCPEmailsは確認済み発行元として表示されます。アプリ パスワードもIMAP設定の入力もなく、個人アカウントでは管理者も関与しません。URLを1つClaude、ChatGPT、Cursor、その他のMCPクライアントに貼り付ければ、エージェントがメールの閲覧、検索、送信、返信、転送、予約送信、振り分けをできるようになります。受信トレイ1つはずっと無料です。"
   },
   "method": {
-    "title": "Outlook.comの接続方法: Microsoftでサインイン",
+    "title": "Outlook.comの接続方法：Microsoftでサインイン",
     "body": "Outlook.comはIMAPではなく、OAuth 2.0を使って<b>Microsoft Graph</b>経由で接続します。Microsoft自身のページでサインインし、短い権限のリストを承認します。メールの読み取りと変更（<b>Mail.ReadWrite</b>）、メールの送信（<b>Mail.Send</b>）、接続の維持（<b>offline_access</b>）、基本プロフィールとメールアドレスです。Microsoftのパスワードを入力するのはMicrosoftのページだけで、私たちには届きません。切断するには、MCPEmailsで受信トレイを削除するか、Microsoftアカウントにアクセスできるアプリの一覧からMCPEmailsを削除してください。"
   },
   "setup": [

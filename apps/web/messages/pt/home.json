@@ -175,6 +175,7 @@
     "readFull": "Ler a avaliação completa"
   },
   "pricing": {
+    "mostPopular": "Mais popular",
     "eyebrow": "Preços",
     "title": "Preço por caixa de entrada. Sem medição nos planos pagos.",
     "sub": "O Free conecta uma caixa de entrada com 150 ações de e-mail por mês. O Personal conecta três. O Pro conecta até 10 para uma pessoa que toca um negócio. O Business inclui 10 caixas de correio, cobra $3 por mês por cada extra e tem espaço para toda a sua equipe.",
@@ -218,7 +219,7 @@
           "Limite de pico 5x maior",
           "Histórico de análise mais longo",
           "Lembretes de acompanhamento quando ninguém responde ao e-mail que você enviou",
-          "Soneca: o e-mail sai da caixa de entrada e volta quando você escolher",
+          "Adiar: o e-mail sai da caixa de entrada e volta quando você escolher",
           "Um resumo matinal diário, colocado direto na sua caixa de entrada",
           "Pesquisa em todas as caixas de entrada conectadas de uma vez",
           "Instruções para a sua IA, por caixa de entrada"

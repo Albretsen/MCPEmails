@@ -20,7 +20,7 @@
     "answer": "ダッシュボードで作成したAPIキーを入れたAuthorization Bearerヘッダーを付けて、https://mcpemails.com/api/mcpにJSON-RPC 2.0をPOSTします。対応メソッドはinitialize、tools/list、tools/call、prompts/list、prompts/getです。"
   },
   "method": {
-    "title": "スクリプトやHTTPクライアントの接続方法: スコープ付きAPIキー",
+    "title": "スクリプトやHTTPクライアントの接続方法：スコープ付きAPIキー",
     "body": "スクリプトやHTTPクライアントはリモートMCPサーバーに対してOAuthのブラウザーフローを実行しないため、代わりにBearerトークンで認証します。ダッシュボードでAPIキーを作成し、エージェントに必要なスコープだけを選んで、スクリプトやHTTPクライアントから<code>Authorization: Bearer</code>ヘッダーとして送ります。キーによる接続とOAuthによる接続は同じエンドポイントにつながり、使えるツールも同じです。違うのはトークンの取得方法だけです。"
   },
   "setup": [
@@ -30,7 +30,7 @@
     },
     {
       "h": "スコープ付きAPIキーを作成",
-      "p": "ダッシュボードの「APIキー」でCreate key（キーを作成）をクリックします。名前を付け、このエージェントに必要なスコープだけを選びます: <code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、表示されるのは一度だけです。ダイアログを閉じる前にコピーしてください。"
+      "p": "ダッシュボードの「APIキー」でCreate key（キーを作成）をクリックします。名前を付け、このエージェントに必要なスコープだけを選びます：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code>、<code>manage:automations</code>。キーは<code>mcpe_</code>に続く16進数64文字の形式で、表示されるのは一度だけです。ダイアログを閉じる前にコピーしてください。"
     },
     {
       "h": "エンドポイントを呼び出す",

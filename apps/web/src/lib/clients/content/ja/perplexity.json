@@ -11,7 +11,7 @@
     "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
   ],
   "meta": {
-    "title": "Perplexityにメールを接続: カスタムMCPコネクタの設定",
+    "title": "Perplexityにメールを接続：カスタムMCPコネクタの設定",
     "description": "カスタムリモートコネクタで、Perplexityに本物の受信トレイを追加できます。URLを1つ貼り付けてOAuthを選び、ログインするだけ。APIキーは不要です。Pro、Max、Enterpriseで使えます。"
   },
   "hero": {
@@ -25,7 +25,7 @@
     "answer": "PerplexityのPro、Max、Enterpriseプランで「Plugins」を開き、「Add custom」、「Connector」、「Add MCP connector」の順に選びます。「Remote」を選んで「MCP Server URL」にhttps://mcpemails.com/api/mcpを貼り付け、「Authentication」でOAuthを選んで「Add」をクリックします。最後にコネクタのカードをクリックしてMCPEmailsにログインします。"
   },
   "method": {
-    "title": "Perplexityの接続方法: OAuth、APIキー不要",
+    "title": "Perplexityの接続方法：OAuth、APIキー不要",
     "body": "Perplexityのカスタムリモートコネクタは、ディスカバリー付きのOAuth 2.0に対応しています。MCPEmailsはエンドポイントを<code>/.well-known/oauth-authorization-server</code>で公開しています。Perplexityは<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、Client IDやClient Secretを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。トークンには同意画面で承認したスコープだけが含まれます。アクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

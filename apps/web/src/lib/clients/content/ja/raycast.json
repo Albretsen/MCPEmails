@@ -5,7 +5,7 @@
     "https://manual.raycast.com/ai/model-context-protocol"
   ],
   "meta": {
-    "title": "Raycast AIにメールを接続: MCPサーバーの設定",
+    "title": "Raycast AIにメールを接続：MCPサーバーの設定",
     "description": "Raycast AIに本物の受信トレイを追加できます。Install MCP Serverを実行し、TransportをHTTPにしてURLを1つ貼り付け、ログインするだけ。APIキーは不要です。受信トレイ1つは無料。"
   },
   "hero": {
@@ -19,7 +19,7 @@
     "answer": "RaycastでInstall MCP Serverコマンドを実行し、TransportをHTTPにしてhttps://mcpemails.com/api/mcpを貼り付けてインストールします。そのあとSign Inをクリックし、MCPEmailsで承認します。"
   },
   "method": {
-    "title": "Raycastの接続方法: OAuth、APIキー不要",
+    "title": "Raycastの接続方法：OAuth、APIキー不要",
     "body": "Raycastはこのサーバーに対して標準のMCP OAuthフローを実行します。<b>RFC 7591の動的クライアント登録</b>で自身を登録するため、クライアントIDを作成する必要はなく、S256による<b>認可コードとPKCE</b>で認可します。クライアントシークレットが送信されることはなく、トークンには同意画面で承認したスコープだけが含まれます。取得したアクセストークンの有効期間は1時間で、自動で更新されます。ダッシュボードの「APIキー」に<code>OAuth:</code>とクライアント名の形で表示され、そこから接続を取り消せます。"
   },
   "setup": [

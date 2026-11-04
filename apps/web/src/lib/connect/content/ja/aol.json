@@ -7,7 +7,7 @@
     "method": "app-password",
     "label": "アプリ パスワード",
     "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
-    "usernameForm": "ドメインを含むAOLアドレス全体（例: name@aol.com）。古いaim.comや国別のAOLアドレスも同じ形式です。",
+    "usernameForm": "ドメインを含むAOLアドレス全体（例：name@aol.com）。古いaim.comや国別のAOLアドレスも同じ形式です。",
     "status": "active"
   },
   "meta": {
@@ -25,7 +25,7 @@
     "answer": "ClaudeはそのままではAOL Mailにアクセスできません。MCPEmailsはホスト型のMCPサーバーで、アプリ パスワードを使ってIMAPで接続するので、Claude、CursorなどのMCPクライアントからメールの閲覧、検索、送信、整理ができます。設定は数分で終わり、受信トレイ1つは無料です。"
   },
   "method": {
-    "title": "AOL Mailの接続方法: IMAPとアプリ パスワード",
+    "title": "AOL Mailの接続方法：IMAPとアプリ パスワード",
     "body": "AOL MailはIMAP/SMTPを通じて<b>AOLのアプリ パスワード</b>で接続します。通常のAOLパスワードではメールクライアントの認証ができないため、ここでログインが拒否される原因はほぼ必ずアプリ パスワードがないことです。2-Step Verification（2段階認証）をオンにし、Account Info、Account Securityでアプリ パスワードを生成して、AOLアドレス全体と一緒にMCPEmailsに貼り付けてください。"
   },
   "setup": [

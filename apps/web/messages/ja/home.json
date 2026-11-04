@@ -33,7 +33,7 @@
       "serverSub": "/api/mcpエンドポイント",
       "provider": "お使いのプロバイダー",
       "providerSub": "Gmail · Outlook · iCloud · IMAP",
-      "logCalls": "エージェントが呼び出し",
+      "logCalls": "エージェントの呼び出し",
       "logReturns": "受信トレイIDを返却、ダッシュボードからのコピペ不要",
       "logFetches": "MCPEmailsがプロバイダーからその場で取得",
       "logResult": "20件のメッセージを返却",
@@ -175,6 +175,7 @@
     "readFull": "レビュー全文を読む"
   },
   "pricing": {
+    "mostPopular": "人気No.1",
     "eyebrow": "料金",
     "title": "受信トレイ数で決まる料金。有料プランに従量課金はありません。",
     "sub": "Freeは受信トレイ1件、月150件のメール操作まで。Personalは3件。Proは事業を営む1人のために最大10件。Businessはメールボックス10件を含み、追加は1件につき月$3で、チーム全員分の余裕があります。",
