@@ -88,7 +88,7 @@
   },
   "enterprise": {
     "title": "エンタープライズ：ご相談ください",
-    "body": "DPA、請求書払い、IT管理者によるMicrosoft 365承認のサポート。<contact>hello@mcpemails.com</contact>までご連絡ください。"
+    "body": "<dpa>DPA</dpa>、請求書払い、IT管理者によるMicrosoft 365承認のサポート。<contact>hello@mcpemails.com</contact>までご連絡ください。"
   },
   "comparison": {
     "eyebrow": "完全比較",

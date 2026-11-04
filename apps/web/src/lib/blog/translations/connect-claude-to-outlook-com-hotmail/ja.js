@@ -88,7 +88,7 @@ MCPEmailsは新着メールをClaudeに自動で送りません。Claudeは依�
 
 ## Outlook.comのメールはどこかに保存されますか？
 
-いいえ。Claudeがメッセージを要求するたびに、MCPEmailsはMicrosoftからその場で取得してClaudeに渡し、そのまま破棄します。受信トレイについて保存されるのは、Microsoftでログインしたときに発行されたOAuthトークンだけで、保存時は暗号化されています。接続を解除するには、MCPEmailsで受信トレイを削除するか、Microsoftアカウントにアクセスできるアプリの一覧からMCPEmailsを削除します。この仕組みは[「メールを一切保存しない」ことが重要な理由](/blog/why-email-never-stored-matters)で、メールの中に隠された指示など注意すべき点は[AIエージェントにメールへのアクセスを許可しても安全か](/blog/is-it-safe-to-give-ai-agent-email-access)で説明しています。
+いいえ。Claudeがメッセージを要求するたびに、MCPEmailsはMicrosoftからその場で取得してClaudeに渡し、そのまま破棄します。受信トレイについて保存されるのは、Microsoftでログインしたときに発行されたOAuthトークン（保存時は暗号化）と、予約して送信を待っているメッセージのように、オンにした機能に必要なわずかな情報です。接続を解除するには、MCPEmailsで受信トレイを削除するか、Microsoftアカウントにアクセスできるアプリの一覧からMCPEmailsを削除します。この仕組みは[「メールを一切保存しない」ことが重要な理由](/blog/why-email-never-stored-matters)で、メールの中に隠された指示など注意すべき点は[AIエージェントにメールへのアクセスを許可しても安全か](/blog/is-it-safe-to-give-ai-agent-email-access)で説明しています。
 
 ## よくある質問
 

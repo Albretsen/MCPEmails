@@ -29,7 +29,7 @@
   "why": {
     "title": "Por que eu criei",
     "p1": "Eu queria meus próprios agentes trabalhando na minha caixa de entrada. Toda opção que encontrei queria primeiro uma cópia dos meus e-mails: sincronizar, indexar, guardar no banco de dados de outra empresa enquanto a conta existisse. Para uma caixa cheia de faturas, contratos e redefinições de senha, é muito a entregar por algo que eu só precisava de vez em quando.",
-    "p2": "Então construí a versão que eu toparia usar. Os e-mails são buscados ao vivo quando seu agente pede e descartados assim que a resposta é enviada, por isso não existe cópia armazenada. A única coisa guardada é a credencial da caixa de e-mail, criptografada em repouso, porque a próxima chamada precisa dela. Uso com meus próprios e-mails todos os dias."
+    "p2": "Então construí a versão que eu toparia usar. Os e-mails são buscados ao vivo quando seu agente pede e descartados assim que a resposta é enviada, por isso não existe cópia armazenada. O que fica guardado por caixa de entrada é a credencial da caixa de e-mail, criptografada em repouso, porque a próxima chamada precisa dela, mais os poucos dados de que um recurso que você ativa precisa, como uma mensagem agendada esperando para sair. Uso com meus próprios e-mails todos os dias."
   },
   "trusting": {
     "title": "Em que você está confiando",

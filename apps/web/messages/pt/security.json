@@ -12,8 +12,8 @@
     "title": "1. A versão curta",
     "intro": "Se você não ler mais nada nesta página:",
     "points": [
-      "O seu e-mail é buscado em tempo real a cada solicitação e descartado no momento em que a resposta é enviada. Não guardamos nenhuma cópia de corpo de mensagem, assunto, anexo ou contato.",
-      "Armazenamos exatamente um dado sensível por caixa de entrada: um token de acesso ou uma senha de app, criptografado com AES-256-GCM, para podermos fazer a próxima chamada que você pedir.",
+      "O seu e-mail é buscado em tempo real a cada solicitação e descartado no momento em que a resposta é enviada. Não guardamos nenhuma cópia dos e-mails que o seu agente lê.",
+      "Por caixa de entrada, armazenamos um token de acesso ou uma senha de app, criptografado com AES-256-GCM, para podermos fazer a próxima chamada que você pedir. Alguns recursos guardam uma pequena parte de uma mensagem enquanto você os usa: envios agendados e retidos, lembretes de acompanhamento e sonecas, e o histórico de execuções das automações. A Seção 2 lista cada um deles.",
       "Nunca treinamos nenhum modelo de IA com o seu e-mail e nunca enviamos o seu e-mail a um modelo escolhido por nós. O seu agente é o único que o lê, sob o seu controle.",
       "O acesso é limitado pela credencial que você configura: as chaves de API podem ser restritas a caixas de entrada selecionadas ou ter permissão para acessar todas as caixas de entrada do espaço de trabalho. Você pode revogar o acesso do provedor a qualquer momento nas configurações do Google, da Microsoft ou do seu provedor.",
       "O código que executa o serviço é público. Você pode lê-lo, auditá-lo ou hospedar tudo por conta própria."
@@ -49,12 +49,22 @@
       {
         "data": "Mensagens que você agenda para depois",
         "accessed": "Retidas até o horário de envio e então enviadas",
-        "stored": "Sim, criptografadas em repouso até o envio e depois mantidas como o seu histórico"
+        "stored": "Sim, criptografadas em repouso até o envio; o conteúdo é apagado 7 dias após o envio"
       },
       {
         "data": "Envios retidos para a sua aprovação",
         "accessed": "Retidos até que um revisor aprove ou rejeite, ou até expirarem após 24 horas",
-        "stored": "Sim, criptografados em repouso e depois mantidos como o seu histórico de aprovações"
+        "stored": "Sim, criptografados em repouso. O conteúdo é apagado 7 dias após a decisão; o registro da aprovação (destinatários e assunto, criptografados) é mantido por 90 dias"
+      },
+      {
+        "data": "Lembretes de acompanhamento e sonecas",
+        "accessed": "Verificados em segundo plano até que o lembrete seja concluído",
+        "stored": "Assunto, remetente e destinatários, criptografados, até que o lembrete seja concluído. Nunca o corpo"
+      },
+      {
+        "data": "Histórico de execuções das automações",
+        "accessed": "Gravado quando uma automação age sobre uma mensagem",
+        "stored": "Remetente e os primeiros 120 caracteres do assunto, por 90 dias. Nunca o corpo"
       },
       {
         "data": "Atividade das chamadas de ferramentas (metadados)",
@@ -62,13 +72,13 @@
         "stored": "Apenas nome da ferramenta, caixa de entrada, data e hora e status. Nenhum conteúdo de e-mail"
       }
     ],
-    "outro": "As exceções deliberadas são mensagens de saída que precisam esperar: uma mensagem que você pede ao agente para agendar e um envio retido para a sua aprovação. Precisamos guardá-las até que sejam enviadas, por isso as armazenamos criptografadas nesse meio-tempo e depois mantemos um registro para o seu histórico."
+    "outro": "As exceções deliberadas são recursos que precisam lembrar parte de uma mensagem: um envio agendado ou retido, um lembrete de acompanhamento ou uma soneca, e o histórico de execuções das automações. Cada um guarda apenas o que precisa, pelo tempo indicado na tabela acima."
   },
   "verify": {
     "title": "3. Você não precisa confiar em mim, pode verificar",
     "p1": "“Uma pessoa qualquer fez isso no vibe coding” é uma preocupação legítima para qualquer ferramenta hospedada que acessa o seu e-mail. A resposta certa não é uma promessa maior. É eliminar a necessidade de você acreditar na minha palavra.",
     "points": [
-      "<b>Leia o código.</b> O servidor que executa o MCPEmails é público no GitHub. Você pode ver exatamente o que ele guarda (um token criptografado) e o que não guarda (os seus e-mails).",
+      "<b>Leia o código.</b> O servidor que executa o MCPEmails é público no GitHub. Você pode ver exatamente o que ele guarda (um token criptografado, mais os registros de recursos listados acima) e o que não guarda (os e-mails que o seu agente lê).",
       "<selfhost><b>Hospede você mesmo.</b></selfhost> Se preferir não usar o serviço hospedado, você pode executar o mesmo código na sua própria infraestrutura, com as suas próprias chaves: uma stack Docker de um único comando está em <selfhost>self-host/</selfhost>.",
       "<b>Use uma conexão restrita e revogável.</b> Você se conecta com OAuth ou com uma senha de app que concede apenas acesso aos e-mails, e pode revogá-la com um clique no seu provedor, sem nenhuma participação minha.",
       "<b>Acompanhe o que ele faz.</b> Cada chamada de ferramenta do seu agente é registrada em um log de atividade que você pode ler, para ver exatamente o que foi acessado e quando."
@@ -81,14 +91,14 @@
     "points": [
       "<b>O acesso às caixas de entrada é configurável.</b> As chaves de API podem ser restritas a caixas de entrada selecionadas ou receber, de forma deliberada, permissão para acessar todas as caixas de entrada de um espaço de trabalho. Uma chave restrita não consegue acessar uma caixa de entrada que não lhe foi concedida.",
       "<b>Ações destrutivas são separadas e sinalizadas.</b> Enviar e excluir são ferramentas próprias, com escopos separados; a exclusão exige <code>confirm: true</code>. Se um cliente mostra ou não uma confirmação ao usuário depende da política desse cliente.",
-      "<b>Privilégio mínimo.</b> As conexões solicitam acesso de leitura e redação de e-mails, não o controle da conta inteira. Mesmo um token totalmente comprometido fica limitado ao escopo que você concedeu.",
+      "<b>Só e-mail.</b> As conexões pedem acesso aos e-mails, nunca à sua conta inteira: nada de agenda, arquivos ou contatos. Dentro dos e-mails o acesso é amplo, porque as ferramentas precisam dele: ler, organizar, excluir e enviar. Com o login do Google, o Gmail também nos deixa ler os seus endereços de “Enviar e-mail como”. O que o seu agente pode fazer com esse acesso é limitado pelas permissões que você concede a cada app de IA ou chave de API e pelas restrições da caixa de entrada.",
       "<b>Limite de taxa.</b> Toda chave tem limite de taxa, então um agente descontrolado ou sequestrado não consegue disparar milhares de ações sem que ninguém perceba."
     ],
     "outro": "Não está resolvido. Está contido: ações irreversíveis têm uma barreira, e os escopos das chaves de API e as restrições de caixa de entrada podem reduzir o raio de impacto."
   },
   "credentials": {
     "title": "5. Como as suas credenciais são protegidas",
-    "intro": "Os seus tokens são o único dado sensível que guardamos, então recebem a proteção mais forte que podemos oferecer:",
+    "intro": "Os tokens e as senhas das suas caixas de entrada são o dado mais sensível que guardamos, então recebem a proteção mais forte que podemos oferecer:",
     "measures": [
       "Todos os dados em trânsito são criptografados com TLS 1.2 ou superior. Conexões que não suportam TLS são recusadas.",
       "Os tokens OAuth e as credenciais IMAP são criptografados em repouso com AES-256-GCM. A chave de criptografia é mantida como um segredo de servidor, separada do banco de dados, e nunca é armazenada junto com os dados criptografados.",
@@ -105,7 +115,7 @@
   },
   "subprocessors": {
     "title": "7. Suboperadores",
-    "intro": "Mantemos curta a lista de empresas que têm contato com algum dado, e cada uma está vinculada a um acordo de processamento de dados. Repare no que não está na lista: nenhum provedor de IA. O MCPEmails não envia o seu e-mail a nenhum modelo próprio. Quem faz isso é o seu agente, sob o seu controle e de acordo com a política de dados do provedor dele.",
+    "intro": "Mantemos curta a lista de empresas que têm contato com algum dado. Cada uma trata dados apenas conforme as nossas instruções, com base em um acordo de processamento de dados ou nos termos padrão de processamento de dados do provedor, e o nosso <dpa>Acordo de Processamento de Dados</dpa> está disponível para clientes que precisarem dele. Repare no que não está na lista: nenhum provedor de IA. O MCPEmails não envia o seu e-mail a nenhum modelo próprio. Quem faz isso é o seu agente, sob o seu controle e de acordo com a política de dados do provedor dele.",
     "thProvider": "Provedor",
     "thPurpose": "Finalidade",
     "thLocation": "Localização",
@@ -126,19 +136,19 @@
         "location": "Alemanha (UE)"
       },
       {
-        "provider": "Stripe",
-        "purpose": "Processamento de pagamentos (somente cobrança, nenhum dado de e-mail)",
-        "location": "EUA; certificação PCI-DSS"
-      },
-      {
         "provider": "Resend",
-        "purpose": "E-mails da conta: recibos, avisos de cobrança, convites, respostas do suporte, links de login e de redefinição de senha",
-        "location": "Enviados a partir da UE (Irlanda); a Resend é uma empresa dos EUA"
+        "purpose": "E-mails da conta, de cobrança e de suporte, e e-mails de marketing se você tiver aceitado (nunca o conteúdo da caixa de correio)",
+        "location": "UE (Irlanda); a Resend Inc. é uma empresa dos EUA"
       },
       {
         "provider": "Migadu",
-        "purpose": "As nossas próprias caixas de correio comerciais, como o nosso endereço de suporte",
-        "location": "Operada a partir da Suíça"
+        "purpose": "As nossas próprias caixas de suporte e noreply (e-mails de cadastro e de senha, mensagens de suporte)",
+        "location": "Suíça / UE"
+      },
+      {
+        "provider": "Stripe",
+        "purpose": "Processamento de pagamentos (somente cobrança, nenhum dado de e-mail)",
+        "location": "EUA; certificação PCI-DSS"
       }
     ]
   },

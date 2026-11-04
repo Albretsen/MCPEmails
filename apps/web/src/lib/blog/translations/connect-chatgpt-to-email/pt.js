@@ -58,9 +58,9 @@ Escolha OAuth, não "sem autenticação". Este servidor recusa chamadas anônima
 
 ## Passo 3: aprovar só os escopos de que você precisa
 
-A tela de consentimento é nossa, não da OpenAI. O primeiro consentimento começa em \`read:email\`, que basta para triagem, resumos e buscas, e deixa toda ação irreversível fora de alcance enquanto você decide até onde ir. Os outros escopos são \`send:email\`, \`search:email\` e \`manage:automations\`.
+A tela de consentimento é nossa, não da OpenAI. Para o ChatGPT, ela abre em **Acesso total**, porque o ChatGPT não volta depois para pedir mais acesso. Se quiser um nível mais restrito, escolha antes de clicar em **Permitir acesso**: **Somente leitura** basta para triagem, resumos e buscas, e deixa toda ação irreversível fora de alcance. **Personalizar permissões** lista as nove permissões (leitura, pesquisa, envio, pastas, exclusão, rascunhos, contatos, agendamento e automações). Por padrão, a tela também deixa todas as caixas de entrada do espaço de trabalho acessíveis, incluindo as que você conectar depois; escolha caixas específicas ali para limitar isso.
 
-Conceder pouco demais tem conserto: uma chamada que precisa de um escopo que seu token não tem volta como 403 com um erro de escopo insuficiente, então o cliente pode pedir consentimento para esse escopo e tentar de novo. O dono de uma caixa de entrada também pode exigir [aprovação humana](/blog/approve-ai-agent-email-sends) no painel, o que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere.
+Conceder pouco demais tem conserto. Quando uma ferramenta precisa de uma permissão que a conexão do ChatGPT não tem, o resultado da ferramenta diz qual está faltando e pede ao ChatGPT que reconecte. O dono de uma caixa de entrada também pode exigir [aprovação humana](/blog/approve-ai-agent-email-sends) no painel, o que segura todo envio, resposta, encaminhamento, envio de rascunho e envio agendado até que uma pessoa libere.
 
 ## Passo 4: dar ao ChatGPT uma primeira tarefa segura
 
