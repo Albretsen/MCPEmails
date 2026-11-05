@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   OUTLOOK_SCOPES,
   shouldForceConsent,
+  outlookAuthorizePrompt,
   classifyMicrosoftAuthError,
   outlookTenant,
   outlookAuthorizeEndpoint,
@@ -33,6 +34,16 @@ test('reconnect forces the consent screen', () => {
   // Re-consent is the only way to pick up a widened scope set: a silent refresh
   // keeps whatever scopes were originally granted.
   assert.equal(shouldForceConsent(true), true);
+});
+
+test('first connect shows the Microsoft account picker', () => {
+  // Without a prompt, Microsoft reuses the account already signed in, so a
+  // person who picked the wrong account fails the same way on every retry.
+  assert.equal(outlookAuthorizePrompt(false), 'select_account');
+});
+
+test('reconnect still forces consent rather than the account picker', () => {
+  assert.equal(outlookAuthorizePrompt(true), 'consent');
 });
 
 // ─── scopes ───────────────────────────────────────────────────────────────────

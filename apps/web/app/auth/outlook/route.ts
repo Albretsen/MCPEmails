@@ -4,7 +4,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
-import { OUTLOOK_SCOPES, outlookAuthorizeEndpoint, shouldForceConsent } from '@/lib/email-providers/outlook-oauth';
+import { OUTLOOK_SCOPES, outlookAuthorizeEndpoint, outlookAuthorizePrompt } from '@/lib/email-providers/outlook-oauth';
 import { ONBOARDING_RETURN_COOKIE, ONBOARDING_RETURN_TTL_SECONDS, onboardingReturnCookieValue } from '@/lib/onboarding/outlook-return';
 
 /**
@@ -133,9 +133,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   // reattaching, which is why the login hint doubles as the reconnect signal.
   const isReconnect = loginHint !== null;
 
-  if (shouldForceConsent(isReconnect)) {
-    params.set('prompt', 'consent');
-  }
+  params.set('prompt', outlookAuthorizePrompt(isReconnect));
   if (loginHint) {
     params.set('login_hint', loginHint);
   }
