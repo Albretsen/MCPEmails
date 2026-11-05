@@ -44,6 +44,24 @@ export function shouldForceConsent(isReconnect: boolean): boolean {
   return isReconnect;
 }
 
+/**
+ * The `prompt` value for an Outlook authorization request.
+ *
+ * Reconnect: `consent` (see `shouldForceConsent`), with a login_hint naming the
+ * address being reattached.
+ *
+ * First connect: `select_account`. Without any prompt Microsoft silently signs
+ * the person in with whichever account the browser already holds. Someone who
+ * picked the wrong account once (one with no Outlook mailbox) then fails the
+ * same way on every retry, within seconds, with no way to choose another
+ * account from our side (MCPE-S69XCZ, 2026-11-05: six identical failures).
+ * select_account only shows Microsoft's account picker; it does not force the
+ * consent screen, so it is safe in tenants that already granted admin consent.
+ */
+export function outlookAuthorizePrompt(isReconnect: boolean): 'consent' | 'select_account' {
+  return shouldForceConsent(isReconnect) ? 'consent' : 'select_account';
+}
+
 /** Dashboard error codes an Outlook callback can redirect with. */
 export type OutlookCallbackError =
   | 'admin_consent_required'

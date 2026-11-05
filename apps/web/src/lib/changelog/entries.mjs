@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-05',
+    kind: 'fixed',
+    title: 'Choose your Microsoft account when connecting Outlook',
+    body:
+      "Connecting Outlook now asks which Microsoft account to use. Before, a retry signed you straight back in with the account you picked last time, so choosing the wrong one first left you stuck.",
+  },
+  {
     date: '2026-11-04',
     kind: 'added',
     title: 'Setup guides for Yahoo! JAPAN, Locaweb, Vodafone and more',

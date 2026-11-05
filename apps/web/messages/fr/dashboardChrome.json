@@ -13,7 +13,7 @@
     "adminConsentFailedAction": "Obtenir le lien d'approbation",
     "outlookEmailMissing": "Votre compte Microsoft ne nous a transmis aucune adresse e-mail, nous n'avons donc pas pu le connecter. Essayez avec un autre compte Microsoft ou contactez le support à support@mcpemails.com.",
     "inboxExistsOtherProvider": "Cette adresse est déjà connectée par une autre méthode (par exemple IMAP, Gmail ou Outlook) : nous n'avons pas touché à cette boîte. Pour changer de méthode de connexion, supprimez d'abord cette boîte, puis connectez-la à nouveau.",
-    "outlookNoMailbox": "Ce compte Microsoft n'a pas de boîte aux lettres Outlook (Exchange Online), il n'y a donc rien à connecter. C'est fréquent pour les comptes administrateur sans licence Exchange, ou lorsque la messagerie de l'organisation est hébergée ailleurs. Si votre messagerie est sur un autre serveur, connectez l'adresse en IMAP.",
+    "outlookNoMailbox": "Ce compte Microsoft n'a pas de boîte aux lettres Outlook (Exchange Online), il n'y a donc rien à connecter. C'est fréquent pour les comptes administrateur sans licence Exchange, ou lorsque la messagerie de l'organisation est hébergée ailleurs. Si votre messagerie est sur un autre serveur, connectez l'adresse en IMAP. Connecté avec le mauvais compte Microsoft ? Connectez Outlook à nouveau et choisissez le bon compte.",
     "connectionFailed": "Échec de la connexion de la boîte ({error}). Veuillez réessayer.",
     "contactSupport": "Contacter le support",
     "checkoutSuccess": "Bienvenue dans {plan}. Votre abonnement s'active maintenant ; cela peut prendre un moment.",
