@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Purelymail 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Purelymail 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "用邮箱密码通过 IMAP（imap.purelymail.com:993）将 Purelymail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。一个收件箱永久免费。"
   },
   "hero": {

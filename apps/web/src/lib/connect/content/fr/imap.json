@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter toute boîte IMAP à Claude, Cursor et MCP",
+    "title": "Connecter toute boîte IMAP à Claude, ChatGPT et MCP",
     "description": "Connectez toute boîte IMAP de votre entreprise à Claude, Cursor et tout client MCP. Serveur et mot de passe suffisent : IMAP 993 ou 143, SMTP 465 ou 587, détectés."
   },
   "hero": {

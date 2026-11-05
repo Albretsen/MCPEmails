@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect GoDaddy Email to Claude, Cursor & MCP",
+    "title": "Connect GoDaddy Email to Claude, ChatGPT & MCP",
     "description": "Connect GoDaddy Professional Email to Claude and any MCP client over IMAP at imap.secureserver.net:993. Microsoft 365 from GoDaddy connects with Outlook instead."
   },
   "hero": {

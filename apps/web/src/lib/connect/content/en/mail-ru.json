@@ -11,7 +11,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Mail.ru to Claude, Cursor & MCP Clients",
+    "title": "Connect Mail.ru to Claude, ChatGPT & MCP Clients",
     "description": "Connect Mail.ru to Claude, Cursor and any MCP client over IMAP at imap.mail.ru:993 with a password for external applications. The website password fails."
   },
   "hero": {

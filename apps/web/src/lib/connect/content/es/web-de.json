@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta WEB.DE a Claude, Cursor y clientes MCP",
+    "title": "Conecta WEB.DE a Claude, ChatGPT y clientes MCP",
     "description": "Conecta WEB.DE a Claude, Cursor y cualquier cliente MCP por IMAP en imap.web.de:993. El acceso POP3 e IMAP viene desactivado y hay que activarlo antes."
   },
   "hero": {

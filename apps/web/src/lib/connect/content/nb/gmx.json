@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble GMX til Claude, Cursor og MCP-klienter",
+    "title": "Koble GMX til Claude, ChatGPT og MCP-klienter",
     "description": "Koble GMX Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.gmx.net:993. POP3 og IMAP er av som standard i GMX og må slås på først."
   },
   "hero": {

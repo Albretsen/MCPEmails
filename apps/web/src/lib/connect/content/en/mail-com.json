@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Mail.com to Claude, Cursor & MCP Clients",
+    "title": "Connect Mail.com to Claude, ChatGPT & MCP Clients",
     "description": "Connect mail.com to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.mail.com:993. POP3/IMAP is a mail.com Premium feature, off by default."
   },
   "hero": {
