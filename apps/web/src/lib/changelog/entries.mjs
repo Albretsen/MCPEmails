@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-05',
+    kind: 'fixed',
+    title: 'Search and inbox listing on more IMAP servers',
+    body:
+      "Searching or listing an IMAP inbox could fail partway, or take far longer than usual, when the mail server sent whole messages where only a short preview was asked for. Those inboxes now list and search at their usual speed.",
+  },
+  {
     date: '2026-11-04',
     kind: 'added',
     title: 'Setup guides for Yahoo! JAPAN, Locaweb, Vodafone and more',
