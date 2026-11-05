@@ -641,8 +641,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setRouteState('inboxes');
     } else if (errorParam === 'outlook_no_mailbox') {
       // Microsoft signed the person in, but the account has no Exchange Online
-      // mailbox, so no inbox was created. Signing in again gives the same
-      // answer, so the message points at IMAP rather than a retry.
+      // mailbox, so no inbox was created. The same account gives the same
+      // answer, so the message points at IMAP; a first connect shows
+      // Microsoft's account picker, so it also says to retry with the right
+      // account in case the wrong one was chosen.
       toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0, action: contactSupportAction('outlook', errorParam) });
       setRouteState('inboxes');
     } else if (adminConsentParam === 'granted') {
