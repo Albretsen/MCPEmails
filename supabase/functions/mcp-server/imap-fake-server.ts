@@ -76,6 +76,12 @@ export interface FakeServerOptions {
   statusName?: (name: string) => string;
   /** Told of every partial `BODY.PEEK[1]<offset.length>` a FETCH asks for, per message. */
   onPartialFetch?: (uid: number, offset: number, length: number) => void;
+  /**
+   * Answer `BODY.PEEK[1]<offset.length>` with the whole of part one, as
+   * `BODY[1] {n}`, the way a server that ignores the partial range does
+   * (seen on a mail.ru inbox, 2026-11-04: multi-MB pages for 2 KB previews).
+   */
+  ignorePartial?: boolean;
   /** Answer the commands of one pipelined write in reverse order. */
   reversePipelined?: boolean;
   /** Receive LOGOUT but say nothing until `answerLogout()` is called. */
@@ -581,8 +587,13 @@ export class FakeImapServer {
           // answered as `BODY[1]<offset>`, "" past the end.
           const [offset, length] = item.slice(item.indexOf("<") + 1, -1).split(".").map(Number);
           if (this.#options.onPartialFetch) this.#options.onPartialFetch(uid, offset, length);
-          const slice = partOneOf(message.raw).slice(offset, offset + length);
-          parts.push(`BODY[1]<${offset}> {${slice.length}}${CRLF}${slice}`);
+          if (this.#options.ignorePartial) {
+            const whole = partOneOf(message.raw);
+            parts.push(`BODY[1] {${whole.length}}${CRLF}${whole}`);
+          } else {
+            const slice = partOneOf(message.raw).slice(offset, offset + length);
+            parts.push(`BODY[1]<${offset}> {${slice.length}}${CRLF}${slice}`);
+          }
         }
       }
       // A UID FETCH always reports the UID, asked for or not (RFC 3501 6.4.8).

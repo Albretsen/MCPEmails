@@ -51,6 +51,13 @@ export const ENTRIES = [
       "Connecting Outlook now asks which Microsoft account to use. Before, a retry signed you straight back in with the account you picked last time, so choosing the wrong one first left you stuck.",
   },
   {
+    date: '2026-11-05',
+    kind: 'fixed',
+    title: 'Search and inbox listing on more IMAP servers',
+    body:
+      "Searching or listing an IMAP inbox could fail partway, or take far longer than usual, when the mail server sent whole messages where only a short preview was asked for. Those inboxes now list and search at their usual speed.",
+  },
+  {
     date: '2026-11-04',
     kind: 'added',
     title: 'Setup guides for Yahoo! JAPAN, Locaweb, Vodafone and more',
