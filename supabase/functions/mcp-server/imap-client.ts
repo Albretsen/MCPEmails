@@ -63,6 +63,7 @@ import { imapSelectCommand } from "./imap-read-only.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
+  shouldRetryPlainWithLogin,
   cramMd5Response,
   imapLoginArgument,
   type ImapPasswordMechanism,
@@ -1140,7 +1141,13 @@ export class ImapClient {
         : null;
     }
     const mechanism = chooseImapPasswordMechanism(caps);
-    return { ...(await this.authenticatePassword(mechanism, username, password)), mechanism };
+    const first = await this.authenticatePassword(mechanism, username, password);
+    // A PLAIN refused as a mechanism (T-Online) never reached the password
+    // check: LOGIN on the same connection is the first real one.
+    if (mechanism === "PLAIN" && shouldRetryPlainWithLogin(caps, first.resp.status, first.resp.text)) {
+      return { ...(await this.authenticatePassword("LOGIN", username, password)), mechanism: "LOGIN" };
+    }
+    return { ...first, mechanism };
   }
 
   /**

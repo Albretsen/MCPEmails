@@ -31,6 +31,7 @@ import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
 import { legacyTlsOptions } from './legacy-tls.ts';
 import {
   chooseImapPasswordMechanism,
+  shouldRetryPlainWithLogin,
   cramMd5Response,
   imapLoginArgument,
   parseImapCapabilities,
@@ -923,7 +924,7 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
 
   // 4. Authenticate
   await closeOnError(async () => {
-    const authTag = nextTag();
+    let authTag = nextTag();
 
     if (config.authMethod === 'XOAUTH2') {
       if (!config.accessToken) {
@@ -984,7 +985,40 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
           ? parseImapCapabilities([...capResult.untagged, capResult.text])
           : null;
       }
-      const mechanism = chooseImapPasswordMechanism(caps);
+      let mechanism = chooseImapPasswordMechanism(caps);
+
+      // AUTH PLAIN, unchanged on the wire. A PLAIN refused as a mechanism
+      // (T-Online) never reached the password check, so it falls through to
+      // LOGIN on the same connection; see shouldRetryPlainWithLogin.
+      if (mechanism === 'PLAIN') {
+        const payload = buildPlainAuthToken(username, password);
+        await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
+
+        let authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+
+        // A tagged BAD rejects the command, not the credentials: the server does
+        // not implement RFC 4959 (SASL-IR) and will not accept the initial
+        // response inline. Yandex is the preset that behaves this way. Retry the
+        // RFC 3501 two-step form on the same connection; NO is a real credential
+        // rejection and falls straight through.
+        if (authResult.status === 'BAD') {
+          const retryTag = nextTag();
+          await socketWrite(socket, `${retryTag} AUTHENTICATE PLAIN\r\n`);
+          await readSaslContinuation(reader);
+          await socketWrite(socket, `${payload}\r\n`);
+          authResult = await readTaggedResponse(reader, retryTag, TIMEOUT.AUTHENTICATE);
+        }
+
+        if (authResult.status === 'OK') return;
+        if (!shouldRetryPlainWithLogin(caps, authResult.status, authResult.text)) {
+          socket.destroy();
+          throw new ImapAuthError(
+            `PLAIN authentication rejected: ${redactImapAuthText(authResult.text, [...secrets, payload])}`
+          );
+        }
+        mechanism = 'LOGIN';
+        authTag = nextTag();
+      }
 
       if (mechanism === 'LOGIN') {
         // RFC 3501 LOGIN. Quoted strings, or synchronizing literals for
@@ -1035,31 +1069,6 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
         return;
       }
 
-      // AUTH PLAIN, unchanged on the wire.
-      const payload = buildPlainAuthToken(username, password);
-      await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
-
-      let authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
-
-      // A tagged BAD rejects the command, not the credentials: the server does
-      // not implement RFC 4959 (SASL-IR) and will not accept the initial
-      // response inline. Yandex is the preset that behaves this way. Retry the
-      // RFC 3501 two-step form on the same connection; NO is a real credential
-      // rejection and falls straight through.
-      if (authResult.status === 'BAD') {
-        const retryTag = nextTag();
-        await socketWrite(socket, `${retryTag} AUTHENTICATE PLAIN\r\n`);
-        await readSaslContinuation(reader);
-        await socketWrite(socket, `${payload}\r\n`);
-        authResult = await readTaggedResponse(reader, retryTag, TIMEOUT.AUTHENTICATE);
-      }
-
-      if (authResult.status !== 'OK') {
-        socket.destroy();
-        throw new ImapAuthError(
-          `PLAIN authentication rejected: ${redactImapAuthText(authResult.text, [...secrets, payload])}`
-        );
-      }
     }
   });
 
