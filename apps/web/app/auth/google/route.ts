@@ -26,7 +26,13 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: callbackUrl.toString() },
+    options: {
+      redirectTo: callbackUrl.toString(),
+      // Always show Google's account chooser. Without it Google silently reuses
+      // whichever account the browser or phone is signed in to, and a second
+      // Google address quietly becomes a second, empty MCPEmails account.
+      queryParams: { prompt: 'select_account' },
+    },
   });
 
   if (error || !data.url) {

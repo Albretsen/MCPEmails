@@ -107,6 +107,15 @@ test('the sign-out control is one button in the account footer, titled from the 
   assert.equal(button.disabled, false);
 });
 
+test('the account footer shows the email under the name, so two accounts with one name look different', async (t) => {
+  const { container } = await renderSidebar(t);
+  const footer = container.querySelector('.footer-user');
+  assert.match(footer.textContent, /Ada/);
+  const email = footer.querySelector('.footer-user-email');
+  assert.ok(email, 'an email line exists');
+  assert.equal(email.textContent, 'ada@acme.com');
+});
+
 test('rendering the sidebar does not sign anyone out or build a client', async (t) => {
   await renderSidebar(t);
   await flush(() => new Promise((resolve) => setTimeout(resolve, 20)));
