@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
 import { verifyPortalCustomerOwnership } from '@/lib/stripe/portal-customer';
+import { portalConfigurationFor } from '@/lib/stripe/portal-configuration';
+import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 import {
   planCategory,
   primaryWorkspaceId,
@@ -39,7 +41,7 @@ import {
  *     customer id found only on a workspace row is used after Stripe confirms
  *     it belongs to this user, so a user cannot open another customer's portal.
  */
-export async function POST(_request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
   const {
@@ -128,7 +130,14 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
   // changes go through our own checkout instead, where the copy is ours. The
   // portal still covers invoices, payment method, tax ID, and cancellation
   // (at period end, matching the published refund policy).
-  const portalConfiguration = process.env.STRIPE_PORTAL_CONFIGURATION_ID;
+  //
+  // Customers we know are outside Europe get a second configuration that also
+  // asks why they cancel; see src/lib/stripe/portal-configuration.ts for why
+  // Europe keeps the one without the question.
+  const portalConfiguration = portalConfigurationFor({
+    requestCountry: countryFromHeaders(request.headers),
+    signupCountry: await signupCountry(supabase, user.id),
+  });
 
   try {
     const session = await stripe.billingPortal.sessions.create({
@@ -313,4 +322,26 @@ async function verifiedWorkspaceCustomerId(user: {
     if (verdict.reason !== 'no_proof') await clearCandidate(candidate, verdict.reason);
   }
   return null;
+}
+
+/**
+ * The country recorded when the user's first workspace was created, or null.
+ * Any failure reads as unknown, which keeps the base portal configuration.
+ */
+async function signupCountry(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('workspaces')
+      .select('acquisition_country')
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return data?.acquisition_country ?? null;
+  } catch {
+    return null;
+  }
 }
