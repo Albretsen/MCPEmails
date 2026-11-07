@@ -351,3 +351,32 @@ Deno.test("CRAM-MD5 refused at the command surfaces the tagged answer instead of
   assertEquals(result.resp.status, "NO");
   assertStringIncludes(result.resp.text, "unavailable");
 });
+
+// secureimap.t-online.de, probed 2026-11-07 with a made-up account.
+const TONLINE_GREETING =
+  "* OK [CAPABILITY IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT] IMAP Proxy ready (secureimap.t-online.de)";
+
+Deno.test("T-Online: PLAIN refused as a mechanism, so LOGIN follows on the same connection", async () => {
+  const conn: ScriptedConn = new ScriptedConn((chunk): string | undefined => {
+    if (chunk.includes(" AUTHENTICATE PLAIN ")) return `${tagOf(chunk)} NO Authentication mechanism not supported\r\n`;
+    if (chunk.includes(" LOGIN ")) return `${tagOf(chunk)} OK LOGIN completed\r\n`;
+    return `${tagOf(chunk)} BAD unexpected\r\n`;
+  });
+  const result = await loginOn(conn, TONLINE_GREETING, "someone@t-online.de", "pw");
+  assertEquals(result.mechanism, "LOGIN");
+  assertEquals(result.resp.status, "OK");
+  assertEquals(conn.written.length, 2);
+  assertEquals(
+    conn.written[0],
+    `${tagOf(conn.written[0])} AUTHENTICATE PLAIN ${btoa("\u0000someone@t-online.de\u0000pw")}\r\n`,
+  );
+  assertEquals(conn.written[1], `${tagOf(conn.written[1])} LOGIN "someone@t-online.de" "pw"\r\n`);
+});
+
+Deno.test("a PLAIN rejected on the credential is not retried with LOGIN", async () => {
+  const conn = new ScriptedConn((chunk) => `${tagOf(chunk)} NO [AUTHENTICATIONFAILED] Authentication failed.\r\n`);
+  const result = await loginOn(conn, TONLINE_GREETING, "me@example.com", "pw");
+  assertEquals(result.mechanism, "PLAIN");
+  assertEquals(result.resp.status, "NO");
+  assertEquals(conn.written.length, 1);
+});

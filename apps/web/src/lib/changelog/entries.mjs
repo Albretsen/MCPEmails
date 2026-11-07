@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-07',
+    kind: 'fixed',
+    title: 'T-Online inboxes connect',
+    body:
+      "T-Online and Telekom mailboxes now connect over IMAP. Before, every attempt ended with a message saying the password was rejected, even when the password for email programs was correct.",
+  },
+  {
     date: '2026-11-05',
     kind: 'fixed',
     title: 'Choose your Microsoft account when connecting Outlook',
