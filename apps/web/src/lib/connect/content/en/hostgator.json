@@ -2,7 +2,9 @@
   "_sources": [
     "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
     "https://www.hostgator.com/help/article/email-connection-settings",
-    "https://www.hostgator.com/help/article/professional-email-product-overview"
+    "https://www.hostgator.com/help/article/professional-email-product-overview",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30811089087379-Como-usar-seu-e-mail-em-plataformas-externas-Gmail-Outlook-e-outros",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30820346865811-Como-saber-o-nome-do-seu-servidor-na-HostGator"
   ],
   "auth": {
     "method": "mail-password",
@@ -59,6 +61,10 @@
     {
       "h": "Clicking through the certificate warning is the wrong fix, and it hides a real one",
       "p": "Because the mismatch is so common on HostGator, the usual workaround is to accept the certificate or add an exception. A desktop client lets you. An automated IMAP connection from a server, which is what an MCP integration is, generally will not, and should not: once you habitually ignore the name mismatch you have no way to notice a genuine one. Point at the server hostname and the certificate validates properly, with no exception anywhere."
+    },
+    {
+      "h": "HostGator Brasil runs its own servers, named brNNN.hostgator.com.br",
+      "p": "A plan bought from HostGator Brasil is not on the gator servers at all. Its support site documents the same cPanel ports, 993 for IMAP and 465 for SMTP with SSL, but the recommended server name is the name of your own hosting plan's server, in the form <code>br100.hostgator.com.br</code>, with <code>mail.seudominio.com.br</code> as the unencrypted alternative. The name is shown in the Portal do Cliente under <b>Hospedagens e Servidores</b>, <b>Gerenciar</b>, in the <b>Nome do Servidor</b> field, and in the welcome email under <b>Informações Técnicas</b>. HostGator Brasil's paid mailbox product, sold as E-mail Profissional, runs on Titan with <code>imap.titan.email</code> and <code>smtp.titan.email</code>, and its support says Titan has to be enabled for external apps before a client can log in; connect that one as Titan, not as cPanel."
     }
   ],
   "limits": [

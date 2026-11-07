@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "https://king.host/wiki/artigo/como-ativar-o-smtp-internacional/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte, avec SMTP Internacional activé pour l'envoi",
+    "helpUrl": "https://king.host/wiki/artigo/configurar-email-outlook-365/",
+    "usernameForm": "Votre adresse e-mail complète sur le domaine, par exemple contato@suaempresa.com.br. Les guides de KingHost commencent chaque configuration par l'adresse complète.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Messagerie KingHost dans Claude : IMAP, et l'interrupteur SMTPi pour l'envoi",
+    "description": "Connectez une boîte KingHost à Claude ou tout client MCP sur imap.kinghost.net:993. L'envoi depuis l'extérieur du Brésil passe par smtpi.kinghost.net, qu'il faut d'abord activer dans le panneau KingHost."
+  },
+  "hero": {
+    "eyebrow": "KingHost + IA",
+    "titleLine1": "Connectez la messagerie KingHost à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte KingHost sur votre propre domaine. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, avec un seul interrupteur dans le panneau pour que l'envoi fonctionne depuis l'extérieur du Brésil.",
+    "answer": "Claude ne peut pas accéder seul à une boîte KingHost. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.kinghost.net, port 993, en s'authentifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La lecture est simple. L'envoi demande une chose que KingHost documente pour quiconque se trouve hors du Brésil : son serveur SMTP ordinaire ne répond que depuis les réseaux brésiliens, si bien que le courrier envoyé d'ailleurs, ce qui inclut les serveurs de MCPEmails, passe par SMTP Internacional sur smtpi.kinghost.net, qu'il faut d'abord activer pour votre domaine dans le panneau KingHost. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, SMTPi activé dans le panneau",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment KingHost se connecte : IMAP sur imap.kinghost.net, SMTP via SMTPi",
+    "body": "KingHost documente IMAP sur <code>imap.kinghost.net</code>, port 993 avec SSL/TLS, et SMTP sur <code>smtp.kinghost.net</code>, port 465 avec SSL/TLS, avec 143 et 587 comme alternatives non chiffrées. Les domaines enregistrés chez un revendeur KingHost utilisent plutôt <code>imap.uni5.net</code> et <code>smtp.uni5.net</code>. Le nom d'utilisateur est l'adresse e-mail complète et le mot de passe est celui défini sur cette boîte. Le piège est géographique. Les guides de KingHost indiquent que si vous êtes hors du Brésil, vous devez utiliser <b>SMTPi</b>, le service SMTP Internacional, et depuis ici <code>smtp.kinghost.net</code> n'a pas répondu du tout alors que <code>smtpi.kinghost.net</code> répondait. MCPEmails envoie depuis des serveurs en Europe, c'est donc le serveur SMTPi que cette page publie. Il n'est pas activé par défaut : le panneau KingHost a un interrupteur par domaine, et KingHost indique que le changement prend de 30 minutes à 2 heures pour s'appliquer. L'activer ne change rien à la réception du courrier ni à l'envoi depuis des machines au Brésil."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande aucune carte bancaire. Gardez la page ouverte pendant que vous activez SMTPi, car cette étape comporte un délai d'attente."
+    },
+    {
+      "h": "Activez SMTP Internacional pour le domaine dans le panneau KingHost",
+      "p": "Ouvrez le <b>Painel de Controle</b> de KingHost, sélectionnez le domaine et allez dans la section e-mail. Cliquez sur l'icône <b>SMTP INTERNACIONAL</b>, puis sur <b>ATIVAR</b> dans la page qui s'ouvre. KingHost indique de compter 30 minutes à 2 heures avant que le changement prenne effet sur le domaine. Sans cela, les envois depuis MCPEmails sont refusés, parce que le serveur SMTP ordinaire de KingHost ne répond pas depuis l'extérieur du Brésil."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe de la boîte dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète avec le mot de passe défini sur cette boîte dans le panneau KingHost, pas votre identifiant client KingHost. Le serveur entrant <code>imap.kinghost.net</code> et le serveur sortant <code>smtpi.kinghost.net</code> sont préremplis et ont été confirmés par une connexion TLS réelle. Sur un domaine revendeur, remplacez-les par <code>imap.uni5.net</code> et <code>smtpi.uni5.net</code>."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser la boîte KingHost."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le serveur SMTP des guides de KingHost est injoignable depuis l'extérieur du Brésil",
+      "p": "Les articles de configuration de KingHost nomment <code>smtp.kinghost.net</code> sur le port 465. Depuis nos serveurs, ce serveur n'a répondu ni sur 465 ni sur 587 : la connexion a expiré au lieu d'être refusée, ce qui est la signature d'un réseau qui n'admet que le trafic brésilien. L'article SMTPi de KingHost le dit lui-même : hors du Brésil, SMTP Internacional est obligatoire. Un agent qui envoie via MCPEmails est hors du Brésil quel que soit votre propre emplacement : utilisez donc <code>smtpi.kinghost.net</code>, et vérifiez que SMTPi est activé pour le domaine, sinon chaque envoi reste bloqué jusqu'à l'expiration du délai."
+    },
+    {
+      "h": "L'interrupteur est par domaine, et il prend jusqu'à deux heures",
+      "p": "SMTPi s'active dans le panneau KingHost pour chaque domaine séparément, dans la section e-mail, avec l'icône <b>SMTP INTERNACIONAL</b> et le bouton <b>ATIVAR</b>. KingHost indique que le changement prend entre 30 minutes et 2 heures pour s'appliquer. Un envoi tenté dans cet intervalle échoue de la même façon qu'avant l'activation : si l'envoi ne fonctionne toujours pas juste après l'avoir activé, attendez plutôt que de changer les réglages. La réception du courrier et l'envoi depuis des machines brésiliennes ne sont affectés dans aucun des deux cas."
+    },
+    {
+      "h": "Les domaines revendeur utilisent uni5.net, pas kinghost.net",
+      "p": "Un domaine enregistré sous un compte revendeur KingHost (Revenda) vit sur un autre cluster, et les guides de KingHost lui donnent ses propres noms : <code>imap.uni5.net</code> pour le courrier entrant et <code>smtpi.uni5.net</code> pour SMTPi, avec les mêmes ports. Les noms en kinghost.net ne sont pas des alias de ceux-là : un client d'un revendeur qui copie les serveurs de cette page se connecte aux mauvais serveurs. Demandez à celui qui vous a vendu l'hébergement si le domaine est sur une offre revendeur en cas de doute."
+    },
+    {
+      "h": "Ni MOVE ni SPECIAL-USE : les dossiers sont identifiés par leur nom",
+      "p": "Le serveur Dovecot derrière <code>imap.kinghost.net</code> annonce <code>IDLE</code> mais ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Classer un message s'effectue par une copie, une mise à jour de drapeau et un expunge plutôt qu'en une seule commande, et les dossiers Envoyés, Brouillons et Corbeille sont identifiés par leur nom plutôt que par un rôle déclaré par le serveur. Si un agent classe quelque chose au mauvais endroit, nommez le dossier dans la consigne."
+    }
+  ],
+  "limits": [
+    "L'envoi exige que SMTP Internacional soit activé pour le domaine dans le panneau KingHost. Tant que ce n'est pas fait, les envois depuis MCPEmails échouent, et le serveur SMTP ordinaire de KingHost ne peut pas être utilisé depuis l'extérieur du Brésil.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers.",
+    "Le serveur SMTPi accepte les messages jusqu'à 60 Mo. Un transfert contenant des pièces jointes plus volumineuses est refusé au moment de l'envoi."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie KingHost ?",
+      "a": "Pas seul. Claude n'a pas de connecteur KingHost intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de KingHost ?",
+      "a": "IMAP : imap.kinghost.net sur le port 993 avec SSL/TLS. Pour l'envoi depuis l'extérieur du Brésil, là où tourne MCPEmails, SMTP est smtpi.kinghost.net sur le port 465 avec SSL/TLS, une fois SMTP Internacional activé pour le domaine dans le panneau. Les guides de KingHost donnent smtp.kinghost.net pour les clients au Brésil. Les domaines revendeur utilisent imap.uni5.net et smtpi.uni5.net. Les deux serveurs publiés ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi MCPEmails peut-il lire mon courrier KingHost mais pas envoyer ?",
+      "a": "Parce que SMTP Internacional n'est pas activé pour le domaine, ou l'a été depuis moins de deux heures. Le serveur SMTP ordinaire de KingHost ne répond pas depuis l'extérieur du Brésil, et les envois de MCPEmails partent d'Europe. Ouvrez le panneau KingHost, sélectionnez le domaine, allez dans la section e-mail, cliquez sur SMTP INTERNACIONAL puis sur ATIVAR, et comptez jusqu'à deux heures."
+    },
+    {
+      "q": "Activer SMTPi change-t-il la façon dont je reçois le courrier ?",
+      "a": "Non. KingHost indique qu'activer ou désactiver SMTP Internacional n'affecte ni la réception ni l'envoi depuis des machines situées au Brésil. Cela ouvre seulement le serveur smtpi à l'envoi authentifié depuis ailleurs."
+    },
+    {
+      "q": "KingHost a-t-il besoin d'un mot de passe d'application ?",
+      "a": "Non. KingHost n'a pas de système de mot de passe propre à une application. Le mot de passe défini sur la boîte dans le panneau authentifie à la fois IMAP et SMTP."
+    },
+    {
+      "q": "Mon courrier KingHost est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis KingHost en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte KingHost à votre IA",
+    "sub": "Connectez une boîte KingHost en quelques minutes, une fois SMTPi activé. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

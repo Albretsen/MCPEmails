@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "https://www.locaweb.com.br/ajuda/wiki/como-configurar-o-mx-e-mail-locaweb/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón, con el mismo usuario SMTP que el remitente",
+    "helpUrl": "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "usernameForm": "Tu dirección de correo completa en el dominio, por ejemplo contato@suaempresa.com.br. La guía de Locaweb pone la cuenta entera en el campo Nome de usuário.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Locaweb en Claude: email-ssl.com.br para IMAP y SMTP",
+    "description": "Conecta un buzón de Locaweb (Email Locaweb) a Claude o a cualquier cliente MCP en email-ssl.com.br:993. Un solo servidor para IMAP y SMTP con SSL/TLS, con la contraseña del buzón y el remitente como usuario SMTP."
+  },
+  "hero": {
+    "eyebrow": "Locaweb + IA",
+    "titleLine1": "Conecta el correo de Locaweb a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Locaweb en tu propio dominio. Lee, busca, envía, responde, programa y organiza correo por IMAP, con el único servidor que Locaweb publica para todas las cuentas.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Locaweb. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en email-ssl.com.br en el puerto 993, autenticándose con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Locaweb usa un único servidor compartido, email-ssl.com.br, para el correo entrante y saliente de todos los dominios que aloja, lo que simplifica los ajustes. La regla que hay que conocer está en el envío: la cuenta que se autentica en SMTP tiene que ser la misma dirección que aparece como remitente, o Locaweb rechaza el mensaje. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón, un solo servidor para todo",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Locaweb: un servidor compartido y un remitente que debe coincidir con el usuario",
+    "body": "Locaweb documenta su servicio de correo, vendido como Email Locaweb, en un único servidor. IMAP es <code>email-ssl.com.br</code> en el puerto 993 con SSL/TLS, y SMTP es el mismo <code>email-ssl.com.br</code> en el puerto 465 con SSL/TLS, con el servidor saliente configurado para exigir autenticación. La guía también lista el 143 y el 587 sin cifrar para versiones antiguas de Outlook y avisa de que pueden dejar de funcionar; MCPEmails usa el par cifrado. El usuario es la dirección de correo entera y la contraseña es la definida en ese buzón. Ese servidor es compartido por todos los dominios que aloja Locaweb, así que el certificado que presenta es para <code>email-ssl.com.br</code> y no para tu dominio. La única regla que Locaweb impone y otros proveedores no está en el envío: el usuario SMTP tiene que ser la misma cuenta que la dirección del remitente, y una discrepancia se rechaza con <code>503 5.0.3 Client host rejected</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Usa la contraseña del buzón, no tu acceso de cliente de Locaweb",
+      "p": "IMAP se autentica con la contraseña definida en la dirección de correo concreta en el panel de control de Locaweb, no con la contraseña con la que inicias sesión en la propia Locaweb. Si no la conoces, restablécela en esa dirección desde el panel y usa el valor nuevo."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, como contato@suaempresa.com.br, junto con la contraseña del buzón. El servidor <code>email-ssl.com.br</code> y los puertos ya vienen rellenados y se confirmaron con una conexión TLS real. Usa la misma dirección para el lado de salida; Locaweb exige que el usuario SMTP y el remitente coincidan."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de Locaweb."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor es email-ssl.com.br, no tu dominio, y es a propósito",
+      "p": "Locaweb sirve todos los dominios alojados desde los mismos servidores de correo, y el certificado TLS que presentan es para <code>email-ssl.com.br</code>. Apuntar un cliente a <code>mail.suaempresa.com.br</code> con TLS falla en la validación del nombre, porque tu dominio no está en ese certificado. Usa <code>email-ssl.com.br</code> tanto para IMAP como para SMTP, como hace la propia guía de Locaweb, y el certificado se valida sin necesidad de ninguna excepción."
+    },
+    {
+      "h": "Envía como la cuenta con la que iniciaste sesión, o Locaweb rechaza el mensaje",
+      "p": "La guía de Locaweb indica que la cuenta que se autentica en el servidor saliente debe ser la misma que se usa como remitente, y que una discrepancia produce el error <code>503 5.0.3 Client host rejected</code>. En la práctica eso significa que no puedes iniciar sesión con un buzón y enviar como otra dirección del dominio, ni siquiera un alias del mismo buzón. MCPEmails envía desde la dirección que conectaste, así que la regla se cumple siempre que conectes cada dirección remitente como su propia bandeja."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, con nombres de carpeta en portugués",
+      "p": "El servidor Dovecot detrás de <code>email-ssl.com.br</code> anuncia <code>IDLE</code>, pero ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un solo comando, y las carpetas de enviados, borradores y papelera se identifican por nombre y no por una función que declare el servidor. Si un agente archiva algo en el lugar equivocado, nombra la carpeta en la instrucción."
+    },
+    {
+      "h": "Autodiscover solo funciona si el dominio tiene el registro SRV",
+      "p": "La guía de Locaweb dice que, cuando la configuración automática de un cliente de correo falla en un dominio alojado en Locaweb, la solución es un registro DNS llamado <code>_autodiscover._tcp</code> que apunte a <code>autodiscover.email.locaweb.com.br</code> en el puerto 443, y que tarda hasta 48 horas en propagarse. No necesitas ese registro para conectar aquí, porque MCPEmails rellena el servidor, pero explica por qué un cliente de escritorio en el mismo dominio puede no haber encontrado nada por su cuenta."
+    }
+  ],
+  "limits": [
+    "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El servidor SMTP acepta mensajes de hasta unos 50 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo.",
+    "Locaweb rechaza un envío cuya dirección de remitente no coincide con la cuenta autenticada. Cada dirección desde la que quieras enviar tiene que conectarse como su propia bandeja."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Locaweb?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Locaweb y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Locaweb?",
+      "a": "IMAP es email-ssl.com.br en el puerto 993 con SSL/TLS. SMTP es email-ssl.com.br en el puerto 465 con SSL/TLS y autenticación obligatoria. El usuario es tu dirección de correo completa y la contraseña es la del buzón. El servidor se confirmó con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Por qué Locaweb rechaza mi correo saliente con 503 5.0.3?",
+      "a": "Porque la dirección desde la que envías no es la cuenta con la que te autenticaste. Locaweb exige que el usuario SMTP y el remitente sean la misma cuenta. Conecta la dirección desde la que quieres enviar como su propia bandeja, con su propia contraseña."
+    },
+    {
+      "q": "¿Puedo usar mail.midominio.com.br como servidor?",
+      "a": "No con TLS. El certificado de Locaweb cubre email-ssl.com.br, no tu dominio, así que un cliente apuntado a tu propio nombre falla en la validación del certificado. Usa email-ssl.com.br tanto para IMAP como para SMTP, que es lo que documenta Locaweb."
+    },
+    {
+      "q": "¿Locaweb necesita una contraseña de aplicación?",
+      "a": "No. Locaweb no tiene un sistema de contraseñas específicas de aplicación. La contraseña definida en el buzón desde el panel de control autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de Locaweb en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Locaweb por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Locaweb",
+    "sub": "Conecta un buzón de Locaweb en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

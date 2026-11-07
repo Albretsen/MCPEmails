@@ -62,8 +62,9 @@ export function parseImapCapabilities(lines: readonly string[]): Set<string> | n
  * The rule is built so that nothing that works today changes:
  *
  *   1. Nothing known, or no `AUTH=` entry at all: PLAIN, exactly as before.
- *      Plenty of servers (sina, t-online and most self-hosted presets in the
- *      registry) list no mechanisms and take PLAIN.
+ *      Plenty of servers (sina and most self-hosted presets in the registry)
+ *      list no mechanisms and take PLAIN. One that refuses the mechanism
+ *      itself gets LOGIN next; see shouldRetryPlainWithLogin.
  *   2. `AUTH=PLAIN` advertised: PLAIN, exactly as before.
  *   3. Mechanisms advertised, PLAIN not among them, and no `LOGINDISABLED`:
  *      the RFC 3501 LOGIN command. It is part of base IMAP, so a server only
@@ -96,6 +97,37 @@ export function chooseImapPasswordMechanism(
   if (caps.has("AUTH=CRAM-MD5")) return "CRAM-MD5";
   return "PLAIN";
 }
+
+/**
+ * After a refused SASL PLAIN, should the same connection try the RFC 3501
+ * LOGIN command? Only when the refusal is about the mechanism itself, never a
+ * credential verdict, and only when the server has not said LOGINDISABLED.
+ *
+ * Why: a server that lists no `AUTH=` entries gets PLAIN (rule 1 above), and
+ * most of them take it. T-Online does not. Probed on 2026-11-07 with a made-up
+ * account, secureimap.t-online.de lists no mechanisms and answers
+ *
+ *   AUTHENTICATE PLAIN  -> "NO Authentication mechanism not supported"
+ *   LOGIN               -> "NO Invalid login"   (a real check)
+ *
+ * so every T-Online connect failed before its password was ever checked (57
+ * attempts, 3 workspaces, 2026-10-10..2026-11-07). Retrying is safe: the
+ * server has refused the command, not judged the credential, so the second
+ * attempt is the first real check and cannot count against a lockout twice.
+ */
+export function shouldRetryPlainWithLogin(
+  caps: ReadonlySet<string> | null,
+  status: string,
+  text: string,
+): boolean {
+  if (status === "OK") return false;
+  if (caps?.has("LOGINDISABLED")) return false;
+  return PLAIN_MECHANISM_REFUSAL.test(typeof text === "string" ? text : "");
+}
+
+/** A refusal that names the mechanism, not the credential. */
+const PLAIN_MECHANISM_REFUSAL =
+  /mechanism[^.]{0,40}not (supported|available|allowed)|unsupported (authentication|mechanism|sasl)|does not support plain|unknown (authentication )?mechanism/i;
 
 /** One argument of the LOGIN command: a quoted string, or a literal's octets. */
 export type ImapLoginArgument =

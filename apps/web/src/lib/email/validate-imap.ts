@@ -4,6 +4,7 @@ import { sanitizeAuthDiagnostic } from './connection-config.ts';
 import { legacyTlsOptions } from './legacy-tls.ts';
 import {
   chooseImapPasswordMechanism,
+  shouldRetryPlainWithLogin,
   cramMd5Response,
   imapLoginArgument,
   parseImapCapabilities,
@@ -349,12 +350,18 @@ export async function authenticateImapPassword(
   username: string,
   password: string
 ): Promise<TaggedResponse & { token: string; mechanism: ImapPasswordMechanism }> {
-  const mechanism = chooseImapPasswordMechanism(await readCapabilities(socket, greeting));
+  const caps = await readCapabilities(socket, greeting);
+  const mechanism = chooseImapPasswordMechanism(caps);
   const result = mechanism === 'LOGIN'
     ? await authenticateLogin(socket, username, password)
     : mechanism === 'CRAM-MD5'
       ? await authenticateCramMd5(socket, username, password)
       : await authenticatePlain(socket, username, password);
+  // A PLAIN refused as a mechanism (T-Online) never reached the password
+  // check: LOGIN on the same connection is the first real one.
+  if (mechanism === 'PLAIN' && shouldRetryPlainWithLogin(caps, result.status, result.text)) {
+    return { ...(await authenticateLogin(socket, username, password)), mechanism: 'LOGIN' };
+  }
   return { ...result, mechanism };
 }
 

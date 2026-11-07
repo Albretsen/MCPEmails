@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://support.ntt.com/ocn-business/support/detail/pid21000001uk9/",
+    "https://autoconfig.thunderbird.net/v1.1/ocn.ne.jp"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "OCN メールパスワード (e-postpassordet), ikke OCN-tilkoblingspassordet",
+    "helpUrl": "https://support.ntt.com/ocn-business/support/detail/pid21000001uk9/",
+    "usernameForm": "Hele OCN-adressen din, name@ocn.ne.jp, skrevet fullt ut. NTTs veiledning sier uttrykkelig at du skal skrive hele adressen, ikke delen før @.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "OCN Mail i Claude: IMAP og det separate e-postpassordet",
+    "description": "Koble en OCN-postkasse (ocn.ne.jp) til Claude eller enhver MCP-klient på imap.ocn.ne.jp:993. Logg inn med OCN メールパスワード fra medlemsbeviset ditt, ikke OCN-tilkoblingspassordet."
+  },
+  "hero": {
+    "eyebrow": "OCN + AI",
+    "titleLine1": "Koble OCN Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte ocn.ne.jp-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med e-postpassordet NTT utsteder for OCN-e-post og ikke det som kobler deg til internett.",
+    "answer": "Claude når ikke OCN-e-post på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.ocn.ne.jp port 993 og autentiserer med hele OCN-adressen din og OCN メールパスワード, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Påloggingen er delen folk tar feil av: NTT holder et eget tilkoblingspassord for OCN-linjen og et eget e-postpassord for postkassen, og bare e-postpassordet fungerer her. Det finnes ikke noe app-passord og ingen bryter å slå på. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OCN-e-postpassord, hele adressen som brukernavn",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler OCN seg til: IMAP over SSL, og e-postpassordet fra medlemsbeviset",
+    "body": "NTT dokumenterer OCN-e-post på <code>imap.ocn.ne.jp</code> port 993 med SSL for innkommende e-post, og <code>smtp.ocn.ne.jp</code> port 465 med SSL og autentisering for utgående. Brukernavnet på begge er hele adressen. Passordet er <b>メールパスワード</b> (e-postpassordet), en streng på 6 til 32 tegn som står trykt på OCN-medlemsbeviset (OCN会員登録証) og brukes både i e-postprogrammer og i OCN-webmailen. NTT sier rett ut at det er adskilt fra tilkoblingspassordet (接続用パスワード, også kalt 認証パスワード) som autentiserer selve OCN-linjen, og at serververdiene trykt på et eldre bevis kan være utdaterte, så vertene på denne siden kommer fra NTTs nåværende støtteside og ikke fra papiret. Automatisk oppdaging hjelper ikke med OCN: den offentlige Mozilla-databasen oppgir bare POP for ocn.ne.jp, og derfor kan en e-postklient som fyller inn innstillinger for deg, la være å tilby IMAP i det hele tatt."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Finn OCN-e-postpassordet ditt",
+      "p": "Det er verdien i feltet <b>メールパスワード</b> på OCN-medlemsbeviset ditt, dokumentet NTT sendte da linjen ble satt opp. Det er ikke tilkoblingspassordet som står trykt ved siden av. Har du ikke lenger beviset, eller er passordet endret, setter du et nytt e-postpassord via OCN-kontoinnstillingene dine og bruker den nye verdien."
+    },
+    {
+      "h": "Skriv inn hele adressen og e-postpassordet i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel name@ocn.ne.jp, og lim inn e-postpassordet. OCN-vertene og -portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere OCN-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "To passord på én konto, og e-postserveren godtar bare det ene",
+      "p": "Et OCN-abonnement kommer med et tilkoblingspassord som logger linjen på nettet, og et e-postpassord som åpner postkassen. NTT dokumenterer dem som to ulike ting, og e-postserveren godtar bare det andre. Skriver du inn tilkoblingspassordet, eller passordet til OCNs kundeportal, får du en vanlig autentiseringsfeil uten noe som forklarer hvilken pålogging som var feil. Avvises et passord som ser riktig ut, sjekk hvilket av de to du limte inn før du endrer noe annet."
+    },
+    {
+      "h": "Adressen skrives inn hel, ikke bare delen før @",
+      "p": "NTTs veiledning sier at du skal skrive hele e-postadressen som brukernavn på både innkommende og utgående server. Flere japanske leverandører tar bare den lokale delen, og klienter som kopierer innstillinger fra én leverandør til en annen, tar gjerne med seg den vanen. Hos OCN feiler et brukernavn som bare <code>name</code>, eller <code>name@ocn</code>, på samme måte som et feil passord ville gjort. MCPEmails sender hele adressen."
+    },
+    {
+      "h": "Utgående e-post er begrenset til 10 MB",
+      "p": "<code>smtp.ocn.ne.jp</code> oppgir en maksimal meldingsstørrelse på 10 485 760 byte, som er den laveste hos noen leverandør på dette nettstedet. Taket gjelder hele den kodede meldingen, så et base64-vedlegg teller omtrent en tredjedel mer enn størrelsen på disk; et vedlegg på rundt 7 MB er allerede på grensen. En agent som blir bedt om å videresende noe større, får en hard avvisning ved sending. Del en lenke i stedet."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, så mapper matches etter navn",
+      "p": "Ved testing annonserte <code>imap.ocn.ne.jp</code> <code>IDLE</code>, men verken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv finnes etter navn og ikke etter en rolle serveren oppgir. Finner ikke en agent en mappe, oppgi den i instruksjonen."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren godtar meldinger opptil 10 MB. Større videresendinger avvises i stedet for å settes i kø, så legg ved en lenke i stedet for en stor fil.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Brytes en tilkobling midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "Det finnes ikke noe app-passord og ingen OAuth-vei, så den lagrede påloggingen er OCN-e-postpassordet ditt. Endrer du det, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med OCN-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd OCN-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for OCN?",
+      "a": "IMAP er imap.ocn.ne.jp på port 993 med SSL. SMTP er smtp.ocn.ne.jp på port 465 med SSL og autentisering. Brukernavnet er hele OCN-adressen din, og passordet er OCN-e-postpassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvilket OCN-passord bruker jeg i en e-postapp?",
+      "a": "メールパスワード, e-postpassordet som står trykt i sitt eget felt på OCN-medlemsbeviset og brukes i OCN-webmailen. NTT dokumenterer det som adskilt fra tilkoblingspassordet som autentiserer linjen. Har du det ikke, setter du et nytt e-postpassord via OCN-kontoinnstillingene dine."
+    },
+    {
+      "q": "Hvorfor tilbyr e-postklienten min bare POP for OCN?",
+      "a": "Fordi den offentlige autokonfigurasjonsdatabasen mange klienter slår opp i, bare oppgir POP3 for ocn.ne.jp. IMAP finnes og er dokumentert av NTT; du må bare skrive inn imap.ocn.ne.jp, port 993 og SSL for hånd. MCPEmails forhåndsutfyller de verdiene."
+    },
+    {
+      "q": "Trenger OCN et app-passord?",
+      "a": "Nei. OCN har ingen ordning med appspesifikke passord og ingen pålogging per klient. OCN-e-postpassordet autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres OCN-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra OCN via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en OCN-innboks",
+    "sub": "Koble til OCN-e-post på minutter med e-postpassordet. Én innboks gratis for alltid, uten kort."
+  }
+}

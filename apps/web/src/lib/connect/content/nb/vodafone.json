@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.vodafone.de/hilfe/email/einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-Mail-/IMAP-Passwort, ikke MeinVodafone-innloggingen",
+    "helpUrl": "https://www.vodafone.de/hilfe/email/einrichten.html",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@vodafone.de, name@arcor.de, name@vodafonemail.de eller Kabel Deutschland- eller Unitymedia-adressen du fikk tildelt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Vodafone- og Arcor-e-post i Claude: det separate IMAP-passordet",
+    "description": "Koble en Vodafone-, Arcor- eller Kabel Deutschland-postkasse til Claude og enhver MCP-klient på imap.vodafonemail.de:993. Krever det separate E-Mail-/IMAP-Passwort, ikke MeinVodafone-passordet ditt."
+  },
+  "hero": {
+    "eyebrow": "Vodafone + AI",
+    "titleLine1": "Koble Vodafone- eller Arcor-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Vodafone-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med e-postpassordet Vodafone holder adskilt fra kundeinnloggingen din.",
+    "answer": "Claude når ikke en Vodafone-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.vodafonemail.de port 993 og autentiserer med det separate E-Mail-/IMAP-Passwort i stedet for MeinVodafone-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. De samme serverne og den samme regelen gjelder for alle Vodafone-, Arcor-, Kabel Deutschland- og Unitymedia-adresser. Har du aldri valgt det e-postpassordet, har ingen e-postprogram noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Vodafones e-postpassord kreves",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Vodafone seg til: IMAP og et andre, separat passord",
+    "body": "Vodafone dokumenterer ett sett servere for alle postkassene sine, inkludert de tidligere Arcor-, Kabel Deutschland- og Unitymedia-kontoene: IMAP på <code>imap.vodafonemail.de</code> port 993 med SSL (143 med TLS), og SMTP på <code>smtp.vodafonemail.de</code> port 465 med SSL (25 eller 587 med TLS). Vodafone merker IMAP som anbefalt protokoll og sier at kryptering har vært obligatorisk siden oktober 2024. Brukernavnet er hele adressen. Det nesten alle gjør feil, er passordet. Vodafones hjelp sier uttrykkelig at <b>E-Mail-/IMAP-Passwort</b> ikke er det samme som internettpassordet du bruker til MeinVodafone-innloggingen. Du velger det når postkassen settes opp, og du kan endre det i postkassen på mail.vodafone.de under <b>Einstellungen</b>, <b>Mein Konto</b>, <b>Passwort</b>. Bare det passordet åpner <code>imap.vodafonemail.de</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sett eller finn E-Mail-/IMAP-Passwort",
+      "p": "Logg inn i postkassen på mail.vodafone.de med Vodafone-, Kabel- eller Arcor-adressen din. Åpne <b>Einstellungen</b>, så <b>Mein Konto</b>, så <b>Passwort</b>, og bruk <b>Bearbeiten</b> for å sette e-postpassordet. Får du ikke logget inn, bruker du <b>Zugangsdaten vergessen</b> under innloggingsknappen. Dette passordet er adskilt fra MeinVodafone-passordet ditt, og Vodafone sier det på samme side."
+    },
+    {
+      "h": "Lim det inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel name@arcor.de eller name@vodafonemail.de, og lim inn e-postpassordet. Vodafone-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "MeinVodafone-passordet avvises, og det er med vilje",
+      "p": "Dette er den vanligste tilkoblingsfeilen med Vodafone, og den gir en vanlig autentiseringsfeil uten noe som forteller deg hvorfor. Vodafone holder internettpassordet for MeinVodafone-kundeinnloggingen adskilt fra <b>E-Mail-/IMAP-Passwort</b> for postkassen, og bare det andre autentiserer på IMAP og SMTP. Sett det i postkassen under Einstellungen, Mein Konto, Passwort, og bruk det så på både innkommende og utgående side av tilkoblingen."
+    },
+    {
+      "h": "Arcor-, Kabel Deutschland- og Unitymedia-adresser ligger alle på vodafonemail.de",
+      "p": "Vodafones hjelp sier at innstillingene gjelder for alle Vodafone-, Arcor-, Kabel Deutschland- og Unitymedia-e-postkontoer. Vertsnavnene inneholder <code>vodafonemail.de</code> uansett hva din egen adresse slutter på, så en @arcor.de-bruker skriver likevel inn <code>imap.vodafonemail.de</code> og <code>smtp.vodafonemail.de</code>. Eldre veiledninger som nevner andre Arcor- eller Vodafone-verter, beskriver systemer som siden er slått sammen med dette."
+    },
+    {
+      "h": "IMAP-serveren tilbyr bare PLAIN, og ingen IDLE, MOVE eller SPECIAL-USE",
+      "p": "Funksjonsbanneret fra <code>imap.vodafonemail.de</code> er kort: <code>IMAP4rev1 ID SASL-IR AUTH=PLAIN</code>. Det finnes ingen <code>AUTH=LOGIN</code>, så verktøy som er låst til LOGIN-mekanismen, feiler ved autentisering selv med riktig passord, og det finnes ingen <code>IDLE</code>, <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. I praksis oppdages ny e-post ved polling i stedet for å skyves ut, arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og mappene for sendt, utkast og papirkurv finnes etter navn. MCPEmails autentiserer med PLAIN og håndterer resten."
+    },
+    {
+      "h": "Sending er begrenset til 32 MB per melding",
+      "p": "<code>smtp.vodafonemail.de</code> oppgir en maksimal meldingsstørrelse på 33 554 432 byte. Det er størrelsen på hele den kodede meldingen, så base64-vedlegg teller omtrent en tredjedel mer enn størrelsen på disk. En agent som blir bedt om å videresende et stort vedlegg, får en hard SMTP-avvisning i stedet for en treg sending."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Brytes en tilkobling midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "Det finnes ingen IDLE-støtte, så e-post hentes ved polling i stedet for å skyves ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
+    "E-postpassordet vedlikeholdes adskilt fra MeinVodafone-passordet. Å endre det ene endrer ikke det andre, og endrer du e-postpassordet, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Vodafone- eller Arcor-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Vodafone-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Vodafone?",
+      "a": "IMAP er imap.vodafonemail.de på port 993 med SSL. SMTP er smtp.vodafonemail.de på port 465 med SSL; Vodafone oppgir også 587 med TLS. Logg inn med hele adressen og E-Mail-/IMAP-Passwort. Vodafone dokumenterer de samme serverne for Vodafone-, Arcor-, Kabel Deutschland- og Unitymedia-adresser, og begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Vodafone-passordet mitt avvist i et e-postprogram?",
+      "a": "Nesten alltid fordi du skrev inn MeinVodafone-passordet. Vodafone holder et eget E-Mail-/IMAP-Passwort for postkassen, og bare det autentiserer mot e-postserverne. Sett eller endre det i postkassen på mail.vodafone.de under Einstellungen, Mein Konto, Passwort, eller bruk Zugangsdaten vergessen under innloggingsknappen hvis du ikke får logget inn."
+    },
+    {
+      "q": "Virker dette med arcor.de-adresser?",
+      "a": "Ja. Vodafone slår fast at innstillingene gjelder for alle Vodafone-, Arcor-, Kabel Deutschland- og Unitymedia-e-postkontoer: imap.vodafonemail.de for IMAP og smtp.vodafonemail.de for SMTP, med hele adressen som brukernavn og e-postpassordet som passord."
+    },
+    {
+      "q": "Trenger Vodafone et app-passord?",
+      "a": "Ikke i Gmail-forstand, men den bruker en egen pålogging: E-Mail-/IMAP-Passwort, som er adskilt fra MeinVodafone-innloggingen. Det finnes ingen token per app å generere."
+    },
+    {
+      "q": "Lagres Vodafone-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Vodafone via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Vodafone-innboks",
+    "sub": "Koble til Vodafone- eller Arcor-postkassen din på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "https://autoconfig.thunderbird.net/v1.1/biglobe.ne.jp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "BIGLOBEパスワード",
+    "helpUrl": "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "usernameForm": "BIGLOBEのメールアドレス全体（name@xxx.biglobe.ne.jp）。BIGLOBEの案内でアカウントと表記されている欄に入力します。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BIGLOBEメールをClaudeで使う：IMAPとSMTPが1つのホスト",
+    "description": "BIGLOBEのメールボックスをmail.biglobe.ne.jp:993でClaudeやあらゆるMCPクライアントに接続。1つのホストがIMAPとSMTPをSSLで提供し、BIGLOBEのメールアドレスとBIGLOBEパスワードでログインします。"
+  },
+  "hero": {
+    "eyebrow": "BIGLOBE + AI",
+    "titleLine1": "BIGLOBEメールをClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のBIGLOBEの受信トレイを渡せます。BIGLOBEが公開している設定のままで、先に有効にすべき項目もなく、IMAP経由でメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "answer": "Claudeは自力ではBIGLOBEメールに届きません。MCPEmailsはホスト型のMCPサーバーで、mail.biglobe.ne.jpのポート993にIMAPで接続し、BIGLOBEのメールアドレスとBIGLOBEパスワードで認証するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。BIGLOBEは日本のISPの中でも接続が簡単な部類です。同じホストが受信と送信の両方を担い、パスワードはふだんのBIGLOBEパスワードで、ウェブメールで先に探すべき設定もありません。受信トレイ1つはずっと無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "BIGLOBEパスワード、有効化は不要",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "BIGLOBEの接続方法：送受信ともにmail.biglobe.ne.jp",
+    "body": "BIGLOBEはすべてを1つのサーバー名で文書化しています。IMAPは<code>mail.biglobe.ne.jp</code>のポート993（SSL）、SMTPは同じ<code>mail.biglobe.ne.jp</code>のポート465（SSL）です。案内にはSSLなしの143と587も載っていますが、MCPEmailsは暗号化された組み合わせを使います。ユーザー名はBIGLOBEが<b>アカウント</b>と表記する欄に入れるBIGLOBEのメールアドレスで、パスワードは<b>BIGLOBEパスワード</b>です。BIGLOBEのIMAPの案内には前提条件も専用のメールパスワードもなく、この点で他のいくつかの日本のISPとは異なります。サーバー自体について1つ知っておくべきことがあります。ログイン前には認証方式について何も告げないので、通知された認証方式の一覧を待つクライアントには空の一覧しか見えません。MCPEmailsは問い合わせを行い、<code>PLAIN</code>、<code>LOGIN</code>、<code>CRAM-MD5</code>の返答を受け取ってログインします。BIGLOBEでは自動設定も失敗します。公開されているMozillaのデータベースにはbiglobe.ne.jpのPOPしか登録されていないからです。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成する",
+      "p": "mcpemails.comで新規登録します。Freeプランでは受信トレイ1つをずっと接続でき、カードは不要です。"
+    },
+    {
+      "h": "BIGLOBEのメールアドレスとパスワードを用意する",
+      "p": "ユーザー名はBIGLOBEのメールアドレス、パスワードはBIGLOBEパスワードで、BIGLOBEの案内でメールソフトに入力するよう指示されているものと同じです。別途作成する認証情報も、ウェブメールで先に有効にする設定もありません。"
+    },
+    {
+      "h": "MCPEmailsに入力する",
+      "p": "IMAP / SMTPを選び、メールアドレスとパスワードを入力します。BIGLOBEのホストとポートはあらかじめ入力済みで、実際のTLS接続で確認したものです。"
+    },
+    {
+      "h": "MCP URLをAIクライアントに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがBIGLOBEのメールボックスの閲覧、検索、送信、返信、転送、予約送信、整理をできるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "バナーは機能を何も通知せず、そこで諦めるツールがあります",
+      "p": "<code>mail.biglobe.ne.jp</code>からの挨拶は<code>* OK IMAP4rev1 server ready</code>だけで、機能一覧も<code>SASL-IR</code>もありません。明示的にCAPABILITYを要求して初めて、サーバーは<code>AUTH=PLAIN</code>、<code>AUTH=LOGIN</code>、<code>AUTH=CRAM-MD5</code>を列挙します。挨拶だけを読み、認証方式が示されていなければ先へ進まないライブラリは、Thunderbirdが問題なくログインできる一方でBIGLOBEに接続できないと報告します。MCPEmailsは判断する前に問い合わせるので、この点は自動的に処理されます。"
+    },
+    {
+      "h": "MOVEはありますが、IDLEはありません",
+      "p": "調査時、BIGLOBEは<code>MOVE</code>と<code>UIDPLUS</code>を通知していたので、メッセージの振り分けはコピー、フラグ更新、expungeの組み合わせではなく1つのアトミックなコマンドで済みます。<code>IDLE</code>は通知していなかったため、新着メールはプッシュではなくポーリングで見つかります。エージェントが新しいメッセージに気づくのは、届いた瞬間ではなく次に確認したときです。<code>SPECIAL-USE</code>もないので、送信済み、下書き、ゴミ箱のフォルダーは名前で照合されます。エージェントが間違ったフォルダーに振り分けたら、指示の中でフォルダー名を指定してください。"
+    },
+    {
+      "h": "メールクライアントがPOPしか提示しないことがあります。公開データベースがそうなっているからです",
+      "p": "多くのクライアントが参照するMozillaの自動設定データベースには、biglobe.ne.jpのPOP3しか登録されていないため、設定を自動入力するクライアントは、IMAPではなくダウンロードして削除する方式のアカウントを黙って作ってしまうことがあります。BIGLOBE自身の案内はポート993のIMAPを文書化しています。手動で入力するか、MCPEmailsの自動入力に任せてください。"
+    }
+  ],
+  "limits": [
+    "IDLEに対応していないため、メールはプッシュではなくポーリングで取得します。エージェントが新しいメッセージに気づくのは、届いた瞬間ではなく次に確認したときです。",
+    "SMTPサーバーは100 MBまでのメッセージを受け付けますが、これは余裕のある値で、受信側のサーバーには独自の上限があります。多くは10 MBから50 MBの間なので、BIGLOBEが受け付けた大きな添付ファイルでも相手側から戻ってくることがあります。",
+    "アプリ パスワードもOAuthもないため、保存される認証情報はBIGLOBEパスワードです。変更すると、新しいパスワードを入力するまでメールボックスは切断されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはBIGLOBEメールで使えますか？",
+      "a": "単体では使えません。Claudeに内蔵のBIGLOBEコネクタはなく、自力でIMAP接続を開くこともできません。MCPEmailsのようなMCPサーバーをIMAP経由でメールボックスに接続すると、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信、整理をできるようになり、同じ接続がCursor、ChatGPT、その他のMCPクライアントからも使えます。"
+    },
+    {
+      "q": "BIGLOBEのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはmail.biglobe.ne.jpのポート993、SSLです。SMTPはmail.biglobe.ne.jpのポート465、SSLです。ユーザー名はBIGLOBEのメールアドレス、パスワードはBIGLOBEパスワードです。ホストは、このページに表示された日付に実際のTLS接続で確認しました。"
+    },
+    {
+      "q": "BIGLOBEメールではどのパスワードを使いますか？",
+      "a": "BIGLOBEパスワードです。BIGLOBEのIMAPの案内でメールソフトに入力するよう指示されているものです。案内には専用のメールパスワードもアプリ パスワードも載っていません。"
+    },
+    {
+      "q": "先にBIGLOBEでIMAPを有効にする必要がありますか？",
+      "a": "BIGLOBEのIMAP設定の案内には前提条件がありません。サーバー、ポート、認証情報が書かれているだけで、有効にすべき項目はありません。ログインが拒否されたら、設定を探す前にメールアドレスとパスワードを確認してください。"
+    },
+    {
+      "q": "メールクライアントがBIGLOBEにPOPを提案するのはなぜですか？",
+      "a": "公開の自動設定データベースに、biglobe.ne.jpのPOP3しか登録されていないからです。IMAPは存在し、BIGLOBEがmail.biglobe.ne.jpのポート993、SSLとして文書化しています。手動で入力するか、MCPEmailsの自動入力に任せてください。"
+    },
+    {
+      "q": "私のBIGLOBEメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにBIGLOBEからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにBIGLOBEの受信トレイを渡す",
+    "sub": "BIGLOBEメールを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  }
+}

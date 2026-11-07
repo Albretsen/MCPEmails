@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Yahooの接続方法：アプリ パスワード",
-    "body": "このページは米国Yahooのyahoo.comなどのアドレス向けです。<b>Yahoo!メール（@yahoo.co.jp）は別のサービス</b>で、アプリ パスワードはありません。Yahoo!メールの設定でIMAPとSMTPのアクセスを有効にしてから、汎用IMAPとしてimap.mail.yahoo.co.jp（993）とsmtp.mail.yahoo.co.jp（465）、Yahoo! JAPAN IDのパスワードで接続してください。手順はYahoo! JAPANのヘルプ（support.yahoo-net.jp）にあります。Yahoo MailはIMAP/SMTPを通じて<b>Yahooのアプリ パスワード</b>で接続します。YahooのAccount Securityの「External connections」で生成し、YahooアドレスとともにMCPEmailsに貼り付けてください。その項目が見当たらなければ、2段階認証を有効にしてからもう一度確認してください。OAuthのやり取りも、ブラウザーのポップアップもありません。"
+    "body": "このページは米国Yahooのyahoo.comなどのアドレス向けです。<b>Yahoo!メール（@yahoo.co.jp、@ymail.ne.jp）は別のサービス</b>で、アプリ パスワードはありません。Yahoo! JAPAN IDのパスワードと設定画面の切り替えで接続する手順は、Yahoo!メール専用のページ（mcpemails.com/ja/connect/yahoo-japan）にまとめています。Yahoo MailはIMAP/SMTPを通じて<b>Yahooのアプリ パスワード</b>で接続します。YahooのAccount Securityの「External connections」で生成し、YahooアドレスとともにMCPEmailsに貼り付けてください。その項目が見当たらなければ、2段階認証を有効にしてからもう一度確認してください。OAuthのやり取りも、ブラウザーのポップアップもありません。"
   },
   "setup": [
     {

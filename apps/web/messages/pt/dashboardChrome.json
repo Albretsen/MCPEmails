@@ -13,7 +13,7 @@
     "adminConsentFailedAction": "Gerar o link de aprovação",
     "outlookEmailMissing": "Sua conta Microsoft não nos informou um endereço de e-mail, então não foi possível conectá-la. Tente outra conta Microsoft ou fale com o suporte em support@mcpemails.com.",
     "inboxExistsOtherProvider": "Esse endereço já está conectado por outro método (por exemplo IMAP, Gmail ou Outlook), então não mexemos nessa caixa de entrada. Se quiser mudar a forma de conexão, remova essa caixa de entrada primeiro e depois conecte de novo.",
-    "outlookNoMailbox": "Esta conta Microsoft não tem caixa de correio do Outlook (Exchange Online), então não há nada para conectar. Isso é comum em contas de administrador sem licença do Exchange, ou quando o e-mail da organização está hospedado em outro lugar. Se o seu e-mail fica em outro servidor, conecte o endereço por IMAP.",
+    "outlookNoMailbox": "Esta conta Microsoft não tem caixa de correio do Outlook (Exchange Online), então não há nada para conectar. Isso é comum em contas de administrador sem licença do Exchange, ou quando o e-mail da organização está hospedado em outro lugar. Se o seu e-mail fica em outro servidor, conecte o endereço por IMAP. Entrou com a conta Microsoft errada? Conecte o Outlook de novo e escolha a conta certa.",
     "connectionFailed": "A conexão da caixa de entrada falhou ({error}). Tente novamente.",
     "contactSupport": "Falar com o suporte",
     "checkoutSuccess": "Boas-vindas ao {plan}. Sua assinatura está sendo ativada agora; isso pode levar alguns instantes.",

@@ -44,6 +44,48 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-07',
+    kind: 'improved',
+    title: 'See which account you are signed in to',
+    body:
+      "Signing in with Google now asks which Google account to use, and the dashboard shows your email under your name. Before, two accounts with the same name looked identical.",
+  },
+  {
+    date: '2026-11-07',
+    kind: 'fixed',
+    title: 'T-Online inboxes connect',
+    body:
+      "T-Online and Telekom mailboxes now connect over IMAP. Before, every attempt ended with a message saying the password was rejected, even when the password for email programs was correct.",
+  },
+  {
+    date: '2026-11-05',
+    kind: 'fixed',
+    title: 'Choose your Microsoft account when connecting Outlook',
+    body:
+      "Connecting Outlook now asks which Microsoft account to use. Before, a retry signed you straight back in with the account you picked last time, so choosing the wrong one first left you stuck.",
+  },
+  {
+    date: '2026-11-05',
+    kind: 'fixed',
+    title: 'Search and inbox listing on more IMAP servers',
+    body:
+      "Searching or listing an IMAP inbox could fail partway, or take far longer than usual, when the mail server sent whole messages where only a short preview was asked for. Those inboxes now list and search at their usual speed.",
+  },
+  {
+    date: '2026-11-04',
+    kind: 'added',
+    title: 'Setup guides for Yahoo! JAPAN, Locaweb, Vodafone and more',
+    body:
+      "New step-by-step connect guides for Yahoo! JAPAN, OCN, BIGLOBE and @nifty in Japanese, Locaweb and KingHost in Brazilian Portuguese, and Vodafone and A1 in German. The HostGator guide now covers HostGator Brasil.",
+  },
+  {
+    date: '2026-11-04',
+    kind: 'improved',
+    title: 'Server settings fill in for more mailbox providers',
+    body:
+      "When you connect a mailbox from Locaweb, KingHost, UOL, BOL, Terra, Yahoo! JAPAN, docomo, OCN, BIGLOBE, @nifty, STRATO, freenet, Vodafone, A1, Bluewin and other providers in Brazil, Japan, Germany, Austria and Switzerland, MCPEmails now fills in the server settings and shows the provider's own steps if the sign-in is refused.",
+  },
+  {
     date: '2026-11-04',
     kind: 'improved',
     title: 'Server settings fill in for more mailbox providers',

@@ -13,7 +13,7 @@
     "adminConsentFailedAction": "Get the approval link",
     "outlookEmailMissing": "Your Microsoft account did not give us an email address, so we could not connect it. Try a different Microsoft account, or contact support at support@mcpemails.com.",
     "inboxExistsOtherProvider": "That address is already connected with a different method (for example IMAP, Gmail or Outlook), so we left that inbox untouched. If you want to switch how it is connected, remove that inbox first and then connect it again.",
-    "outlookNoMailbox": "This Microsoft account has no Outlook mailbox (Exchange Online), so there is nothing to connect. This is common for admin accounts without an Exchange licence, or when the organisation's mail is hosted elsewhere. If your mail lives on another server, connect the address with IMAP instead.",
+    "outlookNoMailbox": "This Microsoft account has no Outlook mailbox (Exchange Online), so there is nothing to connect. This is common for admin accounts without an Exchange licence, or when the organisation's mail is hosted elsewhere. If your mail lives on another server, connect the address with IMAP instead. Signed in with the wrong Microsoft account? Connect Outlook again and choose the right one.",
     "connectionFailed": "Inbox connection failed ({error}). Please try again.",
     "contactSupport": "Contact support",
     "checkoutSuccess": "Welcome to {plan}. Your subscription is activating now; this may take a moment.",

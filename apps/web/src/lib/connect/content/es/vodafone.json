@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.vodafone.de/hilfe/email/einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-Mail-/IMAP-Passwort (contraseña de correo), no el acceso de MeinVodafone",
+    "helpUrl": "https://www.vodafone.de/hilfe/email/einrichten.html",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@vodafone.de, name@arcor.de, name@vodafonemail.de o la dirección de Kabel Deutschland o Unitymedia que te asignaron.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Vodafone y Arcor en Claude: la contraseña IMAP aparte",
+    "description": "Conecta un buzón de Vodafone, Arcor o Kabel Deutschland a Claude y a cualquier cliente MCP en imap.vodafonemail.de:993. Requiere el E-Mail-/IMAP-Passwort aparte, no tu contraseña de MeinVodafone."
+  },
+  "hero": {
+    "eyebrow": "Vodafone + IA",
+    "titleLine1": "Conecta tu buzón de Vodafone o Arcor",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Vodafone. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña de correo que Vodafone mantiene aparte de tu acceso de cliente.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Vodafone. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.vodafonemail.de en el puerto 993, autenticándose con el E-Mail-/IMAP-Passwort aparte y no con tu contraseña de MeinVodafone, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Los mismos servidores y la misma regla se aplican a todas las direcciones de Vodafone, Arcor, Kabel Deutschland y Unitymedia. Si nunca has elegido esa contraseña de correo, ningún programa de correo ha podido iniciar sesión nunca en el buzón y el fallo parece una errata. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Requiere la contraseña de correo de Vodafone",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Vodafone: IMAP y una segunda contraseña aparte",
+    "body": "Vodafone documenta un único juego de servidores para todos sus buzones, incluidas las antiguas cuentas de Arcor, Kabel Deutschland y Unitymedia: IMAP en <code>imap.vodafonemail.de</code> en el puerto 993 con SSL (143 con TLS), y SMTP en <code>smtp.vodafonemail.de</code> en el puerto 465 con SSL (25 o 587 con TLS). Vodafone señala IMAP como el protocolo recomendado y dice que el cifrado es obligatorio desde octubre de 2024. El usuario es la dirección completa. Lo que casi todo el mundo hace mal es la contraseña. La ayuda de Vodafone dice expresamente que el <b>E-Mail-/IMAP-Passwort</b> no es la contraseña de internet que usas para el acceso a MeinVodafone. La eliges al configurar el buzón, y puedes cambiarla en el buzón en mail.vodafone.de en <b>Einstellungen</b>, <b>Mein Konto</b>, <b>Passwort</b>. Solo esa contraseña abre <code>imap.vodafonemail.de</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Define o consulta el E-Mail-/IMAP-Passwort",
+      "p": "Inicia sesión en el buzón en mail.vodafone.de con tu dirección de Vodafone, Kabel o Arcor. Abre <b>Einstellungen</b>, luego <b>Mein Konto</b>, luego <b>Passwort</b>, y usa <b>Bearbeiten</b> para definir la contraseña de correo. Si no puedes iniciar sesión, usa <b>Zugangsdaten vergessen</b> bajo el botón de acceso. Esta contraseña es distinta de tu contraseña de MeinVodafone, y Vodafone lo dice en esa misma página."
+    },
+    {
+      "h": "Pégala en MCPEmails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como name@arcor.de o name@vodafonemail.de, y pega la contraseña de correo. Los servidores y puertos de Vodafone ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La contraseña de MeinVodafone se rechaza, y es a propósito",
+      "p": "Es el fallo de conexión con Vodafone más habitual y produce un error de autenticación corriente sin nada que explique el motivo. Vodafone mantiene la contraseña de internet para el acceso de cliente de MeinVodafone aparte del <b>E-Mail-/IMAP-Passwort</b> del buzón, y solo la segunda autentica en IMAP y SMTP. Defínela en el buzón en Einstellungen, Mein Konto, Passwort, y úsala luego tanto para el lado entrante como para el saliente de la conexión."
+    },
+    {
+      "h": "Las direcciones de Arcor, Kabel Deutschland y Unitymedia viven todas en vodafonemail.de",
+      "p": "La ayuda de Vodafone dice que sus ajustes se aplican a todas las cuentas de correo de Vodafone, Arcor, Kabel Deutschland y Unitymedia. Los nombres de servidor contienen <code>vodafonemail.de</code> sea cual sea la terminación de tu dirección, así que un usuario de @arcor.de también introduce <code>imap.vodafonemail.de</code> y <code>smtp.vodafonemail.de</code>. Las guías antiguas que nombran otros servidores de Arcor o Vodafone describen sistemas que desde entonces se han fusionado en este."
+    },
+    {
+      "h": "El servidor IMAP solo ofrece PLAIN, y no tiene IDLE, MOVE ni SPECIAL-USE",
+      "p": "El saludo de capacidades de <code>imap.vodafonemail.de</code> es corto: <code>IMAP4rev1 ID SASL-IR AUTH=PLAIN</code>. No hay <code>AUTH=LOGIN</code>, así que las herramientas atadas al mecanismo LOGIN fallan en la autenticación incluso con la contraseña correcta, y no hay <code>IDLE</code>, <code>MOVE</code>, <code>UIDPLUS</code> ni <code>SPECIAL-USE</code>. En la práctica, el correo nuevo se descubre consultando periódicamente en lugar de recibirse al instante, archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge, y las carpetas de enviados, borradores y papelera se encuentran por nombre. MCPEmails se autentica con PLAIN y se ocupa del resto."
+    },
+    {
+      "h": "El envío tiene un límite de 32 MB por mensaje",
+      "p": "<code>smtp.vodafonemail.de</code> anuncia un tamaño máximo de mensaje de 33.554.432 bytes. Es el tamaño de todo el mensaje codificado, así que los adjuntos en base64 cuentan aproximadamente un tercio más que su tamaño en disco. Un agente al que se pida reenviar un adjunto grande recibirá un rechazo SMTP rotundo, no un envío lento."
+    }
+  ],
+  "limits": [
+    "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse al instante. Tu agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega.",
+    "La contraseña de correo se mantiene aparte de la contraseña de MeinVodafone. Cambiar una no cambia la otra, y cambiar la contraseña de correo desconecta el buzón hasta que introduzcas la nueva."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Vodafone o Arcor?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Vodafone. Apuntar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Vodafone?",
+      "a": "IMAP es imap.vodafonemail.de en el puerto 993 con SSL. SMTP es smtp.vodafonemail.de en el puerto 465 con SSL; Vodafone también indica el 587 con TLS. Inicia sesión con tu dirección completa y el E-Mail-/IMAP-Passwort. Vodafone documenta los mismos servidores para las direcciones de Vodafone, Arcor, Kabel Deutschland y Unitymedia, y ambos servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Vodafone en un programa de correo?",
+      "a": "Casi siempre porque introdujiste la contraseña de MeinVodafone. Vodafone mantiene un E-Mail-/IMAP-Passwort aparte para el buzón, y solo ese autentica contra los servidores de correo. Defínelo o cámbialo en el buzón en mail.vodafone.de en Einstellungen, Mein Konto, Passwort, o usa Zugangsdaten vergessen bajo el botón de acceso si no puedes iniciar sesión."
+    },
+    {
+      "q": "¿Funciona con direcciones arcor.de?",
+      "a": "Sí. Vodafone indica que sus ajustes se aplican a todas las cuentas de correo de Vodafone, Arcor, Kabel Deutschland y Unitymedia: imap.vodafonemail.de para IMAP y smtp.vodafonemail.de para SMTP, con la dirección completa como usuario y la contraseña de correo como contraseña."
+    },
+    {
+      "q": "¿Vodafone necesita una contraseña de aplicación?",
+      "a": "No en el sentido de Gmail, pero sí usa una credencial específica: el E-Mail-/IMAP-Passwort, que es distinto del acceso de MeinVodafone. No hay ningún token por aplicación que generar."
+    },
+    {
+      "q": "¿Se almacena mi correo de Vodafone en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Vodafone por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Vodafone",
+    "sub": "Conecta tu buzón de Vodafone o Arcor en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

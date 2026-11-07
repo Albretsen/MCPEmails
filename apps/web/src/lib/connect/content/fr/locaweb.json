@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "https://www.locaweb.com.br/ajuda/wiki/como-configurar-o-mx-e-mail-locaweb/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte, identifiant SMTP égal à l'expéditeur",
+    "helpUrl": "https://www.locaweb.com.br/ajuda/wiki/configuracao-de-outlook-email-locaweb/",
+    "usernameForm": "Votre adresse e-mail complète sur le domaine, par exemple contato@suaempresa.com.br. Le guide de Locaweb met le compte entier dans le champ Nome de usuário.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Email Locaweb dans Claude : email-ssl.com.br pour IMAP et SMTP",
+    "description": "Connectez une boîte Locaweb (Email Locaweb) à Claude ou tout client MCP sur email-ssl.com.br:993. Un seul serveur pour IMAP et SMTP en SSL/TLS, avec le mot de passe de la boîte et l'expéditeur comme identifiant SMTP."
+  },
+  "hero": {
+    "eyebrow": "Locaweb + IA",
+    "titleLine1": "Connectez la messagerie Locaweb à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Locaweb sur votre propre domaine. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, avec le seul serveur que Locaweb publie pour tous ses comptes.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Locaweb. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur email-ssl.com.br, port 993, en s'authentifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Locaweb exploite un seul serveur partagé, email-ssl.com.br, pour le courrier entrant et sortant de tous les domaines qu'il héberge, ce qui rend les réglages simples. La règle à connaître concerne l'envoi : le compte qui s'authentifie en SMTP doit être la même adresse que celle qui apparaît comme expéditeur, sinon Locaweb rejette le message. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, un seul serveur pour tout",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Locaweb se connecte : un serveur partagé, et un expéditeur qui doit correspondre à l'identifiant",
+    "body": "Locaweb documente son service de messagerie, vendu sous le nom Email Locaweb, sur un seul serveur. IMAP est <code>email-ssl.com.br</code> sur le port 993 avec SSL/TLS, et SMTP est le même <code>email-ssl.com.br</code> sur le port 465 avec SSL/TLS, le serveur sortant étant réglé pour exiger l'authentification. Le guide liste aussi 143 et 587 sans chiffrement pour les anciennes versions d'Outlook et prévient que cela peut cesser de fonctionner ; MCPEmails utilise la paire chiffrée. Le nom d'utilisateur est l'adresse e-mail entière et le mot de passe est celui défini sur cette boîte. Ce serveur est partagé par tous les domaines hébergés chez Locaweb, si bien que le certificat qu'il présente est celui de <code>email-ssl.com.br</code> et non celui de votre domaine. La seule règle que Locaweb applique et que les autres hébergeurs n'appliquent pas concerne l'envoi : l'identifiant SMTP doit être le même compte que l'adresse From, et une discordance est refusée avec <code>503 5.0.3 Client host rejected</code>."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande aucune carte bancaire."
+    },
+    {
+      "h": "Utilisez le mot de passe de la boîte, pas celui de votre compte Locaweb",
+      "p": "IMAP s'authentifie avec le mot de passe défini sur l'adresse e-mail elle-même dans le panneau de contrôle de Locaweb, pas avec celui que vous utilisez pour vous connecter à Locaweb. Si vous ne le connaissez pas, réinitialisez-le sur cette adresse dans le panneau et utilisez la nouvelle valeur."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple contato@suaempresa.com.br, avec le mot de passe de la boîte. Le serveur <code>email-ssl.com.br</code> et les ports sont préremplis et ont été confirmés par une connexion TLS réelle. Utilisez la même adresse côté sortant ; Locaweb exige que l'identifiant SMTP et l'expéditeur correspondent."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser la boîte Locaweb."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le serveur est email-ssl.com.br, pas votre domaine, et c'est voulu",
+      "p": "Locaweb sert tous les domaines hébergés depuis les mêmes serveurs de messagerie, et le certificat TLS que ces serveurs présentent est celui de <code>email-ssl.com.br</code>. Pointer un client vers <code>mail.suaempresa.com.br</code> en TLS échoue à la validation du nom, parce que votre domaine ne figure pas sur ce certificat. Utilisez <code>email-ssl.com.br</code> pour IMAP comme pour SMTP, comme le fait le guide de Locaweb, et le certificat se valide sans aucune exception."
+    },
+    {
+      "h": "Envoyez avec le compte connecté, sinon Locaweb refuse le message",
+      "p": "Le guide de Locaweb indique que le compte qui s'authentifie sur le serveur sortant doit être le même que celui utilisé comme expéditeur, et qu'une discordance produit l'erreur <code>503 5.0.3 Client host rejected</code>. Concrètement, vous ne pouvez pas vous connecter avec une boîte et envoyer avec une autre adresse du domaine, même un alias de la même boîte. MCPEmails envoie depuis l'adresse que vous avez connectée, la règle est donc respectée tant que vous connectez chaque adresse d'envoi comme sa propre boîte."
+    },
+    {
+      "h": "Ni MOVE ni SPECIAL-USE, avec des noms de dossiers en portugais",
+      "p": "Le serveur Dovecot derrière <code>email-ssl.com.br</code> annonce <code>IDLE</code> mais ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Classer un message s'effectue par une copie, une mise à jour de drapeau et un expunge plutôt qu'en une seule commande, et les dossiers Envoyés, Brouillons et Corbeille sont identifiés par leur nom plutôt que par un rôle déclaré par le serveur. Si un agent classe quelque chose au mauvais endroit, nommez le dossier dans la consigne."
+    },
+    {
+      "h": "L'Autodiscover ne fonctionne que si le domaine a l'enregistrement SRV",
+      "p": "Le guide de Locaweb indique que lorsque la configuration automatique d'un client de messagerie échoue sur un domaine hébergé chez Locaweb, le remède est un enregistrement DNS nommé <code>_autodiscover._tcp</code> pointant vers <code>autodiscover.email.locaweb.com.br</code> sur le port 443, dont la propagation prend jusqu'à 48 heures. Vous n'avez pas besoin de cet enregistrement pour vous connecter ici, puisque MCPEmails préremplit le serveur, mais il explique pourquoi un client de bureau sur le même domaine n'a peut-être rien trouvé de lui-même."
+    }
+  ],
+  "limits": [
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers.",
+    "Le serveur SMTP accepte les messages jusqu'à environ 50 Mo. Un transfert contenant des pièces jointes plus volumineuses est refusé au moment de l'envoi.",
+    "Locaweb refuse un envoi dont l'adresse From diffère du compte authentifié. Chaque adresse depuis laquelle vous voulez envoyer doit être connectée comme sa propre boîte."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie Locaweb ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Locaweb intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Locaweb ?",
+      "a": "IMAP : email-ssl.com.br sur le port 993 avec SSL/TLS. SMTP : email-ssl.com.br sur le port 465 avec SSL/TLS et authentification obligatoire. Le nom d'utilisateur est votre adresse e-mail complète et le mot de passe est celui de la boîte. Le serveur a été confirmé par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi Locaweb rejette-t-il mon courrier sortant avec 503 5.0.3 ?",
+      "a": "Parce que l'adresse depuis laquelle vous envoyez n'est pas le compte avec lequel vous vous êtes authentifié. Locaweb exige que l'identifiant SMTP et l'expéditeur soient le même compte. Connectez l'adresse depuis laquelle vous voulez envoyer comme sa propre boîte, avec son propre mot de passe."
+    },
+    {
+      "q": "Puis-je utiliser mail.mondomaine.com.br comme serveur ?",
+      "a": "Pas en TLS. Le certificat de Locaweb couvre email-ssl.com.br, pas votre domaine, si bien qu'un client pointé vers votre propre nom échoue à la validation du certificat. Utilisez email-ssl.com.br pour IMAP comme pour SMTP, ce que Locaweb documente."
+    },
+    {
+      "q": "Locaweb a-t-il besoin d'un mot de passe d'application ?",
+      "a": "Non. Locaweb n'a pas de système de mot de passe propre à une application. Le mot de passe défini sur la boîte dans le panneau de contrôle authentifie à la fois IMAP et SMTP."
+    },
+    {
+      "q": "Mon courrier Locaweb est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Locaweb en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Locaweb à votre IA",
+    "sub": "Connectez une boîte Locaweb en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

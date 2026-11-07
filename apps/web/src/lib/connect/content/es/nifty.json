@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://mail.nifty.com/cs/mail-faq/detail/200326000044/",
+    "https://autoconfig.thunderbird.net/v1.1/nifty.com"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de correo de @nifty, con メールソフト接続許可（IMAP） en 許可中",
+    "helpUrl": "https://mail.nifty.com/cs/mail-faq/detail/200326000044/",
+    "usernameForm": "Tu dirección completa de @nifty, por ejemplo abc12345@nifty.com, tal como la muestra la propia guía de @nifty.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de @nifty en Claude: IMAP tras el permiso de conexión",
+    "description": "Conecta un buzón de @nifty a Claude o a cualquier cliente MCP en imap.nifty.com:993. Pon メールソフト接続許可（IMAP） en 許可中 y usa la contraseña de correo específica, no la de tu @nifty ID."
+  },
+  "hero": {
+    "eyebrow": "@nifty + IA",
+    "titleLine1": "Conecta el correo de @nifty a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de nifty.com. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez activado el permiso de conexión IMAP y con la contraseña de correo que @nifty emite para los programas de correo.",
+    "answer": "Claude no puede acceder por sí solo al correo de @nifty. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.nifty.com en el puerto 993, autenticándose con tu dirección completa de @nifty y la contraseña de correo de @nifty, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Dos cosas deciden si el inicio de sesión funciona, y @nifty documenta ambas: un ajuste llamado メールソフト接続許可（IMAP） tiene que mostrar 許可中 en tus ajustes de correo, y la contraseña tiene que ser la contraseña de correo específica, no la de tu @nifty ID. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de correo, permiso IMAP activado",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta @nifty: IMAP, un permiso y una contraseña pensada para programas de correo",
+    "body": "@nifty documenta IMAP en <code>imap.nifty.com</code> en el puerto 993 con SSL/TLS, y SMTP en <code>smtp.nifty.com</code> en el puerto 465 con SSL/TLS y autenticación SMTP obligatoria. El usuario es la dirección completa, y el método de autenticación en ambos es la autenticación normal con contraseña, que la guía de @nifty llama <b>通常のパスワード（PLAIN/LOGIN）</b>. La contraseña es la <b>メールパスワード</b> (contraseña de correo), una credencial que @nifty emite específicamente para los programas de correo; si no la conoces, la guía dice que definas una nueva en la página de cambio de contraseña. Antes de que nada de eso funcione, el ajuste <b>メールソフト接続許可（IMAP）</b> de tu lista de ajustes de correo tiene que mostrar <b>許可中</b>. Para una dirección estándar está en <b>@niftyメール</b>; para los buzones adicionales está en <b>セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント</b>. No confíes en que un cliente de correo lo rellene por ti: la base de datos pública de configuración automática sigue describiendo @nifty como POP sin cifrar en el puerto 110, lo cual está mal en todos los sentidos."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta. Deja la pestaña abierta; la parte de @nifty lleva un par de minutos."
+    },
+    {
+      "h": "Pon el permiso de conexión IMAP en 許可中",
+      "p": "En tu lista de ajustes de correo de @nifty, busca <b>メールソフト接続許可（IMAP）</b> y asegúrate de que muestra <b>許可中</b>. Para una cuenta estándar está en <b>@niftyメール</b>; para un segundo buzón o un buzón adicional está en <b>セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント</b>. Hasta que esté activado, todo inicio de sesión IMAP se rechaza."
+    },
+    {
+      "h": "Introduce la dirección completa y la contraseña de correo en MCPEmails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como abc12345@nifty.com, y pega la contraseña de correo de @nifty. Si no conoces la contraseña de correo, define antes una nueva en la página de cambio de contraseña de @nifty. Los servidores y puertos ya vienen rellenados y se confirmaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de @nifty."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El permiso y la contraseña fallan exactamente igual",
+      "p": "Un inicio de sesión rechazado porque <b>メールソフト接続許可（IMAP）</b> está desactivado se ve exactamente igual que uno rechazado porque pegaste la contraseña del @nifty ID en lugar de la contraseña de correo. El servidor devuelve el mismo error de autenticación en ambos casos y no nombra ninguno. Comprueba primero el permiso, porque es el que viene desactivado de serie, y luego confirma que estás usando la contraseña de correo y no la del ID. @nifty emite la contraseña de correo por separado precisamente para que los programas de correo nunca guarden la credencial del ID."
+    },
+    {
+      "h": "Antes de iniciar sesión el servidor solo ofrece CRAM-MD5",
+      "p": "La lista de capacidades que <code>imap.nifty.com</code> devuelve antes de la autenticación nombra un único mecanismo, <code>AUTH=CRAM-MD5</code>, y ningún <code>SASL-IR</code>. Aun así, la propia guía de @nifty te indica elegir la autenticación normal con contraseña, y la lista de capacidades no incluye <code>LOGINDISABLED</code>, así que el comando IMAP <code>LOGIN</code> simple sigue disponible sobre SSL. Las bibliotecas cliente que solo autentican mediante un mecanismo SASL anunciado, y no implementan CRAM-MD5, se detienen antes de llegar a enviar credenciales, por eso algunas herramientas IMAP dicen que @nifty es inaccesible mientras Outlook y Thunderbird se conectan al mismo buzón. MCPEmails gestiona la vía del LOGIN simple."
+    },
+    {
+      "h": "Nombres de carpeta en inglés, un tope de 50 carpetas y dos carpetas que no se mueven",
+      "p": "La guía IMAP de @nifty llama a las carpetas especiales <b>Draft</b>, <b>Sent</b> y <b>Trash</b>, y dice que el archivo y el prefijo de ruta IMAP deben quedar en blanco. Como el servidor no anuncia <code>SPECIAL-USE</code>, esos nombres son la forma en que MCPEmails las encuentra. La misma guía fija un límite de 50 carpetas en el webmail y en los programas de correo, dice que las carpetas creadas en el webmail pueden tener que mostrarse a mano en un programa de correo, y advierte de que el correo de las carpetas Sent y Draft no se puede sacar de ellas y nada se puede meter dentro. Un agente al que se pida archivar un mensaje enviado en otro sitio recibirá un rechazo del servidor, no nuestro."
+    },
+    {
+      "h": "Los datos de configuración automática de @nifty están desactualizados y te configurarían sin cifrar",
+      "p": "La base de datos pública de Mozilla describe nifty.com como POP3 sin cifrar en el puerto 110 con SMTP en el 587, una configuración que @nifty ya no documenta. Un cliente que rellena los ajustes desde esa fuente te da una cuenta de solo descarga sin cifrar, no el buzón IMAP que @nifty publica. Introduce <code>imap.nifty.com</code>, el puerto 993 y SSL/TLS a mano, o deja que MCPEmails los rellene."
+    }
+  ],
+  "limits": [
+    "El buzón permite 50 carpetas como máximo, y los mensajes de las carpetas Sent y Draft no se pueden mover a otras carpetas. Ambos límites los impone @nifty.",
+    "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse al instante. Tu agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega.",
+    "El servidor SMTP acepta mensajes de hasta 20 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de @nifty?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para @nifty y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de @nifty?",
+      "a": "IMAP es imap.nifty.com en el puerto 993 con SSL/TLS. SMTP es smtp.nifty.com en el puerto 465 con SSL/TLS y autenticación. El usuario es tu dirección completa de @nifty y la contraseña es la contraseña de correo de @nifty. Ambos servidores se confirmaron con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Por qué una app de correo rechaza mi contraseña de @nifty?",
+      "a": "O bien メールソフト接続許可（IMAP） no está en 許可中 en tus ajustes de correo, o bien introdujiste la contraseña del @nifty ID en lugar de la contraseña de correo específica. Comprueba primero el permiso. Si no conoces la contraseña de correo, define una nueva en la página de cambio de contraseña de @nifty y usa esa."
+    },
+    {
+      "q": "¿Dónde está el permiso de conexión IMAP en @nifty?",
+      "a": "En la lista de ajustes de correo. Para una dirección estándar está en @niftyメール; para un segundo buzón o un buzón adicional está en セカンドメール/セカンドメールPRO/旧Infoweb追加アカウント. El ajuste se llama メールソフト接続許可（IMAP） y tiene que mostrar 許可中."
+    },
+    {
+      "q": "¿@nifty necesita una contraseña de aplicación?",
+      "a": "No en el sentido de Gmail, pero sí usa una credencial específica: la contraseña de correo de @nifty, que es distinta de la contraseña del @nifty ID y es la que deben usar los programas de correo. No hay token por aplicación."
+    },
+    {
+      "q": "¿Se almacena mi correo de @nifty en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de @nifty por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de @nifty",
+    "sub": "Conecta el correo de @nifty en minutos una vez activado el permiso IMAP. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

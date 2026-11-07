@@ -13,7 +13,7 @@
     "adminConsentFailedAction": "承認リンクを取得",
     "outlookEmailMissing": "Microsoftアカウントからメールアドレスを取得できなかったため、接続できませんでした。別のMicrosoftアカウントを試すか、support@mcpemails.com までサポートにお問い合わせください。",
     "inboxExistsOtherProvider": "このアドレスは別の方法（IMAP、Gmail、Outlookなど）ですでに接続されているため、その受信トレイは変更していません。接続方法を切り替えたい場合は、先にその受信トレイを削除してから、もう一度接続してください。",
-    "outlookNoMailbox": "このMicrosoftアカウントにはOutlookのメールボックス (Exchange Online) がないため、接続できるものがありません。Exchangeライセンスのない管理者アカウントや、組織のメールが別の場所でホストされている場合によくあるケースです。メールが別のサーバーにある場合は、代わりにIMAPでそのアドレスを接続してください。",
+    "outlookNoMailbox": "このMicrosoftアカウントにはOutlookのメールボックス (Exchange Online) がないため、接続できるものがありません。Exchangeライセンスのない管理者アカウントや、組織のメールが別の場所でホストされている場合によくあるケースです。メールが別のサーバーにある場合は、代わりにIMAPでそのアドレスを接続してください。別のMicrosoftアカウントでサインインした場合は、もう一度Outlookを接続して正しいアカウントを選んでください。",
     "connectionFailed": "受信トレイの接続に失敗しました ({error})。もう一度お試しください。",
     "contactSupport": "サポートに問い合わせる",
     "checkoutSuccess": "{plan}へようこそ。サブスクリプションを有効化しています。少し時間がかかる場合があります。",

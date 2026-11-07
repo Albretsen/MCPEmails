@@ -13,7 +13,7 @@
     "adminConsentFailedAction": "Genehmigungslink holen",
     "outlookEmailMissing": "Ihr Microsoft-Konto hat uns keine E-Mail-Adresse übermittelt, daher konnten wir es nicht verbinden. Versuchen Sie ein anderes Microsoft-Konto oder wenden Sie sich an den Support unter support@mcpemails.com.",
     "inboxExistsOtherProvider": "Diese Adresse ist bereits über eine andere Methode verbunden (zum Beispiel IMAP, Gmail oder Outlook). Wir haben dieses Postfach daher nicht verändert. Wenn Sie die Verbindungsart wechseln möchten, entfernen Sie das Postfach zuerst und verbinden es dann neu.",
-    "outlookNoMailbox": "Dieses Microsoft-Konto hat kein Outlook-Postfach (Exchange Online), es gibt also nichts zu verbinden. Das ist bei Admin-Konten ohne Exchange-Lizenz üblich oder wenn die E-Mails der Organisation woanders gehostet werden. Liegen Ihre E-Mails auf einem anderen Server, verbinden Sie die Adresse stattdessen per IMAP.",
+    "outlookNoMailbox": "Dieses Microsoft-Konto hat kein Outlook-Postfach (Exchange Online), es gibt also nichts zu verbinden. Das ist bei Admin-Konten ohne Exchange-Lizenz üblich oder wenn die E-Mails der Organisation woanders gehostet werden. Liegen Ihre E-Mails auf einem anderen Server, verbinden Sie die Adresse stattdessen per IMAP. Mit dem falschen Microsoft-Konto angemeldet? Verbinden Sie Outlook erneut und wählen Sie das richtige Konto.",
     "connectionFailed": "Verbindung des Postfachs fehlgeschlagen ({error}). Bitte versuchen Sie es erneut.",
     "contactSupport": "Support kontaktieren",
     "checkoutSuccess": "Willkommen bei {plan}. Ihr Abonnement wird gerade aktiviert, das kann einen Moment dauern.",

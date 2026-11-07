@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "https://autoconfig.thunderbird.net/v1.1/biglobe.ne.jp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "BIGLOBE password",
+    "helpUrl": "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "usernameForm": "Your full BIGLOBE address, name@xxx.biglobe.ne.jp, in the field BIGLOBE's guide labels アカウント.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BIGLOBE Mail in Claude: One Host for IMAP and SMTP",
+    "description": "Connect a BIGLOBE mailbox to Claude or any MCP client at mail.biglobe.ne.jp:993. One host serves IMAP and SMTP over SSL, with your BIGLOBE address and BIGLOBE password."
+  },
+  "hero": {
+    "eyebrow": "BIGLOBE + AI",
+    "titleLine1": "Connect BIGLOBE mail to Claude,",
+    "titleLine2": "Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real BIGLOBE inbox. Read, search, send, reply, schedule and organize mail over IMAP, with the settings BIGLOBE publishes and nothing to switch on first.",
+    "answer": "Claude cannot reach BIGLOBE mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at mail.biglobe.ne.jp on port 993, authenticating with your BIGLOBE address and BIGLOBE password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. BIGLOBE is one of the simpler Japanese ISPs to connect: the same host serves incoming and outgoing mail, the password is the ordinary BIGLOBE password, and there is no toggle to find in the webmail first. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "BIGLOBE password, nothing to enable",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How BIGLOBE connects: mail.biglobe.ne.jp for both directions",
+    "body": "BIGLOBE documents one server name for everything. IMAP is <code>mail.biglobe.ne.jp</code> on port 993 with SSL, and SMTP is the same <code>mail.biglobe.ne.jp</code> on port 465 with SSL. The guide also lists 143 and 587 without SSL; MCPEmails uses the encrypted pair. The username, in the field BIGLOBE labels <b>アカウント</b>, is your BIGLOBE mail address, and the password is your <b>BIGLOBEパスワード</b>. BIGLOBE's IMAP guide lists no prerequisite and no separate mail password, which sets it apart from several other Japanese ISPs. One thing to know about the server itself: before you log in it says nothing about how it authenticates, so a client that waits for an advertised list of mechanisms sees an empty one. MCPEmails asks, gets <code>PLAIN</code>, <code>LOGIN</code> and <code>CRAM-MD5</code> back, and logs in. Autodiscovery also fails for BIGLOBE, because the public Mozilla database lists only POP for biglobe.ne.jp."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and asks for no card."
+    },
+    {
+      "h": "Have your BIGLOBE address and password ready",
+      "p": "The username is your BIGLOBE mail address and the password is your BIGLOBE password, the same one BIGLOBE's guide tells you to type into a mail program. There is no separate credential to create and no setting to enable in the webmail first."
+    },
+    {
+      "h": "Enter them in MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the address and the password. The BIGLOBE host and ports are prefilled and were confirmed from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI client",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent can read, search, send, reply, forward, schedule and organize the BIGLOBE mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The banner advertises no capabilities, and some tooling gives up there",
+      "p": "The greeting from <code>mail.biglobe.ne.jp</code> is a bare <code>* OK IMAP4rev1 server ready</code>, with no capability list and no <code>SASL-IR</code>. Only after an explicit CAPABILITY request does the server list <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> and <code>AUTH=CRAM-MD5</code>. Libraries that read the greeting alone and refuse to continue when it names no mechanism report BIGLOBE as unreachable while Thunderbird logs in without complaint. MCPEmails asks before deciding, so this is handled for you."
+    },
+    {
+      "h": "MOVE is there, IDLE is not",
+      "p": "When probed, BIGLOBE advertised <code>MOVE</code> and <code>UIDPLUS</code>, so filing a message is one atomic command rather than a copy, a flag update and an expunge. It did not advertise <code>IDLE</code>, so new mail is found by polling rather than pushed: an agent sees a new message the next time it checks, not the instant it arrives. It also omits <code>SPECIAL-USE</code>, so the sent, drafts and trash folders are matched by name. If an agent files something in the wrong folder, name the folder in the instruction."
+    },
+    {
+      "h": "Your mail client may offer only POP, because the public database does",
+      "p": "The Mozilla autoconfiguration database that many clients consult lists only POP3 for biglobe.ne.jp, so a client that fills in settings for you can silently set up a download-and-delete account instead of IMAP. BIGLOBE's own guide documents IMAP on port 993. Enter it by hand, or let MCPEmails prefill it."
+    }
+  ],
+  "limits": [
+    "There is no IDLE support, so mail is polled rather than pushed. Your agent sees a new message the next time it checks rather than the moment it arrives.",
+    "The SMTP server accepts messages up to 100 MB, which is generous, but the receiving server applies its own limit. Most sit between 10 MB and 50 MB, so a large attachment BIGLOBE accepts can still bounce from the other end.",
+    "There is no app password and no OAuth path, so the stored credential is your BIGLOBE password. Changing it disconnects the mailbox until you enter the new one."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with BIGLOBE mail?",
+      "a": "Not on its own. Claude has no built-in BIGLOBE connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to the mailbox over IMAP gives Claude read, search, send, reply, forward, schedule and organize access to it, and the same connection works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the BIGLOBE IMAP and SMTP settings?",
+      "a": "IMAP is mail.biglobe.ne.jp on port 993 with SSL. SMTP is mail.biglobe.ne.jp on port 465 with SSL. The username is your BIGLOBE mail address and the password is your BIGLOBE password. The host was confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Which password does BIGLOBE mail use?",
+      "a": "The BIGLOBE password, the one BIGLOBE's IMAP guide tells you to enter in a mail program. BIGLOBE's guide lists no separate mail password and no app password."
+    },
+    {
+      "q": "Do I have to enable IMAP in BIGLOBE first?",
+      "a": "BIGLOBE's IMAP setup guide lists no prerequisite: it gives the server, the ports and the credentials and nothing to switch on. If a login is refused, check the address and password before looking for a setting."
+    },
+    {
+      "q": "Why does my mail client suggest POP for BIGLOBE?",
+      "a": "Because the public autoconfiguration database lists only POP3 for biglobe.ne.jp. IMAP exists and is documented by BIGLOBE at mail.biglobe.ne.jp on port 993 with SSL. Enter it by hand, or let MCPEmails fill it in."
+    },
+    {
+      "q": "Is my BIGLOBE mail stored on your servers?",
+      "a": "No. Messages are fetched live from BIGLOBE over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a BIGLOBE inbox",
+    "sub": "Connect BIGLOBE mail in minutes. One inbox free forever, no card required."
+  }
+}

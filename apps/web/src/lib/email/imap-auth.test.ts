@@ -9,6 +9,7 @@ import {
   cramMd5Response,
   imapLoginArgument,
   parseImapCapabilities,
+  shouldRetryPlainWithLogin,
 } from './imap-auth.ts';
 import { authenticateImapPassword } from './validate-imap.ts';
 
@@ -165,4 +166,44 @@ test('validator runs the RFC 2195 CRAM-MD5 transcript when LOGIN is disabled', a
   assert.equal(result.status, 'OK');
   assert.equal(result.token, RFC2195_RESPONSE, 'the response is returned so the caller can redact it');
   assert.ok(!received.join('\n').includes('tanstaaf'), 'the password never goes on the wire');
+});
+
+// secureimap.t-online.de, probed 2026-11-07 with a made-up account.
+const TONLINE_GREETING =
+  '* OK [CAPABILITY IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT] IMAP Proxy ready (secureimap.t-online.de)';
+
+test('a PLAIN refused as a mechanism retries with LOGIN; a credential verdict does not', () => {
+  const none = parseImapCapabilities([TONLINE_GREETING]);
+  assert.equal(shouldRetryPlainWithLogin(none, 'NO', 'Authentication mechanism not supported'), true);
+  assert.equal(shouldRetryPlainWithLogin(none, 'NO', 'AUTHENTICATE does not support PLAIN'), true);
+  assert.equal(shouldRetryPlainWithLogin(none, 'BAD', 'Unsupported authentication mechanism'), true);
+  assert.equal(shouldRetryPlainWithLogin(none, 'NO', 'Invalid login'), false);
+  assert.equal(shouldRetryPlainWithLogin(none, 'NO', '[AUTHENTICATIONFAILED] Authentication failed.'), false);
+  assert.equal(shouldRetryPlainWithLogin(none, 'BAD', 'AUTHENTICATE Command syntax error'), false);
+  assert.equal(shouldRetryPlainWithLogin(none, 'OK', 'Authentication mechanism not supported'), false);
+  assert.equal(
+    shouldRetryPlainWithLogin(parseImapCapabilities(['* CAPABILITY IMAP4rev1 LOGINDISABLED']), 'NO', 'Authentication mechanism not supported'),
+    false,
+  );
+});
+
+test('validator on T-Online: PLAIN refused as a mechanism, then LOGIN reaches the real check', async () => {
+  const token = Buffer.from('\x00someone@t-online.de\x00pw', 'utf8').toString('base64');
+  const { result, received } = await transcript(TONLINE_GREETING, 'someone@t-online.de', 'pw', (line) => {
+    if (line.startsWith('A0001 ')) return 'A0001 NO Authentication mechanism not supported\r\n';
+    if (line.startsWith('L0001 LOGIN ')) return 'L0001 OK LOGIN completed\r\n';
+    return undefined;
+  });
+  assert.equal(result.mechanism, 'LOGIN');
+  assert.equal(result.status, 'OK');
+  assert.deepEqual(received, [`A0001 AUTHENTICATE PLAIN ${token}`, 'L0001 LOGIN "someone@t-online.de" "pw"']);
+});
+
+test('validator does not retry a PLAIN the server rejected on the credential', async () => {
+  const { result, received } = await transcript(TONLINE_GREETING, 'someone@example.com', 'pw', (line) =>
+    line.startsWith('A0001 ') ? 'A0001 NO [AUTHENTICATIONFAILED] Authentication failed.\r\n' : undefined
+  );
+  assert.equal(result.mechanism, 'PLAIN');
+  assert.equal(result.status, 'NO');
+  assert.equal(received.length, 1);
 });

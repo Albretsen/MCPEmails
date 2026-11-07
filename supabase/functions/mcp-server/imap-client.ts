@@ -63,6 +63,7 @@ import { imapSelectCommand } from "./imap-read-only.ts";
 import { IMAP_CLIENT_ID, imapServerWantsId } from "./imap-id.ts";
 import {
   chooseImapPasswordMechanism,
+  shouldRetryPlainWithLogin,
   cramMd5Response,
   imapLoginArgument,
   type ImapPasswordMechanism,
@@ -544,7 +545,30 @@ interface ReadTaggedOptions {
    * one command needs its own budget and why nothing else gets one.
    */
   idleTimeoutMs?: number;
+  /**
+   * Keep only the first this-many octets of any literal and drain the rest,
+   * instead of failing the command. Takes precedence over `maxLiteralBytes`.
+   *
+   * For commands whose literals are previews and envelope strings, where a
+   * prefix is as good as the whole. The summary FETCH asks for
+   * `BODY.PEEK[1]<0.2048>`, but a server that ignores the partial range (or
+   * a message whose subject is a megabyte literal) answers with the whole
+   * part. Without a cut that literal was escaped into the logical line,
+   * tokenized and then decoded in full to show 2 KB, a page of such rows
+   * reached the isolate's 256 MB ceiling, and the worker died under every
+   * other tenant's request sharing it (2026-11-04: 546s from one mail.ru
+   * inbox's email_search/email_list).
+   */
+  truncateLiteralBytes?: number;
 }
+
+/**
+ * Per-literal cut for summary FETCHes (ENVELOPE, BODYSTRUCTURE, the 2 KB
+ * preview, and the preview extension up to {@link PREVIEW_EXTENDED_BYTES}).
+ * Far above anything a compliant reply carries, far below what a page of
+ * whole body parts adds up to.
+ */
+export const SUMMARY_LITERAL_TRUNCATE_BYTES = 64 * 1024;
 
 /** A live, authenticated IMAP session over implicit TLS. */
 export class ImapClient {
@@ -1117,7 +1141,13 @@ export class ImapClient {
         : null;
     }
     const mechanism = chooseImapPasswordMechanism(caps);
-    return { ...(await this.authenticatePassword(mechanism, username, password)), mechanism };
+    const first = await this.authenticatePassword(mechanism, username, password);
+    // A PLAIN refused as a mechanism (T-Online) never reached the password
+    // check: LOGIN on the same connection is the first real one.
+    if (mechanism === "PLAIN" && shouldRetryPlainWithLogin(caps, first.resp.status, first.resp.text)) {
+      return { ...(await this.authenticatePassword("LOGIN", username, password)), mechanism: "LOGIN" };
+    }
+    return { ...first, mechanism };
   }
 
   /**
@@ -1585,6 +1615,7 @@ export class ImapClient {
     );
     const resp = await this.readTagged(tag, {
       maxLiteralBytes: options.maxLiteralBytes,
+      truncateLiteralBytes: SUMMARY_LITERAL_TRUNCATE_BYTES,
     });
     const summaries: ImapMessageSummary[] = [];
     const prefixBytes = previewPart === "" ? 0 : summaryPreviewBytes();
@@ -1624,7 +1655,10 @@ export class ImapClient {
     if (more <= 0) return;
     const tag = this.nextTag();
     await this.write(`${tag} UID FETCH ${[...cut.keys()].join(",")} (UID BODY.PEEK[1]<${prefixBytes}.${more}>)${CRLF}`);
-    const resp = await this.readTagged(tag, { maxLiteralBytes: PREVIEW_EXTENDED_BYTES * 2 });
+    const resp = await this.readTagged(tag, {
+      maxLiteralBytes: PREVIEW_EXTENDED_BYTES * 2,
+      truncateLiteralBytes: more,
+    });
     if (resp.status !== "OK") return;
     const byUid = new Map(summaries.map((s) => [s.uid, s]));
     for (const line of resp.untagged) {
@@ -2637,7 +2671,20 @@ export class ImapClient {
         let litMatch = /\{(\d+)\}$/.exec(line);
         while (litMatch) {
           const n = Number(litMatch[1]);
-          if (oversized !== null || n > maxLiteralBytes) {
+          const keep = options.truncateLiteralBytes;
+          if (oversized === null && keep !== undefined && n > keep) {
+            const literal = await this.readExact(keep);
+            await this.discardExact(n - keep);
+            const cont = await this.readLine();
+            if (options.captureLiterals) {
+              line = line.slice(0, litMatch.index) +
+                `"${literalPlaceholder(literals.length)}"` + cont;
+              literals.push(literal);
+            } else {
+              line = line.slice(0, litMatch.index) +
+                `"${escapeQuoted(literal)}"` + cont;
+            }
+          } else if (oversized !== null || n > maxLiteralBytes) {
             if (oversized === null) oversized = n;
             await this.discardExact(n);
             const cont = await this.readLine();
@@ -3459,6 +3506,12 @@ function parseFetchLine(
     ) {
       previewSource = attrs[i + 1] as string;
     }
+  }
+  // A server that ignored `<0.N>` sent the whole part: keep the N octets a
+  // compliant one would have, so the preview and the cut test below see the
+  // same input either way and the decoder never walks a whole body.
+  if (previewSource !== null && previewCut !== undefined && previewSource.length > previewCut.prefixBytes) {
+    previewSource = previewSource.slice(0, previewCut.prefixBytes);
   }
   if (previewSource !== null) {
     const part = structure ? partOneOfStructure(structure) : null;

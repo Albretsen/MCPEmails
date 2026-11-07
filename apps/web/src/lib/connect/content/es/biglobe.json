@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "https://autoconfig.thunderbird.net/v1.1/biglobe.ne.jp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de BIGLOBE",
+    "helpUrl": "https://support.biglobe.ne.jp/settei/mailer/imap.html",
+    "usernameForm": "Tu dirección completa de BIGLOBE, name@xxx.biglobe.ne.jp, en el campo que la guía de BIGLOBE llama アカウント.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de BIGLOBE en Claude: un solo servidor para IMAP y SMTP",
+    "description": "Conecta un buzón de BIGLOBE a Claude o a cualquier cliente MCP en mail.biglobe.ne.jp:993. Un solo servidor atiende IMAP y SMTP con SSL, con tu dirección y tu contraseña de BIGLOBE."
+  },
+  "hero": {
+    "eyebrow": "BIGLOBE + IA",
+    "titleLine1": "Conecta el correo de BIGLOBE a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de BIGLOBE. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes que publica BIGLOBE y sin nada que activar antes.",
+    "answer": "Claude no puede acceder por sí solo al correo de BIGLOBE. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.biglobe.ne.jp en el puerto 993, autenticándose con tu dirección y tu contraseña de BIGLOBE, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. BIGLOBE es uno de los ISP japoneses más sencillos de conectar: el mismo servidor atiende el correo entrante y el saliente, la contraseña es la contraseña normal de BIGLOBE y no hay ningún interruptor que buscar antes en el webmail. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de BIGLOBE, nada que activar",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta BIGLOBE: mail.biglobe.ne.jp en ambas direcciones",
+    "body": "BIGLOBE documenta un único nombre de servidor para todo. IMAP es <code>mail.biglobe.ne.jp</code> en el puerto 993 con SSL, y SMTP es el mismo <code>mail.biglobe.ne.jp</code> en el puerto 465 con SSL. La guía también lista el 143 y el 587 sin SSL; MCPEmails usa el par cifrado. El usuario, en el campo que BIGLOBE llama <b>アカウント</b> (cuenta), es tu dirección de correo de BIGLOBE, y la contraseña es tu <b>BIGLOBEパスワード</b>. La guía IMAP de BIGLOBE no indica ningún requisito previo ni ninguna contraseña de correo aparte, lo que la distingue de varios otros ISP japoneses. Una cosa que conviene saber del propio servidor: antes de iniciar sesión no dice nada sobre cómo autentica, así que un cliente que espera una lista anunciada de mecanismos ve una lista vacía. MCPEmails pregunta, recibe <code>PLAIN</code>, <code>LOGIN</code> y <code>CRAM-MD5</code> como respuesta, e inicia sesión. La detección automática también falla con BIGLOBE, porque la base de datos pública de Mozilla solo lista POP para biglobe.ne.jp."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Ten a mano tu dirección y tu contraseña de BIGLOBE",
+      "p": "El usuario es tu dirección de correo de BIGLOBE y la contraseña es tu contraseña de BIGLOBE, la misma que la guía de BIGLOBE te indica escribir en un programa de correo. No hay ninguna credencial aparte que crear ni ningún ajuste que activar antes en el webmail."
+    },
+    {
+      "h": "Introdúcelos en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección y la contraseña. El servidor y los puertos de BIGLOBE ya vienen rellenados y se confirmaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de BIGLOBE."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El saludo no anuncia ninguna capacidad, y algunas herramientas se rinden ahí",
+      "p": "El saludo de <code>mail.biglobe.ne.jp</code> es un escueto <code>* OK IMAP4rev1 server ready</code>, sin lista de capacidades y sin <code>SASL-IR</code>. Solo tras una petición CAPABILITY explícita el servidor lista <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> y <code>AUTH=CRAM-MD5</code>. Las bibliotecas que leen solo el saludo y se niegan a continuar cuando no nombra ningún mecanismo dicen que BIGLOBE es inaccesible mientras Thunderbird inicia sesión sin problemas. MCPEmails pregunta antes de decidir, así que esto ya lo tienes resuelto."
+    },
+    {
+      "h": "MOVE está, IDLE no",
+      "p": "Al sondearlo, BIGLOBE anunció <code>MOVE</code> y <code>UIDPLUS</code>, así que archivar un mensaje es un único comando atómico en lugar de una copia, una actualización de marcas y un expunge. No anunció <code>IDLE</code>, así que el correo nuevo se descubre consultando periódicamente en lugar de recibirse al instante: un agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega. También omite <code>SPECIAL-USE</code>, así que las carpetas de enviados, borradores y papelera se identifican por nombre. Si un agente archiva algo en la carpeta equivocada, nombra la carpeta en la instrucción."
+    },
+    {
+      "h": "Tu cliente de correo puede ofrecer solo POP, porque la base de datos pública lo hace",
+      "p": "La base de datos de configuración automática de Mozilla que consultan muchos clientes solo lista POP3 para biglobe.ne.jp, así que un cliente que rellena los ajustes por ti puede configurar sin avisar una cuenta de descargar y borrar en lugar de IMAP. La propia guía de BIGLOBE documenta IMAP en el puerto 993. Introdúcelo a mano, o deja que MCPEmails lo rellene."
+    }
+  ],
+  "limits": [
+    "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse al instante. Tu agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega.",
+    "El servidor SMTP acepta mensajes de hasta 100 MB, que es generoso, pero el servidor de destino aplica su propio límite. La mayoría están entre 10 MB y 50 MB, así que un adjunto grande que BIGLOBE acepta puede rebotar igualmente desde el otro extremo.",
+    "No hay contraseña de aplicación ni vía OAuth, así que la credencial guardada es tu contraseña de BIGLOBE. Cambiarla desconecta el buzón hasta que introduzcas la nueva."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de BIGLOBE?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para BIGLOBE y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de BIGLOBE?",
+      "a": "IMAP es mail.biglobe.ne.jp en el puerto 993 con SSL. SMTP es mail.biglobe.ne.jp en el puerto 465 con SSL. El usuario es tu dirección de correo de BIGLOBE y la contraseña es tu contraseña de BIGLOBE. El servidor se confirmó con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Qué contraseña usa el correo de BIGLOBE?",
+      "a": "La contraseña de BIGLOBE, la que la guía IMAP de BIGLOBE te indica introducir en un programa de correo. La guía de BIGLOBE no menciona ninguna contraseña de correo aparte ni ninguna contraseña de aplicación."
+    },
+    {
+      "q": "¿Tengo que activar IMAP en BIGLOBE primero?",
+      "a": "La guía de configuración IMAP de BIGLOBE no indica ningún requisito previo: da el servidor, los puertos y las credenciales, y nada que activar. Si se rechaza un inicio de sesión, comprueba la dirección y la contraseña antes de buscar un ajuste."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo sugiere POP para BIGLOBE?",
+      "a": "Porque la base de datos pública de configuración automática solo lista POP3 para biglobe.ne.jp. IMAP existe y BIGLOBE lo documenta en mail.biglobe.ne.jp en el puerto 993 con SSL. Introdúcelo a mano, o deja que MCPEmails lo rellene."
+    },
+    {
+      "q": "¿Se almacena mi correo de BIGLOBE en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de BIGLOBE por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de BIGLOBE",
+    "sub": "Conecta el correo de BIGLOBE en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

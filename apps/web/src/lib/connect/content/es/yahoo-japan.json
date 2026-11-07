@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.yahoo-net.jp/PccMail/s/article/H000007321"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del Yahoo! JAPAN ID, una vez activado el acceso IMAP y SMTP",
+    "helpUrl": "https://support.yahoo-net.jp/PccMail/s/article/H000007321",
+    "usernameForm": "Tu dirección de Yahoo! JAPAN, name@yahoo.co.jp o name@ymail.ne.jp, o tu Yahoo! JAPAN ID. Si inicias sesión con un ID secreto, usa el ID secreto.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo! JAPAN Mail en Claude: IMAP sin contraseña de aplicación",
+    "description": "Conecta Yahoo! JAPAN Mail (yahoo.co.jp) a Claude o a cualquier cliente MCP en imap.mail.yahoo.co.jp:993. Activa antes el acceso IMAP y SMTP y usa la contraseña de tu Yahoo! JAPAN ID."
+  },
+  "hero": {
+    "eyebrow": "Yahoo! JAPAN Mail + IA",
+    "titleLine1": "Conecta Yahoo! JAPAN Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de yahoo.co.jp. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña normal de tu Yahoo! JAPAN ID, una vez activado el acceso desde fuera de las apps de Yahoo! JAPAN.",
+    "answer": "Claude no puede acceder por sí solo a Yahoo! JAPAN Mail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.mail.yahoo.co.jp en el puerto 993, autenticándose con la contraseña de tu Yahoo! JAPAN ID, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Yahoo! JAPAN es una empresa distinta y una plataforma de correo distinta de Yahoo Mail en yahoo.com: no hay contraseñas de aplicación, y una guía de yahoo.com no sirve aquí. Lo que necesitas en su lugar es una página de ajustes en Yahoo! JAPAN Mail donde se permite el acceso desde fuera de los servicios de Yahoo! JAPAN y se activan IMAP y SMTP. Hasta que lo hagas, una contraseña correcta será rechazada. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del Yahoo! JAPAN ID, con IMAP activado antes",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Yahoo! JAPAN Mail: IMAP, un interruptor y la contraseña de tu ID",
+    "body": "Yahoo! JAPAN documenta IMAP en <code>imap.mail.yahoo.co.jp</code> en el puerto 993 y SMTP en <code>smtp.mail.yahoo.co.jp</code> en el puerto 465, ambos con SSL, y pide que los nombres se escriban en minúsculas. El usuario es la dirección que quieres usar o tu Yahoo! JAPAN ID, y la contraseña es la <b>contraseña del Yahoo! JAPAN ID</b>, la misma con la que inicias sesión en la web. No hay ninguna contraseña de aplicación que generar. Lo que Yahoo! JAPAN exige en su lugar es un permiso: en la página <b>IMAP/POP/SMTPアクセス</b> (acceso IMAP/POP/SMTP) de los ajustes del correo hay que permitir el acceso desde fuera de los servicios oficiales de Yahoo! JAPAN y activar IMAP y SMTP por separado. La ayuda de Yahoo! JAPAN también advierte de que una cuenta que inicia sesión sin contraseña, con passkey o SMS, tiene que definir una antes de que cualquier app de correo externa pueda usarla. Esta página es para direcciones @yahoo.co.jp y @ymail.ne.jp. Una dirección @yahoo.com es Yahoo Mail, un servicio distinto con su propia página."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta. Deja la pestaña abierta; la parte de Yahoo! JAPAN lleva alrededor de un minuto."
+    },
+    {
+      "h": "Permite el acceso desde fuera de Yahoo! JAPAN y activa IMAP y SMTP",
+      "p": "En Yahoo! JAPAN Mail desde la web, haz clic en el icono del engranaje (<b>設定</b>) arriba a la derecha de la lista de mensajes y abre la página <b>IMAP/POP/SMTPアクセス</b>. En <b>Yahoo! JAPAN公式サービス以外からのアクセス</b> elige <b>許可する</b>, pon <b>IMAP</b>, <b>POP</b> y <b>SMTP</b> en <b>利用する</b> y haz clic en <b>保存</b>. Yahoo! JAPAN advierte de que SMTP no funciona si los demás no están activados también, así que actívalos todos a la vez. Si inicias sesión con passkey o SMS y no tienes contraseña, define una primero; el mismo artículo de ayuda enlaza a la página para hacerlo."
+    },
+    {
+      "h": "Introduce tu dirección y la contraseña de tu Yahoo! JAPAN ID en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce tu dirección @yahoo.co.jp y la contraseña de tu Yahoo! JAPAN ID. Los servidores y puertos ya vienen rellenados y se confirmaron con una conexión TLS real. Si la dirección se rechaza, prueba con tu Yahoo! JAPAN ID en el campo de usuario, que es la otra forma que documenta Yahoo! JAPAN."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de Yahoo! JAPAN."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo! JAPAN no es Yahoo, y una contraseña de aplicación de yahoo.com no sirve de nada aquí",
+      "p": "Yahoo! JAPAN opera su propio servicio de correo en sus propios servidores, bajo <code>yahoo.co.jp</code>, y no es el Yahoo Mail que da servicio a yahoo.com. Los dos tienen servidores distintos, páginas de ajustes distintas y reglas distintas para los clientes de correo. Yahoo Mail rechaza la contraseña de la cuenta y exige una contraseña de aplicación; Yahoo! JAPAN no tiene contraseñas de aplicación en absoluto y acepta la contraseña normal del ID una vez activado el acceso. Una guía escrita para yahoo.com, incluida nuestra propia página de Yahoo Mail, te manda a una página de ajustes que tu cuenta de Yahoo! JAPAN no tiene. Usa esta página para @yahoo.co.jp y @ymail.ne.jp, y la página de Yahoo Mail para @yahoo.com."
+    },
+    {
+      "h": "Un inicio de sesión rechazado suele ser el interruptor de acceso, no la contraseña",
+      "p": "Yahoo! JAPAN entrega los buzones con el acceso desde fuera de sus propias apps desactivado. Hasta que <b>Yahoo! JAPAN公式サービス以外からのアクセス</b> esté en <b>許可する</b> e IMAP y SMTP estén en <b>利用する</b>, el servidor acepta la conexión y rechaza las credenciales, y nada en ese error explica el motivo. Yahoo! JAPAN también documenta que vuelve a desactivar ese acceso por su cuenta, tras actividad sospechosa de inicio de sesión o tras un periodo largo en el que ninguna app de correo lo usó. Así que una conexión que funcionó durante meses puede fallar al iniciar sesión sin que nada haya cambiado por tu parte; abre la misma página de ajustes y vuelve a activarlo."
+    },
+    {
+      "h": "Yahoo! JAPAN preferiría que no hicieras esto, y lo dice",
+      "p": "El artículo de ayuda que documenta estos ajustes también dice que la autenticación con contraseña por POP, IMAP y SMTP conlleva un riesgo de robo de cuenta, recomienda en su lugar las versiones web y app de Yahoo! JAPAN Mail, y sugiere desactivar el acceso desde apps de correo cuando ya no lo necesites. Esa es la postura de Yahoo! JAPAN, y conviene conocerla antes de depender de la conexión. En el lado de MCPEmails la credencial guardada se cifra en reposo, y desactivar el interruptor en Yahoo! JAPAN corta la conexión de inmediato en su lado, que es la forma más rápida de revocarla."
+    },
+    {
+      "h": "Sin MOVE, sin IDLE y sin SPECIAL-USE, así que las carpetas se identifican por nombre",
+      "p": "Al sondearlo, <code>imap.mail.yahoo.co.jp</code> anunció <code>UIDPLUS</code> y <code>SASL-IR</code>, pero ni <code>MOVE</code>, ni <code>IDLE</code>, ni <code>SPECIAL-USE</code>. Por eso archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un solo comando, el correo nuevo se descubre consultando periódicamente en lugar de recibirse al instante, y las carpetas de enviados, borradores y papelera se identifican por su nombre y no por una función que declare el servidor. Si un agente archiva algo en el lugar equivocado, nombra la carpeta en la instrucción."
+    }
+  ],
+  "limits": [
+    "El acceso desde apps de correo lo desactiva Yahoo! JAPAN cuando quiere, y lo hace tras actividad sospechosa o un largo periodo sin uso. Cuando ocurre, la conexión falla hasta que lo vuelves a activar en los ajustes del correo.",
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de unos 36 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo.",
+    "No hay vía OAuth para apps externas ni contraseña de aplicación, así que la credencial guardada es la contraseña de tu Yahoo! JAPAN ID. Cambiarla desconecta el buzón hasta que introduzcas la nueva."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Yahoo! JAPAN Mail?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Yahoo! JAPAN y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Yahoo! JAPAN Mail?",
+      "a": "IMAP es imap.mail.yahoo.co.jp en el puerto 993 con SSL. SMTP es smtp.mail.yahoo.co.jp en el puerto 465 con SSL. El usuario es tu dirección yahoo.co.jp o tu Yahoo! JAPAN ID, y la contraseña es la de tu Yahoo! JAPAN ID. Ambos servidores se confirmaron con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Por qué una app de correo rechaza mi contraseña de Yahoo! JAPAN?",
+      "a": "Casi siempre porque el acceso desde fuera de los servicios de Yahoo! JAPAN sigue desactivado. Abre el icono del engranaje en Yahoo! JAPAN Mail, ve a IMAP/POP/SMTPアクセス, permite el acceso desde servicios no oficiales, activa IMAP y SMTP y guarda. Si tu cuenta inicia sesión con passkey o SMS, antes tienes que definir una contraseña. Si la conexión funcionaba antes, puede que Yahoo! JAPAN haya vuelto a desactivar el acceso tras un periodo sin uso."
+    },
+    {
+      "q": "¿Yahoo! JAPAN Mail necesita una contraseña de aplicación?",
+      "a": "No. Yahoo! JAPAN no tiene un sistema de contraseñas de aplicación. Las apps de correo usan la contraseña del Yahoo! JAPAN ID una vez permitido el acceso en los ajustes. Es justo lo contrario de Yahoo Mail en yahoo.com, que solo acepta contraseñas de aplicación, así que no sigas una guía de yahoo.com para una dirección yahoo.co.jp."
+    },
+    {
+      "q": "¿Puedo conectar una dirección ymail.ne.jp?",
+      "a": "Sí. ymail.ne.jp es una dirección de Yahoo! JAPAN y usa los mismos servidores, la misma página de ajustes y la misma contraseña del Yahoo! JAPAN ID que yahoo.co.jp."
+    },
+    {
+      "q": "¿Se almacena mi correo de Yahoo! JAPAN en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Yahoo! JAPAN por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Desactivar el acceso desde apps de correo en los ajustes de Yahoo! JAPAN corta la conexión de inmediato en su lado."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Yahoo! JAPAN",
+    "sub": "Conecta Yahoo! JAPAN Mail en minutos una vez activado el acceso. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Tienes una dirección @yahoo.com?",
+    "label": "Conecta Yahoo Mail, que usa una contraseña de aplicación",
+    "href": "/connect/yahoo"
+  }
+}

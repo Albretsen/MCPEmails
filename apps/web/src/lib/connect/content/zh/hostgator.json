@@ -2,7 +2,9 @@
   "_sources": [
     "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
     "https://www.hostgator.com/help/article/email-connection-settings",
-    "https://www.hostgator.com/help/article/professional-email-product-overview"
+    "https://www.hostgator.com/help/article/professional-email-product-overview",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30811089087379-Como-usar-seu-e-mail-em-plataformas-externas-Gmail-Outlook-e-outros",
+    "https://suporte.hostgator.com.br/hc/pt-br/articles/30820346865811-Como-saber-o-nome-do-seu-servidor-na-HostGator"
   ],
   "auth": {
     "method": "mail-password",
@@ -59,6 +61,10 @@
     {
       "h": "点过证书警告是错误的解决办法，还会掩盖真正的问题",
       "p": "由于名称不匹配在 HostGator 上极为常见，通常的变通方法是接受证书或添加例外。桌面客户端允许你这样做。而来自服务器的自动化 IMAP 连接（MCP 集成正是这种连接）通常不允许，也不应该允许：一旦你习惯性地忽略名称不匹配，就无法察觉真正的不匹配。指向服务器主机名，证书就能正常通过校验，任何地方都不需要例外。"
+    },
+    {
+      "h": "HostGator Brasil 运行自己的服务器，命名为 brNNN.hostgator.com.br",
+      "p": "从 HostGator Brasil 购买的套餐根本不在 gator 服务器上。它的支持站点记录了同样的 cPanel 端口，IMAP 为 993，使用 SSL 的 SMTP 为 465，但推荐的服务器名称是你自己主机套餐所在服务器的名称，形如 <code>br100.hostgator.com.br</code>，未加密的替代选项则是 <code>mail.seudominio.com.br</code>。这个名称显示在 Portal do Cliente 中 <b>Hospedagens e Servidores</b>（主机与服务器）、<b>Gerenciar</b>（管理）下的 <b>Nome do Servidor</b>（服务器名称）字段中，也在欢迎邮件的 <b>Informações Técnicas</b>（技术信息）部分。HostGator Brasil 的付费邮箱产品以 E-mail Profissional 名义销售，运行在 Titan 上，使用 <code>imap.titan.email</code> 和 <code>smtp.titan.email</code>；其支持文档称，客户端登录之前必须先为外部应用启用 Titan。这种邮箱请按 Titan 连接，而不是按 cPanel。"
     }
   ],
   "limits": [

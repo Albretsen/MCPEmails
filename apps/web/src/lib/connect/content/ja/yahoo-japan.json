@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.yahoo-net.jp/PccMail/s/article/H000007321"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Yahoo! JAPAN IDのパスワード（IMAPとSMTPのアクセスを有効にしたあと）",
+    "helpUrl": "https://support.yahoo-net.jp/PccMail/s/article/H000007321",
+    "usernameForm": "Yahoo! JAPANのメールアドレス（name@yahoo.co.jpまたはname@ymail.ne.jp）、またはYahoo! JAPAN ID。シークレットIDでログインしている場合はシークレットIDを使います。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo!メール（Yahoo! JAPAN）をClaudeで使う：アプリ パスワード不要のIMAP接続",
+    "description": "Yahoo! JAPANのYahoo!メール（yahoo.co.jp）をimap.mail.yahoo.co.jp:993でClaudeやあらゆるMCPクライアントに接続。先にIMAPとSMTPのアクセスを有効にし、Yahoo! JAPAN IDのパスワードでログインします。"
+  },
+  "hero": {
+    "eyebrow": "Yahoo!メール + AI",
+    "titleLine1": "Yahoo!メール（Yahoo! JAPAN）をClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のyahoo.co.jpの受信トレイを渡せます。Yahoo! JAPAN公式サービス以外からのアクセスを有効にすれば、ふだんのYahoo! JAPAN IDのパスワードだけで、IMAP経由でメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "answer": "Claudeは自力ではYahoo!メールに届きません。MCPEmailsはホスト型のMCPサーバーで、imap.mail.yahoo.co.jpのポート993にIMAPで接続し、Yahoo! JAPAN IDのパスワードで認証するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。Yahoo! JAPANは米国Yahooのyahoo.comとは別の会社で、メールの基盤も別です。アプリ パスワードはなく、yahoo.com向けの手順は当てはまりません。代わりに必要なのは、Yahoo!メールの設定ページ1つで、Yahoo! JAPAN公式サービス以外からのアクセスを許可し、IMAPとSMTPを有効にしておくことです。それまでは、正しいパスワードでも拒否されます。受信トレイ1つはずっと無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Yahoo! JAPAN IDのパスワード、先にIMAPを有効化",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "Yahoo!メールの接続方法：IMAP、アクセス設定の切り替え、そしてIDのパスワード",
+    "body": "Yahoo! JAPANはIMAPを<code>imap.mail.yahoo.co.jp</code>のポート993、SMTPを<code>smtp.mail.yahoo.co.jp</code>のポート465、どちらもSSLで文書化しており、サーバー名は小文字で入力するよう案内しています。ユーザー名は使いたいメールアドレスまたはYahoo! JAPAN ID、パスワードは<b>Yahoo! JAPAN IDのパスワード</b>、つまりウェブでログインするときと同じものです。生成すべきアプリ パスワードはありません。Yahoo! JAPANが代わりに求めるのは許可です。メール設定の<b>IMAP/POP/SMTPアクセス</b>ページで、Yahoo! JAPAN公式サービス以外からのアクセスを許可し、IMAPとSMTPをそれぞれ利用する設定にしておく必要があります。Yahoo! JAPANのヘルプには、パスキーやSMSなどパスワードなしでログインしているアカウントは、外部のメールアプリを使う前にパスワードを設定する必要があるとも書かれています。このページは@yahoo.co.jpと@ymail.ne.jpのアドレス向けです。@yahoo.comのアドレスはYahoo Mailという別のサービスで、専用のページがあります。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成する",
+      "p": "mcpemails.comで新規登録します。Freeプランでは受信トレイ1つをずっと接続でき、カードは不要です。そのまま開いておいてください。Yahoo! JAPAN側の作業は1分ほどです。"
+    },
+    {
+      "h": "Yahoo! JAPAN以外からのアクセスを許可し、IMAPとSMTPを有効にする",
+      "p": "ウェブ版のYahoo!メールで、メール一覧の右上にある歯車アイコン（<b>設定</b>）をクリックし、<b>IMAP/POP/SMTPアクセス</b>のページを開きます。<b>Yahoo! JAPAN公式サービス以外からのアクセス</b>で<b>許可する</b>を選び、<b>IMAP</b>、<b>POP</b>、<b>SMTP</b>をそれぞれ<b>利用する</b>にして、<b>保存</b>をクリックします。Yahoo! JAPANによると、SMTPは他の項目も有効でないと動作しないので、まとめて有効にしてください。パスキーやSMSでログインしていてパスワードがない場合は、先にパスワードを設定します。同じヘルプ記事からその設定ページにリンクされています。"
+    },
+    {
+      "h": "MCPEmailsにメールアドレスとYahoo! JAPAN IDのパスワードを入力する",
+      "p": "IMAP / SMTPを選び、@yahoo.co.jpのアドレスとYahoo! JAPAN IDのパスワードを入力します。ホストとポートはあらかじめ入力済みで、実際のTLS接続で確認したものです。アドレスが拒否されたら、ユーザー名欄にYahoo! JAPAN IDを入れて試してください。Yahoo! JAPANが案内しているもう1つの形式です。"
+    },
+    {
+      "h": "MCP URLをAIクライアントに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがYahoo! JAPANのメールボックスの閲覧、検索、送信、返信、転送、予約送信、整理をできるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo! JAPANはYahooではなく、yahoo.comのアプリ パスワードはここでは何の役にも立ちません",
+      "p": "Yahoo! JAPANは<code>yahoo.co.jp</code>のもとで独自のサーバー上に独自のメールサービスを運営しており、yahoo.comを提供するYahoo Mailとは別物です。ホストも設定ページもメールクライアント向けのルールも異なります。Yahoo Mailはアカウントのパスワードを拒否してアプリ パスワードを要求しますが、Yahoo! JAPANにはアプリ パスワードそのものがなく、アクセスを有効にすれば通常のIDのパスワードを受け付けます。yahoo.com向けに書かれた手順は、私たちのYahoo Mailのページも含めて、Yahoo! JAPANのアカウントには存在しない設定ページへ案内してしまいます。@yahoo.co.jpと@ymail.ne.jpにはこのページを、@yahoo.comにはYahoo Mailのページを使ってください。"
+    },
+    {
+      "h": "ログインが拒否される原因は、たいていパスワードではなくアクセス設定です",
+      "p": "Yahoo! JAPANのメールボックスは、初期状態では自社アプリ以外からのアクセスが無効になっています。<b>Yahoo! JAPAN公式サービス以外からのアクセス</b>が<b>許可する</b>に、IMAPとSMTPが<b>利用する</b>になるまで、サーバーは接続を受け付けたうえで認証情報を拒否し、そのエラーには理由が一切示されません。さらにYahoo! JAPANは、不審なログインがあったときや、メールアプリからの利用が長期間なかったときに、このアクセスを自動で無効に戻すとも明記しています。そのため、何か月も動いていた接続が、こちらでは何も変えていないのにログイン失敗で止まることがあります。同じ設定ページを開いて、もう一度有効にしてください。"
+    },
+    {
+      "h": "Yahoo! JAPANはこの使い方を勧めておらず、そう明言しています",
+      "p": "これらの設定を説明しているヘルプ記事には、POP、IMAP、SMTPでのパスワード認証にはアカウント乗っ取りのリスクがあること、代わりにウェブ版やアプリ版のYahoo!メールを推奨すること、不要になったらメールアプリからのアクセスを無効にすることが書かれています。それがYahoo! JAPANの立場であり、この接続に頼る前に知っておく価値があります。MCPEmails側では保存した認証情報を暗号化しており、Yahoo! JAPANで設定を無効にすれば先方の側で接続が即座に切れるので、それが取り消しの最短の方法です。"
+    },
+    {
+      "h": "MOVEもIDLEもSPECIAL-USEもないため、フォルダーは名前で照合されます",
+      "p": "調査時、<code>imap.mail.yahoo.co.jp</code>は<code>UIDPLUS</code>と<code>SASL-IR</code>を通知していましたが、<code>MOVE</code>、<code>IDLE</code>、<code>SPECIAL-USE</code>はいずれも通知していませんでした。そのためメッセージの振り分けは1つのコマンドではなくコピー、フラグ更新、expungeとして実行され、新着メールはプッシュではなくポーリングで見つかり、送信済み、下書き、ゴミ箱のフォルダーはサーバーが宣言する役割ではなく名前で識別されます。エージェントが間違った場所に振り分けたら、指示の中でフォルダー名を指定してください。"
+    }
+  ],
+  "limits": [
+    "メールアプリからのアクセスを無効にする権限はYahoo! JAPAN側にあり、不審な操作があったときや長期間使われなかったときに無効にされます。その場合、メール設定で再度有効にするまで接続は失敗します。",
+    "SMTPサーバーが通知するメッセージの最大サイズはおよそ36 MBです。それより大きい添付ファイルを含む転送は送信時に拒否されます。",
+    "外部アプリ向けのOAuthもアプリ パスワードもないため、保存される認証情報はYahoo! JAPAN IDのパスワードです。変更すると、新しいパスワードを入力するまでメールボックスは切断されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはYahoo!メール（Yahoo! JAPAN）で使えますか？",
+      "a": "単体では使えません。Claudeに内蔵のYahoo! JAPANコネクタはなく、自力でIMAP接続を開くこともできません。MCPEmailsのようなMCPサーバーをIMAP経由でメールボックスに接続すると、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信、整理をできるようになり、同じ接続がCursor、ChatGPT、その他のMCPクライアントからも使えます。"
+    },
+    {
+      "q": "Yahoo!メールのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはimap.mail.yahoo.co.jpのポート993、SSLです。SMTPはsmtp.mail.yahoo.co.jpのポート465、SSLです。ユーザー名はyahoo.co.jpのアドレスまたはYahoo! JAPAN ID、パスワードはYahoo! JAPAN IDのパスワードです。両方のホストは、このページに表示された日付に実際のTLS接続で確認しました。"
+    },
+    {
+      "q": "メールアプリでYahoo! JAPANのパスワードが拒否されるのはなぜですか？",
+      "a": "ほとんどの場合、Yahoo! JAPAN公式サービス以外からのアクセスがまだ無効のままだからです。Yahoo!メールの歯車アイコンからIMAP/POP/SMTPアクセスを開き、公式サービス以外からのアクセスを許可し、IMAPとSMTPを利用する設定にして保存してください。パスキーやSMSでログインしているアカウントは、先にパスワードを設定する必要があります。以前は接続できていたなら、長期間使われなかったためにYahoo! JAPANがアクセスを再び無効にした可能性があります。"
+    },
+    {
+      "q": "Yahoo!メールにアプリ パスワードは必要ですか？",
+      "a": "いいえ。Yahoo! JAPANにはアプリ パスワードの仕組みがありません。メールアプリは、設定でアクセスを許可したあと、Yahoo! JAPAN IDのパスワードを使います。これはアプリ パスワードしか受け付けないyahoo.comのYahoo Mailとは正反対なので、yahoo.co.jpのアドレスにyahoo.com向けの手順を当てはめないでください。"
+    },
+    {
+      "q": "ymail.ne.jpのアドレスも接続できますか？",
+      "a": "できます。ymail.ne.jpはYahoo! JAPANのアドレスで、yahoo.co.jpと同じサーバー、同じ設定ページ、同じYahoo! JAPAN IDのパスワードを使います。"
+    },
+    {
+      "q": "私のYahoo!メールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにYahoo! JAPANからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。Yahoo! JAPANの設定でメールアプリからのアクセスを無効にすれば、先方の側で接続がすぐに終了します。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにYahoo! JAPANの受信トレイを渡す",
+    "sub": "アクセスを有効にすれば、Yahoo!メールを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  },
+  "seeAlso": {
+    "intro": "@yahoo.comのアドレスをお使いですか？",
+    "label": "アプリ パスワードを使うYahoo Mailを接続する",
+    "href": "/connect/yahoo"
+  }
+}
