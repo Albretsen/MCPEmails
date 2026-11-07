@@ -297,6 +297,13 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user?.displayName || user?.email || tr('sidebar.accountFallback')}
             </div>
+            {/* The email is what tells two accounts apart: Google gives every
+                account of one person the same display name. */}
+            {user?.displayName && user?.email && user.displayName !== user.email ? (
+              <div className="footer-user-email" title={user.email} style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user.email}
+              </div>
+            ) : null}
             {/* Already the effective plan: the dashboard page resolves it
                 through effective_workspace_plan() before it becomes
                 `workspace.plan`. This is the label the switcher above now

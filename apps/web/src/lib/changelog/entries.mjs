@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-11-07',
+    kind: 'improved',
+    title: 'See which account you are signed in to',
+    body:
+      "Signing in with Google now asks which Google account to use, and the dashboard shows your email under your name. Before, two accounts with the same name looked identical.",
+  },
+  {
+    date: '2026-11-07',
     kind: 'fixed',
     title: 'T-Online inboxes connect',
     body:
