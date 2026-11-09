@@ -1081,6 +1081,17 @@ export class ImapClient {
           `IMAP connection refused at auth: ${text}`,
         );
       }
+      // The server's own words for a refused login were never kept anywhere,
+      // so "wrong password" could not be told from "not from your address"
+      // (a GMX mailbox that the web app could sign in to and this runtime
+      // could not, 2026-11-09). `text` is already redacted of the address, the
+      // password and the token; the tools/call line that follows names the inbox.
+      console.warn("[imap] login refused", {
+        host: cfg.host,
+        mechanism,
+        status: resp.status,
+        text: text.slice(0, 200),
+      });
       throw new ImapAuthError(
         mechanism === "PLAIN"
           ? `IMAP authentication failed: ${text}`
