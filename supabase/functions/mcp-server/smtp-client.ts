@@ -30,6 +30,7 @@ import {
   relayForFallback,
   relayOnlyHost,
   relayConfigured,
+  relayLoginListed,
   relayRouteFor,
   RelayUnavailableError,
 } from "./smtp-relay.ts";
@@ -834,6 +835,17 @@ class SmtpSession {
  * to either must be made to the other.
  */
 async function openGuardedSmtpConn(cfg: SmtpConfig, mode: SmtpConnectMode): Promise<OpenedSmtpConn> {
+  // One mailbox login carried by the relay whatever its host (MAIL_RELAY_LOGINS;
+  // see relayLoginListed). Same transport as the one-off retry (465 becomes
+  // 587, which the relay can carry); a relay that is down falls back to direct.
+  if (mode === "auto" && relayRouteFor(cfg.host, "smtp") === null && relayLoginListed(cfg.email)) {
+    try {
+      return { ...(await openFallbackSmtpConn(cfg)), route: "listed" };
+    } catch (err) {
+      if (!(err instanceof RelayUnavailableError)) throw err;
+      console.warn("[mcp-server] relay: smtp login falling back to direct egress", { host: cfg.host, error: err.message });
+    }
+  }
   const relayed = mode === "fallback" ? await openFallbackSmtpConn(cfg) : await openRelayedSmtpConn(cfg);
   if (relayed) return relayed;
 

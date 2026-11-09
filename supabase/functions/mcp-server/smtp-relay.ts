@@ -521,6 +521,35 @@ export function relayForFallback(now: number = Date.now()): RelayConfig | null {
 }
 
 /**
+ * Parse `MAIL_RELAY_LOGINS`: comma- or whitespace-separated SASL logins
+ * (normally email addresses), lower-cased.
+ */
+export function parseRelayLogins(raw: string | null | undefined): Set<string> {
+  return new Set(
+    String(raw ?? "").split(/[\s,]+/).map((login) => login.trim().toLowerCase()).filter((login) => login.length > 0),
+  );
+}
+
+/**
+ * True when this one mailbox login is always carried by the relay, for IMAP
+ * and SMTP, whatever its host.
+ *
+ * For a mailbox whose provider refuses a correct password from our address
+ * but not from the relay's, without wording that says so (a GMX mailbox
+ * accepted from the web app and refused from the edge, 2026-11-09). Its host
+ * cannot be listed: every other mailbox there works directly and would only
+ * get slower. The list is the `MAIL_RELAY_LOGINS` secret, never this repo,
+ * because it holds customer addresses. Read on every call so a change to the
+ * secret needs no deploy; the lookup is a string split.
+ *
+ * Only a preference: if the relay is down the login is dialled directly.
+ */
+export function relayLoginListed(login: string | null | undefined): boolean {
+  if (!login || !currentConfig()) return false;
+  return parseRelayLogins(Deno.env.get("MAIL_RELAY_LOGINS")).has(login.trim().toLowerCase());
+}
+
+/**
  * True when `host` may only be reached through the relay. Decides two things:
  * that IMAP is relayed at all, and that a relay failure is NOT answered with a
  * direct dial. False when no relay is configured, because then there is nothing
