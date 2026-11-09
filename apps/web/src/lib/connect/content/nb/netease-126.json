@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble 126.com-e-post til Claude, Cursor og MCP",
+    "title": "Koble 126.com-e-post til Claude, ChatGPT og MCP",
     "description": "Koble en NetEase 126.com-postkasse til Claude eller enhver MCP-klient via IMAP på imap.126.com:993. Bruker sin egen autorisasjonskode, ikke den fra 163-kontoen."
   },
   "hero": {

@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Hostinger til Claude, Cursor og MCP-klienter",
+    "title": "Koble Hostinger til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Hostinger Email til Claude, Cursor og enhver MCP-klient over IMAP på imap.hostinger.com:993. Titan-basert Business Email bruker helt andre verter."
   },
   "hero": {

@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Gandi Mail til Claude, Cursor og MCP",
+    "title": "Koble Gandi Mail til Claude, ChatGPT og MCP",
     "description": "Koble en Gandi-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på mail.gandi.net:993, med postkassepassordet og ikke innloggingen til Gandi-kontoen."
   },
   "hero": {

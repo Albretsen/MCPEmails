@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect mailcow to Claude, Cursor & MCP Clients",
+    "title": "Connect mailcow to Claude, ChatGPT & MCP Clients",
     "description": "Connect a mailcow mailbox to Claude, Cursor and ChatGPT over IMAP on 993. Why acme-mailcow only certifies MAILCOW_HOSTNAME and what SKIP_LETS_ENCRYPT breaks."
   },
   "hero": {

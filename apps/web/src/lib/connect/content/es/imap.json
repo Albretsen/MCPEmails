@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta cualquier buzón IMAP a Claude, Cursor y clientes MCP",
+    "title": "Conecta cualquier buzón IMAP a Claude, ChatGPT y clientes MCP",
     "description": "Conecta cualquier buzón IMAP de tu empresa a Claude, Cursor y clientes MCP. Aporta servidor y contraseña: IMAP en el 993 o 143 y SMTP en el 465 o 587, detectados solos."
   },
   "hero": {

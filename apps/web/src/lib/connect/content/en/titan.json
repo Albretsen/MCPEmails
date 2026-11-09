@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Titan Email to Claude, Cursor & MCP Clients",
+    "title": "Connect Titan Email to Claude, ChatGPT & MCP Clients",
     "description": "Connect Titan Email to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.titan.email:993. Enable Titan on other apps first. One inbox free, forever."
   },
   "hero": {

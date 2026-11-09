@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Zoho Mail mit Claude, Cursor und MCP-Clients verbinden",
+    "title": "Zoho Mail mit Claude, ChatGPT und MCP-Clients verbinden",
     "description": "Zoho Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.zoho.com:993. IMAP ist standardmäßig aus, und der Host richtet sich nach Ihrem Zoho-Rechenzentrum."
   },
   "hero": {

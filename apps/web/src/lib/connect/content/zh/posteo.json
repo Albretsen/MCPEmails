@@ -14,7 +14,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Posteo 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Posteo 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过 IMAP（posteo.de:993）将 Posteo 连接到 Claude、Cursor 及任意 MCP 客户端。开启额外账户保护后，每个邮件客户端都必须使用应用密码。"
   },
   "hero": {

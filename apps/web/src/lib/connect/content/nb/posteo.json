@@ -14,7 +14,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Posteo til Claude, Cursor og MCP-klienter",
+    "title": "Koble Posteo til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Posteo til Claude, Cursor og enhver MCP-klient via IMAP på posteo.de:993. Ekstra kontobeskyttelse gjør app-passord obligatorisk for alle e-postklienter."
   },
   "hero": {

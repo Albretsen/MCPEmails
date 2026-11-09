@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble mailcow til Claude, Cursor og MCP-klienter",
+    "title": "Koble mailcow til Claude, ChatGPT og MCP-klienter",
     "description": "Koble mailcow til Claude, Cursor og ChatGPT over IMAP på 993. Hvorfor acme-mailcow bare sertifiserer MAILCOW_HOSTNAME, og hva SKIP_LETS_ENCRYPT ødelegger."
   },
   "hero": {

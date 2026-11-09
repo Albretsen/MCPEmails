@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Zoho Mail 连接到 Claude、Cursor 与 MCP 客户端",
+    "title": "将 Zoho Mail 连接到 Claude、ChatGPT 与 MCP 客户端",
     "description": "通过 IMAP（imap.zoho.com:993）将 Zoho Mail 连接到 Claude、Cursor 及任意 MCP 客户端。IMAP 默认关闭，主机名取决于你的 Zoho 数据中心。"
   },
   "hero": {

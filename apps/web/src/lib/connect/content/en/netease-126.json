@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect 126.com Mail to Claude, Cursor and MCP",
+    "title": "Connect 126.com Mail to Claude, ChatGPT and MCP",
     "description": "Connect a NetEase 126.com mailbox to Claude or any MCP client over IMAP at imap.126.com:993. Uses its own authorization code, not the one from your 163 account."
   },
   "hero": {

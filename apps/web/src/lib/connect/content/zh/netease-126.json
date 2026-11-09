@@ -13,7 +13,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 126 邮箱连接到 Claude、Cursor 与 MCP",
+    "title": "将 126 邮箱连接到 Claude、ChatGPT 与 MCP",
     "description": "通过 IMAP（imap.126.com:993）将网易 126 邮箱连接到 Claude 或任意 MCP 客户端。使用该邮箱自己的授权码，而不是 163 账户的授权码。"
   },
   "hero": {

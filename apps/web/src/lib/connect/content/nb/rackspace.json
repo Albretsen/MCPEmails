@@ -12,7 +12,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Rackspace Email til Claude, Cursor og MCP-klienter",
+    "title": "Koble Rackspace Email til Claude, ChatGPT og MCP-klienter",
     "description": "Koble Rackspace Email til Claude, Cursor og enhver MCP-klient via IMAP på secure.emailsrvr.com:993. Verten er felles og bygges aldri fra ditt eget domene."
   },
   "hero": {

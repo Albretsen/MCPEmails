@@ -15,7 +15,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect WEB.DE to Claude, Cursor & MCP Clients",
+    "title": "Connect WEB.DE to Claude, ChatGPT & MCP Clients",
     "description": "Connect WEB.DE to Claude, Cursor and any MCP client over IMAP at imap.web.de:993. POP3 and IMAP access is off by default and must be switched on first."
   },
   "hero": {

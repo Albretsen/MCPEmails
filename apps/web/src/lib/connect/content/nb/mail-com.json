@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Mail.com til Claude, Cursor og MCP-klienter",
+    "title": "Koble Mail.com til Claude, ChatGPT og MCP-klienter",
     "description": "Koble mail.com til Claude, Cursor, ChatGPT og enhver MCP-klient over IMAP på imap.mail.com:993. POP3/IMAP er en Premium-funksjon hos mail.com, av som standard."
   },
   "hero": {

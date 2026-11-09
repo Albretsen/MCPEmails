@@ -16,7 +16,7 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Purelymail à Claude, Cursor et aux clients MCP",
+    "title": "Connecter Purelymail à Claude, ChatGPT et aux clients MCP",
     "description": "Connectez Purelymail à Claude, Cursor, ChatGPT et tout client MCP en IMAP via imap.purelymail.com:993 avec le mot de passe de la boîte. Une boîte gratuite."
   },
   "hero": {
