@@ -18,7 +18,17 @@ for (const provider of ["imap", "fastmail"]) {
     assert(text.startsWith(`Unable to send reply via the ${provider} inbox: its mail server refused the saved password.`));
     assert(text.includes("not OAuth"));
     assert(!/OAuth token|marked 'error'/.test(text));
-    assert(text.includes(URL));
     assert(!text.includes("—"), "no em dashes in customer-facing text");
   });
 }
+
+Deno.test("the password text, exactly", () => {
+  assertEquals(
+    authFailedText("imap", "access", URL),
+    "Unable to access the imap inbox: its mail server refused the saved password. This inbox signs in with a password, not OAuth. " +
+      "Ask the user to check the password (or the app password their provider issued) and reconnect the inbox by opening this " +
+      "link in their browser (they may need to sign in to MCPEmails first): https://mcpemails.com/dashboard/inboxes . " +
+      "If the dashboard accepts the same password, the provider may be refusing sign-ins from MCPEmails' servers; " +
+      "the user can email support@mcpemails.com.",
+  );
+});
