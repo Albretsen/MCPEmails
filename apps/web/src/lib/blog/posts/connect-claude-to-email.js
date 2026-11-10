@@ -99,7 +99,7 @@ MCPEmails gives Claude focused email tools rather than a password or raw IMAP co
 - **Organize:** \`email_organize\` moves, labels, flags, and archives messages.
 - **Work with drafts, folders, schedules, and contacts:** \`draft\`, \`folder\`, \`schedule\`, and \`contact_search\` cover the rest of a practical email workflow.
 
-Claude reads your mail by calling tools: it checks for new mail when you ask it to, and nothing is pushed into the chat the instant an email arrives. If your own code needs a push, Pro and Business workspaces can add a signed new-mail webhook under API keys in the dashboard.
+Claude reads your mail by calling tools: it checks for new mail when you ask it to, and nothing is pushed into the chat the instant an email arrives. If your own code needs a push, Pro and Business workspaces can add a signed new-mail webhook on the **API Keys** page of the dashboard.
 
 ## Troubleshooting connection and Claude setup
 
