@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://github.com/Zimbra/adminguide/blob/master/imap.adoc",
+    "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Guide",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Manual:Installing_,_Configuring,_Disabling_the_Zimbra_Proxy",
+    "https://zimbra.github.io/adminguide/8.8.11/index.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "usernameForm": "Zimbraが保持しているアカウントのアドレス全体（you@yourdomain.comなど）。ドメインエイリアス上のアカウントも同様です。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "ZimbraをClaudeで使う：IMAPは993、プロキシなしなら7993",
+    "description": "ZimbraのメールボックスをClaude、Cursor、ChatGPTにIMAPで接続。993はプロキシのポートで、mailboxdは7993で待ち受けます。IMAPがオフになりうる4つの場所も解説。"
+  },
+  "hero": {
+    "eyebrow": "Zimbra + AI",
+    "titleLine1": "ZimbraをClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "Zimbraは何年も組織のメールを預かってきた一方で、使っているのはごく普通のIMAPです。AIエージェントが本物のメールボックスの中で閲覧、検索、送信、返信、予約送信、振り分けをするには、それで十分です。",
+    "answer": "Claudeは自力ではZimbraサーバーに届きません。MCPEmailsはホスト型のMCPサーバーで、あなた自身のホスト名に対して、Zimbraプロキシがインストールされていればポート993のIMAPで、メールボックスのパスワードを使って接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。Zimbraは組織が自分で動かすソフトウェアなので公開できる共通のホスト名はなく、ポートも思い込まずに確認する価値があります。993と143はZimbraプロキシのもので、mailboxd自身は7993と7143で待ち受けています。サーバーにはインターネットから届く必要があり、証明書は検証に通る必要があります。受信トレイ1つは無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "メールボックスのパスワード、COSでIMAPを有効に",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "Zimbraの接続方法：前にプロキシ、後ろにmailboxd",
+    "body": "ZimbraのIMAPは2層構造で、どちらと通信しているかを知っておくだけで半日分の調査が省けます。内蔵のIMAPサーバーは<code>zimbra-mailboxd</code>プロセスの中で動き、既定でインストールされていて、<code>zimbraImapServerEnabled</code>と<code>zimbraImapSSLServerEnabled</code>で制御されます。どちらも既定はTRUEです。そのポートは<code>zimbraImapBindPort</code>（既定<b>7143</b>）と<code>zimbraImapSSLBindPort</code>（既定<b>7993</b>）です。おなじみの143と993はプロキシ側のポート、<code>zimbraImapProxyBindPort</code>と<code>zimbraImapSSLProxyBindPort</code>で、Zimbra IMAP and POP proxyが接続を検査し、そのアカウントを保持するメールボックスサーバーへ振り分けます。新しいリリースでは、プロセス内サーバーと並んで独立した<code>zimbra-imapd</code>も同梱されています。認証情報は通常のメールボックスのパスワードで、Zimbra Web Clientで使うものと同じです。Zimbraにアプリ パスワードの仕組みはありません。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成する",
+      "p": "mcpemails.comで新規登録します。受信トレイ1つはずっと無料でカードも不要なので、本物のZimbraアカウントで試すには十分です。"
+    },
+    {
+      "h": "IMAPが有効か確認し、応答するポートを見つける",
+      "p": "管理コンソールで「設定」（Configure）、「グローバル設定」、「IMAP」の順に開き、<b>IMAPサービスを有効にする</b>と<b>IMAPサービスのSSLを有効にする</b>にチェックが入っているか確認します。次に、外側から実際にどのポートが待ち受けているかを確かめます。<code>openssl s_client -connect mail.yourdomain.com:993</code>を実行し、応答がなければ7993を試してください。サーバー上では<code>zmprov gs yourserver</code>が使用中のバインドポートを報告します。"
+    },
+    {
+      "h": "サービスクラスを確認してから、アカウントを追加する",
+      "p": "「設定」、「提供サービス」（Class of Service、いわゆるサービスクラス）、アカウントが属するクラスの順に開き、「プリファレンス」のPOP/IMAPオプションを見ます。IMAPがオフのクラスは、その中のすべてのアカウントを拒否します。その後、MCPEmailsで受信トレイを追加します。IMAP / SMTPを選び、Zimbraのホスト名、アドレス全体、メールボックスのパスワードを入力してください。"
+    },
+    {
+      "h": "MCP URLをAIクライアントに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "ポート993はプロキシのものなので、プロキシのないサーバーは7993で応答します",
+      "p": "Zimbraのメールボックスプロセスは993では待ち受けません。IMAP over SSLは<b>7993</b>、平文のIMAPは7143で待ち受け、標準ポートは別パッケージのZimbra IMAP and POP proxyが担当して、各接続を正しいメールボックスストアへ転送します。<code>zimbra-proxy</code>を一度も選択していないシングルサーバー構成や、管理者がそれを削除した構成では、993には何も応答せず、クライアントはファイアウォールの問題に見える接続拒否を報告します。その場合は7993を使ってください。ただしトレードオフを理解しておく必要があります。マルチサーバー構成では、どのストアがどのアカウントを保持しているかを知っているのはプロキシなので、ノードの7993に直接つなぐのは、そのメールボックスが実際にそのノードにあるときだけ機能します。メールボックスサーバーが複数あるなら、回避ではなくプロキシの復旧が正しい答えです。"
+    },
+    {
+      "h": "993の証明書はプロキシのもので、誰かが変えるまでは自己署名です",
+      "p": "接続を終端するのはプロキシなので、クライアントが993で検証する証明書はnginxが持っているもので、mailboxdが7993で提示するものとは限りません。両者は食い違うことがあり、片方のポートでは検証に通り、もう片方では失敗するサーバーができあがるのはそのためです。Zimbraはセットアップ時に自己署名証明書もインストールし、ウェブクライアントには別経由で到達しているから、あるいは全員が2019年に警告をクリックして済ませたからという理由で、それを一度も置き換えていない環境がたくさんあります。証明書は<code>zmcertmgr</code>で配置し管理コンソールで確認できますが、唯一意味のあるテストは実際に流れているものです。外部のマシンから<code>openssl s_client -connect mail.yourdomain.com:993</code>を実行し、返ってきたチェーンを読んでください。こちら側では厳格な検証は任意ではないので、自己署名や期限切れの証明書では認証に進む前に接続が打ち切られます。"
+    },
+    {
+      "h": "IMAPは4つの別々の場所でオフにできます",
+      "p": "Zimbraは設定を階層化しており、各階層は他の階層が正しく見えていても単独で接続を拒否できます。「設定」、「グローバル設定」、「IMAP」にあるグローバル設定は、マスタースイッチの<b>IMAPサービスを有効にする</b>を持ちます。各サーバーには独自の設定があり、IMAPとIMAP SSLのポート番号を定め、<code>zimbraImapServerEnabled</code>と<code>zimbraImapSSLServerEnabled</code>でプロセス内サーバーをオフにできます。各サービスクラスには、その中のすべてのアカウントに適用されるPOPとIMAPのオプションがあります。そして個々のアカウントはクラスを上書きできます。コマンドラインも同じ順序で読みます。グローバル設定は<code>zmprov gcf</code>、サーバーは<code>zmprov gs</code>、サービスクラスは<code>zmprov gc</code>、アカウントは<code>zmprov ga</code>です。失敗の見え方はどの階層でも同じなので、推測せずにこの一覧を上から順にたどってください。"
+    }
+  ],
+  "limits": [
+    "Zimbraサーバーはインターネットからの着信IMAP接続を受け入れる必要があります。社内ネットワークやVPNの内側にだけ公開された環境には、ホスト型サービスは届きません。代わりにMCPEmailsを同じネットワーク内でセルフホストすることもでき、ポートを開ける話より、セキュリティチームとの会話はそちらのほうが楽なことが多いです。",
+    "IMAP接続を通るのはメールだけです。Zimbraのカレンダー、連絡先、タスク、ブリーフケースはZimbra自身のウェブクライアントとCalDAV、CardDAV、Zimbra APIで提供されるので、この方法で接続したエージェントが扱うのはメールのみです。",
+    "送信はあなた自身のZimbra MTAから出ていくので、配信性はサーバー上の他のクライアントとまったく同じく、SPF、DKIM、DMARCのレコードに左右されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはZimbraで使えますか？",
+      "a": "直接は使えません。ClaudeにZimbraのコネクタはなく、組織が動かすサーバーへIMAPセッションを開くこともできません。MCPEmailsのようなMCPサーバーをZimbraホストに接続すると、Zimbra Web Clientと同じ認証情報で、Claudeがその上のメールボックスを閲覧、検索、送信、返信、予約送信、整理できるようになり、同じ受信トレイがCursorやChatGPTでも使えます。"
+    },
+    {
+      "q": "ZimbraのIMAPとSMTPの設定は何ですか？",
+      "a": "ホスト名はあなた自身のZimbraサーバーです。Zimbraプロキシがインストールされている通常の構成では、IMAPは993で暗黙的TLS、143でSTARTTLSです。プロキシなしの場合、mailboxd自身のポートは7993と7143です。サブミッションは通常587でSTARTTLS、または465で暗黙的TLSです。アカウントのアドレス全体とメールボックスのパスワードでログインします。"
+    },
+    {
+      "q": "ポート993に何も応答しないのはなぜですか？",
+      "a": "993と143はメールボックスサーバーではなくプロキシのポートなので、Zimbra IMAP and POP proxyがインストールされていないか無効になっている可能性が高いです。mailboxd自身のzimbraImapSSLBindPortの既定値である7993を試してください。メールボックスサーバーが複数ある環境では、ノードに直接つなぐよりプロキシを復旧するほうが適切です。"
+    },
+    {
+      "q": "ウェブメールは使えるのに、ZimbraのパスワードがIMAPで拒否されるのはなぜですか？",
+      "a": "ウェブアクセスとIMAPアクセスは別の権限だからです。まずアカウントのサービスクラスのPOPとIMAPのオプション、次にアカウント自身の上書き設定、最後にグローバル設定でIMAPサービスが有効かを確認してください。そのどれか1つでも、Zimbra Web Clientが普通に動いたままIMAPログインを拒否できます。"
+    },
+    {
+      "q": "Zimbraにアプリ パスワードは必要ですか？",
+      "a": "いいえ。Zimbraはアプリ専用のパスワードを発行せず、メールクライアントはアカウント自身のパスワードで認証します。ウェブクライアントで2要素認証を使っている環境なら、メールクライアント向けにどう構成されているかを管理者に確認してください。そのポリシーはZimbra全体ではなくサービスクラスごとに設定されます。"
+    },
+    {
+      "q": "私のZimbraのメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにZimbraサーバーからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにZimbraの受信トレイを渡す",
+    "sub": "自分のZimbraサーバーのメールボックスを接続。受信トレイ1つはずっと無料、カード不要。"
+  }
+}
