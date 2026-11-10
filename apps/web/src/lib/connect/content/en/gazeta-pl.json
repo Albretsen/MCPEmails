@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "https://pomoc.gazeta.pl/pomoc/7,154322,19745058.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Gazeta.pl password",
+    "helpUrl": "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "usernameForm": "Your full address: login@gazeta.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Gazeta.pl Poczta to Claude & Any MCP Client",
+    "description": "Connect a Gazeta.pl mailbox to Claude, Cursor and any MCP client over IMAP at imap.gazeta.pl:993 and SMTP at smtp.gazeta.pl:465 with your Gazeta.pl password and login@gazeta.pl as the username."
+  },
+  "hero": {
+    "eyebrow": "Gazeta.pl Poczta + AI",
+    "titleLine1": "Connect Gazeta.pl Poczta to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Gazeta.pl mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you already use, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Gazeta.pl Poczta on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.gazeta.pl on port 993, signing in with login@gazeta.pl and your Gazeta.pl password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Gazeta.pl's help documents exactly these hosts, with smtp.gazeta.pl on port 465 and SMTP login required, and advertises SMTP, IMAP and POP3 access for mail programs on every mailbox. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Your Gazeta.pl password",
+    "meta2": "Email fetched live, never stored"
+  },
+  "method": {
+    "title": "How Gazeta.pl connects: IMAP and your Gazeta.pl password",
+    "body": "Gazeta.pl serves IMAP at <code>imap.gazeta.pl</code> on port 993 and SMTP at <code>smtp.gazeta.pl</code> on port 465, both SSL/TLS, and its instructions for Thunderbird and Outlook say to turn SMTP login on and use the whole address, login@gazeta.pl, as the username. The password is the one you use at poczta.gazeta.pl. There is no IMAP switch to find and no plan condition: the mailbox page itself advertises access from mail programs over SMTP, IMAP and POP3. The IMAP server answers under the gazeta.pl name with Onet's banner, which tells you where Agora hosts the service, but the login is a Gazeta.pl account and the hosts are Gazeta.pl's own; an Onet password does not work here and the reverse."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Make sure you can sign in at poczta.gazeta.pl",
+      "p": "Open poczta.gazeta.pl in a browser and sign in with your address and password. That is the pair IMAP checks. If you have forgotten the password, reset it there first; a mail program cannot."
+    },
+    {
+      "h": "Check two-step login on the account",
+      "p": "The Gazeta.pl sign-in page offers <b>logowanie dwustopniowe</b>. Gazeta.pl's help does not say how a mail program signs in once it is on, and documents no app password, so if two-step login is enabled and the IMAP login is refused, that is the first thing to look at. With it off, the account password is the credential."
+    },
+    {
+      "h": "Paste the address and password into MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the full address such as login@gazeta.pl, and enter the password. The hosts and ports are prefilled from the verified values on this page. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The username is the whole address, with SMTP login turned on",
+      "p": "Gazeta.pl's instructions repeat it for both servers: the username is login@gazeta.pl, not the login alone, and the outgoing server must have authentication enabled with the same pair. A client that fills in the local part only is refused on IMAP, and one that leaves SMTP authentication off is refused on sending while reading works, which looks like two different problems and is one."
+    },
+    {
+      "h": "Onet's server, Gazeta.pl's login",
+      "p": "The IMAP banner at imap.gazeta.pl reads Onet server ready, because Agora runs the mailbox on Onet's platform. It is not an Onet account. The hosts are the gazeta.pl names Gazeta.pl documents, the password is your Gazeta.pl one, and the help pages that apply are pomoc.gazeta.pl, not Onet's. Pointing a Gazeta.pl address at imap.poczta.onet.pl is refused."
+    },
+    {
+      "h": "No IDLE, no MOVE, no UIDPLUS, no SPECIAL-USE",
+      "p": "The server advertises SASL-IR and LITERAL+ and the PLAIN, LOGIN and XOAUTH2 mechanisms, but none of the extensions that make a mailbox cheap to organize. New mail is found by polling, which is how MCPEmails works anyway; filing runs as a copy, a flag and an expunge; and Sent, Drafts and Trash are matched by their Polish names rather than announced by role, so name the folder if the agent cannot find it."
+    }
+  ],
+  "limits": [
+    "An attachment is capped at 50 MB, so a larger file is refused at send time rather than trimmed. Gazeta.pl sets no limit on mailbox size.",
+    "Gazeta.pl offers two-step login but documents no app password for mail programs. If you enable it and the IMAP login starts failing, Gazeta.pl's help is the place to ask."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Gazeta.pl Poczta?",
+      "a": "Not directly. Claude has no built-in Gazeta.pl connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to your gazeta.pl mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Gazeta.pl IMAP and SMTP settings?",
+      "a": "IMAP is imap.gazeta.pl on port 993 with SSL/TLS. SMTP is smtp.gazeta.pl on port 465, also SSL/TLS, with login required. The username is your full address, login@gazeta.pl, and the password is your Gazeta.pl password. Both hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Gazeta.pl password rejected in a mail client?",
+      "a": "Check the username first: it must be the whole address, login@gazeta.pl. Then check that the password signs you in at poczta.gazeta.pl, and whether two-step login is on, since Gazeta.pl documents no separate password for mail programs. For sending, SMTP login has to be enabled with the same pair."
+    },
+    {
+      "q": "Is Gazeta.pl mail the same as Onet Poczta?",
+      "a": "No. The server behind imap.gazeta.pl identifies itself as Onet's, but the mailbox is a Gazeta.pl account with its own login, its own hosts and its own help pages. Use the gazeta.pl hosts and your Gazeta.pl password."
+    },
+    {
+      "q": "Is my Gazeta.pl mail stored on your servers?",
+      "a": "No. Messages are fetched live from Gazeta.pl over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Gazeta.pl inbox",
+    "sub": "Connect Gazeta.pl Poczta in minutes. One inbox free forever, no card required."
+  }
+}

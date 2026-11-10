@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://aiuto.libero.it/articolo/mail/configurare-libero-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.virgilio.it/articolo/mail/configurare-virgilio-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "https://aiuto.libero.it/articolo/mail/casella-libero-mail-disattivata-per-inutilizzo-come-riattivarla/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Libero Mail, o una Password specifica per applicazioni si tienes Password Sicura activada",
+    "helpUrl": "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nome@libero.it, nome@iol.it, nome@blu.it, nome@inwind.it o nome@virgilio.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Libero Mail y Virgilio Mail a Claude y a cualquier cliente MCP",
+    "description": "Conecta Libero Mail o Virgilio Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imapmail.libero.it:993 o in.virgilio.it:993. Tu contraseña de la cuenta funciona hasta que activas Password Sicura; a partir de ahí, una contraseña de aplicación de 16 caracteres."
+  },
+  "hero": {
+    "eyebrow": "Libero Mail + IA",
+    "titleLine1": "Conecta Libero Mail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Libero o Virgilio. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder a Libero Mail por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imapmail.libero.it en el puerto 993, iniciando sesión con tu dirección completa y tu contraseña de Libero Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La misma plataforma de Italiaonline sirve las direcciones iol.it, blu.it e inwind.it en los servidores de Libero, y Virgilio Mail en in.virgilio.it y out.virgilio.it. Si has activado Password Sicura, la contraseña de la cuenta deja de funcionar en los programas de correo y la sustituye una Password specifica per applicazioni de 16 caracteres. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de la cuenta, salvo con Password Sicura",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Virgilio Mail", "host": "in.virgilio.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Virgilio Mail", "host": "out.virgilio.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son de Libero Mail, que también cubre @iol.it, @blu.it y @inwind.it. Las dos de abajo son de Virgilio Mail. Los cuatro servidores se verificaron mediante una conexión TLS real. Para cualquier otra dirección, usa el",
+      "label": "buscador de ajustes de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Cómo se conecta Libero Mail: IMAP y tu contraseña de Libero",
+    "body": "Libero ofrece IMAP en <code>imapmail.libero.it</code> en el puerto 993 y SMTP en <code>smtp.libero.it</code> en el puerto 465, ambos con SSL/TLS y con autenticación obligatoria en SMTP. La ayuda de Libero es muy concreta con el nombre de usuario: siempre la dirección completa con su dominio, sea @libero.it, @iol.it, @blu.it o @inwind.it, y la contraseña de tu cuenta de Libero Mail. Virgilio Mail, de la misma empresa, publica sus propios nombres, <code>in.virgilio.it</code> en el 993 y <code>out.virgilio.it</code> en el 465, con las mismas reglas. No hay ningún interruptor de IMAP que buscar en el webmail ni ninguna condición de plan: IMAP está documentado para todos los buzones. Lo que cambia la contraseña es <b>Password Sicura</b>, el inicio de sesión en dos pasos de Libero. Una vez activada, Libero indica que la contraseña normal sigue funcionando solo en el navegador, y los programas de correo necesitan una <b>Password specifica per applicazioni</b> generada desde el área de la cuenta."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba si tienes Password Sicura activada",
+      "p": "Inicia sesión en Libero Mail desde el navegador y pulsa el icono <b>Account</b> arriba a la derecha. Si ves <b>Attiva Password Sicura</b>, está desactivada y la contraseña que debes usar es tu contraseña normal de Libero. Si ya está activada, abre el área <b>Sicurezza</b> y busca <b>Password per App</b>. Virgilio muestra las mismas pantallas en <b>Impostazioni Password Sicura</b>, en account.virgilio.it."
+    },
+    {
+      "h": "Con Password Sicura activada, genera una contraseña de aplicación",
+      "p": "En <b>Password per App</b>, crea una contraseña nueva y llámala MCPEmails. Libero genera una cadena de 16 caracteres que se muestra una sola vez. Solo vale para programas de correo; tu contraseña normal sigue sirviendo para entrar en el webmail. Crea una por cada programa que conectes."
+    },
+    {
+      "h": "Pega la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa con su dominio y pega la contraseña que corresponda. Los servidores y puertos vienen rellenados con los valores verificados de esta página. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Password Sicura retira sin avisar tu contraseña para los programas de correo",
+      "p": "El propio artículo de resolución de problemas de Libero lo pone en primer lugar: si no puedes iniciar sesión desde un programa de correo y tienes Password Sicura activada, comprueba que estás introduciendo la Password specifica per app y no la contraseña de la cuenta. El fallo parece una errata, porque el servidor responde con un rechazo sin más. La solución está en la sección <b>Password per App</b> del área de la cuenta y en el valor de 16 caracteres que genera. Si desactivas Password Sicura, la contraseña de la cuenta vuelve a mandar."
+    },
+    {
+      "h": "Cuatro meses sin iniciar sesión y el buzón se desactiva",
+      "p": "Libero desactiva un buzón gratuito en el que no se ha iniciado sesión durante más de cuatro meses (120 días), y un buzón desactivado ni recibe ni envía. Iniciar sesión en login.libero.it antes de nueve meses lo reactiva sin coste; pasados nueve meses (270 días), el buzón y su contenido se eliminan. Un agente que lee por IMAP sí cuenta como uso, pero si vas a recuperar una dirección antigua, entra primero en el webmail y comprueba que está activa antes de conectarla."
+    },
+    {
+      "h": "Virgilio es la misma plataforma con otros nombres de servidor",
+      "p": "Una dirección de Virgilio no inicia sesión en los servidores de Libero, y viceversa, aunque ambos respondan con el mismo saludo de Dovecot y envíen por el mismo clúster iol.local. Virgilio documenta <code>in.virgilio.it</code> para IMAP y <code>out.virgilio.it</code> para SMTP, y sus páginas de Password Sicura son un reflejo de las de Libero. MCPEmails rellena el par correcto a partir de la dirección que escribes."
+    },
+    {
+      "h": "Los mensajes salientes se detienen en 25 MB",
+      "p": "Libero y Virgilio limitan un mensaje saliente a 25 MB; por encima, el webmail ofrece en su lugar su enlace de DriveMail. El servidor SMTP anuncia 50 MB, pero la regla que se aplica a un cliente es la del buzón, así que un adjunto grande se rechaza al enviarlo en lugar de recortarse. Libero señala además que los proxies corporativos pueden bloquear las conexiones POP e IMAP a buzones externos, algo que no afecta a un servidor alojado pero explica los fallos desde la red de una oficina."
+    }
+  ],
+  "limits": [
+    "Libero no anuncia SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en italiano eso suele significar Posta in arrivo, Inviata, Bozze y Cestino. Si has renombrado una carpeta, indícala cuando pidas mover algo.",
+    "Un buzón estándar de Libero no puede reenviar todo el correo a una dirección externa; eso es una función de Mail Plus. No afecta a una conexión IMAP, que lee el buzón donde está."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Libero Mail?",
+      "a": "No directamente. Claude no tiene un conector de Libero integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón libero.it, iol.it, blu.it, inwind.it o virgilio.it le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Libero Mail?",
+      "a": "IMAP es imapmail.libero.it en el puerto 993 con SSL/TLS. SMTP es smtp.libero.it en el puerto 465, también con SSL/TLS y autenticación obligatoria. El nombre de usuario es tu dirección completa, incluido el dominio. Virgilio Mail usa in.virgilio.it en el 993 y out.virgilio.it en el 465. Los cuatro servidores se confirmaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Libero en un cliente de correo?",
+      "a": "Casi siempre porque Password Sicura está activada. Libero entonces solo acepta la contraseña de la cuenta en el navegador, y los programas de correo necesitan una Password specifica per applicazioni generada en Password per App, en el área de la cuenta. La otra causa es un buzón desactivado tras cuatro meses sin iniciar sesión, que se reactiva entrando en el webmail."
+    },
+    {
+      "q": "¿Necesito Libero Mail Plus para usar IMAP?",
+      "a": "No. La guía de configuración de Libero documenta IMAP sin ninguna condición de plan, y sus páginas de Mail Plus describen las ventajas de pago como ausencia de publicidad, reenvío externo, alias, más espacio y exención de la regla de inactividad. IMAP no está entre ellas."
+    },
+    {
+      "q": "¿Funciona también con Virgilio Mail?",
+      "a": "Sí. Virgilio pertenece a la misma empresa y documenta la misma configuración con sus propios servidores, in.virgilio.it y out.virgilio.it, y su propia Password Sicura con una contraseña de aplicación de 16 caracteres. Escribe la dirección con el dominio virgilio.it y MCPEmails rellena los servidores de Virgilio."
+    },
+    {
+      "q": "¿Se almacena mi correo de Libero en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Libero por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Libero",
+    "sub": "Conecta Libero Mail o Virgilio Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

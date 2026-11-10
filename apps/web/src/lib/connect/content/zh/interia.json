@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Interia 不声明 MOVE 或 SPECIAL-USE，因此归档以复制加标记加清除的方式完成，Sent、Drafts 和 Trash 按名称匹配。在波兰语邮箱中，它们通常是 Wysłane、Kopie robocze 和 Kosz，所以如果代理找不到某个文件夹，请写出它的名称。",
-    "在 Interia 账户上开启两步登录，会让邮箱与所有邮件客户端（包括 MCPEmails）断开连接，而且不存在可以恢复连接的应用专用密码。"
+    "在 Interia 账户上开启两步登录，会让邮箱与所有邮件客户端（包括 MCPEmails）断开连接，而且不存在可以恢复连接的应用专用密码。",
+    "免费 Interia 账户每天允许 1 GB 的邮件程序流量（PocztaPRO 为 15 GB）；用完后，发送和邮件客户端访问会停止 24 小时。单封邮件上限为 100 MB。"
   ],
   "faq": [
     {

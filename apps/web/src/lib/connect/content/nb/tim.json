@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/client-pc",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/guida/casella-posta"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "TIM Mail-passord, på en postkasse knyttet til en aktiv TIM-linje",
+    "helpUrl": "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "usernameForm": "Hele adressen din inkludert domenet: nome@tim.it, nome@alice.it eller nome@tin.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble TIM Mail (tim.it, alice.it, tin.it) til Claude og enhver MCP-klient",
+    "description": "Koble TIM Mail, Alice Mail eller tin.it til Claude, Cursor og enhver MCP-klient over IMAP på imap.tim.it:143 med STARTTLS. Virker på en postkasse knyttet til en aktiv TIM-linje; en postkasse uten en slik linje tillater TIM i e-postprogrammer bare fra sitt eget nett."
+  },
+  "hero": {
+    "eyebrow": "TIM Mail + AI",
+    "titleLine1": "Koble TIM Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte TIM-, Alice- eller tin.it-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke TIM Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.tim.it port 143 med STARTTLS og logger inn med hele adressen din og TIM Mail-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Alice-adresser bruker in.alice.it og out.alice.it, tin.it-adresser imaps.tin.it og smtps.tin.it, på de samme portene. Ett vilkår kommer fra TIM, ikke fra oss: en postkasse knyttet til en aktiv TIM-fastlinje eller -mobillinje kan brukes fra et hvilket som helst e-postprogram hvor som helst, mens en postkasse uten en slik linje bare tillates i e-postprogrammer fra TIMs eget nett, og det er ikke en hostet server. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Krever en postkasse knyttet til en aktiv TIM-linje",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @alice.it", "host": "in.alice.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @alice.it", "host": "out.alice.it", "port": 587, "security": "starttls" },
+      { "label": "IMAP, @tin.it", "host": "imaps.tin.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @tin.it", "host": "smtps.tin.it", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene er @tim.it. Alice- og tin.it-adresser har sine egne navn under, på de samme portene. Alle seks vertene ble verifisert via en direkte tilkobling med STARTTLS. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Slik kobler TIM Mail seg til: IMAP med STARTTLS, og TIMs linjeregel",
+    "body": "TIM dokumenterer ett par porter for alle domenene sine: IMAP på port 143 og SMTP på port 587, begge oppgradert til TLS med STARTTLS, den eldre krypteringsformen som starter i klartekst og bytter over. Vertene varierer etter domene. For @tim.it er de <code>imap.tim.it</code> og <code>smtp.tim.it</code>; for @alice.it <code>in.alice.it</code> og <code>out.alice.it</code>; for @tin.it <code>imaps.tin.it</code> og <code>smtps.tin.it</code>, tross s-en i navnene. TIM oppgir verken 993 eller 465, og i vår test svarte ingen av dem. Brukernavnet er hele adressen med domene, passordet er TIM Mail-passordet ditt, og den utgående serveren krever autentisering med det samme paret. TIMs hjelp sier så hvem som i det hele tatt får bruke et e-postprogram: en postkasse knyttet til en aktiv TIM-fastlinje eller -mobillinje, fra hvor som helst, eller en postkasse uten en slik linje så lenge du er koblet til TIM-nettet. Hos en annen operatør, sier TIM, går tilgangen bare via webmailen. MCPEmails kobler til fra sine egne servere, og passer derfor i det første tilfellet og ikke det andre."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk at postkassen er knyttet til en aktiv TIM-linje",
+      "p": "Dette er steget som avgjør om noe e-postprogram utenfor TIMs nett kan logge inn. Fulgte @tim.it-, @alice.it- eller @tin.it-adressen din med en TIM-fastlinje eller et mobilabonnement som fortsatt er aktivt, er alt i orden. Er linjen sagt opp, eller var postkassen aldri knyttet til en, tillater TIM e-postprogrammer bare fra en TIM-tilkobling, og en hostet server kan ikke koble den til. Det finnes ingen innstilling som endrer dette; det følger kontrakten."
+    },
+    {
+      "h": "Bruk TIM Mail-passordet ditt og hele adressen",
+      "p": "TIM utsteder ikke noe eget passord for e-postprogrammer. Logg inn med adressen skrevet helt ut, inkludert domenet, og passordet du bruker på mail.tim.it. Fulgte postkassen med en TIM-linje og du aldri har satt et passord for webmailen, gjør du det først i TIMs hjelpeområde."
+    },
+    {
+      "h": "Lim adressen og passordet inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og skriv inn passordet. Vertene, STARTTLS-portene og sikkerhetsmodusen er forhåndsutfylt med de verifiserte verdiene på denne siden for ditt domene. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Linjeregelen, og hvorfor en hostet server feiler der telefonen din virker",
+      "p": "TIMs regel har to halvdeler. En postkasse knyttet til en aktiv TIM-linje virker i alle e-postprogrammer på alle nett. En postkasse uten en slik linje virker i e-postprogrammer bare mens enheten er på TIMs nett, og hos alle andre operatører er webmailen eneste vei inn. Telefonen din på TIM mobildata består den andre testen; en server i et datasenter gjør det aldri. Så hvis TIM-appen virker og MCPEmails blir avvist, er linjen bak postkassen det første du skal sjekke, ikke passordet."
+    },
+    {
+      "h": "STARTTLS på 143 og 587, og ingenting på 993 eller 465",
+      "p": "De fleste leverandørene på dette nettstedet bruker implisitt TLS på 993 og 465. TIM dokumenterer i stedet 143 og 587 med STARTTLS, og portene for implisitt TLS svarer ikke. En klient som insisterer på 993, får derfor tidsavbrudd i stedet for en ren feil, noe som ser ut som et nettverksproblem. MCPEmails forhåndsutfyller STARTTLS-portene og prøver den andre transporten hvis den første ikke svarer, så dette er håndtert, men det forklarer en lang stillhet fra andre verktøy."
+    },
+    {
+      "h": "Ingen SASL-IR og bare PLAIN, så noen klienter får et nakent avslag",
+      "p": "IMAP-serveren annonserer <code>AUTH=PLAIN</code> og ingenting annet, og annonserer ikke SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. Klienter som er satt opp for LOGIN eller ettstegsformen, feiler ved autentisering uten forklaring. MCPEmails bruker PLAIN-utvekslingen i to steg, og det er derfor en TIM-postkasse kobler til her etter å ha feilet i andre IMAP-verktøy."
+    },
+    {
+      "h": "Daglige sendegrenser, og mapper som flyttet i migreringen",
+      "p": "TIM begrenser en melding til 50 mottakere på tvers av Til, Kopi og Blindkopi, og en konto til 200 sendinger om dagen; Spam-mappen tømmes etter 20 dager og Cestino etter 7, og TIM sier at de ikke tar sikkerhetskopi. Da TIM flyttet postkasser til den nye plattformen, ble mapper som det nye oppsettet ikke har (Junk, Trash, Sent, Posta in uscita fra det gamle), lagt under Cartelle personali, så en eldre postkasse kan ha to sendt-mapper. Oppgi hvilken du mener når du ber agenten arkivere noe."
+    }
+  ],
+  "limits": [
+    "TIM tillater e-postprogrammer på en postkasse uten aktiv TIM-linje bare fra TIMs eget nett. MCPEmails kobler til fra sine servere, så en slik postkasse kan ikke kobles til her. Dette er TIMs regel, og ingen innstilling endrer den.",
+    "Serveren annonserer MOVE og UIDPLUS, men ikke IDLE eller SPECIAL-USE, så ny e-post finnes ved polling og mapper matches etter navn: i en italiensk postkasse Posta in arrivo, Spam, Cestino og det som ligger under Cartelle personali."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med TIM Mail, Alice Mail eller tin.it?",
+      "a": "Ja, på en postkasse knyttet til en aktiv TIM-linje. Claude har ingen innebygd TIM-kobling; kobler du til en MCP-server som MCPEmails via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter. En postkasse uten aktiv TIM-linje tillates i e-postprogrammer bare fra TIMs nett, og det kan en hostet server ikke oppfylle."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for TIM Mail?",
+      "a": "IMAP på port 143 med STARTTLS og SMTP på port 587 med STARTTLS, autentisering påkrevd. Vertene er imap.tim.it og smtp.tim.it for @tim.it, in.alice.it og out.alice.it for @alice.it, og imaps.tin.it og smtps.tin.it for @tin.it. Brukernavnet er hele adressen din. TIM oppgir verken 993 eller 465, og de portene svarte ikke da vi sjekket."
+    },
+    {
+      "q": "Hvorfor virker TIM-passordet mitt i webmailen, men ikke i en e-postklient?",
+      "a": "På grunn av TIMs linjeregel, ikke passordet. Er postkassen ikke knyttet til en aktiv TIM-fastlinje eller -mobillinje, tillater TIM e-postprogrammer bare fra sitt eget nett, og webmailen fra alle andre steder. Er linjen aktiv og innloggingen fortsatt feiler, sjekk verten for ditt domene, siden alice.it og tin.it ikke bruker tim.it-navnene."
+    },
+    {
+      "q": "Har TIM app-passord?",
+      "a": "Nei. TIMs hjelp dokumenterer verken programspesifikke passord eller totrinnsverifisering for TIM Mail. Et e-postprogram logger inn med samme passord som webmailen, sammen med hele adressen."
+    },
+    {
+      "q": "Lagres TIM-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra TIM via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en TIM Mail-innboks",
+    "sub": "Koble til TIM Mail, Alice eller tin.it på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -41,7 +41,11 @@ export function datasetRows(now = new Date()) {
     .filter((p) => p.evidence?.reachable && p.imap)
     .map((p) => {
       const e = p.evidence;
-      const smtpAuthVisible = !(p.smtp?.security === 'starttls' && e.smtpAuthMechs.length === 0);
+      // A STARTTLS submission port advertises its mechanisms only after the
+      // upgrade, and a server that refused the probe before EHLO (Tiscali
+      // answers 554 to outside addresses) advertised nothing either way: both
+      // are "unknown", published as null, never as an empty list.
+      const smtpAuthVisible = e.smtpAuthMechs.length > 0;
       const size = Number(e.smtpMaxSize);
       return {
         slug: p.slug,

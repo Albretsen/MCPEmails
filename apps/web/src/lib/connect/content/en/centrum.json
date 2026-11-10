@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "https://freemail.help.economia.cz/articles/95768-casto-kladene-dotazy"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Centrum password, or an aplikační heslo with two-factor on",
+    "helpUrl": "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "usernameForm": "Your full address including the domain: jmeno@centrum.cz, jmeno@atlas.cz or jmeno@volny.cz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Centrum.cz, Atlas.cz and Volný.cz Email to Claude & Any MCP Client",
+    "description": "Connect a Centrum.cz, Atlas.cz or Volný.cz mailbox to Claude, Cursor and any MCP client over IMAP at imap.centrum.cz:993. Sending needs the free enlarged mailbox (navýšená schránka); with two-factor on, an app password."
+  },
+  "hero": {
+    "eyebrow": "Centrum.cz + AI",
+    "titleLine1": "Connect Centrum.cz Email to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Centrum, Atlas or Volný mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you already use, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Centrum.cz Email on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.centrum.cz on port 993, signing in with your full address and your Centrum password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Atlas.cz and Volný.cz run on the same Economia platform with their own IMAP names, imap.atlas.cz and imap.volny.cz. Two rules from the provider: sending over SMTP works only on an enlarged mailbox (navýšená schránka), which is free and takes a phone number in the web settings, and with two-factor verification on, mail programs sign in with an aplikační heslo instead of the account password. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Account password, or an app password with two-factor",
+    "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @atlas.cz", "host": "imap.atlas.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @atlas.cz", "host": "smtp.centrum.cz", "port": 465, "security": "tls" },
+      { "label": "IMAP, @volny.cz", "host": "imap.volny.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @volny.cz", "host": "smtp.volny.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "The first two rows are @centrum.cz, and the help page says to use them for its other domains such as @cbox.cz and @mujmail.cz too. Atlas and Volný have their own IMAP names below. Every host was verified from a live TLS connection. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "How Centrum.cz connects: IMAP, and SMTP once the mailbox is enlarged",
+    "body": "Centrum serves IMAP at <code>imap.centrum.cz</code> on port 993 with SSL/TLS and SMTP at <code>smtp.centrum.cz</code> on port 465 with SSL/TLS (587 with STARTTLS is documented as well), with authentication on and the whole address as the username. The same help site covers Atlas.cz and Volný.cz: <code>imap.atlas.cz</code> sends through smtp.centrum.cz, while Volný has both <code>imap.volny.cz</code> and <code>smtp.volny.cz</code>. For any other domain on the platform, Centrum says to use the centrum.cz settings. There is no IMAP switch to find, but there is a condition on sending that the help page states in one sentence: to use SMTP you need an enlarged mailbox, which is free and is done in the web settings with a phone number. A basic mailbox is 100 MB; an enlarged one is 15 GB. With two-factor verification on, the FAQ says mail programs sign in with an application password generated in the <b>Dvoufaktorové ověření</b> section of the web settings, which the mobile site and app do not show."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Enlarge the mailbox so SMTP works",
+      "p": "Sign in to the webmail on a computer, open the mailbox settings and complete the free enlargement (<b>navýšení schránky</b>) by confirming a phone number. Centrum ties SMTP to this: without it, the IMAP login succeeds and the sending check fails. The enlargement also lifts the mailbox from 100 MB to 15 GB."
+    },
+    {
+      "h": "With two-factor on, generate an aplikační heslo",
+      "p": "If you use <b>dvoufaktorové ověření</b>, your account password is refused by mail programs. In the web settings open the <b>Dvoufaktorové ověření</b> section and generate an application password there; the mobile version of the mailbox and the app do not offer it. Use that value in MCPEmails. With two-factor off, your normal Centrum password is the credential."
+    },
+    {
+      "h": "Paste the address and password into MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the full address with its domain, and paste whichever password applies. The hosts and ports are prefilled for centrum.cz, atlas.cz and volny.cz addresses. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Reading works and sending fails: the mailbox has not been enlarged",
+      "p": "This is the Centrum-specific failure, and it is easy to misread because the IMAP half is fine. The help page is explicit that SMTP needs an enlarged mailbox (navýšení is free, done in the web settings with a phone number). Until then the sending check in MCPEmails is refused and the connect form offers reading only. Do the enlargement, then test again, and sending comes with it."
+    },
+    {
+      "h": "Two-factor needs an app password, and only the desktop web settings issue it",
+      "p": "With dvoufaktorové ověření on, the FAQ says to sign mail programs in with an aplikační heslo generated in the Dvoufaktorové ověření section, and notes that this setting is not reachable from the mobile version of the mailbox or the mobile app. So if you manage the account from a phone, the password you need can only be made from a computer. The refused login itself gives no hint which of the two credentials it wanted."
+    },
+    {
+      "h": "A bare IMAP server: no IDLE, no MOVE, no UIDPLUS",
+      "p": "The banner advertises IMAP4rev1, LITERAL+, ID, SASL-IR and AUTH=PLAIN, and nothing else. No IDLE means new mail is found by polling, which is how MCPEmails works anyway. No MOVE means filing a message runs as a copy, a flag and an expunge, and no UIDPLUS means the new id of the copy is not reported back. Neither is fatal; bulk organizing is just slower than the capability list of a bigger provider would make it. If folder sync misbehaves in a desktop client, Centrum's help suggests setting the IMAP path prefix to INBOX."
+    },
+    {
+      "h": "Atlas and Volný share the platform but not the IMAP name",
+      "p": "An @atlas.cz address signs in at <code>imap.atlas.cz</code> and sends through smtp.centrum.cz; a @volny.cz address uses <code>imap.volny.cz</code> and <code>smtp.volny.cz</code>. Pointing an Atlas account at the Centrum IMAP host is refused. MCPEmails prefills the right pair from the address you type, and the SMTP server identifies itself as a centrum.cz machine in every case, which is normal."
+    }
+  ],
+  "limits": [
+    "SMTP is available only on an enlarged mailbox (navýšená schránka). Until the free enlargement is done in the web settings, the mailbox connects for reading only.",
+    "The SMTP server caps a message at 25 MB including encoded attachments, so a large file is refused at send time rather than trimmed.",
+    "Centrum does not advertise SPECIAL-USE, so folders are matched by name rather than by role. On a Czech mailbox that usually means Doručené, Odeslané, Koncepty and Koš. Name the folder when you ask for a move."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Centrum.cz, Atlas.cz or Volný.cz email?",
+      "a": "Not directly. Claude has no built-in Centrum connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to your centrum.cz, atlas.cz or volny.cz mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Centrum.cz IMAP and SMTP settings?",
+      "a": "IMAP is imap.centrum.cz on port 993 with SSL/TLS. SMTP is smtp.centrum.cz on port 465 with SSL/TLS (or 587 with STARTTLS), authentication required. Atlas uses imap.atlas.cz with smtp.centrum.cz; Volný uses imap.volny.cz and smtp.volny.cz. The username is your full address. Every host was confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why can MCPEmails read my Centrum mail but not send?",
+      "a": "Because sending over SMTP needs an enlarged mailbox. Centrum's help says the enlargement is free and is done in the web settings on a computer by confirming a phone number. Once it is done, test the connection again and sending works."
+    },
+    {
+      "q": "Why is my Centrum password rejected in a mail client?",
+      "a": "If two-factor verification is on, mail programs need an aplikační heslo generated in the Dvoufaktorové ověření section of the web settings, which is only reachable from the desktop version. If two-factor is off, check that the username is the whole address with its domain and that an Atlas or Volný address is using its own IMAP host."
+    },
+    {
+      "q": "Is my Centrum mail stored on your servers?",
+      "a": "No. Messages are fetched live from Centrum over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Centrum.cz inbox",
+    "sub": "Connect Centrum, Atlas or Volný in minutes. One inbox free forever, no card required."
+  }
+}

@@ -315,7 +315,7 @@ export const PROVIDERS = [
   },
   {
     slug: "startmail",
-    wave: 11,
+    wave: 12,
     name: "StartMail",
     category: "privacy",
     domain: "startmail.com",
@@ -1034,7 +1034,7 @@ export const PROVIDERS = [
   },
   {
     slug: "frontier",
-    wave: 11,
+    wave: 12,
     name: "Frontier",
     category: "isp",
     domain: "frontier.com",
@@ -1146,7 +1146,7 @@ export const PROVIDERS = [
   },
   {
     slug: "optimum",
-    wave: 11,
+    wave: 12,
     name: "Optimum",
     category: "isp",
     domain: "optimum.net",
@@ -1188,7 +1188,7 @@ export const PROVIDERS = [
   },
   {
     slug: "rogers",
-    wave: 11,
+    wave: 12,
     name: "Rogers",
     category: "isp",
     domain: "rogers.com",
@@ -1230,7 +1230,7 @@ export const PROVIDERS = [
   },
   {
     slug: "sfr",
-    wave: 11,
+    wave: 12,
     name: "SFR",
     category: "isp",
     domain: "sfr.fr",
@@ -1286,6 +1286,10 @@ export const PROVIDERS = [
   },
   {
     slug: "wp-pl",
+    // Held in the review cohort until 2026-11-10, when the page was checked
+    // against pomoc.wp.pl (hosts, the Opcje > IMAP/POP switch, the mail-program
+    // passwords under Logowanie dwustopniowe) and released with the Italian,
+    // Czech and Polish cohort.
     wave: 11,
     name: "WP.pl",
     category: "isp",
@@ -1300,7 +1304,7 @@ export const PROVIDERS = [
   },
   {
     slug: "xtra",
-    wave: 11,
+    wave: 12,
     name: "Spark Xtra",
     category: "isp",
     domain: "xtra.co.nz",
@@ -1706,6 +1710,133 @@ export const PROVIDERS = [
     smtp: {"host": "securemail.a1.net", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-11-04", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": true, "smtpMaxSize": "26214400"},
     locales: ["en", "nb", "es", "fr", "de"],
+  },
+  // ── Italy, Czechia and Poland, researched on the providers' own help pages
+  // and probed on 2026-11-10 (TLS handshake with a verified chain, then
+  // CAPABILITY and EHLO). Settings cite the vendor page in each content file.
+  {
+    // Aruba's domain mailboxes (nome@tuodominio.ext) live on imaps/smtps
+    // .aruba.it; the free @aruba.it mailboxes use imap/smtp.aruba.it (same
+    // Dovecot banner, probed too). guide.aruba.it, parametri configurazione.
+    slug: "aruba",
+    wave: 11,
+    name: "Aruba",
+    category: "hosting",
+    domain: "aruba.it",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imaps.aruba.it", "port": 993, "security": "tls"},
+    smtp: {"host": "smtps.aruba.it", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["LOGIN", "OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=OAUTHBEARER AUTH=XOAUTH2] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "OAUTH2"], "smtpStarttls": false, "smtpMaxSize": "524288000"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Libero Mail (Italiaonline): libero.it, iol.it, blu.it, inwind.it on
+    // imapmail.libero.it; Virgilio on in.virgilio.it / out.virgilio.it, same
+    // Dovecot and the same iol.local SMTP cluster. aiuto.libero.it.
+    slug: "libero",
+    wave: 11,
+    name: "Libero Mail",
+    category: "isp",
+    domain: "libero.it",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imapmail.libero.it", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.libero.it", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE STARTTLS AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "50000000"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // TIM Mail documents only 143 and 587 with STARTTLS (tim.it assistenza,
+    // protocolli-posta); 993 and 465 do not answer. alice.it uses in/out
+    // .alice.it and tin.it imaps/smtps.tin.it on the same ports, listed as
+    // extra rows on the page. Mail clients are allowed only for a mailbox
+    // tied to an active TIM line, or from TIM's own network.
+    slug: "tim",
+    wave: 11,
+    name: "TIM Mail",
+    category: "isp",
+    domain: "tim.it",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.tim.it", "port": 143, "security": "starttls"},
+    smtp: {"host": "smtp.tim.it", "port": 587, "security": "starttls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 Server", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "41943040"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Tiscali: IMAP answers on 993. smtp.tiscali.it:465 completes a TLS
+    // handshake only with a 1024-bit DH key and then refuses outside addresses
+    // ("554 ESMTP server not available from your IP"); 587 does not answer.
+    // The page says reading works and sending from MCPEmails does not.
+    slug: "tiscali",
+    wave: 11,
+    name: "Tiscali Mail",
+    category: "isp",
+    domain: "tiscali.it",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.tiscali.it", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.tiscali.it", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["CRAM-MD5", "DIGEST-MD5", "PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UIDPLUS NAMESPACE QUOTA CHILDREN SORT AUTH=CRAM-MD5 AUTH=DIGEST-MD5 AUTH=PLAIN] Dovecot ready.", "smtpAuthMechs": [], "smtpStarttls": false, "smtpMaxSize": null},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // PEC, Italian certified email. The table shows Aruba PEC (the largest
+    // provider, @pec.it and pec.<domain>); Legalmail (InfoCert) and Poste
+    // (Postecert, PEC postecertifica) are extra rows on the page. All three
+    // serve IMAP/SMTP to ordinary mail clients; each has its own password rule.
+    slug: "pec",
+    wave: 11,
+    name: "PEC",
+    category: "business",
+    domain: "pec.it",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imaps.pec.aruba.it", "port": 993, "security": "tls"},
+    smtp: {"host": "smtps.pec.aruba.it", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["LOGIN", "OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=OAUTHBEARER AUTH=XOAUTH2] IMAP ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "OAUTHBEARER", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "671088640"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Centrum.cz, Atlas.cz and Volný.cz: one Economia platform
+    // (freemail.help.economia.cz). Each domain has its own IMAP name; SMTP is
+    // smtp.centrum.cz for centrum and atlas, smtp.volny.cz for volny, and
+    // needs the free "navýšená schránka" (phone number confirmed) first.
+    slug: "centrum",
+    wave: 11,
+    name: "Centrum.cz",
+    category: "isp",
+    domain: "centrum.cz",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.centrum.cz", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.centrum.cz", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ ID SASL-IR AUTH=PLAIN] BalaIMAP server ready for users @centrum.cz", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "26214400"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Gazeta.pl Poczta (Agora). pomoc.gazeta.pl documents imap/smtp.gazeta.pl;
+    // the IMAP banner is Onet's, so the mailbox runs on Onet's platform with
+    // its own login.
+    slug: "gazeta-pl",
+    wave: 11,
+    name: "Gazeta.pl Poczta",
+    category: "isp",
+    domain: "gazeta.pl",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.gazeta.pl", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.gazeta.pl", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=XOAUTH2] Onet server ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "90000000"},
+    locales: ["en", "nb", "es", "fr"],
   },
 ];
 

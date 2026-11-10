@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Las funciones de las carpetas se deducen por su nombre en lugar de anunciarlas el servidor, porque SPECIAL-USE no se anuncia.",
-    "Solo existe una credencial por aplicación si activas el inicio de sesión en dos pasos. Sin él, la conexión guarda la contraseña principal de tu cuenta."
+    "Solo existe una credencial por aplicación si activas el inicio de sesión en dos pasos. Sin él, la conexión guarda la contraseña principal de tu cuenta.",
+    "Desde el 15 de diciembre de 2026, las condiciones de WP le permiten desactivar un protocolo como IMAP o SMTP que la cuenta no haya usado en 90 días, y una cuenta sin inicio de sesión durante 180 días se elimina. Un buzón que lleve tiempo inactivo puede necesitar que vuelvas a activar IMAP en Opcje. Los adjuntos tienen un límite de 100 MB."
   ],
   "faq": [
     {

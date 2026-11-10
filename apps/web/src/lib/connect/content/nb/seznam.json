@@ -8,7 +8,7 @@
     "method": "account-password",
     "label": "Seznam-passord",
     "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
-    "usernameForm": "Hele adressen din, inkludert alt etter krøllalfa: name@seznam.cz eller name@email.cz.",
+    "usernameForm": "Hele adressen din, inkludert alt etter krøllalfa: name@seznam.cz, name@email.cz eller name@post.cz.",
     "status": "active"
   },
   "meta": {

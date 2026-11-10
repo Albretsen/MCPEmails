@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistenza.tiscali.it/servizi/guida/parametri-mail/",
+    "https://assistenza.tiscali.it/servizi/tiscali-mail/guida/tiscali-mail-abilita-autenticazione-due-fattori/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Tiscali Mail-passord, for lesing",
+    "helpUrl": "https://assistenza.tiscali.it/servizi/guida/parametri-mail/",
+    "usernameForm": "Hele adressen din: userid@tiscali.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Tiscali Mail til Claude og enhver MCP-klient",
+    "description": "Koble Tiscali Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.tiscali.it:993 med Tiscali-passordet ditt. Lesing, søk og organisering virker; Tiscalis SMTP-server avviser tilkoblinger utenfra nettet sitt, så sending gjør det ikke."
+  },
+  "hero": {
+    "eyebrow": "Tiscali Mail + AI",
+    "titleLine1": "Koble Tiscali Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Tiscali-postkasse å lese, søke i, oppsummere og organisere via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én. Sending er det ene Tiscali holder for sitt eget nett.",
+    "answer": "Claude når ikke Tiscali Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.tiscali.it port 993 og logger inn med hele adressen din og Tiscali-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i og organisere den e-posten. Sending er annerledes: Tiscali dokumenterer smtp.tiscali.it på port 465, og den serveren svarer på en tilkobling utenfra Tiscalis nett med et avslag, ESMTP server not available from your IP. MCPEmails kobler til fra sine egne servere, og kobler derfor til en Tiscali-postkasse bare for lesing, mens agenten skriver utkast til svar som du sender fra Tiscalis webmail eller app. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Lesing og organisering; sending blir hos Tiscali",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Tiscali Mail seg til: IMAP for lesing, og hvorfor sending stopper",
+    "body": "Tiscali tilbyr IMAP på <code>imap.tiscali.it</code> port 993 med SSL og SMTP på <code>smtp.tiscali.it</code> port 465 med SSL, og veiledningen understreker at sending fra en klient krever SMTP-autentisering med de samme påloggingsdetaljene som postkassen. Brukernavnet er hele adressen, userid@tiscali.it, og passordet er Tiscali Mail-passordet ditt. IMAP-halvdelen oppfører seg som dokumentert: serveren svarer på en TLS-tilkobling under det navnet og annonserer <code>AUTH=PLAIN</code>, <code>CRAM-MD5</code> og <code>DIGEST-MD5</code>. SMTP-halvdelen gjør det ikke, utenfra. Da vi koblet til smtp.tiscali.it på 465 fra våre servere, ble TLS-håndtrykket fullført bare med en 1024-bits Diffie-Hellman-nøkkel som dagens TLS-biblioteker avviser som standard, og serveren hilste oss så med <code>554 ESMTP server not available from your IP</code>. Port 587 svarte ikke i det hele tatt. Derfor tilbyr MCPEmails Tiscali som en tilkobling bare for lesing: velg den når sendekontrollen feiler, så virker alt som leser, søker, oppsummerer, arkiverer og skriver utkast."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk tofaktorautentisering i Area personale",
+      "p": "Tiscali tilbyr tofaktorautentisering under <b>Sicurezza</b> i Area personale, med en autentiseringsapp og reservekoder. Sidene beskriver den for webmailen og kontoområdet og sier ikke hvordan et e-postprogram logger inn når den er på, så er tofaktor aktivert og innloggingen din avvises, er det det første du skal sjekke. Med den av er Tiscali Mail-passordet ditt påloggingen."
+    },
+    {
+      "h": "Skriv inn adressen og passordet, og velg bare lesing når du blir spurt",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nome@tiscali.it, og skriv inn Tiscali-passordet ditt. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden. Innloggingskontrollen går gjennom; sendekontrollen avvises av Tiscali, og MCPEmails tilbyr da å koble til postkassen bare for lesing. Velg det."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke i, oppsummere og organisere innboksen, og skrive utkast du selv sender fra Tiscali."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tiscalis SMTP-server avviser adresser utenfor nettet sitt",
+      "p": "Dette er hele historien om sending. Tiscalis veiledning sier at du skal sende fra en klient med SMTP-autentisering over SSL på port 465, og det virker fra en Tiscali-tilkobling. Fra en server et annet sted hilser smtp.tiscali.it tilkoblingen med <code>554 ESMTP server not available from your IP</code> før noen innlogging er forsøkt, så ikke noe passord kommer forbi. Det er en nettverkspolicy på Tiscalis side, ikke en innstilling på postkassen, og ingen hostet tjeneste kan sende gjennom den. Lesing via IMAP har ingen slik begrensning."
+    },
+    {
+      "h": "SMTP-serverens TLS er en 1024-bits DH-nøkkel som moderne programvare avviser",
+      "p": "Allerede før avslaget tilbyr TLS-håndtrykket på smtp.tiscali.it bare en Diffie-Hellman-utveksling med en 1024-bits nøkkel. OpenSSL på standard sikkerhetsnivå stopper med dh key too small, og TLS-biblioteker som har droppet finite-field DH helt, kan ikke forhandle i det hele tatt. Skrivebordsklienter med eldre innstillinger kommer gjennom; en moderne server gjør det ikke. Sammen med IP-regelen betyr det at sending fra MCPEmails er stengt to ganger, og derfor sier siden det rett ut i stedet for å tilby en omvei."
+    },
+    {
+      "h": "Tofaktor er dokumentert for kontoen, ikke for e-postprogrammer",
+      "p": "Tiscalis hjelp forklarer hvordan du slår på tofaktorautentisering med en app og reservekoder, og hvordan du logger inn i webmailen med den. Den sier ikke om et e-postprogram fortsetter å virke med kontopassordet etterpå, og dokumenterer ikke noe app-spesifikt passord. Slår du den på og IMAP-innloggingen begynner å feile, er Tiscalis egne sider stedet å spørre, og denne siden oppdateres når de svarer på spørsmålet."
+    },
+    {
+      "h": "Ingen SASL-IR, og POP tillater én enhet om gangen",
+      "p": "IMAP-banneret annonserer <code>AUTH=PLAIN</code> uten SASL-IR, så en klient som sender påloggingsdetaljene i ett steg med AUTHENTICATE, får et nakent avslag som ser ut som feil passord. MCPEmails bruker utvekslingen i to steg. Tiscali nevner også at POP-serveren ikke tillater samme konto fra flere enheter samtidig; IMAP, som MCPEmails bruker, har ingen slik regel."
+    }
+  ],
+  "limits": [
+    "Sending gjennom smtp.tiscali.it avvises utenfra Tiscalis nett, så en Tiscali-postkasse kobles til bare for lesing, søk og organisering. Agenten kan forberede utkast; du sender dem fra Tiscalis webmail eller app.",
+    "Tiscali annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle. I en italiensk postkasse betyr det vanligvis Posta in arrivo, Inviati, Bozze og Cestino."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Tiscali Mail?",
+      "a": "For lesing, søk og organisering, ja. Claude har ingen innebygd Tiscali-kobling; kobler du til en MCP-server som MCPEmails via IMAP, får Claude tilgang til å lese, søke i, oppsummere og organisere postkassen, og samme tilkobling fungerer i Cursor og andre MCP-klienter. Sending er ikke mulig, fordi Tiscalis SMTP-server avviser tilkoblinger utenfra sitt eget nett."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Tiscali?",
+      "a": "IMAP er imap.tiscali.it på port 993 med SSL. SMTP er smtp.tiscali.it på port 465 med SSL og autentisering påkrevd. Brukernavnet er hele adressen din, userid@tiscali.it, og passordet er Tiscali Mail-passordet ditt. IMAP-verten ble bekreftet via en direkte TLS-tilkobling; SMTP-verten avviste tilkoblingen vår med 554 ESMTP server not available from your IP."
+    },
+    {
+      "q": "Hvorfor kan MCPEmails lese Tiscali-e-posten min, men ikke sende?",
+      "a": "Fordi smtp.tiscali.it bare betjener klienter på Tiscalis nett. Fra våre servere svarer den 554 ESMTP server not available from your IP før noen innlogging, og TLS-håndtrykket bruker en 1024-bits DH-nøkkel som dagens biblioteker avviser. IMAP-serveren har ingen av delene, så lesing virker, og tilkoblingen settes opp bare for lesing."
+    },
+    {
+      "q": "Har Tiscali app-passord?",
+      "a": "Tiscali dokumenterer tofaktorautentisering for Area personale, men ikke noe programspesifikt passord, og sier ikke hvordan e-postprogrammer logger inn med tofaktor på. Med tofaktor av er kontopassordet påloggingen for IMAP."
+    },
+    {
+      "q": "Lagres Tiscali-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Tiscali via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Tiscali-innboks å lese",
+    "sub": "Koble til Tiscali Mail for lesing på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -417,6 +417,43 @@
       "seznam": {
         "password": "If two-factor authentication (dvoufázové ověření) is on, your Seznam password stops working here. Set a Heslo pro aplikace under Zabezpečení účtu and use that."
       },
+      "aruba": {
+        "password": "Aruba checks the password of this mailbox, set under Gestione caselle in the Aruba panel, not your Aruba customer-area login. On a Hosting Basic plan from before June 2017, IMAP is a separate add-on that has to be active on the domain."
+      },
+      "libero": {
+        "password": "With Password Sicura on, Libero and Virgilio refuse your normal password in mail apps. Create a Password specifica per applicazioni under Account, then Password per App, and use that 16-character password."
+      },
+      "tim": {
+        "line": "TIM allows mail apps only on a mailbox tied to an active TIM landline or mobile line. Without one, TIM lets mail apps in from its own network only, which MCPEmails is not."
+      },
+      "tiscali": {
+        "password": "Tiscali takes your Tiscali Mail password with the full address. Its help documents two-factor authentication for the account only, so if it is on and the login fails, turn it off to test."
+      },
+      "arubaPec": {
+        "password": "With verifica in 2 passaggi on, Aruba PEC refuses the mailbox password in mail apps. Generate a Password per programmi di posta under Gestione account PEC, then Sicurezza, and use that. It expires after six months."
+      },
+      "legalmail": {
+        "password": "Legalmail signs in with the User ID and password of the mailbox, under Advanced settings, Username; the PEC address works as the login only if you set that in the webmail. If you switched the mailbox to Application Password only, use a 16-digit Application Password from Accessi e Sicurezza."
+      },
+      "postecert": {
+        "password": "In the PEC dashboard choose Genera password and use that client password. It expires every 90 days."
+      },
+      "centrum": {
+        "password": "With dvoufaktorové ověření on, Centrum, Atlas and Volný refuse your password in mail apps. Generate an aplikační heslo in the Dvoufaktorové ověření section of the web settings, on a computer, and use that.",
+        "smtp": "Sending needs the free enlarged mailbox (navýšení schránky): confirm a phone number in the web settings, then test again."
+      },
+      "wp": {
+        "imap": "Turn on IMAP in {provider}: Opcje, the IMAP/POP tab, then IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "With logowanie dwustopniowe on, create a hasło do programu pocztowego under Bezpieczeństwo, Logowanie dwustopniowe, and use that instead of your {provider} password."
+      },
+      "onet": {
+        "protocols": "Unblock IMAP and SMTP in Onet Poczta: Ustawienia (the cog), Konto, the Konto Główne tab, then the switch on each protocol's tile.",
+        "appPassword": "With weryfikacja dwuetapowa on, generate a hasło do aplikacji under Bezpieczeństwo in Onet Konto and use that instead of your Onet password."
+      },
+      "interia": {
+        "program": "In Interia, open Ustawienia, Ustawienia główne, the Parametry tab, and set korzystam z programu pocztowego to TAK.",
+        "twoStep": "Interia blocks mail programs while logowanie dwuetapowe is on and has no app passwords. Turn it off to connect."
+      },
       "gmx": {
         "imap": "{provider} switches POP3 and IMAP access off by default. Turn it on under E-Mail-Einstellungen, then POP3/IMAP.",
         "twoFactor": "With two-factor authentication on, use an app password instead of your normal password."

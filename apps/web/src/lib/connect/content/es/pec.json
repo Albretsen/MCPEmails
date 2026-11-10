@@ -1,0 +1,126 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "https://guide.aruba.it/pec/account-e-sicurezza/password/generare-password-programmi-posta",
+    "https://help.infocert.it/home/guida/guida-alla-configurazione-legalmail---mozilla-thunderbird?lang=it",
+    "https://help.infocert.it/home/faq/che-cosa-e-l-application-password",
+    "https://postecert.poste.it/pec/configurazione.shtml",
+    "https://www.poste.it/assistenza/faq-posta-elettronica-certificata"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del buzón PEC, o la contraseña para programas de correo que emite tu proveedor",
+    "helpUrl": "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "usernameForm": "Tu dirección PEC completa: nome@pec.it o nome@pec.tuodominio.it en Aruba, el User ID en Legalmail, nome@postecert.it o nome@postecertifica.it en Poste.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta un buzón PEC (Aruba PEC, Legalmail, Poste) a Claude",
+    "description": "Conecta el correo certificado italiano (PEC) a Claude, Cursor y cualquier cliente MCP por IMAP: Aruba PEC en imaps.pec.aruba.it:993, Legalmail en mbox.cert.legalmail.it:993, Poste en mail.postecert.it:993. La regla de contraseña de cada proveedor y lo que ve el agente."
+  },
+  "hero": {
+    "eyebrow": "PEC + IA",
+    "titleLine1": "Conecta tu buzón PEC a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "La Posta Elettronica Certificata es donde llegan las multas, las licitaciones, las facturas y las cartas certificadas, y donde nadie quiere mirar. Dale a tu agente de IA acceso IMAP: lee, busca, resume y archiva el correo certificado, recibos incluidos, con las credenciales que tu proveedor PEC emite para programas de correo.",
+    "answer": "Claude no puede acceder a un buzón PEC por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP, exactamente como lo harían Thunderbird u Outlook: Aruba PEC en imaps.pec.aruba.it en el puerto 993, Legalmail en mbox.cert.legalmail.it en el 993, Poste en mail.postecert.it o mail.postecertifica.it en el 993, cada uno con su propio servidor SMTP en el 465. Los tres proveedores documentan este acceso para clientes de correo normales. Lo que cambia es la contraseña. Aruba acepta la contraseña del buzón hasta que se activa la verificación en dos pasos, y a partir de ahí una contraseña específica para programas de correo válida seis meses; Legalmail acepta el User ID y la contraseña, o una Application Password opcional de 16 dígitos; Poste nunca acepta la contraseña del webmail y emite desde su panel una contraseña para clientes que caduca cada 90 días. Leer por IMAP muestra al agente el sobre certificado con el mensaje original adjunto; enviar a través del SMTP del proveedor produce un mensaje certificado como el de cualquier cliente. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña para programas de correo de tu proveedor",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Legalmail", "host": "mbox.cert.legalmail.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Legalmail", "host": "sendm.cert.legalmail.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, Postecert", "host": "mail.postecert.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Postecert", "host": "mail.postecert.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son de Aruba PEC, que sirve los buzones @pec.it y pec.tuodominio.it. Siguen Legalmail y Poste. Todos los servidores se verificaron mediante una conexión TLS real. Para una PEC de otro proveedor, usa el",
+      "label": "buscador de ajustes de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "¿Varios buzones PEC en la empresa?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo se conecta la PEC: IMAP y SMTP estándar, con la regla de contraseña de cada proveedor",
+    "body": "La PEC es correo normal envuelto en un transporte certificado, y todos los grandes proveedores la sirven por los protocolos estándar. Aruba documenta <code>imaps.pec.aruba.it</code> en el 993 y <code>smtps.pec.aruba.it</code> en el 465, ambos con SSL/TLS, con la dirección PEC como nombre de usuario y la nota de que los protocolos están activos por defecto. El manual operativo de InfoCert indica <code>mbox.cert.legalmail.it</code> en el 993 para IMAP y <code>sendm.cert.legalmail.it</code> en el 465 para enviar, con TLS 1.2 o superior, iniciando sesión con el User ID y la contraseña del buzón (la dirección PEC sirve como usuario solo si lo has configurado así en el webmail). Las páginas de configuración de Poste indican <code>mail.postecert.it</code> para los buzones Postecert más antiguos y <code>mail.postecertifica.it</code> para PEC postecertifica, con IMAP en el 993 y SMTP en el 465 con autenticación activada. Las contraseñas siguen las reglas europeas REM que AgID adoptó en 2024: un inicio de sesión fuerte para el webmail y, para los clientes de correo, un token que el usuario genera tras autenticarse de forma fuerte. Aruba lo llama <b>Password per programmi di posta</b>, se genera una vez activada la verificación en dos pasos y vale seis meses; Legalmail, <b>Application Password</b>, hoy opcional, de 16 dígitos, creada en Accessi e Sicurezza; Poste, la contraseña para clientes, generada desde el panel PEC con <b>Genera password</b>, obligatoria y con caducidad cada 90 días. MCPEmails usa la que te entregue tu proveedor, con el mismo IMAP y SMTP que cualquier cliente."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Consigue la credencial que tu proveedor emite para programas de correo",
+      "p": "<b>Aruba PEC</b>: si la verificación en dos pasos (verifica in 2 passaggi) está desactivada, la contraseña del buzón funciona tal cual. Si está activada, algo que una PEC adaptada al estándar europeo exige, abre <b>Gestione account PEC</b>, luego <b>Sicurezza</b>, luego <b>Password per programmi di posta</b>, pulsa <b>Attiva</b> y copia la contraseña generada; dura seis meses y <b>Genera nuova password</b> la sustituye. <b>Legalmail</b>: tu User ID y la contraseña del buzón funcionan, o genera una Application Password en <b>Accessi e Sicurezza</b> dentro del webmail. <b>Poste</b>: en el panel PEC elige <b>Genera password</b>; un cliente nunca acepta la contraseña del webmail."
+    },
+    {
+      "h": "Comprueba que los protocolos están activados en el buzón",
+      "p": "En Aruba PEC, el webmail tiene <b>Impostazioni</b>, luego <b>SMTP/POP/IMAP</b>, con una pestaña <b>Accessi</b>. Los protocolos están activados por defecto, y Aruba avisa de que desactivarlos todos bloquea cualquier programa de correo. Legalmail permite hacer de la Application Password el único inicio de sesión aceptado; si lo hiciste sin generar una, solo el webmail y la app pueden entrar."
+    },
+    {
+      "h": "Pega el acceso en MCPEmails y después la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección PEC (o el User ID en Legalmail, en Avanzado) y pega la contraseña. Los servidores y puertos vienen rellenados para las direcciones de Aruba, Legalmail y Poste. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá el buzón PEC."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Lo que ve el agente: la busta di trasporto, con el mensaje real dentro",
+      "p": "Un mensaje PEC no llega como el mensaje que escribió el remitente. El proveedor del remitente lo envuelve en un sobre certificado, la <b>busta di trasporto</b>, firmado por ese proveedor, cuyo cuerpo dice quién envió qué a quién y cuándo, con el mensaje original adjunto como <code>postacert.eml</code> y los datos de certificación como <code>daticert.xml</code>. Por IMAP ese sobre es el mensaje, así que cuando le preguntas al agente qué dice una PEC, lee el original adjunto. Los recibos funcionan igual: la <b>ricevuta di accettazione</b> de tu proveedor y la <b>ricevuta di avvenuta consegna</b> del proveedor del destinatario llegan como mensajes separados a la bandeja, y por eso un buzón PEC se llena con tres elementos por cada carta enviada. Un agente es bueno archivando exactamente eso."
+    },
+    {
+      "h": "La contraseña de cada proveedor tiene su propia vida útil",
+      "p": "La contraseña de Aruba para programas de correo vale seis meses, y el área de la cuenta ofrece <b>Posticipa scadenza</b> para prolongarla o una nueva para sustituirla; cuando caduca, la conexión falla con un rechazo sin más. La contraseña para clientes de Poste caduca cada 90 días y se regenera desde el panel. La Application Password de Legalmail no caduca por sí sola, pero se puede revocar desde el webmail, y pasar el buzón a solo Application Password desactiva la contraseña normal en todos los sitios menos en el webmail. Cuando una conexión PEC que llevaba meses funcionando se detiene, la caducidad es lo primero que hay que revisar. MCPEmails informa del inicio de sesión rechazado en la bandeja, y ahí pegas la contraseña nueva."
+    },
+    {
+      "h": "El envío debe pasar por el SMTP del proveedor, y cuenta",
+      "p": "Aruba afirma que los mensajes certificados solo se pueden enviar a través del servidor SMTP de Aruba, y que otro servidor no produce ningún mensaje certificado. MCPEmails siempre envía a través del servidor SMTP del buzón conectado, así que una PEC enviada por el agente está tan certificada como una enviada desde Outlook, con el mismo efecto legal y los mismos recibos. Es un motivo para actuar con cuidado: una PEC a un organismo público es una carta certificada. Mucha gente limita el agente a leer, archivar y redactar, y pulsa enviar ella misma. Además, una PEC solo tiene pleno valor legal entre dos direcciones PEC; los servidores de Aruba rechazan con un 554 un mensaje a una dirección normal que no acepta correo no certificado, y Poste señala que la entrega a direcciones normales depende del proveedor del destinatario."
+    },
+    {
+      "h": "100 MB por mensaje, repartidos entre destinatarios en Aruba",
+      "p": "Los tres proveedores limitan un mensaje PEC a 100 MB adjuntos incluidos, y Aruba señala que el límite se reparte entre los destinatarios, así que un adjunto de 50 MB llega como mucho a dos. Por encima del límite, el proveedor emite una ricevuta di mancata accettazione en lugar de un rebote, que el agente encontrará en la bandeja como cualquier otro recibo."
+    }
+  ],
+  "limits": [
+    "Cada proveedor PEC tiene su propia regla de acceso: la contraseña para programas de correo de Aruba una vez activada la verificación en dos pasos, el User ID de Legalmail (o la Application Password), la contraseña para clientes de Poste generada desde el panel y con caducidad cada 90 días. La contraseña del webmail no es la credencial en Poste, ni en Aruba una vez activada la verificación en dos pasos.",
+    "Los proveedores no anuncian SPECIAL-USE, así que las carpetas se identifican por nombre y no por función: en un buzón PEC en italiano, normalmente Posta in arrivo, Posta inviata, Bozze y Cestino. Indica la carpeta cuando pidas mover algo.",
+    "Un mensaje certificado solo se envía a través del SMTP propio del proveedor, que es el que usa MCPEmails. Enviar desde MCPEmails produce una PEC real con recibos, así que trata el envío del agente como tratarías el tuyo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con un buzón PEC?",
+      "a": "No directamente. Claude no tiene un conector PEC integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a un buzón de Aruba PEC, Legalmail o Poste por IMAP le da a Claude acceso para leer, buscar, resumir, archivar y enviar, y la misma conexión funciona en Cursor y otros clientes MCP. El sobre del proveedor, los recibos y el efecto legal no cambian."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Aruba PEC, Legalmail y Poste?",
+      "a": "Aruba PEC: imaps.pec.aruba.it en el 993 y smtps.pec.aruba.it en el 465. Legalmail: mbox.cert.legalmail.it en el 993 y sendm.cert.legalmail.it en el 465. Poste: mail.postecert.it o, para PEC postecertifica, mail.postecertifica.it, en el 993 y el 465. Todos con SSL/TLS y autenticación obligatoria, y todos confirmados mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Qué contraseña acepta un buzón PEC en un programa de correo?",
+      "a": "Aruba: la contraseña del buzón o, una vez activada la verificación en dos pasos, la Password per programmi di posta generada en Gestione account PEC, Sicurezza, válida seis meses. Legalmail: el User ID y la contraseña del buzón, o una Application Password de 16 dígitos desde Accessi e Sicurezza. Poste: una contraseña para clientes generada en el panel PEC con Genera password, que caduca cada 90 días; la contraseña del webmail nunca se acepta."
+    },
+    {
+      "q": "¿El estándar europeo de PEC (REM) impidió que funcionen los clientes de correo?",
+      "a": "No. La política REM de AgID mantiene explícitamente disponibles IMAP, POP3 y SMTP: el usuario se autentica de forma fuerte una vez y recibe un token, una contraseña de aplicación, para usarla en cualquier cliente de correo estándar en lugar de la contraseña, durante un periodo limitado como seis meses. Aruba, InfoCert y Poste aplican esa regla cada uno a su manera, y por eso las contraseñas de arriba son distintas."
+    },
+    {
+      "q": "¿Puede el agente leer los recibos y el adjunto original?",
+      "a": "Sí. La busta di trasporto llega como un mensaje con el original como adjunto postacert.eml y daticert.xml al lado, y la ricevuta di accettazione y la ricevuta di avvenuta consegna llegan como mensajes propios. MCPEmails lee mensajes y adjuntos por IMAP, así que el agente puede resumir el original y emparejar los recibos con lo que enviaste."
+    },
+    {
+      "q": "¿Se almacena mi correo PEC en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu proveedor PEC por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tu buzón PEC",
+    "sub": "Conecta Aruba PEC, Legalmail o Poste en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

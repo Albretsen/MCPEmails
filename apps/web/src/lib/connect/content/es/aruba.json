@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "https://guide.aruba.it/hosting-e-domini/email/gestione-email/caratteristiche-acquisto-gestione/caratteristiche-caselle-posta-dominio"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nome@tuodominio.it, o nome@aruba.it en un buzón gratuito.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de Aruba: conecta el correo de Aruba a Claude",
+    "description": "Servidor MCP para el correo de Aruba. Conecta los buzones de tu dominio en Aruba (info@, amministrazione@) a Claude y ChatGPT por IMAP en imaps.aruba.it:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo de Aruba + IA",
+    "titleLine1": "Servidor MCP para el correo de Aruba:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Llevas info@, amministrazione@ y tu propio nombre en un dominio alojado en Aruba? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón, no con tu acceso de cliente de Aruba.",
+    "answer": "Claude no puede acceder a un buzón de Aruba por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imaps.aruba.it en el puerto 993, iniciando sesión con la dirección completa y la contraseña establecida en ese buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La propia guía de Aruba indica exactamente estos servidores para un buzón de tu dominio, con smtps.aruba.it en el puerto 465 para enviar y autenticación siempre obligatoria. Un buzón gratuito @aruba.it usa en cambio imap.aruba.it y smtp.aruba.it. Una bandeja es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, no el acceso de cliente",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, buzón gratuito @aruba.it", "host": "imap.aruba.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, buzón gratuito @aruba.it", "host": "smtp.aruba.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son para un buzón de tu propio dominio; las dos de abajo, para un buzón gratuito @aruba.it. Ambos pares se verificaron mediante una conexión TLS real. Para cualquier otra dirección, usa el",
+      "label": "buscador de ajustes de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de Aruba?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo se conecta Aruba: IMAP con TLS y la contraseña del buzón",
+    "body": "Aruba ofrece IMAP para los buzones de dominio en <code>imaps.aruba.it</code> en el puerto 993 y SMTP en <code>smtps.aruba.it</code> en el puerto 465, ambos con TLS implícito, y su guía indica que el servidor SMTP exige siempre autenticación con la dirección y su contraseña. El nombre de usuario es la dirección completa: Aruba pide escribir la dirección de correo entera en el campo de usuario, nunca solo la parte local. La contraseña es la establecida en el buzón desde el panel de control de Aruba, que no es la que usas para entrar en el área de cliente de Aruba. Aruba también documenta una alternativa sin cifrar en tu propio nombre de dominio (<code>imap.tuodominio.it</code> en el puerto 143, <code>smtp.tuodominio.it</code> en el 587 o el 25), pero su requisito de TLS es explícito: el cliente debe admitir al menos TLS 1.2, y los nombres aruba.it son los que tienen un certificado que coincide, así que son los que usa MCPEmails."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Busca o establece la contraseña del buzón en el panel de control de Aruba",
+      "p": "Inicia sesión en el área de cliente de Aruba, abre el servicio de hosting o de correo del dominio y entra en la sección de gestión de buzones (<b>Gestione caselle</b>). Cada dirección tiene ahí su propia contraseña. Si no la conoces, establece una nueva para ese buzón; tu acceso al área de cliente es una credencial distinta e IMAP la rechazará."
+    },
+    {
+      "h": "Comprueba que IMAP está activo en el dominio, en los planes antiguos",
+      "p": "La guía de Aruba indica que IMAP solo funciona si el servicio adicional de IMAP está activo en el dominio. Viene incluido en todos los paquetes actuales, así que esto solo afecta a un plan Hosting Basic activado antes de junio de 2017, donde IMAP se compraba por separado. En uno de esos planes, un inicio de sesión rechazado es cosa del servicio adicional, no de la contraseña."
+    },
+    {
+      "h": "Pega la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo info@tuodominio.it, e introduce la contraseña del buzón. Los servidores y puertos vienen rellenados con los valores verificados de esta página. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Dos contraseñas, y solo la del buzón funciona",
+      "p": "Los clientes de Aruba entran en el área de cliente con un usuario y una contraseña, y ese es el par que casi todo el mundo intenta primero. IMAP comprueba la contraseña del buzón concreto, establecida en la sección de gestión de buzones del panel de hosting o de correo. Las dos pueden coincidir por casualidad, pero son distintas por diseño, así que un inicio de sesión rechazado en una dirección de Aruba suele ser la contraseña del área de cliente pegada en un formulario que pedía la del buzón."
+    },
+    {
+      "h": "Los buzones gratuitos @aruba.it usan otros nombres de servidor",
+      "p": "Un buzón de tu propio dominio usa <code>imaps.aruba.it</code> y <code>smtps.aruba.it</code>. Los buzones gratuitos @aruba.it están en <code>imap.aruba.it</code> y <code>smtp.aruba.it</code>, con los mismos puertos y el mismo TLS. Hoy ambos pares responden con el mismo saludo de Dovecot, pero Aruba los documenta por separado, y los ajustes que se rellenan aquí siguen la dirección que escribes."
+    },
+    {
+      "h": "Los planes Hosting Basic antiguos necesitan el servicio adicional de IMAP",
+      "p": "Aruba es explícita: una configuración IMAP solo funciona cuando el servicio IMAP está activo en el dominio. Viene incluido en todos los paquetes actuales; en un plan Hosting Basic anterior a junio de 2017 se compra por separado. Si en un dominio antiguo se rechaza cada contraseña que pruebas, revisa el servicio adicional antes de restablecer nada."
+    },
+    {
+      "h": "Un límite de 100 MB por mensaje, aplicado al enviar",
+      "p": "Aruba limita cada mensaje a 100 MB tanto de entrada como de salida, adjuntos codificados incluidos. El servidor SMTP anuncia un límite mayor, pero la regla que se aplica es la del buzón, así que un archivo grande se rechaza al enviarlo en lugar de recortarse."
+    }
+  ],
+  "limits": [
+    "Aruba no anuncia SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en italiano eso suele significar Posta in arrivo, Posta inviata, Bozze y Cestino. Si has renombrado una carpeta, indícala cuando pidas mover algo.",
+    "Un buzón de dominio empieza en 1 GB (5 GB con la opción GigaMail). Un buzón lleno deja de recibir, así que pide al agente que archive o elimine cuando aparezca un aviso de cuota."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Aruba?",
+      "a": "No directamente. Claude no tiene un conector de Aruba integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de Aruba le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Aruba?",
+      "a": "Para un buzón de tu propio dominio, IMAP es imaps.aruba.it en el puerto 993 con TLS implícito y SMTP es smtps.aruba.it en el puerto 465, también con TLS implícito y autenticación obligatoria. Para un buzón gratuito @aruba.it los servidores son imap.aruba.it y smtp.aruba.it en los mismos puertos. El nombre de usuario es tu dirección completa. Los cuatro servidores se confirmaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Aruba en un cliente de correo?",
+      "a": "Normalmente porque es la contraseña del área de cliente y no la del buzón. IMAP comprueba la contraseña establecida en la dirección concreta en Gestione caselle. En un plan Hosting Basic anterior a junio de 2017, la otra causa es el servicio adicional de IMAP, que tiene que estar activo en el dominio."
+    },
+    {
+      "q": "¿Puedo conectar un buzón PEC de Aruba de la misma forma?",
+      "a": "Sí, en otros servidores. Aruba PEC usa imaps.pec.aruba.it y smtps.pec.aruba.it, y con la verificación en dos pasos activada exige una contraseña aparte para programas de correo. MCPEmails tiene una página sobre cómo conectar buzones PEC, Aruba PEC incluido, con esos detalles."
+    },
+    {
+      "q": "¿Se almacena mi correo de Aruba en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Aruba por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de Aruba",
+    "sub": "Conecta el correo de Aruba en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

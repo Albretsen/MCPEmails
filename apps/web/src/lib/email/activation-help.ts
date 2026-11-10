@@ -272,6 +272,20 @@ const HOST_TABLE: ReadonlyArray<{ suffixes: readonly string[]; match: HostMatch 
   { suffixes: ['imap.uol.com.br'], match: { provider: 'other', label: 'UOL', slug: 'uol' } },
   { suffixes: ['imap.bol.com.br'], match: { provider: 'other', label: 'BOL', slug: 'bol' } },
   { suffixes: ['imap.terra.com.br'], match: { provider: 'other', label: 'Terra', slug: 'terra' } },
+  // Italy, Czechia and Poland, 2026-11-10. Platforms that share a page share
+  // its slug (Virgilio on libero, alice.it and tin.it on tim, the three PEC
+  // providers on pec, Atlas and Volný on centrum).
+  { suffixes: ['imaps.aruba.it', 'imap.aruba.it'], match: { provider: 'other', label: 'Aruba', slug: 'aruba' } },
+  { suffixes: ['imapmail.libero.it', 'in.virgilio.it'], match: { provider: 'other', label: 'Libero Mail', slug: 'libero' } },
+  { suffixes: ['imap.tim.it', 'in.alice.it', 'imaps.tin.it'], match: { provider: 'other', label: 'TIM Mail', slug: 'tim' } },
+  { suffixes: ['imap.tiscali.it'], match: { provider: 'other', label: 'Tiscali Mail', slug: 'tiscali' } },
+  { suffixes: ['imaps.pec.aruba.it', 'mbox.cert.legalmail.it', 'mail.postecert.it', 'mail.postecertifica.it'], match: { provider: 'other', label: 'PEC', slug: 'pec' } },
+  { suffixes: ['imap.centrum.cz', 'imap.atlas.cz', 'imap.volny.cz'], match: { provider: 'other', label: 'Centrum.cz', slug: 'centrum' } },
+  { suffixes: ['imap.wp.pl'], match: { provider: 'other', label: 'WP Poczta', slug: 'wp-pl' } },
+  { suffixes: ['poczta.o2.pl'], match: { provider: 'other', label: 'o2.pl', slug: 'o2-pl' } },
+  { suffixes: ['imap.poczta.onet.pl'], match: { provider: 'other', label: 'Onet Poczta', slug: 'onet' } },
+  { suffixes: ['poczta.interia.pl'], match: { provider: 'other', label: 'Interia', slug: 'interia' } },
+  { suffixes: ['imap.gazeta.pl'], match: { provider: 'other', label: 'Gazeta.pl Poczta', slug: 'gazeta-pl' } },
 ];
 
 export function matchHost(host: string | null | undefined): HostMatch | null {

@@ -189,6 +189,63 @@ const ROWS: RowCase[] = [
     steps: ['connect.fix.appPassword.normalRejected', 'connect.fix.yandex.create', 'connect.fix.yandex.imap'], links: ['yandex_app_passwords', 'yandex_imap'],
   },
   { name: 'yandex card, IMAP disabled', input: { card: 'yandex', reason: 'imap_disabled' }, row: 'yandex_imap_disabled', provider: 'yandex', steps: ['connect.fix.yandex.imap'] },
+  // Italy, Czechia and Poland (2026-11-10)
+  {
+    name: 'Aruba domain mailbox, found by host', input: { email: 'a@firm.example', imapHost: 'imaps.aruba.it' }, row: 'aruba_password_rejected', provider: 'aruba',
+    steps: ['connect.fix.aruba.password', 'connect.fix.fullAddress'], links: ['aruba_help'],
+  },
+  { name: 'Aruba free mailbox, found by address', input: { email: 'a@aruba.it', imapHost: 'imap.aruba.it' }, row: 'aruba_password_rejected', provider: 'aruba' },
+  {
+    name: 'Libero', input: { email: 'a@libero.it', imapHost: 'imapmail.libero.it' }, row: 'libero_password_rejected', provider: 'libero',
+    steps: ['connect.fix.libero.password', 'connect.fix.fullAddress'], links: ['libero_app_passwords'],
+  },
+  { name: 'Virgilio is Libero', input: { email: 'a@virgilio.it', imapHost: 'in.virgilio.it' }, row: 'libero_password_rejected', provider: 'libero' },
+  {
+    name: 'TIM', input: { email: 'a@tim.it', imapHost: 'imap.tim.it' }, row: 'tim_password_rejected', provider: 'tim',
+    steps: ['connect.fix.tim.line', 'connect.fix.fullAddress'], links: ['tim_help'],
+  },
+  { name: 'alice.it is TIM', input: { email: 'a@alice.it', imapHost: 'in.alice.it' }, row: 'tim_password_rejected', provider: 'tim' },
+  {
+    name: 'Tiscali', input: { email: 'a@tiscali.it', imapHost: 'imap.tiscali.it' }, row: 'tiscali_password_rejected', provider: 'tiscali',
+    steps: ['connect.fix.tiscali.password', 'connect.fix.fullAddress'], links: ['tiscali_help'],
+  },
+  {
+    name: 'Aruba PEC', input: { email: 'a@pec.it', imapHost: 'imaps.pec.aruba.it' }, row: 'aruba_pec_password_rejected', provider: 'aruba_pec',
+    steps: ['connect.fix.arubaPec.password', 'connect.fix.fullAddress'], links: ['aruba_pec_app_passwords'],
+  },
+  { name: 'Aruba PEC on a custom domain, found by host', input: { email: 'a@pec.firm.example', imapHost: 'imaps.pec.aruba.it' }, row: 'aruba_pec_password_rejected', provider: 'aruba_pec' },
+  {
+    name: 'Legalmail', input: { email: 'a@legalmail.it', imapHost: 'mbox.cert.legalmail.it' }, row: 'legalmail_password_rejected', provider: 'legalmail',
+    steps: ['connect.fix.legalmail.password'], links: ['legalmail_help'],
+  },
+  {
+    name: 'Poste PEC wants its client password', input: { email: 'a@postecert.it', imapHost: 'mail.postecert.it', reason: 'app_password_required' }, row: 'postecert_app_password', provider: 'postecert',
+    steps: ['connect.fix.appPassword.normalRejected', 'connect.fix.postecert.password', 'connect.fix.appPassword.paste'], links: ['postecert_app_passwords'],
+  },
+  {
+    name: 'Centrum', input: { email: 'a@centrum.cz', imapHost: 'imap.centrum.cz' }, row: 'centrum_password_rejected', provider: 'centrum',
+    steps: ['connect.fix.centrum.password', 'connect.fix.centrum.smtp', 'connect.fix.fullAddress'], links: ['centrum_help'],
+  },
+  { name: 'Volný is Centrum', input: { email: 'a@volny.cz', imapHost: 'imap.volny.cz' }, row: 'centrum_password_rejected', provider: 'centrum' },
+  {
+    name: 'WP Poczta', input: { email: 'a@wp.pl', imapHost: 'imap.wp.pl' }, row: 'wp_password_rejected', provider: 'wp',
+    steps: ['connect.fix.wp.imap', 'connect.fix.wp.twoStep'], links: ['wp_imap'],
+  },
+  { name: 'WP Poczta, IMAP disabled', input: { email: 'a@wp.pl', imapHost: 'imap.wp.pl', reason: 'imap_disabled' }, row: 'wp_imap_disabled', provider: 'wp', steps: ['connect.fix.wp.imap'] },
+  {
+    name: 'o2.pl shares the WP steps with its own link', input: { email: 'a@o2.pl', imapHost: 'poczta.o2.pl' }, row: 'o2_pl_password_rejected', provider: 'o2_pl',
+    steps: ['connect.fix.wp.imap', 'connect.fix.wp.twoStep'], links: ['o2_imap'],
+  },
+  {
+    name: 'Onet', input: { email: 'a@onet.pl', imapHost: 'imap.poczta.onet.pl' }, row: 'onet_password_rejected', provider: 'onet',
+    steps: ['connect.fix.onet.protocols', 'connect.fix.onet.appPassword'], links: ['onet_protocols'],
+  },
+  { name: 'Onet, IMAP disabled', input: { email: 'a@op.pl', imapHost: 'imap.poczta.onet.pl', reason: 'imap_disabled' }, row: 'onet_imap_disabled', provider: 'onet', steps: ['connect.fix.onet.protocols'] },
+  {
+    name: 'Interia', input: { email: 'a@interia.pl', imapHost: 'poczta.interia.pl' }, row: 'interia_password_rejected', provider: 'interia',
+    steps: ['connect.fix.interia.program', 'connect.fix.interia.twoStep'], links: ['interia_params'],
+  },
+  { name: 'Interia, IMAP disabled', input: { email: 'a@poczta.fm', imapHost: 'poczta.interia.pl', reason: 'imap_disabled' }, row: 'interia_imap_disabled', provider: 'interia', steps: ['connect.fix.interia.program'] },
   // Microsoft 365 on the generic form
   {
     name: 'Office 365 host: switch to the Microsoft sign-in card',

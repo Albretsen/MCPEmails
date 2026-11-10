@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/client-pc",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/guida/casella-posta"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "TIM Mail password, on a mailbox tied to an active TIM line",
+    "helpUrl": "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "usernameForm": "Your full address including the domain: nome@tim.it, nome@alice.it or nome@tin.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect TIM Mail (tim.it, alice.it, tin.it) to Claude & Any MCP Client",
+    "description": "Connect TIM Mail, Alice Mail or tin.it to Claude, Cursor and any MCP client over IMAP at imap.tim.it:143 with STARTTLS. Works on a mailbox tied to an active TIM line; TIM allows other mailboxes in mail programs only from its own network."
+  },
+  "hero": {
+    "eyebrow": "TIM Mail + AI",
+    "titleLine1": "Connect TIM Mail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real TIM, Alice or tin.it mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you already use, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach TIM Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.tim.it on port 143 with STARTTLS, signing in with your full address and your TIM Mail password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Alice addresses use in.alice.it and out.alice.it, tin.it addresses imaps.tin.it and smtps.tin.it, on the same ports. One condition comes from TIM, not from us: a mailbox tied to an active TIM landline or mobile line can be used from any mail program anywhere, while a mailbox without one is allowed in mail programs only from TIM's own network, which a hosted server is not. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Needs a mailbox tied to an active TIM line",
+    "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @alice.it", "host": "in.alice.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @alice.it", "host": "out.alice.it", "port": 587, "security": "starttls" },
+      { "label": "IMAP, @tin.it", "host": "imaps.tin.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @tin.it", "host": "smtps.tin.it", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "The first two rows are @tim.it. Alice and tin.it addresses have their own names below, on the same ports. All six hosts were verified from a live connection with STARTTLS. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "How TIM Mail connects: IMAP with STARTTLS, and TIM's line rule",
+    "body": "TIM documents one pair of ports for every one of its domains: IMAP on port 143 and SMTP on port 587, both upgraded to TLS with STARTTLS, which is the older style of encryption that starts in plain text and switches. The hosts differ by domain. For @tim.it they are <code>imap.tim.it</code> and <code>smtp.tim.it</code>; for @alice.it <code>in.alice.it</code> and <code>out.alice.it</code>; for @tin.it <code>imaps.tin.it</code> and <code>smtps.tin.it</code>, despite the s in those names. TIM lists no 993 or 465, and in our probe neither answered. The username is the complete address with its domain, the password is your TIM Mail password, and the outgoing server requires authentication with the same pair. TIM's help then states who may use a mail program at all: a mailbox associated with an active TIM fixed or mobile line, from anywhere, or a mailbox without one as long as you are connected to the TIM network. With another operator, TIM says, access is through the webmail only. MCPEmails connects from its own servers, so it fits the first case and not the second."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Check that the mailbox is tied to an active TIM line",
+      "p": "This is the step that decides whether any mail program outside TIM's network can sign in. If your @tim.it, @alice.it or @tin.it address came with a TIM landline or mobile contract that is still active, you are fine. If the line was cancelled, or the mailbox was never attached to one, TIM allows mail programs only from a TIM connection, and a hosted server cannot connect it. There is no setting to change this; it follows the contract."
+    },
+    {
+      "h": "Use your TIM Mail password and the full address",
+      "p": "TIM issues no separate password for mail programs. Sign in with the address written out in full, including the domain, and the password you use at mail.tim.it. If the mailbox came with a TIM line and you have never set a password for the webmail, do that first in the TIM assistance area."
+    },
+    {
+      "h": "Paste the address and password into MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the full address, and enter the password. The hosts, the STARTTLS ports and the security mode are prefilled from the verified values on this page for your domain. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The line rule, and why a hosted server fails where your phone works",
+      "p": "TIM's rule has two halves. A mailbox tied to an active TIM line works in any mail program on any network. A mailbox not tied to one works in mail programs only while the device is on TIM's network, and with any other operator the webmail is the only way in. Your phone on TIM mobile data passes the second test; a server in a data centre never does. So if the TIM app works and MCPEmails is refused, the line behind the mailbox is the first thing to check, not the password."
+    },
+    {
+      "h": "STARTTLS on 143 and 587, and nothing on 993 or 465",
+      "p": "Most providers on this site use implicit TLS on 993 and 465. TIM documents 143 and 587 with STARTTLS instead, and the implicit-TLS ports do not answer. A client that insists on 993 therefore times out rather than failing cleanly, which reads like a network problem. MCPEmails prefills the STARTTLS ports and tries the other transport if the first does not answer, so this is handled, but it explains a long silence from other tooling."
+    },
+    {
+      "h": "No SASL-IR and PLAIN only, so some clients get a bare refusal",
+      "p": "The IMAP server advertises <code>AUTH=PLAIN</code> and nothing else, and does not advertise SASL-IR, so it rejects the one-step authentication that sends the credential with the AUTHENTICATE command. Clients wired to LOGIN or to the one-step form fail at authentication with no explanation. MCPEmails uses the two-step PLAIN exchange, which is why a TIM mailbox connects here after failing in other IMAP tooling."
+    },
+    {
+      "h": "Daily sending limits, and folders that moved in the migration",
+      "p": "TIM caps a message at 50 recipients across To, Cc and Bcc, and an account at 200 sends a day; the Spam folder is emptied after 20 days and Cestino after 7, and TIM states it keeps no backup. When TIM moved mailboxes to its new platform, folders that the new layout does not have (Junk, Trash, Sent, Posta in uscita from the old one) were placed under Cartelle personali, so an older mailbox may have two sent folders. Name the one you mean when you ask the agent to file something."
+    }
+  ],
+  "limits": [
+    "TIM allows mail programs on a mailbox without an active TIM line only from TIM's own network. MCPEmails connects from its servers, so such a mailbox cannot be connected here. This is TIM's rule and no setting changes it.",
+    "The server advertises MOVE and UIDPLUS but not IDLE or SPECIAL-USE, so new mail is found by polling and folders are matched by name: on an Italian mailbox Posta in arrivo, Spam, Cestino and whatever sits under Cartelle personali."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with TIM Mail, Alice Mail or tin.it?",
+      "a": "Yes, on a mailbox tied to an active TIM line. Claude has no built-in TIM connector; connecting an MCP server such as MCPEmails over IMAP gives Claude read, search, send, reply, schedule and organize access, and the same connection works in Cursor and other MCP clients. A mailbox without an active TIM line is allowed in mail programs only from TIM's network, which a hosted server cannot satisfy."
+    },
+    {
+      "q": "What are the TIM Mail IMAP and SMTP settings?",
+      "a": "IMAP on port 143 with STARTTLS and SMTP on port 587 with STARTTLS, authentication required. The hosts are imap.tim.it and smtp.tim.it for @tim.it, in.alice.it and out.alice.it for @alice.it, and imaps.tin.it and smtps.tin.it for @tin.it. The username is your full address. TIM lists no 993 or 465, and those ports did not answer when we checked."
+    },
+    {
+      "q": "Why does my TIM password work in the webmail but not in a mail client?",
+      "a": "Because of TIM's line rule, not the password. If the mailbox is not tied to an active TIM landline or mobile line, TIM allows mail programs only from its own network and the webmail from anywhere else. If the line is active and the login still fails, check the host for your domain, since alice.it and tin.it do not use the tim.it names."
+    },
+    {
+      "q": "Does TIM have app passwords?",
+      "a": "No. TIM's help documents no application-specific password and no two-step verification for TIM Mail. A mail program signs in with the same password as the webmail, together with the full address."
+    },
+    {
+      "q": "Is my TIM mail stored on your servers?",
+      "a": "No. Messages are fetched live from TIM over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a TIM Mail inbox",
+    "sub": "Connect TIM Mail, Alice or tin.it in minutes. One inbox free forever, no card required."
+  }
+}

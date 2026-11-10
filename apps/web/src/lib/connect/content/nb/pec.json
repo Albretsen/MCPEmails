@@ -1,0 +1,126 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "https://guide.aruba.it/pec/account-e-sicurezza/password/generare-password-programmi-posta",
+    "https://help.infocert.it/home/guida/guida-alla-configurazione-legalmail---mozilla-thunderbird?lang=it",
+    "https://help.infocert.it/home/faq/che-cosa-e-l-application-password",
+    "https://postecert.poste.it/pec/configurazione.shtml",
+    "https://www.poste.it/assistenza/faq-posta-elettronica-certificata"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "PEC-postkassepassord, eller passordet for e-postprogrammer som leverandøren din utsteder",
+    "helpUrl": "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "usernameForm": "Hele PEC-adressen din: nome@pec.it eller nome@pec.tuodominio.it hos Aruba, User ID hos Legalmail, nome@postecert.it eller nome@postecertifica.it hos Poste.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble en PEC-postkasse (Aruba PEC, Legalmail, Poste) til Claude",
+    "description": "Koble italiensk sertifisert e-post (PEC) til Claude, Cursor og enhver MCP-klient over IMAP: Aruba PEC på imaps.pec.aruba.it:993, Legalmail på mbox.cert.legalmail.it:993, Poste på mail.postecert.it:993. Passordregelen hos hver leverandør, og hva agenten ser."
+  },
+  "hero": {
+    "eyebrow": "PEC + AI",
+    "titleLine1": "Koble PEC-postkassen din til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Posta Elettronica Certificata er der bøtene, anbudene, fakturaene og de rekommanderte brevene lander, og der ingen har lyst til å se. Gi AI-agenten din IMAP-tilgang til den: les, søk i, oppsummer og arkiver sertifisert e-post, kvitteringer inkludert, med påloggingen PEC-leverandøren din utsteder for e-postprogrammer.",
+    "answer": "Claude når ikke en PEC-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til én via IMAP, akkurat som Thunderbird eller Outlook ville gjort: Aruba PEC på imaps.pec.aruba.it port 993, Legalmail på mbox.cert.legalmail.it på 993, Poste på mail.postecert.it eller mail.postecertifica.it på 993, hver med sin egen SMTP-vert på 465. Alle tre leverandørene dokumenterer denne tilgangen for vanlige e-postklienter. Det som varierer, er passordet. Aruba tar postkassepassordet til totrinnsverifisering er på, deretter et eget passord for e-postprogrammer som gjelder i seks måneder; Legalmail tar User ID og passord, eller et valgfritt Application Password på 16 sifre; Poste godtar aldri webmail-passordet og utsteder et klientpassord fra dashbordet sitt som utløper hver 90. dag. Lesing via IMAP viser agenten den sertifiserte konvolutten med originalmeldingen som vedlegg; sending gjennom leverandørens SMTP gir en sertifisert melding som fra enhver annen klient. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Leverandørens passord for e-postprogrammer",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Legalmail", "host": "mbox.cert.legalmail.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Legalmail", "host": "sendm.cert.legalmail.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, Postecert", "host": "mail.postecert.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Postecert", "host": "mail.postecert.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene er Aruba PEC, som betjener @pec.it- og pec.tuodominio.it-postkasser. Legalmail og Poste følger. Alle vertene ble verifisert via en direkte TLS-tilkobling. For en PEC hos en annen leverandør kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Flere PEC-postkasser i firmaet?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler PEC seg til: standard IMAP og SMTP, med passordregelen hos hver leverandør",
+    "body": "PEC er vanlig e-post med en sertifisert transport rundt, og alle de store leverandørene tilbyr den over standardprotokollene. Aruba dokumenterer <code>imaps.pec.aruba.it</code> på 993 og <code>smtps.pec.aruba.it</code> på 465, begge SSL/TLS, med PEC-adressen som brukernavn og en merknad om at protokollene er aktive som standard. InfoCerts driftshåndbok oppgir <code>mbox.cert.legalmail.it</code> på 993 for IMAP og <code>sendm.cert.legalmail.it</code> på 465 for sending, TLS 1.2 eller nyere, innlogget med postkassens User ID og passord (PEC-adressen virker som innlogging bare hvis du har satt det opp i webmailen). Postes oppsettsider oppgir <code>mail.postecert.it</code> for de eldre Postecert-postkassene og <code>mail.postecertifica.it</code> for PEC postecertifica, IMAP på 993 og SMTP på 465 med autentisering på. Passordene følger de europeiske REM-reglene som AgID innførte i 2024: en sterk innlogging for webmailen, og for e-postklienter et token brukeren genererer etter sterk autentisering. Aruba kaller det <b>Password per programmi di posta</b>, generert når totrinnsverifisering er på og gyldig i seks måneder; Legalmail <b>Application Password</b>, valgfritt i dag, 16 sifre, opprettet under Accessi e Sicurezza; Poste klientpassordet, generert fra PEC-dashbordet med <b>Genera password</b>, obligatorisk, og det utløper hver 90. dag. MCPEmails bruker det leverandøren din gir deg, med samme IMAP og SMTP som enhver klient."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Hent påloggingen leverandøren din utsteder for e-postprogrammer",
+      "p": "<b>Aruba PEC</b>: er totrinnsverifisering (verifica in 2 passaggi) av, virker postkassepassordet som det er. Er den på, noe en PEC tilpasset den europeiske standarden krever, åpner du <b>Gestione account PEC</b>, så <b>Sicurezza</b>, så <b>Password per programmi di posta</b>, klikker <b>Attiva</b> og kopierer det genererte passordet; det varer i seks måneder, og <b>Genera nuova password</b> erstatter det. <b>Legalmail</b>: User ID og postkassepassordet ditt virker, eller generer et Application Password under <b>Accessi e Sicurezza</b> i webmailen. <b>Poste</b>: velg <b>Genera password</b> i PEC-dashbordet; webmail-passordet godtas aldri av en klient."
+    },
+    {
+      "h": "Sjekk at protokollene er slått på for postkassen",
+      "p": "På Aruba PEC har webmailen <b>Impostazioni</b>, så <b>SMTP/POP/IMAP</b>, med en <b>Accessi</b>-fane. Protokollene er på som standard, og Aruba advarer om at å slå av alle blokkerer alle e-postprogrammer. Legalmail lar deg gjøre Application Password til eneste godtatte innlogging; gjorde du det uten å generere ett, kan bare webmailen og appen logge inn."
+    },
+    {
+      "h": "Lim påloggingen inn i MCPEmails, så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn PEC-adressen (eller User ID hos Legalmail, under Avansert), og lim inn passordet. Vertene og portene er forhåndsutfylt for Aruba-, Legalmail- og Poste-adresser. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten PEC-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hva agenten ser: busta di trasporto, med den egentlige meldingen inni",
+      "p": "En PEC-melding kommer ikke fram som meldingen avsenderen skrev. Avsenderens leverandør pakker den inn i en sertifisert konvolutt, <b>busta di trasporto</b>, signert av den leverandøren, der brødteksten sier hvem som sendte hva til hvem og når, med originalmeldingen vedlagt som <code>postacert.eml</code> og sertifiseringsdataene som <code>daticert.xml</code>. Via IMAP er den konvolutten meldingen, så når du spør agenten hva en PEC sier, leser den den vedlagte originalen. Kvitteringer virker på samme måte: <b>ricevuta di accettazione</b> fra din leverandør og <b>ricevuta di avvenuta consegna</b> fra mottakerens kommer som separate meldinger i innboksen, og det er det som gjør at en PEC-postkasse fylles med tre elementer per brev som sendes. En agent er god til å arkivere nettopp det."
+    },
+    {
+      "h": "Hvert leverandørpassord har sin egen levetid",
+      "p": "Arubas passord for e-postprogrammer gjelder i seks måneder, og kontoområdet tilbyr <b>Posticipa scadenza</b> for å forlenge det eller et nytt for å erstatte det; når det utløper, feiler tilkoblingen med et rent avslag. Postes klientpassord utløper hver 90. dag og genereres på nytt fra dashbordet. Legalmails Application Password utløper ikke av seg selv, men kan trekkes tilbake fra webmailen, og setter du postkassen til bare Application Password, deaktiveres det vanlige passordet overalt unntatt i webmailen. Når en PEC-tilkobling som har virket i månedsvis stopper, er utløpet det første du skal sjekke. MCPEmails melder den avviste innloggingen på innboksen, og du limer inn det nye passordet der."
+    },
+    {
+      "h": "Sending må gå gjennom leverandørens SMTP, og den teller",
+      "p": "Aruba sier at sertifiserte meldinger bare kan sendes gjennom Arubas SMTP-server, og at en annen server ikke gir noen sertifisert melding. MCPEmails sender alltid gjennom SMTP-verten til den tilkoblede postkassen, så en PEC sendt av agenten er like sertifisert som en sendt fra Outlook, med samme rettsvirkning og samme kvitteringer. Det er en grunn til å være bevisst: en PEC til et offentlig organ er et rekommandert brev. Mange lar agenten lese, arkivere og skrive utkast, og trykker send selv. En PEC har dessuten full rettslig verdi bare mellom to PEC-adresser; Arubas servere avviser en melding til en vanlig adresse som ikke godtar usertifisert e-post, med en 554, og Poste påpeker at levering til vanlige adresser avhenger av mottakerens leverandør."
+    },
+    {
+      "h": "100 MB per melding, delt mellom mottakerne hos Aruba",
+      "p": "Alle tre leverandørene begrenser en PEC-melding til 100 MB inkludert vedlegg, og Aruba påpeker at grensen deles mellom mottakerne, så et vedlegg på 50 MB kan gå til høyst to. Over grensen utsteder leverandøren en ricevuta di mancata accettazione i stedet for en returmelding, og agenten finner den i innboksen som enhver annen kvittering."
+    }
+  ],
+  "limits": [
+    "Hver PEC-leverandør har sin egen innloggingsregel: Arubas passord for e-postprogrammer når totrinnsverifisering er på, Legalmails User ID (eller Application Password), Postes dashbordgenererte klientpassord som utløper hver 90. dag. Webmail-passordet er ikke påloggingen hos Poste, og hos Aruba ikke når totrinnsverifisering er på.",
+    "Leverandørene annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle: i en italiensk PEC-postkasse vanligvis Posta in arrivo, Posta inviata, Bozze og Cestino. Oppgi mappen når du ber om en flytting.",
+    "En sertifisert melding sendes bare gjennom leverandørens egen SMTP, som MCPEmails bruker. Sending fra MCPEmails gir en ekte PEC med kvitteringer, så behandle agentens sending som din egen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med en PEC-postkasse?",
+      "a": "Ikke direkte. Claude har ingen innebygd PEC-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til en Aruba PEC-, Legalmail- eller Poste-postkasse via IMAP, får Claude tilgang til å lese, søke i, oppsummere, arkivere og sende, og samme tilkobling fungerer i Cursor og andre MCP-klienter. Leverandørens konvolutt, kvitteringer og rettsvirkning er uendret."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Aruba PEC, Legalmail og Poste?",
+      "a": "Aruba PEC: imaps.pec.aruba.it på 993 og smtps.pec.aruba.it på 465. Legalmail: mbox.cert.legalmail.it på 993 og sendm.cert.legalmail.it på 465. Poste: mail.postecert.it eller, for PEC postecertifica, mail.postecertifica.it, på 993 og 465. Alle med SSL/TLS, autentisering påkrevd, og alle bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvilket passord tar en PEC-postkasse i et e-postprogram?",
+      "a": "Aruba: postkassepassordet, eller når totrinnsverifisering er på, Password per programmi di posta generert under Gestione account PEC, Sicurezza, gyldig i seks måneder. Legalmail: User ID og postkassepassordet, eller et Application Password på 16 sifre fra Accessi e Sicurezza. Poste: et klientpassord generert i PEC-dashbordet med Genera password, som utløper hver 90. dag; webmail-passordet godtas aldri."
+    },
+    {
+      "q": "Stoppet den europeiske PEC-standarden (REM) e-postklienter fra å virke?",
+      "a": "Nei. AgIDs REM-policy holder uttrykkelig IMAP, POP3 og SMTP tilgjengelige: brukeren autentiserer seg sterkt én gang og får et token, et applikasjonspassord, som brukes i enhver vanlig e-postklient i stedet for passordet, i en begrenset periode, for eksempel seks måneder. Aruba, InfoCert og Poste gjennomfører den regelen hver på sin måte, og derfor er passordene over forskjellige."
+    },
+    {
+      "q": "Kan agenten lese kvitteringene og det originale vedlegget?",
+      "a": "Ja. Busta di trasporto kommer som en melding med originalen som postacert.eml-vedlegg og daticert.xml ved siden av, og ricevuta di accettazione og ricevuta di avvenuta consegna kommer som egne meldinger. MCPEmails leser meldinger og vedlegg via IMAP, så agenten kan oppsummere originalen og koble kvitteringene til det du sendte."
+    },
+    {
+      "q": "Lagres PEC-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra PEC-leverandøren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din PEC-postkassen din",
+    "sub": "Koble til Aruba PEC, Legalmail eller Poste på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

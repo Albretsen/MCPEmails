@@ -417,6 +417,43 @@
       "seznam": {
         "password": "Ist die Zwei-Faktor-Authentifizierung (dvoufázové ověření) aktiv, funktioniert Ihr Seznam-Passwort hier nicht mehr. Legen Sie unter Zabezpečení účtu ein Heslo pro aplikace fest und verwenden Sie dieses."
       },
+      "aruba": {
+        "password": "Aruba prüft das Passwort dieses Postfachs, das unter Gestione caselle im Aruba-Panel festgelegt wird, nicht Ihren Login für den Aruba-Kundenbereich. Bei einem Hosting-Basic-Tarif von vor Juni 2017 ist IMAP ein eigenes Zusatzmodul, das auf der Domain aktiv sein muss."
+      },
+      "libero": {
+        "password": "Ist Password Sicura aktiv, lehnen Libero und Virgilio Ihr normales Passwort in Mail-Apps ab. Erstellen Sie unter Account, dann Password per App, eine Password specifica per applicazioni und verwenden Sie dieses 16-stellige Passwort."
+      },
+      "tim": {
+        "line": "TIM erlaubt Mail-Apps nur bei einem Postfach, das an einen aktiven TIM-Festnetz- oder Mobilfunkanschluss gebunden ist. Ohne einen solchen lässt TIM Mail-Apps nur aus dem eigenen Netz zu, und das ist MCPEmails nicht."
+      },
+      "tiscali": {
+        "password": "Tiscali erwartet Ihr Tiscali-Mail-Passwort zusammen mit der vollständigen Adresse. Die Hilfe beschreibt die Zwei-Faktor-Authentifizierung nur für das Konto: Ist sie aktiv und die Anmeldung schlägt fehl, schalten Sie sie zum Testen aus."
+      },
+      "arubaPec": {
+        "password": "Ist die verifica in 2 passaggi aktiv, lehnt Aruba PEC das Postfach-Passwort in Mail-Apps ab. Erzeugen Sie unter Gestione account PEC, dann Sicurezza, eine Password per programmi di posta und verwenden Sie diese. Sie läuft nach sechs Monaten ab."
+      },
+      "legalmail": {
+        "password": "Legalmail meldet sich mit User ID und Passwort des Postfachs an, unter Erweiterte Einstellungen, Benutzername; die PEC-Adresse gilt nur dann als Login, wenn Sie das im Webmail eingerichtet haben. Haben Sie das Postfach auf Application Password beschränkt, verwenden Sie eine 16-stellige Application Password aus Accessi e Sicurezza."
+      },
+      "postecert": {
+        "password": "Wählen Sie im PEC-Dashboard Genera password und verwenden Sie dieses Client-Passwort. Es läuft alle 90 Tage ab."
+      },
+      "centrum": {
+        "password": "Ist dvoufaktorové ověření aktiv, lehnen Centrum, Atlas und Volný Ihr Passwort in Mail-Apps ab. Erzeugen Sie im Bereich Dvoufaktorové ověření der Web-Einstellungen, an einem Computer, ein aplikační heslo und verwenden Sie dieses.",
+        "smtp": "Zum Senden braucht es das kostenlose erweiterte Postfach (navýšení schránky): Bestätigen Sie in den Web-Einstellungen eine Telefonnummer und testen Sie dann erneut."
+      },
+      "wp": {
+        "imap": "Aktivieren Sie IMAP bei {provider}: Opcje, Reiter IMAP/POP, dann IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "Ist logowanie dwustopniowe aktiv, erstellen Sie unter Bezpieczeństwo, Logowanie dwustopniowe, ein hasło do programu pocztowego und verwenden Sie es statt Ihres {provider}-Passworts."
+      },
+      "onet": {
+        "protocols": "Geben Sie IMAP und SMTP in Onet Poczta frei: Ustawienia (das Zahnrad), Konto, Reiter Konto Główne, dann der Schalter auf der Kachel des jeweiligen Protokolls.",
+        "appPassword": "Ist weryfikacja dwuetapowa aktiv, erzeugen Sie unter Bezpieczeństwo im Onet Konto ein hasło do aplikacji und verwenden Sie es statt Ihres Onet-Passworts."
+      },
+      "interia": {
+        "program": "Öffnen Sie bei Interia Ustawienia, Ustawienia główne, Reiter Parametry, und stellen Sie korzystam z programu pocztowego auf TAK.",
+        "twoStep": "Interia sperrt Mail-Programme, solange logowanie dwuetapowe aktiv ist, und kennt keine App-Passwörter. Schalten Sie es aus, um zu verbinden."
+      },
       "gmx": {
         "imap": "{provider} schaltet den POP3- und IMAP-Zugriff standardmäßig aus. Aktivieren Sie ihn unter E-Mail-Einstellungen, dann POP3/IMAP.",
         "twoFactor": "Bei aktivierter Zwei-Faktor-Authentifizierung verwenden Sie ein App-Passwort statt Ihres normalen Passworts."

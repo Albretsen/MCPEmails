@@ -417,6 +417,43 @@
       "seznam": {
         "password": "Si l’authentification à deux facteurs (dvoufázové ověření) est activée, votre mot de passe Seznam ne fonctionne plus ici. Définissez un Heslo pro aplikace sous Zabezpečení účtu et utilisez-le."
       },
+      "aruba": {
+        "password": "Aruba vérifie le mot de passe de cette boîte, défini sous Gestione caselle dans le panneau Aruba, pas celui de votre espace client Aruba. Sur un plan Hosting Basic antérieur à juin 2017, IMAP est une option à part qui doit être active sur le domaine."
+      },
+      "libero": {
+        "password": "Avec Password Sicura activée, Libero et Virgilio refusent votre mot de passe habituel dans les applications de messagerie. Créez une Password specifica per applicazioni sous Account, puis Password per App, et utilisez ce mot de passe de 16 caractères."
+      },
+      "tim": {
+        "line": "TIM n’autorise les applications de messagerie que sur une boîte liée à une ligne fixe ou mobile TIM active. Sans cela, TIM ne les accepte que depuis son propre réseau, ce que MCPEmails n’est pas."
+      },
+      "tiscali": {
+        "password": "Tiscali attend votre mot de passe Tiscali Mail avec l’adresse complète. Son aide ne documente l’authentification à deux facteurs que pour le compte : si elle est activée et que la connexion échoue, désactivez-la pour tester."
+      },
+      "arubaPec": {
+        "password": "Avec la verifica in 2 passaggi activée, Aruba PEC refuse le mot de passe de la boîte dans les applications de messagerie. Générez une Password per programmi di posta sous Gestione account PEC, puis Sicurezza, et utilisez-la. Elle expire au bout de six mois."
+      },
+      "legalmail": {
+        "password": "Legalmail se connecte avec le User ID et le mot de passe de la boîte, dans Paramètres avancés, Nom d’utilisateur ; l’adresse PEC ne sert d’identifiant que si vous l’avez configuré dans le webmail. Si vous avez limité la boîte à l’Application Password, utilisez une Application Password à 16 chiffres créée sous Accessi e Sicurezza."
+      },
+      "postecert": {
+        "password": "Dans le tableau de bord PEC, choisissez Genera password et utilisez ce mot de passe client. Il expire tous les 90 jours."
+      },
+      "centrum": {
+        "password": "Avec dvoufaktorové ověření activé, Centrum, Atlas et Volný refusent votre mot de passe dans les applications de messagerie. Générez un aplikační heslo dans la section Dvoufaktorové ověření des réglages web, depuis un ordinateur, et utilisez-le.",
+        "smtp": "L’envoi exige la boîte agrandie gratuite (navýšení schránky) : confirmez un numéro de téléphone dans les réglages web, puis testez à nouveau."
+      },
+      "wp": {
+        "imap": "Activez IMAP chez {provider} : Opcje, l’onglet IMAP/POP, puis IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "Avec logowanie dwustopniowe activé, créez un hasło do programu pocztowego sous Bezpieczeństwo, Logowanie dwustopniowe, et utilisez-le à la place de votre mot de passe {provider}."
+      },
+      "onet": {
+        "protocols": "Débloquez IMAP et SMTP dans Onet Poczta : Ustawienia (la roue dentée), Konto, l’onglet Konto Główne, puis l’interrupteur sur la vignette de chaque protocole.",
+        "appPassword": "Avec weryfikacja dwuetapowa activée, générez un hasło do aplikacji sous Bezpieczeństwo dans Onet Konto et utilisez-le à la place de votre mot de passe Onet."
+      },
+      "interia": {
+        "program": "Dans Interia, ouvrez Ustawienia, Ustawienia główne, l’onglet Parametry, et réglez korzystam z programu pocztowego sur TAK.",
+        "twoStep": "Interia bloque les logiciels de messagerie tant que logowanie dwuetapowe est activé et n’a pas de mot de passe d’application. Désactivez-le pour vous connecter."
+      },
       "gmx": {
         "imap": "{provider} désactive par défaut l’accès POP3 et IMAP. Activez-le sous E-Mail-Einstellungen, puis POP3/IMAP.",
         "twoFactor": "Si l’authentification à deux facteurs est activée, utilisez un mot de passe d’application au lieu de votre mot de passe habituel."
