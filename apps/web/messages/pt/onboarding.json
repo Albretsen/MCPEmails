@@ -202,9 +202,9 @@
       "manual": "Configurar manualmente",
       "continue": "Já adicionei",
       "chatgpt": {
-        "step1": "Em chatgpt.com, abra Plugins e clique em Add (adicionar) no canto superior direito.",
+        "step1": "Em chatgpt.com, abra Plugins e clique em Add (Adicionar) no canto superior direito.",
         "step2": "Escolha Adicionar servidor MCP personalizado, dê o nome MCPEmails e cole a URL abaixo como Server URL.",
-        "step3": "Marque Entendo e quero continuar, clique em Criar como plugin, depois em Connect MCPEmails e permita o acesso.",
+        "step3": "Marque Entendo e quero continuar, clique em Criar como plugin, depois em Conectar e permita o acesso.",
         "step4": "Em um chat, digite @MCPEmails para usar.",
         "note": "Servidores MCP personalizados funcionam no plano Go e em todos os planos pagos, no navegador em chatgpt.com."
       },
