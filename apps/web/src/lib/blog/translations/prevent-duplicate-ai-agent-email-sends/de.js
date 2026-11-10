@@ -1,7 +1,7 @@
 const translation = {
   title: 'Doppelte E-Mail-Sendungen von KI-Agenten verhindern',
   description:
-    'Wiederholungen passieren. So helfen Idempotenzschlüssel in MCPEmails, doppelte Sendungen, Antworten, Weiterleitungen, Entwurfssendungen und geplante E-Mails von KI-Agenten zu verhindern.',
+    'Wiederholungen passieren. So verhindern Idempotenzschlüssel in MCPEmails, dass ein KI-Agent eine E-Mail, Antwort, Weiterleitung, einen Entwurf oder eine geplante Sendung doppelt verschickt.',
   coverAlt: 'Doppelte E-Mail-Sendungen von KI-Agenten verhindern, mit MCPEmails',
   content: `Ein Timeout bedeutet nicht immer, dass eine E-Mail nicht gesendet wurde. Manchmal hat der Anbieter die Nachricht angenommen, kurz bevor die Verbindung abbrach. Wenn ein Agent dann blind wiederholt, bekommt ein Kunde dieselbe E-Mail zweimal: peinlich in jedem Ablauf und ernst bei Akquise, Support oder Rechnungen.
 

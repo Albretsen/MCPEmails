@@ -16,11 +16,11 @@ Ein E-Mail-Programm zeigt Ihnen Konten. Es beantwortet keine Fragen. „In welch
 
 ## Ihr Agent findet die Postfächer selbst
 
-Sie fügen nie eine Postfach-ID in einen Prompt ein. Der Agent ruft \`inbox_list\` auf, das jedes Postfach zurückgibt, das Ihr Schlüssel nutzen darf, jeweils mit UUID, E-Mail-Adresse, Anzeigename, Anbieter, optionaler Dienstmarke und einem Objekt mit den Fähigkeiten. Jedes andere Tool nimmt entweder \`inbox_id\` (eine UUID oder eine Adresse) oder \`inbox\` (eine Adresse), ausgefüllt aus diesem Ergebnis.
+Sie fügen nie eine Postfach-ID in einen Prompt ein. Der Agent ruft \`inbox_list\` auf, das jedes Postfach zurückgibt, das Ihr Schlüssel nutzen darf, jeweils mit UUID, E-Mail-Adresse, Anzeigename, Anbieter, gegebenenfalls der Marke des Dienstes und einem Objekt mit den Fähigkeiten. Jedes andere Tool nimmt entweder \`inbox_id\` (eine UUID oder eine Adresse) oder \`inbox\` (eine Adresse), ausgefüllt aus diesem Ergebnis.
 
 Zwei Details lohnen sich zu kennen:
 
-- **Die Erkennung ist kostenlos.** \`inbox_list\` ist das eine Tool, das im Free-Tarif nicht auf das monatliche Kontingent angerechnet wird, ein Agent kann sich also jederzeit neu orientieren.
+- **Die Erkennung ist kostenlos.** \`inbox_list\` zählt nie als E-Mail-Aktion, ein Agent kann sich also jederzeit neu orientieren.
 - **Widersprüchliche Angaben werden abgelehnt, nicht geraten.** Ein Aufruf mit einer \`inbox_id\` für ein Postfach und einer \`inbox\`-Adresse für ein anderes wird abgelehnt, und der Fehler nennt beide. Die übliche Ursache ist eine veraltete ID aus einem früheren Teil der Unterhaltung. Sagen Sie dem Agenten, er soll es allein mit der Adresse erneut versuchen.
 
 ## Eine Anfrage auf ein Postfach eingrenzen
@@ -37,7 +37,7 @@ Das ist der Teil, den viele falsch verstehen: **Ein Aufruf erreicht ein Postfach
 
 - Lassen Sie ihn zuerst \`inbox_list\` aufrufen, oder sagen Sie, wie viele Konten Sie haben. Geht er von einem aus, berichtet er selbstbewusst über eines.
 - Bitten Sie um eine zusammengeführte Antwort („eine kombinierte Liste, markiert mit dem Konto, aus dem jeder Eintrag stammt“), sonst bekommen Sie drei getrennte Berichte.
-- Das Volumen wächst mit der Zahl der Postfächer. Eine Triage über drei Postfächer sind mindestens drei abrechenbare Aktionen, nicht eine.
+- Das Volumen wächst mit der Zahl der Postfächer. Eine Triage über drei Postfächer sind mindestens drei E-Mail-Aktionen, nicht eine.
 
 ## Namen und Absenderidentität
 
@@ -113,7 +113,7 @@ Nein. Nachrichteninhalte werden bei jeder Anfrage live von Ihrem Anbieter abgeru
 
 ## Nächster Schritt
 
-[Kostenlos starten](/signup), Ihr geschäftigstes Postfach verbinden und Ihren Agenten fragen, was heute eine Antwort braucht. Fügen Sie das zweite und dritte Konto hinzu, wenn Sie eine Antwort statt drei wollen. Die [Dokumentation](/docs) enthält die vollständige Tool-Referenz, und die [Anbieterdetails](/docs/providers) zeigen, was jeder Postfachtyp unterstützt.`,
+[Kostenlos starten](/signup), das Postfach mit dem meisten Verkehr verbinden und Ihren Agenten fragen, was heute eine Antwort braucht. Fügen Sie das zweite und dritte Konto hinzu, wenn Sie eine Antwort statt drei wollen. Die [Dokumentation](/docs) enthält die vollständige Tool-Referenz, und die [Anbieterdetails](/docs/providers) zeigen, was jeder Postfachtyp unterstützt.`,
 };
 
 export default translation;

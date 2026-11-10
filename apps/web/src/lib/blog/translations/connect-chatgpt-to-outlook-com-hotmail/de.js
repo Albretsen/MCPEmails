@@ -1,7 +1,7 @@
 const translation = {
   title: 'ChatGPT mit Hotmail und Outlook.com verbinden (private Microsoft-Konten)',
   description:
-    'Das Outlook-Plugin von ChatGPT ist für Arbeits- und Schulkonten gebaut. So verbinden Sie ein privates Postfach bei Hotmail, Outlook.com, Live oder MSN mit ChatGPT: Anmeldung bei Microsoft und eine URL für einen benutzerdefinierten MCP-Server.',
+    'Das Outlook-Plugin von ChatGPT ist für Arbeits- und Schulkonten gebaut. So verbinden Sie ein privates Postfach bei Hotmail, Outlook.com, Live oder MSN mit ChatGPT: Anmeldung bei Microsoft plus eine MCP-URL.',
   coverAlt: 'ChatGPT über MCPEmails mit einem privaten Postfach bei Outlook.com oder Hotmail verbunden',
   content: `Um ChatGPT mit einer privaten Adresse bei Outlook.com, Hotmail, Live oder MSN zu verbinden, fügen Sie das Postfach mit **Mit Microsoft verbinden** zu MCPEmails hinzu und tragen dann eine URL als benutzerdefinierten MCP-Server in ChatGPT ein. Das eigene Outlook-Plugin von ChatGPT ist um Arbeits- und Schulkonten bei Microsoft herum gebaut, und wer es mit einer privaten Adresse versucht, berichtet von der Meldung, dass sich nur Geschäfts- oder Bildungskonten verbinden lassen. Ein benutzerdefinierter MCP-Server hat diese Grenze nicht.
 
@@ -38,15 +38,15 @@ Danach landen Sie wieder im Dashboard, und das Postfach ist verbunden. Bei einem
 
 ## Schritt 2: MCPEmails zu ChatGPT hinzufügen
 
-1. Öffnen Sie auf chatgpt.com **Plugins**, dann **Personal**, und klicken Sie oben rechts auf **Add**.
-2. Wählen Sie **Add custom MCP server** und nennen Sie ihn MCPEmails.
-3. Fügen Sie unter **Connection** diese URL ein:
+1. Öffnen Sie auf chatgpt.com **Plugins**, dann **Persönlich**, und klicken Sie oben rechts auf **Hinzufügen**.
+2. Wählen Sie **Benutzerdefinierten MCP-Server hinzufügen** und nennen Sie ihn MCPEmails.
+3. Fügen Sie unter **Verbindung** diese URL ein:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Wählen Sie **OAuth**, setzen Sie das Häkchen bei **I understand and want to continue** und klicken Sie auf **Create as a plugin**.
+4. Wählen Sie **OAuth**, setzen Sie das Häkchen bei **Ich verstehe und möchte fortfahren** und klicken Sie auf **Als Plugin erstellen**.
 5. Melden Sie sich bei MCPEmails an und genehmigen Sie den Zugriff, den ChatGPT haben soll, zum Beispiel zunächst nur Lesen.
 6. Tippen Sie in einem Chat **@** und wählen Sie MCPEmails. Die Auswahl gilt für diese Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.
 
