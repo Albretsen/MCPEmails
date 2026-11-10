@@ -34,7 +34,7 @@ MCPEmailsは、一方ではModel Context ProtocolでChatGPTと、もう一方で
 
 ### IMAPとアプリ パスワードは使わない
 
-古いガイドには、アプリ パスワードを作成してOutlookのIMAP設定を入力するよう書かれています。Microsoftは2024年9月16日に[Microsoft以外のメールアプリでのOutlookアカウントのパスワードによるログインを終了](https://support.microsoft.com/en-us/office/modern-authentication-methods-now-needed-to-continue-syncing-outlook-email-in-non-microsoft-email-apps-c5d65390-9676-4763-b41f-d7986499a90d)したため、この経路ではもうログインできません。**IMAP / SMTP**を選んでHotmailやOutlook.comのアドレスを入力すると、ダッシュボードが**Use Sign in with Microsoft**（Microsoftでログインを使う）へ案内します。詳細は[Outlook.comの設定ページ](/connect/outlook)に1か所にまとめています。
+古いガイドには、アプリ パスワードを作成してOutlookのIMAP設定を入力するよう書かれています。Microsoftは2024年9月16日に[Microsoft以外のメールアプリでのOutlookアカウントのパスワードによるログインを終了](https://support.microsoft.com/en-us/office/modern-authentication-methods-now-needed-to-continue-syncing-outlook-email-in-non-microsoft-email-apps-c5d65390-9676-4763-b41f-d7986499a90d)したため、この経路ではもうログインできません。**IMAP / SMTP**を選んでHotmailやOutlook.comのアドレスを入力すると、ダッシュボードが**Microsoftでログインする**へ案内します。詳細は[Outlook.comの設定ページ](/connect/outlook)に1か所にまとめています。
 
 ## ステップ2：MCPEmailsをChatGPTに追加する
 

@@ -19,7 +19,7 @@ OpenAIの[接続済みアプリの一覧](https://help.openai.com/en/articles/11
 - **自動化プラットフォーム。** トリガーが発火したときに、Yahooのメッセージを1通ずつAIモデルに渡します。決まったワークフロー1つには便利ですが、チャットでメールについて質問する用途には向きません。
 - **コピーして貼り付ける。** 1通ずつなら使えます。
 
-AIに本物のメールボックスを渡せるのはMCPサーバーだけです。ChatGPTもClaudeもカスタムコネクタとして受け付け、Yahooへのログインはサーバー側が行います。
+MCPサーバーは、AIに本物のメールボックスそのものを渡せる経路です。ChatGPTもClaudeもカスタムコネクタとして受け付け、Yahooへのログインはサーバー側が行います。
 
 ## 必要なもの
 
@@ -33,7 +33,7 @@ AIに本物のメールボックスを渡せるのはMCPサーバーだけです
 Yahooは通常のYahooパスワードで他のアプリからログインすることを認めていないため、MCPEmails用のアプリ パスワードを作成します。手順は[Yahooのヘルプページ](https://help.yahoo.com/kb/SLN15241.html)にあります。
 
 1. Yahooにログインし、**Account Security**（アカウントセキュリティ）ページを開きます。
-2. **External connections**（外部接続）の下にある**Create app password**（アプリ パスワードを作成）をクリックします。
+2. **External connections**（外部との接続）の下にある**Create app password**（アプリ パスワードを作成）をクリックします。
 3. 名前（たとえばMCPEmails）を入力し、**Generate password**（パスワードを生成）をクリックします。
 4. パスワードをコピーします。Yahooが表示するのは一度だけです。
 
@@ -71,7 +71,7 @@ OpenAIはこれらのメニューを時々移動します。最新の経路と�
 3. 名前をMCPEmailsにして\`https://mcpemails.com/api/mcp\`を貼り付け、**続行**、**追加**の順にクリックします。
 4. **接続**をクリックしてMCPEmailsにログインし、Claudeに許可するアクセス権を承認します。
 
-チャットでは**+**をクリックし、**コネクタ**を選んでMCPEmailsをオンにします。TeamプランやEnterpriseプランではOwnerが先にコネクタを追加します。その手順は[Claudeのセットアップページ](/docs/claude)にあります。
+チャットでは**+**をクリックし、**コネクタ**を選んでMCPEmailsをオンにします。TeamプランやEnterpriseプランではオーナーが先にコネクタを追加します。その手順は[Claudeのセットアップページ](/docs/claude)にあります。
 
 両方に追加しても構いません。MCPEmailsのアカウント1つで、同じYahooの受信トレイをChatGPTとClaudeから同時に使えます。
 

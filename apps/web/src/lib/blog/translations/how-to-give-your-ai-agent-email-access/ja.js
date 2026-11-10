@@ -17,7 +17,7 @@ const translation = {
 
 モデルをメールにつなぐのは、実際にやってみるまでは簡単に見えます。3つの点でつまずきます。
 
-1. **認証がプロバイダーごとに違う。** OutlookとMicrosoft 365は、Microsoft IDを通じたOAuthを求めます。GmailはGoogleのアプリ パスワードを求め、Googleは2 段階認証プロセスが有効なときにしかそれを作らせません。iCloudとFastmailはアプリ用のパスワードを求めます。それぞれに独自のトークン更新サイクルと、独自の失敗のしかたがあります。
+1. **認証がプロバイダーごとに違う。** OutlookとMicrosoft 365は、Microsoftのサインインを通じたOAuthを求めます。GmailはGoogleのアプリ パスワードを求め、Googleは2 段階認証プロセスが有効なときにしかそれを作らせません。iCloudとFastmailはアプリ用のパスワードを求めます。それぞれに独自のトークン更新サイクルと、独自の失敗のしかたがあります。
 2. **認証情報は危険物である。** チャットの記録やログの行に置かれたメールボックスのパスワードは、侵害が起きるのを待っているだけです。モデルにシークレットを持たせてはいけません。
 3. **メールはエージェントに向かない形をしている。** MIME、スレッドのヘッダー、HTMLとプレーンテキスト、添付ファイル、実はラベルであるフォルダー。モデルに必要なのは整った応答であって、RFC 5322ではありません。
 
@@ -41,7 +41,7 @@ const translation = {
 
 ### 標準のMCP over HTTPである
 
-サーバーはMCP 2025-06-18仕様に従ってStreamable HTTPを話します。インストールするSDKも、独自のクライアントもありません。MCPを話すものなら何にでもそのまま組み込めます。
+サーバーはMCP 2025-06-18仕様のStreamable HTTPに対応しています。インストールするSDKも、独自のクライアントもありません。MCPに対応するものなら何にでもそのまま組み込めます。
 
 ## エージェントが手にするツール
 
@@ -80,11 +80,11 @@ const translation = {
 
 ### アプリ パスワードのプロバイダー
 
-Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex、そして汎用のIMAPメールボックスは、OAuthではなくアプリ用のパスワードで接続します。プロバイダーのセキュリティ設定でパスワードを生成し、MCPEmailsに貼り付けます。Gmailのアプリ パスワードはGoogle アカウントで作成し、Googleはその前に2 段階認証プロセスを必須にしています。iCloudのパスワードはappleid.apple.comで作成します。Fastmailは**アプリ パスワードのみ**です（Fastmailの設定で作成します）。これらはすべて同じIMAP/SMTPの経路を通り、まったく同じ機能セットを共有します。詳しい手順は[iCloud、Fastmail、任意のIMAP受信トレイをClaudeに接続する](/blog/connect-icloud-fastmail-imap-to-claude)にあります。
+Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex、そして汎用のIMAPメールボックスは、OAuthではなくアプリ用のパスワードで接続します。プロバイダーのセキュリティ設定でパスワードを生成し、MCPEmailsに貼り付けます。Gmailのアプリ パスワードはGoogleアカウントで作成し、Googleはその前に2 段階認証プロセスを必須にしています。iCloudのパスワードはappleid.apple.comで作成します。Fastmailは**アプリ パスワードのみ**です（Fastmailの設定で作成します）。これらはすべて同じIMAP/SMTPの経路を通り、まったく同じ機能セットを共有します。詳しい手順は[iCloud、Fastmail、任意のIMAP受信トレイをClaudeに接続する](/blog/connect-icloud-fastmail-imap-to-claude)にあります。
 
 ## AIクライアントを接続する
 
-同じエンドポイント、同じツール。入り口は、クライアントがOAuthを話せるかどうかで2つに分かれます。
+同じエンドポイント、同じツール。入り口は、クライアントがOAuthに対応しているかどうかで2つに分かれます。
 
 ### OAuth対応クライアント（APIキー不要）
 
