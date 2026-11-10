@@ -53,7 +53,7 @@
     },
     {
       "h": "Use your TIM Mail password and the full address",
-      "p": "TIM issues no separate password for mail programs. Sign in with the address written out in full, including the domain, and the password you use at mail.tim.it. If the mailbox came with a TIM line and you have never set a password for the webmail, do that first in the TIM assistance area."
+      "p": "TIM issues no separate password for mail programs. Sign in with the address written out in full, including the domain, and the password you use at mail.tim.it. If you have forgotten it, TIM's <b>Recupera Username e Password</b> page resets it, provided a recovery mobile number is set on the mailbox; without one, TIM asks for a signed form and a copy of an ID."
     },
     {
       "h": "Paste the address and password into MCPEmails",
