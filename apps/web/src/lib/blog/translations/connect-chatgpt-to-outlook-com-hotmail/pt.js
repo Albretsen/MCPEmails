@@ -17,7 +17,7 @@ Se ele recusar, o motivo é o tipo de conta. Uma conta pessoal da Microsoft não
 
 ## O que você precisa
 
-- Uma conta pessoal da Microsoft com uma caixa do Outlook: outlook.com, hotmail.com, live.com ou msn.com, inclusive versões de outros países, como outlook.com.br ou hotmail.co.uk.
+- Uma conta pessoal da Microsoft com uma caixa do Outlook: outlook.com, hotmail.com, live.com ou msn.com, inclusive versões por país, como hotmail.com.br ou outlook.com.br.
 - **ChatGPT Go ou um plano pago, no chatgpt.com em um navegador.** A OpenAI permite que esses planos adicionem um servidor MCP personalizado. O Free não pode, e não dá para adicionar um pelo aplicativo de celular.
 - Uma conta no MCPEmails. [Comece grátis](/signup); o plano gratuito conecta uma caixa de entrada.
 
@@ -39,14 +39,14 @@ Guias antigos mandam criar uma senha de app e informar as configurações IMAP d
 ## Passo 2: adicionar o MCPEmails ao ChatGPT
 
 1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar) no canto superior direito.
-2. Escolha **Add custom MCP server** (Adicionar servidor MCP personalizado) e dê o nome MCPEmails.
-3. Em **Connection** (Conexão), cole esta URL:
+2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
+3. Em **Conexão**, cole esta URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Escolha **OAuth**, marque **I understand and want to continue** (Entendo e quero continuar) e clique em **Create as a plugin** (Criar como plugin).
+4. Escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.
 5. Faça login no MCPEmails e aprove o acesso que você quer dar ao ChatGPT, por exemplo só leitura para começar.
 6. Em um chat, digite **@** e escolha MCPEmails. A escolha vale para aquela mensagem, então mencione de novo com @ quando uma pergunta seguinte precisar dos seus e-mails.
 

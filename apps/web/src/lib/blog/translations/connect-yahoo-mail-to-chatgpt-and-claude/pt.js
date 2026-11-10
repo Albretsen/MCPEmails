@@ -50,14 +50,14 @@ Um endereço da AOL é uma conta separada, com senha de aplicativo própria. Con
 ## Passo 3a: adicionar ao ChatGPT
 
 1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar).
-2. Escolha **Add custom MCP server** (Adicionar servidor MCP personalizado) e dê o nome MCPEmails.
-3. Em **Connection** (Conexão), cole:
+2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
+3. Em **Conexão**, cole:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Escolha **OAuth**, confirme, clique em **Create as a plugin** (Criar como plugin) e faça login no MCPEmails.
+4. Escolha **OAuth**, confirme, clique em **Criar como plugin** e faça login no MCPEmails.
 5. Em um chat, digite **@** e escolha MCPEmails. Repita quando uma pergunta seguinte precisar dos seus e-mails.
 
 A OpenAI muda esses menus de lugar de tempos em tempos. A [página de configuração do ChatGPT](/docs/chatgpt) tem o caminho atual e as soluções para os erros mais frequentes.
@@ -69,7 +69,7 @@ A OpenAI muda esses menus de lugar de tempos em tempos. A [página de configura�
 3. Dê o nome MCPEmails, cole \`https://mcpemails.com/api/mcp\`, clique em **Continuar** e depois em **Adicionar**.
 4. Clique em **Conectar**, faça login no MCPEmails e aprove o acesso que você quer dar ao Claude.
 
-Em um chat, clique em **+**, escolha **Conectores** e ative o MCPEmails. A [página de configuração do Claude](/docs/claude) cobre os planos Team e Enterprise, em que um owner adiciona o conector primeiro.
+Em um chat, clique em **+**, escolha **Conectores** e ative o MCPEmails. A [página de configuração do Claude](/docs/claude) cobre os planos Team e Enterprise, em que um proprietário adiciona o conector primeiro.
 
 Você pode fazer os dois. Uma conta do MCPEmails atende ao ChatGPT e ao Claude ao mesmo tempo, com a mesma caixa do Yahoo.
 

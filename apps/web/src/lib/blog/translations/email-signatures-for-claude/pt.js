@@ -27,7 +27,7 @@ Ele também lida bem com idas e vindas. Existe um **modo de resposta** para que 
 
 ## Funciona em todos os provedores
 
-Isso não é um mimo só para o Gmail. As assinaturas valem para **todos** os provedores conectados: Gmail, Outlook, Fastmail, iCloud e qualquer outra conta IMAP, inclusive uma caixa da empresa na Locaweb ou na UOL Host. Como o MCPEmails monta a mensagem de saída por conta própria, o comportamento é idêntico onde quer que a caixa esteja. Conecte uma caixa nova de qualquer tipo e a assinatura simplesmente funciona.
+Isso não é uma exclusividade do Gmail. As assinaturas valem para **todos** os provedores conectados: Gmail, Outlook, Fastmail, iCloud e qualquer outra conta IMAP, inclusive uma caixa da empresa na Locaweb ou na UOL Host. Como o MCPEmails monta a mensagem de saída por conta própria, o comportamento é idêntico onde quer que a caixa esteja. Conecte uma caixa nova de qualquer tipo e a assinatura simplesmente funciona.
 
 ## Duas formas de configurar
 
@@ -70,7 +70,7 @@ De dois jeitos: editando por caixa de entrada no painel, ou pedindo ao Claude, p
 
 ## Resumo
 
-Defina sua assinatura uma vez, por caixa de entrada, e todo e-mail que o Claude envia daquela caixa (novo, resposta, encaminhamento, rascunho ou agendado) sai assinado como se você tivesse escrito. Funciona em todos os provedores, se posiciona corretamente nas conversas e sai do caminho com \`include_signature\` quando você quer uma resposta seca.
+Defina sua assinatura uma vez, por caixa de entrada, e todo e-mail que o Claude envia daquela caixa (novo, resposta, encaminhamento, rascunho ou agendado) sai assinado como se você tivesse escrito. Funciona em todos os provedores, se posiciona corretamente nas conversas e sai do caminho com \`include_signature\` quando você quer uma resposta curta e direta.
 
 [Abra seu painel](/dashboard) para definir uma assinatura, ou simplesmente diga ao Claude qual deve ser a sua. Ainda não conectou? [Comece grátis](/signup) e conecte uma caixa em cerca de dois minutos. O [guia para conectar o Claude à sua caixa de entrada](/blog/connect-claude-to-email) mostra cada passo.`,
 };

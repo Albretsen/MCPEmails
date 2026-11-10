@@ -74,7 +74,7 @@ Minha opinião, sem rodeios.
 
 **Copie e cole** em casos realmente isolados.
 
-**Pule a extensão de navegador**, a menos que você viva no Gmail na web e tenha lido a política de dados dela com atenção. **Pule as integrações nativas**, a menos que a sua já traga o recurso e você seja uma pessoa de um cliente só e um provedor só.
+**Pule a extensão de navegador**, a menos que você viva no Gmail na web e tenha lido a política de dados dela com atenção. **Pule as integrações nativas**, a menos que a sua já traga o recurso e você use um único cliente e um único provedor.
 
 Mais uma coisa que separa as opções sérias dos brinquedos: o envio. Com o MCPEmails, \`email_compose\` (ação send ou reply) passa pelo seu próprio provedor (o SMTP do Gmail, o Microsoft Graph ou o SMTP do seu provedor), então a reputação do seu domínio continua sua e os cabeçalhos de encadeamento são definidos automaticamente. E-mail que sai do domínio de outra pessoa é um problema de entregabilidade esperando para acontecer.
 

@@ -15,7 +15,7 @@ A [página de ajuda sobre apps conectados](https://help.openai.com/en/articles/1
 
 1. **Ative a autenticação de dois fatores** na sua Conta Apple, se estiver desligada. A Apple [só emite senhas específicas de app](https://support.apple.com/pt-br/102654) para contas protegidas por ela.
 2. **Crie uma senha específica de app.** Entre em account.apple.com, abra **Início de sessão e segurança**, escolha **Senhas específicas de apps** e gere uma. Dê o nome ChatGPT para encontrá-la depois.
-3. **Abra o plugin no ChatGPT.** Vá em **Settings** (Configurações), depois **Plugins**, e escolha **iCloud Mail**.
+3. **Abra o plugin no ChatGPT.** Vá em **Configurações**, depois **Plugins**, e escolha **iCloud Mail**.
 4. **Informe seu endereço do iCloud e a senha específica de app.** A OpenAI pede um endereço terminado em @icloud.com, @me.com ou @mac.com.
 
 Sua senha normal da Conta Apple não funciona aqui. É regra da Apple para todo app que não é da própria Apple, e é o mesmo tipo de senha que um app de e-mail de terceiros usa.
@@ -83,7 +83,7 @@ Seus e-mails nunca ficam armazenados no MCPEmails. Cada mensagem é buscada ao v
 ## Perguntas frequentes
 
 **O ChatGPT consegue ler meu e-mail do iCloud?**
-Sim. Conecte o plugin do iCloud Mail em Settings (Configurações), Plugins, com seu endereço do iCloud e uma senha específica de app da Apple. A OpenAI diz que o recurso está sendo liberado para todos os planos do ChatGPT na web, no desktop e no iOS.
+Sim. Conecte o plugin do iCloud Mail em Configurações, Plugins, com seu endereço do iCloud e uma senha específica de app da Apple. A OpenAI diz que o recurso está sendo liberado para todos os planos do ChatGPT na web, no desktop e no iOS.
 
 **O plugin do iCloud no ChatGPT vê minhas contas do Gmail ou do Outlook no Apple Mail?**
 Não. Ele entra nos servidores de e-mail do iCloud, não no app Mail, então só vê e-mails guardados no iCloud. Conecte as outras contas com o plugin de cada uma, ou por um servidor MCP como o MCPEmails.

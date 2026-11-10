@@ -100,7 +100,7 @@ De qualquer forma, você revoga qualquer conexão no painel com um clique. Pegue
 
 Resposta curta: sim, e o texto [é seguro dar a um agente de IA acesso ao e-mail?](/blog/is-it-safe-to-give-ai-agent-email-access) apresenta o argumento completo. O modelo guarda capacidades com escopo, não a sua senha; as credenciais são criptografadas; nada é armazenado; o envio fica no seu provedor; o acesso é revogado com um clique.
 
-Sobre limites de taxa, cada espaço de trabalho tem um teto por minuto que cresce com o plano (veja [preços](/pricing)), e cada chave de API recebe janelas por minuto, por hora e por dia dimensionadas para esse plano, então uma chave pode usar o teto inteiro e várias chaves o compartilham. Quando você atinge um limite, o servidor devolve um erro com nova tentativa permitida e um valor \`retry_after\` em segundos. Respeite-o. E nunca repita às cegas um envio de \`email_compose\`: você vai mandar duplicados.
+Sobre limites de taxa, cada espaço de trabalho tem um teto por minuto que cresce com o plano (veja [preços](/pricing)), e cada chave de API recebe janelas por minuto, por hora e por dia dimensionadas para esse plano, então uma chave pode usar o teto inteiro e várias chaves o compartilham. Quando você atinge um limite, o servidor devolve um erro que admite nova tentativa, com um valor \`retry_after\` em segundos. Respeite-o. E nunca repita às cegas um envio de \`email_compose\`: você vai mandar duplicados.
 
 ## Preços
 

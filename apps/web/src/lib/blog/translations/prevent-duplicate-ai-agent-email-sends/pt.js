@@ -3,7 +3,7 @@ const translation = {
   description:
     'Novas tentativas acontecem. Veja como as chaves de idempotência do MCPEmails ajudam a evitar envios, respostas, encaminhamentos, envios de rascunho e e-mails agendados em duplicidade por agentes de IA.',
   coverAlt: 'Evitando envios duplicados de e-mail por agentes de IA com o MCPEmails',
-  content: `Um tempo esgotado nem sempre significa que o e-mail não foi enviado. Às vezes o provedor aceitou a mensagem logo antes de a conexão cair. Se um agente tenta de novo às cegas, um cliente pode receber o mesmo e-mail duas vezes: um resultado constrangedor em qualquer fluxo de trabalho e um problema sério em prospecção, suporte ou cobrança.
+  content: `Um timeout nem sempre significa que o e-mail não foi enviado. Às vezes o provedor aceitou a mensagem logo antes de a conexão cair. Se um agente tenta de novo às cegas, um cliente pode receber o mesmo e-mail duas vezes: um resultado constrangedor em qualquer fluxo de trabalho e um problema sério em prospecção, suporte ou cobrança.
 
 O MCPEmails aceita chaves de idempotência nas operações de saída. Dê a uma tentativa lógica de envio uma chave única, e uma nova tentativa com a mesma chave é reconhecida como a mesma solicitação, em vez de tratada como permissão para enviar de novo.
 
@@ -11,7 +11,7 @@ O MCPEmails aceita chaves de idempotência nas operações de saída. Dê a uma 
 
 Idempotência é simplesmente segurança para tentar de novo. Você anexa um valor curto e único a uma mensagem que pretende enviar. Se o seu cliente precisar repetir exatamente essa operação, ele envia o mesmo valor de novo. O MCPEmails consegue então distinguir "repita o envio que eu já comecei" de "envie outro e-mail".
 
-Isso vale para e-mails novos, respostas, encaminhamentos, envio de um rascunho salvo e criação de um envio agendado. É especialmente valioso quando um agente roda em um ambiente em que as solicitações podem esgotar o tempo, reiniciar ou ser entregues mais de uma vez.
+Isso vale para e-mails novos, respostas, encaminhamentos, envio de um rascunho salvo e criação de um envio agendado. É especialmente valioso quando um agente roda em um ambiente em que as solicitações podem sofrer timeout, reiniciar ou ser entregues mais de uma vez.
 
 ## O padrão certo para um fluxo de agente
 
