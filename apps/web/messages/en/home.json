@@ -12,7 +12,12 @@
     "signIn": "Sign in",
     "dashboard": "Dashboard",
     "getStarted": "Get started free",
-    "selfHost": "Self-host"
+    "selfHost": "Self-host",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "primaryNav": "Primary navigation",
+    "mobileNav": "Mobile navigation",
+    "menuDialog": "Navigation menu"
   },
   "hero": {
     "eyebrow": "Hosted email MCP server",
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Product preview",

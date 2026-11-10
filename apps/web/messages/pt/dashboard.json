@@ -871,7 +871,7 @@
     "paymentRequiredClose": "Fechar",
     "paymentRequiredToast": "O pagamento não foi concluído, então você continua no {plan}. Abra o portal de cobrança para pagar a fatura em aberto.",
     "proInboxesKept": "Seu plano Pro mantém caixas de entrada conectadas ilimitadas.",
-    "businessMailboxRate": "10 caixas de correio incluídas em todos os seus espaços de trabalho. Cada caixa de correio extra é cobrada junto com o plano: $3 por mês ou $28.80 por ano.",
+    "businessMailboxRate": "10 caixas de correio incluídas em todos os seus espaços de trabalho. Cada caixa de correio extra é cobrada junto com o plano: $3 por mês ou $28,80 por ano.",
     "confirmExtraMailboxes": "Inclui {count, plural, one {# caixa de correio extra} other {# caixas de correio extras}} além das 10 incluídas.",
     "pass": {
       "offerLine": "Ou Personal por 3 meses, pago uma vez, {price}. Nada é renovado.",

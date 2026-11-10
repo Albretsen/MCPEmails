@@ -871,7 +871,7 @@
     "paymentRequiredClose": "Schließen",
     "paymentRequiredToast": "Die Zahlung wurde nicht abgeschlossen, Sie nutzen also weiterhin {plan}. Öffnen Sie das Abrechnungsportal, um die offene Rechnung zu bezahlen.",
     "proInboxesKept": "Ihr Pro-Tarif behält unbegrenzt viele verbundene Postfächer.",
-    "businessMailboxRate": "10 Postfächer inklusive, über alle Ihre Workspaces hinweg. Jedes weitere Postfach wird mit Ihrem Tarif abgerechnet: $3 pro Monat oder $28.80 pro Jahr.",
+    "businessMailboxRate": "10 Postfächer inklusive, über alle Ihre Workspaces hinweg. Jedes weitere Postfach wird mit Ihrem Tarif abgerechnet: $3 pro Monat oder $28,80 pro Jahr.",
     "confirmExtraMailboxes": "Enthält {count, plural, one {# zusätzliches Postfach} other {# zusätzliche Postfächer}} über die 10 inklusiven hinaus.",
     "pass": {
       "offerLine": "Oder Personal für 3 Monate, einmal bezahlt, {price}. Es verlängert sich nichts.",

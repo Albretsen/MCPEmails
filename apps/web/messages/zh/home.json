@@ -12,7 +12,12 @@
     "signIn": "登录",
     "dashboard": "控制面板",
     "getStarted": "免费开始使用",
-    "selfHost": "自托管"
+    "selfHost": "自托管",
+    "openMenu": "打开导航菜单",
+    "closeMenu": "关闭导航菜单",
+    "primaryNav": "主导航",
+    "mobileNav": "移动端导航",
+    "menuDialog": "导航菜单"
   },
   "hero": {
     "eyebrow": "托管的邮件 MCP 服务器",
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "产品预览",

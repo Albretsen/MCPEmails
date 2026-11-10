@@ -12,7 +12,12 @@
     "signIn": "ログイン",
     "dashboard": "ダッシュボード",
     "getStarted": "無料で始める",
-    "selfHost": "セルフホスト"
+    "selfHost": "セルフホスト",
+    "openMenu": "ナビゲーションメニューを開く",
+    "closeMenu": "ナビゲーションメニューを閉じる",
+    "primaryNav": "メインナビゲーション",
+    "mobileNav": "モバイルナビゲーション",
+    "menuDialog": "ナビゲーションメニュー"
   },
   "hero": {
     "eyebrow": "ホスト型メールMCPサーバー",

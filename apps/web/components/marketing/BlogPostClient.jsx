@@ -100,7 +100,7 @@ export default function BlogPostClient({ post }) {
       <article className="blog-post">
         <div className="container" style={{ maxWidth: 1080 }}>
           {/* Breadcrumb */}
-          <nav className="blog-crumbs" aria-label="Breadcrumb">
+          <nav className="blog-crumbs" aria-label={t('post.breadcrumbAria')}>
             <Link href="/">{t('post.home')}</Link>
             <span aria-hidden="true">/</span>
             <Link href="/blog">{t('post.blog')}</Link>
@@ -111,8 +111,8 @@ export default function BlogPostClient({ post }) {
           {/* Header */}
           <header className="blog-head">
             <div className="blog-card-tags">
-              {post.tags.map((t) => (
-                <span className="blog-tag" key={t}>{t}</span>
+              {post.tags.map((tag) => (
+                <span className="blog-tag" key={tag}>{post.tagLabels?.[tag] ?? tag}</span>
               ))}
             </div>
             <h1 className="blog-title">{post.title}</h1>

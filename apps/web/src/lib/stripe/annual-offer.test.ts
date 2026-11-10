@@ -21,6 +21,7 @@ import {
   annualOfferFromPlan,
   annualOfferFromPrices,
   formatPriceCents,
+  formatUsdCopy,
 } from './annual-offer.ts';
 import { PLANS } from './plans.ts';
 import { checkoutStartHref } from '../billing/upgrade-intent.mjs';
@@ -183,4 +184,18 @@ test('the annual price the CTA quotes is the price the interval buys', () => {
     ...sellable(PLANS.personal.monthlyPriceCents, PLANS.personal.yearlyPriceCents!),
   })!;
   assert.equal(formatPriceCents(personal.yearlyPriceCents), '$86.40');
+});
+
+test('formatUsdCopy writes the dollar the way each locale\'s copy does', () => {
+  // The price cards: locale decimal separator, sign where messages/<locale> puts it.
+  assert.equal(formatUsdCopy(8640, 'en'), '$86.40');
+  assert.equal(formatUsdCopy(720, 'de'), '$7,20');
+  assert.equal(formatUsdCopy(720, 'pt'), '$7,20');
+  assert.equal(formatUsdCopy(8640, 'nb'), '$86,40');
+  assert.equal(formatUsdCopy(8640, 'fr'), '86,40 $');
+  assert.equal(formatUsdCopy(720, 'ja'), '$7.20');
+  // Whole amounts drop the cents everywhere, and a region tag is read by language.
+  assert.equal(formatUsdCopy(900, 'de'), '$9');
+  assert.equal(formatUsdCopy(1500, 'fr-CA'), '15 $');
+  assert.equal(formatUsdCopy(0, 'pt-BR'), '$0');
 });

@@ -12,7 +12,12 @@
     "signIn": "Iniciar sesión",
     "dashboard": "Panel",
     "getStarted": "Empieza gratis",
-    "selfHost": "Auto-alojar"
+    "selfHost": "Auto-alojar",
+    "openMenu": "Abrir el menú de navegación",
+    "closeMenu": "Cerrar el menú de navegación",
+    "primaryNav": "Navegación principal",
+    "mobileNav": "Navegación móvil",
+    "menuDialog": "Menú de navegación"
   },
   "hero": {
     "eyebrow": "Servidor MCP de correo alojado",
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Vista del producto",
