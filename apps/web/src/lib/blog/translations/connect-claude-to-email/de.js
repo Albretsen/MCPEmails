@@ -92,7 +92,7 @@ MCPEmails gibt Claude gezielte E-Mail-Tools statt eines Passworts oder einer roh
 - **Organisieren:** \`email_organize\` verschiebt, labelt, markiert und archiviert Nachrichten.
 - **Entwürfe, Ordner, Planung und Kontakte:** \`draft\`, \`folder\`, \`schedule\` und \`contact_search\` decken den Rest eines praktischen E-Mail-Workflows ab.
 
-MCPEmails arbeitet mit Abfragen: Claude prüft auf neue E-Mails, wenn Sie darum bitten, und erhält kein Push-Ereignis in dem Moment, in dem eine E-Mail eintrifft.
+Claude liest Ihre E-Mails, indem es Tools aufruft: Es sieht nach neuen Nachrichten, wenn Sie darum bitten, und nichts wird in dem Moment in den Chat geschoben, in dem eine E-Mail eintrifft. Braucht Ihr eigener Code einen Push, können Pro- und Business-Workspaces im Dashboard unter **API-Schlüssel** einen signierten Webhook für neue E-Mails anlegen.
 
 ## Fehlerbehebung bei Verbindung und Claude-Einrichtung
 
