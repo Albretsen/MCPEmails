@@ -86,7 +86,7 @@ MCPEmailsは、パスワードや生のIMAPソケットではなく、目的を�
 - **下書き、フォルダー、予約送信：** \`draft\`、\`draft_list\`、\`folder\`、\`folder_list\`、\`schedule\`、\`schedule_list\`。
 - **その他：** \`contact_search\`、\`signature_get\`、\`signature_set\`に加えて、繰り返しのルール用の\`automation\`と\`automation_read\`。
 
-計画しておきたい制限が1つあります。チャットの中では、ChatGPTはメッセージが届いた瞬間ではなく、依頼されたときに新着メールを確認します。コネクタ側からChatGPTを起こす仕組みはありません（自分のコードは別です。ProとBusinessのワークスペースでは「APIキー」でWebhookを追加でき、新着メールが届くとあなたのURLにPOSTされます）。
+計画しておきたい制限が1つあります。チャットの中では、ChatGPTはメッセージが届いた瞬間ではなく、依頼されたときに新着メールを確認します。コネクタ側からChatGPTを呼び出す仕組みはありません（自分のコードは別です。ProとBusinessのワークスペースではダッシュボードの**APIキー**でWebhookを追加でき、新着メールが届くとあなたのURLに署名付きのPOSTが送られます）。
 
 ## ターミナルのOpenAI Codex
 
