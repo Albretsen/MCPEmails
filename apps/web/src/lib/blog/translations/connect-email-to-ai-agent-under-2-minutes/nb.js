@@ -14,7 +14,7 @@ Før du tar fatt på en leverandør, bestem deg for hvordan AI-agenten din skal 
 
 1. I claude.ai, gå til **Customize → Connectors → Add connector**.
 2. Lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
-3. Klikk **Connect**, logg inn på MCPEmails-kontoen din, og godkjenn de scopene du vil ha (\`read:email\`, \`send:email\`, eller begge).
+3. Klikk **Connect**, logg inn på MCPEmails-kontoen din, og velg tilgang: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting).
 
 Det er hele klientsiden. Tokens er begrenset til nøyaktig det du godkjente, og du kan tilbakekalle koblingen fra dashbordet med ett klikk. Vil du ha avveiningene forklart, se [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access). Vil du ha en gjennomgang for én bestemt klient, se hvordan du [kobler Claude til e-posten din](/blog/connect-claude-to-email) eller [kobler ChatGPT til e-posten din](/blog/connect-chatgpt-to-email).
 

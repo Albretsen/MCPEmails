@@ -63,7 +63,7 @@ I claude.ai:
 
 1. Gå til **Customize → Connectors**.
 2. Klikk på **Add connector** og lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
-3. Klikk på **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn de tilgangene du vil ha: \`read:email\`, \`send:email\`, eller begge.
+3. Klikk på **Connect**, logg inn med MCPEmails-kontoen din, og velg hvor mye tilgang Claude skal få: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting).
 
 Ingen API-nøkkel, ingen konfigurasjonsfil. claude.ai bruker OAuth med PKCE under panseret, og tokenet Claude får er begrenset til nøyaktig det du godkjente. Hvis du er på en klient som ikke kan gjøre OAuth (Cursor, Cline, et cURL-skript), lager du i stedet en avgrenset nøkkel, som jeg dekker i [e-posttilgang for Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 

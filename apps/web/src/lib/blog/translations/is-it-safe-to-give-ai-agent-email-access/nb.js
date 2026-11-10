@@ -55,7 +55,7 @@ Hvis et verktøy klarer alle seks, er restrisikoen liten og håndterbar. Hvis de
 
 ## En merknad om hva vi ikke gjør
 
-To begrensninger verdt å si rett ut. For det første får en agent i en chat ikke et pling når post kommer; den sjekker etter en tidsplan. Det eneste push-varselet vi tilbyr, er en signert webhook for ny post til en URL du eier, på Pro og Business, og den bærer meldings-ID-er, ikke post. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
+To begrensninger verdt å si rett ut. For det første får en agent i en chat ikke et pling når post kommer; den sjekker etter en tidsplan. Det eneste push-varselet vi tilbyr, er en signert webhook for ny post til en URL du eier, på Pro og Business, og den bærer meldings-ID-er, aldri selve meldingsinnholdet. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
 
 ## Så, er det trygt?
 

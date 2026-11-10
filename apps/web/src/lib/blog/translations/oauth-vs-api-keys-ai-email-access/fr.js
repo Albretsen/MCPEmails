@@ -4,7 +4,7 @@ const translation = {
   coverAlt: 'OAuth versus clés API pour connecter les agents IA à l’e-mail, par MCPEmails',
   content: `Lorsque vous connectez un agent IA à votre e-mail via MCPEmails, vous vous authentifiez de deux façons possibles : par OAuth ou par une clé API. Utilisez OAuth si votre client le prend en charge (claude.ai, Claude Desktop, Cursor), et une clé API restreinte sinon (Cline, JetBrains, scripts, cURL). Les deux atteignent le même point de terminaison et exposent les mêmes outils. La différence tient à qui gère le secret et à la facilité avec laquelle vous pouvez tout couper.
 
-Il ne s’agit pas d’un compromis entre sécurité et commodité où vous sacrifiez l’un pour l’autre. Les deux chemins sont limités exactement à \`read:email\`, \`send:email\`, ou les deux, et tous deux peuvent être révoqués depuis le tableau de bord en un clic. La vraie question est de savoir lequel convient au client que vous utilisez réellement. Pour une vue d’ensemble de la façon dont tout cela s’articule, commencez par le guide de référence, [comment donner à votre agent IA l’accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access).
+Il ne s’agit pas d’un compromis entre sécurité et commodité où vous sacrifiez l’un pour l’autre. Les deux chemins sont limités exactement à ce que vous accordez, de la lecture seule jusqu’aux neuf permissions, et tous deux peuvent être révoqués depuis le tableau de bord en un clic. La vraie question est de savoir lequel convient au client que vous utilisez réellement. Pour une vue d’ensemble de la façon dont tout cela s’articule, commencez par le guide de référence, [comment donner à votre agent IA l’accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access).
 
 ## La recommandation en 30 secondes
 

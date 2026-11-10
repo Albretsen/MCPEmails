@@ -88,7 +88,7 @@ Même point de terminaison, mêmes outils, deux façons d'entrer selon que votre
 
 ### Clients compatibles OAuth (sans clé API)
 
-claude.ai, Claude Desktop, Cursor et les clients similaires se connectent avec OAuth 2.0 Authorization Code + PKCE et l'enregistrement dynamique de client RFC 7591. Dans claude.ai, c'est **Customize → Connectors → Add connector**, collez l'URL du point de terminaison MCP, cliquez sur Connect, connectez-vous à votre compte MCPEmails et approuvez. Les jetons sont limités exactement à ce que vous approuvez : \`read:email\`, \`send:email\`, ou les deux. Pour des guides pas à pas, consultez [configurer Claude avec votre boîte mail](/blog/connect-claude-to-email) et [ajouter vos e-mails à ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor et les clients similaires se connectent avec OAuth 2.0 Authorization Code + PKCE et l'enregistrement dynamique de client RFC 7591. Dans claude.ai, c'est **Customize → Connectors → Add connector**, collez l'URL du point de terminaison MCP, cliquez sur Connect, connectez-vous à votre compte MCPEmails et approuvez. Le jeton porte exactement l'accès que vous choisissez sur l'écran de consentement : **Lecture seule**, **Standard** (ajoute l'envoi et les brouillons), **Accès complet** (ajoute la programmation, les dossiers et la suppression), ou **Personnalisé**, où vous activez ou désactivez chaque permission une par une. Pour des guides pas à pas, consultez [configurer Claude avec votre boîte mail](/blog/connect-claude-to-email) et [ajouter vos e-mails à ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clients sans OAuth (clé API)
 

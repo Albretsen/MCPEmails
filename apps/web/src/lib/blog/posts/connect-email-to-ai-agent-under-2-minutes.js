@@ -31,7 +31,7 @@ Before you touch a provider, decide how your AI agent will talk to MCPEmails. Th
 
 1. In claude.ai, go to **Customize → Connectors → Add connector**.
 2. Paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Click **Connect**, sign in to your MCPEmails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both).
+3. Click **Connect**, sign in to your MCPEmails account, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
 
 That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). For a client-specific walkthrough, see how to [connect Claude to your email](/blog/connect-claude-to-email) or [connect ChatGPT to your email](/blog/connect-chatgpt-to-email).
 
@@ -140,7 +140,7 @@ Antes de tocar un proveedor, decide cómo hablará tu agente de IA con MCPEmails
 
 1. En claude.ai, ve a **Personalizar → Conectores → Añadir conector**.
 2. Pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCPEmails y aprueba los permisos que quieras (\`read:email\`, \`send:email\`, o ambos).
+3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCPEmails y elige el acceso: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 
 Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access). Si quieres una guía para un cliente concreto, mira cómo [conectar Claude a tu correo](/blog/connect-claude-to-email) o [conectar ChatGPT a tu correo](/blog/connect-chatgpt-to-email).
 

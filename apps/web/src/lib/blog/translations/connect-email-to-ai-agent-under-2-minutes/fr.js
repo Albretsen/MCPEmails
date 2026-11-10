@@ -14,7 +14,7 @@ Avant de toucher au moindre fournisseur, décidez comment votre agent IA va dial
 
 1. Dans claude.ai, allez dans **Customize → Connectors → Add connector**.
 2. Collez l’endpoint : \`https://www.mcpemails.com/api/mcp\`
-3. Cliquez sur **Connect**, connectez-vous à votre compte MCPEmails et approuvez les portées souhaitées (\`read:email\`, \`send:email\`, ou les deux).
+3. Cliquez sur **Connect**, connectez-vous à votre compte MCPEmails et choisissez le niveau d’accès de Claude : **Lecture seule**, **Standard** (ajoute l’envoi et les brouillons) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression).
 
 C’est tout pour le côté client. Les jetons sont limités exactement à ce que vous avez approuvé, et vous pouvez révoquer la connexion depuis le tableau de bord en un clic. Si vous voulez voir les compromis détaillés, lisez [OAuth ou clés d’API pour l’accès à l’e-mail par l’IA](/blog/oauth-vs-api-keys-ai-email-access). Pour un guide propre à un client, voyez comment [connecter Claude à vos e-mails](/blog/connect-claude-to-email) ou [connecter ChatGPT à vos e-mails](/blog/connect-chatgpt-to-email).
 

@@ -42,7 +42,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. 点击**继续（Continue）**，检查 Claude 检测到的登录设置（保持默认即可），然后点击**添加（Add）**。
-5. 用你的 MCPEmails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
+5. 用你的 MCPEmails 账户登录，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。**自定义**则可以逐项开启或关闭权限。
 6. 在对话中点击左下角的 **+**，选择**连接器（Connectors）**，然后打开 MCPEmails。
 
 在 Team 或 Enterprise 方案中，由 Owner 在 **Organization settings → Connectors** 下添加一次连接器。之后成员打开 **Customize → Connectors**，找到 MCPEmails 并点击 **Connect**。

@@ -116,7 +116,7 @@ Yes. Connect the iCloud Mail plugin under Settings, Plugins, with your iCloud ad
 No. It signs in to iCloud's mail servers, not to the Mail app, so it only sees mail stored in iCloud. Connect other accounts with their own plugin, or through an MCP server such as MCPEmails.
 
 **Why does ChatGPT reject my Apple password?**
-Apple requires an app-specific password for every app outside Apple's own. Create one at account.apple.com under Sign-In and Security, App-Specific Passwords. Two-factor authentication must be on.
+Apple gives third-party apps two ways in: a supported app can be authorized with the Apple Account itself, and every other app, OpenAI's plugin included, takes an app-specific password. Create one at account.apple.com under Sign-In and Security, App-Specific Passwords. Two-factor authentication must be on. MCPEmails connects iCloud the same way, with an app-specific password over IMAP.
 
 **Does Claude have an iCloud connector?**
 No. Claude's own email connectors cover Gmail and work Microsoft 365 accounts. Add iCloud to Claude as a custom connector through an MCP server: connect the mailbox to MCPEmails with an app-specific password and paste \`https://mcpemails.com/api/mcp\` into Claude.

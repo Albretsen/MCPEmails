@@ -60,7 +60,7 @@ MCPEmails 只加密保存由此获得的 OAuth 令牌，不保存你邮箱的其
 https://mcpemails.com/api/mcp
 \`\`\`
 
-点击 Connect 后，你登录自己的 MCPEmails 账户并批准权限范围：\`read:email\`、\`send:email\`，或两者都选。整个过程不需要交出任何 API 密钥。
+点击 Connect 后，你登录自己的 MCPEmails 账户，并在我们的同意页上选择访问级别：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除），也可以用**自定义**逐项开启权限。整个过程不需要交出任何 API 密钥。
 
 对于不支持 OAuth 的客户端（Cline、JetBrains 插件、你自己的脚本、直接用 cURL），在 **Dashboard → API Keys** 中生成一个限定权限的密钥，并以 \`Authorization: Bearer <api-key>\` 的形式发送。这类客户端的完整步骤见[在 Cursor、Cline 和 VS Code 中为 AI 智能体接入邮件](/blog/email-for-ai-agents-cursor-cline-vscode)。如果你在权衡两种方式，[AI 访问邮件：OAuth 与 API 密钥对比](/blog/oauth-vs-api-keys-ai-email-access)列出了各自的利弊。
 

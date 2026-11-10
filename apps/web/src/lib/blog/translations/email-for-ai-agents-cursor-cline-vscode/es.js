@@ -26,7 +26,7 @@ Cursor admite OAuth 2.0 para servidores MCP, que es la vía indolora. No hay cla
 
 1. Abre los ajustes de Cursor y busca la sección de servidores MCP.
 2. Añade un nuevo servidor con la URL \`https://www.mcpemails.com/api/mcp\`.
-3. Cursor abre una ventana del navegador. Inicia sesión en tu cuenta de MCPEmails y aprueba los permisos que quieras darle al agente: \`read:email\`, \`send:email\` o ambos.
+3. Cursor abre una ventana del navegador. Inicia sesión en tu cuenta de MCPEmails y elige cuánto acceso le das al agente: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 4. La conexión se pone en verde y las herramientas de correo aparecen en la lista de herramientas de Cursor.
 
 Por debajo, eso es OAuth 2.0 con código de autorización y PKCE, y el token que guarda Cursor está limitado exactamente a lo que aprobaste. Si solo concediste \`read:email\`, el agente literalmente no puede enviar. Cuando termines, revoca la conexión desde **Panel → Claves de API** (las concesiones de OAuth también están ahí) con un clic, y el acceso de Cursor se corta al instante.

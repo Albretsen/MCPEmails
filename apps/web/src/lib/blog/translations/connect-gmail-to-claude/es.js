@@ -44,7 +44,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Haz clic en **Continue**, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en **Add**.
-5. Inicia sesión con tu cuenta de MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\`, o ambos.
+5. Inicia sesión con tu cuenta de MCPEmails y elige cuánto acceso le das a Claude: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación). Con **Personalizado** activas o desactivas cada permiso por separado.
 6. En un chat, haz clic en **+** abajo a la izquierda, elige **Connectors** y activa MCPEmails.
 
 En un plan Team o Enterprise, un Owner añade el conector una vez en **Organization settings → Connectors**. Después, los miembros abren **Customize → Connectors**, buscan MCPEmails y hacen clic en **Connect**.
