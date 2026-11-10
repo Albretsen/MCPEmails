@@ -12,7 +12,12 @@
     "signIn": "登录",
     "dashboard": "控制面板",
     "getStarted": "免费开始使用",
-    "selfHost": "自托管"
+    "selfHost": "自托管",
+    "openMenu": "打开导航菜单",
+    "closeMenu": "关闭导航菜单",
+    "primaryNav": "主导航",
+    "mobileNav": "移动端导航",
+    "menuDialog": "导航菜单"
   },
   "hero": {
     "eyebrow": "托管的邮件 MCP 服务器",
@@ -201,7 +206,7 @@
         "name": "Personal",
         "desc": "三个邮箱，适合一个人或一家小公司：工作、私人，或公司最初的几个地址。",
         "features": [
-          "包含 Free 的全部功能",
+          "包含免费版的全部功能",
           "3 个已连接收件箱",
           "突发速率上限提升 2 倍",
           "优先邮件支持"
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "产品预览",

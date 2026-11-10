@@ -12,7 +12,12 @@
     "signIn": "Se connecter",
     "dashboard": "Tableau de bord",
     "getStarted": "Commencer gratuitement",
-    "selfHost": "Auto-hébergement"
+    "selfHost": "Auto-hébergement",
+    "openMenu": "Ouvrir le menu de navigation",
+    "closeMenu": "Fermer le menu de navigation",
+    "primaryNav": "Navigation principale",
+    "mobileNav": "Navigation mobile",
+    "menuDialog": "Menu de navigation"
   },
   "hero": {
     "eyebrow": "Serveur MCP e-mail hébergé",
@@ -201,7 +206,7 @@
         "name": "Personal",
         "desc": "Trois boîtes pour une personne ou une petite entreprise : le travail, le personnel ou les premières adresses de votre société.",
         "features": [
-          "Tout ce que contient Free",
+          "Tout ce que contient l'offre Gratuit",
           "3 boîtes connectées",
           "Limite de pointe 2x plus élevée",
           "Support prioritaire par e-mail"
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Aperçu du produit",

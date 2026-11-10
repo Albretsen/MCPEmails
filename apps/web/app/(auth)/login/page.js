@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { LoginApp } from '../../../components/auth/LoginApp';
 import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
+import { authPageMetadata } from '@/i18n/auth-page-metadata';
 
-export const metadata = {
-  title: 'Sign in',
-  description: 'Sign in to your MCPEmails workspace',
-};
+/** Title and description in the language the visitor was reading (`?lang=`), else English. */
+export async function generateMetadata({ searchParams }) {
+  return authPageMetadata(await searchParams, 'login');
+}
 
 export default async function LoginPage({ searchParams }) {
   const supabase = await createClient();

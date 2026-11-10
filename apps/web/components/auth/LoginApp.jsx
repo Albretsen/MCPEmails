@@ -16,9 +16,11 @@ import { ssoUiEnabled } from '@/lib/sso/ui-flag.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
+import { useDocumentTitle } from '../i18n/useDocumentTitle';
 
 export function LoginApp({ redirectTo = null, connectProvider = null, initialMode = 'password' }) {
   const t = useTranslations('auth');
+  useDocumentTitle(t('login.title'));
   // Arriving from an approval link in an AI chat: say why sign-in is needed,
   // so the person knows they are in the right place.
   const approvalContext = typeof redirectTo === 'string' && redirectTo.startsWith('/approvals/')

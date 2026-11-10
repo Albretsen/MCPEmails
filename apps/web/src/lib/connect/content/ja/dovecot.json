@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "https://doc.dovecot.org/",
+    "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/deploying_mail_servers/configuring-and-maintaining-a-dovecot-imap-and-pop3-server_deploying-mail-servers"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "usernameForm": "userdbがログイン名として返すもの。通常はuser@yourdomain.comのアドレス全体ですが、システムのpassdbを使う構成では素のユーザー名です。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Dovecot IMAPをClaudeとあらゆるMCPクライアントに接続",
+    "description": "自分のDovecotサーバーをClaude、Cursor、ChatGPTにIMAPで接続。993を担当するinet_listener、重要なssl_certの行、そしてポート143がログインを拒否する理由。"
+  },
+  "hero": {
+    "eyebrow": "Dovecot + AI",
+    "titleLine1": "自分のDovecotサーバーを",
+    "titleLine2": "Claude、Cursor、あらゆるMCPクライアントに接続",
+    "lead": "IMAPサーバーを運用しているのはあなたなので、エージェントがどこまで届くかを決めるのもあなたです。MCPEmailsを自分のDovecotホストに向ければ、Claudeが、すでに運用しているメールボックスの中でメールの閲覧、検索、送信、返信、予約送信、振り分けをできるようになります。",
+    "answer": "Claudeは自力ではDovecotサーバーに届きません。MCPEmailsはホスト型のMCPサーバーで、あなた自身のホスト名、通常はmail.yourdomain.comのポート993に対して、passdbがすでに受け付けているメールボックスのパスワードを使ってIMAPで接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。調べるべき共通のホスト名はありません。ホストはサーバーに付けた名前そのもので、インターネットから到達できる必要があり、TLS証明書は接続先の名前に対して有効でなければなりません。受信トレイ1つは無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "既存のDovecotメールボックスのパスワード",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "Dovecotの接続方法：自分のホスト、自分のpassdb",
+    "body": "Dovecotはメールボックスのプロバイダーではなく、あなたがインストールしたIMAPサーバーです。だから共通のホスト名も、サインインするベンダーアカウントもありません。ホストはサーバーが応答する名前で、通常は<code>mail.yourdomain.com</code>のようなものです。どのポートで応答するかは<code>conf.d/10-master.conf</code>で決まり、そこの<code>service imap-login</code>ブロックにポート143用の<code>inet_listener imap</code>と、<code>ssl = yes</code>のポート993用の<code>inet_listener imaps</code>があります。リスナーの<code>port = 0</code>を設定するとそれはオフになり、多くの堅牢化されたビルドが993だけになっているのはこのためです。認証情報はpassdbが検証するものなので、仮想メールボックス構成ならSQLやLDAPのユーザーテーブルに設定したパスワード、システムユーザー構成ならUnixアカウントのパスワードです。サーバー上で<code>doveconf -n</code>を実行すると、自分が書いたつもりの設定ではなく、Dovecotが実際に読み込んだ設定を確認できます。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続でき、自分のサーバー上の本物のメールボックスで試すには十分です。"
+    },
+    {
+      "h": "Dovecotが何を待ち受けているか確認する",
+      "p": "サーバー上で<code>doveconf -n</code>を実行し、<code>service imap-login</code>ブロックを読みます。993に<code>inet_listener imaps</code>があるかを確かめ、<code>listen</code>の設定も確認してください。<code>127.0.0.1</code>になっていれば、Dovecotはループバックでしか応答しておらず、マシンの外からは何も届きません。"
+    },
+    {
+      "h": "993の証明書を外側から確認する",
+      "p": "メールサーバーではないマシンから<code>openssl s_client -connect mail.yourdomain.com:993</code>を実行します。検証に通るチェーンと、MCPEmailsに入力するホストと一致するサブジェクト名が返ってくるのが望ましい状態です。その後、受信トレイを追加します。IMAP / SMTPを選び、ホスト名、メールボックスのログイン名、そのパスワードを入力してください。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "special_useの指定がないと、Dovecotはフォルダーの役割を一切伝えません",
+      "p": "DovecotがSPECIAL-USE拡張を通知するのは、あなたが宣言したメールボックスに対してだけです。<code>15-mailboxes.conf</code>に<code>mailbox Sent { special_use = \\Sent }</code>のような項目がなければ、IMAPクライアントはフラットな名前の一覧を受け取るだけで、どれが送信済み、下書き、迷惑メール、ゴミ箱なのかを推測するしかありません。MCPEmailsは名前の照合にフォールバックするので、フォルダー名がSent Items、Gesendet、Papierkorbのようなサーバーでは、一度だけ手動でフォルダーを選ぶ必要があるかもしれません。special_useの行を追加すれば、手持ちのすべてのクライアントで恒久的に解決します。"
+    },
+    {
+      "h": "名前空間のプレフィックスは、見えるフォルダー名をすべて書き換えます",
+      "p": "Maildir++のレイアウトでは、受信トレイの名前空間に<code>prefix = INBOX.</code>と<code>separator = .</code>を設定するのが一般的で、フォルダーは<code>Sent</code>や<code>Archive</code>ではなく<code>INBOX.Sent</code>や<code>INBOX.Archive</code>として届きます。これは不具合ではありませんが、ウェブメールからコピーしたフォルダー名がIMAPの報告と一致しないことを意味します。何かが欠けていると思い込む前に、<code>doveadm mailbox list -u user@yourdomain.com</code>で実際の名前を読んでください。"
+    },
+    {
+      "h": "disable_plaintext_authは、143では正しいパスワードをBADに変えます",
+      "p": "ほとんどのディストリビューションの既定である<code>disable_plaintext_auth = yes</code>では、DovecotはクライアントがSTARTTLSを発行するまでポート143でのLOGINを拒否します。クライアントには認証失敗と見え、ユーザーはパスワードが間違っていると結論づけます。そうではありません。接続がまだ暗号化されていなかっただけです。ポート993は、認証が始まる前に暗黙的TLSがすでに確立しているので影響を受けません。993を使うべき理由がもう1つ増えます。"
+    },
+    {
+      "h": "ssl_certには先頭の記号が必須で、名前ごとに証明書を分けるにはlocal_nameが必要です",
+      "p": "<code>10-ssl.conf</code>の<code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code>にある先頭の<code>&lt;</code>は省略できません。これがDovecotに、パスを証明書そのものとして扱うのではなくファイルの中身を読むよう指示します。<code>cert.pem</code>ではなく<code>fullchain.pem</code>を指してください。さもないと中間証明書が欠け、ブラウザーが受け入れた証明書でも、厳格に検証するクライアントは拒否します。1台で複数のホスト名を提供しているなら、それぞれに<code>local_name</code>ブロックが必要です。なければすべての接続に既定の証明書が返り、検証に通るホスト名は1つだけになります。"
+    }
+  ],
+  "limits": [
+    "ホスト型のMCPサーバーが届くためには、Dovecotサーバーが公開インターネットからの接続を受け入れる必要があります。IMAPはLANやVPNの外に出さないという方針なら、それは正当な答えであり、この製品はホスト型サービスとしてはお役に立てません。代わりにMCPEmailsをセルフホストすれば、IMAP接続は自分のネットワークの中にとどまります。",
+    "厳格なTLS検証はここでは任意ではありません。自己署名、期限切れ、別のホスト名向けに発行された証明書は拒否され、それでも受け入れるためのチェックボックスはありません。",
+    "送信は自分のサブミッションサービスから出ていくので、配信性はそのサーバー上の他のすべてのクライアントとまったく同じく、SPF、DKIM、DMARCのレコードに左右されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはDovecotで使えますか？",
+      "a": "直接は使えません。Claudeには、あなたが運用するサーバーへIMAPソケットを開く手段がありません。MCPEmailsのようなMCPサーバーをDovecotホストに接続すると、他のどのIMAPクライアントとも同じ認証情報で、Claudeがその上のメールボックスを閲覧、検索、送信、返信、予約送信、整理できるようになります。"
+    },
+    {
+      "q": "DovecotのIMAPとSMTPの設定は何ですか？",
+      "a": "ホスト名はあなた自身のサーバーなので、誰かが代わりに公開することはできません。ポートは<code>conf.d/10-master.conf</code>の<code>service imap-login</code>ブロックで決まり、誰かが変えていなければ暗黙的TLSが993、STARTTLSが143です。SMTPサブミッションはDovecotと並んで動くPostfixやEximが担当し、通常は587か465です。"
+    },
+    {
+      "q": "Dovecotのパスワードが拒否されるのはなぜですか？",
+      "a": "推測せずにサーバーのログを確認してください。よくある原因は2つで、暗号化されていないポート143の接続で平文認証が拒否されていることと、ログイン名がpassdbの期待と一致していないことです。仮想構成はアドレス全体を、システムユーザー構成は素のユーザー名を求めます。サーバー上で<code>doveadm auth login user@yourdomain.com</code>を実行すれば、ネットワークを介さずに認証情報を試せます。"
+    },
+    {
+      "q": "Dovecotサーバーはインターネットから到達できる必要がありますか？",
+      "a": "ホスト型サービスを使うなら、はい。MCPEmailsはあなたのIMAPポートへ外から接続するので、ループバックにバインドされたサーバー、オフィスのアドレス範囲にファイアウォールで絞ったサーバー、VPN経由でしか届かないサーバーは接続できません。IMAPを公開したくなければ、MCPEmailsはセルフホスト可能で、メールサーバーと同じネットワーク内で動かせます。"
+    },
+    {
+      "q": "Dovecotの上に作られた製品にはどんなものがありますか？",
+      "a": "よく使われるパッケージ型メールサーバーのいくつかは中身がDovecotで、mailcow、Mail-in-a-Box、Poste.ioがそうです。Open-Xchange App Suiteも通常はメールバックエンドとしてDovecotと組み合わせて配備されます。リスナー、証明書、フォルダーの役割についてこのページに書いたことはそれらにも当てはまりますが、変更のための管理画面はそれぞれ独自のものです。"
+    },
+    {
+      "q": "私のメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにDovecotサーバーからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにDovecotの受信トレイを渡す",
+    "sub": "MCPEmailsを自分のサーバーに向けるだけ。受信トレイ1つはずっと無料、カード不要。"
+  }
+}

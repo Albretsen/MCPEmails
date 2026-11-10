@@ -2,6 +2,8 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { PROVIDER_CATEGORIES, featuredFirst } from '@/lib/connect/providers.mjs';
+import { providerDisplayName } from '@/lib/connect/display-name.mjs';
+import { categoryLabel } from './category-labels.mjs';
 import { releasedProviders } from '@/lib/connect/release.mjs';
 import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
@@ -63,8 +65,11 @@ export default async function ConnectHubPage({ params }) {
   // Featured providers (Gmail, Outlook, Microsoft 365) lead their silo;
   // everything else keeps registry order.
   const available = featuredFirst(releasedProviders().filter((p) => p.locales.includes(locale)));
+  // Headings come from category-labels.mjs next to this page; the ids and
+  // anchors (they are URLs) stay in providers.mjs.
   const groups = PROVIDER_CATEGORIES.map((c) => ({
     ...c,
+    label: categoryLabel(c.id, locale),
     providers: available.filter((p) => p.category === c.id),
   })).filter((g) => g.providers.length > 0);
   const verifiedOn = available.find((p) => p.evidence?.verifiedOn)?.evidence.verifiedOn;
@@ -88,7 +93,7 @@ export default async function ConnectHubPage({ params }) {
           itemListElement: available.map((p, i) => ({
             '@type': 'ListItem',
             position: i + 1,
-            name: p.name,
+            name: providerDisplayName(p, locale),
             url: localePath(locale, `/connect/${p.slug}`),
           })),
         },
@@ -148,7 +153,7 @@ export default async function ConnectHubPage({ params }) {
                 {g.providers.map((p) => (
                   <li key={p.slug}>
                     <Link href={`/connect/${p.slug}`}>
-                      <span className="connect-index-name">{p.name}</span>
+                      <span className="connect-index-name">{providerDisplayName(p, locale)}</span>
                       {p.imap && <code className="connect-index-host">{p.imap.host}</code>}
                     </Link>
                   </li>

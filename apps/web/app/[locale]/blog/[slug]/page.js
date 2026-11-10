@@ -6,6 +6,7 @@ import { languageTag } from '@/i18n/locale-policy.mjs';
 import { getAllPosts, getPost, getPostLocales, getLocalizedPost, getAuthor } from '@/lib/blog/posts';
 import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
 import { localizeHref } from '@/lib/blog/links.mjs';
+import { tagLabelMap } from '@/lib/blog/tag-labels.mjs';
 import { withReadingLangEscaped } from '@/i18n/reading-lang.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
 import { requireLocale } from '@/i18n/require-locale';
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const post = getLocalizedPost(slug, locale);
   if (!post) return {};
-  const author = getAuthor(post);
+  const author = getAuthor(post, locale);
   const path = `/blog/${slug}`;
   const { canonical, languages, canonicalLocale } = buildAlternates(post, locale, path);
   return {
@@ -93,7 +94,7 @@ export default async function BlogPostPage({ params }) {
   if (!post.translated) permanentRedirect(`/blog/${slug}`);
 
   const t = await getTranslations({ locale, namespace: 'blog' });
-  const author = getAuthor(post);
+  const author = getAuthor(post, locale);
   const { html, headings } = renderMarkdown(post.content, {
     // Locale prefix where the target exists in this locale, and ?lang= on
     // signup and login links so the form opens in the language being read.
@@ -149,6 +150,7 @@ export default async function BlogPostPage({ params }) {
     cover: post.cover,
     coverAlt: post.coverAlt,
     tags: post.tags,
+    tagLabels: tagLabelMap(post.tags, locale),
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
     readingMinutes,

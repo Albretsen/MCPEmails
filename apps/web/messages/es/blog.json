@@ -25,6 +25,7 @@
       "sub": "Conecta Gmail, Outlook, Fastmail o cualquier cuenta IMAP a tu agente de IA en minutos.",
       "primary": "Empieza gratis",
       "secondary": "Leer la documentación"
-    }
+    },
+    "breadcrumbAria": "Ruta de navegación"
   }
 }
