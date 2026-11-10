@@ -232,7 +232,7 @@ const LABELS = {
     'Workflow': '工作流',
     'Multiple inboxes': '多个收件箱',
     'Privacy': '隐私',
-    'Inbox triage': '收件箱分拣',
+    'Inbox triage': '收件箱整理',
     'Email automation': '邮件自动化',
     'Comparison': '对比',
     'Teams': '团队',

@@ -37,7 +37,7 @@ export const AUTHORS = {
       fr: "Asgeir développe MCPEmails, la passerelle qui permet aux agents IA de lire, rechercher et envoyer de vrais e-mails via le Model Context Protocol. Il écrit sur les agents, l'infrastructure e-mail et l'expérience développeur.",
       de: 'Asgeir entwickelt MCPEmails, die Brücke, über die KI-Agenten echte E-Mails per Model Context Protocol lesen, durchsuchen und senden. Er schreibt über Agenten, E-Mail-Infrastruktur und Developer Experience.',
       pt: 'Asgeir desenvolve o MCPEmails, a ponte que permite a agentes de IA ler, pesquisar e enviar e-mails de verdade pelo Model Context Protocol. Ele escreve sobre agentes, infraestrutura de e-mail e experiência do desenvolvedor.',
-      ja: 'AsgeirはMCPEmailsを開発しています。AIエージェントがModel Context Protocolを通じて実際のメールを読み、検索し、送信できるようにする橋渡し役です。エージェント、メールインフラ、開発者体験について執筆しています。',
+      ja: 'Asgeirは、AIエージェントがModel Context Protocolを通じて実際のメールを読み、検索し、送信できるようにする橋渡し役、MCPEmailsを開発しています。エージェント、メールインフラ、開発者体験について執筆しています。',
       zh: 'Asgeir 开发 MCPEmails，一座让 AI 智能体通过 Model Context Protocol 读取、搜索和发送真实邮件的桥梁。他撰写关于智能体、邮件基础设施和开发者体验的文章。',
     },
     url: 'https://mcpemails.com/blog',
