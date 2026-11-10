@@ -49,7 +49,7 @@ Um endereço da AOL é uma conta separada, com senha de aplicativo própria. Con
 
 ## Passo 3a: adicionar ao ChatGPT
 
-1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar).
+1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoais), e clique em **Add** (Adicionar).
 2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
 3. Em **Conexão**, cole:
 

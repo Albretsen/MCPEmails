@@ -54,7 +54,7 @@ A rotina acima leva uns cinco minutos quando o Claude faz o trabalho pesado. Alg
 
 - **Uma frase-gatilho.** Salve a sequência inteira como uma única mensagem: *"Rode minha triagem matinal da caixa de entrada."* O Claude lembra os passos dentro de uma conversa, então uma linha dispara o ciclo.
 - **Ajuste as regras com o tempo.** Quando o Claude arquivar algo que não devia, diga uma vez ("nunca arquive nada da minha gestora") e incorpore isso às suas instruções fixas.
-- **Faxina semanal.** Uma vez por semana: *"Encontre todo e-mail não lido com mais de 30 dias e arquive ou exclua."* A cauda longa é onde o Inbox Zero costuma morrer; deixe o Claude limpá-la. Para mais padrões, veja [as melhores formas de deixar o Claude gerenciar sua caixa de entrada](/blog/best-ways-to-let-claude-manage-your-inbox) e o [playbook de triagem e resumo](/blog/ai-agent-triage-summarize-inbox).
+- **Faxina semanal.** Uma vez por semana: *"Encontre todo e-mail não lido com mais de um mês e arquive ou exclua."* A cauda longa é onde o Inbox Zero costuma morrer; deixe o Claude limpá-la. Para mais padrões, veja [as melhores formas de deixar o Claude gerenciar sua caixa de entrada](/blog/best-ways-to-let-claude-manage-your-inbox) e o [playbook de triagem e resumo](/blog/ai-agent-triage-summarize-inbox).
 
 ## A única regra que mantém isso seguro
 

@@ -59,7 +59,7 @@ Todas as caixas que você conectou estão disponíveis agora. O [guia do Claude]
 
 O ChatGPT Go e os planos pagos podem adicionar um servidor MCP personalizado em chatgpt.com no navegador; o app para celular não consegue. No Business e no Enterprise, um administrador ou proprietário pode precisar adicioná-lo.
 
-1. Abra **Plugins**, depois **Personal** (Pessoal), clique em **Add** (Adicionar) no canto superior direito e escolha **Adicionar servidor MCP personalizado**.
+1. Abra **Plugins**, depois **Personal** (Pessoais), clique em **Add** (Adicionar) no canto superior direito e escolha **Adicionar servidor MCP personalizado**.
 2. Dê o nome MCPEmails, cole \`https://mcpemails.com/api/mcp\` em **Conexão**, escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.
 3. Faça login com o MCPEmails e aprove.
 4. Em um chat, digite **@** e escolha MCPEmails. A escolha vale para aquela mensagem, então mencione com @ de novo quando uma mensagem seguinte precisar do seu e-mail.
@@ -83,11 +83,11 @@ Ative **Revisar antes de enviar** em qualquer caixa e todo envio, resposta, enca
 ## Quantas caixas cada plano conecta
 
 - **Free:** uma caixa de e-mail.
-- **Personal:** três caixas de e-mail.
-- **Pro:** até 10 caixas de e-mail, em um único login.
-- **Business:** 10 caixas incluídas e US$ 3 por mês para cada caixa extra, e para quando uma segunda pessoa precisa de um login próprio.
+- **Personal:** algumas caixas de e-mail, para uma pessoa.
+- **Pro:** mais caixas de e-mail, ainda em um único login.
+- **Business:** um conjunto de caixas incluídas e um valor por caixa extra, e para quando uma segunda pessoa precisa de um login próprio.
 
-Uma empresa com contato@, vendas@ e notasfiscais@ mais o seu próprio endereço são quatro caixas, o que é Pro. Os preços atuais estão na [página de preços](/pricing), e [MCPEmails para empresas](/for/business) mostra como uma pessoa administra todas as caixas da empresa a partir de um único agente.
+Uma empresa com contato@, vendas@ e notasfiscais@ mais o seu próprio endereço são quatro caixas, o que coloca você no Pro. O número de caixas e os preços atuais estão na [página de preços](/pricing), e [MCPEmails para empresas](/for/business) mostra como uma pessoa administra todas as caixas da empresa a partir de um único agente.
 
 ## Perguntas frequentes
 
