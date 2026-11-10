@@ -101,7 +101,7 @@ L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` 
 
 Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail : elle arrive donc depuis mon adresse avec la réputation de mon domaine. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
 
-Une limitation : les outils MCP ne vous appellent jamais. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur, avec \`email_read\` et l’action \`list\` plus \`unread: true\` selon un planning, ou vous laissez un webhook de nouveau message réveiller votre code (les espaces de travail Pro et Business en ajoutent un sous Clés API dans le tableau de bord, et il envoie les identifiants des messages à votre URL). Dans les deux cas, cela façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
+Une limite à connaître : les outils MCP ne vous appellent jamais. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur, avec \`email_read\` et l’action \`list\` plus \`unread: true\` selon un planning, ou vous laissez un webhook de nouveau message réveiller votre code (les espaces de travail Pro et Business en ajoutent un sous Clés API dans le tableau de bord, et il envoie les identifiants des messages à votre URL). Dans les deux cas, cela façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Limites de débit pour l’accès scripté
 
