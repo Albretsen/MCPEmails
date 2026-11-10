@@ -85,7 +85,7 @@ Slå på **Gjennomgang før sending** (Review before sending) for en postkasse, 
 - **Gratis:** én postkasse.
 - **Personal:** noen få postkasser, for én person.
 - **Pro:** flere postkasser, fortsatt på én innlogging.
-- **Business:** en blokk med postkasser inkludert med en pris per postkasse utover det, og for når en person til trenger sin egen innlogging.
+- **Business:** et antall postkasser inkludert, med en pris per postkasse utover det, og for når en person til trenger sin egen innlogging.
 
 Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og da havner du på Pro. Gjeldende antall postkasser og priser finner du på [prissiden](/pricing), og [MCPEmails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
 

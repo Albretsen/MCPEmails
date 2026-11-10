@@ -14,7 +14,7 @@ Tre feil er verdt å designe mot: **lekkasje mellom kunder**, der en for vid leg
 
 Arbeidsområdet er enheten som skiller. Postkasser, medlemmer, API-nøkler og aktivitet lever inne i ett, og grensen håndheves i databasen med sikkerhet på radnivå, ikke med forsiktig filtrering i applikasjonskoden. En nøkkel utstedt i Acme-arbeidsområdet kan ikke lese en postkasse hos Bolt, uansett hva instruksjonen sier.
 
-Mer enn ett arbeidsområde er en **Business**-funksjon, som også gir ubegrenset antall medlemmer med roller uten ekstra kostnad, og en blokk med postkasser inkludert med en pris per postkasse for hver utover det. Abonnementet henger på kontoen din og ikke på ett arbeidsområde, så ett Business-abonnement dekker alle kundearbeidsområdene du oppretter. Gi hvert av dem kundens navn, koble bare den kundens postkasser inn i det, og bytt mellom dem i sidemenyen i dashbordet.
+Mer enn ett arbeidsområde er en **Business**-funksjon, som også gir ubegrenset antall medlemmer med roller uten ekstra kostnad, og et antall postkasser inkludert, med en pris per postkasse for hver utover det. Abonnementet henger på kontoen din og ikke på ett arbeidsområde, så ett Business-abonnement dekker alle kundearbeidsområdene du oppretter. Gi hvert av dem kundens navn, koble bare den kundens postkasser inn i det, og bytt mellom dem i sidemenyen i dashbordet.
 
 Under Business er planene for én person i ett arbeidsområde: **Pro** for den som driver en virksomhet på tvers av flere postkasser, **Personal** for noen få, **Free** for én. Billigere, og alle postkassene deler samme skadeomfang. Gjeldende priser og antall postkasser står på [prissiden](/pricing), og [leverandørmatrisen](/docs/providers) dekker hver leverandør.
 

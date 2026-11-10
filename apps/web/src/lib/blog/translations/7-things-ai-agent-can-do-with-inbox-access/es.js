@@ -7,7 +7,7 @@ const translation = {
 
 Cada ejemplo de abajo se corresponde con herramientas MCP reales que puedes invocar ahora mismo. Las herramientas son las mismas tanto si conectas Gmail, Outlook, iCloud, Fastmail o un buzón IMAP genérico. Si todavía no has conectado un agente a tu bandeja, la [guía completa para darle acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración; el [tutorial de conexión en 2 minutos](/blog/connect-email-to-ai-agent-under-2-minutes) es el camino rápido.
 
-Una advertencia por adelantado, porque condiciona la mitad de esta lista: **las herramientas funcionan por petición y respuesta.** Al agente no le avisan cuando llega correo; lo comprueba según una programación. Suena a limitación, y para algunos casos lo es, pero también significa que nada se dispara sin un reloj que tú controlas. Si quieres un aviso push, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel, y MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo. Iré señalando dónde importa el momento.
+Una advertencia por adelantado, porque condiciona la mitad de esta lista: **las herramientas funcionan por petición y respuesta.** Al agente no le avisan cuando llega correo; lo comprueba según una programación. Suena a limitación, y para algunos casos lo es, pero también significa que nada se dispara sin un reloj que tú controlas. Si quieres un aviso push, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel, y MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo. Iré señalando dónde importan los tiempos.
 
 ## El conjunto de herramientas, de un vistazo
 

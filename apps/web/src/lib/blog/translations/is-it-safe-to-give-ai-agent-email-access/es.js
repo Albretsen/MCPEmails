@@ -55,7 +55,7 @@ Si una herramienta supera las seis, el riesgo residual es pequeño y manejable. 
 
 ## Una nota sobre lo que no hacemos
 
-Dos limitaciones que vale la pena enunciar con claridad. Un agente dentro de un chat no recibe un aviso cuando llega correo; lo comprueba según una programación. El único push que ofrecemos es un webhook firmado de correo nuevo hacia una URL tuya, en Pro y Business, y lleva IDs de mensajes, no correo. Segundo, no podemos protegerte de un agente en el que has confiado en exceso. Si le das a un agente autónomo acceso de envío y cero revisión, la inyección de prompts es un riesgo real, y eso es cosa de la configuración, no del transporte. Reduce los permisos y mantén a una persona en lo irreversible.
+Dos limitaciones que vale la pena enunciar con claridad. La primera: un agente dentro de un chat no recibe un aviso cuando llega correo; lo comprueba según una programación. El único push que ofrecemos es un webhook firmado de correo nuevo hacia una URL tuya, en Pro y Business, y lleva IDs de mensajes, no correo. La segunda: no podemos protegerte de un agente en el que has confiado en exceso. Si le das a un agente autónomo acceso de envío y cero revisión, la inyección de prompts es un riesgo real, y eso es cosa de la configuración, no del transporte. Reduce los permisos y mantén a una persona en lo irreversible.
 
 ## Entonces, ¿es seguro?
 

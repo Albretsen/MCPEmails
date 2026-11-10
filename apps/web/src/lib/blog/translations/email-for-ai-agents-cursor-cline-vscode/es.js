@@ -101,7 +101,7 @@ El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y
 
 Llama a \`email_compose\` con la acción \`reply\`, el hilo se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Una limitación: las herramientas MCP nunca te llaman a ti. Si quieres que el agente reaccione a los mensajes entrantes, haces sondeo (polling), con \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica, o dejas que un webhook de correo nuevo despierte tu código (los espacios de trabajo Pro y Business añaden uno en Claves de API dentro del panel, y hace un POST con los IDs de los mensajes a tu URL). En cualquier caso, condiciona cómo construyes cualquier cosa reactiva, como un [autorrespondedor sobre MCP](/blog/build-email-auto-responder-mcp-agent).
+Una limitación: las herramientas MCP nunca te llaman a ti. Si quieres que el agente reaccione a los mensajes entrantes, haces sondeo (polling) llamando a \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica, o dejas que un webhook de correo nuevo despierte tu código (los espacios de trabajo Pro y Business añaden uno en Claves de API dentro del panel, y hace un POST con los IDs de los mensajes a tu URL). En cualquier caso, eso condiciona cómo construyes cualquier cosa reactiva, como un [autorrespondedor sobre MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Límites de tasa para el acceso por scripts
 

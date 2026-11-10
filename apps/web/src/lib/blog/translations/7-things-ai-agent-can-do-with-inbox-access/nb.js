@@ -7,7 +7,7 @@ const translation = {
 
 Hvert eksempel under bygger på ekte MCP-verktøy du kan kalle akkurat nå. Verktøyene er de samme enten du kobler til Gmail, Outlook, iCloud, Fastmail eller en vanlig IMAP-konto. Hvis du ennå ikke har koblet en agent til innboksen din, dekker [den komplette guiden til å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) oppsettet; [gjennomgangen for å koble til på 2 minutter](/blog/connect-email-to-ai-agent-under-2-minutes) er den raske veien.
 
-Ett forbehold med en gang, fordi det former halve denne listen: **verktøyene er forespørsel og svar.** Agenten får ikke et pling når det kommer post; den sjekker etter en tidsplan. Det høres ut som en begrensning, og for noen få bruksområder er det det, men det betyr også at ingenting utløses uten en klokke du styrer. Vil du ha push likevel, kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet, og MCPEmails sender en signert POST til URL-en din når det kommer ny post. Jeg markerer der timingen har betydning.
+Ett forbehold med en gang, fordi det former halve denne listen: **verktøyene er basert på forespørsel og svar.** Agenten får ikke et pling når det kommer post; den sjekker etter en tidsplan. Det høres ut som en begrensning, og for noen få bruksområder er det det, men det betyr også at ingenting utløses uten en klokke du styrer. Vil du ha push likevel, kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet, og MCPEmails sender en signert POST til URL-en din når det kommer ny post. Jeg markerer der timingen har betydning.
 
 ## Verktøysettet, i én setning
 
@@ -73,7 +73,7 @@ Dette syr sammen de andre: \`email_read\` (handlingen search, så list) for å s
 
 ## Hva dette koster og hvor grensene ligger
 
-Alle sju fungerer på [Gratis-planen](/pricing), som ikke koster noe og kobler til én innboks. Personal legger til innbokser for én person og hever burst-grensen; Pro legger til flere innbokser for den som driver en virksomhet, hever den igjen og gir webhooks for ny post; Business har en blokk med postkasser inkludert, med en pris per postkasse utover det, pluss medlemmer med roller og et eget arbeidsområde per kunde. Én innboks holder lenge for et ukentlig sammendrag; i det øyeblikket du vil ha både jobb og privat i samme agent, er det Personal. Gjeldende antall innbokser og priser finner du på [prissiden](/pricing).
+Alle sju fungerer på [Gratis-planen](/pricing), som ikke koster noe og kobler til én innboks. Personal legger til innbokser for én person og hever burst-grensen; Pro legger til flere innbokser for den som driver en virksomhet, hever den igjen og gir webhooks for ny post; Business har et antall postkasser inkludert, med en pris per postkasse utover det, pluss medlemmer med roller og et eget arbeidsområde per kunde. Én innboks holder lenge for et ukentlig sammendrag; i det øyeblikket du vil ha både jobb og privat i samme agent, er det Personal. Gjeldende antall innbokser og priser finner du på [prissiden](/pricing).
 
 Når du først treffer en grense, returnerer serveren en feil du kan prøve på nytt, med \`data.retry_after\` i sekunder. Respekter den. Og prøv aldri blindt på nytt en \`email_compose\`-sending automatisk, for et nytt forsøk etter en timeout kan bety at to kopier av samme melding havner i noens innboks.
 

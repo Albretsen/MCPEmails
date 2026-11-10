@@ -29,7 +29,7 @@ La configuración es realmente rápida. En claude.ai vas a **Customize → Conne
 
 **Contrapartidas:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y MCP en sí no tiene push: para reaccionar al correo nuevo dentro de un chat, Claude tiene que sondear, llamando a \`email_read\` con \`action: list\` y \`unread: true\` de forma programada. Para tu propio código, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel, y MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo. Cualquier herramienta que afirme reaccionar en tiempo real sin una de esas dos vías o está sondeando por debajo o está almacenando tu correo.
 
-El plan Gratis es gratis para siempre, con una bandeja conectada. Personal añade bandejas y un límite de ráfaga más alto, Pro añade más todavía, y Business añade miembros y roles. Aquí el coste rara vez es el factor decisivo; las cifras actuales están en la [página de precios](/pricing).
+El plan Gratis no cuesta nada, para siempre, con una bandeja conectada. Personal añade bandejas y un límite de ráfaga más alto, Pro añade más todavía, y Business añade miembros y roles. Aquí el coste rara vez es el factor decisivo; las cifras actuales están en la [página de precios](/pricing).
 
 ## Opción 2: un servidor MCP propio / autoalojado
 

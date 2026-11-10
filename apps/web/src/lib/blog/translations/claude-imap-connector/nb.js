@@ -80,7 +80,7 @@ Den siste funksjonen krever omtanke. Permanent IMAP-sletting omgår papirkurven 
 
 En IMAP-kobling har bred støtte, men gjør ikke alle leverandører identiske.
 
-- **Ingen push for innkommende e-post inn i Claude:** MCP-verktøyene er forespørsel og svar, så ingenting utløser Claude når en melding kommer inn. En chatbasert arbeidsflyt sjekker etter nye meldinger etter en tidsplan, for eksempel ved å liste ulest e-post. Din egen kode kan i stedet vekkes av en webhook for ny post, som Pro- og Business-arbeidsområder legger til under API-nøkler.
+- **Ingen push for innkommende e-post inn i Claude:** MCP-verktøyene er basert på forespørsel og svar, så ingenting utløser Claude når en melding kommer inn. En chatbasert arbeidsflyt sjekker etter nye meldinger etter en tidsplan, for eksempel ved å liste ulest e-post. Din egen kode kan i stedet vekkes av en webhook for ny post, som Pro- og Business-arbeidsområder legger til under API-nøkler.
 - **Søk varierer etter transport:** Strukturerte filtre for avsender, emne, tekst og dato fungerer på tvers av leverandører, men generisk IMAP støtter ikke søkefilteret \`has_attachment\`. Leverandørspesifikk søkesyntaks kan ikke flyttes mellom tjenester.
 - **Mapper er ikke Gmail-etiketter:** IMAP flytter en melding mellom mapper, mens Gmail kan knytte flere etiketter til én melding. Den praktiske forskjellen forklares i [Gmail-etiketter kontra IMAP-mapper](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **SMTP kreves for sending:** En fungerende IMAP-innlogging beviser at Claude når innkommende e-post, ikke at SMTP-verten, porten eller sendetillatelsen er riktig. Test én ufarlig utgående melding før du stoler på en svarflyt.

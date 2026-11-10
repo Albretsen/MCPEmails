@@ -29,7 +29,7 @@ Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors 
 
 **Avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og MCP i seg selv har ingen push: for å reagere på ny e-post inne i en chat må Claude polle, altså kalle \`email_read\` med \`action: list\` og \`unread: true\` etter en tidsplan. For din egen kode kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet, og MCPEmails sender en signert POST til URL-en din når det kommer ny post. Ethvert verktøy som hevder å reagere i sanntid uten en av de to, enten poller under panseret eller lagrer e-posten din.
 
-Gratisnivået er gratis for alltid med én tilkoblet innboks. Personal legger til innbokser og et høyere burst-tak, Pro flere igjen, og Business legger til medlemmer og roller. Kostnad er sjelden den avgjørende faktoren her; gjeldende tall finner du på [prissiden](/pricing).
+Gratisnivået koster ingenting, for alltid, med én tilkoblet innboks. Personal legger til innbokser og et høyere burst-tak, Pro flere igjen, og Business legger til medlemmer og roller. Kostnad er sjelden den avgjørende faktoren her; gjeldende tall finner du på [prissiden](/pricing).
 
 ## Alternativ 2: En egen / selvhostet MCP-server
 
