@@ -42,9 +42,9 @@ Outlookはアプリ パスワードではなくSign in with Microsoft（Microsof
 
 ## ステップ2：ChatGPTでコネクタを追加する
 
-1. chatgpt.comで**プラグイン**、**Personal**（パーソナル）の順に開き、右上の**Add**（追加）をクリックします。
+1. chatgpt.comで**プラグイン**、**Personal**（個人）の順に開き、右上の**Add**（追加）をクリックします。
 2. **カスタム MCP サーバーを追加**を選び、名前をMCPEmailsにします。
-3. **Connection**（接続）の下に次のURLを貼り付けます。
+3. **接続**の下に次のURLを貼り付けます。
 
 \`\`\`
 https://mcpemails.com/api/mcp

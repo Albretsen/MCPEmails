@@ -43,14 +43,14 @@ Conecte mais de uma caixa de correio se o seu plano permitir. O ChatGPT as desco
 ## Passo 2: adicionar o conector no ChatGPT
 
 1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar) no canto superior direito.
-2. Escolha **Add custom MCP server** (Adicionar servidor MCP personalizado) e dê o nome MCPEmails.
-3. Em **Connection** (Conexão), cole esta URL:
+2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
+3. Em **Conexão**, cole esta URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Escolha **OAuth**, marque **I understand and want to continue** (Entendo e quero continuar) e clique em **Create as a plugin** (Criar como plugin).
+4. Escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.
 5. Faça login com o MCPEmails e aprove.
 6. Em um chat, digite **@** e escolha MCPEmails. A escolha vale para aquela mensagem, então mencione o MCPEmails com @ de novo quando uma pergunta seguinte precisar do seu e-mail.
 

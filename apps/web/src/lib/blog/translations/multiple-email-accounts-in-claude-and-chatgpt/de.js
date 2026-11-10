@@ -59,8 +59,8 @@ Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung
 
 ChatGPT Go und die kostenpflichtigen Tarife können auf chatgpt.com im Browser einen benutzerdefinierten MCP-Server hinzufügen; in der Mobil-App geht das nicht. Bei Business und Enterprise muss ihn unter Umständen ein Admin oder Owner hinzufügen.
 
-1. Öffnen Sie **Plugins**, dann **Personal**, klicken Sie oben rechts auf **Add** und wählen Sie **Add custom MCP server**.
-2. Nennen Sie ihn MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` unter **Connection** ein, wählen Sie **OAuth**, setzen Sie das Häkchen bei **I understand and want to continue** und klicken Sie auf **Create as a plugin**.
+1. Öffnen Sie **Plugins**, dann **Persönlich**, klicken Sie oben rechts auf **Hinzufügen** und wählen Sie **Benutzerdefinierten MCP-Server hinzufügen**.
+2. Nennen Sie ihn MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` unter **Verbindung** ein, wählen Sie **OAuth**, setzen Sie das Häkchen bei **Ich verstehe und möchte fortfahren** und klicken Sie auf **Als Plugin erstellen**.
 3. Melden Sie sich bei MCPEmails an und stimmen Sie zu.
 4. Tippen Sie in einem Chat **@** und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht. Erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.
 

@@ -25,9 +25,9 @@
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API. Nos planos Team e Enterprise, um Owner adiciona o conector em Organization settings → Connectors (configurações da organização, conectores), e depois os membros clicam em \"Connect\" em Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "No chatgpt.com, abra Plugins → Personal, clique em \"Add\" no canto superior direito e depois em \"Add custom MCP server\" (adicionar servidor MCP personalizado). Não dá para fazer isso no app para celular.",
-      "step2": "Dê o nome MCPEmails e cole a URL acima em \"Connection\" (conexão).",
-      "step3": "Escolha OAuth, marque \"I understand and want to continue\" (entendo e quero continuar) e clique em \"Create as a plugin\" (criar como plugin).",
+      "step1": "No chatgpt.com, abra Plugins → Personal (Pessoal), clique em \"Add\" (Adicionar) no canto superior direito e depois em \"Adicionar servidor MCP personalizado\". Não dá para fazer isso no app para celular.",
+      "step2": "Dê o nome MCPEmails e cole a URL acima em \"Conexão\".",
+      "step3": "Escolha OAuth, marque \"Entendo e quero continuar\" e clique em \"Criar como plugin\".",
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API.",
       "step5": "Em um chat, digite @ e escolha MCPEmails. A escolha vale só para aquela mensagem, então mencione com @ de novo quando uma pergunta seguinte precisar do seu e-mail.",
       "note": "Servidores MCP personalizados podem ser adicionados no ChatGPT Go e nos planos pagos. Nos planos Business e Enterprise, talvez um admin ou owner precise adicioná-lo."

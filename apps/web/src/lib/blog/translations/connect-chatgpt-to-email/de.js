@@ -42,15 +42,15 @@ Verbinden Sie mehr als ein Postfach, wenn Ihr Tarif das erlaubt. ChatGPT findet 
 
 ## Schritt 2: Konnektor in ChatGPT hinzufügen
 
-1. Öffnen Sie auf chatgpt.com **Plugins**, dann **Personal**, und klicken Sie oben rechts auf **Add**.
-2. Wählen Sie **Add custom MCP server** und nennen Sie ihn MCPEmails.
-3. Fügen Sie unter **Connection** diese URL ein:
+1. Öffnen Sie auf chatgpt.com **Plugins**, dann **Persönlich**, und klicken Sie oben rechts auf **Hinzufügen**.
+2. Wählen Sie **Benutzerdefinierten MCP-Server hinzufügen** und nennen Sie ihn MCPEmails.
+3. Fügen Sie unter **Verbindung** diese URL ein:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Wählen Sie **OAuth**, setzen Sie das Häkchen bei **I understand and want to continue** und klicken Sie auf **Create as a plugin**.
+4. Wählen Sie **OAuth**, setzen Sie das Häkchen bei **Ich verstehe und möchte fortfahren** und klicken Sie auf **Als Plugin erstellen**.
 5. Melden Sie sich bei MCPEmails an und bestätigen Sie.
 6. Tippen Sie in einem Chat **@** und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht. Erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.
 
