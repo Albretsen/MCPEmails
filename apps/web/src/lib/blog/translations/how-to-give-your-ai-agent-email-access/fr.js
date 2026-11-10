@@ -1,9 +1,9 @@
 const translation = {
   title: 'Comment donner à votre agent IA un accès à la messagerie (le guide complet 2026)',
   description:
-    'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte mail via MCP — Gmail, Outlook, iCloud, Fastmail ou IMAP. Fonctionnement, outils, sécurité et configuration.',
-  coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP — MCPEmails',
-  content: `Pour donner à un agent IA un accès à la messagerie, vous connectez votre boîte mail à un serveur MCP et vous pointez votre agent vers une seule URL de point de terminaison. L'agent dispose alors d'un petit ensemble d'outils pour lire, rechercher et envoyer des e-mails. Le plus difficile, ce n'est pas l'agent — c'est de faire tout cela sans laisser fuiter votre mot de passe dans un prompt, un journal ou une base vectorielle. C'est ce dernier kilomètre qui fait l'objet de ce guide.
+    'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte mail via MCP : Gmail, Outlook, iCloud, Fastmail ou IMAP. Fonctionnement, outils, sécurité et configuration.',
+  coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP, par MCPEmails',
+  content: `Pour donner à un agent IA un accès à la messagerie, vous connectez votre boîte mail à un serveur MCP et vous pointez votre agent vers une seule URL de point de terminaison. L'agent dispose alors d'un petit ensemble d'outils pour lire, rechercher et envoyer des e-mails. Le plus difficile, ce n'est pas l'agent, c'est de faire tout cela sans laisser fuiter votre mot de passe dans un prompt, un journal ou une base vectorielle. C'est ce dernier kilomètre qui fait l'objet de ce guide.
 
 Si vous voulez juste la voie rapide : connectez une boîte mail dans le tableau de bord, collez le point de terminaison MCP dans [claude.ai](https://claude.ai), Claude Desktop, Cursor ou votre propre agent, et appelez d'abord \`inbox_list\`. Le reste de cet article explique ce qui se passe réellement, pourquoi le modèle de sécurité est important et comment câbler chaque fournisseur pris en charge.
 
@@ -21,7 +21,7 @@ Brancher un modèle sur la messagerie semble trivial jusqu'à ce que vous l'essa
 2. **Les identifiants sont radioactifs.** Un mot de passe de boîte mail qui traîne dans une transcription de discussion ou une ligne de journal est une fuite qui ne demande qu'à arriver. Vous ne pouvez pas laisser le modèle détenir le secret.
 3. **L'e-mail est mal adapté aux agents.** MIME, en-têtes de fil de discussion, HTML contre texte brut, pièces jointes, dossiers qui sont en réalité des étiquettes. Le modèle a besoin d'une réponse propre, pas de RFC 5322.
 
-La solution naïve du bricolage maison — donner au modèle une bibliothèque IMAP et votre mot de passe — échoue sur ces trois points à la fois. La plupart des dépôts « Gmail MCP server » sur GitHub s'arrêtent exactement là.
+La solution naïve du bricolage maison (donner au modèle une bibliothèque IMAP et votre mot de passe) échoue sur ces trois points à la fois. La plupart des dépôts « Gmail MCP server » sur GitHub s'arrêtent exactement là.
 
 ## Comment MCPEmails résout le problème
 
@@ -37,7 +37,7 @@ Le mot de passe d'application ou le jeton OAuth de chaque boîte mail est chiffr
 
 ### L'envoi passe par votre propre fournisseur
 
-Lorsque l'agent envoie ou répond, l'e-mail part via votre Gmail, votre Microsoft 365 ou votre serveur SMTP. MCPEmails ne relaie jamais depuis son propre domaine. Votre délivrabilité et la réputation de votre domaine restent entièrement les vôtres — pas de roulette du dossier spam liée à une IP partagée.
+Lorsque l'agent envoie ou répond, l'e-mail part via votre Gmail, votre Microsoft 365 ou votre serveur SMTP. MCPEmails ne relaie jamais depuis son propre domaine. Votre délivrabilité et la réputation de votre domaine restent entièrement les vôtres : pas de roulette du dossier spam liée à une IP partagée.
 
 ### C'est du MCP standard via HTTP
 
@@ -45,17 +45,17 @@ Le serveur parle Streamable HTTP conformément à la spécification MCP 2025-06-
 
 ## Les outils dont dispose votre agent
 
-Une poignée d'outils consolidés, basés sur des actions, couvrent toute la surface : lire, composer, organiser, plus d'autres pour les dossiers, la planification et les contacts. L'agent commence toujours par \`inbox_list\` pour découvrir ce qui est connecté et récupérer l'ID de chaque boîte mail — il ne code jamais en dur un UUID.
+Une poignée d'outils consolidés, basés sur des actions, couvrent toute la surface : lire, composer, organiser, plus d'autres pour les dossiers, la planification et les contacts. L'agent commence toujours par \`inbox_list\` pour découvrir ce qui est connecté et récupérer l'ID de chaque boîte mail ; il ne code jamais en dur un UUID.
 
-- \`inbox_list\` — découvrir les comptes connectés et leurs capacités
-- \`email_read\` (action \`list\`) — paginé, du plus récent au plus ancien, par boîte mail
-- \`email_read\` (action \`read\`) — texte brut analysé, HTML assaini en option, pièces jointes en option
-- \`email_read\` (action \`search\`) — syntaxe native du fournisseur (opérateurs Gmail, KQL Outlook, recherche texte IMAP)
-- \`email_compose\` (action \`send\`) — composer avec CC/CCI, HTML et pièces jointes jusqu'à 10 MB au total
-- \`email_compose\` (action \`reply\`) — pareil, et il définit pour vous les en-têtes de fil de discussion (In-Reply-To, References)
-- \`email_organize\` — déplacer, supprimer, marquer ou archiver (une action par appel)
+- \`inbox_list\` : découvrir les comptes connectés et leurs capacités
+- \`email_read\` (action \`list\`) : paginé, du plus récent au plus ancien, par boîte mail
+- \`email_read\` (action \`read\`) : texte brut analysé, HTML assaini en option, pièces jointes en option
+- \`email_read\` (action \`search\`) : syntaxe native du fournisseur (opérateurs Gmail, KQL Outlook, recherche texte IMAP)
+- \`email_compose\` (action \`send\`) : composer avec CC/CCI, HTML et pièces jointes jusqu'à 10 MB au total
+- \`email_compose\` (action \`reply\`) : pareil, et il définit pour vous les en-têtes de fil de discussion (In-Reply-To, References)
+- \`email_organize\` : déplacer, supprimer, marquer ou archiver (une action par appel)
 
-Une limitation honnête qui mérite d'être énoncée d'emblée : il s'agit de **scrutation, pas de notification poussée**. Il n'y a pas de webhooks. Pour réagir aux nouveaux e-mails, votre agent interroge selon un calendrier, par exemple \`email_read\` (action \`list\`) avec \`unread: true\`. Tout répondeur automatique que vous construisez fonctionne sur une minuterie, pas sur un déclencheur instantané. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre comment bien le faire.
+Une chose à savoir d'emblée : les outils eux-mêmes fonctionnent en **requête et réponse**. Le serveur répond quand votre agent le sollicite, et la façon la plus simple de réagir aux nouveaux e-mails est d'interroger selon un calendrier, par exemple \`email_read\` (action \`list\`) avec \`unread: true\`. Si vous préférez du push, les espaces de travail Pro et Business peuvent ajouter un webhook sous **Clés API** dans le tableau de bord : MCPEmails envoie alors un POST signé à votre URL quand un nouveau message arrive, avec les identifiants des messages que votre agent ouvre avec \`email_read\`. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre les deux approches.
 
 Une exécution de tri matinal se lit ainsi :
 
@@ -94,28 +94,28 @@ claude.ai, Claude Desktop, Cursor et les clients similaires se connectent avec O
 
 Cline, JetBrains, les scripts personnalisés et le cURL brut utilisent une clé API à scopes définis. Créez-en une dans **Dashboard → API Keys**, choisissez ses scopes et copiez-la (elle n'est affichée qu'une fois). Transmettez-la sous la forme \`Authorization: Bearer <api-key>\`. La configuration complète pour ces clients se trouve dans [l'e-mail pour les agents IA dans Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode), et le compromis entre les deux approches est traité dans [OAuth contre clés API pour l'accès des IA à la messagerie](/blog/oauth-vs-api-keys-ai-email-access).
 
-Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau de bord en un clic. Récupérez l'URL exacte du point de terminaison depuis [la documentation](/docs) — copiez-la de là plutôt que de la saisir à la main.
+Dans les deux cas, vous révoquez n'importe quelle connexion depuis le tableau de bord en un clic. Récupérez l'URL exacte du point de terminaison depuis [la documentation](/docs) ; copiez-la de là plutôt que de la saisir à la main.
 
 ## Est-ce sûr ? Et les limites de débit
 
-Réponse courte : oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
+Oui, et l'article [est-il sûr de donner à un agent IA un accès à la messagerie](/blog/is-it-safe-to-give-ai-agent-email-access) expose l'argumentaire complet. Le modèle détient des capacités à scopes définis, pas votre mot de passe ; les identifiants sont chiffrés ; rien n'est stocké ; l'envoi reste sur votre fournisseur ; l'accès se révoque en un clic.
 
 Côté limites de débit, chaque espace de travail a un plafond par minute qui évolue avec votre forfait (voir [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Lorsque vous atteignez une limite, le serveur renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi via \`email_compose\` : vous enverriez des doublons.
 
 ## Tarifs
 
-Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont illimitées à tous les niveaux, et les forfaits diffèrent aussi sur la limite de pointe, la rétention des analyses, les fonctionnalités d'équipe et le support.
+Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont illimitées à tous les niveaux, et les forfaits diffèrent aussi sur la limite de pointe, l'historique des analyses, les fonctionnalités d'équipe et le support.
 
-- **Gratuit, 0 $ pour toujours.** Sans carte. Une boîte connectée, 60 req/min, analyses sur 30 jours, centre d'aide et support par e-mail.
-- **Personal, 9 $/mois** (ou 86,40 $/an, soit 7,20 $/mois). Jusqu'à trois boîtes connectées, 120 req/min, analyses sur 90 jours, support prioritaire par e-mail.
-- **Pro, 15 $/mois** (ou 144 $/an, soit 12 $/mois). Jusqu'à 10 boîtes connectées, 300 req/min, analyses sur 2 ans, support prioritaire par e-mail.
-- **Business, 39 $/mois** (ou 374,40 $/an, soit 31,20 $/mois). Tout ce que contient Pro, plus 10 boîtes incluses et 3 $/mois par boîte en plus, des membres illimités avec rôles, des administrateurs qui valident les envois retenus, un espace de travail distinct par client ou activité, 1 000 req/min.
+- **Gratuit.** Pour toujours, sans carte. Une boîte connectée, des analyses d'utilisation, le centre d'aide et le support par e-mail.
+- **Personal.** Plus de boîtes pour une seule personne, une limite de pointe plus élevée, un historique d'analyses plus long, le support prioritaire par e-mail.
+- **Pro.** Pour une personne qui gère une activité professionnelle : encore plus de boîtes, une limite de pointe plus élevée encore, des années d'historique d'analyses et les webhooks pour les nouveaux messages.
+- **Business.** Tout ce que contient Pro, plus un lot de boîtes incluses avec un tarif par boîte au-delà, des membres illimités avec rôles, des administrateurs qui valident les envois retenus et un espace de travail distinct par client ou activité.
 
-Détail complet sur la [page des tarifs](/pricing).
+Les tarifs et le nombre de boîtes à jour sont sur la [page des tarifs](/pricing).
 
 ## Pour commencer
 
-Connectez une boîte mail, collez le point de terminaison dans votre agent et appelez \`inbox_list\`. C'est tout l'onboarding. [Commencez gratuitement](/signup) ou parcourez le [guide de démarrage rapide](/docs#quickstart) — votre agent lira de vrais e-mails en quelques minutes.`,
+Connectez une boîte mail, collez le point de terminaison dans votre agent et appelez \`inbox_list\`. C'est tout l'onboarding. [Commencez gratuitement](/signup) ou parcourez le [guide de démarrage rapide](/docs#quickstart) : votre agent lira de vrais e-mails en quelques minutes.`,
 };
 
 export default translation;

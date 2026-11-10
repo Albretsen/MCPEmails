@@ -114,7 +114,7 @@ Saisissez-les vous-même : hôte, port, mode de sécurité et votre adresse comp
 Non. Le contenu des messages est récupéré en direct auprès de votre fournisseur à chaque requête puis supprimé. Seule la clé d'accès chiffrée du fournisseur est conservée.
 
 **Une seule boîte suffit-elle sur le plan gratuit ?**
-Free connecte 1 boîte. Personal coûte 9 $/mois pour 3 boîtes avec des actions e-mail illimitées, et Pro 15 $/mois pour jusqu'à 10 boîtes. Voir les [tarifs](/pricing).
+Free connecte une boîte. Personal en ajoute quelques-unes pour une seule personne, et Pro davantage pour qui gère une activité professionnelle. Le nombre de boîtes et les tarifs à jour sont sur la page des [tarifs](/pricing).
 
 ## Prochaine étape
 

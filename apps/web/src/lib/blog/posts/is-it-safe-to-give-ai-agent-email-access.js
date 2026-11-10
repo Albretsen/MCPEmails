@@ -1,15 +1,15 @@
 const post = {
   slug: 'is-it-safe-to-give-ai-agent-email-access',
   title: 'Is It Safe to Give an AI Agent Access to Your Email? What to Know',
-  description: 'Is it safe to give an AI agent email access? The honest answer: it depends on the architecture. Here are the real risks and the checklist that makes it safe.',
+  description: 'Is it safe to give an AI agent email access? It depends on the architecture. Here are the real risks and the checklist that makes it safe.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
-  coverAlt: 'Is it safe to give an AI agent email access — risks and safeguards explained — MCPEmails',
+  coverAlt: 'Is it safe to give an AI agent email access: risks and safeguards explained (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: "2026-06-07T09:00:00.000Z",
   updatedAt: "2026-06-21T09:00:00.000Z",
   tags: ['Security', 'Privacy', 'AI agents', 'Email'],
   featured: false,
-  content: `Short answer: it can be, but the safety lives in the architecture, not the marketing. Giving an AI agent email access is safe when the service fetches your mail live instead of copying it, encrypts your credentials properly, runs on minimal scopes, and lets you cut access in one click. It's risky when any of those four things is missing. The trick is knowing which questions to ask before you connect an inbox.
+  content: `It can be, but the safety lives in the architecture, not the marketing. Giving an AI agent email access is safe when the service fetches your mail live instead of copying it, encrypts your credentials properly, runs on minimal scopes, and lets you cut access in one click. It's risky when any of those four things is missing. The trick is knowing which questions to ask before you connect an inbox.
 
 This is the objection I hear most, and it's a fair one. Your inbox is your password-reset hub, your contract archive, your private life. Handing the keys to a language model feels reckless. So let's be honest about what can actually go wrong, then walk through what a careful setup looks like. If you want the broader picture first, the pillar guide on [how to give your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) covers the full setup; this post is about the trust question specifically.
 
@@ -35,13 +35,13 @@ The classic mistake is granting full mailbox access when the task needs "read th
 
 ## What a safe setup actually looks like
 
-Here's how MCPEmails handles each risk. I'm biased — I built it — but the design choices are checkable, and you should hold any tool you pick to the same bar.
+Here's how MCPEmails handles each risk. I'm biased (I built it), but the design choices are checkable, and you should hold any tool you pick to the same bar.
 
 **Your email is never stored.** Every tool call hits your provider in real time, over IMAP/SMTP for Gmail and most other providers, or Microsoft Graph for Outlook. Message bodies, subjects, and attachments pass through to the agent and are discarded immediately. The only thing we keep per inbox is one encrypted credential so the next call can be made. There's no inbox mirror to breach, because the mirror doesn't exist.
 
 **Credentials are AES-256-GCM encrypted at rest.** Your app password or OAuth token is encrypted before it touches the database. It's decrypted on our servers only when a request needs it, and it's never sent to your agent. The encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. This is the one piece of your data we persist, and it's the piece we treat most carefully.
 
-**Scopes are minimal by design.** When you connect an agent, you approve exactly two possible permissions: \`read:email\` and \`send:email\`. Want an agent that summarizes but can never send? Grant \`read:email\` only. The system doesn't have a "full access" sledgehammer, because there's nothing to gain from one. If you're weighing how agents authenticate, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) breaks down which to use when.
+**Scopes are minimal by design.** When you connect an agent, the consent screen offers **Read-only**, **Standard** and **Full access**, plus a custom card where each of the nine permissions (read, search, send, folders, delete, drafts, contacts, scheduling, automations) is its own switch. Want an agent that summarizes but can never send? Pick Read-only, and \`send:email\` is never issued. Even Full access is a named list you can see on the screen, not a blank check. If you're weighing how agents authenticate, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) breaks down which to use when.
 
 **Sending goes through your own provider.** When the agent sends mail, it goes out through your Gmail, your Microsoft 365, or your own SMTP server. We never relay messages from our domain. Your sender reputation and deliverability stay entirely yours, and there's no shared IP pool to poison.
 
@@ -62,7 +62,7 @@ If a tool clears all six, the residual risk is small and manageable. If it fails
 
 ## A note on what we don't do
 
-Honesty builds trust more than feature lists, so two limitations worth stating plainly. We don't push notifications to your agent. There are no webhooks; to react to new mail, your agent polls on a schedule. That's a design choice, not an oversight, and it keeps the server from holding a persistent connection into your mailbox. Second, we can't protect you from an agent you've over-trusted. If you give an autonomous agent send access and zero review, prompt injection is a real risk, and that's on the setup, not the transport. Scope it down and keep a human on the irreversible stuff.
+Two limitations worth stating plainly. First, an agent in a chat is not pinged when mail arrives; it checks on a schedule. The one push we offer is a signed new-mail webhook to a URL you own, on Pro and Business, and it carries message IDs, never the message body. Second, we can't protect you from an agent you've over-trusted. If you give an autonomous agent send access and zero review, prompt injection is a real risk, and that's on the setup, not the transport. Scope it down and keep a human on the irreversible stuff.
 
 ## So, is it safe?
 

@@ -83,11 +83,11 @@ Activa **Revisión antes de enviar** en cualquier buzón y cada envío, respuest
 ## Cuántos buzones conecta cada plan
 
 - **Gratis:** un buzón.
-- **Personal:** tres buzones.
-- **Pro:** hasta 10 buzones, con un solo inicio de sesión.
-- **Business:** 10 buzones incluidos y $3 al mes por cada uno extra, y para cuando una segunda persona necesita su propio inicio de sesión.
+- **Personal:** unos cuantos buzones, para una sola persona.
+- **Pro:** más buzones, siempre con un solo inicio de sesión.
+- **Business:** un bloque de buzones incluidos con un precio por buzón a partir de ahí, y para cuando una segunda persona necesita su propio inicio de sesión.
 
-Una empresa con info@, ventas@ y facturas@ más tu propia dirección son cuatro buzones, es decir, Pro. Los precios actuales están en la [página de precios](/pricing), y [MCPEmails para empresas](/for/business) muestra cómo una sola persona lleva todos los buzones de la empresa desde un solo agente.
+Una empresa con info@, ventas@ y facturas@ más tu propia dirección son cuatro buzones, lo que te sitúa en Pro. El número de buzones y los precios actuales están en la [página de precios](/pricing), y [MCPEmails para empresas](/for/business) muestra cómo una sola persona lleva todos los buzones de la empresa desde un solo agente.
 
 ## Preguntas frecuentes
 

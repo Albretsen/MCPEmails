@@ -1,8 +1,8 @@
 const translation = {
   title: 'Est-il prudent de donner à un agent IA l’accès à vos e-mails ? Ce qu’il faut savoir',
-  description: 'Donner l’accès à vos e-mails à un agent IA est-il prudent ? La vraie réponse : ça dépend de l’architecture. Voici les risques réels et la checklist qui sécurise tout.',
-  coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails — risques et protections expliqués — MCPEmails',
-  content: `Réponse courte : ça peut l’être, mais la sécurité tient à l’architecture, pas au discours marketing. Donner l’accès à vos e-mails à un agent IA est prudent quand le service récupère vos messages en direct au lieu de les copier, chiffre correctement vos identifiants, fonctionne avec des permissions minimales et vous laisse couper l’accès en un clic. Ça devient risqué dès que l’un de ces quatre points manque. L’astuce, c’est de savoir quelles questions poser avant de connecter une boîte mail.
+  description: 'Donner l’accès à vos e-mails à un agent IA est-il prudent ? Cela dépend de l’architecture. Voici les risques réels et la checklist qui sécurise tout.',
+  coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails : risques et protections expliqués par MCPEmails',
+  content: `Cela peut l’être, mais la sécurité tient à l’architecture, pas au discours marketing. Donner l’accès à vos e-mails à un agent IA est prudent quand le service récupère vos messages en direct au lieu de les copier, chiffre correctement vos identifiants, fonctionne avec des permissions minimales et vous laisse couper l’accès en un clic. Ça devient risqué dès que l’un de ces quatre points manque. L’astuce, c’est de savoir quelles questions poser avant de connecter une boîte mail.
 
 C’est l’objection que j’entends le plus souvent, et elle est légitime. Votre boîte de réception, c’est votre centre de réinitialisation de mots de passe, vos archives de contrats, votre vie privée. Confier les clés à un modèle de langage paraît imprudent. Soyons donc honnêtes sur ce qui peut réellement mal tourner, puis voyons à quoi ressemble une configuration soignée. Si vous voulez d’abord la vue d’ensemble, le guide de référence sur [comment donner à votre agent IA l’accès aux e-mails](/blog/how-to-give-your-ai-agent-email-access) couvre toute la mise en place ; ce billet-ci porte spécifiquement sur la question de la confiance.
 
@@ -28,13 +28,13 @@ L’erreur classique consiste à accorder l’accès complet à la boîte mail q
 
 ## À quoi ressemble vraiment une configuration sûre
 
-Voici comment MCPEmails traite chaque risque. Je suis partial — c’est moi qui l’ai conçu — mais les choix de conception sont vérifiables, et vous devriez tenir n’importe quel outil que vous choisissez à la même exigence.
+Voici comment MCPEmails traite chaque risque. Je suis partial (c’est moi qui l’ai conçu), mais les choix de conception sont vérifiables, et vous devriez tenir n’importe quel outil que vous choisissez à la même exigence.
 
 **Vos e-mails ne sont jamais stockés.** Chaque appel d’outil interroge votre fournisseur en temps réel, via IMAP/SMTP pour Gmail et la plupart des autres fournisseurs, ou via Microsoft Graph pour Outlook. Les corps de messages, les objets et les pièces jointes transitent vers l’agent puis sont aussitôt supprimés. La seule chose que nous conservons par boîte mail, c’est un identifiant chiffré pour que l’appel suivant puisse être effectué. Il n’y a pas de copie de votre boîte à compromettre, parce que cette copie n’existe pas.
 
 **Les identifiants sont chiffrés au repos en AES-256-GCM.** Votre mot de passe d’application ou votre jeton OAuth est chiffré avant même de toucher la base de données. Il est déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin, et il n’est jamais envoyé à votre agent. La clé de chiffrement est conservée comme secret serveur, séparée de la base de données : un simple vidage de la base ne sert donc à rien. C’est le seul élément de vos données que nous conservons, et c’est celui que nous traitons avec le plus de soin.
 
-**Les permissions sont minimales par conception.** Quand vous connectez un agent, vous approuvez exactement deux permissions possibles : \`read:email\` et \`send:email\`. Vous voulez un agent qui résume mais ne peut jamais envoyer ? Accordez uniquement \`read:email\`. Le système n’a pas de bouton « accès complet », parce qu’il n’y aurait rien à y gagner. Si vous hésitez sur la façon dont les agents s’authentifient, [OAuth vs clés d’API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) explique laquelle utiliser et quand.
+**Les permissions sont minimales par conception.** Quand vous connectez un agent, l’écran de consentement propose **Lecture seule**, **Standard** et **Accès complet**, plus une carte personnalisée où chacune des neuf permissions (lecture, recherche, envoi, dossiers, suppression, brouillons, contacts, planification, automatisations) a son propre interrupteur. Vous voulez un agent qui résume mais ne peut jamais envoyer ? Choisissez Lecture seule, et \`send:email\` n’est jamais délivré. Même l’Accès complet est une liste nommée que vous voyez à l’écran, pas un chèque en blanc. Si vous hésitez sur la façon dont les agents s’authentifient, [OAuth vs clés d’API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) explique laquelle utiliser et quand.
 
 **L’envoi passe par votre propre fournisseur.** Quand l’agent envoie un message, il part via votre Gmail, votre Microsoft 365 ou votre propre serveur SMTP. Nous ne relayons jamais de messages depuis notre domaine. Votre réputation d’expéditeur et votre délivrabilité restent entièrement les vôtres, et il n’y a aucun pool d’IP partagé à empoisonner.
 
@@ -55,7 +55,7 @@ Si un outil coche les six cases, le risque résiduel est faible et maîtrisable.
 
 ## Un mot sur ce que nous ne faisons pas
 
-L’honnêteté inspire plus confiance qu’une liste de fonctionnalités, voici donc deux limites à énoncer clairement. Nous n’envoyons pas de notifications push à votre agent. Il n’y a pas de webhooks ; pour réagir aux nouveaux messages, votre agent interroge la boîte à intervalles réguliers. C’est un choix de conception, pas un oubli, et cela évite que le serveur maintienne une connexion permanente vers votre boîte mail. Deuxièmement, nous ne pouvons pas vous protéger d’un agent à qui vous avez accordé trop de confiance. Si vous donnez à un agent autonome l’accès en envoi sans aucune relecture, l’injection de prompt est un risque réel, et cela relève de la configuration, pas du transport. Restreignez la portée et gardez un humain sur tout ce qui est irréversible.
+Deux limites à énoncer clairement. D’abord, un agent dans une conversation n’est pas prévenu quand un message arrive ; il vérifie selon un calendrier. Le seul push que nous proposons est un webhook signé de nouveau message vers une URL qui vous appartient, sur Pro et Business, et il transporte des identifiants de messages, pas du courrier. Deuxièmement, nous ne pouvons pas vous protéger d’un agent à qui vous avez accordé trop de confiance. Si vous donnez à un agent autonome l’accès en envoi sans aucune relecture, l’injection de prompt est un risque réel, et cela relève de la configuration, pas du transport. Restreignez la portée et gardez un humain sur tout ce qui est irréversible.
 
 ## Alors, est-ce sûr ?
 

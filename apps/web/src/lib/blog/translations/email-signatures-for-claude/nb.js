@@ -6,16 +6,16 @@ const translation = {
     'E-postsignaturer for Claude: angi en signatur per innboks én gang, så signerer Claude hver melding den sender, hos alle leverandører',
   content: `Når Claude sender en e-post for deg, bør den se ut som om du sendte den. Det inkluderer avslutningen: navnet ditt, tittelen din, firmalinjen din, den lenken til bestillingssiden din. Frem til nå måtte du enten skrive signaturen din inn i hver melding, eller godta e-post som sluttet litt brått. I dag endres det: **MCPEmails legger nå signaturen din automatisk til i hver melding Claude sender.**
 
-Signaturer er **per innboks**. Hver tilkoblet postkasse beholder sin egen, så gründerhatten havner på jobbadressen din og et enkelt "— Sam" på den private. Når den først er satt, tenker du aldri på den igjen.
+Signaturer er **per innboks**. Hver tilkoblet postkasse beholder sin egen, så gründerhatten havner på jobbadressen din og et enkelt "Mvh Sam" på den private. Når den først er satt, tenker du aldri på den igjen.
 
 ## Hva som blir signert
 
 Sett den én gang, så legges signaturen automatisk til på alt Claude sender fra den innboksen:
 
-- **Nye e-poster** — \`email_compose\` (handling \`send\`).
-- **Svar og videresendinger** — \`email_compose\` (handlingene \`reply\` og \`forward\`).
-- **Utkast** — \`draft\`, så det du gjennomgår har avslutningen din allerede på plass.
-- **Planlagte sendinger** — \`schedule\`, så en melding som er satt i kø til mandag morgen går ut signert.
+- **Nye e-poster**: \`email_compose\` (handling \`send\`).
+- **Svar og videresendinger**: \`email_compose\` (handlingene \`reply\` og \`forward\`).
+- **Utkast**: \`draft\`, så det du gjennomgår har avslutningen din allerede på plass.
+- **Planlagte sendinger**: \`schedule\`, så en melding som er satt i kø til mandag morgen går ut signert.
 
 Det er ingenting ekstra å si i meldingen din. "Svar Dana og fortell henne at presentasjonen er vedlagt" gir en komplett, signert e-post.
 
@@ -33,9 +33,9 @@ Dette er ikke en finesse bare for Gmail. Signaturer gjelder hos **alle** tilkobl
 
 **1. Signatureditoren i dashbordet.** Åpne en innboks i MCPEmails-dashbordet og rediger signaturen dens direkte. Hver innboks har sin egen, så du kan gi hver adresse riktig stemme.
 
-**2. Bare spør Claude.** Det finnes et nytt \`signature\`-verktøy, så du kan sette eller endre signaturen din i naturlig språk uten å forlate chatten:
+**2. Bare spør Claude.** Det finnes et \`signature_set\`-verktøy (og \`signature_get\` som leser tilbake den gjeldende), så du kan sette eller endre signaturen din i naturlig språk uten å forlate chatten:
 
-> "Sett signaturen til jobbinnboksen min til: Sam Rivera, Gründer, Acme — calendly.com/sam"
+> "Sett signaturen til jobbinnboksen min til: Sam Rivera, Gründer, Acme, calendly.com/sam"
 
 Claude skriver den for den innboksen, og fra da av blir hver sending signert. Be den oppdatere signaturen senere, og den gjør det samme.
 
@@ -43,11 +43,11 @@ Claude skriver den for den innboksen, og fra da av blir hver sending signert. Be
 
 Noen ganger er en signatur bare støy: et ett-ords "Takk!" trenger ikke tre linjer med kontaktinfo under seg. For slike enkelttilfeller finnes **\`include_signature\`-valget**: be Claude hoppe over signaturen for én enkelt melding, så sender den den korte versjonen. Den lagrede signaturen din blir værende for alt etterpå.
 
-> "Svar 'På vei' på den siste meldingen fra kontoret — uten signatur."
+> "Svar 'På vei' på den siste meldingen fra kontoret, uten signatur."
 
 ## Hvordan det passer inn i resten av arbeidsflyten
 
-Signaturer glir rett inn i verktøyene du allerede bruker. Hvis Claude kjører morgentriagen din og fyrer av svar, bærer nå hvert av dem avslutningen din uten at du nevner den. Det samme gjelder [autosvar-mønstrene](/blog/build-email-auto-responder-mcp-agent) og [triage- og oppsummeringsguiden](/blog/ai-agent-triage-summarize-inbox) — alt som ender i en sending, ender nå signert.
+Signaturer glir rett inn i verktøyene du allerede bruker. Hvis Claude kjører morgentriagen din og fyrer av svar, bærer nå hvert av dem avslutningen din uten at du nevner den. Det samme gjelder [autosvar-mønstrene](/blog/build-email-auto-responder-mcp-agent) og [triage- og oppsummeringsguiden](/blog/ai-agent-triage-summarize-inbox): alt som ender i en sending, ender nå signert.
 
 Og personvernmodellen er uendret: e-posten din blir fortsatt [aldri lagret](/blog/why-email-never-stored-matters). Signaturen er en liten bit konfigurasjon per innboks; meldingene dine hentes fortsatt direkte og forkastes i det øyeblikket Claude har dem.
 
@@ -66,7 +66,7 @@ Alle: Gmail, Outlook, Fastmail, iCloud og alle andre IMAP-kontoer. MCPEmails kom
 Ja. Bruk \`include_signature\`-valget (bare be Claude hoppe over signaturen) for en kort enkeltmelding. Den lagrede signaturen din blir værende for alt annet.
 
 **Hvordan setter jeg signaturen min?**
-På to måter: rediger den per innboks i dashbordet, eller spør Claude — for eksempel "sett signaturen min til …" via det nye \`signature\`-verktøyet.
+På to måter: rediger den per innboks i dashbordet, eller spør Claude, for eksempel "sett signaturen min til …" via \`signature_set\`-verktøyet.
 
 ## Oppsummering
 

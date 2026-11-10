@@ -18,7 +18,7 @@ That sounds like a small implementation detail. It isn't. It's the difference be
 
 There are really only two designs, and most products fall cleanly into one camp.
 
-**Copy-everything (sync-and-store).** The tool connects to your mailbox once, then pulls your messages into its own database — often continuously. Your inbox gets mirrored into their infrastructure so it can be indexed, embedded into a vector store, fed to a model, or served back fast. The agent reads from *their* copy, not your provider.
+**Copy-everything (sync-and-store).** The tool connects to your mailbox once, then pulls your messages into its own database, often continuously. Your inbox gets mirrored into their infrastructure so it can be indexed, embedded into a vector store, fed to a model, or served back fast. The agent reads from *their* copy, not your provider.
 
 **Live-fetch (never-stored).** The tool holds only a credential. When the agent needs a message, the server calls your provider in real time, returns the result, and discards the body. Nothing about the content is retained. This is how MCPEmails works.
 
@@ -30,11 +30,11 @@ Once a tool copies your mail, four things follow whether the vendor advertises t
 
 ### A second copy of your mail you don't control
 
-Your real inbox lives at Google or Microsoft or Fastmail, behind their security teams and their breach history. A synced tool creates a second, full-fidelity copy somewhere else — a startup's Postgres instance, an S3 bucket, a search index. Every password reset link, legal thread, medical result, and two-factor backup code you've ever received now exists in a place you didn't vet and can't audit.
+Your real inbox lives at Google or Microsoft or Fastmail, behind their security teams and their breach history. A synced tool creates a second, full-fidelity copy somewhere else: a startup's Postgres instance, an S3 bucket, a search index. Every password reset link, legal thread, medical result, and two-factor backup code you've ever received now exists in a place you didn't vet and can't audit.
 
 ### A bigger breach surface
 
-This is the part people underrate. If the vendor's database leaks, the attacker doesn't get your *credentials* — they get your *mail*, already decrypted and indexed, ready to read. No need to log into your account. The most damaging part of an email breach is the email itself, and a copy-everything tool has helpfully assembled it in one place. You inherit their security posture on top of your provider's.
+This is the part people underrate. If the vendor's database leaks, the attacker doesn't get your *credentials*; they get your *mail*, already decrypted and indexed, ready to read. No need to log into your account. The most damaging part of an email breach is the email itself, and a copy-everything tool has helpfully assembled it in one place. You inherit their security posture on top of your provider's.
 
 ### Retention you have to think about
 
@@ -61,13 +61,13 @@ The credential is the only secret we keep at rest, and it's encrypted with **AES
 
 Sending works the same way and adds one more guarantee: outbound mail goes through *your* provider: Gmail or another provider over SMTP, or Microsoft Graph for Outlook. We never relay from our own domain, so your deliverability and domain reputation stay entirely yours. There's no shared sending pool to land you in someone else's spam reputation.
 
-If you want the deeper mechanics of the credential model — OAuth tokens versus app passwords and why both stay encrypted — I wrote that up in [OAuth vs. API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
+If you want the deeper mechanics of the credential model (OAuth tokens versus app passwords and why both stay encrypted), I wrote that up in [OAuth vs. API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
 
-## The honest trade-off
+## The trade-off
 
 Never-stored isn't free. There's a real cost, and I'd rather name it than pretend it away.
 
-Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) — Gmail operators, Outlook KQL, IMAP text search — which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And there's no push: we can't notify your agent the instant mail arrives because we're not watching a synced copy. To react to new mail, your agent polls (for example, \`email_read\` with action \`list\` and \`unread: true\` on a schedule).
+Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) (Gmail operators, Outlook KQL, IMAP text search), which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And push is limited: we're not watching a synced copy, so an agent in a chat reacts to new mail by polling (for example, \`email_read\` with action \`list\` and \`unread: true\` on a schedule). For your own code, Pro and Business workspaces can add a new-mail webhook, and what it carries is message IDs, never the message body.
 
 For most people that's an easy trade. Slightly slower search and a polling loop, in exchange for never creating a second copy of your most sensitive data. I'll take that.
 
@@ -80,13 +80,13 @@ Before you connect anything to your inbox, ask the vendor four direct questions.
 - **Is the credential encrypted at rest, and where does the key live?** Separate from the database is the right answer.
 - **Does sending go through my provider or yours?** Yours protects your domain reputation; theirs pools it with strangers.
 
-If a tool can't answer these crisply, that's information too. This is the same lens I'd apply to the broader safety question in [Is it safe to give an AI agent access to your email?](/blog/is-it-safe-to-give-ai-agent-email-access) — the architecture underneath the marketing is what actually determines your risk.
+If a tool can't answer these crisply, that's information too. This is the same lens I'd apply to the broader safety question in [Is it safe to give an AI agent access to your email?](/blog/is-it-safe-to-give-ai-agent-email-access): the architecture underneath the marketing is what actually determines your risk.
 
 ## Where this fits
 
 The never-stored model is one piece of a larger decision: how to wire an agent to a real inbox without doing something you'll regret. The [complete 2026 guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) covers the whole picture, and if you're weighing running your own server, [hosted vs. self-hosted Gmail MCP](/blog/hosted-vs-self-hosted-gmail-mcp-server) gets into who holds the encryption key in each case.
 
-You don't have to choose between giving your agent useful inbox access and keeping your mail out of a third party's database. With live-fetch you get both. [Connect an inbox](/signup) and you can revoke it in one click — and there's nothing left behind when you do.`,
+You don't have to choose between giving your agent useful inbox access and keeping your mail out of a third party's database. With live-fetch you get both. [Connect an inbox](/signup) and you can revoke it in one click, and there's nothing left behind when you do.`,
 };
 
 export default post;

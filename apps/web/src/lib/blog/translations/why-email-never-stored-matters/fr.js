@@ -11,7 +11,7 @@ Cela ressemble à un petit détail d’implémentation. Ça n’en est pas un. C
 
 Il n’existe en réalité que deux approches de conception, et la plupart des produits relèvent nettement de l’une d’elles.
 
-**Tout copier (synchroniser-et-stocker).** L’outil se connecte une fois à votre boîte, puis aspire vos messages dans sa propre base de données — souvent en continu. Votre boîte est répliquée dans leur infrastructure pour être indexée, intégrée dans un magasin de vecteurs, fournie à un modèle ou renvoyée rapidement. L’agent lit depuis *leur* copie, pas depuis votre fournisseur.
+**Tout copier (synchroniser-et-stocker).** L’outil se connecte une fois à votre boîte, puis aspire vos messages dans sa propre base de données, souvent en continu. Votre boîte est répliquée dans leur infrastructure pour être indexée, intégrée dans un magasin de vecteurs, fournie à un modèle ou renvoyée rapidement. L’agent lit depuis *leur* copie, pas depuis votre fournisseur.
 
 **Récupération en direct (jamais stocké).** L’outil ne détient qu’un identifiant. Quand l’agent a besoin d’un message, le serveur appelle votre fournisseur en temps réel, renvoie le résultat et jette le corps du message. Rien du contenu n’est conservé. C’est ainsi que fonctionne MCPEmails.
 
@@ -23,11 +23,11 @@ Une fois qu’un outil a copié vos courriels, quatre choses en découlent, que 
 
 ### Une seconde copie de vos courriels que vous ne maîtrisez pas
 
-Votre vraie boîte mail réside chez Google, Microsoft ou Fastmail, derrière leurs équipes de sécurité et leur historique de fuites. Un outil de synchronisation crée une seconde copie complète, fidèle à l’original, ailleurs — l’instance Postgres d’une startup, un bucket S3, un index de recherche. Chaque lien de réinitialisation de mot de passe, fil juridique, résultat médical et code de secours à deux facteurs que vous avez jamais reçu existe désormais dans un endroit que vous n’avez pas examiné et que vous ne pouvez pas auditer.
+Votre vraie boîte mail réside chez Google, Microsoft ou Fastmail, derrière leurs équipes de sécurité et leur historique de fuites. Un outil de synchronisation crée une seconde copie complète, fidèle à l’original, ailleurs : l’instance Postgres d’une startup, un bucket S3, un index de recherche. Chaque lien de réinitialisation de mot de passe, fil juridique, résultat médical et code de secours à deux facteurs que vous avez jamais reçu existe désormais dans un endroit que vous n’avez pas examiné et que vous ne pouvez pas auditer.
 
 ### Une surface de violation plus grande
 
-C’est la partie que les gens sous-estiment. Si la base de données du fournisseur fuit, l’attaquant n’obtient pas vos *identifiants* — il obtient vos *courriels*, déjà déchiffrés et indexés, prêts à être lus. Pas besoin de se connecter à votre compte. La partie la plus dommageable d’une fuite de courriel, c’est le courriel lui-même, et un outil tout-copier l’a obligeamment rassemblé au même endroit. Vous héritez de leur posture de sécurité en plus de celle de votre fournisseur.
+C’est la partie que les gens sous-estiment. Si la base de données du fournisseur fuit, l’attaquant n’obtient pas vos *identifiants* : il obtient vos *courriels*, déjà déchiffrés et indexés, prêts à être lus. Pas besoin de se connecter à votre compte. La partie la plus dommageable d’une fuite de courriel, c’est le courriel lui-même, et un outil tout-copier l’a obligeamment rassemblé au même endroit. Vous héritez de leur posture de sécurité en plus de celle de votre fournisseur.
 
 ### Une rétention à laquelle vous devez penser
 
@@ -54,13 +54,13 @@ L’identifiant est le seul secret stocké au repos, et il est chiffré avec **A
 
 L’envoi fonctionne de la même manière et ajoute une garantie de plus : le courrier sortant passe par *votre* fournisseur : Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook. Nous ne relayons jamais depuis notre propre domaine, donc votre délivrabilité et votre réputation de domaine restent entièrement les vôtres. Il n’y a pas de pool d’envoi partagé pour vous faire atterrir dans la réputation de spam de quelqu’un d’autre.
 
-Si vous voulez les rouages plus profonds du modèle d’identifiants — jetons OAuth contre mots de passe d’application, et pourquoi les deux restent chiffrés — j’ai détaillé tout ça dans [OAuth contre clés API pour l’accès de l’IA au courriel](/blog/oauth-vs-api-keys-ai-email-access).
+Si vous voulez les rouages plus profonds du modèle d’identifiants (jetons OAuth contre mots de passe d’application, et pourquoi les deux restent chiffrés), j’ai détaillé tout ça dans [OAuth contre clés API pour l’accès de l’IA au courriel](/blog/oauth-vs-api-keys-ai-email-access).
 
-## Le compromis, en toute honnêteté
+## Le compromis
 
 Le « jamais stocké » n’est pas gratuit. Il y a un coût réel, et je préfère le nommer plutôt que faire comme s’il n’existait pas.
 
-Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) — opérateurs Gmail, KQL Outlook, recherche texte IMAP — qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et il n’y a pas de push : nous ne pouvons pas notifier votre agent à l’instant où un courriel arrive, parce que nous ne surveillons pas une copie synchronisée. Pour réagir aux nouveaux messages, votre agent interroge régulièrement (par exemple, \`email_read\` avec l’action \`list\` et \`unread: true\` à intervalles réguliers).
+Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) (opérateurs Gmail, KQL Outlook, recherche texte IMAP) qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et le push est limité : nous ne surveillons pas de copie synchronisée, donc un agent dans une conversation réagit aux nouveaux messages en interrogeant régulièrement (par exemple, \`email_read\` avec l’action \`list\` et \`unread: true\` à intervalles réguliers). Pour votre propre code, les espaces de travail Pro et Business peuvent ajouter un webhook de nouveau message, qui transporte des identifiants de messages, pas du courrier.
 
 Pour la plupart des gens, c’est un compromis facile. Une recherche légèrement plus lente et une boucle d’interrogation, en échange de ne jamais créer une seconde copie de vos données les plus sensibles. Je prends.
 
@@ -73,13 +73,13 @@ Avant de connecter quoi que ce soit à votre boîte mail, posez au fournisseur q
 - **L’identifiant est-il chiffré au repos, et où réside la clé ?** Séparée de la base de données, voilà la bonne réponse.
 - **L’envoi passe-t-il par mon fournisseur ou le vôtre ?** Le vôtre protège votre réputation de domaine ; le leur la mêle à celle d’inconnus.
 
-Si un outil ne peut pas répondre clairement à ces questions, c’est aussi une information. C’est le même prisme que j’appliquerais à la question plus large de la sécurité dans [Est-il sûr de donner à un agent IA l’accès à votre courriel ?](/blog/is-it-safe-to-give-ai-agent-email-access) — c’est l’architecture sous le marketing qui détermine réellement votre risque.
+Si un outil ne peut pas répondre clairement à ces questions, c’est aussi une information. C’est le même prisme que j’appliquerais à la question plus large de la sécurité dans [Est-il sûr de donner à un agent IA l’accès à votre courriel ?](/blog/is-it-safe-to-give-ai-agent-email-access) : c’est l’architecture sous le marketing qui détermine réellement votre risque.
 
 ## Où cela s’inscrit
 
 Le modèle « jamais stocké » est une pièce d’une décision plus large : comment relier un agent à une vraie boîte mail sans faire quelque chose que vous regretterez. Le [guide complet 2026 pour donner à votre agent IA l’accès au courriel](/blog/how-to-give-your-ai-agent-email-access) couvre le tableau d’ensemble, et si vous pesez l’idée d’héberger votre propre serveur, [Gmail MCP hébergé contre auto-hébergé](/blog/hosted-vs-self-hosted-gmail-mcp-server) aborde qui détient la clé de chiffrement dans chaque cas.
 
-Vous n’avez pas à choisir entre donner à votre agent un accès utile à la boîte mail et garder vos courriels hors de la base de données d’un tiers. Avec la récupération en direct, vous obtenez les deux. [Connectez une boîte mail](/signup) et vous pourrez la révoquer en un clic — et il ne reste rien derrière quand vous le faites.`,
+Vous n’avez pas à choisir entre donner à votre agent un accès utile à la boîte mail et garder vos courriels hors de la base de données d’un tiers. Avec la récupération en direct, vous obtenez les deux. [Connectez une boîte mail](/signup) et vous pourrez la révoquer en un clic, et il ne reste rien derrière quand vous le faites.`,
 };
 
 export default translation;

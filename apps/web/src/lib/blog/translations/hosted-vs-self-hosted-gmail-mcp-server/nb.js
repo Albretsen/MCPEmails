@@ -1,11 +1,11 @@
 const translation = {
   title: 'Hostet vs. selvhostet Gmail MCP-server: fordeler, ulemper og kostnader',
   description:
-    'Hostet vs. selvhostet Gmail MCP-server, ærlig sammenlignet: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
-  coverAlt: 'Sammenligning av hostet og selvhostet Gmail MCP-server — MCPEmails',
+    'Hostet vs. selvhostet Gmail MCP-server sammenlignet: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
+  coverAlt: 'Sammenligning av hostet og selvhostet Gmail MCP-server (MCPEmails)',
   content: `Hvis du vil at AI-agenten din skal lese og sende Gmail, har du to reelle valg: kjøre en selvhostet Gmail MCP-server fra et åpen kildekode-repo, eller peke klienten din mot en hostet en. Gjør-det-selv-veien koster null kroner og gir deg total kontroll, men du eier personlig OAuth-oppsettet, token-krypteringen, hostingen, oppdateringene og sikkerheten. En hostet server som MCPEmails tar minutter å sette opp og holder legitimasjonen kryptert, mot at du stoler på at en leverandør håndterer tilkoblingen.
 
-Dette er den ærlige gjennomgangen. Jeg har bygd en hostet server, så jeg har en side i saken, men jeg skal si deg nøyaktig hvor selvhosting vinner og hvilken type person som bør velge det. Hvis du først bare vil ha modellen på verb-nivå, er [den komplette guiden til å gi en AI-agent tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access) hovedartikkelen du bør lese ved siden av denne.
+Her er gjennomgangen. Jeg har bygd en hostet server, så jeg har en side i saken, men jeg skal si deg nøyaktig hvor selvhosting vinner og hvilken type person som bør velge det. Hvis du først bare vil ha modellen på verb-nivå, er [den komplette guiden til å gi en AI-agent tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access) hovedartikkelen du bør lese ved siden av denne.
 
 ## Hva «selvhostet Gmail MCP-server» faktisk betyr
 
@@ -23,7 +23,7 @@ Koden kjører på din egen maskinvare. Ingen tredjepart sitter noensinne mellom 
 
 ### Det er gratis i kroner
 
-Ingen abonnement. Gmail API-et selv er gratis ved et hvilket som helst volum en agent vil treffe. Hvis tiden din er billig i forhold til $9 per måned (eller $15 per måned når du trenger flere enn tre innbokser), taler regnestykket for å lage din egen.
+Ingen abonnement. Gmail API-et selv er gratis ved et hvilket som helst volum en agent vil treffe. Hvis tiden din er billig i forhold til et Personal- eller Pro-abonnement, taler regnestykket for å lage din egen.
 
 ### Du kan bøye det til hva som helst
 
@@ -35,7 +35,7 @@ Nå til den delen README-filene i repoene glatter over.
 
 ### Du eier OAuth-oppsettet
 
-Et Google Cloud-prosjekt, en OAuth-samtykkeskjerm, de riktige scopene, og — hvis du vil at noen andre enn deg selv skal bruke det — Googles app-verifiseringsprosess, som er en reell gjennomgang med reell behandlingstid. Velg feil scope, og du er tilbake i konsollen. Dette er steget som spiser en ettermiddag den første gangen og en mindre bit hver gang en token utløper eller Google endrer en policy.
+Et Google Cloud-prosjekt, en OAuth-samtykkeskjerm, de riktige scopene, og, hvis du vil at noen andre enn deg selv skal bruke det, Googles app-verifiseringsprosess, som er en reell gjennomgang med reell behandlingstid. Velg feil scope, og du er tilbake i konsollen. Dette er steget som spiser en ettermiddag den første gangen og en mindre bit hver gang en token utløper eller Google endrer en policy.
 
 ### Du eier lagring og kryptering av legitimasjon
 
@@ -45,7 +45,7 @@ Her er den som holder meg våken. En refresh-token for \`read:email\` og \`send:
 
 ### Du eier hosting og oppetid
 
-En localhost-server dør når laptopen din går i dvale. Hvis du vil at agenten skal triagere e-post klokka 6 om morgenen eller kjøre uten tilsyn, trenger du en prosess som alltid er oppe — en VPS, en container, en restart-policy, TLS, overvåking. Det er ops-arbeid, og det slutter aldri å være ops-arbeid.
+En localhost-server dør når laptopen din går i dvale. Hvis du vil at agenten skal triagere e-post klokka 6 om morgenen eller kjøre uten tilsyn, trenger du en prosess som alltid er oppe: en VPS, en container, en restart-policy, TLS, overvåking. Det er ops-arbeid, og det slutter aldri å være ops-arbeid.
 
 ### Du eier oppdateringer og sikkerhetsfikser
 
@@ -55,7 +55,7 @@ MCP er ungt. Spesifikasjonen beveger seg, Google roterer krav, og repoet du klon
 
 Repoet du valgte gjør Gmail. Den dagen du legger til en Outlook-konto eller en iCloud-adresse, integrerer du Microsoft Graph eller kobler opp IMAP og SMTP selv, med en andre auth-modell og et andre sett med kanttilfeller. De fleste gjør-det-selv-servere forblir kun Gmail, fordi den andre leverandøren er et prosjekt i seg selv.
 
-## Argumentet for hostet: MCPEmails, ærlig
+## Argumentet for hostet: MCPEmails
 
 En hostet MCP-server snur byttehandelen. Du gir opp å kjøre koden; du får tilbake all tiden listen over ville kostet.
 
@@ -69,19 +69,19 @@ Innbokslegitimasjonen (apppassordet eller OAuth-tokenet) er det som lagres per i
 
 ### Multi-leverandør følger med gratis
 
-Det samme endepunktet og de samme kjerneverktøyene — \`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` for flagg og mapper, pluss \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` — fungerer på tvers av Gmail, Outlook, iCloud, Fastmail og enhver IMAP-innboks. Legg til en Outlook-konto neste uke, og ingenting ved agenten din endrer seg.
+Det samme endepunktet og de samme kjerneverktøyene (\`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` for flagg og mapper, pluss \`folder\`, \`draft\`, \`schedule\` og \`contact_search\`) fungerer på tvers av Gmail, Outlook, iCloud, Fastmail og enhver IMAP-innboks. Legg til en Outlook-konto neste uke, og ingenting ved agenten din endrer seg.
 
 ### Sending forblir hos din leverandør
 
 MCPEmails videresender aldri e-post fra sitt eget domene. \`email_compose\` (med \`send\`-handlingen) går ut gjennom leverandøren din (Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook), så domenets omdømme og leveringsevne forblir dine. Det er den samme egenskapen du ville fått med selvhosting, uten å bygge den.
 
-### Den ærlige kostnaden: du stoler på en leverandør
+### Den reelle kostnaden: du stoler på en leverandør
 
 Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet server ligger det krypterte tokenet ditt i noen andres database, og agentens kall rutes gjennom noen andres kode. Du stoler på at krypteringen er ekte, at tilgangskontrollen holder, og at selskapet ikke gjør noe dumt. For de fleste er den tilliten velplassert og sparer enormt med tid. Hvis trusselmodellen din forbyr det helt, selvhost. Det er den legitime grunnen til å gjøre det.
 
 ## Hva det koster i kroner
 
-MCPEmails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kjører på 60 forespørsler per minutt med 30-dagers analyse, hjelpesenter og e-poststøtte. [Personal koster $9 per måned](/pricing) (opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyse, prioritert e-poststøtte), Pro koster $15 per måned (opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyse), og Business koster $39 per måned (10 postkasser inkludert pluss $3 per måned for hver ekstra, medlemmer med roller, et eget arbeidsområde per kunde). Selvhosting er $0 i abonnement pluss hva enn VPS-en din og timene dine koster. Vær ærlig om timene.
+MCPEmails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kommer med bruksanalyse, hjelpesenter og e-poststøtte. [Personal](/pricing) legger til innbokser, en høyere burst-grense, lengre analysehistorikk og prioritert e-poststøtte; Pro legger til flere innbokser igjen, en enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post; Business har et antall postkasser inkludert, med en pris per postkasse utover det, medlemmer med roller og et eget arbeidsområde per kunde. Gjeldende priser står på [prissiden](/pricing). Selvhosting har ingen abonnementskostnad, bare det VPS-en din og timene dine koster. Tell timene skikkelig.
 
 ## Så hva bør du velge?
 
@@ -89,7 +89,7 @@ Velg **selvhostet** hvis du er en ingeniør som liker rørleggerarbeidet, du tre
 
 Velg **hostet** hvis du vil ha et fungerende endepunkt i dag, du heller ikke vil være på vakt for din egen e-postinfrastruktur, du sannsynligvis vil legge til Outlook eller iCloud eller en IMAP-boks på et tidspunkt, og du vil ha legitimasjonskryptering håndtert av folk som vedlikeholder det på heltid. Det er de fleste, inkludert de fleste ingeniører som kunne bygd det, men som har bedre ting å gjøre.
 
-Hvis du fremdeles vurderer hvordan en agent i det hele tatt bør nå innboksen din, sammenligner [de beste måtene å la Claude håndtere innboksen din på](/blog/best-ways-to-let-claude-manage-your-inbox) de bredere alternativene. Når du er klar, [start gratis](/signup) eller skum [dokumentasjonen](/docs) — å koble til en Gmail-innboks tar faktisk omtrent ett minutt.`,
+Hvis du fremdeles vurderer hvordan en agent i det hele tatt bør nå innboksen din, sammenligner [de beste måtene å la Claude håndtere innboksen din på](/blog/best-ways-to-let-claude-manage-your-inbox) de bredere alternativene. Når du er klar, [start gratis](/signup) eller skum [dokumentasjonen](/docs); å koble til en Gmail-innboks tar faktisk omtrent ett minutt.`,
 };
 
 export default translation;

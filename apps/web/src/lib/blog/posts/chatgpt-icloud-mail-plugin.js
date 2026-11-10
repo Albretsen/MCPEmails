@@ -45,7 +45,7 @@ OpenAI's [connected apps help page](https://help.openai.com/en/articles/11487775
 3. **Open the plugin in ChatGPT.** Go to **Settings**, then **Plugins**, and pick **iCloud Mail**.
 4. **Enter your iCloud address and the app-specific password.** OpenAI asks for an address ending in @icloud.com, @me.com or @mac.com.
 
-Your normal Apple Account password will not work here. That is Apple's rule for every app outside Apple's own, and it is the same password type a third-party mail app uses.
+Your normal Apple Account password will not work here. Apple gives apps from other developers two ways in: a supported app can be authorized with the Apple Account itself, and every other app gets an app-specific password. OpenAI's plugin takes the password, the same type a third-party mail app uses.
 
 ## What the iCloud Mail plugin can do
 
@@ -83,7 +83,7 @@ Each plugin is its own connection, with its own sign-in, and ChatGPT has to be t
 
 ## iCloud Mail in Claude
 
-Claude has two email connectors of its own, one for Gmail and one for work Microsoft 365 accounts. There is no iCloud option in Claude, and Apple offers no sign-in for iCloud Mail that a third party could use instead of a password. [Can Claude read my email?](/blog/can-claude-read-my-email) goes through Claude's options mailbox by mailbox.
+Claude has two email connectors of its own, one for Gmail and one for work Microsoft 365 accounts. There is no iCloud option in Claude. Apple does let a supported third-party app authorize iCloud Mail with the Apple Account instead of an app-specific password, but Claude has no such connector, and MCPEmails connects iCloud with an app-specific password over IMAP. [Can Claude read my email?](/blog/can-claude-read-my-email) goes through Claude's options mailbox by mailbox.
 
 To use iCloud in Claude, you add an MCP server that holds the iCloud connection, and that is what MCPEmails is. It connects to iCloud the same way OpenAI's plugin does, with an app-specific password over IMAP, and then serves the mailbox to any app that speaks the Model Context Protocol: Claude, ChatGPT, Cursor and the other [supported clients](/docs/clients).
 

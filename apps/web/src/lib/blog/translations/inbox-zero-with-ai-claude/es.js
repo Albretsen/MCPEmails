@@ -2,10 +2,10 @@ const translation = {
   title: 'Cómo llegar al inbox zero con IA (usando Claude y tu bandeja de entrada real)',
   description:
     'Llega al inbox zero con IA: deja que Claude clasifique, archive, etiquete y redacte respuestas en tu bandeja real de Gmail, Outlook o IMAP a través de MCP. Una rutina repetible, los prompts exactos y por qué no se almacena nada.',
-  coverAlt: 'Llega al inbox zero con IA — Claude clasifica, archiva y redacta respuestas en tu bandeja real a través de MCP',
+  coverAlt: 'Llega al inbox zero con IA: Claude clasifica, archiva y redacta respuestas en tu bandeja real a través de MCP',
   content: `El inbox zero siempre ha tenido el mismo problema: alcanzarlo te cuesta una hora que no tienes, y mañana vuelves a tener cincuenta sin leer. Un agente de IA cambia las cuentas. En lugar de ordenar tú los mensajes uno a uno, le dices a Claude qué significa "gestionado" y se ocupa de toda la bandeja a la vez: clasifica, archiva, etiqueta y redacta respuestas sobre tu correo *real*, en directo.
 
-Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) (o la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — lleva unos dos minutos — y luego vuelve. Si usas iCloud, Fastmail u otro servidor IMAP, sigue en su lugar la [guía para conectar el correo a Claude](/blog/connect-claude-to-email).
+Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) (o la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)), que lleva unos dos minutos, y luego vuelve. Si usas iCloud, Fastmail u otro servidor IMAP, sigue en su lugar la [guía para conectar el correo a Claude](/blog/connect-claude-to-email).
 
 ## Por qué el "inbox zero" por fin es realista con IA
 
@@ -35,7 +35,7 @@ Aquí \`email_organize\` hace el trabajo aburrido: archiva en masa para que tu b
 
 Ahora los supervivientes están ordenados. Claude aplica etiquetas de Gmail (o carpetas en Outlook e IMAP) para que los hilos importantes queden agrupados visualmente antes de que dediques un segundo de atención.
 
-**4. Redacta las respuestas — pero no las envíes.**
+**4. Redacta las respuestas, pero no las envíes.**
 
 > "Por cada correo que necesite respuesta, escribe un borrador breve con mi tono. Guárdalos como borradores; no envíes nada."
 
@@ -52,8 +52,8 @@ Todo lo que no puedas resolver recibe un aviso \`schedule\` para que salga de tu
 La rutina anterior dura unos cinco minutos una vez que Claude hace el trabajo duro. Algunas formas en que la gente la mantiene constante:
 
 - **Una frase desencadenante.** Guarda toda la secuencia como un único mensaje: *"Ejecuta mi clasificación matinal de la bandeja."* Claude recuerda los pasos dentro de una conversación, así que una sola línea arranca el bucle.
-- **Ajusta las reglas con el tiempo.** Cuando Claude archive algo que no debería, díselo una vez — "nunca archives nada de mi jefe" — e incorpóralo a tus instrucciones permanentes.
-- **Limpieza a fondo semanal.** Una vez por semana: *"Encuentra todos los correos sin leer de más de 30 días y archívalos o elimínalos."* La cola larga es donde el inbox zero suele morir; deja que Claude la despeje. Para más patrones, consulta [las mejores formas de dejar que Claude gestione tu bandeja](/blog/best-ways-to-let-claude-manage-your-inbox) y el [manual de clasificar y resumir](/blog/ai-agent-triage-summarize-inbox).
+- **Ajusta las reglas con el tiempo.** Cuando Claude archive algo que no debería, díselo una vez ("nunca archives nada de mi jefe") e incorpóralo a tus instrucciones permanentes.
+- **Limpieza a fondo semanal.** Una vez por semana: *"Encuentra todos los correos sin leer de más de un mes y archívalos o elimínalos."* La cola larga es donde el inbox zero suele morir; deja que Claude la despeje. Para más patrones, consulta [las mejores formas de dejar que Claude gestione tu bandeja](/blog/best-ways-to-let-claude-manage-your-inbox) y el [manual de clasificar y resumir](/blog/ai-agent-triage-summarize-inbox).
 
 ## La única regla que mantiene esto seguro
 

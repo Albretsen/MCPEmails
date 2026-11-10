@@ -95,9 +95,9 @@ Fire regler som rydder bort alt det mekaniske, pluss én morgensamtale om det so
 
 Så spør du agenten om de tretti meldingene som er igjen, i stedet for de hundre og åtti som kom inn. Reglene prøver ikke å være smarte. De fjerner alt som aldri trengte intelligens.
 
-## Regler teller mot planens handlinger
+## Regler teller mot planens bruk
 
-Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. På **Free**-planen er det 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 3 dagene ikke telles. Den månedlige kvoten gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet før er unntatt. Når et arbeidsområde når kvoten sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet kvoteperioden slutter. **Personal** til $9 per måned gir ubegrensede e-posthandlinger og tillater 3 tilkoblede innbokser. Se [priser](/pricing).
+Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. Hvis et **Free**-arbeidsområde når månedsgrensen sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet grensen nullstilles. De betalte planene og grensene deres står på [prissiden](/pricing).
 
 ## Ofte stilte spørsmål
 

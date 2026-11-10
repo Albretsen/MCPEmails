@@ -1,9 +1,9 @@
 const translation = {
   title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
   description:
-    'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP — Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
-  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP — MCPEmails',
-  content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten — det er å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
+    'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP: Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
+  coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP (MCPEmails)',
+  content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten, men å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 
 Hvis du bare vil ha den raske veien: koble til en innboks i dashbordet, lim MCP-endepunktet inn i [claude.ai](https://claude.ai), Claude Desktop, Cursor eller din egen agent, og kall \`inbox_list\` først. Resten av dette innlegget forklarer hva som faktisk skjer, hvorfor sikkerhetsmodellen er viktig, og hvordan du kobler opp hver støttede leverandør.
 
@@ -21,7 +21,7 @@ Det er hele ideen bak [MCPEmails](/). Ett endepunkt, ett sett med verktøy, hvil
 2. **Legitimasjon er radioaktiv.** Et innbokspassord som ligger i en chat-transkripsjon eller en loggsetning er et brudd som bare venter på å skje. Du kan ikke la modellen holde hemmeligheten.
 3. **E-post har et dårlig format for agenter.** MIME, tråd-headere, HTML kontra ren tekst, vedlegg, mapper som egentlig er etiketter. Modellen trenger et rent svar, ikke RFC 5322.
 
-Den naive gjør-det-selv-løsningen — gi modellen et IMAP-bibliotek og passordet ditt — feiler på alle tre samtidig. De fleste "Gmail MCP server"-repoene på GitHub stopper akkurat der.
+Den naive gjør-det-selv-løsningen, å gi modellen et IMAP-bibliotek og passordet ditt, feiler på alle tre samtidig. De fleste "Gmail MCP server"-repoene på GitHub stopper akkurat der.
 
 ## Hvordan MCPEmails løser det
 
@@ -37,7 +37,7 @@ App-passordet eller OAuth-tokenet for hver innboks krypteres før det skrives ti
 
 ### Sending går gjennom din egen leverandør
 
-Når agenten sender eller svarer, går e-posten ut gjennom din Gmail, ditt Microsoft 365 eller din SMTP-server. MCPEmails videreformidler aldri fra sitt eget domene. Leveringsdyktigheten og domenets omdømme forblir helt dine egne — ingen spam-mappe-rulett med delt IP.
+Når agenten sender eller svarer, går e-posten ut gjennom din Gmail, ditt Microsoft 365 eller din SMTP-server. MCPEmails videreformidler aldri fra sitt eget domene. Leveringsdyktigheten og domenets omdømme forblir helt dine egne, uten spam-mappe-rulett med delt IP.
 
 ### Det er standard MCP over HTTP
 
@@ -45,17 +45,17 @@ Serveren snakker Streamable HTTP i henhold til MCP 2025-06-18-spesifikasjonen. I
 
 ## Verktøyene agenten din får
 
-En håndfull konsoliderte, handlingsbaserte verktøy dekker hele flaten: lese, skrive, organisere, pluss flere for mapper, planlegging og kontakter. Agenten starter alltid med \`inbox_list\` for å oppdage hva som er koblet til og hente hver innboks' ID — den hardkoder aldri en UUID.
+En håndfull konsoliderte, handlingsbaserte verktøy dekker hele flaten: lese, skrive, organisere, pluss flere for mapper, planlegging og kontakter. Agenten starter alltid med \`inbox_list\` for å oppdage hva som er koblet til og hente hver innboks' ID; den hardkoder aldri en UUID.
 
-- \`inbox_list\` — oppdag tilkoblede kontoer og hva de kan
-- \`email_read\` (handling \`list\`) — paginert, nyeste først, per innboks
-- \`email_read\` (handling \`read\`) — parset ren tekst, valgfri renset HTML, valgfrie vedlegg
-- \`email_read\` (handling \`search\`) — leverandørens egen syntaks (Gmail-operatorer, Outlook KQL, IMAP tekstsøk)
-- \`email_compose\` (handling \`send\`) — skriv med CC/BCC, HTML og vedlegg på opptil 10 MB totalt
-- \`email_compose\` (handling \`reply\`) — det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
-- \`email_organize\` — flytt, slett, flagg eller arkiver (én handling per kall)
+- \`inbox_list\`: oppdag tilkoblede kontoer og hva de kan
+- \`email_read\` (handling \`list\`): paginert, nyeste først, per innboks
+- \`email_read\` (handling \`read\`): parset ren tekst, valgfri renset HTML, valgfrie vedlegg
+- \`email_read\` (handling \`search\`): leverandørens egen syntaks (Gmail-operatorer, Outlook KQL, IMAP tekstsøk)
+- \`email_compose\` (handling \`send\`): skriv med CC/BCC, HTML og vedlegg på opptil 10 MB totalt
+- \`email_compose\` (handling \`reply\`): det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
+- \`email_organize\`: flytt, slett, flagg eller arkiver (én handling per kall)
 
-Én ærlig begrensning verdt å nevne med en gang: dette er **polling, ikke push**. Det finnes ingen webhooks. For å reagere på ny e-post må agenten din polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread: true\`. Enhver autosvarer du bygger fungerer på en timer, ikke en umiddelbar utløser. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser hvordan du gjør dette godt.
+Én ting å vite med en gang: verktøyene i seg selv er basert på **forespørsel og svar**. Serveren svarer når agenten din spør, og den enkleste måten å reagere på ny e-post på er å polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread: true\`. Vil du heller ha push, kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet: MCPEmails sender da en signert POST til URL-en din når det kommer ny post, med meldings-ID-er som agenten åpner med \`email_read\`. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser begge mønstrene.
 
 En morgentriage-kjøring ser slik ut:
 
@@ -94,28 +94,28 @@ claude.ai, Claude Desktop, Cursor og lignende klienter kobler til med OAuth 2.0 
 
 Cline, JetBrains, egendefinerte skript og rå cURL bruker en scope-begrenset API-nøkkel. Lag én i **Dashboard → API Keys**, velg dens scopes, og kopier den (den vises bare én gang). Send den som \`Authorization: Bearer <api-key>\`. Fullt oppsett for disse finner du i [e-post for AI-agenter i Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode), og avveiningen mellom de to tilnærmingene dekkes i [OAuth kontra API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access).
 
-Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. Hent den nøyaktige endepunkt-URL-en fra [dokumentasjonen](/docs) — kopier den derfra i stedet for å skrive den for hånd.
+Uansett kan du trekke tilbake enhver tilkobling fra dashbordet med ett klikk. Hent den nøyaktige endepunkt-URL-en fra [dokumentasjonen](/docs), og kopier den derfra i stedet for å skrive den for hånd.
 
 ## Er dette trygt? Og rate-grensene
 
-Kort svar: ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
+Ja, og innlegget [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) legger frem hele saken. Modellen holder scope-begrensede kapabiliteter, ikke passordet ditt; legitimasjon er kryptert; ingenting lagres; sending forblir på leverandøren din; tilgang trekkes tilbake med ett klikk.
 
 Når det gjelder rate-grenser, har hvert arbeidsområde et tak per minutt som skalerer med planen din (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. Når du treffer en grense returnerer serveren en feil som kan prøves på nytt, med en \`retry_after\`-verdi i sekunder. Respekter den. Og prøv aldri blindt å sende på nytt automatisk med \`email_compose\`: da sender du duplikater.
 
 ## Priser
 
-Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analyselagring, teamfunksjoner og støtte.
+Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analysehistorikk, teamfunksjoner og støtte.
 
-- **Gratis, $0 for alltid.** Ingen kort. Én tilkoblet innboks, 60 req/min, 30-dagers analyser, hjelpesenter og e-poststøtte.
-- **Personal, $9 per måned** (eller $86,40 per år, $7,20 per måned). Opptil tre tilkoblede innbokser, 120 req/min, 90-dagers analyser, prioritert e-poststøtte.
-- **Pro, $15 per måned** (eller $144 per år, $12 per måned). Opptil 10 tilkoblede innbokser, 300 req/min, 2 års analyser, prioritert e-poststøtte.
-- **Business, $39 per måned** (eller $374,40 per år, $31,20 per måned). Alt i Pro, pluss 10 postkasser inkludert og $3 per måned for hver ekstra, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet, 1 000 req/min.
+- **Gratis.** Koster ingenting, for alltid, og uten kort. Én tilkoblet innboks, bruksanalyse, hjelpesenter og e-poststøtte.
+- **Personal.** Flere innbokser for én person, høyere burst-grense, lengre analysehistorikk, prioritert e-poststøtte.
+- **Pro.** For én person som driver en virksomhet: flere innbokser igjen, enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post.
+- **Business.** Alt i Pro, pluss et antall postkasser inkludert, med en pris per postkasse utover det, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, og et eget arbeidsområde per kunde eller virksomhet.
 
-Full oversikt på [prissiden](/pricing).
+Gjeldende priser og antall innbokser finner du på [prissiden](/pricing).
 
 ## Kom i gang
 
-Koble til en innboks, lim endepunktet inn i agenten din, og kall \`inbox_list\`. Det er hele onboardingen. [Start gratis](/signup) eller skum gjennom [hurtigstarten](/docs#quickstart) — du vil ha en agent som leser ekte e-post på et par minutter.`,
+Koble til en innboks, lim endepunktet inn i agenten din, og kall \`inbox_list\`. Det er hele onboardingen. [Start gratis](/signup) eller skum gjennom [hurtigstarten](/docs#quickstart); du vil ha en agent som leser ekte e-post på et par minutter.`,
 };
 
 export default translation;

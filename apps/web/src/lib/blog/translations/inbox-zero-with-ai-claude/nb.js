@@ -2,20 +2,20 @@ const translation = {
   title: 'Slik når du Inbox Zero med AI (med Claude og din ekte innboks)',
   description:
     'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast på tvers av din ekte Gmail-, Outlook- eller IMAP-innboks over MCP. En rutine du kan gjenta, de eksakte promptene, og hvorfor ingenting lagres.',
-  coverAlt: 'Nå inbox zero med AI — Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
-  content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang — sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
+  coverAlt: 'Nå inbox zero med AI: Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
+  content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang: sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
 
-Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake. Bruker du iCloud, Fastmail eller en annen IMAP-vert, følg heller [guiden for å koble e-post til Claude](/blog/connect-claude-to-email).
+Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)), som tar omtrent to minutter, og kom så tilbake. Bruker du iCloud, Fastmail eller en annen IMAP-vert, følg heller [guiden for å koble e-post til Claude](/blog/connect-claude-to-email).
 
 ## Hvorfor «inbox zero» endelig er realistisk med AI
 
-Grunnen til at inbox zero kollapser, er volum pluss skjønn. De fleste meldinger trenger en *beslutning* — arkivere, svare, utsette, slette — og å ta femti små beslutninger er utmattende. Claude er god til akkurat det: les meldingen, bruk reglene dine, ta handlingen. Den blir ikke lei av det førtiende nyhetsbrevet.
+Grunnen til at inbox zero kollapser, er volum pluss skjønn. De fleste meldinger trenger en *beslutning* (arkivere, svare, utsette, slette), og å ta femti små beslutninger er utmattende. Claude er god til akkurat det: les meldingen, bruk reglene dine, ta handlingen. Den blir ikke lei av det førtiende nyhetsbrevet.
 
 Den avgjørende endringen er at du slutter å *behandle* e-post og begynner å *føre tilsyn* med den. Du setter retningslinjene («arkivér alle nyhetsbrev, flagg alt fra en kunde, skriv svarutkast jeg kan godkjenne»), og Claude utfører det på tvers av innboksen i én omgang.
 
 ## Morgenrutinen, i fem prompter
 
-Kjør disse i rekkefølge. Hver av dem er en helt vanlig setning — Claude knytter den til riktig verktøy (\`email_read\`, \`email_organize\`, \`draft\`) bak kulissene.
+Kjør disse i rekkefølge. Hver av dem er en helt vanlig setning; Claude knytter den til riktig verktøy (\`email_read\`, \`email_organize\`, \`draft\`) bak kulissene.
 
 **1. Skaff deg oversikt.**
 
@@ -27,7 +27,7 @@ Claude lister opp og leser den uleste e-posten din og gir deg en sortert oversik
 
 > «Arkivér alle nyhetsbrev og reklame-e-poster i den listen. Ikke rør noe fra et ekte menneske.»
 
-Dette er \`email_organize\` som gjør det kjedelige arbeidet — arkiverer i bulk slik at innboksen bare inneholder ting som kanskje trenger deg. Halve innboksen forsvinner som regel her.
+Dette er \`email_organize\` som gjør det kjedelige arbeidet: den arkiverer i bulk slik at innboksen bare inneholder ting som kanskje trenger deg. Halve innboksen forsvinner som regel her.
 
 **3. Merk det som er igjen.**
 
@@ -35,11 +35,11 @@ Dette er \`email_organize\` som gjør det kjedelige arbeidet — arkiverer i bul
 
 Nå er de overlevende sortert. Claude bruker Gmail-etiketter (eller mapper på Outlook og IMAP) slik at de viktige trådene er visuelt gruppert før du bruker ett sekund med oppmerksomhet på dem.
 
-**4. Skriv svarene — men ikke send.**
+**4. Skriv svarene, men ikke send.**
 
 > «For hver e-post som trenger svar, skriv et kort utkast i min stil. Lagre dem som utkast; ikke send noe.»
 
-Dette er delen som faktisk sparer deg for timen. Claude oppretter ekte \`draft\`-er som ligger i innboksen din, klare til at du kan skumlese, justere og sende. Du har kontroll over hver eneste utgående melding — se [OAuth kontra API-nøkler](/blog/oauth-vs-api-keys-ai-email-access) hvis du heller vil gi lesetilgang og aldri la den sende i det hele tatt.
+Dette er delen som faktisk sparer deg for timen. Claude oppretter ekte \`draft\`-er som ligger i innboksen din, klare til at du kan skumlese, justere og sende. Du har kontroll over hver eneste utgående melding. Se [OAuth kontra API-nøkler](/blog/oauth-vs-api-keys-ai-email-access) hvis du heller vil gi lesetilgang og aldri la den sende i det hele tatt.
 
 **5. Utsett resten.**
 
@@ -52,8 +52,8 @@ Alt du ikke får løst, får et \`schedule\`-dytt slik at det forsvinner ut av h
 Rutinen over tar ~fem minutter når Claude gjør tunge løftet. Et par måter folk holder den ved like:
 
 - **Én utløserfrase.** Lagre hele sekvensen som én melding: *«Kjør min morgensortering av innboksen.»* Claude husker stegene innenfor en samtale, så én linje setter i gang sløyfen.
-- **Finjustér reglene over tid.** Når Claude arkiverer noe den ikke burde, si det én gang — «arkivér aldri noe fra sjefen min» — og innlem det i de faste instruksjonene dine.
-- **Ukentlig storrengjøring.** Én gang i uka: *«Finn alle uleste e-poster eldre enn 30 dager og arkivér eller slett dem.»* Den lange halen er der inbox zero som regel dør; la Claude rydde den. For flere mønstre, se [de beste måtene å la Claude håndtere innboksen din på](/blog/best-ways-to-let-claude-manage-your-inbox) og [oppskriften for sortering og oppsummering](/blog/ai-agent-triage-summarize-inbox).
+- **Finjustér reglene over tid.** Når Claude arkiverer noe den ikke burde, si det én gang («arkivér aldri noe fra sjefen min») og innlem det i de faste instruksjonene dine.
+- **Ukentlig storrengjøring.** Én gang i uka: *«Finn alle uleste e-poster eldre enn en måned og arkivér eller slett dem.»* Den lange halen er der inbox zero som regel dør; la Claude rydde den. For flere mønstre, se [de beste måtene å la Claude håndtere innboksen din på](/blog/best-ways-to-let-claude-manage-your-inbox) og [oppskriften for sortering og oppsummering](/blog/ai-agent-triage-summarize-inbox).
 
 ## Den ene regelen som holder dette trygt
 

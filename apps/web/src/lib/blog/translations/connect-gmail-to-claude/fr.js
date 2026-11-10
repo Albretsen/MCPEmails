@@ -77,7 +77,7 @@ Une fois connecté, Claude travaille à travers un petit ensemble d'outils conso
 
 Claude dispose aussi de son propre connecteur Gmail, et lui aussi peut envoyer. [Claude peut-il lire et envoyer mes e-mails ?](/blog/can-claude-read-my-email) le compare à MCPEmails, boîte par boîte.
 
-Une chose à anticiper d'emblée : MCPEmails fonctionne par interrogation (polling). Il n'y a pas de webhooks push, Claude réagit donc aux nouveaux e-mails lorsque vous lui demandez de vérifier, et non à l'instant où un message arrive. Pour presque tous les workflows d'assistant, c'est exactement le bon modèle.
+Une chose à anticiper d'emblée : Claude réagit aux nouveaux e-mails lorsque vous lui demandez de vérifier, et non à l'instant où un message arrive. Pour presque tous les workflows d'assistant, c'est exactement le bon modèle. (Votre propre code, c'est différent : les espaces de travail Pro et Business peuvent ajouter sous Clés API un webhook qui envoie un POST à votre URL quand un nouveau message arrive.)
 
 ## Est-il sûr de connecter Gmail à Claude ?
 
@@ -108,7 +108,7 @@ Non. Vous collez un mot de passe d'application, un identifiant distinct génér�
 
 ## Pour conclure
 
-C'est tout : un mot de passe d'application Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails, sans jamais les stocker. Le niveau Gratuit ne coûte rien, ne nécessite aucune carte et connecte une boîte ; Personal est à 9 $/mois pour trois boîtes, et Pro en connecte jusqu'à 10 (voir [tarifs](/pricing)).
+C'est tout : un mot de passe d'application Google, une URL d'endpoint, et Claude peut lire, rechercher et envoyer vos vrais e-mails, sans jamais les stocker. Le niveau Gratuit ne coûte rien, ne nécessite aucune carte et connecte une boîte ; les forfaits payants en ajoutent (voir [tarifs](/pricing)).
 
 Prêt ? [Connectez votre Gmail gratuitement](/signup), collez l'endpoint dans Claude, et demandez-lui de résumer vos e-mails non lus.`,
 };

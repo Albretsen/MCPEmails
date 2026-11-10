@@ -105,11 +105,11 @@ Turn on **Review before sending** for any mailbox and every send, reply, forward
 ## How many mailboxes each plan connects
 
 - **Free:** one mailbox.
-- **Personal:** three mailboxes.
-- **Pro:** up to 10 mailboxes, on one login.
-- **Business:** 10 mailboxes included and $3 a month for each extra, and for when a second person needs a login of their own.
+- **Personal:** a few mailboxes, for one person.
+- **Pro:** more mailboxes, still on one login.
+- **Business:** a block of included mailboxes with a per-mailbox price above it, and for when a second person needs a login of their own.
 
-A company with info@, sales@ and invoices@ plus your own address is four mailboxes, which is Pro. Current prices are on the [pricing page](/pricing), and [MCPEmails for business](/for/business) shows how one person runs every company mailbox from one agent.
+A company with info@, sales@ and invoices@ plus your own address is four mailboxes, which puts you on Pro. Current mailbox counts and prices are on the [pricing page](/pricing), and [MCPEmails for business](/for/business) shows how one person runs every company mailbox from one agent.
 
 ## FAQ
 

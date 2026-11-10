@@ -2,7 +2,7 @@ const translation = {
   title: 'Qu’est-ce qu’un serveur e-mail MCP ? Une explication en clair',
   description:
     'Un serveur e-mail MCP est un outil qui permet à un agent IA de lire et d’envoyer des e-mails via des verbes simples, plutôt que de l’IMAP brut et des mots de passe. Voici ce que cela signifie.',
-  coverAlt: 'Qu’est-ce qu’un serveur e-mail MCP — une explication en clair par MCPEmails',
+  coverAlt: 'Qu’est-ce qu’un serveur e-mail MCP : une explication en clair par MCPEmails',
   content: `Un serveur e-mail MCP est un petit service qui donne à un agent IA comme Claude ou Cursor un accès en direct, en lecture et en envoi, à une vraie boîte mail, grâce au Model Context Protocol. Au lieu de confier à votre agent un mot de passe e-mail et une bibliothèque IMAP, il lui remet une courte liste d’actions : lister mes messages, lire celui-ci, rechercher cela, envoyer une réponse. L’agent appelle ces actions comme n’importe quel autre outil, et le serveur s’occupe du travail laborieux côté fournisseur en coulisses.
 
 Si vous avez entendu parler de « MCP » un peu partout et que vous voulez la version sans jargon de ce que fait réellement un serveur e-mail *MCP*, c’est ici. Construisons-la pièce par pièce.
@@ -21,7 +21,7 @@ Un serveur e-mail MCP est un serveur MCP dont les outils concernent justement l�
 
 Voici la version concrète. Vous connectez une fois votre boîte Gmail, Outlook, iCloud, Fastmail, ou n’importe quelle boîte IMAP au serveur. Le serveur expose alors l’e-mail sous la forme d’une poignée d’outils. Quand votre agent veut s’occuper d’e-mails, il appelle l’un de ces outils, le serveur dialogue avec votre fournisseur via IMAP et SMTP (ou Microsoft Graph pour Outlook) en votre nom, et il renvoie un résultat propre.
 
-Une bonne image pour se le représenter : le serveur e-mail MCP est un **traducteur et un videur**. La partie traducteur transforme la demande en clair de l’agent (« lis le dernier message de mon propriétaire ») en l’appel d’API spécifique au fournisseur qui convient, et reconvertit la réponse brouillonne (parties MIME, encodage, en-têtes de fil de discussion) en quelque chose de lisible. La partie videur décide ce que l’agent a le droit de faire — lecture seule, ou lecture et envoi — et ne le laisse jamais approcher de votre vrai mot de passe.
+Une bonne image pour se le représenter : le serveur e-mail MCP est un **traducteur et un videur**. La partie traducteur transforme la demande en clair de l’agent (« lis le dernier message de mon propriétaire ») en l’appel d’API spécifique au fournisseur qui convient, et reconvertit la réponse brouillonne (parties MIME, encodage, en-têtes de fil de discussion) en quelque chose de lisible. La partie videur décide ce que l’agent a le droit de faire (lecture seule, ou lecture et envoi) et ne le laisse jamais approcher de votre vrai mot de passe.
 
 ## Des outils, pas de l’IMAP brut
 
@@ -41,15 +41,15 @@ Un serveur e-mail MCP remplace tout ça par des **verbes**. L’agent ne voit pa
 }
 \`\`\`
 
-Chacun sauf \`inbox_list\` prend une \`action\` : \`email_read\` couvre lister, lire et rechercher ; \`email_compose\` couvre envoyer, répondre et transférer. Quelques outils supplémentaires complètent la surface (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), mais ces quelques verbes essentiels couvrent le travail quotidien. L’agent commence toujours par \`inbox_list\` pour découvrir quels comptes sont connectés et leur \`inbox_id\` — il ne copie-colle jamais un UUID depuis un fichier de configuration. Ensuite il liste, lit, recherche, envoie.
+Chacun sauf \`inbox_list\` prend une \`action\` : \`email_read\` couvre lister, lire et rechercher ; \`email_compose\` couvre envoyer, répondre et transférer. Quelques outils supplémentaires complètent la surface (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), mais ces quelques verbes essentiels couvrent le travail quotidien. L’agent commence toujours par \`inbox_list\` pour découvrir quels comptes sont connectés et leur \`inbox_id\` ; il ne copie-colle jamais un UUID depuis un fichier de configuration. Ensuite il liste, lit, recherche, envoie.
 
 Le passage de « voici une bibliothèque, débrouille-toi » à « voici trois verbes, chacun prenant une action » est tout l’intérêt. Les verbes sont prévisibles. Ils ont une forme fixe, une réponse documentée et une permission attachée. C’est ce qui rend l’e-mail sûr à automatiser, plutôt que tout juste bon à faire une démo.
 
 ## Pourquoi un agent a besoin de verbes, pas de votre mot de passe
 
-La façon naïve de donner un accès e-mail à un agent, c’est de glisser le mot de passe de votre boîte dans un prompt ou une configuration et de le laisser piloter un client IMAP. Ne faites pas ça. Un mot de passe est un passe-partout — il donne accès à tout, pour toujours, sans aucun moyen de le restreindre à « lecture seule » ni de le retirer proprement sans le changer partout.
+La façon naïve de donner un accès e-mail à un agent, c’est de glisser le mot de passe de votre boîte dans un prompt ou une configuration et de le laisser piloter un client IMAP. Ne faites pas ça. Un mot de passe est un passe-partout : il donne accès à tout, pour toujours, sans aucun moyen de le restreindre à « lecture seule » ni de le retirer proprement sans le changer partout.
 
-Les verbes, c’est différent. Quand votre agent se connecte à MCPEmails, il obtient un jeton limité exactement à ce que vous avez approuvé : \`read:email\`, \`send:email\`, ou les deux. L’agent détient une capacité, pas un identifiant. Si vous n’avez accordé qu’un accès en lecture, il n’y a aucun verbe d’envoi dans son menu — il est physiquement incapable d’écrire à qui que ce soit.
+Les verbes, c’est différent. Quand votre agent se connecte à MCPEmails, il obtient un jeton limité exactement à ce que vous avez approuvé : \`read:email\`, \`send:email\`, ou les deux. L’agent détient une capacité, pas un identifiant. Si vous n’avez accordé qu’un accès en lecture, il n’y a aucun verbe d’envoi dans son menu ; il est physiquement incapable d’écrire à qui que ce soit.
 
 Et le secret lui-même ? Il reste sur le serveur, chiffré. MCPEmails ne stocke qu’une seule chose par boîte : un mot de passe d’application ou un jeton OAuth, chiffré avec AES-256-GCM, déchiffré sur nos serveurs uniquement lorsqu’une requête en a besoin, et jamais envoyé à votre agent. Votre e-mail lui-même n’est jamais stocké. Chaque appel d’outil récupère le message en direct depuis votre fournisseur et le jette à l’instant où l’agent l’a reçu. Le corps de votre e-mail ne traîne pas dans une base de données quelque part en attendant de fuiter. Si vous voulez la version longue sur l’importance de ce choix de conception, j’en ai parlé dans [pourquoi ne jamais stocker votre e-mail compte](/blog/why-email-never-stored-matters).
 
@@ -62,9 +62,9 @@ Une vraie interaction ressemble à ceci. Imaginons que vous demandiez à Claude 
 1. L’agent appelle \`inbox_list\` et trouve votre Gmail professionnel.
 2. Il appelle \`email_read\` avec \`action: "list"\` et \`unread: true\` pour voir les nouveautés.
 3. Pour tout ce qui semble important, il appelle \`email_read\` avec \`action: "read"\` pour récupérer le corps complet.
-4. Il résume, et si vous avez approuvé l’accès en envoi, il peut rédiger une réponse avec \`email_compose\` (\`action: "reply"\`) — qui définit automatiquement les en-têtes de fil pour que la réponse atterrisse dans la bonne conversation.
+4. Il résume, et si vous avez approuvé l’accès en envoi, il peut rédiger une réponse avec \`email_compose\` (\`action: "reply"\`), qui définit automatiquement les en-têtes de fil pour que la réponse atterrisse dans la bonne conversation.
 
-Une limite honnête qu’il vaut mieux connaître d’emblée : il s’agit de **scrutation, pas de notification poussée**. Il n’y a pas de webhooks. Le serveur ne préviendra pas votre agent quand un nouveau courrier arrive. Pour réagir à un nouvel e-mail, l’agent doit vérifier selon un calendrier. C’est un compromis délibéré, et il façonne la manière de construire quelque chose comme un [répondeur automatique](/blog/build-email-auto-responder-mcp-agent) ou une [routine de tri de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
+Une limite qu’il vaut mieux connaître d’emblée : MCP lui-même fonctionne en **scrutation, pas en notification poussée**. Le serveur répond quand l’agent le sollicite et ne le prévient jamais, donc un agent dans une conversation réagit à un nouvel e-mail en vérifiant selon un calendrier. (MCPEmails propose bien un webhook de nouveau message pour votre propre code, sur Pro et Business.) Cela façonne la manière de construire quelque chose comme un [répondeur automatique](/blog/build-email-auto-responder-mcp-agent) ou une [routine de tri de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
 ## Serveur hébergé ou construire le vôtre
 
@@ -76,7 +76,7 @@ Un serveur e-mail MCP hébergé gère pour vous la dispersion des fournisseurs e
 
 Un serveur e-mail MCP transforme votre boîte de réception en un ensemble d’actions nommées et sûres qu’un agent IA peut appeler via un protocole standard. L’agent obtient des verbes limités à ce que vous avez autorisé. Votre mot de passe reste sur le serveur, chiffré. Votre e-mail proprement dit n’est jamais stocké. Pour le déroulé complet de la mise en place de bout en bout, commencez par le guide pilier sur [donner un accès e-mail à votre agent IA](/blog/how-to-give-your-ai-agent-email-access), ou passez directement à [connecter une boîte en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes).
 
-Envie d’essayer ? [Commencez gratuitement](/signup) — sans carte requise, une boîte connectée — ou lisez [la documentation](/docs) pour la référence des outils et l’URL de terminaison.`,
+Envie d’essayer ? [Commencez gratuitement](/signup), sans carte requise et avec une boîte connectée, ou lisez [la documentation](/docs) pour la référence des outils et l’URL de terminaison.`,
 };
 
 export default translation;

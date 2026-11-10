@@ -2,12 +2,12 @@ const translation = {
   title: 'Sept choses que votre agent IA peut faire dès qu’il a accès à votre boîte mail',
   description:
     'Sept actions concrètes pour un agent IA avec accès à la boîte mail : trier les non-lus, résumer un fil, rédiger des réponses, retrouver des pièces jointes et relancer.',
-  coverAlt: 'Sept choses que votre agent IA peut faire avec un accès à la boîte mail via MCP — MCPEmails',
+  coverAlt: 'Sept choses que votre agent IA peut faire avec un accès à la boîte mail via MCP, par MCPEmails',
   content: `Dès que votre agent peut lire et envoyer de vrais e-mails, les démonstrations gadget s’arrêtent et le vrai travail commence. Voici sept choses que vous pouvez lui confier dès aujourd’hui : trier la pile des non-lus, résumer un long fil de discussion, rédiger des réponses dans votre style, retrouver cette pièce jointe précise, relancer les échanges en attente, router le courrier au bon endroit et vous livrer un récapitulatif hebdomadaire.
 
 Chaque exemple ci-dessous correspond à de vrais outils MCP que vous pouvez appeler dès maintenant. Les outils sont les mêmes que vous connectiez Gmail, Outlook, iCloud, Fastmail ou une boîte IMAP générique. Si vous n’avez pas encore relié un agent à votre boîte mail, le [guide complet pour donner à votre agent IA un accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access) couvre la configuration ; le [tutoriel de connexion en 2 minutes](/blog/connect-email-to-ai-agent-under-2-minutes) est la voie rapide.
 
-Une mise au point honnête d’entrée, car elle façonne la moitié de cette liste : **MCPEmails fonctionne par interrogation, pas par notification push.** Il n’y a ni webhooks, ni événements initiés par le serveur. L’agent n’est pas prévenu quand un message arrive. Il vérifie selon un calendrier. Cela ressemble à une limite, et pour quelques cas d’usage c’en est une, mais cela signifie aussi que rien ne se déclenche sans une horloge que vous contrôlez. Je signalerai les endroits où l’interrogation compte.
+Une précision d’emblée, car elle façonne la moitié de cette liste : **les outils fonctionnent en requête et réponse.** L’agent n’est pas prévenu quand un message arrive ; il vérifie selon un calendrier. Cela ressemble à une limite, et pour quelques cas d’usage c’en est une, mais cela signifie aussi que rien ne se déclenche sans une horloge que vous contrôlez. Si vous tenez à une notification push, les espaces de travail Pro et Business peuvent ajouter un webhook sous **Clés API** dans le tableau de bord, et MCPEmails envoie un POST signé à votre URL quand un nouveau message arrive. Je signalerai les endroits où le délai compte.
 
 ## La trousse à outils, d’un seul souffle
 
@@ -53,7 +53,7 @@ Vous savez que quelqu’un a envoyé le contrat signé en mars. Vous ne savez pa
 
 > Chaque jour ouvré à 16h, vérifie si quelqu’un a répondu aux propositions que j’ai envoyées cette semaine. Liste celles encore en attente avec leur date d’envoi initiale.
 
-Aucun événement ne réveille l’agent quand une réponse arrive. À la place, vous l’exécutez selon un calendrier — une tâche cron, la fonction de tâches programmées de votre client, ce qui vous convient — et chaque exécution fait le travail : \`email_read\` avec l’action search pour les propositions envoyées, puis l’action list pour voir ce qui est revenu. Si vous voulez qu’un fil resté sans suite se rappelle de lui-même, l’agent peut même rédiger et mettre en file d’attente une relance. La [création d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) détaille la boucle d’interrogation, y compris la façon de respecter la valeur \`retry_after\` quand vous atteignez une limite de débit, pour ne pas marteler le serveur.
+Aucun événement ne réveille l’agent quand une réponse arrive. À la place, vous l’exécutez selon un calendrier (une tâche cron, la fonction de tâches programmées de votre client, ce qui vous convient) et chaque exécution fait le travail : \`email_read\` avec l’action search pour les propositions envoyées, puis l’action list pour voir ce qui est revenu. Si vous voulez qu’un fil resté sans suite se rappelle de lui-même, l’agent peut même rédiger et mettre en file d’attente une relance. La [création d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) détaille la boucle d’interrogation, y compris la façon de respecter la valeur \`retry_after\` quand vous atteignez une limite de débit, pour ne pas marteler le serveur.
 
 ### 6. Router ou transférer au bon endroit
 
@@ -73,7 +73,7 @@ Cela combine les autres : \`email_read\` (action search, puis list) pour rassemb
 
 ## Ce que ça coûte et où se situent les limites
 
-Les sept fonctionnent sur le [plan Gratuit](/pricing), à 0 $, qui connecte une boîte à 60 requêtes par minute. Personal (9 $/mois) connecte jusqu'à trois boîtes et porte la limite de pointe à 120 requêtes par minute ; Pro (15 $/mois) en connecte jusqu'à 10 et la porte à 300 ; Business (39 $/mois) inclut 10 boîtes, ajoute des membres avec rôles et un espace de travail distinct par client, et la porte à 1 000 requêtes par minute. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal à 9 $/mois, et Pro seulement au-delà de trois boîtes.
+Les sept fonctionnent sur le [plan Gratuit](/pricing), qui ne coûte rien et connecte une boîte. Personal ajoute des boîtes pour une seule personne et relève la limite de pointe ; Pro en ajoute davantage pour qui gère une activité professionnelle, la relève encore et apporte les webhooks pour les nouveaux messages ; Business inclut un lot de boîtes, avec un tarif par boîte au-delà, plus des membres avec rôles et un espace de travail distinct par client. Une seule boîte suffit largement pour un récapitulatif hebdomadaire ; dès que vous voulez le pro et le perso dans le même agent, c’est Personal. Le nombre de boîtes et les tarifs à jour sont sur la [page des tarifs](/pricing).
 
 Quand vous atteignez bel et bien une limite, le serveur renvoie une erreur réessayable avec \`data.retry_after\` en secondes. Respectez-la. Et ne réessayez jamais aveuglément un envoi \`email_compose\`, car réessayer après un délai d’attente peut faire atterrir deux copies du même message dans la boîte de quelqu’un.
 
