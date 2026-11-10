@@ -9,14 +9,37 @@
  * <time> elements.
  */
 
-/** Author records, keyed by id, reused across posts and for E-E-A-T author markup. */
+/**
+ * Author records, keyed by id, reused across posts and for E-E-A-T author
+ * markup. `role` and `bio` are per-locale maps (resolved by getAuthor), because
+ * the byline and the author card render on every translated post: /de, /pt and
+ * /ja showed them in English under a translated article.
+ */
 export const AUTHORS = {
   asgeir: {
     id: 'asgeir',
     name: 'Asgeir Albretsen',
-    role: 'Founder & Engineer, MCPEmails',
+    role: {
+      en: 'Founder & Engineer, MCPEmails',
+      nb: 'Gründer og utvikler, MCPEmails',
+      es: 'Fundador e ingeniero, MCPEmails',
+      fr: 'Fondateur et ingénieur, MCPEmails',
+      de: 'Gründer und Entwickler, MCPEmails',
+      pt: 'Fundador e engenheiro, MCPEmails',
+      ja: 'MCPEmails 創業者・エンジニア',
+      zh: 'MCPEmails 创始人兼工程师',
+    },
     avatar: '/blog/author-asgeir.svg',
-    bio: 'Asgeir builds MCPEmails — the bridge that lets AI agents read, search, and send real email over the Model Context Protocol. He writes about agents, email infrastructure, and developer experience.',
+    bio: {
+      en: 'Asgeir builds MCPEmails, the bridge that lets AI agents read, search and send real email over the Model Context Protocol. He writes about agents, email infrastructure and developer experience.',
+      nb: 'Asgeir bygger MCPEmails, broen som lar AI-agenter lese, søke i og sende ekte e-post over Model Context Protocol. Han skriver om agenter, e-postinfrastruktur og utvikleropplevelse.',
+      es: 'Asgeir desarrolla MCPEmails, el puente que permite a los agentes de IA leer, buscar y enviar correo real a través del Model Context Protocol. Escribe sobre agentes, infraestructura de correo y experiencia de desarrollo.',
+      fr: "Asgeir développe MCPEmails, la passerelle qui permet aux agents IA de lire, rechercher et envoyer de vrais e-mails via le Model Context Protocol. Il écrit sur les agents, l'infrastructure e-mail et l'expérience développeur.",
+      de: 'Asgeir entwickelt MCPEmails, die Brücke, über die KI-Agenten echte E-Mails per Model Context Protocol lesen, durchsuchen und senden. Er schreibt über Agenten, E-Mail-Infrastruktur und Developer Experience.',
+      pt: 'Asgeir desenvolve o MCPEmails, a ponte que permite a agentes de IA ler, pesquisar e enviar e-mails de verdade pelo Model Context Protocol. Ele escreve sobre agentes, infraestrutura de e-mail e experiência do desenvolvedor.',
+      ja: 'AsgeirはMCPEmailsを開発しています。AIエージェントがModel Context Protocolを通じて実際のメールを読み、検索し、送信できるようにする橋渡し役です。エージェント、メールインフラ、開発者体験について執筆しています。',
+      zh: 'Asgeir 开发 MCPEmails，一座让 AI 智能体通过 Model Context Protocol 读取、搜索和发送真实邮件的桥梁。他撰写关于智能体、邮件基础设施和开发者体验的文章。',
+    },
     url: 'https://mcpemails.com/blog',
     // No `twitter` handle: @mcpemails does not exist on X, so the
     // author-card link is intentionally omitted rather than pointing at a
@@ -295,9 +318,18 @@ export function getPost(slug) {
   return POSTS.find((p) => p.slug === slug);
 }
 
-/** Resolve a post's author record. */
-export function getAuthor(post) {
-  return AUTHORS[post.authorId];
+/**
+ * A post's author with `role` and `bio` resolved to strings for `locale`
+ * (English when the locale has none). Without a locale the English record.
+ */
+export function getAuthor(post, locale = 'en') {
+  const author = AUTHORS[post.authorId];
+  if (!author) return author;
+  return {
+    ...author,
+    role: resolveLocalized(author.role, locale),
+    bio: resolveLocalized(author.bio, locale),
+  };
 }
 
 // ---------------------------------------------------------------------------

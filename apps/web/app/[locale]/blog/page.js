@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, APP_URL } from '@/i18n/seo';
 import { getAllPosts, getAuthor, getLocalizedPost } from '@/lib/blog/posts';
+import { tagLabelMap } from '@/lib/blog/tag-labels.mjs';
 import { readingTime } from '@/lib/blog/markdown';
 import { blogPostCanonicalLocale } from '@/lib/blog/seo.mjs';
 import BlogIndexClient from '../../../components/marketing/BlogIndexClient';
@@ -43,7 +44,7 @@ export default async function BlogIndexPage({ params }) {
   // the active locale (falling back to English when not translated).
   const posts = getAllPosts().map((raw) => {
     const p = getLocalizedPost(raw.slug, locale);
-    const author = getAuthor(p);
+    const author = getAuthor(p, locale);
     return {
       slug: p.slug,
       title: p.title,
@@ -58,6 +59,8 @@ export default async function BlogIndexPage({ params }) {
       canonicalLocale: blogPostCanonicalLocale(p, locale),
     };
   });
+  // Tags stay English keys (the filter matches on them); the chips show these.
+  const tagLabels = tagLabelMap(posts.flatMap((p) => p.tags), locale);
 
   // Blog + ItemList structured data for rich results / AI discovery.
   const jsonLd = {
@@ -90,7 +93,7 @@ export default async function BlogIndexPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <BlogIndexClient posts={posts} />
+      <BlogIndexClient posts={posts} tagLabels={tagLabels} />
     </>
   );
 }

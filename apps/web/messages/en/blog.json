@@ -25,6 +25,7 @@
       "sub": "Connect Gmail, Outlook, Fastmail, or any IMAP account to your AI agent in minutes.",
       "primary": "Get started free",
       "secondary": "Read the docs"
-    }
+    },
+    "breadcrumbAria": "Breadcrumb"
   }
 }
