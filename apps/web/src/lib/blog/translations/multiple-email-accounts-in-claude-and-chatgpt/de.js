@@ -83,11 +83,11 @@ Schalten Sie für ein Postfach **Vor dem Senden prüfen** ein, und jedes Senden,
 ## Wie viele Postfächer jeder Tarif verbindet
 
 - **Free:** ein Postfach.
-- **Personal:** drei Postfächer.
-- **Pro:** bis zu 10 Postfächer, mit einem Login.
-- **Business:** 10 Postfächer inklusive und $3 pro Monat für jedes weitere, und für den Fall, dass eine zweite Person einen eigenen Login braucht.
+- **Personal:** mehrere Postfächer, für eine Person.
+- **Pro:** noch mehr Postfächer, weiterhin mit einem Login.
+- **Business:** ein Kontingent enthaltener Postfächer mit einem Preis pro weiterem Postfach, und für den Fall, dass eine zweite Person einen eigenen Login braucht.
 
-Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, das ist Pro. Aktuelle Preise stehen auf der [Preisseite](/pricing), und [MCPEmails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
+Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, womit Sie bei Pro landen. Aktuelle Postfachzahlen und Preise stehen auf der [Preisseite](/pricing), und [MCPEmails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
 
 ## FAQ
 

@@ -86,7 +86,7 @@ MCPEmails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IMA
 - **Entwürfe, Ordner und Planung:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` und \`schedule_list\`.
 - **Der Rest:** \`contact_search\`, \`signature_get\`, \`signature_set\`, dazu \`automation\` und \`automation_read\` für wiederkehrende Regeln.
 
-Eine Grenze sollten Sie einplanen: MCPEmails arbeitet mit Abfragen. Es gibt keine Webhooks und keine vom Server ausgelösten Ereignisse, ChatGPT prüft also auf neue E-Mails, wenn Sie darum bitten, und nicht in dem Moment, in dem eine Nachricht eintrifft.
+Eine Grenze sollten Sie einplanen: Im Chat prüft ChatGPT auf neue E-Mails, wenn Sie darum bitten, nicht in dem Moment, in dem eine Nachricht eintrifft. Nichts im Konnektor weckt ChatGPT von selbst. (Eigenen Code dagegen schon: Pro- und Business-Workspaces können unter API-Schlüssel einen Webhook anlegen, der bei neuen E-Mails einen POST an Ihre URL schickt.)
 
 ## OpenAI Codex im Terminal
 
@@ -107,7 +107,7 @@ Schränken Sie den Schlüssel eng ein. Für einen Coding-Agenten ist Nur-Lese-Zu
 - **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** MCPEmails wurde für diese Nachricht nicht ausgewählt. Tippen Sie **@**, wählen Sie MCPEmails und fragen Sie erneut.
 - **Der Anbieter lehnt Ihr Passwort ab.** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht Ihr Passwort für die Anmeldung im Web. Manche Anbieter stellen eines erst aus, wenn die Zwei-Faktor-Authentifizierung aktiv ist.
 - **Eine eigene IMAP-Verbindung läuft in ein Timeout.** Prüfen Sie Host, Port und TLS-Modus. Port 993 nutzt normalerweise implizites TLS, Port 143 normalerweise STARTTLS.
-- **ChatGPT ist verbunden, sieht aber keine E-Mails.** Prüfen Sie, ob das Postfach im Dashboard aktiv ist, ob die Verbindung \`read:email\` hat, und bitten Sie ChatGPT, zuerst \`inbox_list\` aufzurufen.
+- **ChatGPT ist verbunden, sieht aber keine E-Mails.** Prüfen Sie, ob das Postfach im Dashboard aktiv ist, ob die Verbindung mindestens Nur-Lese-Zugriff hat, und bitten Sie ChatGPT, zuerst \`inbox_list\` aufzurufen.
 
 ## FAQ
 
@@ -124,7 +124,7 @@ Nein. Codex ist eine Terminal-Oberfläche und nutzt deshalb einen API-Schlüssel
 Nein. Jede Nachricht wird für die Anfrage, die sie braucht, live von Ihrem Anbieter abgerufen und danach verworfen. Gespeichert bleibt nur die verschlüsselte Zugangsberechtigung für den Anbieter. [Warum es wichtig ist, E-Mails nie zu speichern](/blog/why-email-never-stored-matters), erklärt die Gründe.
 
 **Was kostet es?**
-Free umfasst ein verbundenes Postfach und 150 abrechenbare E-Mail-Aktionen pro Kalendermonat (UTC), wobei die ersten 3 Tage nicht mitzählen. Dieses monatliche Kontingent gilt für Workspaces, die am oder nach dem 2026-09-13 erstellt wurden; früher erstellte Workspaces sind ausgenommen. Kostenpflichtige Tarife bieten mehr Postfächer und unbegrenzte E-Mail-Aktionen: siehe [Preise](/pricing).
+Free umfasst ein verbundenes Postfach, mit den Limits, die auf der [Preisseite](/pricing) stehen. Kostenpflichtige Tarife bieten mehr Postfächer.
 
 ## Nächster Schritt
 

@@ -18,7 +18,7 @@ Laut der [Hilfeseite zu verbundenen Apps](https://help.openai.com/en/articles/11
 3. **Öffnen Sie das Plugin in ChatGPT.** Gehen Sie zu **Einstellungen**, dann **Plugins**, und wählen Sie **iCloud Mail**.
 4. **Geben Sie Ihre iCloud-Adresse und das App-spezifische Passwort ein.** OpenAI verlangt eine Adresse, die auf @icloud.com, @me.com oder @mac.com endet.
 
-Ihr normales Apple-Account-Passwort funktioniert hier nicht. Das ist Apples Regel für jede App außerhalb der eigenen, und es ist dieselbe Art Passwort, die auch ein E-Mail-Programm eines anderen Herstellers verwendet.
+Ihr normales Apple-Account-Passwort funktioniert hier nicht. Apple bietet Apps anderer Entwickler zwei Wege an: Eine unterstützte App kann direkt mit dem Apple Account autorisiert werden, jede andere bekommt ein App-spezifisches Passwort. Das Plugin von OpenAI geht den zweiten Weg, mit derselben Art Passwort, die auch ein E-Mail-Programm eines anderen Herstellers verwendet.
 
 ## Was das iCloud-Mail-Plugin kann
 
@@ -56,7 +56,7 @@ Jedes Plugin ist eine eigene Verbindung mit eigener Anmeldung, und ChatGPT muss 
 
 ## iCloud Mail in Claude
 
-Claude hat zwei eigene E-Mail-Konnektoren, einen für Gmail und einen für geschäftliche Microsoft 365-Konten. Eine iCloud-Option gibt es in Claude nicht, und Apple bietet für iCloud Mail keine Anmeldung an, die ein Drittanbieter statt eines Passworts nutzen könnte. [Kann Claude meine E-Mails lesen?](/blog/can-claude-read-my-email) geht die Optionen von Claude Postfach für Postfach durch.
+Claude hat zwei eigene E-Mail-Konnektoren, einen für Gmail und einen für geschäftliche Microsoft 365-Konten. Eine iCloud-Option gibt es in Claude nicht. Apple erlaubt zwar, dass eine unterstützte App eines anderen Entwicklers iCloud Mail mit dem Apple Account statt mit einem App-spezifischen Passwort autorisiert, aber Claude hat keinen solchen Konnektor, und MCPEmails verbindet iCloud mit einem App-spezifischen Passwort über IMAP. [Kann Claude meine E-Mails lesen?](/blog/can-claude-read-my-email) geht die Optionen von Claude Postfach für Postfach durch.
 
 Um iCloud in Claude zu nutzen, fügen Sie einen MCP-Server hinzu, der die iCloud-Verbindung hält, und genau das ist MCPEmails. Es verbindet sich mit iCloud auf dieselbe Weise wie das Plugin von OpenAI, mit einem App-spezifischen Passwort über IMAP, und stellt das Postfach dann jeder App bereit, die das Model Context Protocol spricht: Claude, ChatGPT, Cursor und den anderen [unterstützten Clients](/docs/clients).
 

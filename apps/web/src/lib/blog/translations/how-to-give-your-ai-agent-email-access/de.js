@@ -55,7 +55,7 @@ Eine Handvoll zusammengefasster, aktionsbasierter Tools deckt die gesamte Fläch
 - \`email_compose\` (Aktion \`reply\`): dasselbe, und es setzt die Threading-Header (In-Reply-To, References) für Sie
 - \`email_organize\`: verschieben, löschen, markieren oder archivieren (eine Aktion pro Aufruf)
 
-Eine Grenze gehört gleich vorweg: Das ist **Polling, kein Push**. Es gibt keine Webhooks. Um auf neue E-Mails zu reagieren, fragt Ihr Agent nach einem Zeitplan ab, zum Beispiel mit \`email_read\` (Aktion \`list\`) und \`unread: true\`. Jede automatische Antwort, die Sie bauen, läuft nach Timer, nicht nach einem sofortigen Auslöser. Die [Bauanleitung für automatische Antworten](/blog/build-email-auto-responder-mcp-agent) zeigt, wie das gut geht.
+Eines sollten Sie vorab wissen: Die Tools selbst arbeiten nach **Anfrage und Antwort**. Der Server antwortet, wenn Ihr Agent fragt, und der einfachste Weg, auf neue E-Mails zu reagieren, ist das Abfragen nach einem Zeitplan, zum Beispiel mit \`email_read\` (Aktion \`list\`) und \`unread: true\`. Wollen Sie stattdessen einen Push, können Pro- und Business-Workspaces im Dashboard unter **API-Schlüssel** einen Webhook anlegen: MCPEmails schickt dann einen signierten POST an Ihre URL, sobald neue E-Mails eintreffen, mit Nachrichten-IDs, die Ihr Agent mit \`email_read\` öffnet. Die [Bauanleitung für automatische Antworten](/blog/build-email-auto-responder-mcp-agent) zeigt beide Muster.
 
 Ein Morgen-Triage-Lauf liest sich so:
 
@@ -88,7 +88,7 @@ Derselbe Endpunkt, dieselben Tools, zwei Wege hinein, je nachdem, ob Ihr Client 
 
 ### OAuth-fähige Clients (kein API-Schlüssel)
 
-claude.ai, Claude Desktop, Cursor und ähnliche Clients verbinden sich mit OAuth 2.0 Authorization Code + PKCE und Dynamic Client Registration nach RFC 7591. In claude.ai öffnen Sie **Anpassen → Konnektoren**, klicken auf **+ Hinzufügen** und **Benutzerdefinierten Konnektor hinzufügen**, fügen die URL des MCP-Endpunkts ein, klicken auf Verbinden, melden sich bei Ihrem MCPEmails-Konto an und genehmigen. Tokens sind auf genau das beschränkt, was Sie genehmigen: \`read:email\`, \`send:email\` oder beides. Schritt-für-Schritt-Anleitungen finden Sie in [Claude mit Ihrem Postfach einrichten](/blog/connect-claude-to-email) und [Ihre E-Mail zu ChatGPT hinzufügen](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor und ähnliche Clients verbinden sich mit OAuth 2.0 Authorization Code + PKCE und Dynamic Client Registration nach RFC 7591. In claude.ai öffnen Sie **Anpassen → Konnektoren**, klicken auf **+ Hinzufügen** und **Benutzerdefinierten Konnektor hinzufügen**, fügen die URL des MCP-Endpunkts ein, klicken auf Verbinden, melden sich bei Ihrem MCPEmails-Konto an und genehmigen. Tokens sind auf genau das beschränkt, was Sie auf dem Zustimmungsbildschirm wählen: **Nur-Lese-Zugriff**, **Standard** oder **Vollzugriff**, oder unter **Benutzerdefiniert** einzelne Berechtigungen. Schritt-für-Schritt-Anleitungen finden Sie in [Claude mit Ihrem Postfach einrichten](/blog/connect-claude-to-email) und [Ihre E-Mail zu ChatGPT hinzufügen](/blog/connect-chatgpt-to-email).
 
 ### Clients ohne OAuth (API-Schlüssel)
 
@@ -98,7 +98,7 @@ So oder so widerrufen Sie jede Verbindung im Dashboard mit einem Klick. Die gena
 
 ## Ist das sicher? Und die Rate-Limits
 
-Kurze Antwort: ja, und der Beitrag [Ist es sicher, einem KI-Agenten Zugriff auf E-Mails zu geben?](/blog/is-it-safe-to-give-ai-agent-email-access) führt das vollständig aus. Das Modell hält eingeschränkte Fähigkeiten, nicht Ihr Passwort; Zugangsdaten sind verschlüsselt; nichts wird gespeichert; gesendet wird über Ihren Anbieter; der Zugriff lässt sich mit einem Klick widerrufen.
+Ja, und der Beitrag [Ist es sicher, einem KI-Agenten Zugriff auf E-Mails zu geben?](/blog/is-it-safe-to-give-ai-agent-email-access) führt das vollständig aus. Das Modell hält eingeschränkte Fähigkeiten, nicht Ihr Passwort; Zugangsdaten sind verschlüsselt; nichts wird gespeichert; gesendet wird über Ihren Anbieter; der Zugriff lässt sich mit einem Klick widerrufen.
 
 Zu den Rate-Limits: Jeder Workspace hat eine Obergrenze pro Minute, die mit Ihrem Tarif wächst (siehe [Preise](/pricing)), und jeder API-Schlüssel bekommt Fenster pro Minute, Stunde und Tag, die zu diesem Tarif passen, sodass ein Schlüssel die ganze Obergrenze nutzen kann und mehrere Schlüssel sie sich teilen. Wenn Sie ein Limit erreichen, gibt der Server einen wiederholbaren Fehler mit einem \`retry_after\`-Wert in Sekunden zurück. Halten Sie sich daran. Und wiederholen Sie ein \`email_compose\`-Senden nie blind automatisch: Sie würden Duplikate senden.
 
@@ -108,10 +108,10 @@ Die Tarife bemessen sich nach verbundenen Postfächern. API-Schlüssel sind in j
 
 - **Free**, dauerhaft kostenlos. Keine Karte. Ein verbundenes Postfach, Hilfe-Center und Support per E-Mail.
 - **Personal**: mehrere verbundene Postfächer, höhere Burst-Rate, längere Auswertungen, bevorzugter Support per E-Mail.
-- **Pro**: noch mehr verbundene Postfächer, höhere Burst-Rate, mehrjährige Auswertungen, bevorzugter Support per E-Mail.
-- **Business**: alles aus Pro, dazu ein enthaltenes Kontingent an Postfächern mit weiteren gegen Aufpreis, unbegrenzt viele Mitglieder mit Rollen, Admins, die angehaltene Sendungen freigeben, ein eigener Workspace pro Kunde oder Unternehmen und die höchste Burst-Rate.
+- **Pro**: für eine Person, die ein Unternehmen führt, mit noch mehr verbundenen Postfächern, noch höherer Burst-Rate, mehrjährigen Auswertungen und Webhooks für neue E-Mails.
+- **Business**: alles aus Pro, dazu ein enthaltenes Kontingent an Postfächern mit einem Preis pro weiterem Postfach, unbegrenzt viele Mitglieder mit Rollen, Admins, die angehaltene Sendungen freigeben, und ein eigener Workspace pro Kunde oder Unternehmen.
 
-Die aktuellen Zahlen stehen auf der [Preisseite](/pricing).
+Die aktuellen Preise und Postfachzahlen stehen auf der [Preisseite](/pricing).
 
 ## Loslegen
 
