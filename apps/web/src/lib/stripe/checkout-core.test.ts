@@ -1574,9 +1574,11 @@ const LOCALE_DECKS = {
   },
   ja: {
     stripe: 'ja',
-    obligation: /^登録すると、解約するまで請求期間ごとに表示価格をお支払いいただくことに同意したことになります。/,
+    obligation: /^お申し込みいただくと、解約するまで請求期間ごとに表示の料金をお支払いいただくことになります。/,
     reassurance: '本日請求されます。いつでも解約できます。14日以内なら返金できます。',
-    withdrawal: '撤回権',
+    // Our refund promise, not a statutory right: Japan has no cooling-off
+    // for online sales, so the deck never says 撤回権 or 消費者の方は.
+    withdrawal: '14日間の返金について',
     pass: /^お支払いは1回のみです。\d{4}年\d{1,2}月\d{1,2}日までPersonalをご利用いただけます。/,
     afterSubmit: /mcpemails\.com/,
   },

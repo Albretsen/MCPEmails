@@ -504,7 +504,7 @@ function checkoutCustomText(
             "Une question avant d'acheter : hello@mcpemails.com",
         },
         after_submit: {
-          message: 'Retour sur mcpemails.com pour connecter vos boîtes.',
+          message: 'Redirection vers mcpemails.com pour connecter vos boîtes.',
         },
       };
     case 'es':
@@ -532,18 +532,24 @@ function checkoutCustomText(
             'Dúvidas antes de comprar: hello@mcpemails.com',
         },
         after_submit: {
-          message: 'Levando você de volta ao mcpemails.com para conectar suas caixas de entrada.',
+          message: 'Você será redirecionado ao mcpemails.com para conectar suas caixas de entrada.',
         },
       };
     case 'ja':
       // Japanese runs sentences together without spaces.
+      //
+      // The 14-day sentence describes OUR refund promise (terms 5.4), not a
+      // statutory right: Japan's cooling-off (クーリング・オフ) does not apply
+      // to online sales, so "消費者の方は撤回できます" with a "撤回権" link
+      // would read as a legal entitlement that does not exist there. The
+      // link still goes to /ja/withdrawal, which spells the promise out.
       return {
         submit: {
           message:
-            '登録すると、解約するまで請求期間ごとに表示価格をお支払いいただくことに同意したことになります。' +
+            'お申し込みいただくと、解約するまで請求期間ごとに表示の料金をお支払いいただくことになります。' +
             reassurance +
             `解約はダッシュボードまたは[${cancelLabel}](${cancelUrl})から行えます。` +
-            `消費者の方は14日以内であれば撤回できます（[撤回権](${withdrawalUrl})）。` +
+            `お申し込みから14日以内であれば全額返金します（[14日間の返金について](${withdrawalUrl})）。` +
             'ご購入前のご質問はhello@mcpemails.comまでお寄せください。',
         },
         after_submit: {
@@ -1803,11 +1809,11 @@ function passCustomText(
         submit: {
           message:
             `Paiement unique. Personal jusqu'au ${until}. Rien ne se renouvelle, rien à résilier. ` +
-            `Remboursement intégral sous 14 jours : [droit de rétractation](${withdrawalUrl}). ` +
+            `Remboursement intégral pendant 14 jours : [droit de rétractation](${withdrawalUrl}). ` +
             "Une question avant d'acheter : hello@mcpemails.com",
         },
         after_submit: {
-          message: 'Retour sur mcpemails.com.',
+          message: 'Redirection vers mcpemails.com.',
         },
       };
     case 'es':
@@ -1826,12 +1832,12 @@ function passCustomText(
       return {
         submit: {
           message:
-            `Pagamento único. Personal até ${until}. Nada renova e não há nada para cancelar. ` +
+            `Pagamento único. Personal até ${until}. Nada se renova e não há nada para cancelar. ` +
             `Reembolso integral em até 14 dias: [direito de arrependimento](${withdrawalUrl}). ` +
             'Dúvidas antes de comprar: hello@mcpemails.com',
         },
         after_submit: {
-          message: 'Levando você de volta ao mcpemails.com.',
+          message: 'Você será redirecionado ao mcpemails.com.',
         },
       };
     case 'ja':
@@ -1839,7 +1845,7 @@ function passCustomText(
         submit: {
           message:
             `お支払いは1回のみです。${until}までPersonalをご利用いただけます。自動更新はなく、解約の手続きも不要です。` +
-            `14日以内なら全額返金します（[撤回権](${withdrawalUrl})）。` +
+            `14日以内なら全額返金します（[14日間の返金について](${withdrawalUrl})）。` +
             'ご購入前のご質問はhello@mcpemails.comまでお寄せください。',
         },
         after_submit: {
