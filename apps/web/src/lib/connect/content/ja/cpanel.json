@@ -18,11 +18,11 @@
     "eyebrow": "cPanel + AI",
     "titleLine1": "cPanelメール用のMCPサーバー：",
     "titleLine2": "会社のメールボックスをすべて、ClaudeとChatGPTに",
-    "lead": "cPanelのホスティングで、独自ドメインのinfo@、sales@、support@、invoices@を運用していますか。各メールボックスを1つのワークスペースに接続すれば、AIエージェントがそのすべてを横断して動きます。IMAPとメールボックスのパスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じメールボックスを1つだけでなくすべてのMCPクライアントで使えます。",
-    "meta0": "最初のメールボックスは無料、残りはプランで",
+    "lead": "cPanelのホスティングで、独自ドメインのinfo@、sales@、support@、invoices@を運用していますか。各メールボックスを1つのワークスペースに接続すれば、AIエージェントがそのすべてを横断して動きます。IMAPとメールボックスのパスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じメールボックスを、1つのクライアントだけでなくすべてのMCPクライアントで使えます。",
+    "meta0": "最初のメールボックスは無料、2つ目からは有料プランで",
     "meta1": "メールボックスのパスワードだけ、OAuthの設定なし",
     "meta2": "メールはその場で取得、保存はしません",
-    "answer": "Claudeは自力ではcPanelに届きません。MCPEmailsはホスト型のMCPサーバーで、メールボックスのパスワードを使ってIMAPで接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。設定は2分ほどです。info@やsales@といった会社用アドレスは、それぞれ独立したメールボックスとして接続します。1つは無料、Personalは3つ、Proは最大10、Businessは必要な数だけです。"
+    "answer": "Claudeは自力ではcPanelに届きません。MCPEmailsはホスト型のMCPサーバーで、メールボックスのパスワードを使ってIMAPで接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。設定は数分で終わります。info@やsales@といった会社用アドレスは、それぞれ独立したメールボックスとして接続します。1つは無料、Personalは3つ、Proは最大10、Businessは必要な数だけです。"
   },
   "persona": {
     "intro": "cPanelホスティングに会社用メールボックスが複数ありますか？",
@@ -31,7 +31,7 @@
   },
   "method": {
     "title": "cPanelの接続方法：IMAPとメールボックスのパスワード",
-    "body": "cPanelのメールボックス、つまりRoundcubeやHordeのウェブメールで読んでいるあのメールボックスは、cPanelの「Email Accounts」（メールアカウント）で設定したパスワードを使ってIMAP/SMTPで接続します。アプリ パスワードもOAuthもありません。ホストはたいてい<code>mail.yourdomain.com</code>で、正確な値はcPanelの「Email Accounts」から「Connect Devices」（デバイスの接続）を開いた先の「Mail Client Manual Settings」に表示されます。暗号化なしの列ではなく、SSL/TLSの安全な列を使ってください。"
+    "body": "cPanelのメールボックス（RoundcubeやHordeのウェブメールで読んでいるもの）は、cPanelの「Email Accounts」（メールアカウント）で設定したパスワードを使ってIMAP/SMTPで接続します。アプリ パスワードもOAuthもありません。ホストはたいてい<code>mail.yourdomain.com</code>で、正確な値はcPanelの「Email Accounts」から「Connect Devices」（デバイスを接続）を開いた先の「Mail Client Manual Settings」（メールクライアントの手動設定）に表示されます。暗号化なしの表ではなく、「Secure SSL/TLS Settings」の表の値を使ってください。"
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "cPanelで設定値を読み取る",
-      "p": "cPanelで「Email Accounts」を開き、対象のメールボックスの「Connect Devices」をクリックします。「Mail Client Manual Settings」から、安全なIMAPとSMTPのホストとポートをコピーします。メールボックスのパスワードがわからなければ、同じ画面で新しいものを設定してください。"
+      "p": "cPanelで「Email Accounts」を開き、対象のメールボックスの「Connect Devices」をクリックします。「Mail Client Manual Settings」の「Secure SSL/TLS Settings」側から、IMAPとSMTPのホストとポートをコピーします。メールボックスのパスワードがわからなければ、同じ画面で新しいものを設定してください。"
     },
     {
       "h": "MCPEmailsに貼り付ける",
@@ -54,7 +54,7 @@
   "gotchas": [
     {
       "h": "「cPanelのメールサーバー」は存在せず、あるのはあなたのサーバーだけ。その名前を知っているのはパネルだけです",
-      "p": "cPanelはホスティング会社が動かしているソフトウェアであって、メールサービスではありません。だから、あらかじめ入力しておける共通のホスト名がないのです。各アカウントは、それが置かれているマシンで応答します。あなたのアカウントについて正しい値を示す唯一の場所は、<b>Email Accounts</b>、そのアドレスの行の<b>Connect Devices</b>、その先の<b>Mail Client Manual Settings</b>ブロックです。そこにcPanelは2つの表を表示します。IMAPが993、POP3が995、SMTPが465の<b>Secure SSL/TLS Settings</b>と、143、110、587の非SSLの表です。後者は無視してください。受信サーバーと送信サーバーは、安全な表に印字されたとおりに、たとえ自分のドメインにまったく似ていないホストでも、そのままコピーします。"
+      "p": "cPanelはホスティング会社が動かしているソフトウェアであって、メールサービスではありません。だから、あらかじめ入力しておける共通のホスト名がないのです。各アカウントは、それが置かれているマシンで応答します。あなたのアカウントについて正しい値を示す唯一の場所は、<b>Email Accounts</b>、そのアドレスの行の<b>Connect Devices</b>、その先の<b>Mail Client Manual Settings</b>ブロックです。そこにcPanelは2つの表を表示します。IMAPが993、POP3が995、SMTPが465の<b>Secure SSL/TLS Settings</b>と、143、110、587の非SSLの表です。後者は無視してください。受信サーバーと送信サーバーは、Secure側の表に表示されているとおりに、たとえ自分のドメインとまったく似ていないホスト名でも、そのままコピーします。"
     },
     {
       "h": "mail.yourdomain.comはたいてい名前解決でき、たいてい証明書の検証で失敗します",
@@ -62,11 +62,11 @@
     },
     {
       "h": "メールボックスは、見た目は完全に正常なまま、ログインや送信を制限されていることがあります",
-      "p": "cPanelは各メールボックスに<b>Restrictions</b>（制限）ブロックを設けており、<b>Email Accounts</b>から<b>Manage</b>で開けます。Logging InをSuspendにすると、パスワードを変えずにウェブメールとすべてのメールクライアントがブロックされます。Sending Outgoing EmailはSuspendにすると送信メッセージを拒否し、<b>Hold</b>にすると黙って4日間キューに入れたあと諦めます。AIエージェントにとって最もたちが悪いのはHoldです。送信は受理され、成功したように見え、何も届きません。メールが消えるように見えたら、他を調べる前にRestrictionsを開いてください。"
+      "p": "cPanelは各メールボックスに<b>Restrictions</b>（制限）ブロックを設けており、<b>Email Accounts</b>から<b>Manage</b>（管理）で開けます。Logging InをSuspendにすると、パスワードを変えずにウェブメールとすべてのメールクライアントがブロックされます。Sending Outgoing EmailはSuspendにすると送信メッセージを拒否し、<b>Hold</b>にすると黙って4日間キューに入れたあと配送をあきらめます。AIエージェントにとって最もたちが悪いのはHoldです。送信は受理され、成功したように見え、何も届きません。メールが消えるように見えたら、他を調べる前にRestrictionsを開いてください。"
     },
     {
-      "h": "ホスティング会社が独自の変種を公開していることがあり、その場合はホスティング会社が正です",
-      "p": "このページはcPanelの一般的なパターンです。個々のホスティング会社はここから逸脱し、その違いを自分で文書化しています。たとえばBluehostは<code>mail.example.com</code>を暗号化なしのブロックにだけ置き、安全な側には素のドメインを指定します。A2 Hosting（現hosting.com）は、共有証明書がサーバーをカバーしているため、<code>mi3-ss78.a2hosting.com</code>のようなサーバーのフルネームを使うよう案内しています。お使いのホスティング会社専用のページがあれば、正確な値が載っているのでそちらに従ってください。ない場合は、自分のcPanel内のConnect Devicesパネルが最終的な答えです。"
+      "h": "ホスティング会社が独自の設定値を案内していることがあり、その場合はホスティング会社の案内が優先です",
+      "p": "このページはcPanelの一般的なパターンです。個々のホスティング会社はここから外れることがあり、その違いは各社が自分のヘルプで案内しています。たとえばBluehostは<code>mail.example.com</code>を暗号化なしのブロックにだけ置き、安全な側には素のドメインを指定します。A2 Hosting（現hosting.com）は、共有証明書がサーバーをカバーしているため、<code>mi3-ss78.a2hosting.com</code>のようなサーバーのフルネームを使うよう案内しています。お使いのホスティング会社専用のページがあれば、正確な値が載っているのでそちらに従ってください。ない場合は、自分のcPanel内のConnect Devicesパネルが最終的な答えです。"
     }
   ],
   "limits": [
@@ -85,7 +85,7 @@
     },
     {
       "q": "cPanelのメールサーバーのホスト名はどこで確認できますか？",
-      "a": "cPanelにサインインし、Email Accountsを開いて、アドレスの横のConnect Devicesをクリックします。Mail Client Manual Settingsまでスクロールし、Secure SSL/TLSの表から受信サーバーと送信サーバーを読み取ってください。mail.yourdomain.comのこともあれば、素のドメインや、ホスティング会社のサーバー名のこともあります。そこに印字されている値が、TLSで正しいものです。"
+      "a": "cPanelにサインインし、Email Accountsを開いて、アドレスの横のConnect Devicesをクリックします。Mail Client Manual Settingsまでスクロールし、Secure SSL/TLSの表から受信サーバーと送信サーバーを読み取ってください。mail.yourdomain.comのこともあれば、素のドメインや、ホスティング会社のサーバー名のこともあります。そこに表示されている値が、TLSで正しいものです。"
     },
     {
       "q": "mail.mydomain.comで証明書の警告が出るのはなぜですか？",
@@ -93,7 +93,7 @@
     },
     {
       "q": "cPanelのメールパスワードが拒否されるのはなぜですか？",
-      "a": "主な原因は3つです。個々のメールアドレスに設定したパスワードではなく、cPanelアカウントのログイン情報を使っている。Restrictionsでそのメールボックスの「Logging In」がSuspendになっている。あるいは、別の場所に名前解決されるホスト名を指している。Email AccountsからManageを開いてメールボックスのパスワードを再設定し、同じ画面でRestrictionsを確認してください。"
+      "a": "主な原因は3つです。個々のメールアドレスに設定したパスワードではなく、cPanelアカウントのログイン情報を使っている。Restrictionsでそのメールボックスの「Logging In」がSuspendになっている。あるいは、別の場所に名前解決されるホスト名を指している。Email AccountsからManage（管理）を開いてメールボックスのパスワードを再設定し、同じ画面でRestrictions（制限）を確認してください。"
     },
     {
       "q": "私のcPanelのメールはそちらのサーバーに保存されますか？",

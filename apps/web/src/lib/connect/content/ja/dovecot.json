@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "special_useの指定がないと、Dovecotはフォルダーの役割を一切伝えません",
-      "p": "DovecotがSPECIAL-USE拡張を通知するのは、あなたが宣言したメールボックスに対してだけです。<code>15-mailboxes.conf</code>に<code>mailbox Sent { special_use = \\Sent }</code>のような項目がなければ、IMAPクライアントは名前の平坦な一覧を受け取り、どれが送信済み、下書き、迷惑メール、ゴミ箱なのかを推測するしかありません。MCPEmailsは名前の照合にフォールバックするので、フォルダー名がSent Items、Gesendet、Papierkorbのようなサーバーでは、一度だけ手動でフォルダーを選ぶ必要があるかもしれません。special_useの行を追加すれば、手持ちのすべてのクライアントで恒久的に解決します。"
+      "p": "DovecotがSPECIAL-USE拡張を通知するのは、あなたが宣言したメールボックスに対してだけです。<code>15-mailboxes.conf</code>に<code>mailbox Sent { special_use = \\Sent }</code>のような項目がなければ、IMAPクライアントはフラットな名前の一覧を受け取るだけで、どれが送信済み、下書き、迷惑メール、ゴミ箱なのかを推測するしかありません。MCPEmailsは名前の照合にフォールバックするので、フォルダー名がSent Items、Gesendet、Papierkorbのようなサーバーでは、一度だけ手動でフォルダーを選ぶ必要があるかもしれません。special_useの行を追加すれば、手持ちのすべてのクライアントで恒久的に解決します。"
     },
     {
       "h": "名前空間のプレフィックスは、見えるフォルダー名をすべて書き換えます",
@@ -62,7 +62,7 @@
     },
     {
       "h": "ssl_certには先頭の記号が必須で、名前ごとに証明書を分けるにはlocal_nameが必要です",
-      "p": "<code>10-ssl.conf</code>の<code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code>にある先頭の<code>&lt;</code>は省略できません。これがDovecotに、パスを証明書そのものとして扱うのではなくファイルの中身を読むよう指示します。<code>cert.pem</code>ではなく<code>fullchain.pem</code>を指してください。さもないと中間証明書が欠け、ブラウザーが受け入れた証明書を厳格な検証器は拒否します。1台で複数のホスト名を提供しているなら、それぞれに<code>local_name</code>ブロックが必要です。なければすべての接続に既定の証明書が返り、検証に通るホスト名は1つだけになります。"
+      "p": "<code>10-ssl.conf</code>の<code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code>にある先頭の<code>&lt;</code>は省略できません。これがDovecotに、パスを証明書そのものとして扱うのではなくファイルの中身を読むよう指示します。<code>cert.pem</code>ではなく<code>fullchain.pem</code>を指してください。さもないと中間証明書が欠け、ブラウザーが受け入れた証明書でも、厳格に検証するクライアントは拒否します。1台で複数のホスト名を提供しているなら、それぞれに<code>local_name</code>ブロックが必要です。なければすべての接続に既定の証明書が返り、検証に通るホスト名は1つだけになります。"
     }
   ],
   "limits": [

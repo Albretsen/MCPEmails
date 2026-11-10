@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "mailcowの接続方法：MAILCOW_HOSTNAMEの993へ",
-    "body": "mailcowはDocker Composeのスタックで、メールの半分はIMAPがDovecot、サブミッションがPostfixなので、プロトコルの振る舞いはごく普通で、よく知られたものです。mailcowに固有なのはホスト名です。スタックには正規の名前がちょうど1つ、<code>MAILCOW_HOSTNAME</code>があり、インストール時に<code>mailcow.conf</code>で設定して、その後はまず変更されません。IMAPとSMTPのホストとして使うのはこの名前です。Dovecotは993で暗黙的TLS、143でSTARTTLSに応答します。Postfixは465と587に応答します。認証情報は「構成」の「メールボックス」で設定したメールボックスのパスワードであって、mailcow UI自体に使う管理者パスワードではありません。両者は別のアカウントで、管理者ログインはメールボックスではありません。"
+    "body": "mailcowはDocker Composeのスタックで、メール部分はIMAPがDovecot、サブミッションがPostfixなので、プロトコルの振る舞いはごく普通で、よく知られたものです。mailcowに固有なのはホスト名です。スタックには正規の名前がちょうど1つ、<code>MAILCOW_HOSTNAME</code>があり、インストール時に<code>mailcow.conf</code>で設定して、その後はまず変更されません。IMAPとSMTPのホストとして使うのはこの名前です。Dovecotは993で暗黙的TLS、143でSTARTTLSに応答します。Postfixは465と587に応答します。認証情報は「構成」の「メールボックス」で設定したメールボックスのパスワードであって、mailcow UI自体に使う管理者パスワードではありません。両者は別のアカウントで、管理者ログインはメールボックスではありません。"
   },
   "setup": [
     {
@@ -53,7 +53,7 @@
       "p": "acme-mailcowが証明書を要求するのは、<code>MAILCOW_HOSTNAME</code>に加えて、追加した各メールドメインの<code>autodiscover.</code>と<code>autoconfig.</code>、そして<code>ADDITIONAL_SAN</code>に列挙したものです。素のapexドメインはその一覧にありません。そのため<code>yourdomain.com:993</code>への接続は、証明書自体は完全に有効でも名前が一致しないので検証に失敗します。MAILCOW_HOSTNAMEの値をそのまま使えば、不一致は消えます。"
     },
     {
-      "h": "SKIP_LETS_ENCRYPTは、ブラウザーが隠してくれるsnakeoil証明書を残します",
+      "h": "SKIP_LETS_ENCRYPTは、ブラウザーでは気づけない自己署名（snakeoil）証明書を残します",
       "p": "<code>mailcow.conf</code>で<code>SKIP_LETS_ENCRYPT=y</code>が設定されているか、acme-mailcowがチャレンジを一度も完了していない場合、スタックはインストール時に生成した自己署名証明書を出し続けます。全員が何か月も前にブラウザーの警告をクリックして忘れているので、手元では何も壊れて見えませんが、きちんと検証するクライアントは接続を拒否します。UIを信用せず、<code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code>で実際に流れているものを確認してください。"
     },
     {
@@ -62,7 +62,7 @@
     },
     {
       "h": "ポートをプライベートなインターフェイスに公開すると、外からはサーバーが見えなくなります",
-      "p": "<code>mailcow.conf</code>のポートのバインドはポートだけでなくアドレスも取ります。<code>IMAPS_PORT=127.0.0.1:993</code>のようなバインドはプロキシの背後でmailcowを動かす普通の方法ですが、<code>docker ps</code>ではコンテナーが健全に見えるのに、ホストの外からは誰もそのポートを開けないことを意味します。認証情報を疑う前に、別のネットワークにあるマシンから到達性を確認してください。"
+      "p": "<code>mailcow.conf</code>のポートのバインドはポートだけでなくアドレスも取ります。<code>IMAPS_PORT=127.0.0.1:993</code>のようなバインドはプロキシの背後でmailcowを動かす普通の方法ですが、<code>docker ps</code>ではコンテナーが健全に見えるのに、ホストの外からはそのポートに誰も接続できないことを意味します。認証情報を疑う前に、別のネットワークにあるマシンから到達性を確認してください。"
     }
   ],
   "limits": [
