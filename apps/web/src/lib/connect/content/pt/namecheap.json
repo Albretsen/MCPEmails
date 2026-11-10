@@ -6,7 +6,7 @@
   ],
   "auth": {
     "method": "mail-password",
-    "label": "Senha da caixa de correio, ou uma senha de aplicativo com 2FA",
+    "label": "Senha da caixa de correio, ou uma senha de app com 2FA",
     "helpUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
     "usernameForm": "Seu endereço completo no seu próprio domínio, por exemplo you@yourdomain.com. O guia da Namecheap usa o endereço de e-mail como nome de usuário.",
     "status": "active"
@@ -59,7 +59,7 @@
     },
     {
       "h": "A autenticação em dois fatores do Private Email é só do webmail, e bloqueia todos os clientes de e-mail",
-      "p": "A Namecheap documenta a 2FA do Private Email como proteção da interface web. No momento em que você a ativa, a senha comum da caixa de correio para de autenticar via IMAP e SMTP, e a recusa chega como uma simples falha de login, sem mencionar o segundo fator. A correção é uma <b>senha específica de aplicativo</b>: no webmail do Private Email, abra <b>Settings</b>, depois <b>Security</b>, depois <b>Application Passwords</b>, escolha o tipo de cliente na lista e gere uma. Cole-a no MCPEmails no lugar da senha da caixa de correio. Se você nunca ativou a 2FA, não existe senha de aplicativo e nenhuma é necessária."
+      "p": "A Namecheap documenta a 2FA do Private Email como proteção da interface web. No momento em que você a ativa, a senha comum da caixa de correio para de autenticar via IMAP e SMTP, e a recusa chega como uma simples falha de login, sem mencionar o segundo fator. A correção é uma <b>senha de app</b>: no webmail do Private Email, abra <b>Settings</b>, depois <b>Security</b>, depois <b>Application Passwords</b>, escolha o tipo de cliente na lista e gere uma. Cole-a no MCPEmails no lugar da senha da caixa de correio. Se você nunca ativou a 2FA, não existe senha de app e nenhuma é necessária."
     },
     {
       "h": "O host é mail.privateemail.com para todos os clientes, e a Namecheap diz para não mudar",
@@ -67,7 +67,7 @@
     },
     {
       "h": "O servidor é Dovecot e não traz MOVE, UIDPLUS nem SPECIAL-USE",
-      "p": "A saudação identifica o Dovecot e anuncia <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code>, <code>SASL-IR</code>, <code>IDLE</code> e <code>LITERAL+</code>, mas não MOVE, UIDPLUS nem SPECIAL-USE. Na prática, isso significa três coisas. Mover uma mensagem é feito como cópia, flag e expunge, e não como um único comando atômico. O identificador da cópia não é informado de volta e precisa ser encontrado pesquisando a pasta de destino. E Enviados, Rascunhos, Lixeira e Spam são reconhecidas pelo nome, não por uma flag de função, então uma caixa de correio com pastas renomeadas precisa que a pasta seja nomeada explicitamente."
+      "p": "O banner do servidor identifica o Dovecot e anuncia <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code>, <code>SASL-IR</code>, <code>IDLE</code> e <code>LITERAL+</code>, mas não MOVE, UIDPLUS nem SPECIAL-USE. Na prática, isso significa três coisas. Mover uma mensagem é feito como cópia, flag e expunge, e não como um único comando atômico. O identificador da cópia não é informado de volta e precisa ser encontrado pesquisando a pasta de destino. E Enviados, Rascunhos, Lixeira e Spam são reconhecidas pelo nome, não por uma flag de função, então uma caixa de correio com pastas renomeadas precisa que a pasta seja nomeada explicitamente."
     }
   ],
   "limits": [
@@ -86,10 +86,10 @@
     },
     {
       "q": "Por que a senha do meu Namecheap Private Email é rejeitada?",
-      "a": "As duas causas habituais são usar o login da conta Namecheap em vez da senha da caixa de correio, e ter a autenticação em dois fatores ativada na caixa. Com a 2FA ligada, o Private Email só aceita uma senha específica de aplicativo via IMAP, e a falha parece exatamente uma senha errada. Confira as duas antes de redefinir qualquer coisa."
+      "a": "As duas causas habituais são usar o login da conta Namecheap em vez da senha da caixa de correio, e ter a autenticação em dois fatores ativada na caixa. Com a 2FA ligada, o Private Email só aceita uma senha de app via IMAP, e a falha parece exatamente uma senha errada. Confira as duas antes de redefinir qualquer coisa."
     },
     {
-      "q": "Como crio uma senha de aplicativo na Namecheap?",
+      "q": "Como crio uma senha de app na Namecheap?",
       "a": "Entre no webmail do Private Email em privateemail.com, abra Settings, depois Security, depois Application Passwords. Escolha o aplicativo ou tipo de cliente na lista e gere uma senha. Copie na hora e cole no MCPEmails no lugar da senha da caixa de correio. Você só precisa de uma se a autenticação em dois fatores estiver ativada."
     },
     {

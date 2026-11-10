@@ -93,7 +93,7 @@
     },
     {
       "q": "Por que a senha do meu e-mail do cPanel é rejeitada?",
-      "a": "Três causas dominam. Você usou o login da sua conta cPanel em vez da senha definida no endereço de e-mail específico. A caixa de correio está com Logging In definido como Suspend em Restrictions. Ou você está apontando para um hostname que resolve para outro lugar. Redefina a senha da caixa de correio em Contas de e-mail, depois Manage, e confira Restrictions na mesma tela."
+      "a": "Quase sempre é uma de três causas. Você usou o login da sua conta cPanel em vez da senha definida no endereço de e-mail específico. A caixa de correio está com Logging In definido como Suspend em Restrictions. Ou você está apontando para um hostname que resolve para outro lugar. Redefina a senha da caixa de correio em Contas de e-mail, depois Manage, e confira Restrictions na mesma tela."
     },
     {
       "q": "Meu e-mail do cPanel fica armazenado nos seus servidores?",

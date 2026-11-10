@@ -10,7 +10,7 @@
     "method": "mail-password",
     "label": "Senha da caixa de correio",
     "helpUrl": "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
-    "usernameForm": "O endereço completo da conta como o Zimbra o guarda, por exemplo you@yourdomain.com, inclusive para contas em um alias de domínio.",
+    "usernameForm": "O endereço completo da conta, exatamente como está cadastrado no Zimbra, por exemplo you@yourdomain.com, inclusive para contas em um alias de domínio.",
     "status": "active"
   },
   "meta": {
@@ -52,11 +52,11 @@
   "gotchas": [
     {
       "h": "A porta 993 pertence ao proxy, então um servidor sem proxy responde na 7993",
-      "p": "O processo de caixas de correio do Zimbra não escuta na 993. Ele escuta na <b>7993</b> para IMAP sobre SSL e na 7143 para IMAP sem criptografia, e as portas padrão são servidas pelo pacote separado Zimbra IMAP and POP proxy, que encaminha cada conexão para o armazenamento certo. Em uma instalação de servidor único em que o <code>zimbra-proxy</code> nunca foi selecionado, ou em que um administrador o removeu, nada responde na 993 e o cliente informa uma conexão recusada que parece problema de firewall. Use a 7993 nesse caso, mas entenda a troca: em uma implantação com vários servidores, é o proxy que sabe qual armazenamento guarda determinada conta, então conectar direto na 7993 de um nó só funciona se a caixa de correio realmente estiver naquele nó. Se você tem mais de um servidor de caixas de correio, restaurar o proxy é a resposta certa, não contorná-lo."
+      "p": "O processo de caixas de correio do Zimbra não escuta na 993. Ele escuta na <b>7993</b> para IMAP sobre SSL e na 7143 para IMAP sem criptografia, e as portas padrão são servidas pelo pacote separado Zimbra IMAP and POP proxy, que encaminha cada conexão para o armazenamento certo. Em uma instalação de servidor único em que o <code>zimbra-proxy</code> nunca foi selecionado, ou em que um administrador o removeu, nada responde na 993 e o cliente informa uma conexão recusada que parece problema de firewall. Use a 7993 nesse caso, mas saiba o que está em jogo: em uma implantação com vários servidores, é o proxy que sabe qual armazenamento guarda determinada conta, então conectar direto na 7993 de um nó só funciona se a caixa de correio realmente estiver naquele nó. Se você tem mais de um servidor de caixas de correio, restaurar o proxy é a resposta certa, não contorná-lo."
     },
     {
       "h": "O certificado na 993 é o do proxy, e é autoassinado até alguém trocar",
-      "p": "Como o proxy encerra a conexão, o certificado que um cliente valida na 993 é o que o nginx está segurando, não necessariamente o que o mailboxd apresenta na 7993. Os dois podem divergir, e é assim que um servidor passa na verificação em uma porta e falha na outra. O Zimbra também instala um certificado autoassinado na configuração inicial, e muitas implantações nunca o trocaram porque o cliente web é acessado por outro caminho ou porque todo mundo aceitou o aviso em 2019. Os certificados são implantados com <code>zmcertmgr</code> e vistos no console de administração, mas o único teste que conta é o que está no fio: rode <code>openssl s_client -connect mail.yourdomain.com:993</code> de uma máquina de fora e leia a cadeia que volta. A validação rigorosa não é opcional do nosso lado, então um certificado autoassinado ou vencido encerra a conversa antes da autenticação."
+      "p": "Como o proxy encerra a conexão, o certificado que um cliente valida na 993 é o que o nginx está servindo, não necessariamente o que o mailboxd apresenta na 7993. Os dois podem divergir, e é assim que um servidor passa na verificação em uma porta e falha na outra. O Zimbra também instala um certificado autoassinado na configuração inicial, e muitas implantações nunca o trocaram porque o cliente web é acessado por outro caminho ou porque todo mundo aceitou o aviso em 2019. Os certificados são implantados com <code>zmcertmgr</code> e vistos no console de administração, mas o único teste que vale é o da conexão real: rode <code>openssl s_client -connect mail.yourdomain.com:993</code> de uma máquina de fora e leia a cadeia que volta. A validação rigorosa não é opcional do nosso lado, então um certificado autoassinado ou vencido encerra a conversa antes da autenticação."
     },
     {
       "h": "O IMAP pode estar desligado em quatro lugares diferentes",
@@ -65,7 +65,7 @@
   ],
   "limits": [
     "Seu servidor Zimbra precisa aceitar uma conexão IMAP de entrada vinda da internet. Uma implantação publicada só dentro da rede corporativa ou atrás de uma VPN não pode ser alcançada por um serviço hospedado. O MCPEmails pode ser hospedado por você dentro da mesma rede, o que costuma ser uma conversa mais fácil com a equipe de segurança do que abrir uma porta.",
-    "Só e-mail atravessa uma conexão IMAP. Calendários, contatos, tarefas e a pasta de arquivos do Zimbra são servidos pelo cliente web dele e por CalDAV, CardDAV ou pela API do Zimbra, então um agente conectado assim trabalha só com e-mail.",
+    "Só e-mail atravessa uma conexão IMAP. Calendários, contatos, tarefas e o Porta-arquivos do Zimbra são servidos pelo cliente web dele e por CalDAV, CardDAV ou pela API do Zimbra, então um agente conectado assim trabalha só com e-mail.",
     "O envio sai pelo seu próprio MTA do Zimbra, então a entregabilidade é regida pelos seus registros SPF, DKIM e DMARC exatamente como para qualquer outro cliente do servidor."
   ],
   "faq": [

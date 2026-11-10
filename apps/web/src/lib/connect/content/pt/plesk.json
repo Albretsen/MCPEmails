@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "IMAP e SMTP não fazem SNI, então mail.seudominio.com.br recebe o certificado padrão do servidor",
-      "p": "O HTTPS escolhe o certificado certo porque o navegador anuncia o hostname durante o handshake. Os protocolos de e-mail não funcionam assim: o daemon não tem como saber com segurança qual nome você discou, então entrega um certificado por conexão, seja qual for o nome. Em uma instalação padrão do Plesk, isso significa que só o próprio domínio e o hostname do servidor ficam devidamente protegidos, e <code>mail.example.com</code> apresenta o que quer que seja o padrão do servidor. A divergência de nome que vem em seguida não é um erro de configuração seu, é como o protocolo funciona."
+      "p": "O HTTPS escolhe o certificado certo porque o navegador anuncia o hostname durante o handshake. Os protocolos de e-mail não funcionam assim: o daemon não tem como saber com segurança qual nome você digitou, então entrega um certificado por conexão, seja qual for o nome. Em uma instalação padrão do Plesk, isso significa que só o próprio domínio e o hostname do servidor ficam devidamente protegidos, e <code>mail.example.com</code> apresenta o que quer que seja o padrão do servidor. A divergência de nome que vem em seguida não é um erro de configuração seu, é como o protocolo funciona."
     },
     {
       "h": "A correção é uma caixa de seleção na hora de emitir, e é fácil deixar passar",

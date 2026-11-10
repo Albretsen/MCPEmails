@@ -50,7 +50,7 @@
   ],
   "gotchas": [
     {
-      "h": "Mailbox Type é uma configuração com um valor só POP3, não uma caixa de seleção",
+      "h": "Mailbox Type tem um valor só POP3, e não é uma caixa de seleção",
       "p": "O IceWarp não dá ao usuário um interruptor liga/desliga de IMAP. Ele dá um <b>tipo</b> de caixa de correio na aba Options da conta, e um dos valores disponíveis é POP3, em vez do combinado IMAP e POP3. Uma conta configurada assim responde na 110 e recusa IMAP, e como a mudança foi feita uma vez no provisionamento, por quem montou o modelo de conta, ninguém lembra que ela existe. O sintoma é um único usuário que não consegue conectar enquanto todos os outros no mesmo servidor conseguem. Confira o tipo na conta antes de conferir qualquer coisa de rede."
     },
     {

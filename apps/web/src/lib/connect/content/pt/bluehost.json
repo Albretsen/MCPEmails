@@ -85,7 +85,7 @@
     },
     {
       "q": "Por que a senha do meu e-mail da Bluehost é rejeitada?",
-      "a": "Duas causas dominam. Ou você está usando a senha do portal da Bluehost em vez da senha definida na caixa de correio específica, ou está apontando o cliente para o servidor do produto errado. Redefina a senha da caixa em Email Accounts, no caso do e-mail do cPanel, ou na tela de gerenciamento do Professional Email, no caso de uma caixa do Titan, e tente de novo."
+      "a": "Quase sempre é uma de duas coisas. Ou você está usando a senha do portal da Bluehost em vez da senha definida na caixa de correio específica, ou está apontando o cliente para o servidor do produto errado. Redefina a senha da caixa em Email Accounts, no caso do e-mail do cPanel, ou na tela de gerenciamento do Professional Email, no caso de uma caixa do Titan, e tente de novo."
     },
     {
       "q": "Meu e-mail da Bluehost fica armazenado nos seus servidores?",
