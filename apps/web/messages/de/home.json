@@ -12,7 +12,12 @@
     "signIn": "Anmelden",
     "dashboard": "Dashboard",
     "getStarted": "Kostenlos starten",
-    "selfHost": "Self-Hosting"
+    "selfHost": "Self-Hosting",
+    "openMenu": "Navigationsmenü öffnen",
+    "closeMenu": "Navigationsmenü schließen",
+    "primaryNav": "Hauptnavigation",
+    "mobileNav": "Mobile Navigation",
+    "menuDialog": "Navigationsmenü"
   },
   "hero": {
     "eyebrow": "Gehosteter E-Mail-MCP-Server",
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Produktvorschau",

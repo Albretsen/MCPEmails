@@ -10,7 +10,7 @@ import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-in
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
-import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
+import { formatAmountCents, formatUsdCopy } from '@/lib/stripe/annual-offer';
 import { BLACK_WEEK_2026 } from '@/lib/stripe/seasonal-offer';
 import {
   seasonalOfferForPlan,
@@ -343,6 +343,8 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
 
         // Formatted, never rounded to whole dollars: Personal's $86.40 a year
         // is $7.20 a month, and Math.round would print a $7 nobody is charged.
+        // The decimal separator follows the page's locale (/de and /pt showed
+        // "$7.20" next to copy that writes "$86,40"); see formatUsdCopy.
         let priceDisplay;
         if (eur) {
           // Stripe's EUR currency option, else the same digits as USD.
@@ -359,8 +361,8 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
             monthlyCents === 0
               ? '$0'
               : annual && yearlyCents
-              ? formatPriceCents(Math.round(yearlyCents / 12))
-              : formatPriceCents(monthlyCents);
+              ? formatUsdCopy(Math.round(yearlyCents / 12), locale)
+              : formatUsdCopy(monthlyCents, locale);
         }
 
         // The message writes its own currency sign, so it gets the bare amount

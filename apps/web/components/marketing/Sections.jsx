@@ -10,7 +10,7 @@ import {
 } from './reviews.mjs';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
-import { formatPriceCents } from '@/lib/stripe/annual-offer';
+import { formatUsdCopy } from '@/lib/stripe/annual-offer';
 import { euroizeAmounts, eurCentsFor, formatMoneyCents } from '@/lib/stripe/eur-prices';
 import { CheckoutReassurance } from '../CheckoutReassurance';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
@@ -88,7 +88,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
         <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCPEmails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCPEmails" /></Link>
         {/* Compare and Self-host live in the mobile menu and the footer: with
             them the row needs about 1240 px in French, wider than the container. */}
-        <nav className="nav-links" aria-label="Primary navigation">
+        <nav className="nav-links" aria-label={t('nav.primaryNav')}>
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
           <Link href="/pricing">{t('nav.pricing')}</Link>
@@ -113,7 +113,7 @@ function FullNav({ onSignIn, onGetStarted, user }) {
         {/* Hamburger button — visible only on mobile (≤767px via CSS) */}
         <button
           className="nav-hamburger"
-          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
           aria-expanded={mobileOpen}
           aria-controls={menuId}
           onClick={() => setMobileOpen(o => !o)}
@@ -127,8 +127,8 @@ function FullNav({ onSignIn, onGetStarted, user }) {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="nav-mobile-menu" id={menuId} role="dialog" aria-label="Navigation menu">
-          <nav aria-label="Mobile navigation">
+        <div className="nav-mobile-menu" id={menuId} role="dialog" aria-label={t('nav.menuDialog')}>
+          <nav aria-label={t('nav.mobileNav')}>
             <Link href="/#features" onClick={closeMenu}>{t('nav.features')}</Link>
             <Link href="/#how" onClick={closeMenu}>{t('nav.how')}</Link>
             <Link href="/pricing" onClick={closeMenu}>{t('nav.pricing')}</Link>
@@ -1228,7 +1228,7 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
                   'eur',
                   locale,
                 )
-              : formatPriceCents(monthlyCents);
+              : formatUsdCopy(monthlyCents, locale);
             const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
 
             return (

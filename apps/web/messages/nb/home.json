@@ -12,7 +12,12 @@
     "signIn": "Logg inn",
     "dashboard": "Dashbord",
     "getStarted": "Kom i gang gratis",
-    "selfHost": "Selvhosting"
+    "selfHost": "Selvhosting",
+    "openMenu": "Åpne navigasjonsmenyen",
+    "closeMenu": "Lukk navigasjonsmenyen",
+    "primaryNav": "Hovednavigasjon",
+    "mobileNav": "Mobilnavigasjon",
+    "menuDialog": "Navigasjonsmeny"
   },
   "hero": {
     "eyebrow": "Vertsbasert MCP-server for e-post",
@@ -201,7 +206,7 @@
         "name": "Personal",
         "desc": "Tre postkasser for én person eller et lite firma: jobb, privat eller firmaets første adresser.",
         "features": [
-          "Alt i Free",
+          "Alt i Gratis",
           "3 tilkoblede innbokser",
           "2x høyere burst-grense",
           "Prioritert e-poststøtte"
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Produktforhåndsvisning",

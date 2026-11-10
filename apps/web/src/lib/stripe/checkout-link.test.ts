@@ -129,12 +129,27 @@ test('the session outlives Stripe\'s 30-minute minimum', () => {
   assert.ok(lib.CHECKOUT_LINK_SESSION_TTL_SECONDS <= 35 * 60);
 });
 
-test('the hosted page is German for a German workspace or a German first browser language only', () => {
+test('the hosted page follows the workspace language, then the first browser language, when it has a deck', () => {
   assert.equal(lib.checkoutLinkLocale('de', null), 'de');
   assert.equal(lib.checkoutLinkLocale(null, 'de'), 'de');
   assert.equal(lib.checkoutLinkLocale(null, 'de-AT,en;q=0.5'), 'de');
   assert.equal(lib.checkoutLinkLocale(null, 'en-US,de;q=0.9'), 'en');
-  assert.equal(lib.checkoutLinkLocale('fr', 'fr-FR'), 'en');
+  // The workspace language wins over the browser.
+  assert.equal(lib.checkoutLinkLocale('fr', 'de-DE'), 'fr');
+  assert.equal(lib.checkoutLinkLocale('es', 'en-US'), 'es');
+  assert.equal(lib.checkoutLinkLocale('pt', null), 'pt');
+  assert.equal(lib.checkoutLinkLocale('ja', undefined), 'ja');
+  assert.equal(lib.checkoutLinkLocale('nb', 'fr-FR'), 'nb');
+  // The browser's first language, by its language subtag, when the workspace has none.
+  assert.equal(lib.checkoutLinkLocale(null, 'fr-FR,fr;q=0.9'), 'fr');
+  assert.equal(lib.checkoutLinkLocale(null, 'pt-PT'), 'pt');
+  assert.equal(lib.checkoutLinkLocale(null, 'ja-JP'), 'ja');
+  assert.equal(lib.checkoutLinkLocale(null, 'no'), 'nb');
+  assert.equal(lib.checkoutLinkLocale(null, 'nn-NO'), 'nb');
+  assert.equal(lib.checkoutLinkLocale('en', 'es-MX'), 'es');
+  // A workspace or browser language without a deck is English, never a guess.
+  assert.equal(lib.checkoutLinkLocale('zh', 'zh-CN'), 'en');
+  assert.equal(lib.checkoutLinkLocale(null, 'it-IT,fr;q=0.8'), 'en');
   assert.equal(lib.checkoutLinkLocale(undefined, undefined), 'en');
   assert.equal(lib.checkoutLinkLocale(null, 'deu'), 'en');
 });
