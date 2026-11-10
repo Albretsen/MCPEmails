@@ -20,7 +20,7 @@ Du limer aldri inn en postkasse-ID i en prompt. Agenten kaller \`inbox_list\`, s
 
 To detaljer verdt å kjenne til:
 
-- **Oppdagelse er gratis.** \`inbox_list\` måles aldri, så en agent kan orientere seg på nytt uten kostnad.
+- **Oppdagelse er gratis.** \`inbox_list\` telles aldri med, så en agent kan orientere seg på nytt uten kostnad.
 - **Motstridende velgere avvises, de gjettes ikke.** Et kall som bærer en \`inbox_id\` for én postkasse og en \`inbox\`-adresse for en annen, blir avvist, og feilmeldingen navngir begge. Den vanlige årsaken er en utdatert ID som er dratt med fra tidligere i samtalen. Be agenten prøve på nytt med adressen alene.
 
 ## Avgrens én forespørsel til én postkasse
@@ -93,7 +93,7 @@ Tilkoblede postkasser er det planene prises på:
 - **Free.** Én tilkoblet postkasse.
 - **Personal.** Noen få postkasser for én person, høyere burst-grense, prioritert e-poststøtte.
 - **Pro.** Flere postkasser for én person som driver en virksomhet, enda høyere burst-grense, lengre analysehistorikk, webhooks for ny post.
-- **Business.** En blokk med postkasser inkludert med en pris per postkasse utover det, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
+- **Business.** Et antall postkasser inkludert, med en pris per postkasse utover det, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
 
 En rutine på tvers av postkasser er ett kall per postkasse, så antallet postkasser driver volumet like mye som vanene dine gjør. Gjeldende priser og antall postkasser finner du på [prissiden](/pricing).
 

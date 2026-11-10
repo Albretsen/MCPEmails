@@ -55,7 +55,7 @@ En håndfull konsoliderte, handlingsbaserte verktøy dekker hele flaten: lese, s
 - \`email_compose\` (handling \`reply\`): det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
 - \`email_organize\`: flytt, slett, flagg eller arkiver (én handling per kall)
 
-Én ting å vite med en gang: verktøyene i seg selv er **forespørsel og svar**. Serveren svarer når agenten din spør, og den enkleste måten å reagere på ny e-post på er å polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread: true\`. Vil du heller ha push, kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet: MCPEmails sender da en signert POST til URL-en din når det kommer ny post, med meldings-ID-er som agenten åpner med \`email_read\`. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser begge mønstrene.
+Én ting å vite med en gang: verktøyene i seg selv er basert på **forespørsel og svar**. Serveren svarer når agenten din spør, og den enkleste måten å reagere på ny e-post på er å polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread: true\`. Vil du heller ha push, kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet: MCPEmails sender da en signert POST til URL-en din når det kommer ny post, med meldings-ID-er som agenten åpner med \`email_read\`. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser begge mønstrene.
 
 En morgentriage-kjøring ser slik ut:
 
@@ -106,10 +106,10 @@ Når det gjelder rate-grenser, har hvert arbeidsområde et tak per minutt som sk
 
 Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på alle nivåer, og nivåene skiller seg ellers på burst-grense, analysehistorikk, teamfunksjoner og støtte.
 
-- **Gratis.** Gratis for alltid, uten kort. Én tilkoblet innboks, bruksanalyse, hjelpesenter og e-poststøtte.
+- **Gratis.** Koster ingenting, for alltid, og uten kort. Én tilkoblet innboks, bruksanalyse, hjelpesenter og e-poststøtte.
 - **Personal.** Flere innbokser for én person, høyere burst-grense, lengre analysehistorikk, prioritert e-poststøtte.
 - **Pro.** For én person som driver en virksomhet: flere innbokser igjen, enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post.
-- **Business.** Alt i Pro, pluss en blokk med postkasser inkludert med en pris per postkasse utover det, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, og et eget arbeidsområde per kunde eller virksomhet.
+- **Business.** Alt i Pro, pluss et antall postkasser inkludert, med en pris per postkasse utover det, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, og et eget arbeidsområde per kunde eller virksomhet.
 
 Gjeldende priser og antall innbokser finner du på [prissiden](/pricing).
 

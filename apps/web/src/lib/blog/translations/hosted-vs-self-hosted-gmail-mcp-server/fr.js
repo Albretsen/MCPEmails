@@ -81,7 +81,7 @@ C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur héberg�
 
 ## Ce que ça coûte en dollars
 
-MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit comprend des analytics d'utilisation, le centre d'aide et le support par e-mail. [Personal](/pricing) ajoute des boîtes, une limite de pointe plus élevée, un historique d'analytics plus long et le support prioritaire par e-mail ; Pro ajoute encore des boîtes, une limite de pointe plus élevée encore, des années d'historique d'analytics et les webhooks pour les nouveaux messages ; Business inclut un lot de boîtes avec un tarif par boîte au-delà, des membres avec rôles et un espace de travail distinct par client. Les tarifs à jour sont sur la [page des tarifs](/pricing). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Comptez les heures correctement.
+MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit comprend des analytics d'utilisation, le centre d'aide et le support par e-mail. [Personal](/pricing) ajoute des boîtes, une limite de pointe plus élevée, un historique d'analytics plus long et le support prioritaire par e-mail ; Pro ajoute encore des boîtes, une limite de pointe plus élevée encore, des années d'historique d'analytics et les webhooks pour les nouveaux messages ; Business inclut un lot de boîtes avec un tarif par boîte au-delà, des membres avec rôles et un espace de travail distinct par client. Les tarifs à jour sont sur la [page des tarifs](/pricing). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Comptez bien vos heures.
 
 ## Alors, lequel choisir ?
 

@@ -6,7 +6,7 @@ const translation = {
     'Signatures e-mail pour Claude : définissez une signature par boîte une seule fois et Claude signe chaque message qu\'il envoie, sur tous les fournisseurs',
   content: `Quand Claude envoie un e-mail à votre place, il devrait avoir l'air d'avoir été envoyé par vous. Cela inclut la formule de fin : votre nom, votre fonction, la ligne de votre entreprise, ce lien vers votre page de réservation. Jusqu'à présent, soit vous tapiez votre signature dans chaque prompt, soit vous acceptiez des e-mails qui se terminaient un peu abruptement. Aujourd'hui, cela change : **MCPEmails applique désormais votre signature automatiquement à chaque message que Claude envoie.**
 
-Les signatures sont **par boîte de réception**. Chaque boîte connectée conserve la sienne, ainsi la casquette de fondateur va sur votre adresse professionnelle et un simple "-- Sam" va sur la personnelle. Une fois définie, vous n'y pensez plus.
+Les signatures sont **par boîte de réception**. Chaque boîte connectée conserve la sienne, ainsi la casquette de fondateur va sur votre adresse professionnelle et un simple "À bientôt, Sam" va sur la personnelle. Une fois définie, vous n'y pensez plus.
 
 ## Ce qui est signé
 

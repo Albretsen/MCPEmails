@@ -34,7 +34,7 @@ Slik håndterer MCPEmails hver enkelt risiko. Jeg er partisk (jeg bygde det), me
 
 **Påloggingsdata er AES-256-GCM-kryptert i ro.** App-passordet eller OAuth-tokenet ditt krypteres før det berører databasen. Det dekrypteres på serverne våre bare når en forespørsel trenger det, og det sendes aldri til agenten din. Krypteringsnøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, så en database-dump alene er ubrukelig. Dette er den ene biten av dataene dine vi beholder, og det er biten vi behandler mest forsiktig.
 
-**Tilganger er minimale av design.** Når du kobler til en agent, tilbyr samtykkeskjermen **Skrivebeskyttet**, **Standard** og **Full tilgang**, pluss et eget kort (Tilpasset) der hver av de ni tillatelsene (lese, søke, sende, mapper, slette, utkast, kontakter, planlegging, automatiseringer) er sin egen bryter. Vil du ha en agent som oppsummerer, men aldri kan sende? Velg Skrivebeskyttet, så utstedes aldri \`send:email\`. Selv Full tilgang er en navngitt liste du ser på skjermen, ikke en blankofullmakt. Vurderer du hvordan agenter skal autentisere seg, bryter [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) ned hva du skal bruke når.
+**Tilganger er minimale av design.** Når du kobler til en agent, tilbyr samtykkeskjermen **Skrivebeskyttet**, **Standard** og **Full tilgang**, pluss et eget **Tilpasset**-kort der hver av de ni tillatelsene (lese, søke, sende, mapper, slette, utkast, kontakter, planlegging, automatiseringer) er sin egen bryter. Vil du ha en agent som oppsummerer, men aldri kan sende? Velg Skrivebeskyttet, så utstedes aldri \`send:email\`. Selv Full tilgang er en navngitt liste du ser på skjermen, ikke en blankofullmakt. Vurderer du hvordan agenter skal autentisere seg, bryter [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) ned hva du skal bruke når.
 
 **Sending går gjennom din egen leverandør.** Når agenten sender post, går den ut gjennom din Gmail, din Microsoft 365 eller din egen SMTP-server. Vi videreformidler aldri meldinger fra vårt domene. Avsenderomdømmet og leveringsevnen din forblir helt og holdent dine, og det finnes ingen delt IP-pool å forgifte.
 
@@ -55,7 +55,7 @@ Hvis et verktøy klarer alle seks, er restrisikoen liten og håndterbar. Hvis de
 
 ## En merknad om hva vi ikke gjør
 
-To begrensninger verdt å si rett ut. En agent i en chat får ikke et pling når post kommer; den sjekker etter en tidsplan. Den ene push-en vi tilbyr, er en signert webhook for ny post til en URL du eier, på Pro og Business, og den bærer meldings-ID-er, ikke post. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
+To begrensninger verdt å si rett ut. For det første får en agent i en chat ikke et pling når post kommer; den sjekker etter en tidsplan. Det eneste push-varselet vi tilbyr, er en signert webhook for ny post til en URL du eier, på Pro og Business, og den bærer meldings-ID-er, ikke post. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
 
 ## Så, er det trygt?
 

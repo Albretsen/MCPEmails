@@ -106,7 +106,7 @@ En cuanto a los límites de tasa, cada workspace tiene un tope por minuto que es
 
 Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas en todos los planes, y los planes también difieren en límite de ráfaga, historial de analíticas, funciones de equipo y soporte.
 
-- **Gratis.** Gratis para siempre, sin tarjeta. Una bandeja conectada, analíticas de uso, centro de ayuda y soporte por correo.
+- **Gratis.** Sin coste para siempre y sin tarjeta. Una bandeja conectada, analíticas de uso, centro de ayuda y soporte por correo.
 - **Personal.** Más bandejas para una sola persona, un límite de ráfaga más alto, un historial de analíticas más largo y soporte prioritario por correo.
 - **Pro.** Para una persona que lleva un negocio: más bandejas todavía, un límite de ráfaga aún mayor, años de historial de analíticas y webhooks de correo nuevo.
 - **Business.** Todo lo de Pro, además de un bloque de buzones incluidos con un precio por buzón a partir de ahí, miembros ilimitados con roles, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.

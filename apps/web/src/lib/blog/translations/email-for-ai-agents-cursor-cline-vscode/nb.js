@@ -101,13 +101,13 @@ Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og
 
 Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail, så det lander fra adressen min med domenets omdømme. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
 
-Én begrensning: MCP-verktøyene ringer aldri deg. Vil du at agenten skal reagere på innkommende meldinger, poller du, med \`email_read\` med handling \`list\` og \`unread: true\` etter en plan, eller du lar en webhook for ny post vekke koden din (Pro- og Business-arbeidsområder legger til en under API-nøkler i dashbordet, og den poster meldings-ID-ene til URL-en din). Uansett former det hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
+Én begrensning: MCP-verktøyene ringer aldri deg. Vil du at agenten skal reagere på innkommende meldinger, poller du med \`email_read\` (handling \`list\` og \`unread: true\`) etter en plan, eller du lar en webhook for ny post vekke koden din (Pro- og Business-arbeidsområder legger til en under API-nøkler i dashbordet, og den poster meldings-ID-ene til URL-en din). Uansett former det hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratebegrensninger for skriptet tilgang
 
 Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver plan har et tak per minutt for hele arbeidsområdet, og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. Vellykkede \`tools/call\`-svar har \`RateLimit-Limit\`, \`RateLimit-Remaining\` og \`RateLimit-Reset\`, og en 429 har \`Retry-After\`. Se [prissiden](/pricing) for taket på hver plan.
 
-Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den: bakk av så lenge og prøv igjen. Men ikke alt kan prøves på nytt: når et arbeidsområde en bruksgrense på planen, returnerer kallet et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk, uten \`retry_after\`, og ingen nye forsøk løser det før \`reset_at\`. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
+Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den: bakk av så lenge og prøv igjen. Men ikke alt kan prøves på nytt: hvis et arbeidsområde treffer en bruksgrense på planen, returnerer kallet et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk, uten \`retry_after\`, og ingen nye forsøk løser det før \`reset_at\`. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
 
 ## Oppsummering
 
