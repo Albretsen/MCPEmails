@@ -152,6 +152,24 @@ export function formatPriceCents(cents: number, locale = 'en-US', currency = 'us
   }
 }
 
+/** The locales whose copy writes the dollar sign after the number ("86,40 $"). */
+const TRAILING_DOLLAR_LOCALES = new Set(['fr']);
+
+/**
+ * A USD amount the way this site's copy in `locale` writes it: the locale's
+ * decimal separator (formatAmountCents) with the dollar sign where
+ * messages/<locale> puts it. "$86,40" in nb, es, de and pt, "86,40 $" in fr,
+ * "$86.40" in en, ja and zh. Not Intl's currency style on purpose: that gives
+ * "86,40 USD" in Norwegian and "US$ 86,40" in Portuguese on a card whose
+ * neighbouring copy says "$9". Used for the price cards; the EUR branch keeps
+ * formatMoneyCents, whose Intl output ("86,40 €") is what the EUR copy uses.
+ */
+export function formatUsdCopy(cents: number, locale = 'en-US'): string {
+  const amount = formatAmountCents(cents, locale);
+  const lang = String(locale).toLowerCase().split('-')[0];
+  return TRAILING_DOLLAR_LOCALES.has(lang) ? `${amount} $` : `$${amount}`;
+}
+
 /**
  * The bare amount, no currency sign, for a message that writes its own.
  *

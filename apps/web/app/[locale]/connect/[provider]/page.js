@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternatesFor, localePath, OG_LOCALE, OG_IMAGE, connectJsonLd } from '@/i18n/seo';
 import { getProvider, providerLocales } from '@/lib/connect/providers.mjs';
+import { localizeProvider } from '@/lib/connect/display-name.mjs';
 import { isViewable } from '@/lib/connect/release.mjs';
 import { getProviderContent, providerParams } from '@/lib/connect/content.mjs';
 import { getMultiMailboxCopy, showsMultiMailbox } from '@/lib/connect/multi-mailbox.mjs';
@@ -58,12 +59,15 @@ export async function generateMetadata({ params }) {
 export default async function ConnectProviderPage({ params }) {
   const { locale, provider: slug } = await params;
   requireLocale(locale);
-  const provider = getProvider(slug);
+  const registered = getProvider(slug);
   // Providers are released in waves (see lib/connect/release.mjs). A wave that
   // has not opened yet has no page at all, rather than a page carrying noindex:
   // a URL that 404s costs no crawl budget, and a noindex one still gets fetched.
-  if (!provider || !isViewable(provider)) notFound();
+  if (!registered || !isViewable(registered)) notFound();
   setRequestLocale(locale);
+  // The name every shared string below interpolates: the brand, except on the
+  // generic page, where "Generic IMAP" is translated (lib/connect/display-name).
+  const provider = localizeProvider(registered, locale);
 
   const content = await getProviderContent(locale, slug);
   if (!content) notFound();

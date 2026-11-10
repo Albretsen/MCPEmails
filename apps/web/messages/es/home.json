@@ -12,7 +12,12 @@
     "signIn": "Iniciar sesión",
     "dashboard": "Panel",
     "getStarted": "Empieza gratis",
-    "selfHost": "Auto-alojar"
+    "selfHost": "Auto-alojar",
+    "openMenu": "Abrir el menú de navegación",
+    "closeMenu": "Cerrar el menú de navegación",
+    "primaryNav": "Navegación principal",
+    "mobileNav": "Navegación móvil",
+    "menuDialog": "Menú de navegación"
   },
   "hero": {
     "eyebrow": "Servidor MCP de correo alojado",
@@ -201,7 +206,7 @@
         "name": "Personal",
         "desc": "Tres buzones para una persona o una empresa pequeña: el del trabajo, el personal o las primeras direcciones de tu empresa.",
         "features": [
-          "Todo lo de Free",
+          "Todo lo del plan Gratis",
           "3 bandejas conectadas",
           "Límite de ráfaga 2x más alto",
           "Soporte prioritario por correo"
@@ -341,8 +346,8 @@
     "fr": "Français",
     "zh": "中文",
     "de": "Deutsch",
-  "pt": "Português (Brasil)",
-  "ja": "日本語"
+    "pt": "Português (Brasil)",
+    "ja": "日本語"
   },
   "preview": {
     "eyebrow": "Vista del producto",

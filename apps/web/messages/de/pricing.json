@@ -7,7 +7,7 @@
     "eyebrow": "Preise",
     "titleLine1": "Ein Postfach, kostenlos.",
     "titleLine2": "Drei Postfächer, $9.",
-    "titleLine2Yearly": "Drei Postfächer, $86.40 pro Jahr.",
+    "titleLine2Yearly": "Drei Postfächer, $86,40 pro Jahr.",
     "lead": "Verbinden Sie ein Postfach einmal, und Ihr Agent kann lesen, suchen, organisieren, entwerfen, planen und senden. Free umfasst ein Postfach. Personal umfasst drei für $9 pro Monat. Pro umfasst bis zu 10 für eine Person, die ein Unternehmen führt, mit einem Login. Business enthält 10 Postfächer, berechnet $3 pro Monat für jedes weitere, und Ihr ganzes Team kann sich ohne Aufpreis anmelden."
   },
   "billing": {
@@ -221,7 +221,7 @@
       },
       {
         "q": "Wie funktioniert der Jahresrabatt?",
-        "a": "Bei jährlicher Zahlung sparen Sie rund 20 % gegenüber monatlich: Personal kostet $86.40 pro Jahr ($7.20 pro Monat), Pro $144 pro Jahr ($12 pro Monat) und Business $374.40 pro Jahr ($31.20 pro Monat), jedes weitere Postfach $28.80 pro Jahr ($2.40 pro Monat). Sie zahlen einmal im Voraus für 12 Monate. Eine Kündigung stoppt die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Rückerstattung bei einer ersten Zahlung erstatten wir die restlichen Monate nicht."
+        "a": "Bei jährlicher Zahlung sparen Sie rund 20 % gegenüber monatlich: Personal kostet $86,40 pro Jahr ($7,20 pro Monat), Pro $144 pro Jahr ($12 pro Monat) und Business $374,40 pro Jahr ($31,20 pro Monat), jedes weitere Postfach $28,80 pro Jahr ($2,40 pro Monat). Sie zahlen einmal im Voraus für 12 Monate. Eine Kündigung stoppt die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Rückerstattung bei einer ersten Zahlung erstatten wir die restlichen Monate nicht."
       },
       {
         "q": "Welche E-Mail-Anbieter werden unterstützt?",

@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "https://support.plesk.com/hc/en-us/articles/12377513710359-How-to-configure-a-secure-connection-when-setting-up-a-Plesk-email-account-in-an-email-client",
+    "https://support.plesk.com/hc/en-us/articles/12377516977175-How-to-assign-an-SSL-certificate-per-domain-to-secure-the-mail-server-in-Plesk-SNI-support",
+    "https://support.plesk.com/hc/en-us/articles/12387614382743-The-default-certificate-is-used-for-IMAP-connection-when-the-Plesk-Premium-Mail-is-installed"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "usernameForm": "メールアドレス全体（johndoe@example.comなど）。Pleskは@より前の部分だけでは受け付けません。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "PleskのメールをClaudeで使う：IMAP設定とMCPアクセス",
+    "description": "PleskのメールボックスはIMAP 993でClaudeに接続できます。mail.domain.comではなくドメインそのものを使ってください。IMAPにはSNIがないため、mailサブドメインには別の証明書が返されます。"
+  },
+  "hero": {
+    "eyebrow": "Plesk + AI",
+    "titleLine1": "PleskのメールボックスをClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "AIエージェントに本物のPleskメールボックスを渡せます。Plesk Obsidianが動いているサーバーなら、ホスティング会社がどこでも、IMAP経由でメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "answer": "Claudeは自力ではPleskのメールボックスに届きません。MCPEmailsはホスト型のMCPサーバーで、ポート993のごく普通のIMAPで接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。Pleskはホスティング会社ではなくコントロールパネルのソフトウェアなので、共通のホスト名はありません。メールサーバーはあなた自身のドメイン、またはサーバーのホスト名で、正確な組み合わせはPleskの「Mail Accounts」から「Mail Client Setup」に表示されます。認証はパネルのログインではなく、Pleskでメールボックスに設定したパスワードです。受信トレイ1つは無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "Pleskで設定したメールボックスのパスワード",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "Pleskメールの接続方法：ドメインそのもの、IMAP 993",
+    "body": "Pleskは何千ものホスティング会社と自己管理サーバーが動かしているコントロールパネルのソフトウェアなので、設定はベンダーではなくサーバー次第です。形はいつも同じです。IMAPはポート993でSSL、SMTPは465、またはサブミッションポートが有効なら587、ユーザー名はメールアドレス全体。Plesk自身のクイックスタートは、受信サーバーと送信サーバーに<b>お使いのドメイン名</b>、たとえば<code>example.com</code>を入力するよう案内しています。これは簡略化ではなく意図的なものです。Pleskは求めに応じてドメインの証明書でメールを保護しますが、その証明書がカバーするのはドメインであって<code>mail.</code>サブドメインではないため、<code>mail.example.com</code>はサーバー全体の既定の証明書で応答することが多いのです。値は<b>ウェブサイトとドメイン</b>、対象のドメイン、<b>Mail Accounts</b>、<b>Mail Client Setup</b>の順に開いて読み取り、そこに表示されているとおりに使ってください。"
+  },
+  "setup": [
+    {
+      "h": "MCPEmailsの無料アカウントを作成する",
+      "p": "mcpemails.comで新規登録します。Freeプランでは受信トレイ1つを接続でき、カードは不要です。"
+    },
+    {
+      "h": "PleskでMail Client Setupを開く",
+      "p": "Pleskで<b>ウェブサイトとドメイン</b>に進み、メールを使いたいドメインを選び、<b>Mail Accounts</b>を開いて、アドレスの行の<b>Mail Client Setup</b>アイコンをクリックします。Pleskは受信と送信のホスト名、IMAPとSMTPのポート、そのサーバーが想定するセキュリティの種類を表示します。一字一句そのままコピーしてください。PleskのインストールごとにメールのTLSの構成は異なるので、この画面は、このページを含むどんな一般的なPleskガイドより信頼できます。"
+    },
+    {
+      "h": "メールボックスのパスワードを設定し、証明書がホストをカバーしているか確認する",
+      "p": "<b>Mail Accounts</b>でアドレスを開き、そこでパスワードを設定します。IMAPが照合するのはそのパスワードで、Pleskのログインではありません。自己管理のサーバーなら、<b>ツールと設定</b>（Tools & Settings）の<b>SSL/TLS 証明書</b>でメールサーバーに有効な証明書が割り当てられていること、そしてその名前がこれから使うホスト名と一致していることを確認してください。"
+    },
+    {
+      "h": "MCP URLをAIクライアントに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAPとSMTPはSNIを使えないので、mail.yourdomain.comにはサーバーの既定の証明書が返ります",
+      "p": "HTTPSで正しい証明書が選ばれるのは、ブラウザーがハンドシェイク中にホスト名を伝えるからです。メールのプロトコルはそうは動きません。デーモンにはどの名前で呼ばれたかを確実に知る手段がないため、名前に関係なく接続ごとに1枚の証明書を出します。標準のPleskでは、きちんと保護されるのはドメインそのものとサーバーのホスト名だけで、<code>mail.example.com</code>にはサーバー全体の既定値が何であれそれが提示されます。その結果の名前の不一致は、あなたの設定ミスではなく、プロトコルの仕組みです。"
+    },
+    {
+      "h": "対処法は発行時のチェックボックス1つで、見落としやすいものです",
+      "p": "PleskでLet's Encryptの証明書を発行するとき、<b>Assign the certificate to the mail domain</b>（証明書をメールドメインに割り当てる）にチェックを入れます。次に、そのドメインの<b>メール設定</b>タブで、メール用のSSL/TLS証明書としてその証明書を選びます。両方の手順が必要です。チェックを入れずに発行すると、ウェブサイトは完璧に保護されているのにメールは既定の証明書のままになります。有効なサイトと壊れたメールのハンドシェイクが同じサーバーに同居しているPleskが多いのは、これが理由です。"
+    },
+    {
+      "h": "Plesk Premium Mailをインストールすると、IMAPが既定の証明書に黙って戻ります",
+      "p": "PleskにはPremium Mailをサブスクリプションで有効にすると、ドメインごとの証明書が事前に正しく割り当てられていても、IMAP接続がサーバー既定の証明書にフォールバックするという文書化された事例があります。メールは流れ続け、ウェブメールも動き続けるので、変化を知らせるものは何もなく、厳格なクライアントだけが気づきます。対処はパネル内にあります。<b>Subscriptions</b>（サブスクリプション）、対象のドメイン、<b>Plesk Premium Email</b>を開き、<b>Fix</b>を押してください。"
+    }
+  ],
+  "limits": [
+    "Pleskはソフトウェアであってホスティング会社ではないので、プロバイダーが既定値を変えている場合があります。このページとお使いのMail Client Setup画面が食い違ったら、画面のほうが正しいです。",
+    "ホスティング会社によっては、ポート587を無効にして465だけを残していたり、その逆だったりします。PleskのMail Client Setupには、そのサーバーが実際に受け付けるサブミッションポートが表示されます。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはPleskのメールボックスで使えますか？",
+      "a": "直接は使えません。ClaudeにPleskサーバー用のコネクタはありません。MCPEmailsのようなMCPサーバーをIMAP経由でメールボックスに接続すると、Claudeがメールの閲覧、検索、送信、返信、予約送信、整理をできるようになります。Pleskのメールはごく普通のIMAPとSMTPなので、Pleskが動いているどのホスティング会社でも同じように動きます。"
+    },
+    {
+      "q": "PleskのIMAPとSMTPの設定は何ですか？",
+      "a": "IMAPはポート993でSSL、SMTPはポート465でSSL、またはサブミッションポートが有効なら587です。Plesk自身のドキュメントは、受信サーバーにも送信サーバーにもexample.comのようなドメイン名を入力し、ユーザー名にはメールアドレス全体を使うよう案内しています。お使いのドメインのMail Client Setup画面で確認してください。"
+    },
+    {
+      "q": "Pleskのメールで証明書の名前の不一致が出るのはなぜですか？",
+      "a": "メールのプロトコルがHTTPSのようにはSNIをサポートしないため、サーバーが接続ごとに1枚の証明書を提示するからです。既定ではその証明書がカバーするのはドメインとサーバーのホスト名で、mail.yourdomain.comではありません。メールドメインに割り当てるオプションを付けて証明書を発行し、そのドメインのメール設定でメールのTLS用に選んでください。"
+    },
+    {
+      "q": "Pleskのメール設定はどこにありますか？",
+      "a": "ウェブサイトとドメインに進み、ドメインを選び、Mail Accountsを開いて、アドレスの横のMail Client Setupアイコンをクリックします。Pleskは、その特定のサーバーが想定するホスト名、ポート、暗号化の種類を表示します。Pleskの構成はホスティング会社ごとに異なるため、お使いのサーバーについてはその画面が正です。"
+    },
+    {
+      "q": "私のPleskのメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにPleskサーバーからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにPleskの受信トレイを渡す",
+    "sub": "Pleskのメールボックスを数分で接続。受信トレイ1つはずっと無料、カード不要。"
+  }
+}

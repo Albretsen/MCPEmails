@@ -6,6 +6,7 @@ import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import ConnectFolds, { ConnectFold } from './ConnectFolds';
 import { relatedProviders } from '@/lib/connect/release.mjs';
+import { providerDisplayName } from '@/lib/connect/display-name.mjs';
 import { guideLinksFor } from '@/lib/connect/guides.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { withProvider } from '@/lib/connect/multi-mailbox.mjs';
@@ -467,7 +468,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
               {related.map((p) => (
                 <li key={p.slug}>
                   <Link href={`/connect/${p.slug}`}>
-                    {t('related.link', { provider: p.name })}
+                    {t('related.link', { provider: providerDisplayName(p, locale) })}
                   </Link>
                 </li>
               ))}
