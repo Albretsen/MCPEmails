@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Haz clic en **Continue**, revisa los ajustes de inicio de sesión que detectó Claude (los valores predeterminados sirven) y haz clic en **Add**.
-5. Inicia sesión en MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+5. Inicia sesión en MCPEmails y elige cuánto acceso le das a Claude: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación). Con **Personalizado** activas o desactivas cada permiso por separado.
 6. En un chat, haz clic en **+** abajo a la izquierda, elige **Connectors** y activa MCPEmails.
 
 En un plan Team o Enterprise, un Owner añade el conector una vez en **Organization settings → Connectors**. Después, los miembros abren **Customize → Connectors**, buscan MCPEmails y hacen clic en **Connect**.
@@ -92,7 +92,7 @@ MCPEmails ofrece a Claude herramientas de correo concretas, no una contraseña n
 - **Organizar:** \`email_organize\` mueve, etiqueta, marca y archiva mensajes.
 - **Trabajar con borradores, carpetas, programación y contactos:** \`draft\`, \`folder\`, \`schedule\` y \`contact_search\` cubren el resto de un flujo práctico de correo.
 
-MCPEmails funciona por sondeo: Claude comprueba el correo nuevo cuando se lo pides, en vez de recibir un evento push en el instante en que llega un mensaje.
+Claude lee tu correo llamando a herramientas: comprueba el correo nuevo cuando se lo pides, y nada entra en el chat por sí solo en el instante en que llega un mensaje. Si tu propio código necesita un push, los espacios de trabajo Pro y Business pueden añadir un webhook firmado de correo nuevo en Claves de API, dentro del panel.
 
 ## Solución de problemas de conexión y configuración de Claude
 

@@ -64,7 +64,7 @@
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
-    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
+    "pollingBody": "The MCP tools are request/response: every result comes from a tool call your agent makes, and an incoming email never triggers a tool call on its own. The simplest way to react to new mail is to <b>poll</b>, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above). If you want a push, Pro and Business workspaces can add a <b>webhook</b> under API keys in the dashboard: MCPEmails sends a signed POST to your URL when new mail arrives, carrying message IDs (optionally with sender and subject), never the message body, and your code opens them with <code>email_read</code>."
   },
   "operations": {
     "eyebrow": "Built for real inbox work",

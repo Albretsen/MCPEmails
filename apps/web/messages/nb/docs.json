@@ -64,7 +64,7 @@
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b>. Vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",
-    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
+    "pollingBody": "MCP-verktøyene er forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør, og en innkommende e-post utløser aldri et verktøykall av seg selv. Den enkleste måten å reagere på ny e-post er å <b>polle</b>, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over). Vil du ha push, kan Pro- og Business-arbeidsområder legge til en <b>webhook</b> under API-nøkler i dashbordet: MCPEmails sender en signert POST til URL-en din når det kommer ny e-post, med meldings-ID-er (eventuelt også avsender og emne), aldri selve meldingsinnholdet, og koden din åpner dem med <code>email_read</code>."
   },
   "operations": {
     "eyebrow": "Bygget for ekte innboksarbeid",

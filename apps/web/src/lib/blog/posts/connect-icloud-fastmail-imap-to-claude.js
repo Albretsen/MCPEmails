@@ -70,7 +70,7 @@ In claude.ai:
 
 1. Go to **Customize → Connectors**.
 2. Click **Add connector** and paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Click **Connect**, sign in with your MCPEmails account, and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+3. Click **Connect**, sign in with your MCPEmails account, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
 
 No API key, no config file. claude.ai uses OAuth with PKCE under the hood, and the token Claude gets is scoped to exactly what you approved. If you're on a client that can't do OAuth (Cursor, Cline, a cURL script), you mint a scoped key instead, which I cover in [email access for Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 

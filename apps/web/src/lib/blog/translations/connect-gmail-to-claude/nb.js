@@ -44,7 +44,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Klikk **Continue**, se over innloggingsinnstillingene Claude fant (standardvalgene holder), og klikk **Add**.
-5. Logg inn med MCPEmails-kontoen din, og godkjenn scopene du ønsker: \`read:email\`, \`send:email\`, eller begge.
+5. Logg inn med MCPEmails-kontoen din, og velg hvor mye tilgang Claude skal få: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting). Med **Tilpasset** slår du hver tillatelse av eller på for seg.
 6. I en samtale klikker du **+** nede til venstre, velger **Connectors** og slår på MCPEmails.
 
 På et Team- eller Enterprise-abonnement legger en Owner til connectoren én gang under **Organization settings → Connectors**. Medlemmene åpner deretter **Customize → Connectors**, finner MCPEmails og klikker **Connect**.

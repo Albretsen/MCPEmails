@@ -60,7 +60,7 @@ El endpoint es:
 https://mcpemails.com/api/mcp
 \`\`\`
 
-Al hacer clic en Connect, inicias sesión en tu cuenta de MCPEmails y apruebas los permisos: \`read:email\`, \`send:email\` o ambos. No se intercambia ninguna clave de API.
+Al hacer clic en Connect, inicias sesión en tu cuenta de MCPEmails y eliges el acceso en nuestra pantalla de consentimiento: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación), o **Personalizado** para activar los permisos uno a uno. No se intercambia ninguna clave de API.
 
 Para clientes que no hablan OAuth (Cline, plugins de JetBrains, tus propios scripts, cURL directamente), genera una clave con permisos acotados en **Panel → Claves de API** y envíala como \`Authorization: Bearer <api-key>\`. La guía completa para esos clientes está en [correo para agentes de IA en Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Si estás comparando los dos enfoques, [OAuth frente a claves de API para el acceso de la IA al correo](/blog/oauth-vs-api-keys-ai-email-access) expone las ventajas e inconvenientes.
 

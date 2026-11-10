@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Cliquez sur **Continue**, vérifiez les paramètres de connexion détectés par Claude (les valeurs par défaut conviennent) et cliquez sur **Add**.
-5. Connectez-vous à MCPEmails et approuvez les scopes souhaités : \`read:email\`, \`send:email\`, ou les deux.
+5. Connectez-vous à MCPEmails et choisissez le niveau d'accès de Claude : **Lecture seule**, **Standard** (ajoute l'envoi et les brouillons) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression). **Personnalisé** permet d'activer chaque permission une par une.
 6. Dans une conversation, cliquez sur **+** en bas à gauche, choisissez **Connectors** et activez MCPEmails.
 
 Sur un forfait Team ou Enterprise, un Owner ajoute le connecteur une fois sous **Organization settings → Connectors**. Les membres ouvrent ensuite **Customize → Connectors**, trouvent MCPEmails et cliquent sur **Connect**.
@@ -92,7 +92,7 @@ MCPEmails donne à Claude des outils de messagerie ciblés, et non un mot de pas
 - **Organiser :** \`email_organize\` déplace, étiquette, marque et archive les messages.
 - **Gérer brouillons, dossiers, planification et contacts :** \`draft\`, \`folder\`, \`schedule\` et \`contact_search\` couvrent le reste d'un flux de messagerie pratique.
 
-MCPEmails fonctionne par interrogation : Claude vérifie les nouveaux e-mails quand vous le lui demandez, plutôt que de recevoir un événement push dès qu'un message arrive.
+Claude lit vos e-mails en appelant des outils : il vérifie les nouveaux messages quand vous le lui demandez, et rien n'est poussé dans la conversation dès qu'un e-mail arrive. Si votre propre code a besoin d'un push, les espaces de travail Pro et Business peuvent ajouter un webhook signé de nouveau message sous Clés API dans le tableau de bord.
 
 ## Résoudre les problèmes de connexion et de configuration Claude
 

@@ -52,7 +52,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Click **Continue**, review the sign-in settings Claude detected (the defaults are fine), and click **Add**.
-5. Sign in with your MCPEmails account and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+5. Sign in with your MCPEmails account and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting). **Custom** lets you switch each permission on or off.
 6. In a chat, click **+** at the lower left, choose **Connectors** and switch MCPEmails on.
 
 On a Team or Enterprise plan, an Owner adds the connector once under **Organization settings → Connectors**. Members then open **Customize → Connectors**, find MCPEmails and click **Connect**.

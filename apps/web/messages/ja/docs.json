@@ -64,7 +64,7 @@
     "infoFormat": "レスポンス形式：<b>JSON-RPC 2.0</b>。成功した結果には型付きの<code>structuredContent</code>オブジェクトも含まれます",
     "handshakeLabel": "initializeハンドシェイク",
     "pollingHeading": "プッシュではなくポーリング",
-    "pollingBody": "MCPEmailsはリクエスト/レスポンス方式のみです。すべての結果は、エージェントが行うツール呼び出しから返されます。<b>Webhook、プッシュ通知、サーバー起点のイベントはありません</b>。そのため、メールが届いただけでエージェントが呼び出されることはありません。新着メールに対応するには、エージェントに定期的に<b>ポーリング</b>させてください。たとえば、ワークフローに合った間隔で<code>email_read</code>を<code>action: \"list\"</code>と<code>unread: true</code>で呼び出します (上記のレート制限に注意してください)。"
+    "pollingBody": "MCPツールはリクエスト/レスポンス方式です。すべての結果はエージェントが行うツール呼び出しから返され、メールが届いただけでツールが呼び出されることはありません。新着メールに対応するもっとも簡単な方法は<b>ポーリング</b>です。たとえば、ワークフローに合った間隔で<code>email_read</code>を<code>action: \"list\"</code>と<code>unread: true</code>で呼び出します (上記のレート制限に注意してください)。プッシュが必要な場合、ProとBusinessのワークスペースではダッシュボードのAPIキーから<b>Webhook</b>を追加できます。新しいメールが届くと、MCPEmailsは署名付きのPOSTを指定のURLに送信します。含まれるのはメッセージID (必要に応じて送信者と件名も) で、本文は含まれません。エージェントのコードはそれを<code>email_read</code>で開きます。"
   },
   "operations": {
     "eyebrow": "実際の受信トレイ業務のために",

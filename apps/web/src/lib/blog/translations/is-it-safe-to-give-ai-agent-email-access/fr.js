@@ -55,7 +55,7 @@ Si un outil coche les six cases, le risque résiduel est faible et maîtrisable.
 
 ## Un mot sur ce que nous ne faisons pas
 
-Deux limites à énoncer clairement. D’abord, un agent dans une conversation n’est pas prévenu quand un message arrive ; il vérifie selon un calendrier. Le seul push que nous proposons est un webhook signé de nouveau message vers une URL qui vous appartient, sur Pro et Business, et il transporte des identifiants de messages, pas du courrier. Deuxièmement, nous ne pouvons pas vous protéger d’un agent à qui vous avez accordé trop de confiance. Si vous donnez à un agent autonome l’accès en envoi sans aucune relecture, l’injection de prompt est un risque réel, et cela relève de la configuration, pas du transport. Restreignez la portée et gardez un humain sur tout ce qui est irréversible.
+Deux limites à énoncer clairement. D’abord, un agent dans une conversation n’est pas prévenu quand un message arrive ; il vérifie selon un calendrier. Le seul push que nous proposons est un webhook signé de nouveau message vers une URL qui vous appartient, sur Pro et Business, et il transporte des identifiants de message, jamais le corps du message. Deuxièmement, nous ne pouvons pas vous protéger d’un agent à qui vous avez accordé trop de confiance. Si vous donnez à un agent autonome l’accès en envoi sans aucune relecture, l’injection de prompt est un risque réel, et cela relève de la configuration, pas du transport. Restreignez la portée et gardez un humain sur tout ce qui est irréversible.
 
 ## Alors, est-ce sûr ?
 

@@ -68,7 +68,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Click **Continue**, review the sign-in settings Claude detected (the defaults are fine), and click **Add**.
-5. Sign in to MCPEmails and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+5. Sign in to MCPEmails and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting). **Custom** lets you switch each permission on or off.
 6. In a chat, click **+** at the lower left, choose **Connectors** and switch MCPEmails on.
 
 On a Team or Enterprise plan, an Owner adds the connector once under **Organization settings → Connectors**. Members then open **Customize → Connectors**, find MCPEmails and click **Connect**.
@@ -99,7 +99,7 @@ MCPEmails gives Claude focused email tools rather than a password or raw IMAP co
 - **Organize:** \`email_organize\` moves, labels, flags, and archives messages.
 - **Work with drafts, folders, schedules, and contacts:** \`draft\`, \`folder\`, \`schedule\`, and \`contact_search\` cover the rest of a practical email workflow.
 
-MCPEmails is poll-based: Claude checks for new mail when you ask it to, rather than receiving a push event the instant an email arrives.
+Claude reads your mail by calling tools: it checks for new mail when you ask it to, and nothing is pushed into the chat the instant an email arrives. If your own code needs a push, Pro and Business workspaces can add a signed new-mail webhook under API keys in the dashboard.
 
 ## Troubleshooting connection and Claude setup
 

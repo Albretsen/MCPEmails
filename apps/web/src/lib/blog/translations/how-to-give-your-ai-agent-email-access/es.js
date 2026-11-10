@@ -88,7 +88,7 @@ Mismo endpoint, mismas herramientas, dos formas de entrar según si tu cliente h
 
 ### Clientes con OAuth (sin clave de API)
 
-claude.ai, Claude Desktop, Cursor y clientes similares se conectan con OAuth 2.0 Authorization Code + PKCE y Dynamic Client Registration de RFC 7591. En claude.ai es **Customize → Connectors → Add connector**, pega la URL del endpoint de MCP, pulsa Connect, inicia sesión en tu cuenta de MCPEmails y aprueba. Los tokens se limitan exactamente a lo que apruebes: \`read:email\`, \`send:email\` o ambos. Para guías paso a paso, consulta [configurar Claude con tu bandeja de entrada](/blog/connect-claude-to-email) y [añadir tu correo a ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor y clientes similares se conectan con OAuth 2.0 Authorization Code + PKCE y Dynamic Client Registration de RFC 7591. En claude.ai es **Customize → Connectors → Add connector**, pega la URL del endpoint de MCP, pulsa Connect, inicia sesión en tu cuenta de MCPEmails y aprueba. El token lleva exactamente el acceso que eliges en la pantalla de consentimiento: **Solo lectura**, **Estándar** (añade el envío y los borradores), **Acceso completo** (añade la programación, las carpetas y la eliminación) o un conjunto **Personalizado** con cada permiso activado o desactivado. Para guías paso a paso, consulta [configurar Claude con tu bandeja de entrada](/blog/connect-claude-to-email) y [añadir tu correo a ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clientes sin OAuth (clave de API)
 

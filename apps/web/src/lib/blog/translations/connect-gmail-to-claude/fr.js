@@ -44,7 +44,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Cliquez sur **Continuer**, vérifiez les paramètres de connexion détectés par Claude (les valeurs par défaut conviennent) et cliquez sur **Ajouter**.
-5. Identifiez-vous avec votre compte MCPEmails et approuvez les portées que vous souhaitez : \`read:email\`, \`send:email\`, ou les deux.
+5. Identifiez-vous avec votre compte MCPEmails et choisissez le niveau d'accès de Claude : **Lecture seule**, **Standard** (ajoute l'envoi et les brouillons) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression). **Personnalisé** permet d'activer chaque permission une par une.
 6. Dans une conversation, cliquez sur **+** en bas à gauche, choisissez **Connecteurs** et activez MCPEmails.
 
 Sur un forfait Team ou Enterprise, un propriétaire ajoute le connecteur une fois sous **Paramètres de l’organisation → Connecteurs**. Les membres ouvrent ensuite **Personnaliser → Connecteurs**, trouvent MCPEmails et cliquent sur **Connecter**.

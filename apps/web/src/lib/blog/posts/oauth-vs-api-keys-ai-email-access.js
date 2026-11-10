@@ -11,7 +11,7 @@ const post = {
   featured: false,
   content: `When you connect an AI agent to your email through MCPEmails, you authenticate one of two ways: OAuth or an API key. Use OAuth if your client supports it (claude.ai, Claude Desktop, Cursor), and a scoped API key if it doesn't (Cline, JetBrains, scripts, cURL). Both hit the same endpoint and expose the same tools. The difference is who manages the secret and how easily you can pull the plug.
 
-This isn't a security-vs-convenience tradeoff where you sacrifice one for the other. Both paths are scoped to exactly \`read:email\`, \`send:email\`, or both, and both can be revoked from the dashboard in one click. The real question is which fits the client you're actually using. For the bigger picture on how any of this connects, start with the pillar guide, [how to give your AI agent access to email](/blog/how-to-give-your-ai-agent-email-access).
+This isn't a security-vs-convenience tradeoff where you sacrifice one for the other. Both paths are scoped to exactly what you grant, from read-only up to all nine permissions, and both can be revoked from the dashboard in one click. The real question is which fits the client you're actually using. For the bigger picture on how any of this connects, start with the pillar guide, [how to give your AI agent access to email](/blog/how-to-give-your-ai-agent-email-access).
 
 ## The 30-second recommendation
 

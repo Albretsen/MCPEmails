@@ -63,7 +63,7 @@ En claude.ai:
 
 1. Ve a **Customize → Connectors**.
 2. Pulsa **Add connector** y pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Pulsa **Connect**, inicia sesión con tu cuenta de MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+3. Pulsa **Connect**, inicia sesión con tu cuenta de MCPEmails y elige cuánto acceso le das a Claude: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 
 Sin clave de API, sin archivo de configuración. claude.ai usa OAuth con PKCE por debajo, y el token que recibe Claude queda acotado exactamente a lo que aprobaste. Si estás en un cliente que no puede hacer OAuth (Cursor, Cline, un script de cURL), generas una clave acotada en su lugar, algo que explico en [acceso al correo para Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 

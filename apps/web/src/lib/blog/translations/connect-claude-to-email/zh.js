@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. 点击 **Continue**，检查 Claude 检测到的登录设置（保持默认即可），然后点击 **Add**。
-5. 登录 MCPEmails，并批准所需范围：\`read:email\`、\`send:email\` 或两者。
+5. 登录 MCPEmails，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时、文件夹和删除）。**自定义**可以逐项开关每一项权限。
 6. 在对话中点击左下角的 **+**，选择 **Connectors**，然后打开 MCPEmails。
 
 在 Team 或 Enterprise 计划中，由 Owner 在 **Organization settings → Connectors** 下添加一次连接器。之后成员打开 **Customize → Connectors**，找到 MCPEmails 并点击 **Connect**。
@@ -92,7 +92,7 @@ MCPEmails 为 Claude 提供的是专用邮件工具，而不是密码或原始 I
 - **整理：** \`email_organize\` 可以移动、添加标签、标记和归档邮件。
 - **处理草稿、文件夹、日程和联系人：** \`draft\`、\`folder\`、\`schedule\` 和 \`contact_search\` 覆盖了实用邮件工作流的其余部分。
 
-MCPEmails 采用轮询模式：Claude 会在你要求时检查新邮件，而不是在邮件到达的瞬间接收推送事件。
+Claude 通过调用工具来读取邮件：它会在你要求时检查新邮件，邮件到达的瞬间不会有任何内容被推送进聊天。如果你自己的代码需要推送，Pro 和 Business 工作区可以在仪表盘的 API 密钥下添加一个带签名的新邮件 webhook。
 
 ## 将 Claude 连接到邮件安全吗？
 
