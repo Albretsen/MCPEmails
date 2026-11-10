@@ -12,7 +12,7 @@
     "method": "account-password",
     "label": "Kontopasswort (bei aktiver 2FA ein anwendungsspezifisches Passwort)",
     "helpUrl": "https://support.mail.com/pop-imap/index.html",
-    "usernameForm": "Ihre vollständige mail.com-Adresse genau so, wie sie vergeben wurde, auf welcher Domain der mail.com-Familie auch immer, etwa sie@email.com oder sie@usa.com.",
+    "usernameForm": "Ihre vollständige mail.com-Adresse genau so, wie sie vergeben wurde, egal auf welcher mail.com-Domain, etwa name@email.com oder name@usa.com.",
     "status": "active"
   },
   "meta": {
@@ -24,14 +24,14 @@
     "titleLine1": "Mail.com mit Claude verbinden,",
     "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
     "lead": "Ihr KI-Agent bekommt Ihr echtes mail.com-Postfach: E-Mails lesen, suchen, beantworten, senden, planen und sortieren, per IMAP und in jedem MCP-Client statt nur in einem, sobald der Zugriff für Mailprogramme eingeschaltet ist.",
-    "answer": "Claude kann mail.com nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.mail.com auf Port 993 anbindet, sodass Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren kann. Zwei Bedingungen von mail.com kommen zuerst: POP3, IMAP und SMTP sind Premium-Funktionen, und auch mit Premium ist der Zugriff anfangs ausgeschaltet, bis Sie ihn unter Email, Settings, POP3 and IMAP aktivieren. Ist er an, ist ein Postfach bei MCPEmails dauerhaft kostenlos.",
+    "answer": "Claude kann mail.com nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.mail.com auf Port 993 anbindet, sodass Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren kann. mail.com stellt zwei Bedingungen: POP3, IMAP und SMTP sind Premium-Funktionen, und auch mit Premium ist der Zugriff zunächst ausgeschaltet, bis Sie ihn unter Email, Settings, POP3 and IMAP aktivieren. Ist er an, ist ein Postfach bei MCPEmails dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Premium-Konto, IMAP eingeschaltet",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
   },
   "method": {
     "title": "So verbindet sich mail.com: Premium-IMAP, von Hand eingeschaltet",
-    "body": "mail.com stellt IMAP unter <code>imap.mail.com</code> auf Port 993 über TLS bereit. Für den Postausgang nennt die Hilfe <code>smtp.mail.com</code> auf Port 587 mit STARTTLS und bietet Port 465 mit SSL/TLS als Alternative an, die MCPEmails nutzt. mail.com gehört zur 1&1 Mail & Media, demselben Haus wie GMX und WEB.DE, und übernimmt deren Hausregel: <b>Zugriff außerhalb des Browsers ist eine Bezahlfunktion und ist anfangs ausgeschaltet</b>. mail.coms Hilfeseite zu Drittanwendungen sagt, dass POP, IMAP und SMTP nur mit Premium verfügbar sind, und die Fehlerbehebungsseite sagt separat, dass der Abruf per POP3 oder IMAP im Postfach standardmäßig aus ist. Eine kostenlose mail.com-Adresse lässt sich weder von uns noch von einem anderen Mailprogramm verbinden, bis das Konto aufgewertet ist, und auch dann muss das Kästchen angehakt sein."
+    "body": "mail.com stellt IMAP unter <code>imap.mail.com</code> auf Port 993 über TLS bereit. Für den Postausgang nennt die Hilfe <code>smtp.mail.com</code> auf Port 587 mit STARTTLS und bietet Port 465 mit SSL/TLS als Alternative an, die MCPEmails nutzt. mail.com gehört zu 1&1 Mail & Media, demselben Haus wie GMX und WEB.DE, und übernimmt deren Hausregel: <b>Zugriff außerhalb des Browsers ist eine Bezahlfunktion und ist anfangs ausgeschaltet</b>. Die mail.com-Hilfeseite zu Drittanwendungen sagt, dass POP, IMAP und SMTP nur mit Premium verfügbar sind, und die Fehlerbehebungsseite sagt separat, dass der Abruf per POP3 oder IMAP im Postfach standardmäßig aus ist. Eine kostenlose mail.com-Adresse lässt sich weder von uns noch von einem anderen Mailprogramm verbinden, bis das Konto auf Premium umgestellt ist, und auch dann muss das Häkchen gesetzt sein."
   },
   "setup": [
     {
@@ -40,11 +40,11 @@
     },
     {
       "h": "POP3 und IMAP bei mail.com einschalten",
-      "p": "Melden Sie sich auf mail.com an und gehen Sie zu <b>Email</b>, dann <b>Settings</b>, dann <b>POP3 and IMAP</b>. Haken Sie <b>Enable access to this account via POP3 and IMAP</b> an und klicken Sie auf <b>Save</b>. Fehlt dieser Bereich oder lässt er sich nicht speichern, ist das Postfach noch im kostenlosen Tarif, der weder POP3 noch IMAP noch SMTP enthält."
+      "p": "Melden Sie sich auf mail.com an und gehen Sie zu <b>Email</b>, dann <b>Settings</b>, dann <b>POP3 and IMAP</b>. Setzen Sie das Häkchen bei <b>Enable access to this account via POP3 and IMAP</b> und klicken Sie auf <b>Save</b>. Fehlt dieser Bereich oder lässt er sich nicht speichern, ist das Postfach noch im kostenlosen Tarif, der weder POP3 noch IMAP noch SMTP enthält."
     },
     {
       "h": "Bei aktiver 2FA ein anwendungsspezifisches Passwort erstellen, dann verbinden",
-      "p": "Mit eingeschalteter Zwei-Faktor-Authentifizierung funktioniert Ihr normales mail.com-Passwort in Mailprogrammen nicht mehr. Klicken Sie auf das <b>Profilsymbol</b>, dann <b>Security Options</b>, dann <b>Manage application-specific passwords</b>, dann <b>Create new application-specific password</b>. mail.com zeigt es einmal an. Wählen Sie jetzt in MCPEmails IMAP / SMTP und geben Sie Ihre vollständige Adresse, auf welcher mail.com-Domain auch immer, mit diesem Passwort ein."
+      "p": "Mit eingeschalteter Zwei-Faktor-Authentifizierung funktioniert Ihr normales mail.com-Passwort in Mailprogrammen nicht mehr. Klicken Sie auf das <b>Profilsymbol</b>, dann <b>Security Options</b>, dann <b>Manage application-specific passwords</b>, dann <b>Create new application-specific password</b>. mail.com zeigt es einmal an. Wählen Sie jetzt in MCPEmails IMAP / SMTP und geben Sie Ihre vollständige Adresse, egal auf welcher mail.com-Domain, mit diesem Passwort ein."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
@@ -54,11 +54,11 @@
   "gotchas": [
     {
       "h": "IMAP ist Premium, und der Satz, der das sagt, ist leicht zu übersehen",
-      "p": "mail.coms Hilfe trägt die Einschränkung in einem einzigen Satz auf der Seite zu Drittanwendungen: POP, IMAP und SMTP sind nur Premium-Funktionen. Es gibt keine Testphase, keinen Teilzugriff und keine Meldung im Mailprogramm, die das erklärt: Ein kostenloses Postfach lehnt die Anmeldung genauso ab wie ein falsches Passwort. Das Upgrade ist der einzige Weg, und kein MCP-Server, unserer eingeschlossen, kann es umgehen. Das ist der häufigste Grund, warum eine mail.com-Verbindung scheitert."
+      "p": "Die mail.com-Hilfe erwähnt die Einschränkung in einem einzigen Satz auf der Seite zu Drittanwendungen: POP, IMAP und SMTP sind nur Premium-Funktionen. Es gibt keine Testphase, keinen Teilzugriff und keine Meldung im Mailprogramm, die das erklärt: Ein kostenloses Postfach lehnt die Anmeldung genauso ab wie ein falsches Passwort. Das Upgrade ist der einzige Weg, und kein MCP-Server, unserer eingeschlossen, kann es umgehen. Das ist der häufigste Grund, warum eine mail.com-Verbindung scheitert."
     },
     {
       "h": "Das Einschalten der Zwei-Faktor-Authentifizierung schaltet IMAP stillschweigend wieder ab",
-      "p": "mail.coms Dokumentation zur Zwei-Faktor-Authentifizierung merkt an, dass der Zugriff per POP3 und IMAP nach dem Aktivieren von 2FA in den E-Mail-Einstellungen erneut eingeschaltet werden muss. Ein Postfach, das verbunden war und lief, steht also in dem Moment still, in dem Sie das Konto absichern, und das Häkchen von vor Wochen ist leise wieder weg. Gehen Sie zurück zu <b>Email</b>, <b>Settings</b>, <b>POP3 and IMAP</b>, setzen Sie das Häkchen neu und speichern Sie. Stellen Sie die Verbindung danach auf ein anwendungsspezifisches Passwort um, denn Ihr normales Passwort meldet jetzt ebenfalls nicht mehr an."
+      "p": "Die mail.com-Dokumentation zur Zwei-Faktor-Authentifizierung merkt an, dass der Zugriff per POP3 und IMAP nach dem Aktivieren von 2FA in den E-Mail-Einstellungen erneut eingeschaltet werden muss. Ein Postfach, das verbunden war und lief, steht also in dem Moment still, in dem Sie das Konto absichern, und das Häkchen, das Sie vor Wochen gesetzt haben, ist stillschweigend wieder weg. Gehen Sie zurück zu <b>Email</b>, <b>Settings</b>, <b>POP3 and IMAP</b>, setzen Sie das Häkchen neu und speichern Sie. Stellen Sie die Verbindung danach auf ein anwendungsspezifisches Passwort um, denn auch Ihr normales Passwort wird jetzt nicht mehr akzeptiert."
     },
     {
       "h": "Ihre Adresse endet vermutlich nicht auf @mail.com",
@@ -66,12 +66,12 @@
     },
     {
       "h": "Probleme beheben: Eine tote Verbindung kann eine Sperre sein, die nur das Webmail anzeigt",
-      "p": "mail.coms eigene Fehlerbehebung warnt, dass manche Fehler, vor allem vorübergehende Kontosperren, in einem fremden Mailprogramm nicht richtig dargestellt werden. Die Verbindung scheitert dann einfach, ohne brauchbaren Hinweis. Die Anweisung lautet: am Rechner im Browser auf mail.com anmelden und die Meldung lesen, die direkt nach dem Login erscheint; sie nennt den wahren Grund und die Schritte, ihn zu beheben. Stimmen die Zugangsdaten und ist IMAP an, prüfen Sie das Webmail, bevor Sie eine weitere Einstellung ändern. Danach in dieser Reihenfolge: Premium aktiv, Häkchen unter POP3 and IMAP gesetzt, bei 2FA ein anwendungsspezifisches Passwort statt des Kontopassworts."
+      "p": "mail.com warnt in seiner eigenen Fehlerbehebung, dass manche Fehler, vor allem vorübergehende Kontosperren, in einem fremden Mailprogramm nicht richtig dargestellt werden. Die Verbindung scheitert dann einfach, ohne brauchbaren Hinweis. mail.com rät: am Rechner im Browser auf mail.com anmelden und die Meldung lesen, die direkt nach dem Login erscheint; sie nennt den wahren Grund und die Schritte, ihn zu beheben. Stimmen die Zugangsdaten und ist IMAP an, prüfen Sie das Webmail, bevor Sie eine weitere Einstellung ändern. Danach in dieser Reihenfolge: Premium aktiv, Häkchen unter POP3 and IMAP gesetzt, bei 2FA ein anwendungsspezifisches Passwort statt des Kontopassworts."
     }
   ],
   "limits": [
     "Ein kostenloses mail.com-Postfach lässt sich gar nicht verbinden, weder von uns noch von einem Mailprogramm, weil POP3, IMAP und SMTP Premium-Konten vorbehalten sind.",
-    "mail.coms Seite mit den IMAP-Serverdaten nennt auch Port 143, der unverschlüsselt ist, sofern der Client nicht STARTTLS aushandelt. MCPEmails verbindet sich nur auf 993 mit implizitem TLS und bietet den Klartext-Port nicht an."
+    "Die mail.com-Seite mit den IMAP-Serverdaten nennt auch Port 143, der unverschlüsselt ist, sofern der Client nicht STARTTLS aushandelt. MCPEmails verbindet sich nur auf 993 mit implizitem TLS und bietet den Klartext-Port nicht an."
   ],
   "faq": [
     {
@@ -80,15 +80,15 @@
     },
     {
       "q": "Brauche ich mail.com Premium für IMAP?",
-      "a": "Ja. mail.coms Hilfe sagt klar, dass POP, IMAP und SMTP nur Premium-Funktionen sind, und verweist kostenlose Nutzer auf die Upgrade-Seite. Die Einschränkung setzen mail.coms eigene Server durch; im kostenlosen Tarif bleiben der Browser und die mail.com-Apps Ihr einziger Zugang."
+      "a": "Ja. Die mail.com-Hilfe sagt klar, dass POP, IMAP und SMTP nur Premium-Funktionen sind, und verweist kostenlose Nutzer auf die Upgrade-Seite. Die Einschränkung setzen mail.coms eigene Server durch; im kostenlosen Tarif bleiben der Browser und die mail.com-Apps Ihr einziger Zugang."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von mail.com?",
       "a": "IMAP ist imap.mail.com auf Port 993 mit implizitem TLS. Für SMTP dokumentiert mail.com smtp.mail.com auf Port 587 mit STARTTLS und Port 465 mit SSL/TLS als gleichwertige Alternative; MCPEmails nutzt 465. Melden Sie sich mit Ihrer vollständigen mail.com-Adresse und Ihrem Kontopasswort an, oder mit einem anwendungsspezifischen Passwort, wenn die Zwei-Faktor-Authentifizierung aktiv ist."
     },
     {
-      "q": "Meine mail.com-Verbindung ist kaputt, seit ich die Zwei-Faktor-Authentifizierung eingeschaltet habe. Warum?",
-      "a": "Weil das Aktivieren von 2FA den Zugriff für Mailprogramme zurücksetzt. mail.com verlangt, dass POP3 und IMAP danach in den E-Mail-Einstellungen erneut aktiviert werden, und Ihr normales Passwort meldet ein Mailprogramm nicht mehr an. Schalten Sie die Einstellung unter Email, Settings, POP3 and IMAP wieder ein, erzeugen Sie dann unter Security Options ein anwendungsspezifisches Passwort und verwenden Sie dieses."
+      "q": "Meine mail.com-Verbindung funktioniert nicht mehr, seit ich die Zwei-Faktor-Authentifizierung eingeschaltet habe. Warum?",
+      "a": "Weil das Aktivieren von 2FA den Zugriff für Mailprogramme zurücksetzt. mail.com verlangt, dass POP3 und IMAP danach in den E-Mail-Einstellungen erneut aktiviert werden, und Ihr normales Passwort wird in Mailprogrammen nicht mehr akzeptiert. Schalten Sie die Einstellung unter Email, Settings, POP3 and IMAP wieder ein, erzeugen Sie dann unter Security Options ein anwendungsspezifisches Passwort und verwenden Sie dieses."
     },
     {
       "q": "Funktioniert das mit @email.com, @usa.com und den anderen mail.com-Domains?",
@@ -96,11 +96,11 @@
     },
     {
       "q": "Werden meine mail.com-E-Mails auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von mail.com abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt; Nachrichteninhalte werden nach der Anfrage, die sie angefordert hat, nicht aufbewahrt."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von mail.com abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt; Nachrichteninhalte werden nach der Anfrage nicht aufbewahrt."
     }
   ],
   "ctaBand": {
-    "title": "Geben Sie Ihrer KI ein Mail.com-Postfach",
+    "title": "Geben Sie Ihrer KI ein mail.com-Postfach",
     "sub": "mail.com Premium in wenigen Minuten verbinden. Ein Postfach bei MCPEmails dauerhaft kostenlos, ohne Kreditkarte."
   }
 }
