@@ -89,7 +89,7 @@ Sim. Conecte o plugin do iCloud Mail em Configurações, Plugins, com seu endere
 Não. Ele entra nos servidores de e-mail do iCloud, não no app Mail, então só vê e-mails guardados no iCloud. Conecte as outras contas com o plugin de cada uma, ou por um servidor MCP como o MCPEmails.
 
 **Por que o ChatGPT rejeita minha senha da Apple?**
-A Apple exige uma senha específica de app para todo app que não é da própria Apple. Crie uma em account.apple.com, em Início de sessão e segurança, Senhas específicas de apps. A autenticação de dois fatores precisa estar ativada.
+Porque o plugin da OpenAI usa uma senha específica de app, não a senha da sua Conta Apple. A Apple só deixa apps de terceiros compatíveis entrarem com a própria Conta Apple; os demais, inclusive este plugin e o MCPEmails, usam uma senha específica de app. Crie uma em account.apple.com, em Início de sessão e segurança, Senhas específicas de apps. A autenticação de dois fatores precisa estar ativada.
 
 **O Claude tem conector para o iCloud?**
 Não. Os conectores de e-mail próprios do Claude cobrem o Gmail e contas corporativas do Microsoft 365. Adicione o iCloud ao Claude como conector personalizado por um servidor MCP: conecte a caixa ao MCPEmails com uma senha específica de app e cole \`https://mcpemails.com/api/mcp\` no Claude.
