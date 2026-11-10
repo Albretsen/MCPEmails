@@ -1190,7 +1190,7 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     // two-step login is on.
     id: 'interia',
     label: 'Interia',
-    domains: ['interia.pl', 'interia.eu', 'poczta.fm', 'intmail.pl', 'interia.com', 'vip.interia.pl'],
+    domains: ['interia.pl', 'interia.eu', 'poczta.fm', 'intmail.pl', 'interia.com', 'vip.interia.pl', 'interiowy.pl', 'adresik.net', 'pacz.to', 'pisz.to', 'ogarnij.se'],
     hostSuffixes: ['poczta.interia.pl'],
     imapHost: 'poczta.interia.pl',
     imapPort: 993,

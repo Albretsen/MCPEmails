@@ -53,7 +53,7 @@
     },
     {
       "h": "Onet's server, Gazeta.pl's login",
-      "p": "The IMAP banner at imap.gazeta.pl reads Onet server ready, because Agora runs the mailbox on Onet's platform. It is not an Onet account. The hosts are the gazeta.pl names Gazeta.pl documents, the password is your Gazeta.pl one, and the help pages that apply are pomoc.gazeta.pl, not Onet's. Pointing a Gazeta.pl address at imap.poczta.onet.pl is refused."
+      "p": "The IMAP banner at imap.gazeta.pl reads Onet server ready, because Agora runs the mailbox on Onet's platform. It is not an Onet account. The hosts are the gazeta.pl names Gazeta.pl documents, the password is your Gazeta.pl one, and the help pages that apply are pomoc.gazeta.pl, not Onet's. Gazeta.pl's instructions name only the gazeta.pl hosts, so use those rather than Onet's."
     },
     {
       "h": "No IDLE, no MOVE, no UIDPLUS, no SPECIAL-USE",
@@ -61,7 +61,7 @@
     }
   ],
   "limits": [
-    "An attachment is capped at 50 MB, so a larger file is refused at send time rather than trimmed. Gazeta.pl sets no limit on mailbox size.",
+    "An attachment is capped at 50 MB, so a larger file is refused at send time rather than trimmed. Gazeta.pl describes the mailbox as large and publishes no size figure.",
     "Gazeta.pl offers two-step login but documents no app password for mail programs. If you enable it and the IMAP login starts failing, Gazeta.pl's help is the place to ask."
   ],
   "faq": [
