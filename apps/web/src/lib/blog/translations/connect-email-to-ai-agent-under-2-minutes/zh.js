@@ -14,7 +14,7 @@ const translation = {
 
 1. 在 claude.ai 中，进入 **Customize → Connectors → Add connector**。
 2. 粘贴 endpoint：\`https://www.mcpemails.com/api/mcp\`
-3. 点击 **Connect**，登录你的 MCPEmails 账户，并选择访问级别：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时、文件夹和删除）。
+3. 点击 **Connect**，登录你的 MCPEmails 账户，并选择访问级别：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。
 
 客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。如果想看针对具体客户端的教程，请参阅[把 Claude 连接到你的邮箱](/blog/connect-claude-to-email)或[把 ChatGPT 连接到你的邮箱](/blog/connect-chatgpt-to-email)。
 

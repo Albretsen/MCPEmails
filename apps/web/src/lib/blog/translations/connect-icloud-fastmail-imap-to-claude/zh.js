@@ -63,7 +63,7 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 
 1. 进入 **Customize → Connectors**。
 2. 点击 **Add connector**，粘贴这个端点：\`https://www.mcpemails.com/api/mcp\`
-3. 点击 **Connect**，用你的 MCPEmails 账户登录，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时、文件夹和删除）。
+3. 点击 **Connect**，用你的 MCPEmails 账户登录，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。
 
 不用 API key，不用配置文件。claude.ai 在底层使用带 PKCE 的 OAuth，Claude 拿到的令牌恰好被限定在你批准的范围。如果你用的客户端无法做 OAuth——Cursor、Cline、一段 cURL 脚本——那就改为生成一个限定范围的密钥，这一点我在 [Cursor、Cline 和 VS Code 的邮件访问](/blog/email-for-ai-agents-cursor-cline-vscode)里有讲到。
 
