@@ -421,22 +421,22 @@
         "password": "Aruba sjekker passordet til denne postkassen, satt under Gestione caselle i Aruba-panelet, ikke innloggingen til Aruba-kundeområdet. På en Hosting Basic-plan fra før juni 2017 er IMAP et eget tillegg som må være aktivt på domenet."
       },
       "libero": {
-        "password": "Med Password Sicura på avviser Libero og Virgilio det vanlige passordet i e-postapper. Opprett en Password specifica per applicazioni under Account, deretter Password per App, og bruk det passordet på 16 tegn."
+        "password": "Med Password Sicura på avviser Libero og Virgilio det vanlige passordet i e-postapper. Åpne Password per App i kontoområdet og bruk Password Specifica per Applicazioni på 16 tegn som vises der; det er ett passord for alle appene du kobler til."
       },
       "tim": {
         "line": "TIM tillater e-postapper bare på en postkasse som er knyttet til en aktiv TIM-fastlinje eller -mobillinje. Uten det slipper TIM e-postapper inn kun fra sitt eget nett, og det er ikke MCPEmails."
       },
       "tiscali": {
-        "password": "Tiscali vil ha Tiscali Mail-passordet ditt sammen med hele adressen. Hjelpesidene beskriver tofaktorautentisering bare for kontoen, så er den på og innloggingen feiler, slår du den av for å teste."
+        "password": "Tiscali vil ha Tiscali Mail-passordet ditt sammen med hele adressen. Hjelpesidene beskriver tofaktorautentisering bare for innlogging i webmailen og sier ingenting om e-postapper, så er den på og innloggingen feiler, er det det første du bør sjekke."
       },
       "arubaPec": {
         "password": "Med verifica in 2 passaggi på avviser Aruba PEC postkassepassordet i e-postapper. Generer en Password per programmi di posta under Gestione account PEC, deretter Sicurezza, og bruk den. Den utløper etter seks måneder."
       },
       "legalmail": {
-        "password": "Legalmail logger inn med postkassens User ID og passord, under Avanserte innstillinger, Brukernavn; PEC-adressen fungerer som innlogging bare hvis du har satt det opp i webmailen. Har du satt postkassen til kun Application Password, bruker du et 16-sifret Application Password fra Accessi e Sicurezza."
+        "password": "Legalmail logger inn med User ID eller PEC-adressen og postkassens passord; en User ID skrives i feltet Brukernavn under Avanserte innstillinger. Bruker du heller et Application Password, oppretter du et 16-sifret under Password applicative i kontoinnstillingene; hvert av dem har sin egen utløpsdato, så sjekk at det ikke har gått ut."
       },
       "postecert": {
-        "password": "Velg Genera password i PEC-dashbordet og bruk det klientpassordet. Det utløper hver 90. dag."
+        "password": "På PEC Postecertifica åpner du PEC-dashbordet, velger Genera password og bruker det klientpassordet; webmail-passordet godtas aldri, og klientpassordet utløper hver 90. dag."
       },
       "centrum": {
         "password": "Med dvoufaktorové ověření på avviser Centrum, Atlas og Volný passordet ditt i e-postapper. Generer et aplikační heslo i seksjonen Dvoufaktorové ověření i webinnstillingene, på en datamaskin, og bruk det.",

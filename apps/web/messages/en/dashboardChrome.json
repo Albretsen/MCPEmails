@@ -421,22 +421,22 @@
         "password": "Aruba checks the password of this mailbox, set under Gestione caselle in the Aruba panel, not your Aruba customer-area login. On a Hosting Basic plan from before June 2017, IMAP is a separate add-on that has to be active on the domain."
       },
       "libero": {
-        "password": "With Password Sicura on, Libero and Virgilio refuse your normal password in mail apps. Create a Password specifica per applicazioni under Account, then Password per App, and use that 16-character password."
+        "password": "With Password Sicura on, Libero and Virgilio refuse your normal password in mail apps. Open Password per App in the account area and use the 16-character Password Specifica per Applicazioni shown there; it is one password for every app you connect."
       },
       "tim": {
         "line": "TIM allows mail apps only on a mailbox tied to an active TIM landline or mobile line. Without one, TIM lets mail apps in from its own network only, which MCPEmails is not."
       },
       "tiscali": {
-        "password": "Tiscali takes your Tiscali Mail password with the full address. Its help documents two-factor authentication for the account only, so if it is on and the login fails, turn it off to test."
+        "password": "Tiscali takes your Tiscali Mail password with the full address. Its help documents two-factor authentication for the webmail login only and says nothing about mail apps, so if it is on and the login fails, that is the first thing to check."
       },
       "arubaPec": {
         "password": "With verifica in 2 passaggi on, Aruba PEC refuses the mailbox password in mail apps. Generate a Password per programmi di posta under Gestione account PEC, then Sicurezza, and use that. It expires after six months."
       },
       "legalmail": {
-        "password": "Legalmail signs in with the User ID and password of the mailbox, under Advanced settings, Username; the PEC address works as the login only if you set that in the webmail. If you switched the mailbox to Application Password only, use a 16-digit Application Password from Accessi e Sicurezza."
+        "password": "Legalmail signs in with the User ID or the PEC address and the mailbox password; a User ID goes in the Username field under Advanced settings. If you use an Application Password instead, create a 16-digit one under Password applicative in the account settings; each has its own expiry date, so check it has not lapsed."
       },
       "postecert": {
-        "password": "In the PEC dashboard choose Genera password and use that client password. It expires every 90 days."
+        "password": "On PEC Postecertifica, open the PEC dashboard, choose Genera password and use that client password; the webmail password is never accepted and the client password expires every 90 days."
       },
       "centrum": {
         "password": "With dvoufaktorové ověření on, Centrum, Atlas and Volný refuse your password in mail apps. Generate an aplikační heslo in the Dvoufaktorové ověření section of the web settings, on a computer, and use that.",

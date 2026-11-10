@@ -421,22 +421,22 @@
         "password": "A Aruba confere a senha desta caixa de e-mail, definida em Gestione caselle no painel da Aruba, não o login da sua área de cliente Aruba. Em um plano Hosting Basic anterior a junho de 2017, o IMAP é um adicional à parte que precisa estar ativo no domínio."
       },
       "libero": {
-        "password": "Com a Password Sicura ativada, Libero e Virgilio recusam sua senha normal em apps de e-mail. Crie uma Password specifica per applicazioni em Account, depois Password per App, e use essa senha de 16 caracteres."
+        "password": "Com a Password Sicura ativada, Libero e Virgilio recusam sua senha normal em apps de e-mail. Abra Password per App na área da conta e use a Password Specifica per Applicazioni de 16 caracteres mostrada ali; é uma única senha para todos os apps que você conectar."
       },
       "tim": {
         "line": "A TIM só permite apps de e-mail em uma caixa vinculada a uma linha fixa ou móvel TIM ativa. Sem isso, a TIM aceita apps de e-mail apenas a partir da própria rede, e o MCPEmails não está nela."
       },
       "tiscali": {
-        "password": "A Tiscali pede sua senha do Tiscali Mail com o endereço completo. A ajuda documenta a autenticação de dois fatores só para a conta, então, se ela estiver ativada e o login falhar, desative para testar."
+        "password": "A Tiscali pede sua senha do Tiscali Mail com o endereço completo. A ajuda documenta a autenticação de dois fatores só para o login no webmail e não fala de apps de e-mail, então, se ela estiver ativada e o login falhar, é a primeira coisa a verificar."
       },
       "arubaPec": {
         "password": "Com a verifica in 2 passaggi ativada, a Aruba PEC recusa a senha da caixa em apps de e-mail. Gere uma Password per programmi di posta em Gestione account PEC, depois Sicurezza, e use essa. Ela expira em seis meses."
       },
       "legalmail": {
-        "password": "O Legalmail entra com o User ID e a senha da caixa, em Configurações avançadas, Nome de usuário; o endereço PEC só serve de login se você configurou isso no webmail. Se restringiu a caixa a Application Password, use uma Application Password de 16 dígitos gerada em Accessi e Sicurezza."
+        "password": "O Legalmail entra com o User ID ou o endereço PEC e a senha da caixa; o User ID vai no campo Nome de usuário, em Configurações avançadas. Se preferir uma Application Password, crie uma de 16 dígitos em Password applicative, nas configurações da conta; cada uma tem a própria data de validade, então confira se não venceu."
       },
       "postecert": {
-        "password": "No painel da PEC, escolha Genera password e use essa senha de cliente. Ela expira a cada 90 dias."
+        "password": "Na PEC Postecertifica, abra o painel da PEC, escolha Genera password e use essa senha de cliente; a senha do webmail nunca é aceita e a senha de cliente expira a cada 90 dias."
       },
       "centrum": {
         "password": "Com dvoufaktorové ověření ativado, Centrum, Atlas e Volný recusam sua senha em apps de e-mail. Gere uma aplikační heslo na seção Dvoufaktorové ověření das configurações web, em um computador, e use essa.",

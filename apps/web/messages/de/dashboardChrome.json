@@ -421,22 +421,22 @@
         "password": "Aruba prüft das Passwort dieses Postfachs, das unter Gestione caselle im Aruba-Panel festgelegt wird, nicht Ihren Login für den Aruba-Kundenbereich. Bei einem Hosting-Basic-Tarif von vor Juni 2017 ist IMAP ein eigenes Zusatzmodul, das auf der Domain aktiv sein muss."
       },
       "libero": {
-        "password": "Ist Password Sicura aktiv, lehnen Libero und Virgilio Ihr normales Passwort in Mail-Apps ab. Erstellen Sie unter Account, dann Password per App, eine Password specifica per applicazioni und verwenden Sie dieses 16-stellige Passwort."
+        "password": "Ist Password Sicura aktiv, lehnen Libero und Virgilio Ihr normales Passwort in Mail-Apps ab. Öffnen Sie im Kontobereich Password per App und verwenden Sie die dort angezeigte 16-stellige Password Specifica per Applicazioni; es ist ein Passwort für alle Apps, die Sie verbinden."
       },
       "tim": {
         "line": "TIM erlaubt Mail-Apps nur bei einem Postfach, das an einen aktiven TIM-Festnetz- oder Mobilfunkanschluss gebunden ist. Ohne einen solchen lässt TIM Mail-Apps nur aus dem eigenen Netz zu, und das ist MCPEmails nicht."
       },
       "tiscali": {
-        "password": "Tiscali erwartet Ihr Tiscali-Mail-Passwort zusammen mit der vollständigen Adresse. Die Hilfe beschreibt die Zwei-Faktor-Authentifizierung nur für das Konto: Ist sie aktiv und die Anmeldung schlägt fehl, schalten Sie sie zum Testen aus."
+        "password": "Tiscali erwartet Ihr Tiscali-Mail-Passwort zusammen mit der vollständigen Adresse. Die Hilfe beschreibt die Zwei-Faktor-Authentifizierung nur für die Anmeldung im Webmail und sagt nichts zu Mail-Apps: Ist sie aktiv und die Anmeldung schlägt fehl, prüfen Sie das zuerst."
       },
       "arubaPec": {
         "password": "Ist die verifica in 2 passaggi aktiv, lehnt Aruba PEC das Postfach-Passwort in Mail-Apps ab. Erzeugen Sie unter Gestione account PEC, dann Sicurezza, eine Password per programmi di posta und verwenden Sie diese. Sie läuft nach sechs Monaten ab."
       },
       "legalmail": {
-        "password": "Legalmail meldet sich mit User ID und Passwort des Postfachs an, unter Erweiterte Einstellungen, Benutzername; die PEC-Adresse gilt nur dann als Login, wenn Sie das im Webmail eingerichtet haben. Haben Sie das Postfach auf Application Password beschränkt, verwenden Sie eine 16-stellige Application Password aus Accessi e Sicurezza."
+        "password": "Legalmail meldet sich mit der User ID oder der PEC-Adresse und dem Passwort des Postfachs an; eine User ID gehört in das Feld Benutzername unter Erweiterte Einstellungen. Verwenden Sie stattdessen eine Application Password, erstellen Sie eine 16-stellige unter Password applicative in den Kontoeinstellungen; jede hat ein eigenes Ablaufdatum, prüfen Sie also, ob es noch gilt."
       },
       "postecert": {
-        "password": "Wählen Sie im PEC-Dashboard Genera password und verwenden Sie dieses Client-Passwort. Es läuft alle 90 Tage ab."
+        "password": "Öffnen Sie bei PEC Postecertifica das PEC-Dashboard, wählen Sie Genera password und verwenden Sie dieses Client-Passwort; das Webmail-Passwort wird nie akzeptiert, und das Client-Passwort läuft alle 90 Tage ab."
       },
       "centrum": {
         "password": "Ist dvoufaktorové ověření aktiv, lehnen Centrum, Atlas und Volný Ihr Passwort in Mail-Apps ab. Erzeugen Sie im Bereich Dvoufaktorové ověření der Web-Einstellungen, an einem Computer, ein aplikační heslo und verwenden Sie dieses.",

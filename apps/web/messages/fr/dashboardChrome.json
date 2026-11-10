@@ -421,22 +421,22 @@
         "password": "Aruba vérifie le mot de passe de cette boîte, défini sous Gestione caselle dans le panneau Aruba, pas celui de votre espace client Aruba. Sur un plan Hosting Basic antérieur à juin 2017, IMAP est une option à part qui doit être active sur le domaine."
       },
       "libero": {
-        "password": "Avec Password Sicura activée, Libero et Virgilio refusent votre mot de passe habituel dans les applications de messagerie. Créez une Password specifica per applicazioni sous Account, puis Password per App, et utilisez ce mot de passe de 16 caractères."
+        "password": "Avec Password Sicura activée, Libero et Virgilio refusent votre mot de passe habituel dans les applications de messagerie. Ouvrez Password per App dans l’espace compte et utilisez la Password Specifica per Applicazioni de 16 caractères qui s’y affiche : c’est un seul mot de passe pour toutes les applications que vous connectez."
       },
       "tim": {
         "line": "TIM n’autorise les applications de messagerie que sur une boîte liée à une ligne fixe ou mobile TIM active. Sans cela, TIM ne les accepte que depuis son propre réseau, ce que MCPEmails n’est pas."
       },
       "tiscali": {
-        "password": "Tiscali attend votre mot de passe Tiscali Mail avec l’adresse complète. Son aide ne documente l’authentification à deux facteurs que pour le compte : si elle est activée et que la connexion échoue, désactivez-la pour tester."
+        "password": "Tiscali attend votre mot de passe Tiscali Mail avec l’adresse complète. Son aide ne documente l’authentification à deux facteurs que pour la connexion au webmail et ne dit rien des applications de messagerie : si elle est activée et que la connexion échoue, c’est la première chose à vérifier."
       },
       "arubaPec": {
         "password": "Avec la verifica in 2 passaggi activée, Aruba PEC refuse le mot de passe de la boîte dans les applications de messagerie. Générez une Password per programmi di posta sous Gestione account PEC, puis Sicurezza, et utilisez-la. Elle expire au bout de six mois."
       },
       "legalmail": {
-        "password": "Legalmail se connecte avec le User ID et le mot de passe de la boîte, dans Paramètres avancés, Nom d’utilisateur ; l’adresse PEC ne sert d’identifiant que si vous l’avez configuré dans le webmail. Si vous avez limité la boîte à l’Application Password, utilisez une Application Password à 16 chiffres créée sous Accessi e Sicurezza."
+        "password": "Legalmail se connecte avec le User ID ou l’adresse PEC et le mot de passe de la boîte ; un User ID se saisit dans le champ Nom d’utilisateur, sous Paramètres avancés. Si vous préférez une Application Password, créez-en une à 16 chiffres sous Password applicative dans les paramètres du compte ; chacune a sa propre date d’expiration, vérifiez donc qu’elle n’est pas dépassée."
       },
       "postecert": {
-        "password": "Dans le tableau de bord PEC, choisissez Genera password et utilisez ce mot de passe client. Il expire tous les 90 jours."
+        "password": "Sur PEC Postecertifica, ouvrez le tableau de bord PEC, choisissez Genera password et utilisez ce mot de passe client ; le mot de passe du webmail n’est jamais accepté et le mot de passe client expire tous les 90 jours."
       },
       "centrum": {
         "password": "Avec dvoufaktorové ověření activé, Centrum, Atlas et Volný refusent votre mot de passe dans les applications de messagerie. Générez un aplikační heslo dans la section Dvoufaktorové ověření des réglages web, depuis un ordinateur, et utilisez-le.",

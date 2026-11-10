@@ -421,22 +421,22 @@
         "password": "Aruba comprueba la contraseña de este buzón, la que se define en Gestione caselle en el panel de Aruba, no la de tu área de cliente de Aruba. En un plan Hosting Basic anterior a junio de 2017, IMAP es un complemento aparte que debe estar activo en el dominio."
       },
       "libero": {
-        "password": "Con Password Sicura activada, Libero y Virgilio rechazan tu contraseña normal en las apps de correo. Crea una Password specifica per applicazioni en Account, luego Password per App, y usa esa contraseña de 16 caracteres."
+        "password": "Con Password Sicura activada, Libero y Virgilio rechazan tu contraseña normal en las apps de correo. Abre Password per App en el área de la cuenta y usa la Password Specifica per Applicazioni de 16 caracteres que aparece ahí; es una sola contraseña para todas las apps que conectes."
       },
       "tim": {
         "line": "TIM solo permite apps de correo en un buzón vinculado a una línea fija o móvil de TIM activa. Sin ella, TIM admite apps de correo únicamente desde su propia red, y MCPEmails no está en ella."
       },
       "tiscali": {
-        "password": "Tiscali pide tu contraseña de Tiscali Mail con la dirección completa. Su ayuda documenta la autenticación de dos factores solo para la cuenta, así que si está activada y el acceso falla, desactívala para probar."
+        "password": "Tiscali pide tu contraseña de Tiscali Mail con la dirección completa. Su ayuda documenta la autenticación de dos factores solo para el acceso al webmail y no dice nada de las apps de correo, así que si está activada y el acceso falla, es lo primero que debes comprobar."
       },
       "arubaPec": {
         "password": "Con la verifica in 2 passaggi activada, Aruba PEC rechaza la contraseña del buzón en las apps de correo. Genera una Password per programmi di posta en Gestione account PEC, luego Sicurezza, y usa esa. Caduca a los seis meses."
       },
       "legalmail": {
-        "password": "Legalmail inicia sesión con el User ID y la contraseña del buzón, en Configuración avanzada, Usuario; la dirección PEC sirve como usuario solo si lo configuraste en el webmail. Si pasaste el buzón a solo Application Password, usa una Application Password de 16 dígitos de Accessi e Sicurezza."
+        "password": "Legalmail inicia sesión con el User ID o la dirección PEC y la contraseña del buzón; el User ID va en el campo Usuario, en Configuración avanzada. Si prefieres una Application Password, crea una de 16 dígitos en Password applicative, en los ajustes de la cuenta; cada una tiene su propia fecha de caducidad, así que comprueba que no haya vencido."
       },
       "postecert": {
-        "password": "En el panel de la PEC elige Genera password y usa esa contraseña de cliente. Caduca cada 90 días."
+        "password": "En PEC Postecertifica, abre el panel de la PEC, elige Genera password y usa esa contraseña de cliente; la contraseña del webmail nunca se acepta y la de cliente caduca cada 90 días."
       },
       "centrum": {
         "password": "Con dvoufaktorové ověření activado, Centrum, Atlas y Volný rechazan tu contraseña en las apps de correo. Genera una aplikační heslo en la sección Dvoufaktorové ověření de los ajustes web, desde un ordenador, y usa esa.",

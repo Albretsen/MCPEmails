@@ -421,22 +421,22 @@
         "password": "Arubaが確認するのは、Arubaの管理パネルの Gestione caselle で設定したこのメールボックスのパスワードで、Arubaカスタマーエリアのログインではありません。2017年6月より前の Hosting Basic プランでは、IMAPは別売りのアドオンで、ドメインで有効になっている必要があります。"
       },
       "libero": {
-        "password": "Password Sicura がオンの場合、LiberoとVirgilioはメールアプリで通常のパスワードを拒否します。Account、次に Password per App で Password specifica per applicazioni を作成し、その16文字のパスワードを使ってください。"
+        "password": "Password Sicura がオンの場合、LiberoとVirgilioはメールアプリで通常のパスワードを拒否します。アカウント画面の Password per App を開き、そこに表示される16文字の Password Specifica per Applicazioni を使ってください。接続するすべてのアプリで共通の1つのパスワードです。"
       },
       "tim": {
         "line": "TIMがメールアプリを許可するのは、有効なTIMの固定回線または携帯回線に紐づいたメールボックスだけです。紐づいていない場合、TIMは自社ネットワークからのメールアプリしか受け付けず、MCPEmailsはそこに含まれません。"
       },
       "tiscali": {
-        "password": "Tiscaliでは、Tiscali Mailのパスワードをメールアドレス全体と一緒に使います。ヘルプが2要素認証を説明しているのはアカウントについてだけなので、オンの状態でログインに失敗する場合は、いったんオフにしてテストしてください。"
+        "password": "Tiscaliでは、Tiscali Mailのパスワードをメールアドレス全体と一緒に使います。ヘルプが2要素認証を説明しているのはWebメールへのログインについてだけで、メールアプリには触れていません。オンの状態でログインに失敗する場合は、まずそこを確認してください。"
       },
       "arubaPec": {
         "password": "verifica in 2 passaggi がオンの場合、Aruba PECはメールアプリでメールボックスのパスワードを拒否します。Gestione account PEC、次に Sicurezza で Password per programmi di posta を生成し、それを使ってください。6か月で期限が切れます。"
       },
       "legalmail": {
-        "password": "Legalmailは、メールボックスの User ID とパスワードでログインします。User ID は「詳細設定」の「ユーザー名」に入力してください。PECアドレスをログインに使えるのは、Webメールでそう設定した場合だけです。メールボックスを Application Password のみに切り替えた場合は、Accessi e Sicurezza で作成した16桁の Application Password を使ってください。"
+        "password": "Legalmailは、User ID またはPECアドレスと、メールボックスのパスワードでログインします。User ID を使う場合は「詳細設定」の「ユーザー名」に入力してください。代わりに Application Password を使う場合は、アカウント設定の Password applicative で16桁のものを作成します。それぞれに有効期限があるので、期限切れでないか確認してください。"
       },
       "postecert": {
-        "password": "PECのダッシュボードで Genera password を選び、そのクライアント用パスワードを使ってください。90日ごとに期限が切れます。"
+        "password": "PEC Postecertifica では、PECのダッシュボードで Genera password を選び、そのクライアント用パスワードを使ってください。Webメールのパスワードは受け付けられず、クライアント用パスワードは90日ごとに期限が切れます。"
       },
       "centrum": {
         "password": "dvoufaktorové ověření がオンの場合、Centrum、Atlas、Volnýはメールアプリでパスワードを拒否します。パソコンからWeb設定の Dvoufaktorové ověření セクションで aplikační heslo を生成し、それを使ってください。",

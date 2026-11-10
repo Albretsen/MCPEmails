@@ -421,22 +421,22 @@
         "password": "Aruba 校验的是这个邮箱的密码，即在 Aruba 面板的 Gestione caselle 中设置的密码，而不是你登录 Aruba 客户区的密码。2017 年 6 月之前开通的 Hosting Basic 套餐中，IMAP 是单独的附加服务，必须在域名上处于启用状态。"
       },
       "libero": {
-        "password": "开启 Password Sicura 后，Libero 和 Virgilio 会在邮件应用中拒绝你的普通密码。请在 Account 的 Password per App 中创建一个 Password specifica per applicazioni，并使用这个 16 位密码。"
+        "password": "开启 Password Sicura 后，Libero 和 Virgilio 会在邮件应用中拒绝你的普通密码。请打开账户区域的 Password per App，使用那里显示的 16 位 Password Specifica per Applicazioni；你连接的所有应用共用这一个密码。"
       },
       "tim": {
         "line": "TIM 只允许绑定了有效 TIM 固话或手机线路的邮箱使用邮件应用。没有绑定时，TIM 只接受来自其自有网络的邮件应用，而 MCPEmails 不在其中。"
       },
       "tiscali": {
-        "password": "Tiscali 需要你的 Tiscali Mail 密码和完整的邮箱地址。其帮助只针对账户说明了双重认证，所以如果已开启且登录失败，请先关闭再测试。"
+        "password": "Tiscali 需要你的 Tiscali Mail 密码和完整的邮箱地址。其帮助只针对网页邮箱登录说明了双重认证，没有提到邮件应用，所以如果已开启且登录失败，请先检查这一点。"
       },
       "arubaPec": {
         "password": "开启 verifica in 2 passaggi 后，Aruba PEC 会在邮件应用中拒绝邮箱密码。请在 Gestione account PEC 的 Sicurezza 中生成一个 Password per programmi di posta 并使用它。该密码六个月后过期。"
       },
       "legalmail": {
-        "password": "Legalmail 使用邮箱的 User ID 和密码登录，请在高级设置的用户名中填写 User ID；只有在网页邮箱中设置过，PEC 地址才能作为登录名。如果你把邮箱切换为仅限 Application Password，请使用在 Accessi e Sicurezza 中创建的 16 位 Application Password。"
+        "password": "Legalmail 使用 User ID 或 PEC 地址加邮箱密码登录；User ID 填写在高级设置的用户名中。如果改用 Application Password，请在账户设置的 Password applicative 中创建一个 16 位的；每个都有自己的到期日期，请确认它没有过期。"
       },
       "postecert": {
-        "password": "在 PEC 管理面板中选择 Genera password，并使用这个客户端密码。它每 90 天过期一次。"
+        "password": "在 PEC Postecertifica 中，打开 PEC 管理面板，选择 Genera password 并使用这个客户端密码；网页邮箱密码永远不会被接受，客户端密码每 90 天过期一次。"
       },
       "centrum": {
         "password": "开启 dvoufaktorové ověření 后，Centrum、Atlas 和 Volný 会在邮件应用中拒绝你的密码。请在电脑上进入网页设置的 Dvoufaktorové ověření 部分生成一个 aplikační heslo 并使用它。",
