@@ -89,7 +89,7 @@ ChatGPTでは、MCPEmailsをカスタムMCPサーバーとして追加します�
 いいえ。プラグインはメールアプリではなくiCloudのメールサーバーにサインインするので、iCloudに保存されたメールしか見えません。ほかのアカウントは、それぞれのプラグインか、MCPEmailsのようなMCPサーバーを通じて接続してください。
 
 **ChatGPTがAppleのパスワードを拒否するのはなぜですか？**
-AppleはApple以外のすべてのアプリにアプリ用パスワードを要求します。account.apple.comのサインインとセキュリティ、アプリ用パスワードで作成してください。2ファクタ認証がオンになっている必要があります。
+AppleはApple Accountでの認可に対応したアプリ以外には、アプリ用パスワードを要求します。ChatGPTのiCloud MailプラグインもMCPEmailsもこの後者にあたります。account.apple.comのサインインとセキュリティ、アプリ用パスワードで作成してください。2ファクタ認証がオンになっている必要があります。
 
 **ClaudeにiCloudのコネクタはありますか？**
 いいえ。Claude独自のメールコネクタはGmailと職場のMicrosoft 365アカウント向けです。iCloudはMCPサーバー経由のカスタムコネクタとしてClaudeに追加します。アプリ用パスワードでメールボックスをMCPEmailsに接続し、\`https://mcpemails.com/api/mcp\`をClaudeに貼り付けてください。
