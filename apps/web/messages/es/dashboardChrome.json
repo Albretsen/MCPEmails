@@ -424,7 +424,7 @@
         "password": "Con Password Sicura activada, Libero y Virgilio rechazan tu contraseña normal en las apps de correo. Crea una Password specifica per applicazioni en Account, luego Password per App, y usa esa contraseña de 16 caracteres."
       },
       "tim": {
-        "line": "TIM solo permite apps de correo en un buzón vinculado a una línea fija o móvil de TIM activa. Sin ella, TIM admite apps de correo únicamente desde su propia red, y MCPEmails no lo es."
+        "line": "TIM solo permite apps de correo en un buzón vinculado a una línea fija o móvil de TIM activa. Sin ella, TIM admite apps de correo únicamente desde su propia red, y MCPEmails no está en ella."
       },
       "tiscali": {
         "password": "Tiscali pide tu contraseña de Tiscali Mail con la dirección completa. Su ayuda documenta la autenticación de dos factores solo para la cuenta, así que si está activada y el acceso falla, desactívala para probar."

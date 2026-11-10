@@ -38,7 +38,7 @@
     },
     {
       "h": "Unblock IMAP and SMTP under Konto Główne",
-      "p": "Sign in at poczta.onet.pl, click the cog icon (<b>Ustawienia</b>) on the bar to the left of the mailbox, choose <b>Konto</b>, then the <b>Konto Główne</b> tab. Each protocol has its own tile with a switch. Turn on IMAP and SMTP; POP is no longer offered for mail programs. Onet's Thunderbird guide says the same: make sure every protocol your client needs is unblocked before you try to sign in."
+      "p": "Sign in at poczta.onet.pl, click the cog icon (<b>Ustawienia</b>) on the bar to the left of the mailbox, choose <b>Konto</b>, then the <b>Konto Główne</b> tab. Each protocol has its own tile with a switch. Turn on IMAP and SMTP; POP is no longer offered for mail programs. Make sure every protocol your client needs is unblocked before you try to sign in."
     },
     {
       "h": "With two-step verification on, generate a hasło do aplikacji",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Two-step verification and mail programs need an app password",
-      "p": "Unlike Interia, Onet does not block mail programs when you turn on two-step verification; it moves them to a separate credential. Its help calls app passwords necessary when two-step verification and mail clients are used together, and generates them under Bezpieczeństwo in Onet Konto. The trap is that your browser password is then silently the wrong one, and the refusal looks identical to a typo. Onet also recommends an individual app password per program even without two-step verification, which is good practice: deleting one ends that program's access and nothing else."
+      "p": "Unlike Interia, Onet does not block mail programs when you turn on two-step verification; it moves them to a separate credential. Its help calls app passwords necessary when two-step verification and mail clients are used together, and generates them under Bezpieczeństwo in Onet Konto. The trap is that your browser password is then silently the wrong one, and the refusal looks identical to a typo. Onet lets you create an individual app password per program even without two-step verification, which is good practice: deleting one ends that program's access and nothing else."
     },
     {
       "h": "No IDLE and no MOVE, so filing and freshness both cost extra round trips",

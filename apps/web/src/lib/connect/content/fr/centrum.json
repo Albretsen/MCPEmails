@@ -16,10 +16,10 @@
   },
   "hero": {
     "eyebrow": "Centrum.cz + IA",
-    "titleLine1": "Connectez Centrum.cz Email à Claude,",
+    "titleLine1": "Connectez la messagerie Centrum.cz à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Centrum, Atlas ou Volný. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe que vous utilisez déjà, dans tous les clients MCP et pas seulement un.",
-    "answer": "Claude ne peut pas accéder seul à Centrum.cz Email. MCPEmails est un serveur MCP hébergé qui le connecte via IMAP sur imap.centrum.cz, port 993, en se connectant avec votre adresse complète et votre mot de passe Centrum, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Atlas.cz et Volný.cz tournent sur la même plateforme Economia avec leurs propres noms IMAP, imap.atlas.cz et imap.volny.cz. Deux règles du fournisseur : l'envoi en SMTP ne fonctionne que sur une boîte agrandie (navýšená schránka), gratuite et obtenue avec un numéro de téléphone dans les paramètres web, et avec la double authentification activée, les programmes de messagerie se connectent avec un aplikační heslo au lieu du mot de passe du compte. Une boîte est gratuite, pour toujours.",
+    "answer": "Claude ne peut pas accéder seul à la messagerie Centrum.cz. MCPEmails est un serveur MCP hébergé qui le connecte via IMAP sur imap.centrum.cz, port 993, en se connectant avec votre adresse complète et votre mot de passe Centrum, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Atlas.cz et Volný.cz tournent sur la même plateforme Economia avec leurs propres noms IMAP, imap.atlas.cz et imap.volny.cz. Deux règles du fournisseur : l'envoi en SMTP ne fonctionne que sur une boîte agrandie (navýšená schránka), gratuite et obtenue avec un numéro de téléphone dans les paramètres web, et avec la double authentification activée, les programmes de messagerie se connectent avec un aplikační heslo au lieu du mot de passe du compte. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe du compte, ou un mot de passe d'application avec la double authentification",
     "meta2": "E-mails récupérés en direct, jamais stockés"

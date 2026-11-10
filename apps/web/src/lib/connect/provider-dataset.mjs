@@ -144,7 +144,7 @@ export const FIELD_DOCS = [
   { key: 'smtpHost', doc: 'SMTP submission hostname.' },
   { key: 'smtpPort', doc: 'SMTP submission port.' },
   { key: 'smtpSecurity', doc: 'tls (implicit TLS) or starttls.' },
-  { key: 'smtpAuth', doc: 'SASL mechanisms in the EHLO reply. Empty when the server only lists them after STARTTLS.' },
+  { key: 'smtpAuth', doc: 'SASL mechanisms in the EHLO reply. null when none were visible: a STARTTLS port lists them only after the upgrade, and a server that refuses the probe before EHLO advertises nothing.' },
   { key: 'smtpMaxSizeMb', doc: 'SMTP SIZE limit in MiB, for the whole encoded message. Attachments grow by about a third in base64.' },
   { key: 'oauthAdvertised', doc: 'Whether IMAP advertises XOAUTH2 or OAUTHBEARER. Advertised is not the same as open to third-party apps.' },
   { key: 'settingsSource', doc: 'Where the hosts and ports came from: ispdb+probe (Thunderbird ISPDB) or vendor+probe (vendor documentation).' },
