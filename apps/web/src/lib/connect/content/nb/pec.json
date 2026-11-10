@@ -81,7 +81,7 @@
     },
     {
       "h": "Sending må gå gjennom leverandørens SMTP, og den teller",
-      "p": "Aruba sier at sertifiserte meldinger bare kan sendes gjennom Arubas SMTP-server, og at en annen server ikke gir noen sertifisert melding. MCPEmails sender alltid gjennom SMTP-verten til den tilkoblede postkassen, så en PEC sendt av agenten er like sertifisert som en sendt fra Outlook, med samme rettsvirkning og samme kvitteringer. Det er en grunn til å være bevisst: en PEC til et offentlig organ er et rekommandert brev. Mange lar agenten lese, arkivere og skrive utkast, og trykker send selv. En PEC har dessuten full rettslig verdi bare mellom to PEC-adresser; Arubas servere avviser en melding til en vanlig adresse som ikke godtar usertifisert e-post, med en 554, og Poste påpeker at levering til vanlige adresser avhenger av mottakerens leverandør."
+      "p": "Aruba sier at sertifiserte meldinger bare kan sendes gjennom Arubas SMTP-server, og at en annen server ikke gir noen sertifisert melding. MCPEmails sender alltid gjennom SMTP-verten til den tilkoblede postkassen, så en PEC sendt av agenten er like sertifisert som en sendt fra Outlook, med samme rettsvirkning og samme kvitteringer. Det er en grunn til å være varsom: en PEC til et offentlig organ er et rekommandert brev. Mange lar agenten lese, arkivere og skrive utkast, og trykker send selv. En PEC har dessuten full rettslig verdi bare mellom to PEC-adresser; Arubas servere avviser en melding til en vanlig adresse som ikke godtar usertifisert e-post, med en 554, og Poste påpeker at levering til vanlige adresser avhenger av mottakerens leverandør."
     },
     {
       "h": "100 MB per melding, delt mellom mottakerne hos Aruba",

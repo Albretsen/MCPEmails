@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Koble Tiscali Mail til Claude og enhver MCP-klient",
-    "description": "Koble Tiscali Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.tiscali.it:993 med Tiscali-passordet ditt. Lesing, søk og organisering virker; Tiscalis SMTP-server avviser tilkoblinger utenfra nettet sitt, så sending gjør det ikke."
+    "description": "Koble Tiscali Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.tiscali.it:993 med Tiscali-passordet ditt. Lesing, søk og organisering virker; Tiscalis SMTP-server avviser tilkoblinger utenfra nettet sitt, så sending virker ikke."
   },
   "hero": {
     "eyebrow": "Tiscali Mail + AI",
