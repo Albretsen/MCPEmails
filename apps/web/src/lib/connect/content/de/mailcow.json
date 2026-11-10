@@ -8,7 +8,7 @@
     "method": "mail-password",
     "label": "Mailbox-Passwort",
     "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
-    "usernameForm": "Die vollständige Mailbox-Adresse genau so, wie sie in der Mailbox-Liste steht, zum Beispiel sie@ihredomain.de.",
+    "usernameForm": "Die vollständige Mailbox-Adresse genau so, wie sie in der Mailbox-Liste steht, zum Beispiel name@ihredomain.de.",
     "status": "active"
   },
   "meta": {
@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "So verbindet sich mailcow: MAILCOW_HOSTNAME auf 993",
-    "body": "mailcow ist ein Docker-Compose-Stack, und die Mail-Hälfte darin sind Dovecot für IMAP und Postfix für den Versand; das Protokollverhalten ist also gewöhnlich und gut bekannt. Spezifisch für mailcow ist der Hostname. Der Stack hat genau einen kanonischen Namen, <code>MAILCOW_HOSTNAME</code>, bei der Installation in <code>mailcow.conf</code> gesetzt und danach praktisch nie geändert, und genau dieser Name ist Ihr IMAP- und SMTP-Host. Dovecot antwortet auf 993 mit implizitem TLS und auf 143 mit STARTTLS. Postfix antwortet auf 465 und 587. Zugangsdaten sind das Mailbox-Passwort, das Sie unter Mailboxes gesetzt haben, nicht das Admin-Passwort für die mailcow-Oberfläche: Das sind getrennte Konten, und der Admin-Login ist keine Mailbox."
+    "body": "mailcow ist ein Docker-Compose-Stack, und die Mail-Hälfte darin sind Dovecot für IMAP und Postfix für den Versand; das Protokollverhalten ist also gewöhnlich und gut bekannt. Spezifisch für mailcow ist der Hostname. Der Stack hat genau einen kanonischen Namen, <code>MAILCOW_HOSTNAME</code>, bei der Installation in <code>mailcow.conf</code> gesetzt und danach praktisch nie geändert, und genau dieser Name ist Ihr IMAP- und SMTP-Host. Dovecot antwortet auf 993 mit implizitem TLS und auf 143 mit STARTTLS. Postfix antwortet auf 465 und 587. Zugangsdaten sind das Mailbox-Passwort, das Sie unter Mailboxen gesetzt haben, nicht das Admin-Passwort für die mailcow-Oberfläche: Das sind getrennte Konten, und der Admin-Login ist keine Mailbox."
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Mailbox und Passwort bestätigen",
-      "p": "Öffnen Sie in der mailcow-Oberfläche Configuration, dann Mailboxes. Prüfen Sie, dass die Adresse aktiv ist, und setzen Sie dort ein neues Passwort, falls Sie es nicht kennen. Fügen Sie das Postfach dann in MCPEmails hinzu: IMAP / SMTP wählen, den MAILCOW_HOSTNAME als Host und die Mailbox-Zugangsdaten eintragen."
+      "p": "Öffnen Sie in der mailcow-Oberfläche Konfiguration, dann E-Mail, und dort den Reiter Mailboxen (in der englischen Oberfläche Configuration, dann Mailboxes). Prüfen Sie, dass die Adresse aktiv ist, und setzen Sie dort ein neues Passwort, falls Sie es nicht kennen. Fügen Sie das Postfach dann in MCPEmails hinzu: IMAP / SMTP wählen, den MAILCOW_HOSTNAME als Host und die Mailbox-Zugangsdaten eintragen."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
@@ -57,12 +57,12 @@
       "p": "Steht <code>SKIP_LETS_ENCRYPT=y</code> in <code>mailcow.conf</code>, oder hat acme-mailcow nie eine Challenge abgeschlossen, liefert der Stack weiter das selbstsignierte Zertifikat aus, das er bei der Installation erzeugt hat. Alle haben die Browserwarnung vor Monaten weggeklickt und vergessen, lokal sieht also nichts kaputt aus, aber ein Client, der sauber prüft, verweigert die Verbindung. Sehen Sie nach, was wirklich auf der Leitung liegt, mit <code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code>, statt der Oberfläche zu vertrauen."
     },
     {
-      "h": "Port 80 muss erreichbar bleiben, sonst hört das Zertifikat still auf, sich zu erneuern",
-      "p": "mailcows ACME-Client nutzt die HTTP-01-Challenge, und die Dokumentation sagt ausdrücklich, dass mailcow dafür auf Port 80 erreichbar sein muss. Wer 80 nach der Einrichtung per Firewall schließt oder einen anderen Webserver vor den Stack setzt, bekommt ein Zertifikat, das sich eine Weile erneuert und dann nicht mehr. IMAP auf 993 läuft weiter bis zum Ablauftag, und dann scheitern alle Clients auf einmal. Können Sie 80 nicht offen lassen, stellen Sie die Installation auf eine DNS-01-Challenge um."
+      "h": "Port 80 muss erreichbar bleiben, sonst erneuert sich das Zertifikat irgendwann stillschweigend nicht mehr",
+      "p": "Der ACME-Client von mailcow nutzt die HTTP-01-Challenge, und die Dokumentation sagt ausdrücklich, dass mailcow dafür auf Port 80 erreichbar sein muss. Wer 80 nach der Einrichtung per Firewall schließt oder einen anderen Webserver vor den Stack setzt, bekommt ein Zertifikat, das sich eine Weile erneuert und dann nicht mehr. IMAP auf 993 läuft weiter bis zum Ablauftag, und dann scheitern alle Clients auf einmal. Können Sie 80 nicht offen lassen, stellen Sie die Installation auf eine DNS-01-Challenge um."
     },
     {
-      "h": "Probleme beheben: Ein Port auf einer privaten Schnittstelle versteckt den Server vor allem außerhalb",
-      "p": "Die Port-Bindungen in <code>mailcow.conf</code> nehmen eine Adresse und einen Port. Eine Bindung wie <code>IMAPS_PORT=127.0.0.1:993</code> ist ein normaler Weg, mailcow hinter einem Proxy zu betreiben, und sie bedeutet, dass <code>docker ps</code> den Container als gesund zeigt, während außerhalb des Hosts niemand den Port öffnen kann. Prüfen Sie die Erreichbarkeit von einer Maschine in einem anderen Netz, bevor Sie die Zugangsdaten verdächtigen. Danach in dieser Reihenfolge: Hostname gleich MAILCOW_HOSTNAME, Zertifikat gültig und auf diesen Namen ausgestellt, Mailbox statt Admin-Konto, Mailbox aktiv statt deaktiviert."
+      "h": "Probleme beheben: Ein Port auf einer privaten Schnittstelle ist von außen unsichtbar",
+      "p": "Die Port-Bindungen in <code>mailcow.conf</code> nehmen eine Adresse und einen Port. Eine Bindung wie <code>IMAPS_PORT=127.0.0.1:993</code> ist ein normaler Weg, mailcow hinter einem Proxy zu betreiben, und sie bedeutet, dass <code>docker ps</code> den Container als gesund zeigt, während außerhalb des Hosts niemand den Port öffnen kann. Prüfen Sie die Erreichbarkeit von einer Maschine in einem anderen Netz, bevor Sie den Fehler bei den Zugangsdaten suchen. Danach in dieser Reihenfolge: Hostname gleich MAILCOW_HOSTNAME, Zertifikat gültig und auf diesen Namen ausgestellt, Mailbox statt Admin-Konto, Mailbox aktiv statt deaktiviert."
     }
   ],
   "limits": [
@@ -80,11 +80,11 @@
     },
     {
       "q": "Warum wird meine mailcow-Anmeldung abgelehnt?",
-      "a": "Die häufigste Ursache ist das mailcow-Admin-Konto statt einer Mailbox. Der Admin-Login existiert nur für die Weboberfläche und hat keine IMAP-Mailbox dahinter. Prüfen Sie, dass Sie eine Adresse verwenden, die unter Configuration, dann Mailboxes steht, und dass die Mailbox aktiv und nicht deaktiviert ist."
+      "a": "Die häufigste Ursache ist das mailcow-Admin-Konto statt einer Mailbox. Der Admin-Login existiert nur für die Weboberfläche und hat keine IMAP-Mailbox dahinter. Prüfen Sie, dass Sie eine Adresse verwenden, die unter Konfiguration, E-Mail, Mailboxen steht, und dass die Mailbox aktiv und nicht deaktiviert ist."
     },
     {
       "q": "Ist mailcow dasselbe wie Dovecot?",
-      "a": "mailcow paketiert Dovecot als IMAP-Server, zusammen mit Postfix, SOGo und Rspamd, in einem Docker-Compose-Stack mit Weboberfläche. Alles, was für Dovecots IMAP-Verhalten gilt, gilt auch hier. Deshalb lohnt sich unsere Dovecot-Seite, wenn Sie Listener oder Ordnerrollen direkt anpassen müssen."
+      "a": "mailcow paketiert Dovecot als IMAP-Server, zusammen mit Postfix, SOGo und Rspamd, in einem Docker-Compose-Stack mit Weboberfläche. Alles, was für Dovecots IMAP-Verhalten gilt, gilt auch hier. Deshalb lohnt sich ein Blick auf unsere englische Dovecot-Seite, wenn Sie Listener oder Ordnerrollen direkt anpassen müssen."
     },
     {
       "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",

@@ -9,9 +9,9 @@
   ],
   "auth": {
     "method": "account-password",
-    "label": "Titan-Postfach-Passwort (bei aktiver 2FA ein Anwendungspasswort)",
+    "label": "Titan-Postfach-Passwort (bei aktiver 2FA ein App-Passwort)",
     "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
-    "usernameForm": "Ihre vollständige Titan-Adresse auf Ihrer eigenen Domain, etwa max@ihredomain.de. Fragt ein Programm getrennt nach einem Benutzernamen, trägt Titan dort laut Doku dieselbe Adresse ein.",
+    "usernameForm": "Ihre vollständige Titan-Adresse auf Ihrer eigenen Domain, etwa max@ihredomain.de. Fragt ein Programm getrennt nach einem Benutzernamen, tragen Sie laut Titans Doku auch dort die Adresse ein.",
     "status": "active"
   },
   "meta": {
@@ -23,14 +23,14 @@
     "titleLine1": "Titan Email mit Claude verbinden,",
     "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
     "lead": "Ihr KI-Agent bekommt Ihr echtes Titan-Postfach: E-Mails lesen, suchen, beantworten, senden, planen und sortieren, per IMAP, in jedem MCP-Client statt nur in einem.",
-    "answer": "Claude kann Titan Email nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.titan.email auf Port 993 anbindet, sodass Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren kann. Titan weist jedes fremde Mailprogramm ab, bis Sie in den Webmail-Einstellungen Enable Titan on Other Apps einschalten, und ein Postfach mit Zwei-Faktor-Authentifizierung braucht ein Titan-Anwendungspasswort statt des normalen. Ein Postfach ist dauerhaft kostenlos.",
+    "answer": "Claude kann Titan Email nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über imap.titan.email auf Port 993 anbindet, sodass Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren kann. Titan weist jedes fremde Mailprogramm ab, bis Sie in den Webmail-Einstellungen Enable Titan on Other Apps einschalten, und ein Postfach mit Zwei-Faktor-Authentifizierung braucht ein App-Passwort von Titan statt des normalen. Ein Postfach ist dauerhaft kostenlos.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Zugriff für Drittanbieter-Apps muss an sein",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
   },
   "method": {
     "title": "So verbindet sich Titan Email: IMAP, sobald der Zugriff für Drittanbieter-Apps frei ist",
-    "body": "Titan stellt IMAP unter <code>imap.titan.email</code> auf Port 993 über TLS bereit und SMTP unter <code>smtp.titan.email</code> auf Port 465, ebenfalls implizites TLS. Zwei Dinge kommen zuerst. Der Zugriff für Drittanbieter-Apps ist bei einem Titan-Postfach <b>aus</b>, bis jemand ihn einschaltet, und vorher kommt nichts an der Anmeldung vorbei. Und Titan wird unter fremden Marken verkauft, also <b>entscheidet der Verkäufer Ihres Postfachs über die Hostnamen</b>. Viele landen hier, ohne sicher zu sein, dass ihr Postfach überhaupt Titan ist, weil der Hoster das Wort nie gesagt hat. Drei Merkmale klären es: Das Titan-Webmail liegt unter <code>app.titan.email</code>, die MX-Einträge Ihrer Domain zeigen auf <code>mx1.titan.email</code> und <code>mx2.titan.email</code>, und Ihr Hoster hat es Ihnen als Titan Email verkauft, wie Hostinger, oder als Professional Email, wie GoDaddy dasselbe Produkt nennt."
+    "body": "Titan stellt IMAP unter <code>imap.titan.email</code> auf Port 993 über TLS bereit und SMTP unter <code>smtp.titan.email</code> auf Port 465, ebenfalls implizites TLS. Zwei Dinge vorab. Der Zugriff für Drittanbieter-Apps ist bei einem Titan-Postfach <b>aus</b>, bis jemand ihn einschaltet, und vorher kommt nichts an der Anmeldung vorbei. Und Titan wird unter fremden Marken verkauft, also <b>entscheidet der Verkäufer Ihres Postfachs über die Hostnamen</b>. Viele landen hier, ohne sicher zu sein, dass ihr Postfach überhaupt Titan ist, weil der Hoster das Wort nie gesagt hat. Drei Merkmale klären es: Das Titan-Webmail liegt unter <code>app.titan.email</code>, die MX-Einträge Ihrer Domain zeigen auf <code>mx1.titan.email</code> und <code>mx2.titan.email</code>, und Ihr Hoster hat es Ihnen als Titan Email verkauft, wie Hostinger, oder als Professional Email, wie GoDaddy dasselbe Produkt nennt."
   },
   "setup": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "h": "Hostnamen bestätigen, dann alles in MCPEmails einfügen",
-      "p": "Die meisten Titan-Postfächer nutzen die oben vorausgefüllten Server. Wird Ihre Domain über GoDaddy verwaltet, dokumentiert GoDaddy stattdessen <code>imap.secureserver.net</code> auf 993 und <code>smtpout.secureserver.net</code> auf 465. Haben Sie Titan bei Blacknight, MonoVM, DomainDiscount24, Fluccs oder Domain Central gekauft, nennt Titan <code>imap0101.titan.email</code> und <code>smtp0101.titan.email</code>. Wählen Sie in MCPEmails IMAP / SMTP und geben Sie Ihre vollständige Titan-Adresse und ihr Passwort ein."
+      "p": "Die meisten Titan-Postfächer nutzen die oben vorausgefüllten Server. Wird Ihre Domain über GoDaddy verwaltet, dokumentiert GoDaddy stattdessen <code>imap.secureserver.net</code> auf 993 und <code>smtpout.secureserver.net</code> auf 465. Haben Sie Titan bei Blacknight, MonoVM, DomainDiscount24, Fluccs oder Domain Central gekauft, nennt Titan <code>imap0101.titan.email</code> und <code>smtp0101.titan.email</code>. Wählen Sie in MCPEmails IMAP / SMTP und geben Sie Ihre vollständige Titan-Adresse und das Passwort des Postfachs ein."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
@@ -61,11 +61,11 @@
     },
     {
       "h": "Titans eigene Fehlerbehebung rät, 2FA abzuschalten. Das müssen Sie nicht",
-      "p": "Der Abschnitt zur Fehlerbehebung in Titans IMAP-Anleitung macht die Zwei-Faktor-Authentifizierung für ein abgelehntes Passwort verantwortlich und rät, sie abzuschalten. Titan unterstützt aber Anwendungspasswörter, sie sind nur gut versteckt: <b>Settings</b>, <b>Preferences</b>, <b>Account and Security</b>, <b>Security and Access</b>, dann <b>Manage</b> unter Two-Factor Authentication, wo Sie Ihr Passwort und einen sechsstelligen Code erneut eingeben, bevor <b>Generate App Password</b> überhaupt erscheint. Erzeugen Sie dort eines und lassen Sie 2FA an. Titan zeigt es einmal an, und Sie können es auf derselben Seite widerrufen."
+      "p": "Der Abschnitt zur Fehlerbehebung in Titans IMAP-Anleitung macht die Zwei-Faktor-Authentifizierung für ein abgelehntes Passwort verantwortlich und rät, sie abzuschalten. Titan unterstützt aber App-Passwörter, sie sind nur gut versteckt: <b>Settings</b>, <b>Preferences</b>, <b>Account and Security</b>, <b>Security and Access</b>, dann <b>Manage</b> unter Two-Factor Authentication, wo Sie Ihr Passwort und einen sechsstelligen Code erneut eingeben, bevor <b>Generate App Password</b> überhaupt erscheint. Erzeugen Sie dort eines und lassen Sie 2FA an. Titan zeigt es einmal an, und Sie können es auf derselben Seite widerrufen."
     },
     {
       "h": "Probleme beheben: Titans IMAP-Server ist ungewöhnlich karg, und das verändert das Verhalten",
-      "p": "Titans Capability-Banner kündigt kaum mehr als IMAP4rev1, AUTH=PLAIN und SASL-IR an. Es bietet kein MOVE, Verschieben wird also zu Kopieren, Markieren und Expunge statt zu einem Befehl, und ein abgebrochenes Verschieben kann das Original zurücklassen. Es bietet kein IDLE, kein Programm kann also eine Verbindung offen halten und auf neue E-Mails warten; MCPEmails ruft ohnehin live pro Anfrage ab, aber ein Mailprogramm auf demselben Postfach fragt in Intervallen nach. UIDPLUS und SPECIAL-USE fehlen ebenfalls, weshalb Ordner hier über den Namen erkannt werden: Findet Ihr Agent den Gesendet- oder Archiv-Ordner nicht, weisen Sie die Rolle im Dashboard unter Postfächer, Postfach, Erweitert, Ordner zu. Lehnt Titan die Anmeldung ab, prüfen Sie in dieser Reihenfolge: Enable Titan on Other Apps, dann die Host-Familie Ihres Verkäufers, dann ein Anwendungspasswort bei aktiver 2FA."
+      "p": "Titans Capability-Banner kündigt kaum mehr als IMAP4rev1, AUTH=PLAIN und SASL-IR an. Es bietet kein MOVE, Verschieben wird also zu Kopieren, Markieren und Expunge statt zu einem Befehl, und ein abgebrochenes Verschieben kann das Original zurücklassen. Es bietet kein IDLE, kein Programm kann also eine Verbindung offen halten und auf neue E-Mails warten; MCPEmails ruft ohnehin live pro Anfrage ab, aber ein Mailprogramm auf demselben Postfach fragt in Intervallen nach. UIDPLUS und SPECIAL-USE fehlen ebenfalls, weshalb Ordner hier über den Namen erkannt werden: Findet Ihr Agent den Gesendet- oder Archiv-Ordner nicht, weisen Sie die Rolle im Dashboard beim Postfach unter Erweitert, Ordner zu. Lehnt Titan die Anmeldung ab, prüfen Sie in dieser Reihenfolge: Enable Titan on Other Apps, dann die Host-Familie Ihres Verkäufers, dann ein App-Passwort bei aktiver 2FA."
     }
   ],
   "limits": [
@@ -84,11 +84,11 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Titan Email?",
-      "a": "IMAP ist imap.titan.email auf Port 993 mit implizitem TLS. SMTP ist smtp.titan.email auf Port 465, ebenfalls implizites TLS. Melden Sie sich mit Ihrer vollständigen Titan-Adresse und dem Postfach-Passwort an. Beide Server wurden am auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.titan.email auf Port 993 mit implizitem TLS. SMTP ist smtp.titan.email auf Port 465, ebenfalls implizites TLS. Melden Sie sich mit Ihrer vollständigen Titan-Adresse und dem Postfach-Passwort an. Beide Server wurden an dem auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Warum lehnt Titan mein Passwort ab?",
-      "a": "Fast immer, weil der Zugriff für Drittanbieter-Apps für das Postfach nie eingeschaltet wurde, was einen Authentifizierungsfehler statt einer hilfreichen Meldung erzeugt. Schalten Sie zuerst Enable Titan on Other Apps in den Webmail-Einstellungen ein. Ist er bereits an und die Anmeldung scheitert trotzdem, hat das Postfach die Zwei-Faktor-Authentifizierung aktiv und braucht ein Anwendungspasswort von der Seite Security and Access."
+      "a": "Fast immer, weil der Zugriff für Drittanbieter-Apps für das Postfach nie eingeschaltet wurde, was einen Authentifizierungsfehler statt einer hilfreichen Meldung erzeugt. Schalten Sie zuerst Enable Titan on Other Apps in den Webmail-Einstellungen ein. Ist er bereits an und die Anmeldung scheitert trotzdem, hat das Postfach die Zwei-Faktor-Authentifizierung aktiv und braucht ein App-Passwort von der Seite Security and Access."
     },
     {
       "q": "Funktioniert das mit GoDaddy Professional Email?",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Werden meine Titan-E-Mails auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Titan abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt; Nachrichteninhalte werden nach der Anfrage, die sie angefordert hat, nicht aufbewahrt."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Titan abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt; Nachrichteninhalte werden nach der Anfrage nicht aufbewahrt."
     }
   ],
   "ctaBand": {

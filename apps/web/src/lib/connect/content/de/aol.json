@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "So verbindet sich AOL Mail: IMAP und ein App-Passwort",
-    "body": "AOL Mail verbindet sich über IMAP/SMTP mit einem <b>AOL-App-Passwort</b>. Ihr normales AOL-Passwort meldet kein Mailprogramm an; eine abgelehnte Anmeldung ist hier also fast immer ein fehlendes App-Passwort. Schalten Sie die Bestätigung in zwei Schritten ein, erzeugen Sie unter Account Info, Account Security ein App-Passwort und fügen Sie es zusammen mit Ihrer vollständigen AOL-Adresse in MCPEmails ein."
+    "body": "AOL Mail verbindet sich über IMAP/SMTP mit einem <b>AOL-App-Passwort</b>. Ihr normales AOL-Passwort meldet kein Mailprogramm an; eine abgelehnte Anmeldung ist hier also fast immer ein fehlendes App-Passwort. Schalten Sie die zweistufige Anmeldung (2-Step Verification) ein, erzeugen Sie unter Account Info, Account Security ein App-Passwort und fügen Sie es zusammen mit Ihrer vollständigen AOL-Adresse in MCPEmails ein."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "AOL-App-Passwort erzeugen",
-      "p": "Öffnen Sie in AOL Mail Account Info, dann Account Security, schalten Sie die Bestätigung in zwei Schritten ein, falls sie aus ist, und erzeugen Sie dann ein App-Passwort. Kopieren Sie es sofort, AOL zeigt es nur einmal an."
+      "p": "Öffnen Sie in AOL Mail Account Info, dann Account Security, schalten Sie 2-Step Verification ein, falls sie aus ist, und erzeugen Sie dann ein App-Passwort. Kopieren Sie es sofort, AOL zeigt es nur einmal an."
     },
     {
       "h": "In MCPEmails einfügen",
@@ -52,16 +52,16 @@
       "p": "<code>imap.aol.com</code> wird über denselben Maildienst unter <code>yahoodns.net</code> aufgelöst, der auch Yahoo Mail bedient, und beide Server begrüßen Sie mit demselben Banner. Nicht geteilt wird das Konto. Eine AOL-Adresse wird auf der Seite <b>Account Security</b> von AOL verwaltet, und ein in einem Yahoo-Konto erzeugtes App-Passwort öffnet kein AOL-Postfach. Das ist wichtig, weil Suchergebnisse zu AOL-Einstellungen regelmäßig einen Yahoo-Hilfeartikel liefern: Die beschriebenen Schritte stimmen, die Website, auf der Sie sein sollten, nicht."
     },
     {
-      "h": "Das App-Passwort ist ein Assistent, wird einmal gezeigt, und eine Passwortänderung widerruft es nicht",
+      "h": "Das App-Passwort entsteht in einem Assistenten, wird einmal angezeigt, und eine Passwortänderung widerruft es nicht",
       "p": "Wählen Sie auf der AOL-Seite Account Security die Option Generate app password (bei manchen Konten Generate and manage app passwords), dann Get Started, benennen Sie die App, dann Generate password. AOL zeigt es ein einziges Mal an. Danach funktioniert es weiter, auch wenn Sie Ihr AOL-Hauptpasswort ändern; eine Passwortänderung trennt ein Mailprogramm also <b>nicht</b>. Nur das Löschen genau dieses App-Passworts auf derselben Seite entzieht den Zugriff."
     },
     {
       "h": "AOLs IMAP bietet kein AUTH=LOGIN an, sein SMTP schon",
-      "p": "Beim Test kündigte AOLs IMAP-Server <code>AUTH=PLAIN</code> neben den beiden OAuth-Verfahren an, aber kein <code>AUTH=LOGIN</code>. Der Versandserver dagegen nimmt PLAIN und LOGIN. Posteingang und Postausgang desselben Kontos können sich im selben Programm also unterschiedlich verhalten: Werkzeuge, die fest auf LOGIN eingestellt sind, wie es in Code gegen Exchange üblich ist, senden problemlos und scheitern dann beim Lesen, mit einem Authentifizierungsfehler, der exakt wie ein falsches Passwort aussieht."
+      "p": "Beim Test kündigte AOLs IMAP-Server <code>AUTH=PLAIN</code> neben den beiden OAuth-Verfahren an, aber kein <code>AUTH=LOGIN</code>. Der Versandserver dagegen nimmt PLAIN und LOGIN. Posteingang und Postausgang desselben Kontos können sich im selben Programm also unterschiedlich verhalten: Tools, die fest auf LOGIN verdrahtet sind, wie es in Code für Exchange üblich ist, senden problemlos und scheitern dann beim Lesen, mit einem Authentifizierungsfehler, der exakt wie ein falsches Passwort aussieht."
     },
     {
       "h": "Systemordner werden über ihre Rolle erkannt, Umbenennen ist also unproblematisch",
-      "p": "AOL kündigt <code>SPECIAL-USE</code>, <code>MOVE</code>, <code>UIDPLUS</code> und <code>IDLE</code> an. Im Klartext: Gesendet, Entwürfe, Spam und Papierkorb werden daran erkannt, was sie sind, nicht daran, wie sie heißen. Ein Agent findet Ihren Gesendet-Ordner also auch nach dem Umbenennen, und Verschieben ist ein einzelner Befehl statt Kopieren plus Löschen. Das ist ein besserer IMAP-Server, als manche Bezahlanbieter bieten, und macht AOL zu einem ungewöhnlich gutmütigen Postfach für Automatisierung."
+      "p": "AOL kündigt <code>SPECIAL-USE</code>, <code>MOVE</code>, <code>UIDPLUS</code> und <code>IDLE</code> an. Konkret: Gesendet, Entwürfe, Spam und Papierkorb werden daran erkannt, was sie sind, nicht daran, wie sie heißen. Ein Agent findet Ihren Gesendet-Ordner also auch nach dem Umbenennen, und Verschieben ist ein einzelner Befehl statt Kopieren plus Löschen. Damit ist AOLs IMAP-Server besser als der mancher kostenpflichtiger Anbieter, und AOL ein ungewöhnlich unkompliziertes Postfach für Automatisierung."
     }
   ],
   "limits": [
@@ -75,7 +75,7 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von AOL Mail?",
-      "a": "IMAP ist imap.aol.com auf Port 993 mit implizitem TLS. SMTP ist smtp.aol.com auf Port 465, ebenfalls implizites TLS. Benutzername ist Ihre vollständige AOL-Adresse, Passwort ein AOL-App-Passwort statt Ihres Kontopassworts. Beide Server wurden am auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.aol.com auf Port 993 mit implizitem TLS. SMTP ist smtp.aol.com auf Port 465, ebenfalls implizites TLS. Benutzername ist Ihre vollständige AOL-Adresse, Passwort ein AOL-App-Passwort statt Ihres Kontopassworts. Beide Server wurden an dem auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Warum wird mein AOL-Passwort abgelehnt?",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Ist AOL Mail dasselbe wie Yahoo Mail?",
-      "a": "Beide laufen auf derselben Infrastruktur und verhalten sich über IMAP fast identisch, sind aber getrennte Konten mit eigenen Hostnamen und eigenen Sicherheitsseiten. Verbinden Sie eine aol.com- oder aol.de-Adresse mit den AOL-Servern und einem AOL-App-Passwort. Verbinden Sie eine yahoo.com-, yahoo.de- oder ymail.com-Adresse als Yahoo. Zugangsdaten gelten nicht über Kreuz."
+      "a": "Beide laufen auf derselben Infrastruktur und verhalten sich über IMAP fast identisch, sind aber getrennte Konten mit eigenen Hostnamen und eigenen Sicherheitsseiten. Verbinden Sie eine aol.com- oder aol.de-Adresse mit den AOL-Servern und einem AOL-App-Passwort. Verbinden Sie eine yahoo.com-, yahoo.de- oder ymail.com-Adresse als Yahoo. Zugangsdaten gelten nicht für den jeweils anderen Dienst."
     },
     {
       "q": "Funktionieren alte aim.com- und Länder-AOL-Adressen noch?",

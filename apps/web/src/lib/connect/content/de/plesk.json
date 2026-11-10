@@ -37,7 +37,7 @@
     },
     {
       "h": "Mail Client Setup in Plesk öffnen",
-      "p": "Gehen Sie in Plesk zu <b>Websites & Domains</b>, wählen Sie die Domain, deren E-Mail Sie verbinden möchten, öffnen Sie <b>Mail Accounts</b> und klicken Sie bei der Adresse auf das Symbol <b>Mail Client Setup</b>. Plesk zeigt die Hostnamen für Posteingang und Postausgang, die IMAP- und SMTP-Ports und die Verschlüsselung, die dieser Server erwartet. Übernehmen Sie sie wörtlich. Plesk-Installationen unterscheiden sich darin, wie Mail-TLS eingerichtet wurde, dieser Bildschirm ist also verlässlicher als jede allgemeine Plesk-Anleitung, diese hier eingeschlossen."
+      "p": "Gehen Sie in Plesk zu <b>Websites & Domains</b>, wählen Sie die Domain, deren E-Mail Sie verbinden möchten, öffnen Sie <b>Mail Accounts</b> und klicken Sie bei der Adresse auf das Symbol <b>Mail Client Setup</b>. Plesk zeigt die Hostnamen für Posteingang und Postausgang, die IMAP- und SMTP-Ports und die Verschlüsselung, die dieser Server erwartet. Übernehmen Sie sie wörtlich. Plesk-Installationen unterscheiden sich darin, wie Mail-TLS eingerichtet wurde, diese Ansicht ist also verlässlicher als jede allgemeine Plesk-Anleitung, diese hier eingeschlossen."
     },
     {
       "h": "Postfach-Passwort setzen und prüfen, dass das Zertifikat den Host abdeckt",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "IMAP und SMTP können kein SNI, mail.ihredomain.de bekommt also das Standardzertifikat des Servers",
-      "p": "HTTPS wählt das richtige Zertifikat, weil der Browser den Hostnamen beim Handshake mitteilt. Die Mailprotokolle arbeiten nicht so: Der Dienst hat keinen verlässlichen Weg zu erfahren, welchen Namen Sie gewählt haben, und liefert pro Verbindung ein Zertifikat, egal was. In einer Standard-Plesk-Installation heißt das, dass nur die Domain selbst und der Server-Hostname sauber abgesichert sind, und <code>mail.example.com</code> zeigt, was auch immer das serverweite Standardzertifikat ist. Die Namensabweichung, die daraus folgt, ist keine Fehlkonfiguration auf Ihrer Seite, sondern die Funktionsweise des Protokolls."
+      "p": "HTTPS wählt das richtige Zertifikat, weil der Browser den Hostnamen beim Handshake mitteilt. Die Mailprotokolle arbeiten nicht so: Der Dienst hat keinen verlässlichen Weg zu erfahren, welchen Namen Sie gewählt haben, und liefert bei jeder Verbindung dasselbe Zertifikat aus. In einer Standard-Plesk-Installation heißt das, dass nur die Domain selbst und der Server-Hostname sauber abgesichert sind, und <code>mail.example.com</code> zeigt, was auch immer das serverweite Standardzertifikat ist. Die Namensabweichung, die daraus folgt, ist keine Fehlkonfiguration auf Ihrer Seite, sondern liegt am Protokoll."
     },
     {
       "h": "Die Lösung ist ein Häkchen beim Ausstellen, und es ist leicht zu übersehen",
@@ -63,7 +63,7 @@
     }
   ],
   "limits": [
-    "Plesk ist Software, kein Hoster, Ihr Anbieter kann die Standardwerte also geändert haben. Wo diese Seite und Ihr Bildschirm Mail Client Setup auseinandergehen, hat der Bildschirm recht.",
+    "Plesk ist Software, kein Hoster, Ihr Anbieter kann die Standardwerte also geändert haben. Wo diese Seite und Ihre Ansicht Mail Client Setup voneinander abweichen, gilt die Ansicht in Plesk.",
     "Manche Hoster deaktivieren Port 587 und lassen nur 465, oder umgekehrt. Plesks Mail Client Setup zeigt, welchen Submission-Port dieser Server tatsächlich annimmt."
   ],
   "faq": [
@@ -73,7 +73,7 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Plesk?",
-      "a": "IMAP ist Port 993 mit SSL und SMTP Port 465 mit SSL, oder 587, wo der Submission-Port aktiviert ist. Plesks eigene Dokumentation sagt, dass Sie Ihren Domainnamen, etwa example.com, als Posteingangs- und Postausgangsserver eintragen und die vollständige E-Mail-Adresse als Benutzernamen verwenden. Prüfen Sie es auf dem Bildschirm Mail Client Setup Ihrer Domain."
+      "a": "IMAP ist Port 993 mit SSL und SMTP Port 465 mit SSL, oder 587, wo der Submission-Port aktiviert ist. Plesks eigene Dokumentation sagt, dass Sie Ihren Domainnamen, etwa example.com, als Posteingangs- und Postausgangsserver eintragen und die vollständige E-Mail-Adresse als Benutzernamen verwenden. Prüfen Sie es in der Ansicht Mail Client Setup Ihrer Domain."
     },
     {
       "q": "Warum meldet Plesk-Mail eine Namensabweichung beim Zertifikat?",
@@ -81,7 +81,7 @@
     },
     {
       "q": "Wo finde ich die E-Mail-Einstellungen in Plesk?",
-      "a": "Gehen Sie zu Websites & Domains, wählen Sie die Domain, öffnen Sie Mail Accounts und klicken Sie neben der Adresse auf das Symbol Mail Client Setup. Plesk zeigt Hostnamen, Ports und Verschlüsselung, die dieser Server erwartet. Weil jeder Hoster Plesk anders konfiguriert, ist dieser Bildschirm für Ihren Server maßgeblich."
+      "a": "Gehen Sie zu Websites & Domains, wählen Sie die Domain, öffnen Sie Mail Accounts und klicken Sie neben der Adresse auf das Symbol Mail Client Setup. Plesk zeigt Hostnamen, Ports und Verschlüsselung, die dieser Server erwartet. Weil jeder Hoster Plesk anders konfiguriert, ist diese Ansicht für Ihren Server maßgeblich."
     },
     {
       "q": "Werden meine Plesk-E-Mails auf Ihren Servern gespeichert?",

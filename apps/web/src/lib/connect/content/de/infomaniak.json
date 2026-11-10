@@ -6,7 +6,7 @@
   ],
   "auth": {
     "method": "app-password",
-    "label": "Passwort für ein Gerät (Tab Geräte der Adresse)",
+    "label": "Gerätepasswort (Tab Geräte der E-Mail-Adresse)",
     "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
     "usernameForm": "Ihre vollständige Adresse mit Domain: name@ihredomain.ch.",
     "status": "active"
@@ -20,7 +20,7 @@
     "titleLine1": "Infomaniak Mail mit Claude verbinden:",
     "titleLine2": "der MCP-Server für jedes Firmenpostfach Ihrer Domain",
     "lead": "Sie betreiben info@, verkauf@, support@ und rechnung@ auf Ihrer eigenen Domain bei Infomaniak? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet in allen: E-Mails lesen, suchen, beantworten, senden, planen und ablegen, per IMAP mit einem Passwort, das Sie für diese Adresse unter Geräte erzeugen.",
-    "answer": "Claude kann Infomaniak Mail nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über mail.infomaniak.com auf Port 993 anbindet. Angemeldet wird mit einem Passwort, das Sie im Manager für diese E-Mail-Adresse im Tab Geräte erzeugen, nicht mit Ihrem Infomaniak-Kontopasswort. Danach lesen, suchen, senden und sortieren Claude, ChatGPT oder Cursor die E-Mails. Infomaniak nimmt das Kontopasswort über IMAP gar nicht an, und die separaten Anwendungspasswörter des Kontos sind etwas anderes und funktionieren hier nicht. Jede Firmenadresse, etwa info@ oder verkauf@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
+    "answer": "Claude kann Infomaniak Mail nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der es per IMAP über mail.infomaniak.com auf Port 993 anbindet. Angemeldet wird mit einem Passwort, das Sie im Manager für diese E-Mail-Adresse im Tab Geräte erzeugen, nicht mit Ihrem Infomaniak-Kontopasswort. Danach lesen, suchen, senden und sortieren Claude, ChatGPT oder Cursor die E-Mails. Infomaniak nimmt das Kontopasswort über IMAP gar nicht an, und die App-Passwörter des Kontos sind etwas anderes und funktionieren hier nicht. Jede Firmenadresse, etwa info@ oder verkauf@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen.",
     "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
     "meta1": "Passwort aus dem Tab Geräte, nicht das Kontopasswort",
     "meta2": "E-Mails live abgerufen, nie gespeichert"
@@ -32,7 +32,7 @@
   },
   "method": {
     "title": "So verbindet sich Infomaniak: IMAP und ein Passwort pro Gerät",
-    "body": "Infomaniak stellt IMAP unter <code>mail.infomaniak.com</code> auf Port 993 mit implizitem TLS bereit und SMTP auf demselben Host auf Port 465. Beide Hostnamen gelten für alle Infomaniak-Mail-Kunden, auch für Adressen auf Ihrer eigenen Domain und in einem kSuite-Tarif; es gibt also keinen kundenspezifischen Server nachzuschlagen. Bei der Anmeldung unterscheidet sich Infomaniak von fast allen anderen Hostern dieser Kategorie: Ihr Passwort für den Infomaniak Manager wird von IMAP und SMTP nicht akzeptiert. Jede E-Mail-Adresse vergibt stattdessen eigene <b>Passwörter pro Gerät</b>, erzeugt je Programm im Tab Geräte der Adresse, mindestens sechzehn Zeichen lang, einmal angezeigt und einzeln widerrufbar. Weil es getrennte Zugangsdaten sind, ändert die Zwei-Faktor-Authentifizierung Ihres Infomaniak-Kontos für Mailprogramme nichts: Die Gerätepasswörter funktionieren vorher wie nachher."
+    "body": "Infomaniak stellt IMAP unter <code>mail.infomaniak.com</code> auf Port 993 mit implizitem TLS bereit und SMTP auf demselben Host auf Port 465. Der Hostname gilt für alle Infomaniak-Mail-Kunden, auch für Adressen auf Ihrer eigenen Domain und in einem kSuite-Tarif; es gibt also keinen kundenspezifischen Server nachzuschlagen. Bei der Anmeldung unterscheidet sich Infomaniak von fast allen anderen Hostern dieser Kategorie: Ihr Passwort für den Infomaniak Manager wird von IMAP und SMTP nicht akzeptiert. Stattdessen bekommt jede E-Mail-Adresse eigene <b>Gerätepasswörter</b>, eines pro Programm, erzeugt im Tab Geräte der Adresse, mindestens sechzehn Zeichen lang, einmal angezeigt und einzeln widerrufbar. Weil es getrennte Zugangsdaten sind, ändert die Zwei-Faktor-Authentifizierung Ihres Infomaniak-Kontos für Mailprogramme nichts: Die Gerätepasswörter funktionieren vorher wie nachher."
   },
   "setup": [
     {
@@ -40,8 +40,8 @@
       "p": "Registrieren Sie sich auf mcpemails.com. Der Free-Tarif verbindet ein Postfach dauerhaft und fragt nicht nach einer Kreditkarte."
     },
     {
-      "h": "Passwort für ein Gerät auf der Adresse erzeugen",
-      "p": "Öffnen Sie manager.infomaniak.com, gehen Sie zum Mail-Service, klicken Sie auf Ihre Domain und dann auf die E-Mail-Adresse selbst. Öffnen Sie den Tab Geräte und klicken Sie auf Gerät hinzufügen. Lassen Sie die Option „Kein Benutzer“ stehen, es sei denn, Sie möchten SMTP-Beschränkungen bewusst an ein bestimmtes Benutzerkonto binden, vergeben Sie einen Namen, den Sie später wiedererkennen, und kopieren Sie das erzeugte Passwort sofort. Infomaniak zeigt es nicht noch einmal an."
+      "h": "Gerätepasswort für die E-Mail-Adresse erzeugen",
+      "p": "Öffnen Sie manager.infomaniak.com, öffnen Sie den Mail-Service, klicken Sie auf Ihre Domain und dann auf die E-Mail-Adresse selbst. Öffnen Sie den Tab Geräte und klicken Sie auf Gerät hinzufügen. Lassen Sie die Option „Kein Benutzer“ stehen, es sei denn, Sie möchten SMTP-Beschränkungen bewusst an ein bestimmtes Benutzerkonto binden, vergeben Sie einen Namen, den Sie später wiedererkennen, und kopieren Sie das erzeugte Passwort sofort. Infomaniak zeigt es nicht noch einmal an."
     },
     {
       "h": "In MCPEmails einfügen",
@@ -54,12 +54,12 @@
   ],
   "gotchas": [
     {
-      "h": "Ein Passwort für ein Gerät ist nicht dasselbe wie ein Anwendungspasswort",
-      "p": "Infomaniak vergibt zwei verschiedene Arten von Zweitpasswörtern, und sie sind nicht austauschbar. <b>Anwendungspasswörter</b>, angelegt in den Sicherheitseinstellungen Ihres Kontos, melden Werkzeuge und Dienste am Infomaniak-Konto an, wenn die Zwei-Faktor-Authentifizierung aktiv ist. <b>Passwörter für Geräte</b>, angelegt auf der einzelnen E-Mail-Adresse, sind das, was IMAP, POP und SMTP akzeptieren. Infomaniaks eigene Dokumentation sagt ausdrücklich, dass ein Anwendungspasswort kein Gerätepasswort ist und keine E-Mail-Adresse synchronisiert. Wer in einer allgemeinen Anleitung „App-Passwort“ liest, greift zum falschen, erzeugt es erfolgreich und versteht dann nicht, warum das Postfach die Anmeldung weiter ablehnt."
+      "h": "Ein Gerätepasswort ist nicht dasselbe wie ein App-Passwort",
+      "p": "Infomaniak vergibt zwei verschiedene Arten von Zweitpasswörtern, und sie sind nicht austauschbar. <b>App-Passwörter</b> (in der Hilfe auch Anwendungspasswörter genannt), angelegt in den Sicherheitseinstellungen Ihres Kontos, melden Tools und Dienste am Infomaniak-Konto an, wenn die Zwei-Faktor-Authentifizierung aktiv ist. <b>Gerätepasswörter</b>, angelegt auf der einzelnen E-Mail-Adresse, sind das, was IMAP, POP und SMTP akzeptieren. Infomaniaks eigene Hilfe sagt es wörtlich: Ein App-Passwort ist kein Gerätepasswort und ermöglicht nicht die Synchronisierung einer E-Mail-Adresse. Wer in einer allgemeinen Anleitung „App-Passwort“ liest, greift zum falschen, erzeugt es erfolgreich und versteht dann nicht, warum das Postfach die Anmeldung weiter ablehnt."
     },
     {
       "h": "Infomaniak kündigt kein SASL-IR an, und die meisten Clients setzen es voraus",
-      "p": "Dem IMAP-Server fehlt die Fähigkeit SASL-IR. Er lehnt also die einstufige Authentifizierung ab, bei der die Zugangsdaten in derselben Zeile wie der AUTHENTICATE-Befehl stehen. Ein Client, der SASL-IR voraussetzt, bekommt ein nacktes <code>BAD</code> ohne Erklärung, was exakt wie ein falsches Passwort aussieht. MCPEmails erkennt das und wiederholt den Austausch in zwei Schritten, die Verbindung kommt hier also zustande; bei anderen IMAP-Werkzeugen ist es gegenüber Infomaniak eine häufige Fehlerursache."
+      "p": "Dem IMAP-Server fehlt die Fähigkeit SASL-IR. Er lehnt also die einstufige Authentifizierung ab, bei der die Zugangsdaten in derselben Zeile wie der AUTHENTICATE-Befehl stehen. Ein Client, der SASL-IR voraussetzt, bekommt ein nacktes <code>BAD</code> ohne Erklärung, was exakt wie ein falsches Passwort aussieht. MCPEmails erkennt das und wiederholt den Austausch in zwei Schritten, die Verbindung kommt hier also zustande; bei anderen IMAP-Tools ist es gegenüber Infomaniak eine häufige Fehlerursache."
     },
     {
       "h": "Die Begrüßung enthält keine Fähigkeitenliste",
@@ -68,7 +68,7 @@
   ],
   "limits": [
     "Der Server kündigt die Erweiterung MOVE nicht an. Das Verschieben einer Nachricht läuft daher als Kopieren, Markieren und Expunge statt als ein einzelner Befehl.",
-    "SPECIAL-USE fehlt, Gesendet, Entwürfe, Papierkorb und Spam werden also über ihren Namen erkannt. Bei einem französischsprachig angelegten Postfach heißen sie meist Messages envoyés, Brouillons, Corbeille und Spam; weisen Sie die Rollen im Dashboard unter Erweitert, Ordner zu, falls der Agent sie nicht findet."
+    "SPECIAL-USE fehlt, Gesendet, Entwürfe, Papierkorb und Spam werden also über ihren Namen erkannt. Bei einem französischsprachig angelegten Postfach heißen sie meist Messages envoyés, Brouillons, Corbeille und Spam; weisen Sie die Rollen im Dashboard beim Postfach unter Erweitert, Ordner zu, falls der Agent sie nicht findet."
   ],
   "faq": [
     {
@@ -81,11 +81,11 @@
     },
     {
       "q": "Warum funktioniert mein Infomaniak-Passwort nicht?",
-      "a": "Weil Ihr Passwort für den Infomaniak Manager von IMAP und SMTP nie akzeptiert wird. Mailprogramme melden sich nur mit einem Passwort an, das auf der einzelnen E-Mail-Adresse im Tab Geräte des Managers erzeugt wurde. Haben Sie stattdessen ein Anwendungspasswort erzeugt, ist das eine andere Zugangsberechtigung, die kein Postfach anmeldet."
+      "a": "Weil Ihr Passwort für den Infomaniak Manager von IMAP und SMTP nie akzeptiert wird. Mailprogramme melden sich nur mit einem Passwort an, das auf der einzelnen E-Mail-Adresse im Tab Geräte des Managers erzeugt wurde. Haben Sie stattdessen ein App-Passwort erzeugt, ist das ein anderer Zugang, mit dem sich kein Postfach anmelden lässt."
     },
     {
-      "q": "Bricht die Zwei-Faktor-Authentifizierung mein Mailprogramm?",
-      "a": "Nein. Die Gerätepasswörter sind von Ihrem Konto-Login unabhängig, IMAP, POP und SMTP verhalten sich also vor und nach dem Einschalten der Zwei-Faktor-Authentifizierung gleich. Genau deshalb besteht Infomaniak auf Gerätepasswörtern, statt das Kontopasswort über IMAP zuzulassen."
+      "q": "Funktioniert mein Mailprogramm nach dem Einschalten der Zwei-Faktor-Authentifizierung noch?",
+      "a": "Ja. Die Gerätepasswörter sind von Ihrem Konto-Login unabhängig, IMAP, POP und SMTP verhalten sich also vor und nach dem Einschalten der Zwei-Faktor-Authentifizierung gleich. Genau deshalb besteht Infomaniak auf Gerätepasswörtern, statt das Kontopasswort über IMAP zuzulassen."
     },
     {
       "q": "Kann ich den Zugriff widerrufen, ohne meine anderen Geräte zu stören?",

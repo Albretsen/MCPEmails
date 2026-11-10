@@ -8,7 +8,7 @@
     "method": "mail-password",
     "label": "Postfach-Passwort",
     "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
-    "usernameForm": "Ihre vollständige E-Mail-Adresse auf Ihrer eigenen Domain, nicht Ihr Hostinger-Kontologin.",
+    "usernameForm": "Ihre vollständige E-Mail-Adresse auf Ihrer eigenen Domain, nicht die Anmeldedaten Ihres Hostinger-Kontos.",
     "status": "active"
   },
   "meta": {
@@ -54,15 +54,15 @@
     },
     {
       "h": "Das Postfach-Passwort ist nicht Ihr hPanel-Login, und 2FA ändert es noch einmal",
-      "p": "IMAP prüft das Passwort, das auf der einzelnen E-Mail-Adresse gesetzt ist; Sie legen es im hPanel unter <b>E-Mails</b> in der Postfachliste fest oder setzen es zurück. Ihr Hostinger-Kontologin, mit dem Sie Hosting und Rechnungen verwalten, ist eine andere Zugangsberechtigung und wird abgelehnt. Hostinger dokumentiert außerdem, dass das Passwort das Postfach-Passwort ist <b>oder ein App-Passwort, wenn das Postfach die Zwei-Faktor-Authentifizierung nutzt</b>; ein Postfach mit eingeschalteter 2FA braucht also das App-Passwort statt des gesetzten. Beide Fehler kommen als schlichter Authentifizierungsfehler an."
+      "p": "IMAP prüft das Passwort, das auf der einzelnen E-Mail-Adresse gesetzt ist; Sie legen es im hPanel unter <b>E-Mails</b> in der Postfachliste fest oder setzen es zurück. Die Anmeldedaten Ihres Hostinger-Kontos, mit denen Sie Hosting und Rechnungen verwalten, sind ein anderer Zugang und werden abgelehnt. Hostinger dokumentiert außerdem, dass das Passwort das Postfach-Passwort ist <b>oder ein App-Passwort, wenn das Postfach die Zwei-Faktor-Authentifizierung nutzt</b>; ein Postfach mit eingeschalteter 2FA braucht also das App-Passwort statt des Postfach-Passworts. Beide Fehler zeigen sich als schlichter Authentifizierungsfehler."
     },
     {
       "h": "Der SMTP-Server begrenzt eine Nachricht auf rund 46 MB, weniger als die meisten",
       "p": "Hostingers Versandserver meldet eine maximale Nachrichtengröße von 48.811.212 Byte, etwa 46 MB. Das ist die Größe der kodierten Nachricht, nicht Ihrer Datei, und die MIME-Kodierung bläht einen Anhang um rund ein Drittel auf; praktisch liegt die Grenze also bei etwa 34 MB echtem Anhang. Das ist spürbar weniger, als manche andere Hoster zulassen, und ein Agent, der einen großen Anhang weiterleiten will, bekommt eine harte Ablehnung schon beim Einliefern statt eines späteren Bounce. Senden Sie bei Dateien in dieser Größenordnung besser einen Link."
     },
     {
-      "h": "Probleme beheben: Hostinger Email hat kein MOVE, UIDPLUS und SPECIAL-USE",
-      "p": "Die Begrüßung kündigt <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> und <code>AUTH=LOGIN</code> an, aber weder MOVE noch UIDPLUS noch SPECIAL-USE. Verschieben läuft daher als Kopieren, Markieren und Expunge statt als ein Befehl, die Kennung der Kopie wird nicht zurückgemeldet und muss im Zielordner gesucht werden, und Gesendet, Entwürfe, Papierkorb und Spam werden über den Namen erkannt, nicht über ihre Rolle. Findet ein Agent Ihren Archiv- oder Gesendet-Ordner auf einem Hostinger-Postfach nicht, weisen Sie die Rolle im Dashboard unter Postfächer, Postfach, Erweitert, Ordner dem richtigen Ordner zu. Und wird die Anmeldung abgelehnt: zuerst Postfach-Passwort statt hPanel-Login, dann App-Passwort bei 2FA, dann prüfen, ob das Postfach auf Titan liegt und deshalb andere Server braucht."
+      "h": "Probleme beheben: Hostinger Email bietet weder MOVE noch UIDPLUS noch SPECIAL-USE",
+      "p": "Die Begrüßung kündigt <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> und <code>AUTH=LOGIN</code> an, aber weder MOVE noch UIDPLUS noch SPECIAL-USE. Verschieben läuft daher als Kopieren, Markieren und Expunge statt als ein Befehl, die Kennung der Kopie wird nicht zurückgemeldet und muss im Zielordner gesucht werden, und Gesendet, Entwürfe, Papierkorb und Spam werden über den Namen erkannt, nicht über ihre Rolle. Findet ein Agent Ihren Archiv- oder Gesendet-Ordner auf einem Hostinger-Postfach nicht, weisen Sie die Rolle im Dashboard beim Postfach unter Erweitert, Ordner dem richtigen Ordner zu. Und wird die Anmeldung abgelehnt: zuerst Postfach-Passwort statt hPanel-Login, dann App-Passwort bei 2FA, dann prüfen, ob das Postfach auf Titan liegt und deshalb andere Server braucht."
     }
   ],
   "limits": [
@@ -77,15 +77,15 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Hostinger?",
-      "a": "Für Hostinger Email ist IMAP imap.hostinger.com auf Port 993 mit SSL und SMTP smtp.hostinger.com auf Port 465 mit SSL, mit 587 und STARTTLS als dokumentierter Alternative für den Postausgang. Benutzername ist Ihre vollständige E-Mail-Adresse. Beide Server wurden am auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "Für Hostinger Email ist IMAP imap.hostinger.com auf Port 993 mit SSL und SMTP smtp.hostinger.com auf Port 465 mit SSL, mit 587 und STARTTLS als dokumentierter Alternative für den Postausgang. Benutzername ist Ihre vollständige E-Mail-Adresse. Beide Server wurden an dem auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
     },
     {
       "q": "Wo finde ich meine Hostinger-E-Mail-Einstellungen im hPanel?",
-      "a": "Öffnen Sie im hPanel E-Mails, klicken Sie neben der Domain auf Verwalten und wählen Sie in der Seitenleiste Apps und Geräte verbinden. Dort gibt es geführte Reiter für einzelne Programme und darunter die rohen Servereinstellungen. Angezeigt werden die Werte für die Plattform, auf der Ihr Postfach tatsächlich liegt, was bei einem Titan-Tarif den Unterschied macht."
+      "a": "Öffnen Sie im hPanel E-Mails, klicken Sie neben der Domain auf Verwalten und wählen Sie in der Seitenleiste Apps und Geräte verbinden. Dort gibt es Anleitungen für einzelne Programme und darunter, unter Manuelle Konfiguration, die reinen Servereinstellungen. Angezeigt werden die Werte für die Plattform, auf der Ihr Postfach tatsächlich liegt, was bei einem Titan-Tarif den Unterschied macht."
     },
     {
       "q": "Warum wird mein Hostinger-E-Mail-Passwort abgelehnt?",
-      "a": "Meist, weil Sie Ihren Hostinger-Kontologin statt des Passworts der E-Mail-Adresse selbst verwendet haben. Setzen Sie das Postfach-Passwort im hPanel unter E-Mails zurück und probieren Sie dieses. Hat das Postfach die Zwei-Faktor-Authentifizierung aktiv, verlangt Hostinger für Mailprogramme stattdessen ein App-Passwort, und die Ablehnung sieht genauso aus wie ein falsches Passwort."
+      "a": "Meist, weil Sie die Anmeldedaten Ihres Hostinger-Kontos statt des Passworts der E-Mail-Adresse selbst verwendet haben. Setzen Sie das Postfach-Passwort im hPanel unter E-Mails zurück und probieren Sie dieses. Hat das Postfach die Zwei-Faktor-Authentifizierung aktiv, verlangt Hostinger für Mailprogramme stattdessen ein App-Passwort, und die Ablehnung sieht genauso aus wie ein falsches Passwort."
     },
     {
       "q": "Was, wenn mein Tarif Titan Email nutzt?",

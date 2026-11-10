@@ -7,21 +7,21 @@
   ],
   "auth": {
     "method": "none",
-    "label": "Kein Fernzugang vorhanden",
+    "label": "Kein Zugang von außen vorhanden",
     "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
     "usernameForm": "Hier gibt es nichts einzutragen. Proton vergibt Zugangsdaten für Mailprogramme nur in Proton Mail Bridge, und sie gelten nur gegenüber Bridge auf dem Rechner, auf dem es läuft.",
     "status": "active"
   },
   "meta": {
     "title": "Proton Mail und Claude: Warum Bridge die Verbindung verhindert",
-    "description": "Proton Mail hat kein IMAP im Internet. IMAP gibt es nur in Proton Mail Bridge, einer kostenpflichtigen Desktop-App auf localhost. Kein gehosteter MCP-Server kommt dort hin. Was stattdessen geht."
+    "description": "Proton Mail hat kein IMAP im Internet. IMAP gibt es nur in Proton Mail Bridge, einer kostenpflichtigen Desktop-App auf localhost. Kein gehosteter MCP-Server kommt dorthin. Was stattdessen geht."
   },
   "hero": {
     "eyebrow": "Proton Mail + KI",
     "titleLine1": "Proton Mail lässt sich nicht",
     "titleLine2": "mit einem gehosteten MCP-Server verbinden",
-    "lead": "Proton betreibt keinen IMAP-Server im Internet. Das einzige IMAP, das es für ein Proton-Postfach gibt, läuft auf Ihrem eigenen Rechner in Proton Mail Bridge. Deshalb stoßen alle gehosteten Werkzeuge an dieselbe Wand.",
-    "answer": "Nein. Proton Mail stellt keinen IMAP-, POP- oder SMTP-Endpunkt bereit, an dem sich ein Programm von außerhalb anmelden könnte. Ein Mailprogramm erreicht Proton nur über Proton Mail Bridge, eine Desktop-Anwendung für Bezahltarife, die Ihre E-Mails lokal entschlüsselt und IMAP und SMTP auf localhost anbietet, also auf der Loopback-Adresse des Rechners, auf dem sie läuft. Ein gehosteter MCP-Server wie MCPEmails läuft auf unserer Infrastruktur, nicht auf Ihrem Schreibtisch, und nichts im Internet kann Ihren localhost erreichen. Die Verbindung ist also unmöglich, nicht bloß nicht umgesetzt. Wenn Ihr KI-Agent trotzdem mit E-Mails arbeiten soll, die an Ihre Proton-Adresse gehen, bleiben zwei ehrliche Wege: Protons kostenpflichtige automatische Weiterleitung in ein Postfach, das IMAP spricht und das MCPEmails für ein Postfach kostenlos verbindet, oder Protons reiner SMTP-Versand, nur für ausgehende E-Mails."
+    "lead": "Proton betreibt keinen IMAP-Server im Internet. Das einzige IMAP, das es für ein Proton-Postfach gibt, läuft auf Ihrem eigenen Rechner in Proton Mail Bridge. Deshalb laufen alle gehosteten Tools gegen dieselbe Wand.",
+    "answer": "Nein. Proton Mail stellt keinen IMAP-, POP- oder SMTP-Endpunkt bereit, an dem sich ein Programm von außerhalb anmelden könnte. Ein Mailprogramm erreicht Proton nur über Proton Mail Bridge, eine Desktop-Anwendung für Bezahltarife, die Ihre E-Mails lokal entschlüsselt und IMAP und SMTP auf localhost anbietet, also auf der Loopback-Adresse des Rechners, auf dem sie läuft. Ein gehosteter MCP-Server wie MCPEmails läuft auf unserer Infrastruktur, nicht auf Ihrem Schreibtisch, und nichts im Internet kann Ihren localhost erreichen. Die Verbindung ist also unmöglich, nicht bloß nicht umgesetzt. Wenn Ihr KI-Agent trotzdem mit E-Mails arbeiten soll, die an Ihre Proton-Adresse gehen, bleiben zwei Wege, die wirklich funktionieren: Protons automatische Weiterleitung (nur in Bezahltarifen) in ein Postfach mit echtem IMAP, das MCPEmails kostenlos verbindet, oder Protons reiner SMTP-Versand, nur für ausgehende E-Mails."
   },
   "method": {
     "title": "So verbindet sich Proton Mail: lokal über Bridge, oder gar nicht",
@@ -52,7 +52,7 @@
     },
     {
       "h": "Bridge gibt es nicht für Proton Free",
-      "p": "Viele mit dem kostenlosen Tarif laden Bridge erst herunter und merken es dann. Bridge setzt einen kostenpflichtigen Proton-Mail-Tarif voraus. Mit Proton Free gibt es also keinen unterstützten Weg, irgendein fremdes Mailprogramm zu nutzen, lokal oder sonst wie. Das gilt für Thunderbird und Apple Mail genauso wie für Automatisierungswerkzeuge."
+      "p": "Wer Proton Free nutzt, lädt Bridge oft erst herunter und merkt es dann. Bridge setzt einen kostenpflichtigen Proton-Mail-Tarif voraus. Mit Proton Free gibt es also keinen unterstützten Weg, irgendein fremdes Mailprogramm zu nutzen, weder lokal noch anderswo. Das gilt für Thunderbird und Apple Mail genauso wie für Automatisierungswerkzeuge."
     },
     {
       "h": "Protons SMTP-Versand sieht nach der Lösung aus und kann keine einzige Nachricht lesen",
