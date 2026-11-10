@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postfach-Passwort",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "Ihre vollständige E-Mail-Adresse auf Ihrer eigenen Domain, nicht die Anmeldedaten Ihres Hostinger-Kontos.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Hostinger E-Mail mit Claude, Cursor und MCP-Clients verbinden",
+    "description": "Hostinger Email mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.hostinger.com:993. Business Email auf Titan-Basis nutzt ganz andere Server."
+  },
+  "hero": {
+    "eyebrow": "Hostinger + KI",
+    "titleLine1": "Hostinger E-Mail mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Ihr KI-Agent bekommt Ihr echtes Hostinger-Postfach in wenigen Minuten: E-Mails lesen, suchen, beantworten, senden, planen und sortieren, per IMAP mit Ihrem Postfach-Passwort. Dasselbe Postfach funktioniert in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Ihr Postfach-Passwort, kein OAuth",
+    "meta2": "E-Mails live abgerufen, nie gespeichert",
+    "answer": "Claude kann Hostinger nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Postfach-Passwort anbindet. Danach lesen, suchen, senden und sortieren Claude, Cursor oder jeder MCP-Client diese E-Mails. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich Hostinger: IMAP und Ihr Postfach-Passwort",
+    "body": "Hostinger Email verbindet sich über IMAP/SMTP mit dem Postfach-Passwort, das Sie im hPanel unter E-Mails festlegen. Es gibt kein App-Passwort und keinen OAuth-Schritt. Bei Hostinger Email lauten die Server für jede Domain <code>imap.hostinger.com</code> und <code>smtp.hostinger.com</code>. Die Tarife Business Email und Enterprise Email laufen auf Titan und nutzen andere Server, siehe unten."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails-Konto anlegen",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "Postfach-Passwort bei Hostinger festlegen",
+      "p": "Öffnen Sie im hPanel E-Mails, wählen Sie die Adresse und legen Sie ihr Passwort fest oder setzen Sie es zurück. Mit diesem Passwort meldet sich MCPEmails an."
+    },
+    {
+      "h": "In MCPEmails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre Hostinger-Adresse, die oben genannten Server und das Passwort ein, und das Postfach ist sicher verbunden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT als Konnektor ein, autorisieren Sie den Zugriff, und Ihr Agent arbeitet im Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hostinger hat zwei Mail-Plattformen, und welche Sie haben, hängt vom Kaufzeitpunkt ab",
+      "p": "<b>Hostinger Email</b> ist Hostingers eigene Plattform, dokumentiert unter <code>imap.hostinger.com</code> auf 993 und <code>smtp.hostinger.com</code> auf 465, dazu <code>pop.hostinger.com</code> auf 995 für POP3. Die Tarife <b>Business Email</b> und <b>Enterprise Email</b> laufen auf Titan und antworten stattdessen unter <code>imap.titan.email</code> und <code>smtp.titan.email</code>, wo Hostinger 993 für IMAP und 465 oder 587 für SMTP dokumentiert. An der Adresse erkennen Sie nicht, welche Plattform Sie haben. Das hPanel schon: Öffnen Sie <b>E-Mails</b>, klicken Sie neben der Domain auf <b>Verwalten</b> und wählen Sie <b>Apps und Geräte verbinden</b>; dort stehen die Werte für die Plattform, auf der dieses Postfach tatsächlich liegt. Bei einem Titan-Postfach finden Sie dieselben Werte auch im Titan-Webmail unter Settings, dann Configure 3rd party apps."
+    },
+    {
+      "h": "Das Postfach-Passwort ist nicht Ihr hPanel-Login, und 2FA ändert es noch einmal",
+      "p": "IMAP prüft das Passwort, das auf der einzelnen E-Mail-Adresse gesetzt ist; Sie legen es im hPanel unter <b>E-Mails</b> in der Postfachliste fest oder setzen es zurück. Die Anmeldedaten Ihres Hostinger-Kontos, mit denen Sie Hosting und Rechnungen verwalten, sind ein anderer Zugang und werden abgelehnt. Hostinger dokumentiert außerdem, dass das Passwort das Postfach-Passwort ist <b>oder ein App-Passwort, wenn das Postfach die Zwei-Faktor-Authentifizierung nutzt</b>; ein Postfach mit eingeschalteter 2FA braucht also das App-Passwort statt des Postfach-Passworts. Beide Fehler zeigen sich als schlichter Authentifizierungsfehler."
+    },
+    {
+      "h": "Der SMTP-Server begrenzt eine Nachricht auf rund 46 MB, weniger als die meisten",
+      "p": "Hostingers Versandserver meldet eine maximale Nachrichtengröße von 48.811.212 Byte, etwa 46 MB. Das ist die Größe der kodierten Nachricht, nicht Ihrer Datei, und die MIME-Kodierung bläht einen Anhang um rund ein Drittel auf; praktisch liegt die Grenze also bei etwa 34 MB echtem Anhang. Das ist spürbar weniger, als manche andere Hoster zulassen, und ein Agent, der einen großen Anhang weiterleiten will, bekommt eine harte Ablehnung schon beim Einliefern statt eines späteren Bounce. Senden Sie bei Dateien in dieser Größenordnung besser einen Link."
+    },
+    {
+      "h": "Probleme beheben: Hostinger Email bietet weder MOVE noch UIDPLUS noch SPECIAL-USE",
+      "p": "Die Begrüßung kündigt <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> und <code>AUTH=LOGIN</code> an, aber weder MOVE noch UIDPLUS noch SPECIAL-USE. Verschieben läuft daher als Kopieren, Markieren und Expunge statt als ein Befehl, die Kennung der Kopie wird nicht zurückgemeldet und muss im Zielordner gesucht werden, und Gesendet, Entwürfe, Papierkorb und Spam werden über den Namen erkannt, nicht über ihre Rolle. Findet ein Agent Ihren Archiv- oder Gesendet-Ordner auf einem Hostinger-Postfach nicht, weisen Sie die Rolle im Dashboard beim Postfach unter Erweitert, Ordner dem richtigen Ordner zu. Und wird die Anmeldung abgelehnt: zuerst Postfach-Passwort statt hPanel-Login, dann App-Passwort bei 2FA, dann prüfen, ob das Postfach auf Titan liegt und deshalb andere Server braucht."
+    }
+  ],
+  "limits": [
+    "Ausgehende Nachrichten sind auf rund 46 MB kodiert begrenzt, ein Anhang deutlich über etwa 34 MB wird beim Einliefern abgelehnt.",
+    "Weil MOVE nicht angekündigt wird, ist Verschieben nicht atomar. Bricht die Verbindung mittendrin ab, kann eine Nachricht kurz in beiden Ordnern liegen.",
+    "Die Tarife Business Email und Enterprise Email laufen auf Titan statt auf Hostingers eigener Plattform und nutzen die Titan-Hostnamen. Nehmen Sie die Einstellungen aus Apps und Geräte verbinden für das Postfach, das Sie verbinden."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Hostinger E-Mail?",
+      "a": "Ja, über einen MCP-Server. Claude selbst hat keinen Hostinger-Konnektor. MCPEmails verbindet das Postfach per IMAP, danach kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung nutzen Sie dann in Cursor, ChatGPT und anderen MCP-Clients statt nur in einem."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Hostinger?",
+      "a": "Für Hostinger Email ist IMAP imap.hostinger.com auf Port 993 mit SSL und SMTP smtp.hostinger.com auf Port 465 mit SSL, mit 587 und STARTTLS als dokumentierter Alternative für den Postausgang. Benutzername ist Ihre vollständige E-Mail-Adresse. Beide Server wurden an dem auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Wo finde ich meine Hostinger-E-Mail-Einstellungen im hPanel?",
+      "a": "Öffnen Sie im hPanel E-Mails, klicken Sie neben der Domain auf Verwalten und wählen Sie in der Seitenleiste Apps und Geräte verbinden. Dort gibt es Anleitungen für einzelne Programme und darunter, unter Manuelle Konfiguration, die reinen Servereinstellungen. Angezeigt werden die Werte für die Plattform, auf der Ihr Postfach tatsächlich liegt, was bei einem Titan-Tarif den Unterschied macht."
+    },
+    {
+      "q": "Warum wird mein Hostinger-E-Mail-Passwort abgelehnt?",
+      "a": "Meist, weil Sie die Anmeldedaten Ihres Hostinger-Kontos statt des Passworts der E-Mail-Adresse selbst verwendet haben. Setzen Sie das Postfach-Passwort im hPanel unter E-Mails zurück und probieren Sie dieses. Hat das Postfach die Zwei-Faktor-Authentifizierung aktiv, verlangt Hostinger für Mailprogramme stattdessen ein App-Passwort, und die Ablehnung sieht genauso aus wie ein falsches Passwort."
+    },
+    {
+      "q": "Was, wenn mein Tarif Titan Email nutzt?",
+      "a": "Dann gelten die Hostinger-Hostnamen nicht. Business- und Enterprise-Email-Postfächer auf Titan-Basis nutzen imap.titan.email auf 993 und smtp.titan.email auf 465 oder 587. Nehmen Sie die genauen Werte aus Apps und Geräte verbinden im hPanel oder aus Settings, dann Configure 3rd party apps, im Titan-Webmail."
+    },
+    {
+      "q": "Werden meine Hostinger-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Hostinger abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Hostinger-Postfach",
+    "sub": "Hostinger in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

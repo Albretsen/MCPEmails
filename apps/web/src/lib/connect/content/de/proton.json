@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "https://proton.me/support/smtp-submission",
+    "https://proton.me/support/email-forwarding",
+    "https://proton.me/mail/bridge"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Kein Zugang von außen vorhanden",
+    "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "usernameForm": "Hier gibt es nichts einzutragen. Proton vergibt Zugangsdaten für Mailprogramme nur in Proton Mail Bridge, und sie gelten nur gegenüber Bridge auf dem Rechner, auf dem es läuft.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Proton Mail und Claude: Warum Bridge die Verbindung verhindert",
+    "description": "Proton Mail hat kein IMAP im Internet. IMAP gibt es nur in Proton Mail Bridge, einer kostenpflichtigen Desktop-App auf localhost. Kein gehosteter MCP-Server kommt dorthin. Was stattdessen geht."
+  },
+  "hero": {
+    "eyebrow": "Proton Mail + KI",
+    "titleLine1": "Proton Mail lässt sich nicht",
+    "titleLine2": "mit einem gehosteten MCP-Server verbinden",
+    "lead": "Proton betreibt keinen IMAP-Server im Internet. Das einzige IMAP, das es für ein Proton-Postfach gibt, läuft auf Ihrem eigenen Rechner in Proton Mail Bridge. Deshalb laufen alle gehosteten Tools gegen dieselbe Wand.",
+    "answer": "Nein. Proton Mail stellt keinen IMAP-, POP- oder SMTP-Endpunkt bereit, an dem sich ein Programm von außerhalb anmelden könnte. Ein Mailprogramm erreicht Proton nur über Proton Mail Bridge, eine Desktop-Anwendung für Bezahltarife, die Ihre E-Mails lokal entschlüsselt und IMAP und SMTP auf localhost anbietet, also auf der Loopback-Adresse des Rechners, auf dem sie läuft. Ein gehosteter MCP-Server wie MCPEmails läuft auf unserer Infrastruktur, nicht auf Ihrem Schreibtisch, und nichts im Internet kann Ihren localhost erreichen. Die Verbindung ist also unmöglich, nicht bloß nicht umgesetzt. Wenn Ihr KI-Agent trotzdem mit E-Mails arbeiten soll, die an Ihre Proton-Adresse gehen, bleiben zwei Wege, die wirklich funktionieren: Protons automatische Weiterleitung (nur in Bezahltarifen) in ein Postfach mit echtem IMAP, das MCPEmails kostenlos verbindet, oder Protons reiner SMTP-Versand, nur für ausgehende E-Mails."
+  },
+  "method": {
+    "title": "So verbindet sich Proton Mail: lokal über Bridge, oder gar nicht",
+    "body": "Protons eigene Hilfe ist eindeutig: Mailprogramme von Drittanbietern gehen über <b>Proton Mail Bridge</b>, und POP3 bietet Proton gar nicht an. Bridge läuft unter Windows, macOS und Linux, verwahrt Ihre Schlüssel, entschlüsselt Nachrichten beim Eintreffen auf Ihrem Rechner, verschlüsselt ausgehende E-Mails, bevor sie an Proton gehen, und stellt diese Klartextsicht als gewöhnlichen IMAP- und SMTP-Server auf der Loopback-Schnittstelle bereit. Ihr Mailprogramm meldet sich an diesem lokalen Server mit Zugangsdaten an, die Bridge dafür erzeugt. Diese Zugangsdaten sind nicht Ihr Proton-Passwort und von nirgendwo sonst nutzbar, denn der Server, an dem sie gelten, existiert nur, solange Bridge auf diesem Rechner läuft. Bridge setzt einen Bezahltarif voraus: Proton Mail Plus, Proton Unlimited, Proton Business und höher. Mit Proton Free gibt es keinerlei Zugriff für Mailprogramme."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails-Konto anlegen",
+      "p": "Eine E-Mail-Adresse, keine Kreditkarte. Ein verbundenes Postfach ist dauerhaft kostenlos, und die nächsten beiden Schritte entscheiden, welches Postfach das ist."
+    },
+    {
+      "h": "Das Postfach wählen, das die automatisierte Arbeit trägt",
+      "p": "Nehmen Sie eine Adresse bei einem Anbieter mit echtem IMAP-Server: ein Postfach auf Ihrer Domain, ein Firmenkonto, mailbox.org, Posteo, Fastmail, Migadu, Gmail. Dieses Konto verbindet MCPEmails, und in ihm liest, sendet, sortiert und plant Ihr Agent. Ihre Proton-Adresse bleibt, wie sie ist."
+    },
+    {
+      "h": "Weiterleitungsregel in den Proton-Einstellungen anlegen",
+      "p": "Öffnen Sie in Proton Mail im Browser Einstellungen, dann Alle Einstellungen, dann <b>Weiterleiten und automatisch antworten</b>, und klicken Sie auf Weiterleitungsregel hinzufügen. Wählen Sie die Proton-Adresse, von der weitergeleitet wird, tragen Sie die Zieladresse ein und lassen Sie die Bedingungen leer, um alles weiterzuleiten. Proton schickt der Zieladresse eine Bestätigungs-E-Mail, die angenommen werden muss, bevor etwas fließt. Lesen Sie vorher den nächsten Abschnitt: Eine Weiterleitung an eine Nicht-Proton-Adresse verändert die Verschlüsselung."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT als Konnektor ein, autorisieren Sie den Zugriff, und der Agent arbeitet im verbundenen Postfach, einschließlich der Kopien, die von Proton eintreffen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bridge hängt an localhost, und diese eine Tatsache ist die ganze Blockade",
+      "p": "Bridge lauscht auf der Loopback-Adresse des Rechners, auf dem es läuft. Loopback-Verkehr verlässt diesen Rechner nie. Es gibt also keinen Hostnamen, den ein gehosteter Dienst auflösen, und keinen Port, den er erreichen könnte, egal welche Zugangsdaten er hat. Deshalb bleiben alle gehosteten Assistenten, MCP-Server und Cloud-Automatisierungen bei Proton an exakt derselben Stelle stehen, und deshalb ändert ein Tarif-Upgrade daran nichts."
+    },
+    {
+      "h": "Bridge gibt es nicht für Proton Free",
+      "p": "Wer Proton Free nutzt, lädt Bridge oft erst herunter und merkt es dann. Bridge setzt einen kostenpflichtigen Proton-Mail-Tarif voraus. Mit Proton Free gibt es also keinen unterstützten Weg, irgendein fremdes Mailprogramm zu nutzen, weder lokal noch anderswo. Das gilt für Thunderbird und Apple Mail genauso wie für Automatisierungswerkzeuge."
+    },
+    {
+      "h": "Protons SMTP-Versand sieht nach der Lösung aus und kann keine einzige Nachricht lesen",
+      "p": "Proton bietet in Bezahltarifen mit eigener Domain einen SMTP-Versand an, authentifiziert mit einem Token aus den Einstellungen statt mit Ihrem Kontopasswort. Protons Dokumentation sagt klar, dass er nur zum Senden dient, anders als das IMAP-Protokoll, mit dem Mailprogramme empfangene E-Mails abrufen. Eine Anwendung kann also als Ihre Proton-Adresse senden und sieht die Antwort nie. Für einen Agenten, der einen Thread liest, bevor er antwortet, ist das keine halbe Lösung, sondern keine."
+    },
+    {
+      "h": "Eine Weiterleitung aus Proton heraus schaltet die Ende-zu-Ende-Verschlüsselung für diese Adresse ab",
+      "p": "Proton sagt es selbst: Eine Weiterleitung an eine andere Proton-Adresse bleibt Ende-zu-Ende-verschlüsselt. Wenn Sie an eine Nicht-Proton-Adresse weiterleiten, wird die Ende-zu-Ende-Verschlüsselung für alle E-Mails an und von der Weiterleitungsadresse deaktiviert. Wenn Sie Proton nutzen, weil Proton Ihre E-Mails nicht lesen kann, geben Sie das für die gespiegelten E-Mails auf. Leiten Sie lieber eine bestimmte Korrespondenz weiter als das ganze Postfach, oder gar nichts."
+    }
+  ],
+  "limits": [
+    "Bridge über einen Tunnel oder eine Portweiterleitung ins Internet zu stellen ist keine unterstützte Konfiguration, und wir raten davon ab. Bridge ist dafür gebaut, von einem Programm auf demselben Rechner angesprochen zu werden; eine entschlüsselte Sicht auf Ihr Postfach an einem öffentlichen Port macht den Grund zunichte, aus dem Sie Proton gewählt haben.",
+    "Eine weitergeleitete Kopie ist ein Spiegel, nicht das Postfach. Antworten Ihres Agenten gehen von der anderen Adresse aus, und nichts, was er tut, erscheint in Ihren Proton-Threads, -Ordnern oder -Labels."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Proton Mail?",
+      "a": "Nicht direkt, und über keinen gehosteten MCP-Server. Proton hat keinen IMAP-Endpunkt im Internet, und die lokale Bridge-Anwendung, die IMAP bereitstellt, ist nur von dem Rechner aus erreichbar, auf dem sie läuft. Der gangbare Weg: Leiten Sie die E-Mails, die bearbeitet werden sollen, in ein Postfach weiter, das IMAP spricht, und verbinden Sie dieses."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Proton Mail?",
+      "a": "Es gibt kein öffentliches Paar, das man nennen könnte. Die IMAP- und SMTP-Daten eines Proton-Postfachs erzeugt Proton Mail Bridge auf Ihrem eigenen Rechner und zeigt sie im Bridge-Fenster an; sie zeigen auf die Loopback-Adresse, mit Zugangsdaten, die nur für diese Installation gelten. Jede Einstellungsliste, die einen von außen erreichbaren Proton-IMAP-Hostnamen nennt, ist falsch."
+    },
+    {
+      "q": "Kann ich Proton Mail Bridge mit einem gehosteten MCP-Server nutzen?",
+      "a": "Nein. Bridge bietet IMAP auf localhost an, und localhost ist per Definition nur von dem Rechner aus erreichbar, auf dem Bridge läuft. Ein gehosteter Server steht auf anderer Infrastruktur, ohne Weg zu Ihrer Loopback-Schnittstelle. Das ist eine Netzwerktatsache, keine Regel, die wir aussetzen könnten."
+    },
+    {
+      "q": "Brauche ich einen Bezahltarif von Proton für IMAP?",
+      "a": "Ja. Bridge ist der einzige Weg zu IMAP oder SMTP für ein Proton-Postfach und setzt einen Bezahltarif voraus: Proton Mail Plus, Proton Unlimited, Proton Business oder höher. Proton Free hat gar keinen Zugriff für fremde Mailprogramme, ein kostenloses Konto kann also weder Thunderbird noch Apple Mail noch irgendetwas anderes verbinden."
+    },
+    {
+      "q": "Kann eine KI wenigstens von meiner Proton-Adresse senden?",
+      "a": "Ja, über Protons SMTP-Versand, den es in Bezahltarifen mit eigener Domain gibt und der ein Token aus den Einstellungen verwendet. Er ist reiner Versand. Nichts, was ihn nutzt, kann Ihr Postfach auflisten, lesen oder durchsuchen. Ein Agent könnte also in Ihrem Namen senden, ohne je zu sehen, was angekommen ist."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Bei den Postfächern, die MCPEmails verbindet, werden Nachrichten bei jeder Anfrage live per IMAP abgerufen und an Ihren KI-Client übergeben; Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Proton-Zugangsdaten halten wir gar nicht, weil es keine Proton-Verbindung gibt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Postfach, das sie erreichen kann",
+    "sub": "Proton bleibt privat und unverbunden. Verbinden Sie stattdessen ein IMAP-Postfach mit Ihrem Agenten, dauerhaft kostenlos."
+  }
+}
