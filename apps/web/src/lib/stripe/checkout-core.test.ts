@@ -1517,19 +1517,128 @@ test('the Adaptive Pricing flag defaults on and only explicit off-values disable
 });
 
 // ---------------------------------------------------------------------------
-// Checkout language: German buyers get Stripe's German page, everyone else
-// keeps the English pin.
+// Checkout language: a buyer gets Stripe's page in the language of the page
+// they came from when that language has a deck (de, fr, es, pt, ja, nb), and
+// the English page otherwise.
 //
-// The point is the button. In subscription mode its label follows `locale`
-// and nothing else, and only under 'de' does Stripe write "Zahlungspflichtig
-// abonnieren", the wording §312j BGB asks for. The custom_text beside it must
-// be German too, or the page reads in two languages exactly where the buyer
-// commits to pay.
+// German is the one the law shaped: in subscription mode the button label
+// follows `locale` and nothing else, and only under 'de' does Stripe write
+// "Zahlungspflichtig abonnieren", the wording §312j BGB asks for. In every
+// language the custom_text beside the button must be in that same language,
+// or the page reads in two languages exactly where the buyer commits to pay.
 // ---------------------------------------------------------------------------
 
 const { checkoutLocale } = await import('./checkout-core.ts');
+const { CHECKOUT_LOCALES } = await import('./checkout-locale.ts');
 
 type SubmitText = { submit: { message: string }; after_submit: { message: string } };
+
+/**
+ * What each non-English deck must contain, in its own words: the opening
+ * words of the payment obligation, the reassurance line the pricing page in
+ * that locale shows (checkout-reassurance.mjs), the withdrawal link label,
+ * and the opening of the pass deck.
+ */
+const LOCALE_DECKS = {
+  de: {
+    stripe: 'de',
+    obligation: /^Mit dem Abonnieren verpflichten Sie sich/,
+    reassurance: 'Heute abgebucht. Jederzeit kündbar. 14 Tage volle Erstattung.',
+    withdrawal: 'Widerrufsrecht',
+    pass: /^Einmalige Zahlung\. Personal bis zum \d{1,2}\. [A-Z][a-zä]+ \d{4}\./,
+    afterSubmit: /mcpemails\.com/,
+  },
+  fr: {
+    stripe: 'fr',
+    obligation: /^En vous abonnant, vous vous engagez à payer le prix affiché/,
+    reassurance: "Débité aujourd'hui. Résiliable à tout moment. Remboursable pendant 14 jours.",
+    withdrawal: 'droit de rétractation',
+    pass: /^Paiement unique\. Personal jusqu'au \d{1,2}(er)? [a-zéû]+ \d{4}\./,
+    afterSubmit: /mcpemails\.com/,
+  },
+  es: {
+    stripe: 'es',
+    obligation: /^Al suscribirte, te comprometes a pagar el precio indicado/,
+    reassurance: 'Se cobra hoy. Cancela cuando quieras. Reembolsable durante 14 días.',
+    withdrawal: 'derecho de desistimiento',
+    pass: /^Un solo pago\. Personal hasta el \d{1,2} de [a-z]+ de \d{4}\./,
+    afterSubmit: /mcpemails\.com/,
+  },
+  pt: {
+    stripe: 'pt-BR',
+    obligation: /^Ao assinar, você se compromete a pagar o preço exibido/,
+    reassurance: 'Cobrado hoje. Cancele quando quiser. 14 dias para pedir reembolso.',
+    withdrawal: 'direito de arrependimento',
+    pass: /^Pagamento único\. Personal até \d{1,2} de [a-zç]+ de \d{4}\./,
+    afterSubmit: /mcpemails\.com/,
+  },
+  ja: {
+    stripe: 'ja',
+    obligation: /^登録すると、解約するまで請求期間ごとに表示価格をお支払いいただくことに同意したことになります。/,
+    reassurance: '本日請求されます。いつでも解約できます。14日以内なら返金できます。',
+    withdrawal: '撤回権',
+    pass: /^お支払いは1回のみです。\d{4}年\d{1,2}月\d{1,2}日までPersonalをご利用いただけます。/,
+    afterSubmit: /mcpemails\.com/,
+  },
+  nb: {
+    stripe: 'nb',
+    obligation: /^Når du abonnerer, forplikter du deg til å betale prisen som vises/,
+    reassurance: 'Trekkes i dag. Si opp når som helst. 14 dagers angrerett.',
+    withdrawal: 'angrerett',
+    pass: /^Betales én gang\. Personal til \d{1,2}\. [a-zæøå]+ \d{4}\./,
+    afterSubmit: /mcpemails\.com/,
+  },
+} as const;
+
+const TRANSLATED_LOCALES = Object.keys(LOCALE_DECKS) as Array<keyof typeof LOCALE_DECKS>;
+
+test('the allow-list carries exactly the locales with a deck, and maps /pt to Brazilian Portuguese', () => {
+  assert.deepEqual(Object.keys(CHECKOUT_LOCALES).sort(), ['en', ...TRANSLATED_LOCALES].sort());
+  for (const locale of TRANSLATED_LOCALES) {
+    assert.equal(CHECKOUT_LOCALES[locale], LOCALE_DECKS[locale].stripe, locale);
+  }
+});
+
+test('every translated locale gets its own hosted page, with its own text and legal links beside the button', async () => {
+  for (const locale of TRANSLATED_LOCALES) {
+    const deck = LOCALE_DECKS[locale];
+    const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
+    assert.equal(outcome.kind, 'checkout', locale);
+    assert.equal(sessionsCreated.length, 1, locale);
+    assert.equal(sessionsCreated[0].locale, deck.stripe, locale);
+    const text = sessionsCreated[0].custom_text as SubmitText;
+    const message = text.submit.message;
+    // The payment obligation opens; the reassurance line is the second
+    // sentence, exactly as the pricing page in that locale words it.
+    assert.match(message, deck.obligation, locale);
+    const at = message.indexOf(deck.reassurance);
+    assert.ok(at > 0, `${locale}: carries the reassurance line`);
+    const before = message.slice(0, at);
+    const sentenceEnd = locale === 'ja' ? '。' : '. ';
+    assert.ok(before.endsWith(sentenceEnd), `${locale}: reassurance starts a sentence`);
+    assert.equal(before.split(sentenceEnd).length, 2, `${locale}: reassurance is the second sentence`);
+    // The cancel and withdrawal pages in the buyer's language, as Markdown links.
+    assert.match(message, new RegExp(`\\[mcpemails\\.com/${locale}/cancel\\]\\(http[^)]*/${locale}/cancel\\)`), locale);
+    assert.match(message, new RegExp(`\\[${deck.withdrawal}\\]\\(http[^)]*/${locale}/withdrawal\\)`), locale);
+    assert.match(message, /\b14\b/, locale);
+    assert.match(message, /hello@mcpemails\.com/, locale);
+    assert.match(text.after_submit.message, deck.afterSubmit, locale);
+    for (const part of [message, text.after_submit.message]) {
+      assert.doesNotMatch(part, /—/, `${locale}: no em dashes`);
+      assert.doesNotMatch(part, /[<>]/, locale);
+      assert.doesNotMatch(part, /30 days|30 Tage|30 jours|30 días|30 dias|30日|30 dager|trial|Testphase/i, locale);
+    }
+    assert.ok(message.length <= 1200, `${locale}: Stripe caps custom_text.submit at 1200 characters`);
+  }
+});
+
+test('a pass holder anchored to the pass end is told nothing is charged today, in their language', async () => {
+  const passes = [livePass('a', -10, 80)];
+  const { sessionsCreated } = await checkout({ planId: 'personal', interval: 'year', entitlement: null, passes, locale: 'fr' });
+  const text = (sessionsCreated[0].custom_text as SubmitText).submit.message;
+  assert.match(text, /Rien n'est débité aujourd'hui\. Résiliable à tout moment\. Remboursable pendant 14 jours\./);
+  assert.doesNotMatch(text, /Débité aujourd'hui/);
+});
 
 test('a German buyer gets a German hosted page with German text beside the button', async () => {
   const { outcome, sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale: 'de' });
@@ -1565,21 +1674,25 @@ test('the language changes nothing about what is sold', async () => {
   assert.deepEqual(de.funnelRows, en.funnelRows);
 });
 
-test('a buyer with no language, or any other language, keeps the English page', async () => {
-  for (const locale of [undefined, null, 'en', 'nb', 'fr', 'es', 'zh', '', 'DE', 'de-AT', ['de'], 42]) {
+test('a buyer with no language, or a language without a deck, keeps the English page', async () => {
+  for (const locale of [undefined, null, 'en', 'zh', '', 'DE', 'de-AT', 'pt-BR', 'fr-FR', 'no', ['de'], 42]) {
     const { sessionsCreated } = await checkout({ planId: 'personal', entitlement: null, locale });
     assert.equal(sessionsCreated[0].locale, 'en', JSON.stringify(locale));
     const text = sessionsCreated[0].custom_text as SubmitText;
     assert.match(text.submit.message, /^By subscribing you agree to pay the price shown/);
-    assert.match(text.submit.message, /\(http[^)]*\/cancel\)/);
-    assert.doesNotMatch(text.submit.message, /\/de\//);
+    assert.match(text.submit.message, /\[mcpemails\.com\/cancel\]\(http[^)]*\/cancel\)/);
+    assert.match(text.submit.message, /\[right of withdrawal\]\(http[^)]*\/withdrawal\)/);
+    assert.doesNotMatch(text.submit.message, /\/(de|fr|es|pt|ja|nb)\//);
     assert.equal(text.after_submit.message, 'Taking you back to mcpemails.com to connect your inboxes.');
   }
 });
 
-test('the locale allow-list maps exactly "de" to German and everything else to English', () => {
-  assert.equal(checkoutLocale('de'), 'de');
-  for (const value of [undefined, null, 'en', 'nb', 'DE', ' de', 'de-DE', ['de'], { de: true }, 1]) {
+test('the locale allow-list maps each site locale exactly, and everything else to English', () => {
+  for (const locale of ['en', ...TRANSLATED_LOCALES]) {
+    assert.equal(checkoutLocale(locale), locale);
+  }
+  // Never a Stripe code, a region tag, other casing, whitespace, or a non-string.
+  for (const value of [undefined, null, 'zh', 'xx', 'DE', 'FR', ' de', 'de-DE', 'pt-BR', 'nb-NO', 'no', 'constructor', ['de'], { de: true }, 1]) {
     assert.equal(checkoutLocale(value), 'en', JSON.stringify(value));
   }
 });
@@ -2430,6 +2543,30 @@ test('the hosted page states the end date, that nothing renews, and the 14-day r
   const deText = de.custom_text as SubmitText;
   assert.match(deText.submit.message, /^Einmalige Zahlung\. Personal bis zum \d{1,2}\. [A-Z][a-zä]+ \d{4}\./);
   assert.match(deText.submit.message, /14 Tagen: \[Widerrufsrecht\]\(http[^)]*\/de\/withdrawal\)/);
+});
+
+test('the pass page is in the buyer\'s language too, with the end date in that language\'s own form', async () => {
+  for (const locale of TRANSLATED_LOCALES) {
+    const deck = LOCALE_DECKS[locale];
+    const session = (await passCheckout({ locale })).sessionsCreated[0];
+    assert.equal(session.locale, deck.stripe, locale);
+    const text = session.custom_text as SubmitText;
+    assert.match(text.submit.message, deck.pass, locale);
+    assert.match(text.submit.message, new RegExp(`\\b14\\b[^[]*\\[${deck.withdrawal}\\]\\(http[^)]*/${locale}/withdrawal\\)`), locale);
+    assert.match(text.submit.message, /hello@mcpemails\.com/, locale);
+    assert.match(text.after_submit.message, deck.afterSubmit, locale);
+    for (const part of [text.submit.message, text.after_submit.message]) {
+      assert.doesNotMatch(part, /—/, locale);
+      assert.doesNotMatch(part, /[<>]/, locale);
+      assert.doesNotMatch(part, /30 days|30 Tage|30 jours|30 días|30 dias|30日|30 dager|trial|Testphase/i, locale);
+    }
+    assert.ok(text.submit.message.length <= 1200, locale);
+  }
+  for (const locale of ['zh', 'pt-BR', undefined]) {
+    const session = (await passCheckout({ locale })).sessionsCreated[0];
+    assert.equal(session.locale, 'en', String(locale));
+    assert.match((session.custom_text as SubmitText).submit.message, /^Paid once\. Personal until /, String(locale));
+  }
 });
 
 test('an entitled subscriber is refused with already_subscribed, in every entitled status', async () => {

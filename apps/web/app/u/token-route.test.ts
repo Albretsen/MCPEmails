@@ -420,12 +420,15 @@ test('a workspace the owner no longer owns ends the link, the core is never aske
 
 // ── Language ───────────────────────────────────────────────────────────────
 
-test('the hosted page is German for a German workspace or browser, English otherwise', async () => {
+test('the hosted page follows the workspace language, then the browser, English otherwise', async () => {
   const cases: Array<[string | null, string | undefined, string]> = [
     ['de', undefined, 'de'],
     [null, 'de-DE,de;q=0.9,en;q=0.8', 'de'],
     [null, 'en-US,de;q=0.5', 'en'],
-    ['nb', 'nb-NO', 'en'],
+    ['nb', 'nb-NO', 'nb'],
+    ['fr', 'en-US', 'fr'],
+    [null, 'es-ES,es;q=0.9', 'es'],
+    ['zh', 'zh-CN', 'en'],
     [null, undefined, 'en'],
   ];
   for (const [acquisition, header, expected] of cases) {

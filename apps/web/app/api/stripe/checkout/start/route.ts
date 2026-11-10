@@ -17,8 +17,9 @@ import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
  * on the billing screen with `checkout_error=pass_unavailable`.
  *
  * `lang` is the language the buyer was reading (the marketing page's locale,
- * or the dashboard's). Only 'de' changes anything: it shows the hosted page in
- * German. It survives the /login bounce below with the rest of the query.
+ * or the dashboard's). A locale with a deck in src/lib/stripe/checkout-locale.ts
+ * shows the hosted page in that language; anything else is English. It
+ * survives the /login bounce below with the rest of the query.
  *
  * The buy button's destination. One request in, a 303 to Stripe out.
  *
