@@ -20,7 +20,7 @@ Sie fügen nie eine Postfach-ID in einen Prompt ein. Der Agent ruft \`inbox_list
 
 Zwei Details lohnen sich zu kennen:
 
-- **Die Erkennung ist kostenlos.** \`inbox_list\` zählt nie als E-Mail-Aktion, ein Agent kann sich also jederzeit neu orientieren.
+- **Die Erkennung ist kostenlos.** \`inbox_list\` wird nie gezählt, ein Agent kann sich also jederzeit neu orientieren.
 - **Widersprüchliche Angaben werden abgelehnt, nicht geraten.** Ein Aufruf mit einer \`inbox_id\` für ein Postfach und einer \`inbox\`-Adresse für ein anderes wird abgelehnt, und der Fehler nennt beide. Die übliche Ursache ist eine veraltete ID aus einem früheren Teil der Unterhaltung. Sagen Sie dem Agenten, er soll es allein mit der Adresse erneut versuchen.
 
 ## Eine Anfrage auf ein Postfach eingrenzen
@@ -37,7 +37,7 @@ Das ist der Teil, den viele falsch verstehen: **Ein Aufruf erreicht ein Postfach
 
 - Lassen Sie ihn zuerst \`inbox_list\` aufrufen, oder sagen Sie, wie viele Konten Sie haben. Geht er von einem aus, berichtet er selbstbewusst über eines.
 - Bitten Sie um eine zusammengeführte Antwort („eine kombinierte Liste, markiert mit dem Konto, aus dem jeder Eintrag stammt“), sonst bekommen Sie drei getrennte Berichte.
-- Das Volumen wächst mit der Zahl der Postfächer. Eine Triage über drei Postfächer sind mindestens drei E-Mail-Aktionen, nicht eine.
+- Das Volumen wächst mit der Zahl der Postfächer. Eine Triage über drei Postfächer sind mindestens drei Aufrufe, nicht einer.
 
 ## Namen und Absenderidentität
 
@@ -91,11 +91,11 @@ Gemischte Einrichtungen sind der Normalfall, und die Anbieter sind sich nicht ei
 Verbundene Postfächer sind das, wonach die Tarife bemessen sind:
 
 - **Free** verbindet ein Postfach.
-- **Personal** verbindet mehrere Postfächer, mit unbegrenzten E-Mail-Aktionen und bevorzugtem Support per E-Mail.
-- **Pro** verbindet noch mehr Postfächer und hält die Auswertungen länger vor.
-- **Business** enthält ein Kontingent an Postfächern mit weiteren gegen Aufpreis, unbegrenzt viele Mitglieder mit Rollen ohne Mehrkosten, Admins, die angehaltene Sendungen freigeben, und einen eigenen Workspace pro Kunde oder Unternehmen.
+- **Personal** verbindet mehrere Postfächer für eine Person, mit höherem Burst-Ratenlimit und bevorzugtem Support per E-Mail.
+- **Pro** verbindet noch mehr Postfächer für eine Person, die ein Unternehmen führt, mit noch höherem Burst-Ratenlimit, längerem Analyseverlauf und Webhooks für neue E-Mails.
+- **Business** enthält ein Kontingent an Postfächern mit einem Preis pro weiterem Postfach, unbegrenzt viele Mitglieder mit Rollen ohne Mehrkosten, Admins, die angehaltene Sendungen freigeben, und einen eigenen Workspace pro Kunde oder Unternehmen.
 
-Eine kontoübergreifende Routine kostet eine Aktion pro Postfach, die Zahl Ihrer Postfächer bestimmt das Volumen also genauso wie Ihre Gewohnheiten. Die aktuellen Zahlen und Preise stehen auf der [Preisseite](/pricing).
+Eine kontoübergreifende Routine ist ein Aufruf pro Postfach, die Zahl Ihrer Postfächer bestimmt das Volumen also genauso wie Ihre Gewohnheiten. Die aktuellen Zahlen und Preise stehen auf der [Preisseite](/pricing).
 
 ## FAQ
 
