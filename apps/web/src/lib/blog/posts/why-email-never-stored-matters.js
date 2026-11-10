@@ -67,7 +67,7 @@ If you want the deeper mechanics of the credential model (OAuth tokens versus ap
 
 Never-stored isn't free. There's a real cost, and I'd rather name it than pretend it away.
 
-Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) (Gmail operators, Outlook KQL, IMAP text search), which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And push is limited: we're not watching a synced copy, so an agent in a chat reacts to new mail by polling (for example, \`email_read\` with action \`list\` and \`unread: true\` on a schedule). For your own code, Pro and Business workspaces can add a new-mail webhook, and what it carries is message IDs, not mail.
+Because we don't hold a local index, search runs against your provider's search every time. You get [provider-native search](/docs) (Gmail operators, Outlook KQL, IMAP text search), which is powerful, but it's their latency and their query semantics, not a custom index tuned by us. And push is limited: we're not watching a synced copy, so an agent in a chat reacts to new mail by polling (for example, \`email_read\` with action \`list\` and \`unread: true\` on a schedule). For your own code, Pro and Business workspaces can add a new-mail webhook, and what it carries is message IDs, never the message body.
 
 For most people that's an easy trade. Slightly slower search and a polling loop, in exchange for never creating a second copy of your most sensitive data. I'll take that.
 

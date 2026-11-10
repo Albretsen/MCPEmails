@@ -108,7 +108,7 @@ The agent runs \`inbox_list\`, then \`email_read\` with action \`list\` and \`un
 
 It calls \`email_compose\` with action \`reply\`, threading is handled, and the reply leaves through my own Gmail, so it lands from my address with my domain's reputation. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
 
-One limitation: the MCP tools never call you. If you want the agent to react to incoming messages, you poll, with \`email_read\` with action \`list\` and \`unread: true\` on a schedule, or you let a new-mail webhook wake your code (Pro and Business workspaces add one under API Keys in the dashboard, and it posts the message IDs to your URL). Either way it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
+One limitation: the MCP tools never call you. If you want the agent to react to incoming messages, you poll, calling \`email_read\` with action \`list\` and \`unread: true\` on a schedule, or you let a new-mail webhook wake your code (Pro and Business workspaces add one under API Keys in the dashboard, and it posts the message IDs to your URL). Either way it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Rate limits for scripted access
 

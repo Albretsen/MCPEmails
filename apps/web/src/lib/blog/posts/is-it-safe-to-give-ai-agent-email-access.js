@@ -41,7 +41,7 @@ Here's how MCPEmails handles each risk. I'm biased (I built it), but the design 
 
 **Credentials are AES-256-GCM encrypted at rest.** Your app password or OAuth token is encrypted before it touches the database. It's decrypted on our servers only when a request needs it, and it's never sent to your agent. The encryption key is kept as a server secret, separate from the database, so a database dump alone is useless. This is the one piece of your data we persist, and it's the piece we treat most carefully.
 
-**Scopes are minimal by design.** When you connect an agent, the consent screen offers **Read-only**, **Standard** and **Full access**, plus a custom card where each of the nine permissions (read, search, send, folders, delete, drafts, contacts, scheduling, automations) is its own switch. Want an agent that summarizes but can never send? Pick Read-only, and \`send:email\` is never issued. Even Full access is a named list you can see on the screen, not a blank cheque. If you're weighing how agents authenticate, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) breaks down which to use when.
+**Scopes are minimal by design.** When you connect an agent, the consent screen offers **Read-only**, **Standard** and **Full access**, plus a custom card where each of the nine permissions (read, search, send, folders, delete, drafts, contacts, scheduling, automations) is its own switch. Want an agent that summarizes but can never send? Pick Read-only, and \`send:email\` is never issued. Even Full access is a named list you can see on the screen, not a blank check. If you're weighing how agents authenticate, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) breaks down which to use when.
 
 **Sending goes through your own provider.** When the agent sends mail, it goes out through your Gmail, your Microsoft 365, or your own SMTP server. We never relay messages from our domain. Your sender reputation and deliverability stay entirely yours, and there's no shared IP pool to poison.
 
@@ -62,7 +62,7 @@ If a tool clears all six, the residual risk is small and manageable. If it fails
 
 ## A note on what we don't do
 
-Two limitations worth stating plainly. An agent in a chat is not pinged when mail arrives; it checks on a schedule. The one push we offer is a signed new-mail webhook to a URL you own, on Pro and Business, and it carries message IDs, not mail. Second, we can't protect you from an agent you've over-trusted. If you give an autonomous agent send access and zero review, prompt injection is a real risk, and that's on the setup, not the transport. Scope it down and keep a human on the irreversible stuff.
+Two limitations worth stating plainly. First, an agent in a chat is not pinged when mail arrives; it checks on a schedule. The one push we offer is a signed new-mail webhook to a URL you own, on Pro and Business, and it carries message IDs, never the message body. Second, we can't protect you from an agent you've over-trusted. If you give an autonomous agent send access and zero review, prompt injection is a real risk, and that's on the setup, not the transport. Scope it down and keep a human on the irreversible stuff.
 
 ## So, is it safe?
 
