@@ -333,6 +333,7 @@ import {
   loginRefusedAt,
   loginRefusedMarker,
 } from "./inbox-health.ts";
+import { authFailedText } from "./auth-failed-text.ts";
 import {
   AUTOMATION_CARD_TOOL,
   AUTOMATION_CARD_TOOL_DEFINITION,
@@ -1115,7 +1116,8 @@ interface ToolErrorResult {
 }
 
 /**
- * Standard tool result for an expired/revoked inbox token. The text is written
+ * Standard tool result for a refused sign-in: an expired/revoked OAuth token,
+ * or a password the mail server refused (see auth-failed-text.ts). The text is written
  * for the calling agent: it names the failed action, explains the cause, and
  * gives a single clickable reconnect link the agent can relay to the user.
  *
@@ -1130,11 +1132,7 @@ function authFailedResult(
     result: {
       content: [{
         type: "text",
-        text:
-          `Unable to ${action} the ${provider} inbox: its OAuth token has been ` +
-          `revoked or expired, so the inbox has been marked 'error'. Ask the user ` +
-          `to reconnect it by opening this link in their browser (they may need ` +
-          `to sign in to MCPEmails first): ${reconnectUrl(provider, inboxId)}`,
+        text: authFailedText(provider, action, reconnectUrl(provider, inboxId)),
       }],
       isError: true,
     },

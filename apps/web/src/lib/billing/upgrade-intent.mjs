@@ -32,8 +32,8 @@ export function upgradeDestination(planId, annual) {
  *
  * `locale` is the language the buyer is reading. A supported locale other than
  * English rides along as `&lang=`, and the route decides what to do with it
- * (today only German changes the hosted page). English and anything unknown
- * add nothing, so English links are unchanged.
+ * (the hosted page follows it where checkout-locale.ts has a deck). English
+ * and anything unknown add nothing, so English links are unchanged.
  */
 export function checkoutStartHref(planId, annual, locale) {
   const href = `/api/stripe/checkout/start?plan=${planId}&interval=${annual ? 'year' : 'month'}`;

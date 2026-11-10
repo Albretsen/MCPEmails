@@ -6429,8 +6429,8 @@ function BillingSection({
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // The buyer's language picks the hosted page's (German is the only
-        // one that changes it, see checkout-core). Read at call time, not
+        // The buyer's language picks the hosted page's (the locales with a
+        // deck in checkout-locale.ts, else English). Read at call time, not
         // from `locale`: the ?upgrade= effect below calls this on mount,
         // before the provider has resolved the stored choice into context.
         body: JSON.stringify({ planId, interval: checkoutInterval, locale: preferredAppLocale() }),

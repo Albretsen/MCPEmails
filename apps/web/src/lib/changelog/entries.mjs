@@ -44,6 +44,20 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-09',
+    kind: 'fixed',
+    title: 'Clearer message when a mail server refuses a password',
+    body:
+      "When an IMAP or Fastmail server refuses an inbox's password, your AI assistant now says so. Before, it said an OAuth token had expired, even for mailboxes that sign in with a password.",
+  },
+  {
+    date: '2026-11-07',
+    kind: 'improved',
+    title: 'See which account you are signed in to',
+    body:
+      "Signing in with Google now asks which Google account to use, and the dashboard shows your email under your name. Before, two accounts with the same name looked identical.",
+  },
+  {
     date: '2026-11-07',
     kind: 'improved',
     title: 'See which account you are signed in to',
