@@ -63,8 +63,8 @@
     "infoRateLimits": "速率限制：每个密钥有<b>每分钟、每小时和每天的窗口</b>，按你的套餐确定大小，另加套餐的工作区上限",
     "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>，成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
-    "pollingHeading": "轮询，而非推送",
-    "pollingBody": "MCP 工具采用请求/响应模式：每个结果都来自你的智能体发起的工具调用，收到新邮件本身绝不会触发调用。要对新邮件作出响应，最简单的方式是<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread: true</code>（注意上面的速率限制）。如果你需要推送，Pro 和 Business 工作区可以在仪表盘的 API 密钥下添加一个 <b>webhook</b>：收到新邮件时，MCPEmails 会向你的 URL 发送一个带签名的 POST，其中携带消息 ID（可选附带发件人和主题），绝不包含邮件正文，你的代码再用 <code>email_read</code> 打开它们。"
+    "pollingHeading": "轮询，Pro 和 Business 另有 Webhook",
+    "pollingBody": "MCP 工具采用请求/响应模式：每个结果都来自你的智能体发起的工具调用，收到新邮件本身绝不会触发调用。要对新邮件作出响应，最简单的方式是<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread: true</code>（注意上面的速率限制）。如果你需要推送，Pro 和 Business 工作区可以在仪表盘的 API 密钥下添加一个 <b>Webhook</b>：收到新邮件时，MCPEmails 会向你的 URL 发送一个带签名的 POST，其中携带消息 ID（可选附带发件人和主题），绝不包含邮件正文，你的代码再用 <code>email_read</code> 打开它们。"
   },
   "operations": {
     "eyebrow": "为真实的收件箱工作而建",

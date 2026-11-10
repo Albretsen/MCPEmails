@@ -63,7 +63,7 @@
     "infoRateLimits": "Ratenlimits: <b>Minuten-, Stunden- und Tagesfenster pro Schlüssel</b>, bemessen nach Ihrem Tarif, dazu die Obergrenze des Tarifs für den Workspace",
     "infoFormat": "Antwortformat: <b>JSON-RPC 2.0</b>. Erfolgreiche Ergebnisse enthalten zusätzlich ein typisiertes <code>structuredContent</code>-Objekt",
     "handshakeLabel": "Initialize-Handshake",
-    "pollingHeading": "Abfragen statt Push",
+    "pollingHeading": "Abfragen, plus Webhook bei Pro und Business",
     "pollingBody": "Die MCP-Tools arbeiten nach Anfrage und Antwort: Jedes Ergebnis stammt aus einem Tool-Aufruf Ihres Agenten, und eine eingehende E-Mail löst nie von selbst einen Aufruf aus. Am einfachsten reagieren Sie auf neue E-Mails, indem Ihr Agent in festen Abständen <b>abfragt</b>, z. B. <code>email_read</code> mit <code>action: \"list\"</code> und <code>unread: true</code> in dem Intervall, das Ihr Workflow braucht (beachten Sie die Ratenlimits oben). Wenn Sie Push möchten, können Pro- und Business-Workspaces unter API-Schlüssel im Dashboard einen <b>Webhook</b> anlegen: MCPEmails sendet einen signierten POST an Ihre URL, wenn neue E-Mails ankommen, mit Nachrichten-IDs (auf Wunsch auch Absender und Betreff), nie mit dem Nachrichtentext, und Ihr Code öffnet sie mit <code>email_read</code>."
   },
   "operations": {
