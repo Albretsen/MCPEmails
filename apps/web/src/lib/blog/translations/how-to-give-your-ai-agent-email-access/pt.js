@@ -109,7 +109,7 @@ Os planos são precificados por caixas conectadas. As chaves de API são ilimita
 - **Free.** Sem cartão, para sempre. Uma caixa conectada, análises de uso, central de ajuda e suporte por e-mail.
 - **Personal.** Mais caixas para uma pessoa, limite de pico maior, histórico de análises mais longo, suporte prioritário por e-mail.
 - **Pro.** Para uma pessoa que toca um negócio: ainda mais caixas, limite de pico maior ainda, anos de histórico de análises e webhooks de e-mail novo.
-- **Business.** Tudo do Pro, mais um bloco de caixas incluídas com preço por caixa acima dele, membros ilimitados com papéis, administradores que aprovam envios retidos e um espaço de trabalho separado por cliente ou empresa.
+- **Business.** Tudo do Pro, mais um conjunto de caixas incluídas e um valor por caixa extra, membros ilimitados com papéis, administradores que aprovam envios retidos e um espaço de trabalho separado por cliente ou empresa.
 
 Os preços e o número de caixas atuais estão na [página de preços](/pricing).
 

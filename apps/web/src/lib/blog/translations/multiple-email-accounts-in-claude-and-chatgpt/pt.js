@@ -85,7 +85,7 @@ Ative **Revisar antes de enviar** em qualquer caixa e todo envio, resposta, enca
 - **Free:** uma caixa de e-mail.
 - **Personal:** algumas caixas de e-mail, para uma pessoa.
 - **Pro:** mais caixas de e-mail, ainda em um único login.
-- **Business:** um bloco de caixas incluídas com preço por caixa acima dele, e para quando uma segunda pessoa precisa de um login próprio.
+- **Business:** um conjunto de caixas incluídas e um valor por caixa extra, e para quando uma segunda pessoa precisa de um login próprio.
 
 Uma empresa com contato@, vendas@ e notasfiscais@ mais o seu próprio endereço são quatro caixas, o que coloca você no Pro. O número de caixas e os preços atuais estão na [página de preços](/pricing), e [MCPEmails para empresas](/for/business) mostra como uma pessoa administra todas as caixas da empresa a partir de um único agente.
 
