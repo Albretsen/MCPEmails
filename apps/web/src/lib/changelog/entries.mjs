@@ -44,6 +44,27 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-10',
+    kind: 'added',
+    title: 'Setup guides for Italian, Czech and Polish mail providers',
+    body:
+      "New connect guides for Aruba, Aruba PEC, Legalmail and Poste PEC, Libero and Virgilio, TIM, Tiscali, Centrum, Atlas and Volný, and Gazeta.pl, with updated Onet, WP and Interia guides. When you connect a mailbox from one of these providers, MCPEmails now fills in the server settings and shows the provider's own steps if the sign-in is refused.",
+  },
+  {
+    date: '2026-11-10',
+    kind: 'added',
+    title: 'More guides and articles in German, Brazilian Portuguese and Japanese',
+    body:
+      "New German connect guides for Proton, Infomaniak, mail.com, AOL, Hostinger, GoDaddy, Titan, mailcow, Plesk and Open-Xchange, and the GMX, WEB.DE, T-Online, iCloud, STRATO and IONOS guides are rewritten with a troubleshooting section. Brazilian Portuguese and Japanese get guides for cPanel, Plesk, Zimbra, Synology and other mail servers and hosting panels, and eleven more blog articles are available in each of the three languages.",
+  },
+  {
+    date: '2026-11-10',
+    kind: 'fixed',
+    title: 'German, Portuguese and Japanese pages fully in their language',
+    body:
+      "The connect page categories, blog tags, author line and sign-in tab title showed English on the German, Brazilian Portuguese and Japanese versions of the site. They now appear in the language of the page, and the ChatGPT setup steps in those languages use the menu labels ChatGPT itself shows.",
+  },
+  {
     date: '2026-11-09',
     kind: 'fixed',
     title: 'Clearer message when a mail server refuses a password',
