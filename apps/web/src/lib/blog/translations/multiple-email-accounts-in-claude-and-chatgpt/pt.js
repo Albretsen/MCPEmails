@@ -59,8 +59,8 @@ Todas as caixas que você conectou estão disponíveis agora. O [guia do Claude]
 
 O ChatGPT Go e os planos pagos podem adicionar um servidor MCP personalizado em chatgpt.com no navegador; o app para celular não consegue. No Business e no Enterprise, um administrador ou proprietário pode precisar adicioná-lo.
 
-1. Abra **Plugins**, depois **Personal** (Pessoal), clique em **Add** (Adicionar) no canto superior direito e escolha **Add custom MCP server** (Adicionar servidor MCP personalizado).
-2. Dê o nome MCPEmails, cole \`https://mcpemails.com/api/mcp\` em **Connection** (Conexão), escolha **OAuth**, marque **I understand and want to continue** (Entendo e quero continuar) e clique em **Create as a plugin** (Criar como plugin).
+1. Abra **Plugins**, depois **Personal** (Pessoal), clique em **Add** (Adicionar) no canto superior direito e escolha **Adicionar servidor MCP personalizado**.
+2. Dê o nome MCPEmails, cole \`https://mcpemails.com/api/mcp\` em **Conexão**, escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.
 3. Faça login com o MCPEmails e aprove.
 4. Em um chat, digite **@** e escolha MCPEmails. A escolha vale para aquela mensagem, então mencione com @ de novo quando uma mensagem seguinte precisar do seu e-mail.
 
