@@ -181,22 +181,44 @@ import t168 from './daily-email-briefing-with-claude-and-chatgpt/pt';
 import t169 from './daily-email-briefing-with-claude-and-chatgpt/ja';
 import t170 from './multiple-email-accounts-in-claude-cowork/pt';
 import t171 from './multiple-email-accounts-in-claude-cowork/ja';
-import t172 from './connect-yahoo-mail-to-chatgpt-and-claude/ja';
-import t173 from './email-signatures-for-claude/ja';
-import t174 from './extract-email-attachments-for-ai/ja';
-import t175 from './chatgpt-icloud-mail-plugin/ja';
-import t176 from './best-ways-to-let-claude-manage-your-inbox/ja';
-import t177 from './is-it-safe-to-give-ai-agent-email-access/ja';
-import t178 from './connect-chatgpt-to-outlook-com-hotmail/ja';
-import t179 from './manage-multiple-email-accounts-with-ai/ja';
-import t180 from './inbox-zero-with-ai-claude/ja';
-import t181 from './how-to-give-your-ai-agent-email-access/ja';
-import t182 from './prevent-duplicate-ai-agent-email-sends/ja';
+import t172 from './connect-yahoo-mail-to-chatgpt-and-claude/pt';
+import t173 from './email-signatures-for-claude/pt';
+import t174 from './extract-email-attachments-for-ai/pt';
+import t175 from './chatgpt-icloud-mail-plugin/pt';
+import t176 from './best-ways-to-let-claude-manage-your-inbox/pt';
+import t177 from './is-it-safe-to-give-ai-agent-email-access/pt';
+import t178 from './connect-chatgpt-to-outlook-com-hotmail/pt';
+import t179 from './manage-multiple-email-accounts-with-ai/pt';
+import t180 from './inbox-zero-with-ai-claude/pt';
+import t181 from './how-to-give-your-ai-agent-email-access/pt';
+import t182 from './prevent-duplicate-ai-agent-email-sends/pt';
+import t183 from './connect-yahoo-mail-to-chatgpt-and-claude/de';
+import t184 from './email-signatures-for-claude/de';
+import t185 from './extract-email-attachments-for-ai/de';
+import t186 from './chatgpt-icloud-mail-plugin/de';
+import t187 from './best-ways-to-let-claude-manage-your-inbox/de';
+import t188 from './is-it-safe-to-give-ai-agent-email-access/de';
+import t189 from './connect-chatgpt-to-outlook-com-hotmail/de';
+import t190 from './manage-multiple-email-accounts-with-ai/de';
+import t191 from './inbox-zero-with-ai-claude/de';
+import t192 from './how-to-give-your-ai-agent-email-access/de';
+import t193 from './prevent-duplicate-ai-agent-email-sends/de';
+import t194 from './connect-yahoo-mail-to-chatgpt-and-claude/ja';
+import t195 from './email-signatures-for-claude/ja';
+import t196 from './extract-email-attachments-for-ai/ja';
+import t197 from './chatgpt-icloud-mail-plugin/ja';
+import t198 from './best-ways-to-let-claude-manage-your-inbox/ja';
+import t199 from './is-it-safe-to-give-ai-agent-email-access/ja';
+import t200 from './connect-chatgpt-to-outlook-com-hotmail/ja';
+import t201 from './manage-multiple-email-accounts-with-ai/ja';
+import t202 from './inbox-zero-with-ai-claude/ja';
+import t203 from './how-to-give-your-ai-agent-email-access/ja';
+import t204 from './prevent-duplicate-ai-agent-email-sends/ja';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
   'ai-agent-triage-summarize-inbox': { es: t4, fr: t5, nb: t6, zh: t7 },
-  'best-ways-to-let-claude-manage-your-inbox': { es: t8, fr: t9, nb: t10, zh: t11, ja: t176 },
+  'best-ways-to-let-claude-manage-your-inbox': { es: t8, fr: t9, nb: t10, zh: t11, pt: t176, de: t187, ja: t198 },
   'build-email-auto-responder-mcp-agent': { es: t12, fr: t13, nb: t14, zh: t15 },
   'claude-imap-connector': { es: t75, fr: t76, nb: t77, zh: t78, de: t104, pt: t142, ja: t143 },
   'connect-email-to-ai-agent-under-2-minutes': { fr: t16, nb: t17, zh: t18, de: t107, pt: t144, ja: t145 },
@@ -205,17 +227,17 @@ const TRANSLATIONS = {
   'connect-icloud-fastmail-imap-to-claude': { es: t23, fr: t24, nb: t25, zh: t26 },
   'connect-outlook-microsoft-365-ai-agent-mcp': { es: t27, fr: t28, nb: t29, zh: t30 },
   'email-for-ai-agents-cursor-cline-vscode': { es: t31, fr: t32, nb: t33, zh: t34, de: t109, pt: t150, ja: t151 },
-  'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70, ja: t173 },
+  'email-signatures-for-claude': { es: t67, fr: t68, nb: t69, zh: t70, pt: t173, de: t184, ja: t195 },
   'give-your-ai-agent-an-inbox': { es: t35, fr: t36, nb: t37, zh: t38 },
   'hosted-vs-self-hosted-gmail-mcp-server': { es: t39, fr: t40, nb: t41, zh: t42 },
-  'how-to-give-your-ai-agent-email-access': { es: t43, fr: t44, nb: t45, zh: t46, ja: t181 },
-  'inbox-zero-with-ai-claude': { es: t47, fr: t48, nb: t49, zh: t50, ja: t180 },
-  'is-it-safe-to-give-ai-agent-email-access': { es: t51, fr: t52, nb: t53, zh: t54, ja: t177 },
+  'how-to-give-your-ai-agent-email-access': { es: t43, fr: t44, nb: t45, zh: t46, pt: t181, de: t192, ja: t203 },
+  'inbox-zero-with-ai-claude': { es: t47, fr: t48, nb: t49, zh: t50, pt: t180, de: t191, ja: t202 },
+  'is-it-safe-to-give-ai-agent-email-access': { es: t51, fr: t52, nb: t53, zh: t54, pt: t177, de: t188, ja: t199 },
   'oauth-vs-api-keys-ai-email-access': { es: t55, fr: t56, nb: t57, zh: t58 },
   'what-is-an-mcp-email-server': { es: t59, fr: t60, nb: t61, zh: t62 },
   'why-email-never-stored-matters': { es: t63, fr: t64, nb: t65, zh: t66 },
   'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82, de: t105, pt: t152, ja: t153 },
-  'manage-multiple-email-accounts-with-ai': { es: t83, fr: t84, nb: t85, zh: t86, ja: t179 },
+  'manage-multiple-email-accounts-with-ai': { es: t83, fr: t84, nb: t85, zh: t86, pt: t179, de: t190, ja: t201 },
   'automated-email-triage-rules': { es: t87, fr: t88, nb: t89, zh: t90 },
   'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
   'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
@@ -228,11 +250,11 @@ const TRANSLATIONS = {
   'connect-claude-to-apple-mail': { es: t130, fr: t131, nb: t132, de: t133, pt: t166, ja: t167 },
   'daily-email-briefing-with-claude-and-chatgpt': { es: t134, fr: t135, nb: t136, de: t137, pt: t168, ja: t169 },
   'multiple-email-accounts-in-claude-cowork': { es: t138, fr: t139, nb: t140, de: t141, pt: t170, ja: t171 },
-  'connect-yahoo-mail-to-chatgpt-and-claude': { ja: t172 },
-  'extract-email-attachments-for-ai': { ja: t174 },
-  'chatgpt-icloud-mail-plugin': { ja: t175 },
-  'connect-chatgpt-to-outlook-com-hotmail': { ja: t178 },
-  'prevent-duplicate-ai-agent-email-sends': { ja: t182 },
+  'connect-yahoo-mail-to-chatgpt-and-claude': { pt: t172, de: t183, ja: t194 },
+  'extract-email-attachments-for-ai': { pt: t174, de: t185, ja: t196 },
+  'chatgpt-icloud-mail-plugin': { pt: t175, de: t186, ja: t197 },
+  'connect-chatgpt-to-outlook-com-hotmail': { pt: t178, de: t189, ja: t200 },
+  'prevent-duplicate-ai-agent-email-sends': { pt: t182, de: t193, ja: t204 },
 };
 
 export default TRANSLATIONS;
