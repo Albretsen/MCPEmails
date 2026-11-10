@@ -26,7 +26,7 @@ Cursor prend en charge OAuth 2.0 pour les serveurs MCP, ce qui est le chemin san
 
 1. Ouvrez les paramètres de Cursor et trouvez la section des serveurs MCP.
 2. Ajoutez un nouveau serveur avec l’URL \`https://www.mcpemails.com/api/mcp\`.
-3. Cursor ouvre une fenêtre de navigateur. Connectez-vous à votre compte MCPEmails et approuvez les scopes que vous voulez donner à l’agent — \`read:email\`, \`send:email\`, ou les deux.
+3. Cursor ouvre une fenêtre de navigateur. Connectez-vous à votre compte MCPEmails et approuvez les scopes que vous voulez donner à l’agent (\`read:email\`, \`send:email\`, ou les deux).
 4. La connexion passe au vert et les outils d’e-mail apparaissent dans la liste d’outils de Cursor.
 
 En coulisses, c’est OAuth 2.0 authorization code avec PKCE, et le jeton détenu par Cursor est limité exactement à ce que vous avez approuvé. Si vous n’avez accordé que \`read:email\`, l’agent ne peut littéralement pas envoyer. Quand vous avez terminé, révoquez la connexion depuis **Dashboard → API Keys** (les autorisations OAuth y vivent aussi) en un clic, et l’accès de Cursor meurt immédiatement.
@@ -44,7 +44,7 @@ Dans **Dashboard → API Keys**, cliquez sur **Create key**. Donnez-lui un nom q
 - \`read:email\` pour lister, rechercher et lire.
 - \`send:email\` pour envoyer et répondre.
 
-N’accordez que ce dont le client a besoin. Un assistant de tri en lecture seule n’a aucune raison de détenir \`send:email\`. La clé n’est affichée qu’une seule fois — copiez-la à l’instant où elle apparaît, car vous ne pourrez plus la revoir. Si vous la perdez, vous la faites tourner, vous ne la récupérez pas.
+N’accordez que ce dont le client a besoin. Un assistant de tri en lecture seule n’a aucune raison de détenir \`send:email\`. La clé n’est affichée qu’une seule fois : copiez-la à l’instant où elle apparaît, car vous ne pourrez plus la revoir. Si vous la perdez, vous la faites tourner, vous ne la récupérez pas.
 
 ### Étape 2 : placez la clé dans la configuration de votre client
 
@@ -72,18 +72,18 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Si vous récupérez une liste d’outils, vous êtes connecté. Une erreur \`-32001\` signifie que la clé est mauvaise, et une \`-32004\` (HTTP 403) qu’il lui manque un scope requis par l’outil — aucune des deux n’est réessayable, alors corrigez la clé plutôt que de boucler. Ne committez pas la clé. Lisez-la depuis une variable d’environnement et gardez-la hors de git. Si vous hésitez sur le modèle d’authentification à utiliser et où, [OAuth contre clés API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) expose les compromis.
+Si vous récupérez une liste d’outils, vous êtes connecté. Une erreur \`-32001\` signifie que la clé est mauvaise, et une \`-32004\` (HTTP 403) qu’il lui manque un scope requis par l’outil ; aucune des deux n’est réessayable, alors corrigez la clé plutôt que de boucler. Ne committez pas la clé. Lisez-la depuis une variable d’environnement et gardez-la hors de git. Si vous hésitez sur le modèle d’authentification à utiliser et où, [OAuth contre clés API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) expose les compromis.
 
 ## Les outils dont dispose votre agent
 
 Les deux chemins exposent la même surface. Une poignée d’outils consolidés, basés sur des actions, couvrent le travail :
 
-- \`inbox_list\` — appelez toujours celui-ci en premier pour découvrir les boîtes de réception connectées et leurs ID.
-- \`email_read\` (action \`list\`) — paginé, du plus récent au plus ancien.
-- \`email_read\` (action \`read\`) — texte brut analysé, HTML assaini en option, pièces jointes.
+- \`inbox_list\` : appelez toujours celui-ci en premier pour découvrir les boîtes de réception connectées et leurs ID.
+- \`email_read\` (action \`list\`) : paginé, du plus récent au plus ancien.
+- \`email_read\` (action \`read\`) : texte brut analysé, HTML assaini en option, pièces jointes.
 - \`email_read\` (action \`search\`) : recherche par expéditeur, objet, date, statut non lu et d'autres champs structurés, traduite dans la recherche propre à chaque fournisseur.
-- \`email_compose\` (action \`send\`) — composez avec CC/BCC, HTML, pièces jointes jusqu’à 10 MB.
-- \`email_compose\` (action \`reply\`) — définit pour vous les en-têtes In-Reply-To et References pour que le fil reste intact.
+- \`email_compose\` (action \`send\`) : composez avec CC/BCC, HTML, pièces jointes jusqu’à 10 MB.
+- \`email_compose\` (action \`reply\`) : définit pour vous les en-têtes In-Reply-To et References pour que le fil reste intact.
 
 Il y en a quelques autres pour les drapeaux et les déplacements (\`email_organize\`), les dossiers, l’envoi programmé et les contacts, mais ces quelques-uns font l’essentiel du vrai travail.
 
@@ -101,13 +101,13 @@ L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` 
 
 Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail : elle arrive donc depuis mon adresse avec la réputation de mon domaine. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
 
-Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`email_read\` avec l’action \`list\` et \`unread: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
+Une limitation : les outils MCP ne vous appellent jamais. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur, avec \`email_read\` et l’action \`list\` plus \`unread: true\` selon un planning, ou vous laissez un webhook de nouveau message réveiller votre code (les espaces de travail Pro et Business en ajoutent un sous Clés API dans le tableau de bord, et il envoie les identifiants des messages à votre URL). Dans les deux cas, cela façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Limites de débit pour l’accès scripté
 
 Si vous pilotez le serveur depuis une tâche cron ou une boucle d’agent serrée, faites attention aux limites. Chaque forfait a un plafond par minute pour l’ensemble de l’espace de travail, et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce forfait : une seule clé peut utiliser tout le plafond par minute du forfait, et plusieurs clés le partagent. Les réponses réussies de \`tools/call\` portent \`RateLimit-Limit\`, \`RateLimit-Remaining\` et \`RateLimit-Reset\`, et un 429 porte \`Retry-After\`. Voyez la [page des tarifs](/pricing) pour le plafond de chaque forfait.
 
-Quand vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) avec \`data.retry_after\` en secondes. Respectez-la — patientez d’autant et réessayez. Tout n’est pas réessayable pour autant : si vous épuisez l’allocation mensuelle d’actions de votre formule, l’appel renvoie un résultat d’outil normal avec \`isError: true\` et un bloc \`_meta["com.mcpemails/usage_limit"]\`, sans \`retry_after\`, et aucun réessai ne débloque cela avant \`reset_at\`. Et ne réessayez jamais à l’aveugle un envoi de \`email_compose\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
+Quand vous atteignez une limite de débit, le serveur renvoie une erreur réessayable (code \`-32003\`) avec \`data.retry_after\` en secondes. Respectez-la : patientez d’autant et réessayez. Tout n’est pas réessayable pour autant : si un espace de travail atteint une limite d’utilisation du forfait, l’appel renvoie un résultat d’outil normal avec \`isError: true\` et un bloc \`_meta["com.mcpemails/usage_limit"]\`, sans \`retry_after\`, et aucun réessai ne débloque cela avant \`reset_at\`. Et ne réessayez jamais à l’aveugle un envoi de \`email_compose\` sur un échec générique ; vous enverriez des doublons. Vérifiez d’abord s’il est réellement parti.
 
 ## Pour conclure
 

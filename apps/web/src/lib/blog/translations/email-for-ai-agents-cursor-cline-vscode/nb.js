@@ -26,7 +26,7 @@ Cursor støtter OAuth 2.0 for MCP-servere, som er den smertefrie løypen. Det fi
 
 1. Åpne Cursor-innstillingene og finn seksjonen for MCP-servere.
 2. Legg til en ny server med URL-en \`https://www.mcpemails.com/api/mcp\`.
-3. Cursor åpner et nettleservindu. Logg inn på MCPEmails-kontoen din og godkjenn omfangene du vil at agenten skal ha — \`read:email\`, \`send:email\`, eller begge.
+3. Cursor åpner et nettleservindu. Logg inn på MCPEmails-kontoen din og godkjenn omfangene du vil at agenten skal ha: \`read:email\`, \`send:email\`, eller begge.
 4. Tilkoblingen blir grønn og e-postverktøyene dukker opp i Cursors verktøyliste.
 
 Under panseret er det OAuth 2.0 authorization code med PKCE, og tokenet Cursor holder er avgrenset til nøyaktig det du godkjente. Ga du bare \`read:email\`, kan agenten bokstavelig talt ikke sende. Når du er ferdig, kan du tilbakekalle tilkoblingen fra **Dashboard → API Keys** (OAuth-tildelinger bor der også) med ett klikk, og Cursors tilgang dør umiddelbart.
@@ -44,7 +44,7 @@ I **Dashboard → API Keys**, klikk **Create key**. Gi den et navn du kjenner ig
 - \`read:email\` for liste, søk og lesing.
 - \`send:email\` for sending og svar.
 
-Gi bare det klienten trenger. En skrivebeskyttet sorteringsassistent har ingenting å gjøre med å holde \`send:email\`. Nøkkelen vises nøyaktig én gang — kopier den i det øyeblikket den dukker opp, for du kan ikke se den igjen. Mister du den, roterer du den, du gjenoppretter den ikke.
+Gi bare det klienten trenger. En skrivebeskyttet sorteringsassistent har ingenting å gjøre med å holde \`send:email\`. Nøkkelen vises nøyaktig én gang: kopier den i det øyeblikket den dukker opp, for du kan ikke se den igjen. Mister du den, roterer du den, du gjenoppretter den ikke.
 
 ### Steg 2: legg nøkkelen i klientkonfigurasjonen din
 
@@ -72,18 +72,18 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Får du en verktøyliste tilbake, er du tilkoblet. En \`-32001\`-feil betyr at nøkkelen er ugyldig, og en \`-32004\` (HTTP 403) at den mangler et omfang verktøyet trenger — ingen av dem er gjentakbare, så fiks nøkkelen i stedet for å gå i loop. Ikke commit nøkkelen. Les den fra en miljøvariabel og hold den utenfor git. Veier du hvilken autentiseringsmodell du skal bruke hvor, legger [OAuth vs API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) frem avveiningene.
+Får du en verktøyliste tilbake, er du tilkoblet. En \`-32001\`-feil betyr at nøkkelen er ugyldig, og en \`-32004\` (HTTP 403) at den mangler et omfang verktøyet trenger; ingen av dem er gjentakbare, så fiks nøkkelen i stedet for å gå i loop. Ikke commit nøkkelen. Les den fra en miljøvariabel og hold den utenfor git. Veier du hvilken autentiseringsmodell du skal bruke hvor, legger [OAuth vs API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) frem avveiningene.
 
 ## Verktøyene agenten din får
 
 Begge løypene eksponerer den samme flaten. En håndfull konsoliderte, handlingsbaserte verktøy dekker arbeidet:
 
-- \`inbox_list\` — kall alltid dette først for å oppdage tilkoblede innbokser og ID-ene deres.
-- \`email_read\` (handling \`list\`) — paginert, nyeste først.
-- \`email_read\` (handling \`read\`) — parset ren tekst, valgfri renset HTML, vedlegg.
+- \`inbox_list\`: kall alltid dette først for å oppdage tilkoblede innbokser og ID-ene deres.
+- \`email_read\` (handling \`list\`): paginert, nyeste først.
+- \`email_read\` (handling \`read\`): parset ren tekst, valgfri renset HTML, vedlegg.
 - \`email_read\` (handling \`search\`): søk etter avsender, emne, dato, ulest-status og andre strukturerte felt, oversatt til hver leverandørs eget søk.
-- \`email_compose\` (handling \`send\`) — sett sammen med CC/BCC, HTML, vedlegg opptil 10 MB.
-- \`email_compose\` (handling \`reply\`) — setter In-Reply-To- og References-headere for deg slik at tråden holdes intakt.
+- \`email_compose\` (handling \`send\`): sett sammen med CC/BCC, HTML, vedlegg opptil 10 MB.
+- \`email_compose\` (handling \`reply\`): setter In-Reply-To- og References-headere for deg slik at tråden holdes intakt.
 
 Det finnes noen flere for flagg og flytting (\`email_organize\`), mapper, planlagt sending og kontakter, men disse få gjør brorparten av det reelle arbeidet.
 
@@ -101,13 +101,13 @@ Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og
 
 Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail, så det lander fra adressen min med domenets omdømme. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
 
-En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`email_read\` med handling \`list\` og \`unread: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
+Én begrensning: MCP-verktøyene ringer aldri deg. Vil du at agenten skal reagere på innkommende meldinger, poller du, med \`email_read\` med handling \`list\` og \`unread: true\` etter en plan, eller du lar en webhook for ny post vekke koden din (Pro- og Business-arbeidsområder legger til en under API-nøkler i dashbordet, og den poster meldings-ID-ene til URL-en din). Uansett former det hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratebegrensninger for skriptet tilgang
 
 Driver du serveren fra en cron-jobb eller en tett agentløkke, ta hensyn til grensene. Hver plan har et tak per minutt for hele arbeidsområdet, og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele planens tak per minutt, og flere nøkler deler det. Vellykkede \`tools/call\`-svar har \`RateLimit-Limit\`, \`RateLimit-Remaining\` og \`RateLimit-Reset\`, og en 429 har \`Retry-After\`. Se [prissiden](/pricing) for taket på hver plan.
 
-Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den — bakk av så lenge og prøv igjen. Men ikke alt kan prøves på nytt: bruker du opp den månedlige handlingskvoten på planen din, returnerer kallet et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk, uten \`retry_after\`, og ingen nye forsøk løser det før \`reset_at\`. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
+Når du treffer en hastighetsgrense, returnerer serveren en gjentakbar feil (kode \`-32003\`) med \`data.retry_after\` i sekunder. Respekter den: bakk av så lenge og prøv igjen. Men ikke alt kan prøves på nytt: når et arbeidsområde en bruksgrense på planen, returnerer kallet et vanlig verktøyresultat med \`isError: true\` og en \`_meta["com.mcpemails/usage_limit"]\`-blokk, uten \`retry_after\`, og ingen nye forsøk løser det før \`reset_at\`. Og prøv aldri blindt på nytt en \`email_compose\`-sending ved en generisk feil; du fyrer av duplikater. Sjekk om den faktisk ble sendt først.
 
 ## Oppsummering
 

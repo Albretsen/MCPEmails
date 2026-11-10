@@ -20,7 +20,7 @@ Du limer aldri inn en postkasse-ID i en prompt. Agenten kaller \`inbox_list\`, s
 
 To detaljer verdt å kjenne til:
 
-- **Oppdagelse er gratis.** \`inbox_list\` er det ene verktøyet som ikke teller mot den månedlige handlingskvoten i Free, så en agent kan orientere seg på nytt uten kostnad.
+- **Oppdagelse er gratis.** \`inbox_list\` måles aldri, så en agent kan orientere seg på nytt uten kostnad.
 - **Motstridende velgere avvises, de gjettes ikke.** Et kall som bærer en \`inbox_id\` for én postkasse og en \`inbox\`-adresse for en annen, blir avvist, og feilmeldingen navngir begge. Den vanlige årsaken er en utdatert ID som er dratt med fra tidligere i samtalen. Be agenten prøve på nytt med adressen alene.
 
 ## Avgrens én forespørsel til én postkasse
@@ -37,7 +37,7 @@ Dette er delen folk tar feil om: **ett kall når én postkasse.** Å liste, lese
 
 - La den kalle \`inbox_list\` først, eller si hvor mange kontoer du har. Hvis den antar én, rapporterer den skråsikkert om én.
 - Be om et sammenslått svar («én kombinert liste, merket med kontoen den kom fra»), ellers får du tre separate rapporter.
-- Volumet vokser med antall postkasser. En triering av tre postkasser er minst tre fakturerbare handlinger, ikke én.
+- Volumet vokser med antall postkasser. En triering av tre postkasser er minst tre kall, ikke ett.
 
 ## Navn og avsenderidentitet
 
@@ -90,12 +90,12 @@ Blandede oppsett er det normale, og leverandørene er uenige om hva en mappe er.
 
 Tilkoblede postkasser er det planene prises på:
 
-- **Free, $0.** Én tilkoblet postkasse. 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 3 dagene ikke telles. Den månedlige kvoten gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet tidligere er unntatt.
-- **Personal, $9 i måneden eller $86,40 i året.** Tre tilkoblede postkasser, ubegrensede e-posthandlinger, 2x burst-grense, prioritert e-poststøtte.
-- **Pro, $15 i måneden eller $144 i året.** Opptil 10 tilkoblede postkasser, 5x burst-grense, lengre analysehistorikk.
-- **Business, $39 i måneden eller $374,40 i året.** 10 postkasser inkludert og $3 i måneden for hver ekstra, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
+- **Free.** Én tilkoblet postkasse.
+- **Personal.** Noen få postkasser for én person, høyere burst-grense, prioritert e-poststøtte.
+- **Pro.** Flere postkasser for én person som driver en virksomhet, enda høyere burst-grense, lengre analysehistorikk, webhooks for ny post.
+- **Business.** En blokk med postkasser inkludert med en pris per postkasse utover det, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
 
-En rutine på tvers av postkasser koster én handling per postkasse, så antallet postkasser driver volumet like mye som vanene dine gjør. Detaljer på [priser](/pricing).
+En rutine på tvers av postkasser er ett kall per postkasse, så antallet postkasser driver volumet like mye som vanene dine gjør. Gjeldende priser og antall postkasser finner du på [prissiden](/pricing).
 
 ## Vanlige spørsmål
 

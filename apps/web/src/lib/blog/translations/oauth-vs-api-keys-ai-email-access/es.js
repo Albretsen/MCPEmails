@@ -1,8 +1,8 @@
 const translation = {
   title: 'OAuth o claves de API para el acceso de la IA al email: ¿cuál usar?',
   description: 'OAuth o claves de API para el acceso de la IA al email: usa OAuth en claude.ai, Claude Desktop y Cursor; usa una clave de API con alcance en Cline, JetBrains y scripts.',
-  coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email — MCPEmails',
-  content: `Cuando conectas un agente de IA a tu correo a través de MCPEmails, te autenticas de una de dos formas: con OAuth o con una clave de API. La respuesta corta es OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
+  coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email (MCPEmails)',
+  content: `Cuando conectas un agente de IA a tu correo a través de MCPEmails, te autenticas de una de dos formas: con OAuth o con una clave de API. Usa OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
 
 Esto no es un intercambio entre seguridad y comodidad en el que sacrificas una por la otra. Ambos caminos quedan limitados exactamente a \`read:email\`, \`send:email\`, o ambos, y los dos se pueden revocar desde el panel con un clic. La verdadera pregunta es cuál encaja con el cliente que realmente estás usando. Para tener la visión de conjunto de cómo se conecta todo esto, empieza por la guía principal, [cómo dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
 
@@ -25,7 +25,7 @@ Por debajo es OAuth estándar y actual:
 - **Authorization Code + PKCE** (RFC 7636), de modo que nunca se transmite ningún secreto de cliente. PKCE es el mismo mecanismo que protege los inicios de sesión de las apps móviles y de página única.
 - **Dynamic Client Registration** (RFC 7591), de modo que el cliente se registra por sí solo sin que tengas que configurar nada manualmente.
 - **Los tokens se renuevan automáticamente** dentro de los clientes compatibles. No tienes que estar pendiente de ninguna caducidad.
-- **Los alcances son exactamente los que apruebas** en la pantalla de consentimiento: \`read:email\`, \`send:email\`, o ambos.
+- **Los alcances son exactamente los que apruebas** en la pantalla de consentimiento: Solo lectura, Estándar, Acceso completo o un conjunto personalizado de permisos individuales.
 
 La ventaja práctica: el token nunca aparece como una cadena de texto plano que podrías subir por accidente a un repositorio, dejar en un registro o pegar en el chat equivocado. Cuando quieres cortar el acceso, revocas la conexión en el panel y el agente queda fuera de inmediato. Y en cuanto a por qué esa revocación es suficiente: la bandeja en sí queda intacta porque, de entrada, [el correo nunca se almacena](/blog/why-email-never-stored-matters) en nuestros servidores.
 
@@ -36,7 +36,7 @@ Algunos clientes no hablan OAuth. No es un demérito. Cline, JetBrains y cualqui
 Creas una en **Panel → Claves de API**:
 
 1. Ponle a la clave un nombre que reconozcas luego (\`cline-laptop\`, \`triage-cron\`).
-2. Elige sus alcances: \`read:email\`, \`send:email\`, o ambos.
+2. Elige sus alcances: empieza por \`read:email\`, añade \`send:email\` solo si debe enviar, y los alcances de carpetas, eliminación, borradores, contactos, programación y automatizaciones solo si el trabajo los necesita.
 3. Cópiala. Se muestra **una sola vez** y nunca más. Si la pierdes, creas una nueva.
 
 La clave tiene este aspecto, \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, y la pasas en cada petición:

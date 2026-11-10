@@ -87,7 +87,7 @@ That last capability deserves care. Permanent IMAP deletion bypasses Trash and m
 
 An IMAP connector is broad, but it does not make every provider identical.
 
-- **No incoming-mail push:** MCPEmails is request/response only. It does not send webhooks or trigger Claude when a message arrives. An automated workflow must poll on a schedule, for example by listing unread mail.
+- **No incoming-mail push into Claude:** the MCP tools are request/response, so nothing triggers Claude when a message arrives. A chat-based workflow polls on a schedule, for example by listing unread mail. Your own code can instead be woken by a new-mail webhook, which Pro and Business workspaces add under API Keys.
 - **Search varies by transport:** structured sender, subject, text, and date filters work across providers, but generic IMAP does not support the \`has_attachment\` search filter. Provider-native search syntax is not portable.
 - **Folders are not Gmail labels:** IMAP moves a message between folders, while Gmail can attach several labels to one message. The practical difference is explained in [Gmail labels vs. IMAP folders](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **SMTP is required for sending:** a working IMAP login proves that Claude can reach incoming mail, not that the SMTP host, port, or send permission is correct. Test one harmless outbound message before relying on a reply workflow.

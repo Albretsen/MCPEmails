@@ -1,16 +1,16 @@
 const translation = {
   title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
   description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
-  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP — MCPEmails',
-  content: `Un autorrespondedor de correo construido sobre MCPEmails es un bucle, no un webhook. No hay eventos iniciados por el servidor, así que tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los permisos (scopes) que necesitas, cómo sobrevivir a los límites de tasa y las salvaguardas que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
+  coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP (MCPEmails)',
+  content: `Un autorrespondedor de correo construido sobre MCPEmails es un bucle. Tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), o se despierta con un webhook de correo nuevo en Pro y Business, lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los permisos (scopes) que necesitas, cómo sobrevivir a los límites de tasa y las salvaguardas que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 
 Esto es el extremo avanzado de la historia de [dale acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access). Si solo quieres triaje y resúmenes matutinos sin enviar nada, lee antes [triaje y resumen de bandeja con un agente de IA](/blog/ai-agent-triage-summarize-inbox): es el sitio más seguro para empezar. Vuelve aquí cuando de verdad quieras que el agente le dé a enviar.
 
-## La parte honesta: no hay webhook
+## Sondea, o deja que un webhook te despierte
 
-La mayoría de los tutoriales de «autorrespondedor» dan por hecho que un evento push se dispara en el momento en que llega el correo. MCPEmails no funciona así, y tampoco ningún servidor MCP que yo conozca. MCP es un protocolo de herramientas de petición/respuesta. El servidor responde cuando tu agente pregunta; nunca te llama a ti.
+La mayoría de los tutoriales de «autorrespondedor» dan por hecho que un evento push se dispara en el momento en que llega el correo. MCP en sí no funciona así: es un protocolo de herramientas de petición/respuesta, y el servidor responde cuando tu agente pregunta. Así que el autorrespondedor básico es un planificador más un sondeo. Ejecutas una iteración cada N segundos o minutos, pides los mensajes sin leer y procesas lo que sea nuevo. Eso es todo. Es predecible, y significa que *tú* controlas la cadencia y el radio de impacto.
 
-Así que un autorrespondedor de verdad es un planificador más un sondeo. Ejecutas una iteración cada N segundos o minutos, pides los mensajes sin leer y procesas lo que sea nuevo. Eso es todo. Es menos elegante que un webhook, pero es predecible, y significa que *tú* controlas la cadencia y el radio de impacto.
+Si quieres el push, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel. MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo a una bandeja, con los IDs de los mensajes, y tu bucle los abre con \`email_read\`. Cada webhook tiene un botón de prueba y un registro de entregas. Todo lo que sigue se aplica igual: el webhook solo sustituye al temporizador, no la lectura, la redacción ni las salvaguardas.
 
 Elige un intervalo de sondeo que equilibre tu tolerancia a la latencia con tu presupuesto de tasa. Cada 60 segundos está bien para respuestas tipo soporte. Cada 5 minutos sobra para la mayoría de las bandejas y apenas roza tus límites. No sondees cada segundo: gastarás cuota sin motivo y la bandeja rara vez cambia tan rápido.
 
@@ -20,8 +20,8 @@ Un autorrespondedor casi siempre se ejecuta como un script o una tarea cron, no 
 
 En el panel, ve a **Claves de API**, crea una clave y concédele los permisos que realmente necesitas:
 
-- \`read:email\` — para sondear, listar y leer mensajes con \`email_read\`.
-- \`send:email\` — para llamar a \`email_compose\` (acción \`reply\`).
+- \`read:email\`: para sondear, listar y leer mensajes con \`email_read\`.
+- \`send:email\`: para llamar a \`email_compose\` (acción \`reply\`).
 
 La clave se muestra una sola vez. Cópiala. Tiene el aspecto \`mcpe_9f86d081...\` y la pasas en cada petición:
 
@@ -91,7 +91,7 @@ Tu workspace tiene un tope por minuto fijado por su plan (consulta [precios](/pr
 
 Cuando alcanzas un límite de tasa, el servidor devuelve un error reintentable (código \`-32003\`) que lleva \`data.retry_after\` en segundos. Respétalo. Espera ese tiempo y luego continúa.
 
-La asignación mensual de acciones de tu plan es otro límite distinto, y no es reintentable. Cuando se agota, la llamada vuelve como un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\` en lugar de un error JSON-RPC, sin \`retry_after\`. Reintentar solo quema ciclos hasta \`reset_at\` o hasta que mejores de plan, así que detén el bucle y avisa del problema.
+Un límite de uso del plan es otra cosa distinta, y no es reintentable. Cuando un espacio de trabajo alcanza uno, la llamada vuelve como un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\` en lugar de un error JSON-RPC, sin \`retry_after\`. Reintentar solo quema ciclos hasta \`reset_at\` o hasta que mejores de plan, así que detén el bucle y avisa del problema.
 
 Aquí está la regla que más importa: **nunca reintentes a ciegas un envío o una respuesta de \`email_compose\`.** Un envío no es idempotente. Si una llamada de envío agota el tiempo o devuelve un resultado ambiguo, un reintento ingenuo puede entregar la misma respuesta dos veces. Reintenta las *lecturas* sin problema; trata los *envíos* como una sola oportunidad y reintenta solo ante un error reintentable explícito, con backoff y un tope estricto.
 
@@ -150,7 +150,7 @@ Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y abur
 
 Ese es un sistema en el que de verdad puedes confiar, y se generaliza. El mismo bucle con un prompt distinto se convierte en un bot de triaje, un enrutador de leads o un notificador. Para ver el menú más amplio de lo que un agente puede hacer una vez conectado, consulta [7 cosas que un agente de IA puede hacer con acceso a la bandeja](/blog/7-things-ai-agent-can-do-with-inbox-access). Si aún estás decidiendo si darle a un agente acceso de envío siquiera, vale la pena leer [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de lanzarlo.
 
-¿Listo para construirlo? Crea una clave de API acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal ($9/mes) conecta hasta tres y Pro conecta hasta 10.`,
+¿Listo para construirlo? Crea una clave de API acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja y los planes de pago añaden más (consulta [precios](/pricing)).`,
 };
 
 export default translation;

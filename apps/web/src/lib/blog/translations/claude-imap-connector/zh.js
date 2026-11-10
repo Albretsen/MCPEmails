@@ -80,7 +80,7 @@ MCPEmails 内置 [iCloud](/connect/icloud)、[Yahoo](/connect/yahoo)、[Zoho](/c
 
 IMAP 连接器适用范围广，但并不会让所有服务商的行为变得完全一致。
 
-- **没有新邮件推送：**MCPEmails 仅采用请求/响应模式。新邮件到达时，它不会发送 webhook，也不会触发 Claude。自动化工作流必须按计划轮询，例如定期列出未读邮件。
+- **没有推送进 Claude 的新邮件通知：**MCP 工具采用请求/响应模式，所以新邮件到达时没有任何东西会触发 Claude。基于聊天的工作流按计划轮询，例如定期列出未读邮件。你自己的代码则可以改由新邮件 webhook 唤醒，Pro 和 Business 工作区可在 API 密钥页面添加它。
 - **搜索能力因传输方式而异：**结构化的发件人、主题、文本和日期筛选器适用于各服务商，但通用 IMAP 不支持 \`has_attachment\` 搜索筛选器。服务商原生的搜索语法也无法跨平台通用。
 - **文件夹不是 Gmail 标签：**IMAP 会在文件夹之间移动邮件，而 Gmail 可以为同一封邮件添加多个标签。实际区别请参阅 [Gmail 标签与 IMAP 文件夹](/blog/gmail-labels-vs-imap-folders-ai-agents)。
 - **发送邮件必须使用 SMTP：**IMAP 登录成功只能证明 Claude 可以访问收件，不能证明 SMTP 主机、端口或发送权限正确。在依赖回复工作流之前，请先发送一封无关紧要的测试邮件。

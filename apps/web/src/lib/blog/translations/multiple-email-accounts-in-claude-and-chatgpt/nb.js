@@ -83,11 +83,11 @@ Slå på **Gjennomgang før sending** (Review before sending) for en postkasse, 
 ## Hvor mange postkasser hver plan kobler til
 
 - **Gratis:** én postkasse.
-- **Personal:** tre postkasser.
-- **Pro:** opptil 10 postkasser, på én innlogging.
-- **Business:** 10 postkasser inkludert og $3 i måneden for hver ekstra, og for når en person til trenger sin egen innlogging.
+- **Personal:** noen få postkasser, for én person.
+- **Pro:** flere postkasser, fortsatt på én innlogging.
+- **Business:** en blokk med postkasser inkludert med en pris per postkasse utover det, og for når en person til trenger sin egen innlogging.
 
-Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og det er Pro. Gjeldende priser finner du på [prissiden](/pricing), og [MCPEmails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
+Et firma med post@, salg@ og faktura@ pluss din egen adresse er fire postkasser, og da havner du på Pro. Gjeldende antall postkasser og priser finner du på [prissiden](/pricing), og [MCPEmails for bedrifter](/for/business) viser hvordan én person håndterer alle firmapostkassene fra én agent.
 
 ## Vanlige spørsmål
 

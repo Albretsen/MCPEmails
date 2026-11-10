@@ -102,9 +102,9 @@ Four rules that clear everything mechanical, plus one morning conversation over 
 
 Then you ask your agent about the thirty messages left instead of the hundred and eighty that arrived. The rules are not trying to be clever. They remove everything that never needed intelligence.
 
-## Rules count toward your plan's actions
+## Rules count toward your plan's usage
 
-Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. On the **Free** plan that is 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly allowance applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. When a workspace reaches its allowance a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the allowance period ends. **Personal** at $9 per month gives unlimited email actions and allows 3 connected inboxes. See [pricing](/pricing).
+Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. If a **Free** workspace reaches its monthly limit, a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the limit resets. The paid plans and their limits are on the [pricing page](/pricing).
 
 ## FAQ
 

@@ -14,9 +14,9 @@ Hay tres fallos contra los que conviene diseñar: la **fuga entre clientes**, cu
 
 El espacio de trabajo es la unidad de separación. Las bandejas, los miembros, las claves de API y la actividad viven dentro de uno, y la frontera se aplica en la base de datos con seguridad a nivel de fila, no filtrando con cuidado en el código de la aplicación. Una clave emitida en el espacio de Acme no puede leer un buzón de Bolt, diga lo que diga la instrucción.
 
-Tener más de un espacio de trabajo es una función de **Business** ($39/mes, $374,40/año), que además incluye miembros ilimitados con roles sin coste adicional, y 10 buzones con $3 al mes por cada uno adicional. La suscripción va asociada a tu cuenta y no a un espacio concreto, así que una sola suscripción Business cubre todos los espacios de cliente que crees. Ponle a cada uno el nombre del cliente, conecta dentro solo los buzones de ese cliente y cambia entre ellos desde la barra lateral del panel.
+Tener más de un espacio de trabajo es una función de **Business**, que además incluye miembros ilimitados con roles sin coste adicional, y un bloque de buzones incluidos con un precio por buzón para cada uno adicional. La suscripción va asociada a tu cuenta y no a un espacio concreto, así que una sola suscripción Business cubre todos los espacios de cliente que crees. Ponle a cada uno el nombre del cliente, conecta dentro solo los buzones de ese cliente y cambia entre ellos desde la barra lateral del panel.
 
-Por debajo de Business, los planes son de una persona en un espacio: **Pro** ($15/mes, $144/año) conecta hasta 10 bandejas, **Personal** ($9/mes) tres y **Gratis** una. Sale más barato, y todos los buzones comparten el mismo radio de impacto. Consulta los [precios](/pricing) y la [matriz de proveedores](/docs/providers).
+Por debajo de Business, los planes son de una persona en un espacio: **Pro** para quien lleva un negocio con varias bandejas, **Personal** para unas pocas y **Gratis** para una. Sale más barato, y todos los buzones comparten el mismo radio de impacto. Los precios y el número de bandejas actuales están en [precios](/pricing), y la [matriz de proveedores](/docs/providers) cubre cada proveedor.
 
 ## Miembros y roles
 

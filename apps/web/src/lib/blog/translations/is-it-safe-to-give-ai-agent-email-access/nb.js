@@ -1,8 +1,8 @@
 const translation = {
   title: 'Er det trygt å gi en AI-agent tilgang til e-posten din? Dette bør du vite',
-  description: 'Er det trygt å gi en AI-agent e-posttilgang? Det ærlige svaret: det kommer an på arkitekturen. Her er de reelle risikoene og sjekklisten som gjør det trygt.',
-  coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang — risikoer og sikkerhetstiltak forklart — MCPEmails',
-  content: `Kort svar: det kan være det, men tryggheten ligger i arkitekturen, ikke i markedsføringen. Å gi en AI-agent e-posttilgang er trygt når tjenesten henter posten din i sanntid i stedet for å kopiere den, krypterer påloggingsdataene dine skikkelig, kjører på minimale tilganger og lar deg kutte tilgangen med ett klikk. Det er risikabelt når noen av disse fire tingene mangler. Trikset er å vite hvilke spørsmål du skal stille før du kobler til en innboks.
+  description: 'Er det trygt å gi en AI-agent e-posttilgang? Det kommer an på arkitekturen. Her er de reelle risikoene og sjekklisten som gjør det trygt.',
+  coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang? Risikoer og sikkerhetstiltak forklart (MCPEmails)',
+  content: `Det kan være det, men tryggheten ligger i arkitekturen, ikke i markedsføringen. Å gi en AI-agent e-posttilgang er trygt når tjenesten henter posten din i sanntid i stedet for å kopiere den, krypterer påloggingsdataene dine skikkelig, kjører på minimale tilganger og lar deg kutte tilgangen med ett klikk. Det er risikabelt når noen av disse fire tingene mangler. Trikset er å vite hvilke spørsmål du skal stille før du kobler til en innboks.
 
 Dette er innvendingen jeg hører oftest, og den er berettiget. Innboksen din er knutepunktet for passordtilbakestillinger, kontraktsarkivet ditt, privatlivet ditt. Å overlate nøklene til en språkmodell føles uvøren. Så la oss være ærlige om hva som faktisk kan gå galt, og deretter gå gjennom hvordan et gjennomtenkt oppsett ser ut. Vil du ha det store bildet først, dekker hovedguiden om [hvordan du gir AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) hele oppsettet; dette innlegget handler spesifikt om tillitsspørsmålet.
 
@@ -28,13 +28,13 @@ Den klassiske tabben er å gi full postkassetilgang når oppgaven trenger «les 
 
 ## Hvordan et trygt oppsett faktisk ser ut
 
-Slik håndterer MCPEmails hver enkelt risiko. Jeg er partisk — jeg bygde det — men designvalgene er etterprøvbare, og du bør holde et hvilket som helst verktøy du velger, til samme standard.
+Slik håndterer MCPEmails hver enkelt risiko. Jeg er partisk (jeg bygde det), men designvalgene er etterprøvbare, og du bør holde et hvilket som helst verktøy du velger, til samme standard.
 
 **E-posten din lagres aldri.** Hvert verktøykall treffer leverandøren din i sanntid, over IMAP/SMTP for Gmail og de fleste andre leverandører, eller Microsoft Graph for Outlook. Meldingstekster, emner og vedlegg passerer gjennom til agenten og forkastes umiddelbart. Det eneste vi beholder per innboks, er én kryptert påloggingsopplysning slik at neste kall kan gjøres. Det finnes ingen innbokskopi å bryte seg inn i, fordi kopien ikke eksisterer.
 
 **Påloggingsdata er AES-256-GCM-kryptert i ro.** App-passordet eller OAuth-tokenet ditt krypteres før det berører databasen. Det dekrypteres på serverne våre bare når en forespørsel trenger det, og det sendes aldri til agenten din. Krypteringsnøkkelen oppbevares som en serverhemmelighet, atskilt fra databasen, så en database-dump alene er ubrukelig. Dette er den ene biten av dataene dine vi beholder, og det er biten vi behandler mest forsiktig.
 
-**Tilganger er minimale av design.** Når du kobler til en agent, godkjenner du nøyaktig to mulige tillatelser: \`read:email\` og \`send:email\`. Vil du ha en agent som oppsummerer, men aldri kan sende? Gi kun \`read:email\`. Systemet har ingen slegge for «full tilgang», fordi det ikke er noe å vinne på en slik. Vurderer du hvordan agenter skal autentisere seg, bryter [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) ned hva du skal bruke når.
+**Tilganger er minimale av design.** Når du kobler til en agent, tilbyr samtykkeskjermen **Skrivebeskyttet**, **Standard** og **Full tilgang**, pluss et eget kort (Tilpasset) der hver av de ni tillatelsene (lese, søke, sende, mapper, slette, utkast, kontakter, planlegging, automatiseringer) er sin egen bryter. Vil du ha en agent som oppsummerer, men aldri kan sende? Velg Skrivebeskyttet, så utstedes aldri \`send:email\`. Selv Full tilgang er en navngitt liste du ser på skjermen, ikke en blankofullmakt. Vurderer du hvordan agenter skal autentisere seg, bryter [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) ned hva du skal bruke når.
 
 **Sending går gjennom din egen leverandør.** Når agenten sender post, går den ut gjennom din Gmail, din Microsoft 365 eller din egen SMTP-server. Vi videreformidler aldri meldinger fra vårt domene. Avsenderomdømmet og leveringsevnen din forblir helt og holdent dine, og det finnes ingen delt IP-pool å forgifte.
 
@@ -55,7 +55,7 @@ Hvis et verktøy klarer alle seks, er restrisikoen liten og håndterbar. Hvis de
 
 ## En merknad om hva vi ikke gjør
 
-Ærlighet bygger tillit bedre enn funksjonslister, så to begrensninger verdt å si rett ut. Vi sender ikke push-varsler til agenten din. Det finnes ingen webhooks; for å reagere på ny post må agenten din polle på en tidsplan. Det er et designvalg, ikke en forglemmelse, og det hindrer serveren i å holde en vedvarende tilkobling inn i postkassen din. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
+To begrensninger verdt å si rett ut. En agent i en chat får ikke et pling når post kommer; den sjekker etter en tidsplan. Den ene push-en vi tilbyr, er en signert webhook for ny post til en URL du eier, på Pro og Business, og den bærer meldings-ID-er, ikke post. For det andre kan vi ikke beskytte deg mot en agent du har gitt for mye tillit. Gir du en autonom agent sendetilgang og null gjennomgang, er prompt injection en reell risiko, og det ligger på oppsettet, ikke på transporten. Begrens tilgangen og hold et menneske på det som ikke kan angres.
 
 ## Så, er det trygt?
 

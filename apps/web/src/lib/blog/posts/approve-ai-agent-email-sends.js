@@ -4,7 +4,7 @@ const post = {
   description:
     'Let an AI agent prepare useful email work while a workspace owner or admin makes the final call to send. A practical guide to human approval for AI email.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
-  coverAlt: 'Human approval for AI agent email sends — MCPEmails',
+  coverAlt: 'Human approval for AI agent email sends (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:00:00.000Z',
   updatedAt: '2026-08-02T09:00:00.000Z',

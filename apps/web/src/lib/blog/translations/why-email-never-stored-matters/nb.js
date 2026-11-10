@@ -11,7 +11,7 @@ Det høres ut som en liten implementasjonsdetalj. Det er det ikke. Det er forskj
 
 Det finnes egentlig bare to design, og de fleste produkter faller tydelig i én leir.
 
-**Kopier-alt (synkroniser-og-lagre).** Verktøyet kobler seg til postkassen din én gang og henter så meldingene dine inn i sin egen database — ofte kontinuerlig. Innboksen din blir speilet inn i deres infrastruktur slik at den kan indekseres, embeddes i et vektorlager, mates til en modell eller leveres tilbake raskt. Agenten leser fra *deres* kopi, ikke fra leverandøren din.
+**Kopier-alt (synkroniser-og-lagre).** Verktøyet kobler seg til postkassen din én gang og henter så meldingene dine inn i sin egen database, ofte kontinuerlig. Innboksen din blir speilet inn i deres infrastruktur slik at den kan indekseres, embeddes i et vektorlager, mates til en modell eller leveres tilbake raskt. Agenten leser fra *deres* kopi, ikke fra leverandøren din.
 
 **Live-henting (aldri-lagret).** Verktøyet holder kun på en legitimasjon. Når agenten trenger en melding, ringer serveren leverandøren din i sanntid, returnerer resultatet og kaster brødteksten. Ingenting av innholdet beholdes. Slik fungerer MCPEmails.
 
@@ -23,11 +23,11 @@ Når et verktøy først har kopiert posten din, følger fire ting med, enten lev
 
 ### En andre kopi av posten din som du ikke kontrollerer
 
-Den ekte innboksen din ligger hos Google eller Microsoft eller Fastmail, bak deres sikkerhetsteam og deres bruddhistorikk. Et synkronisert verktøy lager en andre, fullverdig kopi et annet sted — en oppstartsbedrifts Postgres-instans, en S3-bøtte, en søkeindeks. Hver lenke for tilbakestilling av passord, hver juridisk tråd, hvert medisinsk resultat og hver tofaktor-reservekode du noensinne har mottatt, finnes nå på et sted du ikke har vurdert og ikke kan revidere.
+Den ekte innboksen din ligger hos Google eller Microsoft eller Fastmail, bak deres sikkerhetsteam og deres bruddhistorikk. Et synkronisert verktøy lager en andre, fullverdig kopi et annet sted: en oppstartsbedrifts Postgres-instans, en S3-bøtte, en søkeindeks. Hver lenke for tilbakestilling av passord, hver juridisk tråd, hvert medisinsk resultat og hver tofaktor-reservekode du noensinne har mottatt, finnes nå på et sted du ikke har vurdert og ikke kan revidere.
 
 ### En større angrepsflate ved brudd
 
-Dette er den delen folk undervurderer. Hvis leverandørens database lekker, får angriperen ikke *legitimasjonen* din — de får *posten* din, allerede dekryptert og indeksert, klar til å leses. Ingen grunn til å logge inn på kontoen din. Den mest skadelige delen av et e-postbrudd er e-posten selv, og et kopier-alt-verktøy har vennligst samlet den på ett sted. Du arver deres sikkerhetsnivå på toppen av leverandørens.
+Dette er den delen folk undervurderer. Hvis leverandørens database lekker, får angriperen ikke *legitimasjonen* din, de får *posten* din, allerede dekryptert og indeksert, klar til å leses. Ingen grunn til å logge inn på kontoen din. Den mest skadelige delen av et e-postbrudd er e-posten selv, og et kopier-alt-verktøy har vennligst samlet den på ett sted. Du arver deres sikkerhetsnivå på toppen av leverandørens.
 
 ### Oppbevaring du må tenke på
 
@@ -35,7 +35,7 @@ Hvor blir kopien av når du kobler fra? I et velkjørt synkroniseringsverktøy e
 
 ### Risiko for trening og «produktforbedring»
 
-Et lagret korpus med ekte e-post er uimotståelig. Det er fristende å bruke det til å forbedre søkerangering, finjustere en modell eller trene en klassifikator. Selv med gode hensikter — så snart posten din ligger i en database, er spørsmålet «kan dette bli brukt til noe jeg ikke meldte meg på?» permanent åpent. Hvis dataene aldri ble lagret, dukker spørsmålet aldri opp.
+Et lagret korpus med ekte e-post er uimotståelig. Det er fristende å bruke det til å forbedre søkerangering, finjustere en modell eller trene en klassifikator. Selv med gode hensikter: så snart posten din ligger i en database, er spørsmålet «kan dette bli brukt til noe jeg ikke meldte meg på?» permanent åpent. Hvis dataene aldri ble lagret, dukker spørsmålet aldri opp.
 
 ## Hvordan live-henting faktisk fungerer
 
@@ -54,13 +54,13 @@ Legitimasjonen er den eneste hemmeligheten som ligger lagret, og den er kryptert
 
 Sending fungerer på samme måte og legger til én garanti til: utgående post går gjennom *din* leverandør: Gmail eller en annen leverandør over SMTP, eller Microsoft Graph for Outlook. Vi videresender aldri fra vårt eget domene, så leveringsdyktigheten og domeneomdømmet ditt forblir helt og holdent dine. Det finnes ingen delt sendepool som kan lande deg i en annens spam-omdømme.
 
-Vil du ha den dypere mekanikken bak legitimasjonsmodellen — OAuth-tokens kontra app-passord og hvorfor begge forblir krypterte — skrev jeg om det i [OAuth vs. API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access).
+Vil du ha den dypere mekanikken bak legitimasjonsmodellen (OAuth-tokens kontra app-passord og hvorfor begge forblir krypterte), skrev jeg om det i [OAuth vs. API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access).
 
-## Den ærlige avveiningen
+## Avveiningen
 
 Aldri-lagret er ikke gratis. Det er en reell kostnad, og jeg vil heller navngi den enn å late som den ikke finnes.
 
-Fordi vi ikke holder på en lokal indeks, kjører søk mot leverandørens søk hver gang. Du får [leverandør-eget søk](/docs) — Gmail-operatorer, Outlook KQL, IMAP-tekstsøk — som er kraftig, men det er deres ventetid og deres spørringssemantikk, ikke en egen indeks finjustert av oss. Og det er ingen push: vi kan ikke varsle agenten din i det øyeblikket post ankommer, fordi vi ikke overvåker en synkronisert kopi. For å reagere på ny post poller agenten din (for eksempel \`email_read\` med handling \`list\` og \`unread: true\` etter en tidsplan).
+Fordi vi ikke holder på en lokal indeks, kjører søk mot leverandørens søk hver gang. Du får [leverandør-eget søk](/docs) (Gmail-operatorer, Outlook KQL, IMAP-tekstsøk), som er kraftig, men det er deres ventetid og deres spørringssemantikk, ikke en egen indeks finjustert av oss. Og push er begrenset: vi overvåker ingen synkronisert kopi, så en agent i en chat reagerer på ny post ved å polle (for eksempel \`email_read\` med handling \`list\` og \`unread: true\` etter en tidsplan). For din egen kode kan Pro- og Business-arbeidsområder legge til en webhook for ny post, og den bærer meldings-ID-er, ikke e-post.
 
 For de fleste er det en enkel avveining. Litt tregere søk og en pollesløyfe, i bytte mot aldri å lage en andre kopi av dine mest sensitive data. Det tar jeg gjerne.
 
@@ -73,13 +73,13 @@ Før du kobler noe til innboksen din, still leverandøren fire direkte spørsmå
 - **Er legitimasjonen kryptert i lagring, og hvor ligger nøkkelen?** Separat fra databasen er det riktige svaret.
 - **Går sending gjennom min leverandør eller deres?** Din beskytter domeneomdømmet ditt; deres slår det sammen med fremmedes.
 
-Hvis et verktøy ikke kan svare på dette klart og tydelig, er det også informasjon. Dette er den samme linsen jeg ville brukt på det bredere sikkerhetsspørsmålet i [Er det trygt å gi en AI-agent tilgang til e-posten din?](/blog/is-it-safe-to-give-ai-agent-email-access) — det er arkitekturen under markedsføringen som faktisk avgjør risikoen din.
+Hvis et verktøy ikke kan svare på dette klart og tydelig, er det også informasjon. Dette er den samme linsen jeg ville brukt på det bredere sikkerhetsspørsmålet i [Er det trygt å gi en AI-agent tilgang til e-posten din?](/blog/is-it-safe-to-give-ai-agent-email-access): det er arkitekturen under markedsføringen som faktisk avgjør risikoen din.
 
 ## Hvor dette passer inn
 
 Aldri-lagret-modellen er én brikke i en større beslutning: hvordan du kobler en agent til en ekte innboks uten å gjøre noe du vil angre på. Den [komplette 2026-guiden til å gi AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access) dekker hele bildet, og hvis du vurderer å kjøre din egen server, går [hosted vs. selvhostet Gmail MCP](/blog/hosted-vs-self-hosted-gmail-mcp-server) inn på hvem som holder krypteringsnøkkelen i hvert tilfelle.
 
-Du trenger ikke å velge mellom å gi agenten din nyttig innbokstilgang og å holde posten din ute av en tredjeparts database. Med live-henting får du begge deler. [Koble til en innboks](/signup), så kan du trekke tilbake tilgangen med ett klikk — og det er ingenting igjen når du gjør det.`,
+Du trenger ikke å velge mellom å gi agenten din nyttig innbokstilgang og å holde posten din ute av en tredjeparts database. Med live-henting får du begge deler. [Koble til en innboks](/signup), så kan du trekke tilbake tilgangen med ett klikk, og det er ingenting igjen når du gjør det.`,
 };
 
 export default translation;

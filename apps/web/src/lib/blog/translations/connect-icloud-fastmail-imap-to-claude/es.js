@@ -88,7 +88,7 @@ La búsqueda también se comporta de forma un poco distinta. Gmail dispone de to
 La mecánica es la misma con cualquier proveedor, así que cualquier flujo de trabajo que hayas visto para Gmail funciona en tu bandeja de Fastmail o iCloud. Algunos que de verdad compensan:
 
 - Una clasificación matutina que marque lo que necesita a una persona y redacte borradores de respuesta para el resto. Consulta [clasificar y resumir la bandeja](/blog/ai-agent-triage-summarize-inbox).
-- Un autorespondedor casi en tiempo real. Una advertencia honesta: MCPEmails funciona por sondeo, no por push; no hay webhooks, así que el agente comprueba si hay correo nuevo según una programación. La [creación de un autorespondedor](/blog/build-email-auto-responder-mcp-agent) explica cómo hacerlo bien.
+- Un autorespondedor casi en tiempo real. Una advertencia: dentro de un chat, el agente comprueba si hay correo nuevo según una programación; un aviso push necesita un webhook de correo nuevo, que los espacios de trabajo Pro y Business pueden añadir en Claves de API. La [creación de un autorespondedor](/blog/build-email-auto-responder-mcp-agent) explica las dos vías.
 
 Si todavía estás decidiendo si conectar el correo a un agente, empieza por el artículo pilar: [cómo dar a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access).
 
