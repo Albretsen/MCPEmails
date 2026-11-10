@@ -18,7 +18,7 @@ OpenAIの[接続済みアプリのヘルプページ](https://help.openai.com/en
 3. **ChatGPTでプラグインを開きます。** **設定**、**プラグイン**の順に進み、**iCloud Mail**を選びます。
 4. **iCloudアドレスとアプリ用パスワードを入力します。** OpenAIが受け付けるのは@icloud.com、@me.com、@mac.comで終わるアドレスです。
 
-通常のApple Accountのパスワードはここでは使えません。Apple以外のすべてのアプリに対するAppleのルールで、サードパーティのメールアプリが使うのと同じ種類のパスワードです。
+通常のApple Accountのパスワードはここでは使えません。Appleはサードパーティ製アプリに2つの入り口を用意しています。対応アプリはApple Accountそのもので認可でき、それ以外のアプリにはアプリ用パスワードを求めます。OpenAIのプラグインは後者で、サードパーティ製のメールアプリが使うのと同じ種類のパスワードです。
 
 ## iCloud Mailプラグインでできること
 
@@ -56,7 +56,7 @@ GmailとOutlookについては、ChatGPTに別のプラグインがあり、合�
 
 ## ClaudeでiCloud Mailを使う
 
-Claudeには独自のメールコネクタが2つあります。Gmail向けと、職場のMicrosoft 365アカウント向けです。ClaudeにiCloudの選択肢はなく、Appleもパスワードの代わりにサードパーティが使えるiCloud Mail向けのサインインを提供していません。Claudeの選択肢をメールボックスごとに整理した記事が[Claudeは私のメールを読めますか？](/blog/can-claude-read-my-email)です。
+Claudeには独自のメールコネクタが2つあります。Gmail向けと、職場のMicrosoft 365アカウント向けです。ClaudeにiCloudの選択肢はありません。Appleは対応するサードパーティ製アプリに対して、アプリ用パスワードの代わりにApple AccountでiCloud Mailを認可する道も用意していますが、Claudeにはそれを使うコネクタがなく、MCPEmailsはアプリ用パスワードを使ってIMAPでiCloudに接続します。Claudeの選択肢をメールボックスごとに整理した記事が[Claudeは私のメールを読めますか？](/blog/can-claude-read-my-email)です。
 
 ClaudeでiCloudを使うには、iCloudへの接続を保持するMCPサーバーを追加します。それがMCPEmailsです。OpenAIのプラグインと同じく、アプリ用パスワードを使ってIMAPでiCloudに接続し、そのメールボックスをModel Context Protocolを話すあらゆるアプリに提供します。Claude、ChatGPT、Cursor、その他の[対応クライアント](/docs/clients)です。
 
@@ -89,7 +89,7 @@ ChatGPTでは、MCPEmailsをカスタムMCPサーバーとして追加します�
 いいえ。プラグインはメールアプリではなくiCloudのメールサーバーにサインインするので、iCloudに保存されたメールしか見えません。ほかのアカウントは、それぞれのプラグインか、MCPEmailsのようなMCPサーバーを通じて接続してください。
 
 **ChatGPTがAppleのパスワードを拒否するのはなぜですか？**
-AppleはApple以外のすべてのアプリにアプリ用パスワードを要求します。account.apple.comのサインインとセキュリティ、アプリ用パスワードで作成してください。2ファクタ認証がオンになっている必要があります。
+AppleはApple Accountでの認可に対応したアプリ以外には、アプリ用パスワードを要求します。ChatGPTのiCloud MailプラグインもMCPEmailsも、アプリ用パスワードを使う側です。account.apple.comのサインインとセキュリティ、アプリ用パスワードで作成してください。2ファクタ認証がオンになっている必要があります。
 
 **ClaudeにiCloudのコネクタはありますか？**
 いいえ。Claude独自のメールコネクタはGmailと職場のMicrosoft 365アカウント向けです。iCloudはMCPサーバー経由のカスタムコネクタとしてClaudeに追加します。アプリ用パスワードでメールボックスをMCPEmailsに接続し、\`https://mcpemails.com/api/mcp\`をClaudeに貼り付けてください。
