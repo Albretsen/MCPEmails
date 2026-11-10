@@ -68,7 +68,7 @@
   "limits": [
     "Les rôles des dossiers sont reconnus par leur nom plutôt qu'annoncés par le serveur, car SPECIAL-USE n'est pas annoncé.",
     "Un identifiant propre à l'application n'existe que si vous activez la connexion en deux étapes. Sans elle, la connexion détient le mot de passe principal de votre compte.",
-    "À partir du 15 décembre 2026, les conditions de WP lui permettent de désactiver un protocole comme IMAP ou SMTP que le compte n'a pas utilisé depuis 90 jours, et un compte sans connexion depuis 180 jours est supprimé. Une boîte laissée inactive peut nécessiter de réactiver IMAP sous Opcje. Les pièces jointes sont plafonnées à 100 Mo."
+    "Les conditions de WP lui permettent de désactiver un protocole comme IMAP ou SMTP que le compte n'a pas utilisé depuis 90 jours, et de supprimer un compte sans connexion depuis 180 jours. Une boîte laissée inactive peut nécessiter de réactiver IMAP sous Opcje. Les pièces jointes sont plafonnées à 100 Mo."
   ],
   "faq": [
     {

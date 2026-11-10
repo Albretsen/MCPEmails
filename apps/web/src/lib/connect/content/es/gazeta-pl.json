@@ -53,7 +53,7 @@
     },
     {
       "h": "Servidor de Onet, acceso de Gazeta.pl",
-      "p": "El saludo IMAP en imap.gazeta.pl dice Onet server ready, porque Agora aloja el buzón en la plataforma de Onet. No es una cuenta de Onet. Los servidores son los nombres gazeta.pl que Gazeta.pl documenta, la contraseña es la tuya de Gazeta.pl, y las páginas de ayuda que aplican son las de pomoc.gazeta.pl, no las de Onet. Apuntar una dirección de Gazeta.pl a imap.poczta.onet.pl se rechaza."
+      "p": "El saludo IMAP en imap.gazeta.pl dice Onet server ready, porque Agora aloja el buzón en la plataforma de Onet. No es una cuenta de Onet. Los servidores son los nombres gazeta.pl que Gazeta.pl documenta, la contraseña es la tuya de Gazeta.pl, y las páginas de ayuda que aplican son las de pomoc.gazeta.pl, no las de Onet. Las instrucciones de Gazeta.pl solo nombran los servidores gazeta.pl, así que usa esos y no los de Onet."
     },
     {
       "h": "Sin IDLE, sin MOVE, sin UIDPLUS, sin SPECIAL-USE",
@@ -61,7 +61,7 @@
     }
   ],
   "limits": [
-    "Los adjuntos tienen un límite de 50 MB, así que un archivo mayor se rechaza al enviarlo en lugar de recortarse. Gazeta.pl no pone límite al tamaño del buzón.",
+    "Los adjuntos tienen un límite de 50 MB, así que un archivo mayor se rechaza al enviarlo en lugar de recortarse. Gazeta.pl describe el buzón como grande y no publica ninguna cifra de tamaño.",
     "Gazeta.pl ofrece inicio de sesión en dos pasos, pero no documenta ninguna contraseña de aplicación para programas de correo. Si lo activas y el inicio de sesión IMAP empieza a fallar, la ayuda de Gazeta.pl es el sitio donde preguntar."
   ],
   "faq": [

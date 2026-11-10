@@ -53,7 +53,7 @@
     },
     {
       "h": "Onets server, Gazeta.pls innlogging",
-      "p": "IMAP-banneret på imap.gazeta.pl sier Onet server ready, fordi Agora kjører postkassen på Onets plattform. Det er ikke en Onet-konto. Vertene er gazeta.pl-navnene Gazeta.pl dokumenterer, passordet er Gazeta.pl-passordet ditt, og hjelpesidene som gjelder, er pomoc.gazeta.pl, ikke Onets. Peker du en Gazeta.pl-adresse mot imap.poczta.onet.pl, avvises den."
+      "p": "IMAP-banneret på imap.gazeta.pl sier Onet server ready, fordi Agora kjører postkassen på Onets plattform. Det er ikke en Onet-konto. Vertene er gazeta.pl-navnene Gazeta.pl dokumenterer, passordet er Gazeta.pl-passordet ditt, og hjelpesidene som gjelder, er pomoc.gazeta.pl, ikke Onets. Gazeta.pls veiledning nevner bare gazeta.pl-vertene, så bruk dem og ikke Onets."
     },
     {
       "h": "Ingen IDLE, ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE",
@@ -61,7 +61,7 @@
     }
   ],
   "limits": [
-    "Et vedlegg er begrenset til 50 MB, så en større fil avvises ved sending i stedet for å bli kuttet. Gazeta.pl setter ingen grense for postkassens størrelse.",
+    "Et vedlegg er begrenset til 50 MB, så en større fil avvises ved sending i stedet for å bli kuttet. Gazeta.pl beskriver postkassen som stor og oppgir ingen størrelse i tall.",
     "Gazeta.pl tilbyr totrinnsinnlogging, men dokumenterer ikke noe app-passord for e-postprogrammer. Slår du den på og IMAP-innloggingen begynner å feile, er Gazeta.pls hjelp stedet å spørre."
   ],
   "faq": [

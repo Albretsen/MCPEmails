@@ -38,7 +38,7 @@
     },
     {
       "h": "Desbloquea IMAP y SMTP en Konto Główne",
-      "p": "Inicia sesión en poczta.onet.pl, pulsa el icono de la rueda dentada (<b>Ustawienia</b>) en la barra a la izquierda del buzón, elige <b>Konto</b> y después la pestaña <b>Konto Główne</b>. Cada protocolo tiene su propia tarjeta con un interruptor. Activa IMAP y SMTP; POP ya no se ofrece para programas de correo. La guía de Onet para Thunderbird dice lo mismo: asegúrate de que todos los protocolos que necesita tu cliente están desbloqueados antes de intentar iniciar sesión."
+      "p": "Inicia sesión en poczta.onet.pl, pulsa el icono de la rueda dentada (<b>Ustawienia</b>) en la barra a la izquierda del buzón, elige <b>Konto</b> y después la pestaña <b>Konto Główne</b>. Cada protocolo tiene su propia tarjeta con un interruptor. Activa IMAP y SMTP; POP ya no se ofrece para programas de correo. Asegúrate de que todos los protocolos que necesita tu cliente están desbloqueados antes de intentar iniciar sesión."
     },
     {
       "h": "Con la verificación en dos pasos activada, genera una hasło do aplikacji",
@@ -60,7 +60,7 @@
     },
     {
       "h": "La verificación en dos pasos y los programas de correo necesitan una contraseña de aplicación",
-      "p": "A diferencia de Interia, Onet no bloquea los programas de correo cuando activas la verificación en dos pasos; los pasa a una credencial aparte. Su ayuda califica las contraseñas de aplicación de necesarias cuando se usan la verificación en dos pasos y los clientes de correo a la vez, y las genera en Bezpieczeństwo, dentro de Onet Konto. La trampa es que a partir de ahí tu contraseña del navegador pasa a ser, sin aviso, la incorrecta, y el rechazo es idéntico al de una errata. Onet también recomienda una contraseña de aplicación individual por programa incluso sin verificación en dos pasos, lo cual es buena práctica: eliminar una corta el acceso de ese programa y de nada más."
+      "p": "A diferencia de Interia, Onet no bloquea los programas de correo cuando activas la verificación en dos pasos; los pasa a una credencial aparte. Su ayuda califica las contraseñas de aplicación de necesarias cuando se usan la verificación en dos pasos y los clientes de correo a la vez, y las genera en Bezpieczeństwo, dentro de Onet Konto. La trampa es que a partir de ahí tu contraseña del navegador pasa a ser, sin aviso, la incorrecta, y el rechazo es idéntico al de una errata. Onet también permite crear una contraseña de aplicación individual por programa incluso sin verificación en dos pasos, lo cual es buena práctica: eliminar una corta el acceso de ese programa y de nada más."
     },
     {
       "h": "Sin IDLE ni MOVE, así que archivar y detectar correo nuevo cuestan viajes de ida y vuelta adicionales",

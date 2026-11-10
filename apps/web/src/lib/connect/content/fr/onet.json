@@ -38,7 +38,7 @@
     },
     {
       "h": "Débloquez IMAP et SMTP sous Konto Główne",
-      "p": "Connectez-vous sur poczta.onet.pl, cliquez sur l'icône de roue dentée (<b>Ustawienia</b>) dans la barre à gauche de la boîte, choisissez <b>Konto</b>, puis l'onglet <b>Konto Główne</b>. Chaque protocole a sa propre tuile avec un interrupteur. Activez IMAP et SMTP ; POP n'est plus proposé pour les programmes de messagerie. Le guide Thunderbird d'Onet dit la même chose : assurez-vous que chaque protocole dont votre client a besoin est débloqué avant d'essayer de vous connecter."
+      "p": "Connectez-vous sur poczta.onet.pl, cliquez sur l'icône de roue dentée (<b>Ustawienia</b>) dans la barre à gauche de la boîte, choisissez <b>Konto</b>, puis l'onglet <b>Konto Główne</b>. Chaque protocole a sa propre tuile avec un interrupteur. Activez IMAP et SMTP ; POP n'est plus proposé pour les programmes de messagerie. Assurez-vous que chaque protocole dont votre client a besoin est débloqué avant d'essayer de vous connecter."
     },
     {
       "h": "Avec la vérification en deux étapes activée, générez un hasło do aplikacji",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Vérification en deux étapes et programmes de messagerie : il faut un mot de passe d'application",
-      "p": "Contrairement à Interia, Onet ne bloque pas les programmes de messagerie quand vous activez la vérification en deux étapes ; il les fait passer sur un identifiant distinct. Son aide qualifie les mots de passe d'application de nécessaires quand la vérification en deux étapes et les clients de messagerie sont utilisés ensemble, et les génère sous Bezpieczeństwo dans Onet Konto. Le piège, c'est que votre mot de passe du navigateur devient alors discrètement le mauvais, et le refus ressemble exactement à une faute de frappe. Onet recommande aussi un mot de passe d'application propre à chaque programme, même sans vérification en deux étapes, et c'est une bonne pratique : en supprimer un met fin à l'accès de ce programme et de rien d'autre."
+      "p": "Contrairement à Interia, Onet ne bloque pas les programmes de messagerie quand vous activez la vérification en deux étapes ; il les fait passer sur un identifiant distinct. Son aide qualifie les mots de passe d'application de nécessaires quand la vérification en deux étapes et les clients de messagerie sont utilisés ensemble, et les génère sous Bezpieczeństwo dans Onet Konto. Le piège, c'est que votre mot de passe du navigateur devient alors discrètement le mauvais, et le refus ressemble exactement à une faute de frappe. Onet vous laisse aussi créer un mot de passe d'application propre à chaque programme, même sans vérification en deux étapes, et c'est une bonne pratique : en supprimer un met fin à l'accès de ce programme et de rien d'autre."
     },
     {
       "h": "Ni IDLE ni MOVE : le classement et la fraîcheur coûtent des allers-retours supplémentaires",

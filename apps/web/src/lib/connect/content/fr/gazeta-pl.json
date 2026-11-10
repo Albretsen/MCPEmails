@@ -53,7 +53,7 @@
     },
     {
       "h": "Le serveur d'Onet, l'identifiant de Gazeta.pl",
-      "p": "La bannière IMAP sur imap.gazeta.pl affiche Onet server ready, parce qu'Agora fait tourner la boîte sur la plateforme d'Onet. Ce n'est pas un compte Onet. Les serveurs sont les noms en gazeta.pl que Gazeta.pl documente, le mot de passe est votre mot de passe Gazeta.pl, et les pages d'aide qui s'appliquent sont celles de pomoc.gazeta.pl, pas celles d'Onet. Pointer une adresse Gazeta.pl vers imap.poczta.onet.pl est refusé."
+      "p": "La bannière IMAP sur imap.gazeta.pl affiche Onet server ready, parce qu'Agora fait tourner la boîte sur la plateforme d'Onet. Ce n'est pas un compte Onet. Les serveurs sont les noms en gazeta.pl que Gazeta.pl documente, le mot de passe est votre mot de passe Gazeta.pl, et les pages d'aide qui s'appliquent sont celles de pomoc.gazeta.pl, pas celles d'Onet. Les instructions de Gazeta.pl ne nomment que les serveurs gazeta.pl, alors utilisez ceux-là plutôt que ceux d'Onet."
     },
     {
       "h": "Ni IDLE, ni MOVE, ni UIDPLUS, ni SPECIAL-USE",
@@ -61,7 +61,7 @@
     }
   ],
   "limits": [
-    "Une pièce jointe est plafonnée à 50 Mo, donc un fichier plus gros est refusé à l'envoi plutôt que tronqué. Gazeta.pl ne fixe aucune limite à la taille de la boîte.",
+    "Une pièce jointe est plafonnée à 50 Mo, donc un fichier plus gros est refusé à l'envoi plutôt que tronqué. Gazeta.pl décrit la boîte comme grande et ne publie aucun chiffre de taille.",
     "Gazeta.pl propose la connexion en deux étapes mais ne documente aucun mot de passe d'application pour les programmes de messagerie. Si vous l'activez et que la connexion IMAP se met à échouer, l'aide de Gazeta.pl est l'endroit où poser la question."
   ],
   "faq": [

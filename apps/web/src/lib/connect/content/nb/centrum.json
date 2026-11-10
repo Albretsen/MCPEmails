@@ -74,7 +74,7 @@
     },
     {
       "h": "Atlas og Volný deler plattformen, men ikke IMAP-navnet",
-      "p": "En @atlas.cz-adresse logger inn på <code>imap.atlas.cz</code> og sender gjennom smtp.centrum.cz; en @volny.cz-adresse bruker <code>imap.volny.cz</code> og <code>smtp.volny.cz</code>. Peker du en Atlas-konto mot Centrums IMAP-vert, avvises den. MCPEmails forhåndsutfyller riktig par ut fra adressen du skriver, og SMTP-serveren identifiserer seg som en centrum.cz-maskin i alle tilfeller, noe som er normalt."
+      "p": "En @atlas.cz-adresse logger inn på <code>imap.atlas.cz</code> og sender gjennom smtp.centrum.cz; en @volny.cz-adresse bruker <code>imap.volny.cz</code> og <code>smtp.volny.cz</code>. Hjelpesiden gir Atlas et eget IMAP-navn i stedet for Centrums, så bruk det. MCPEmails forhåndsutfyller riktig par ut fra adressen du skriver, og SMTP-serveren identifiserer seg som en centrum.cz-maskin i alle tilfeller, noe som er normalt."
     }
   ],
   "limits": [

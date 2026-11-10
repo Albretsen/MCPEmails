@@ -38,7 +38,7 @@
     },
     {
       "h": "Lås opp IMAP og SMTP under Konto Główne",
-      "p": "Logg inn på poczta.onet.pl, klikk på tannhjulikonet (<b>Ustawienia</b>) på linjen til venstre for postkassen, velg <b>Konto</b>, så fanen <b>Konto Główne</b>. Hver protokoll har sin egen flis med en bryter. Slå på IMAP og SMTP; POP tilbys ikke lenger for e-postprogrammer. Onets Thunderbird-veiledning sier det samme: sørg for at hver protokoll klienten din trenger, er låst opp før du prøver å logge inn."
+      "p": "Logg inn på poczta.onet.pl, klikk på tannhjulikonet (<b>Ustawienia</b>) på linjen til venstre for postkassen, velg <b>Konto</b>, så fanen <b>Konto Główne</b>. Hver protokoll har sin egen flis med en bryter. Slå på IMAP og SMTP; POP tilbys ikke lenger for e-postprogrammer. Sørg for at hver protokoll klienten din trenger, er låst opp før du prøver å logge inn."
     },
     {
       "h": "Med totrinnsverifisering på, generer et hasło do aplikacji",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Totrinnsverifisering og e-postprogrammer krever et app-passord",
-      "p": "I motsetning til Interia blokkerer ikke Onet e-postprogrammer når du slår på totrinnsverifisering; de flyttes over på en egen pålogging. Hjelpen kaller app-passord nødvendige når totrinnsverifisering og e-postklienter brukes sammen, og genererer dem under Bezpieczeństwo i Onet Konto. Fellen er at nettleserpassordet ditt dermed blir feil uten at du får beskjed, og avslaget ser helt likt ut som en skrivefeil. Onet anbefaler også et eget app-passord per program selv uten totrinnsverifisering, noe som er god praksis: sletter du ett, avsluttes det programmets tilgang og ingenting annet."
+      "p": "I motsetning til Interia blokkerer ikke Onet e-postprogrammer når du slår på totrinnsverifisering; de flyttes over på en egen pålogging. Hjelpen kaller app-passord nødvendige når totrinnsverifisering og e-postklienter brukes sammen, og genererer dem under Bezpieczeństwo i Onet Konto. Fellen er at nettleserpassordet ditt dermed blir feil uten at du får beskjed, og avslaget ser helt likt ut som en skrivefeil. Onet lar deg også opprette et eget app-passord per program selv uten totrinnsverifisering, noe som er god praksis: sletter du ett, avsluttes det programmets tilgang og ingenting annet."
     },
     {
       "h": "Ingen IDLE og ingen MOVE, så både arkivering og oppdaging av ny e-post koster ekstra rundturer",
