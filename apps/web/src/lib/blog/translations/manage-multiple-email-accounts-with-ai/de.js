@@ -92,7 +92,7 @@ Verbundene Postfächer sind das, wonach die Tarife bemessen sind:
 
 - **Free** verbindet ein Postfach.
 - **Personal** verbindet mehrere Postfächer für eine Person, mit höherem Burst-Ratenlimit und bevorzugtem Support per E-Mail.
-- **Pro** verbindet noch mehr Postfächer für eine Person, die ein Unternehmen führt, mit noch höherem Burst-Ratenlimit, längerer Auswertungshistorie und Webhooks für neue E-Mails.
+- **Pro** verbindet noch mehr Postfächer für eine Person, die ein Unternehmen führt, mit noch höherem Burst-Ratenlimit, längerem Analyseverlauf und Webhooks für neue E-Mails.
 - **Business** enthält ein Kontingent an Postfächern mit einem Preis pro weiterem Postfach, unbegrenzt viele Mitglieder mit Rollen ohne Mehrkosten, Admins, die angehaltene Sendungen freigeben, und einen eigenen Workspace pro Kunde oder Unternehmen.
 
 Eine kontoübergreifende Routine ist ein Aufruf pro Postfach, die Zahl Ihrer Postfächer bestimmt das Volumen also genauso wie Ihre Gewohnheiten. Die aktuellen Zahlen und Preise stehen auf der [Preisseite](/pricing).

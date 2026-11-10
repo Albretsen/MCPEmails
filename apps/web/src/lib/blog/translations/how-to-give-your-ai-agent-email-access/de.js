@@ -104,11 +104,11 @@ Zu den Rate-Limits: Jeder Workspace hat eine Obergrenze pro Minute, die mit Ihre
 
 ## Preise
 
-Die Tarife bemessen sich nach verbundenen Postfächern. API-Schlüssel sind in jedem Tarif unbegrenzt, und die Tarife unterscheiden sich außerdem bei Burst-Rate, Aufbewahrung der Auswertungen, Team-Funktionen und Support.
+Die Tarife bemessen sich nach verbundenen Postfächern. API-Schlüssel sind in jedem Tarif unbegrenzt, und die Tarife unterscheiden sich außerdem bei Burst-Rate, Analyseverlauf, Team-Funktionen und Support.
 
-- **Free**, dauerhaft kostenlos. Keine Karte. Ein verbundenes Postfach, Hilfe-Center und Support per E-Mail.
-- **Personal**: mehrere verbundene Postfächer, höhere Burst-Rate, längere Auswertungen, bevorzugter Support per E-Mail.
-- **Pro**: für eine Person, die ein Unternehmen führt, mit noch mehr verbundenen Postfächern, noch höherer Burst-Rate, mehrjährigen Auswertungen und Webhooks für neue E-Mails.
+- **Free**, dauerhaft kostenlos. Keine Karte. Ein verbundenes Postfach, Nutzungsanalyse, Hilfe-Center und Support per E-Mail.
+- **Personal**: mehrere verbundene Postfächer, höhere Burst-Rate, längerer Analyseverlauf, bevorzugter Support per E-Mail.
+- **Pro**: für eine Person, die ein Unternehmen führt, mit noch mehr verbundenen Postfächern, noch höherer Burst-Rate, mehrjährigem Analyseverlauf und Webhooks für neue E-Mails.
 - **Business**: alles aus Pro, dazu ein enthaltenes Kontingent an Postfächern mit einem Preis pro weiterem Postfach, unbegrenzt viele Mitglieder mit Rollen, Admins, die angehaltene Sendungen freigeben, und ein eigener Workspace pro Kunde oder Unternehmen.
 
 Die aktuellen Preise und Postfachzahlen stehen auf der [Preisseite](/pricing).

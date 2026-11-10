@@ -56,7 +56,7 @@ Besteht ein Tool alle sechs Punkte, ist das Restrisiko klein und beherrschbar. F
 
 ## Was wir nicht tun
 
-Zwei Grenzen wollen wir klar benennen. Erstens wird ein Agent im Chat nicht angestoßen, wenn eine E-Mail eintrifft; er sieht nach einem Zeitplan nach. Der einzige Push, den wir anbieten, ist ein signierter Webhook für neue E-Mails an eine URL, die Ihnen gehört, in Pro und Business, und er trägt Nachrichten-IDs, nie den Nachrichtentext. Zweitens können wir Sie nicht vor einem Agenten schützen, dem Sie zu viel vertrauen. Wenn Sie einem autonomen Agenten Sendezugriff ohne jede Prüfung geben, ist Prompt-Injection ein echtes Risiko, und das liegt an der Einrichtung, nicht am Transport. Schränken Sie die Berechtigungen ein und behalten Sie bei allem Unumkehrbaren einen Menschen dabei.
+Zwei Grenzen wollen wir klar benennen. Erstens wird ein Agent im Chat nicht angestoßen, wenn eine E-Mail eintrifft; er sieht nach einem Zeitplan nach. Der einzige Push, den wir anbieten, ist der signierte Webhook für neue E-Mails in Pro und Business: Er geht an eine URL, die Ihnen gehört, und enthält Nachrichten-IDs, nie den Nachrichtentext. Zweitens können wir Sie nicht vor einem Agenten schützen, dem Sie zu viel vertrauen. Wenn Sie einem autonomen Agenten Sendezugriff ohne jede Prüfung geben, ist Prompt-Injection ein echtes Risiko, und das liegt an der Einrichtung, nicht am Transport. Schränken Sie die Berechtigungen ein und behalten Sie bei allem Unumkehrbaren einen Menschen dabei.
 
 ## Also, ist es sicher?
 

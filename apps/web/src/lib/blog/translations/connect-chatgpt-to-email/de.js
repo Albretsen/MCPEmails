@@ -86,7 +86,7 @@ MCPEmails gibt ChatGPT gezielte Tools statt eines Passworts oder einer rohen IMA
 - **Entwürfe, Ordner und Planung:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` und \`schedule_list\`.
 - **Der Rest:** \`contact_search\`, \`signature_get\`, \`signature_set\`, dazu \`automation\` und \`automation_read\` für wiederkehrende Regeln.
 
-Eine Grenze sollten Sie einplanen: Im Chat prüft ChatGPT auf neue E-Mails, wenn Sie darum bitten, nicht in dem Moment, in dem eine Nachricht eintrifft. Nichts im Konnektor weckt ChatGPT von selbst. (Eigenen Code dagegen schon: Pro- und Business-Workspaces können unter API-Schlüssel einen Webhook anlegen, der bei neuen E-Mails einen POST an Ihre URL schickt.)
+Eine Grenze sollten Sie einplanen: Im Chat sieht ChatGPT nach neuen E-Mails, wenn Sie darum bitten, nicht in dem Moment, in dem eine Nachricht eintrifft. Nichts im Konnektor weckt ChatGPT von selbst. (Eigener Code lässt sich dagegen wecken: Pro- und Business-Workspaces können unter API-Schlüssel einen Webhook anlegen, der bei neuen E-Mails einen POST an Ihre URL schickt.)
 
 ## OpenAI Codex im Terminal
 

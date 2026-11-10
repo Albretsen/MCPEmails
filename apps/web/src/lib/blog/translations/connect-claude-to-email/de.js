@@ -99,7 +99,7 @@ MCPEmails arbeitet mit Abfragen: Claude prüft auf neue E-Mails, wenn Sie darum 
 - **Der Anbieter lehnt das Passwort ab:** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht das Passwort, mit dem Sie sich im Web anmelden. Erzeugen Sie es neu, nachdem Sie die Zwei-Faktor-Authentifizierung aktiviert haben, falls das verlangt wird.
 - **Eine eigene IMAP-Verbindung läuft in ein Timeout:** Prüfen Sie IMAP/SMTP-Host, Port und TLS-Modus des Anbieters. Port 993 nutzt normalerweise implizites TLS, Port 143 normalerweise STARTTLS.
 - **Claude ist verbunden, sieht aber keine E-Mails:** Prüfen Sie zuerst, ob das Postfach in MCPEmails aktiv ist, verbinden Sie Claude dann neu und wählen Sie mindestens **Nur-Lese-Zugriff**. Bitten Sie Claude, **inbox_list** aufzurufen, bevor es Nachrichten liest.
-- **Claude kann lesen, aber nicht senden:** Verbinden Sie neu mit **Standard** oder **Vollzugriff** (beide enthalten das Senden) und prüfen Sie, ob die Verbindung zum Anbieter SMTP oder das native Senden des Anbieters unterstützt.
+- **Claude kann lesen, aber nicht senden:** Verbinden Sie Claude neu und wählen Sie **Standard** oder **Vollzugriff** (beide enthalten das Senden) und prüfen Sie, ob die Verbindung zum Anbieter SMTP oder das native Senden des Anbieters unterstützt.
 
 Kommen Sie immer noch nicht weiter? Prüfen Sie in der [Anbieter-Übersicht](/docs/providers) die Funktionen, [öffnen Sie dann die Einrichtungsanleitung](/docs#quickstart) und testen Sie eine reine Leseanfrage, bevor Sie das Senden freischalten.
 

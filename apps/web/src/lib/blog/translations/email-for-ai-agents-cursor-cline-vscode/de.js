@@ -101,7 +101,7 @@ Der Agent führt \`inbox_list\` aus, dann \`email_read\` mit der Aktion \`list\`
 
 Er ruft \`email_compose\` mit der Aktion \`reply\` auf, der Verlauf bleibt erhalten, und die Antwort geht über mein eigenes Gmail hinaus. Sie kommt also von meiner Adresse mit der Reputation meiner Domain an. Mehr zu Triage-Prompts lesen Sie unter [wie ein KI-Agent Ihr Postfach sortiert und zusammenfasst](/blog/ai-agent-triage-summarize-inbox).
 
-Eine Einschränkung gibt es: Die MCP-Tools melden sich nie von selbst bei Ihnen. Soll der Agent auf eingehende Nachrichten reagieren, fragen Sie regelmäßig ab, also \`email_read\` mit der Aktion \`list\` und \`unread: true\` nach Zeitplan, oder Sie lassen einen Webhook für neue E-Mails Ihren Code wecken (Pro- und Business-Workspaces legen ihn im Dashboard unter API-Schlüssel an, und er schickt die Nachrichten-IDs per POST an Ihre URL). So oder so bestimmt das, wie Sie alles Reaktive bauen, etwa einen [automatischen Antwortdienst über MCP](/blog/build-email-auto-responder-mcp-agent).
+Eine Einschränkung gibt es: Die MCP-Tools melden sich nie von selbst bei Ihnen. Soll der Agent auf eingehende Nachrichten reagieren, fragen Sie den Server regelmäßig ab, also \`email_read\` mit der Aktion \`list\` und \`unread: true\` nach Zeitplan, oder Sie lassen einen Webhook für neue E-Mails Ihren Code wecken (Pro- und Business-Workspaces legen ihn im Dashboard unter API-Schlüssel an, und er schickt die Nachrichten-IDs per POST an Ihre URL). So oder so bestimmt das, wie Sie alles Reaktive bauen, etwa einen [automatischen Antwortdienst über MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratenlimits für Zugriff per Skript
 

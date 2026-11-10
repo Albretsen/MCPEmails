@@ -52,7 +52,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Klicken Sie auf **Weiter**, übernehmen Sie die Authentifizierungseinstellungen, die Claude erkennt, und klicken Sie auf **Hinzufügen**.
-5. Klicken Sie auf **Verbinden**, melden Sie sich bei Ihrem MCPEmails-Konto an und legen Sie auf dem Zustimmungsbildschirm fest, wie viel Zugriff Claude bekommt: **Nur-Lese-Zugriff**, **Standard** (dazu Senden und Entwürfe) oder **Vollzugriff**.
+5. Klicken Sie auf **Verbinden**, melden Sie sich bei Ihrem MCPEmails-Konto an und legen Sie auf dem Zustimmungsbildschirm fest, wie viel Zugriff Claude bekommt: **Nur-Lese-Zugriff**, **Standard** (zusätzlich Senden und Entwürfe) oder **Vollzugriff**.
 
 Um den Konnektor in einem Chat zu nutzen, klicken Sie unten links im Eingabefeld auf **+**, wählen **Konnektoren** und schalten MCPEmails ein. Sie müssen keinen API-Schlüssel erstellen und keine Konfigurationsdatei bearbeiten. Im Team- oder Enterprise-Tarif kann nur ein Inhaber einen benutzerdefinierten Konnektor hinzufügen; Mitglieder finden ihn dann unter **Anpassen → Konnektoren** und klicken auf **Verbinden**. Wenn Claude auf einem dieser Bildschirme hängen bleibt, hilft die [Einrichtungsseite für Claude](/docs/claude) bei den häufigsten Problemen.
 

@@ -89,7 +89,7 @@ Ja. Verbinden Sie das iCloud-Mail-Plugin unter Einstellungen, Plugins, mit Ihrer
 Nein. Es meldet sich bei den Mailservern von iCloud an, nicht bei der Mail-App, und sieht deshalb nur E-Mails, die in iCloud liegen. Verbinden Sie andere Konten mit ihrem eigenen Plugin oder über einen MCP-Server wie MCPEmails.
 
 **Warum lehnt ChatGPT mein Apple-Passwort ab?**
-Apple verlangt für jede App außerhalb der eigenen ein App-spezifisches Passwort. Erstellen Sie eines auf account.apple.com unter Anmelden und Sicherheit, App-spezifische Passwörter. Die Zwei-Faktor-Authentifizierung muss aktiv sein.
+Weil das Plugin ein App-spezifisches Passwort erwartet, nicht Ihr normales Passwort. Apple lässt zwar [unterstützte Drittanbieter-Apps](https://support.apple.com/de-de/102654) direkt mit dem Apple Account auf iCloud Mail zugreifen, alle anderen bekommen ein App-spezifisches Passwort; so verbindet auch MCPEmails iCloud, über IMAP. Erstellen Sie eines auf account.apple.com unter Anmelden und Sicherheit, App-spezifische Passwörter. Die Zwei-Faktor-Authentifizierung muss aktiv sein.
 
 **Hat Claude einen iCloud-Konnektor?**
 Nein. Die eigenen E-Mail-Konnektoren von Claude decken Gmail und geschäftliche Microsoft 365-Konten ab. Fügen Sie iCloud über einen MCP-Server als benutzerdefinierten Konnektor zu Claude hinzu: Verbinden Sie das Postfach mit einem App-spezifischen Passwort mit MCPEmails und fügen Sie \`https://mcpemails.com/api/mcp\` in Claude ein.
