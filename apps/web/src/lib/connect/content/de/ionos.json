@@ -16,7 +16,7 @@
   },
   "meta": {
     "title": "IONOS Mail MCP: IONOS E-Mail mit Claude verbinden",
-    "description": "IONOS E-Mail mit Claude, ChatGPT und Cursor verbinden: imap.ionos.de:993 für ionos.de-Postfächer, Passwort der E-Mail-Adresse statt IONOS-Login. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
+    "description": "IONOS E-Mail mit Claude und ChatGPT verbinden: imap.ionos.de:993, Passwort der E-Mail-Adresse statt IONOS-Login. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
   },
   "hero": {
     "eyebrow": "IONOS + KI",
@@ -44,7 +44,7 @@
     },
     {
       "h": "Passwort der E-Mail-Adresse bei IONOS festlegen",
-      "p": "Melden Sie sich in Ihrem IONOS Konto an, öffnen Sie den Bereich E-Mail, wählen Sie die Adresse und vergeben Sie dort ein neues Passwort oder setzen Sie es zurück. Es ist nicht das Passwort, mit dem Sie sich gerade bei IONOS angemeldet haben. Kennen Sie das aktuelle Passwort, können Sie es auch in IONOS Webmail ändern."
+      "p": "Melden Sie sich in Ihrem IONOS Konto an und klicken Sie auf die Kachel E-Mail. Klicken Sie in der Zeile der Adresse unter Aktionen auf die drei Punkte, dann auf Passwort ändern, und vergeben Sie ein neues Passwort. Es ist nicht das Passwort, mit dem Sie sich gerade bei IONOS angemeldet haben. Kennen Sie das aktuelle Passwort, können Sie es auch in IONOS Webmail ändern."
     },
     {
       "h": "In MCPEmails einfügen",
@@ -62,7 +62,7 @@
     },
     {
       "h": "Jede IONOS-Adresse hat ein eigenes Passwort, und es ist nicht Ihr IONOS-Login",
-      "p": "IONOS schreibt es wörtlich: Das Passwort ist das Passwort zu Ihrer E-Mail-Adresse, und jede Adresse hat ihr eigenes. Die Zugangsdaten, mit denen Sie sich bei IONOS selbst anmelden, sehr oft ebenfalls eine E-Mail-Adresse, öffnen Ihr Kundenkonto und sonst nichts. Legen Sie das Passwort der Adresse in Ihrem IONOS Konto unter <b>E-Mail</b> fest oder setzen Sie es zurück, indem Sie die Adresse auswählen und dort die Passwort-Option nutzen. Weil beide Zugangsdaten in einem Anmeldeformular gleich aussehen, ist das der häufigste Verbindungsfehler bei IONOS, und genau der Fehler, den viele mit dem Portwechsel oben zu beheben versuchen."
+      "p": "IONOS schreibt es wörtlich: Das Passwort ist das Passwort zu Ihrer E-Mail-Adresse, und jede Adresse hat ihr eigenes. Die Zugangsdaten, mit denen Sie sich bei IONOS selbst anmelden, sehr oft ebenfalls eine E-Mail-Adresse, öffnen Ihr Kundenkonto und sonst nichts. Legen Sie das Passwort der Adresse in Ihrem IONOS Konto unter <b>E-Mail</b> fest oder setzen Sie es zurück: bei der Adresse unter <b>Aktionen</b> auf die drei Punkte und dann auf <b>Passwort ändern</b> klicken. Weil beide Zugangsdaten in einem Anmeldeformular gleich aussehen, ist das der häufigste Verbindungsfehler bei IONOS, und genau der Fehler, den viele mit dem Portwechsel oben zu beheben versuchen."
     },
     {
       "h": "Microsoft 365 von IONOS ist ein Microsoft-Postfach, kein IONOS-Postfach",
@@ -92,7 +92,7 @@
     },
     {
       "q": "Warum wird mein IONOS-E-Mail-Passwort abgelehnt?",
-      "a": "Weil IONOS jeder E-Mail-Adresse ein eigenes Passwort gibt und Sie vermutlich Ihr IONOS-Login verwenden. Öffnen Sie Ihr IONOS Konto, gehen Sie zu E-Mail, wählen Sie die Adresse, vergeben Sie ein neues Passwort und verwenden Sie dieses. Testen Sie es zur Sicherheit in IONOS Webmail. Wurde die Adresse zu Microsoft 365 migriert, existiert sie auf den IONOS-Mailservern nicht mehr; verbinden Sie sie dann über Outlook."
+      "a": "Weil IONOS jeder E-Mail-Adresse ein eigenes Passwort gibt und Sie vermutlich Ihr IONOS-Login verwenden. Öffnen Sie Ihr IONOS Konto, klicken Sie auf die Kachel E-Mail, dann bei der Adresse unter Aktionen auf Passwort ändern, vergeben Sie ein neues Passwort und verwenden Sie dieses. Testen Sie es zur Sicherheit in IONOS Webmail. Wurde die Adresse zu Microsoft 365 migriert, existiert sie auf den IONOS-Mailservern nicht mehr; verbinden Sie sie dann über Outlook."
     },
     {
       "q": "Nutzen IONOS-Postfächer aus Deutschland, Großbritannien und den USA verschiedene Server?",

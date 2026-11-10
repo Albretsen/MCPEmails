@@ -17,7 +17,7 @@
   },
   "meta": {
     "title": "Claude mit GMX verbinden: IMAP, App-Passwort, Fehler beheben",
-    "description": "Claude, ChatGPT oder Cursor mit Ihrem GMX-Postfach verbinden: POP3/IMAP bei GMX einschalten, imap.gmx.net:993, bei 2FA ein App-Passwort. Plus: was tun, wenn GMX die Anmeldung ablehnt."
+    "description": "Claude, ChatGPT oder Cursor mit GMX verbinden: POP3/IMAP bei GMX einschalten, imap.gmx.net:993, bei 2FA ein App-Passwort. Plus Hilfe, wenn GMX die Anmeldung ablehnt."
   },
   "hero": {
     "eyebrow": "GMX + KI",
@@ -40,7 +40,7 @@
     },
     {
       "h": "POP3/IMAP bei GMX einschalten",
-      "p": "Melden Sie sich am PC oder Mac im Browser bei GMX an, klicken Sie oben auf das Symbol mit Ihren Initialen und dann auf E-Mail-Einstellungen. Wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP, stellen Sie den Schieberegler unter POP3-/IMAP-Abruf auf POP3- und IMAP-Zugriff erlauben und lösen Sie die Sicherheitsfrage, bei der Sie zwei Symbole übereinanderschieben. Auf gmx.com: Email, dann Settings, dann POP3 & IMAP."
+      "p": "Melden Sie sich am PC oder Mac im Browser bei GMX an, klicken Sie oben auf das Symbol mit Ihren Initialen und dann auf E-Mail-Einstellungen. Wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP, stellen Sie den Schieberegler unter POP3-/IMAP-Abruf auf POP3- und IMAP-Zugriff erlauben und lösen Sie die Sicherheitsfrage, bei der Sie zwei Symbole übereinander schieben. Auf gmx.com: Email, dann Settings, dann POP3 & IMAP."
     },
     {
       "h": "Postfach in MCPEmails hinzufügen",
@@ -53,7 +53,7 @@
   ],
   "gotchas": [
     {
-      "h": "GMX schaltet POP3 und IMAP ab Werk ab, und nach längerer Pause wieder ab",
+      "h": "Bei GMX sind POP3 und IMAP ab Werk aus, und nach längerer Pause wieder",
       "p": "Solange der Schalter aus ist, lehnt GMX jede Anmeldung eines Mailprogramms ab, und der Fehler sieht exakt aus wie ein falsches Passwort. Der Weg: auf gmx.net anmelden, oben auf das Symbol mit Ihren Initialen, <b>E-Mail-Einstellungen</b>, unter <b>E-Mail empfangen</b> den Punkt <b>POP3/IMAP</b>, den Schieberegler unter <b>POP3-/IMAP-Abruf</b> auf <b>POP3- und IMAP-Zugriff erlauben</b> stellen und die Sicherheitsfrage lösen. Auf gmx.com ist es derselbe Schalter unter Email, Settings, POP3 & IMAP, <b>Enable access to this account via POP3 and IMAP</b>. GMX schreibt außerdem in seiner Hilfe: Nutzen Sie Ihr Mailprogramm längere Zeit nicht, wird der Abruf über POP3 bzw. IMAP aus Sicherheitsgründen automatisch wieder ausgeschaltet. Eine Verbindung, die monatelang lief, kann also plötzlich mit einem Anmeldefehler stehen bleiben, obwohl Sie nichts geändert haben. Ein Agent, der das Postfach regelmäßig liest, hält den Zugriff von selbst aktiv."
     },
     {
@@ -70,7 +70,7 @@
     },
     {
       "h": "Probleme beheben: GMX lehnt die Anmeldung ab, oder das Postfach springt auf „Neu verbinden nötig“",
-      "p": "Eine abgelehnte IMAP-Anmeldung kommt ohne Begründung, deshalb sehen drei Ursachen von außen gleich aus: POP3/IMAP ausgeschaltet, 2FA aktiv ohne App-Passwort, Passwort vertippt. Gehen Sie sie in dieser Reihenfolge durch. Erstens: Melden Sie sich am PC im Browser direkt bei GMX an und lesen Sie, was nach dem Login erscheint. Das ist GMX' eigener Rat für scheiternde Mailprogramme, denn Sicherheitsabfragen und vorübergehende Sperren zeigt GMX nur dort, nie im Mailprogramm. Zweitens: Prüfen Sie den POP3/IMAP-Schieberegler, auch wenn er früher an war. Drittens: Bei aktiver 2FA ein frisches App-Passwort erstellen und in MCPEmails unter Neu verbinden eintragen. Ein Sonderfall aus unserem Support: Das GMX-Postfach verbindet sich im Dashboard, steht aber kurz darauf auf <b>Neu verbinden nötig</b>, sobald der Konnektor es aus Claude oder ChatGPT nutzt. Dann hat GMX die zweite Anmeldung abgewiesen, obwohl das Passwort unverändert ist. Gehen Sie dieselben drei Schritte durch und schreiben Sie, falls es bleibt, an support@mcpemails.com mit der Uhrzeit des Versuchs: Wir protokollieren den Wortlaut, mit dem GMX die Anmeldung abgelehnt hat, und können die Ursache dann benennen."
+      "p": "Eine abgelehnte IMAP-Anmeldung kommt ohne Begründung, deshalb sehen drei Ursachen von außen gleich aus: POP3/IMAP ausgeschaltet, 2FA aktiv ohne App-Passwort, Passwort vertippt. Gehen Sie sie in dieser Reihenfolge durch. Erstens: Melden Sie sich am PC im Browser direkt bei GMX an und lesen Sie, was nach dem Login erscheint. So rät es GMX selbst bei scheiternden Mailprogrammen, denn Sicherheitsabfragen und vorübergehende Sperren zeigt GMX nur dort, nie im Mailprogramm. Zweitens: Prüfen Sie den POP3/IMAP-Schieberegler, auch wenn er früher an war. Drittens: Bei aktiver 2FA ein frisches App-Passwort erstellen und in MCPEmails unter Neu verbinden eintragen. Ein Sonderfall aus unserem Support: Das GMX-Postfach verbindet sich im Dashboard, steht aber kurz darauf auf <b>Neu verbinden nötig</b>, sobald der Konnektor es aus Claude oder ChatGPT nutzt. Dann hat GMX die zweite Anmeldung abgewiesen, obwohl das Passwort unverändert ist. Gehen Sie dieselben drei Schritte durch und schreiben Sie, falls es bleibt, an support@mcpemails.com mit der Uhrzeit des Versuchs: Wir protokollieren den Wortlaut, mit dem GMX die Anmeldung abgelehnt hat, und können die Ursache dann benennen."
     }
   ],
   "limits": [

@@ -16,7 +16,7 @@
   },
   "meta": {
     "title": "Claude mit WEB.DE verbinden: IMAP, App-Passwort, Fehler beheben",
-    "description": "WEB.DE in Claude, ChatGPT oder Cursor nutzen: POP3/IMAP bei WEB.DE einschalten, imap.web.de:993, bei 2FA ein App-Passwort. Mit Lösungen für abgelehnte Anmeldungen. Ein Postfach kostenlos."
+    "description": "WEB.DE in Claude oder ChatGPT nutzen: POP3/IMAP einschalten, imap.web.de:993, bei 2FA ein App-Passwort. Plus Hilfe bei abgelehnter Anmeldung. Ein Postfach kostenlos."
   },
   "hero": {
     "eyebrow": "WEB.DE + KI",
@@ -30,7 +30,7 @@
   },
   "method": {
     "title": "So verbindet sich WEB.DE: IMAP, Ihr Passwort, und ein Schalter, den fast alle übersehen",
-    "body": "WEB.DE spricht ganz normales IMAP und SMTP, aber <b>der Abruf per POP3 und IMAP ist standardmäßig ausgeschaltet</b>. Sie schalten ihn bei WEB.DE unter E-Mail-Einstellungen, E-Mail empfangen, POP3/IMAP ein und melden sich dann mit Ihrer WEB.DE-Adresse und Ihrem Passwort an. Für den Versand antwortet WEB.DE auf beiden üblichen Wegen, implizites TLS auf Port 465 und STARTTLS auf Port 587; am Port scheitert ein Versand also fast nie. MCPEmails nutzt das 465-Paar unten und wechselt bei Bedarf selbst auf den anderen Port."
+    "body": "WEB.DE spricht ganz normales IMAP und SMTP, aber <b>der Abruf per POP3 und IMAP ist standardmäßig ausgeschaltet</b>. Sie schalten ihn bei WEB.DE unter E-Mail-Einstellungen, E-Mail empfangen, POP3/IMAP ein und melden sich dann mit Ihrer WEB.DE-Adresse und Ihrem Passwort an. Für den Versand antwortet WEB.DE auf beiden üblichen Wegen, implizites TLS auf Port 465 und STARTTLS auf Port 587; am Port scheitert ein Versand also fast nie. MCPEmails nutzt das 465-Paar unten und probiert beim Verbinden selbst den anderen Port, falls der erste nicht antwortet."
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "POP3/IMAP bei WEB.DE einschalten",
-      "p": "Melden Sie sich am PC oder Mac auf web.de an, klicken Sie oben auf das Symbol mit Ihren Initialen und öffnen Sie die E-Mail-Einstellungen. Wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP, stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben und lösen Sie die Sicherheitsfrage, bei der Sie zwei Symbole übereinanderschieben."
+      "p": "Melden Sie sich am PC oder Mac auf web.de an, klicken Sie oben auf das Symbol mit Ihren Initialen und öffnen Sie die E-Mail-Einstellungen. Wählen Sie unter E-Mail empfangen den Punkt POP3/IMAP, stellen Sie den Schieberegler auf POP3- und IMAP-Zugriff erlauben und lösen Sie die Sicherheitsfrage, bei der Sie zwei Symbole übereinander schieben."
     },
     {
       "h": "Postfach in MCPEmails hinzufügen",
@@ -80,7 +80,7 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von WEB.DE?",
-      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, alternativ auf Port 465 mit SSL, den MCPEmails nutzt. Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Server wurden am auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.web.de auf Port 993 mit SSL. SMTP ist smtp.web.de, laut WEB.DE auf Port 587 mit STARTTLS, alternativ auf Port 465 mit SSL, den MCPEmails nutzt. Benutzername ist Ihre vollständige WEB.DE-Adresse mit Domain. Beide Server wurden über eine echte TLS-Verbindung bestätigt, das Prüfdatum steht auf dieser Seite."
     },
     {
       "q": "Wie aktiviere ich IMAP bei WEB.DE?",

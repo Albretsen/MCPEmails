@@ -11,7 +11,7 @@ Wer ein Postfach mit Thunderbird, Apple Mail oder über einen MCP-Server wie MCP
 
 ## Was ist ein App-Passwort?
 
-Ein App-Passwort ist eine lange, zufällig erzeugte Zugangsberechtigung, die zu Ihrem E-Mail-Konto gehört, aber nur für eine einzige Anwendung ausgestellt wird. Drei Dinge unterscheiden es von dem Passwort, das Sie im Webmail eingeben:
+Ein App-Passwort ist ein langes, zufällig erzeugtes Passwort, das zu Ihrem E-Mail-Konto gehört, aber nur für eine einzige Anwendung ausgestellt wird. Drei Dinge unterscheiden es von dem Passwort, das Sie im Webmail eingeben:
 
 - **Der Anbieter erzeugt es.** Sie wählen es nicht selbst. Google erzeugt einen Code aus 16 Buchstaben, bei Apple hat es das Format \`abcd-efgh-ijkl-mnop\`, GMX und WEB.DE zeigen es einmal in einem Dialog an, und fast alle Anbieter zeigen es nur dieses eine Mal.
 - **Es ersetzt Ihr Passwort dort, wo kein zweiter Faktor abgefragt werden kann.** Mailprogramme verbinden sich über IMAP (Lesen) und SMTP (Senden), und diese Protokolle können keine Zwei-Faktor-Abfrage anzeigen. Über ein App-Passwort lässt der Anbieter ein solches Programm herein, ohne die Anmeldung im Web zu schwächen.
@@ -21,7 +21,7 @@ Die Namen sind uneinheitlich, gemeint ist immer dasselbe. GMX, WEB.DE und mail.c
 
 ## Warum IMAP-Programme und KI-Konnektoren eines brauchen
 
-Viele E-Mail-Anbieter akzeptieren Ihr normales Passwort nicht mehr von einem fremden Mailprogramm, spätestens sobald die Zwei-Faktor-Authentifizierung aktiv ist. Ein Mailprogramm auf dem Rechner, die Mail-App des Smartphones oder ein Server, der in Ihrem Auftrag E-Mails liest, sprechen alle IMAP und SMTP. Und bei Google, Apple, Yahoo, AOL, Fastmail und Yandex ist die Zugangsberechtigung, die diese Protokolle annehmen, ein App-Passwort. Bei GMX und WEB.DE gilt das, sobald die Zwei-Faktor-Authentifizierung eingeschaltet ist.
+Viele E-Mail-Anbieter akzeptieren Ihr normales Passwort nicht mehr von einem fremden Mailprogramm, spätestens sobald die Zwei-Faktor-Authentifizierung aktiv ist. Ein Mailprogramm auf dem Rechner, die Mail-App des Smartphones oder ein Server, der in Ihrem Auftrag E-Mails liest, sprechen alle IMAP und SMTP. Und bei Google, Apple, Yahoo, AOL, Fastmail und Yandex nehmen diese Protokolle nur ein App-Passwort an. Bei GMX und WEB.DE gilt das, sobald die Zwei-Faktor-Authentifizierung eingeschaltet ist.
 
 Ein KI-Konnektor ist in genau derselben Lage. Wenn Claude oder ChatGPT über [einen MCP-E-Mail-Server](/blog/what-is-an-mcp-email-server) mit Ihrem Postfach arbeitet, meldet sich nicht die KI am Postfach an. Das übernimmt der MCP-Server, über IMAP und SMTP, genau wie Thunderbird. Für iCloud, Yahoo, AOL, Fastmail, Gmail und vergleichbare Anbieter braucht der Server also ein App-Passwort, und der KI-Client bekommt nur ein Token mit begrenzten Rechten für den Server. Die [Anleitung zu OAuth und API-Schlüsseln für den E-Mail-Zugriff](/blog/oauth-vs-api-keys-ai-email-access) behandelt diese zweite Ebene.
 

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "STRATO MCP-Server: STRATO E-Mail mit Claude verbinden (IMAP)",
-    "description": "STRATO E-Mail mit Claude, ChatGPT und Cursor verbinden: imap.strato.de:993, E-Mail-Passwort statt Kunden-Login, Authentifizierung „Passwort, normal“. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
+    "description": "STRATO E-Mail mit Claude verbinden: imap.strato.de:993, E-Mail-Passwort statt Kunden-Login, „Passwort, normal“. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
   },
   "hero": {
     "eyebrow": "STRATO E-Mail + KI",

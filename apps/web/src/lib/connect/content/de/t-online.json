@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "T-Online mit Claude verbinden: Passwort für E-Mail-Programme",
-    "description": "T-Online- und magenta.de-Postfach mit Claude, ChatGPT und Cursor verbinden, über secureimap.t-online.de:993. Nötig ist das separate Passwort für E-Mail-Programme, nicht das Telekom Login."
+    "description": "T-Online und magenta.de mit Claude, ChatGPT und Cursor verbinden: secureimap.t-online.de:993 und das separate Passwort für E-Mail-Programme, nicht das Telekom Login."
   },
   "hero": {
     "eyebrow": "T-Online + KI",
@@ -29,7 +29,7 @@
   },
   "method": {
     "title": "So verbindet sich T-Online: IMAP und ein zweites, separates Passwort",
-    "body": "Die Telekom dokumentiert für jede Adresse mit @t-online.de und @magenta.de dieselben Server: IMAP unter <code>secureimap.t-online.de</code> auf Port 993 mit SSL und SMTP unter <code>securesmtp.t-online.de</code> auf Port 465 oder 587. Beide Namen führen auf einen IMAP-Proxy, nicht auf einen Mailserver, mit dem Sie direkt sprechen; das erklärt einige der Eigenheiten weiter unten. Woran fast alle scheitern, sind die Zugangsdaten. Die Telekom führt zwei Passwörter pro Konto: das <b>Telekom Login</b>-Passwort für das E-Mail Center, das Kundencenter und die MeinMagenta App, und ein zweites <b>Passwort für E-Mail-Programme</b>, das Sie laut Telekom brauchen, sobald Sie Ihre E-Mails in einem Programm wie Outlook, Thunderbird oder Apple Mail statt im E-Mail Center lesen. Nur das zweite meldet Sie an <code>secureimap.t-online.de</code> an, und die Telekom rät, beide verschieden zu wählen."
+    "body": "Die Telekom dokumentiert für jede Adresse mit @t-online.de und @magenta.de dieselben Server: IMAP unter <code>secureimap.t-online.de</code> auf Port 993 mit SSL und SMTP unter <code>securesmtp.t-online.de</code> auf Port 465 oder 587. Hinter dem IMAP-Namen steht ein IMAP-Proxy, kein Mailserver, mit dem Sie direkt sprechen; das erklärt einige der Eigenheiten weiter unten. Woran fast alle scheitern, sind die Zugangsdaten. Die Telekom führt zwei Passwörter pro Konto: das <b>Telekom Login</b>-Passwort für das E-Mail Center, das Kundencenter und die MeinMagenta App, und ein zweites <b>Passwort für E-Mail-Programme</b>, das Sie laut Telekom brauchen, sobald Sie Ihre E-Mails in einem Programm wie Outlook, Thunderbird oder Apple Mail statt im E-Mail Center lesen. Nur das zweite meldet Sie an <code>secureimap.t-online.de</code> an, und die Telekom rät, beide verschieden zu wählen."
   },
   "setup": [
     {
@@ -86,7 +86,7 @@
     },
     {
       "q": "Warum wird mein T-Online-Passwort im E-Mail-Programm abgelehnt?",
-      "a": "Fast immer, weil Sie das Telekom-Login-Passwort eingegeben haben. Die Telekom vergibt ein zweites Passwort, das Passwort für E-Mail-Programme, und nur dieses meldet Sie an den Mailservern an. Legen Sie es im E-Mail Center unter dem Zahnrad, Alle Einstellungen anzeigen, Passwörter an oder setzen Sie es dort zurück, alternativ im Kundencenter unter Profil verwalten, Login-Daten, Weitere Passwörter. Wurde Ihr Passwort vor dem 7. November 2026 in MCPEmails abgelehnt, lag es nicht am Passwort, sondern am Anmeldeverfahren; das ist behoben, versuchen Sie es einfach erneut."
+      "a": "Fast immer, weil Sie das Telekom-Login-Passwort eingegeben haben. Die Telekom vergibt ein zweites Passwort, das Passwort für E-Mail-Programme, und nur dieses meldet Sie an den Mailservern an. Legen Sie es im E-Mail Center unter dem Zahnrad, Alle Einstellungen anzeigen, Passwörter an oder setzen Sie es dort zurück, alternativ im Kundencenter unter Profil verwalten, Login-Daten, Weitere Passwörter. Wurde Ihr Passwort vor dem 7. November 2026 in MCPEmails abgelehnt, wurde es gar nicht erst geprüft: Die Ablehnung kam vom Anmeldeverfahren. Das ist behoben, versuchen Sie es einfach erneut."
     },
     {
       "q": "Wo lege ich das Passwort für E-Mail-Programme an?",

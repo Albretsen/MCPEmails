@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Claude mit iCloud verbinden: Apple Mail per MCP nutzen",
-    "description": "iCloud Mail, das Postfach aus Apple Mail, in Claude, ChatGPT oder Cursor nutzen: App-spezifisches Passwort bei Apple erstellen, imap.mail.me.com:993, fertig. Kein Mac nötig, ein Postfach kostenlos."
+    "description": "iCloud Mail, das Postfach aus Apple Mail, in Claude oder ChatGPT nutzen: App-spezifisches Passwort bei Apple erstellen, imap.mail.me.com:993, fertig. Kein Mac nötig."
   },
   "hero": {
     "eyebrow": "iCloud Mail + KI",
@@ -80,7 +80,7 @@
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für iCloud Mail?",
-      "a": "IMAP ist imap.mail.me.com auf Port 993 mit SSL/TLS. SMTP ist smtp.mail.me.com auf Port 587 mit STARTTLS, nicht Port 465. Das Passwort ist für beide ein App-spezifisches Passwort von Apple. Laut Apple ist der Benutzername für den Posteingang der Namensteil Ihrer Adresse. Beide Server wurden am auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+      "a": "IMAP ist imap.mail.me.com auf Port 993 mit SSL/TLS. SMTP ist smtp.mail.me.com auf Port 587 mit STARTTLS, nicht Port 465. Das Passwort ist für beide ein App-spezifisches Passwort von Apple. Laut Apple ist der Benutzername für den Posteingang der Namensteil Ihrer Adresse. Beide Server wurden über eine echte TLS-Verbindung bestätigt, das Prüfdatum steht auf dieser Seite."
     },
     {
       "q": "Warum wird mein Apple-Passwort abgelehnt?",
