@@ -22,8 +22,9 @@ import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
  *              been shown, and accepted, the amount from a previous call. An
  *              existing subscriber's plan change is a two-call handshake:
  *              the first returns the quote, the second performs it.
- *   locale   : the buyer's app-realm language. Only 'de' changes anything (a
- *              German hosted page); any other value, or none, is English.
+ *   locale   : the buyer's app-realm language. A locale with a deck in
+ *              src/lib/stripe/checkout-locale.ts picks the hosted page's
+ *              language; any other value, or none, is English.
   const { planId, interval, confirm, locale, offer, product, arm, surface } = body as Record<string, unknown>;
 
   if (product !== undefined && product !== PERSONAL_PASS_3M.id) {

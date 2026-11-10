@@ -21,6 +21,12 @@ import {
 import { effectiveStripeEnv } from '@/lib/stripe/eur-launch';
 import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
 import { checkoutReassurance } from '@/lib/billing/checkout-reassurance.mjs';
+import {
+  checkoutLocale,
+  checkoutLocalePrefix,
+  stripeCheckoutLocale,
+  type CheckoutLocale,
+} from '@/lib/stripe/checkout-locale';
 import { checkoutSessionIdOrNull } from '@/lib/email/abandoned-checkout';
 import { reminderLocale } from '@/lib/email/abandoned-checkout-templates';
 import {
@@ -434,39 +440,27 @@ async function previewPlanChange(args: {
   }
 }
 
-/**
- * The languages the hosted Checkout page is shown in. Deliberately two.
- *
- * German is the one exception to the English pin (see the session params
- * below), for a legal reason rather than a cosmetic one: in subscription mode
- * the button label follows `locale` and nothing else, and only under 'de' does
- * Stripe render "Zahlungspflichtig abonnieren", the wording §312j BGB asks for
- * on the button that commits a consumer to pay. Every other buyer keeps the
- * English page, because the Product names on the line items are English and a
- * page half in Norwegian and half in English reads worse than one in English.
- */
-export type CheckoutLocale = 'en' | 'de';
-
-/**
- * The buyer's language as it arrives from a request (a JSON body field or a
- * `lang` query parameter), allow-listed down to a CheckoutLocale.
- *
- * Exact match only: 'de' is German, and anything else, including 'DE',
- * 'de-AT', an array or a missing value, is English. The value is never passed
- * to Stripe as given, so a caller cannot reach a Stripe locale this file has
- * not written copy for.
- */
-export function checkoutLocale(value: unknown): CheckoutLocale {
-  return value === 'de' ? 'de' : 'en';
-}
+// The languages the hosted Checkout page is shown in, and the allow-list that
+// turns a request value into one of them, live in checkout-locale.ts (pure,
+// so the chat link module and tests that stub this file can share it). They
+// are re-exported here because every caller historically imported them from
+// the core.
+export { checkoutLocale, type CheckoutLocale } from '@/lib/stripe/checkout-locale';
 
 /**
  * The two messages the hosted page leaves room for, one deck per locale.
  *
- * Plain sentences in the same register as the pricing page: no exclamation
- * marks, no urgency, no upsell. The German deck uses formal Sie and links the
- * German cancellation and withdrawal pages, which serve the same content as
- * the English ones under /de.
+ * Plain sentences in the same register as the pricing page in that locale:
+ * no exclamation marks, no urgency, no upsell. Each deck links the
+ * cancellation and withdrawal pages in its own language (every locale here
+ * has both: app/[locale]/cancel/content.mjs and withdrawal/content.mjs) and
+ * keeps the register its pricing page uses: formal Sie in German, vous in
+ * French, tú in Spanish, você in Brazilian Portuguese, です/ます in Japanese,
+ * du in Norwegian.
+ *
+ * The order is fixed in every language: the payment obligation first, right
+ * next to the button, then the reassurance line, then where to cancel, then
+ * the right of withdrawal, then the address for questions.
  */
 function checkoutCustomText(
   locale: CheckoutLocale,
@@ -479,36 +473,119 @@ function checkoutCustomText(
   // charged today. It goes SECOND: the first sentence stays the payment
   // obligation, next to the button (see the call site).
   const reassurance = checkoutReassurance(locale, firstChargeLater ? 'deferred' : 'subscription');
-  if (locale === 'de') {
-    return {
-      submit: {
-        message:
-          'Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis in jedem Abrechnungszeitraum zu zahlen, bis Sie kündigen. ' +
-          `${reassurance} ` +
-          `Kündigen Sie in Ihrem Dashboard oder unter [mcpemails.com/de/cancel](${appUrl}/de/cancel). ` +
-          `Verbraucher können innerhalb von 14 Tagen widerrufen: [Widerrufsrecht](${appUrl}/de/withdrawal). ` +
-          'Fragen vor dem Kauf: hello@mcpemails.com',
-      },
-      after_submit: {
-        message:
-          'Sie werden zu mcpemails.com zurückgeleitet, um Ihre Postfächer zu verbinden.',
-      },
-    };
+  const prefix = checkoutLocalePrefix(locale);
+  const cancelUrl = `${appUrl}${prefix}/cancel`;
+  const cancelLabel = `mcpemails.com${prefix}/cancel`;
+  const withdrawalUrl = `${appUrl}${prefix}/withdrawal`;
+  switch (locale) {
+    case 'de':
+      return {
+        submit: {
+          message:
+            'Mit dem Abonnieren verpflichten Sie sich, den angezeigten Preis in jedem Abrechnungszeitraum zu zahlen, bis Sie kündigen. ' +
+            `${reassurance} ` +
+            `Kündigen Sie in Ihrem Dashboard oder unter [${cancelLabel}](${cancelUrl}). ` +
+            `Verbraucher können innerhalb von 14 Tagen widerrufen: [Widerrufsrecht](${withdrawalUrl}). ` +
+            'Fragen vor dem Kauf: hello@mcpemails.com',
+        },
+        after_submit: {
+          message:
+            'Sie werden zu mcpemails.com zurückgeleitet, um Ihre Postfächer zu verbinden.',
+        },
+      };
+    case 'fr':
+      return {
+        submit: {
+          message:
+            "En vous abonnant, vous vous engagez à payer le prix affiché à chaque période de facturation, jusqu'à la résiliation. " +
+            `${reassurance} ` +
+            `Résiliez depuis votre tableau de bord ou sur [${cancelLabel}](${cancelUrl}). ` +
+            `Les consommateurs disposent de 14 jours pour se rétracter : [droit de rétractation](${withdrawalUrl}). ` +
+            "Une question avant d'acheter : hello@mcpemails.com",
+        },
+        after_submit: {
+          message: 'Redirection vers mcpemails.com pour connecter vos boîtes.',
+        },
+      };
+    case 'es':
+      return {
+        submit: {
+          message:
+            'Al suscribirte, te comprometes a pagar el precio indicado en cada período de facturación hasta que canceles. ' +
+            `${reassurance} ` +
+            `Cancela desde tu panel o en [${cancelLabel}](${cancelUrl}). ` +
+            `Los consumidores pueden desistir en un plazo de 14 días: [derecho de desistimiento](${withdrawalUrl}). ` +
+            'Dudas antes de comprar: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Te llevamos de vuelta a mcpemails.com para conectar tus bandejas.',
+        },
+      };
+    case 'pt':
+      return {
+        submit: {
+          message:
+            'Ao assinar, você se compromete a pagar o preço exibido a cada período de cobrança, até cancelar. ' +
+            `${reassurance} ` +
+            `Cancele pelo seu painel ou em [${cancelLabel}](${cancelUrl}). ` +
+            `Consumidores podem desistir da compra em até 14 dias: [direito de arrependimento](${withdrawalUrl}). ` +
+            'Dúvidas antes de comprar: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Você será redirecionado ao mcpemails.com para conectar suas caixas de entrada.',
+        },
+      };
+    case 'ja':
+      // Japanese runs sentences together without spaces.
+      //
+      // The 14-day sentence describes OUR refund promise (terms 5.4), not a
+      // statutory right: Japan's cooling-off (クーリング・オフ) does not apply
+      // to online sales, so "消費者の方は撤回できます" with a "撤回権" link
+      // would read as a legal entitlement that does not exist there. The
+      // link still goes to /ja/withdrawal, which spells the promise out.
+      return {
+        submit: {
+          message:
+            'お申し込みいただくと、解約するまで請求期間ごとに表示の料金をお支払いいただくことになります。' +
+            reassurance +
+            `解約はダッシュボードまたは[${cancelLabel}](${cancelUrl})から行えます。` +
+            `お申し込みから14日以内であれば全額返金します（[14日間の返金について](${withdrawalUrl})）。` +
+            'ご購入前のご質問はhello@mcpemails.comまでお寄せください。',
+        },
+        after_submit: {
+          message: 'mcpemails.comに戻り、受信トレイを接続します。',
+        },
+      };
+    case 'nb':
+      return {
+        submit: {
+          message:
+            'Når du abonnerer, forplikter du deg til å betale prisen som vises for hver faktureringsperiode, helt til du sier opp. ' +
+            `${reassurance} ` +
+            `Si opp fra dashbordet eller på [${cancelLabel}](${cancelUrl}). ` +
+            `Forbrukere kan gå fra avtalen innen 14 dager: [angrerett](${withdrawalUrl}). ` +
+            'Spørsmål før du kjøper: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Vi tar deg tilbake til mcpemails.com for å koble til innboksene dine.',
+        },
+      };
+    case 'en':
+      return {
+        submit: {
+          message:
+            'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
+            `${reassurance} ` +
+            `Cancel from your dashboard or at [${cancelLabel}](${cancelUrl}). ` +
+            `Consumers can withdraw within 14 days: [right of withdrawal](${withdrawalUrl}). ` +
+            'Questions before you buy: hello@mcpemails.com',
+        },
+        after_submit: {
+          message:
+            'Taking you back to mcpemails.com to connect your inboxes.',
+        },
+      };
   }
-  return {
-    submit: {
-      message:
-        'By subscribing you agree to pay the price shown, every billing period until you cancel. ' +
-        `${reassurance} ` +
-        `Cancel from your dashboard or at [mcpemails.com/cancel](${appUrl}/cancel). ` +
-        `Consumers can withdraw within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
-        'Questions before you buy: hello@mcpemails.com',
-    },
-    after_submit: {
-      message:
-        'Taking you back to mcpemails.com to connect your inboxes.',
-    },
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1562,21 +1639,20 @@ async function checkoutFor(
         : {}),
       // ── Presentation ────────────────────────────────────────────────────
       //
-      // ENGLISH IS PINNED for everyone but German buyers, deliberately. Left
-      // to itself Stripe localises its own chrome from the buyer's browser
-      // (Accept-Language), but the things it renders from OUR data cannot
-      // follow: the product name and description on the line item live once,
-      // in English, on the Stripe Product. A Norwegian browser therefore
-      // produced a page that said "Abonner pa MCPEmails Personal / 48,00 USD
-      // per ar" directly above an English sentence about connected inboxes,
-      // in two different voices. One language beats a half-translated one.
+      // THE LANGUAGE IS OURS TO SET, never Stripe's guess. Left to itself
+      // Stripe localises its chrome from the buyer's browser (Accept-Language),
+      // which can disagree with the page the buyer was reading and with the
+      // text we put beside the button. So the session carries the language of
+      // the page the buyer came from, allow-listed in checkout-locale.ts, and
+      // the custom_text below is written in the same one. A language without
+      // a deck there is English, with English text: never a page in one
+      // language with our words in another.
       //
-      // German is the exception because the law makes it one: see
-      // CheckoutLocale above. A German buyer accepts English product names in
-      // exchange for a subscribe button that reads "Zahlungspflichtig
-      // abonnieren" and German text beside it. Pass another locale through
-      // the day the Stripe Products carry translated names and descriptions.
-      locale,
+      // What Stripe renders from OUR data still cannot follow: the product
+      // name and description on the line item live once, in English, on the
+      // Stripe Product. The decks are written knowing "MCPEmails Personal"
+      // stays English above them.
+      locale: stripeCheckoutLocale(locale),
       // The two moments the hosted page leaves room for our own voice.
       //
       // `submit` sits directly above the subscribe button, where the
@@ -1588,9 +1664,10 @@ async function checkoutFor(
       // changed: `submit_type: 'pay'` is rejected ("You can not pass
       // submit_type: 'pay' in subscription mode"), and the label follows
       // `locale`. Under 'en' it reads "Subscribe"; under 'de' it reads
-      // "Zahlungspflichtig abonnieren". The first sentence of the message
-      // states the payment obligation in words next to the button; it does
-      // not replace a compliant label.
+      // "Zahlungspflichtig abonnieren", the wording §312j BGB asks for. The
+      // first sentence of the message states the payment obligation in words
+      // next to the button, in every language; it does not replace a
+      // compliant label.
       custom_text: checkoutCustomText(locale, appUrl, passStart !== null),
       // Pass USER context through to the subscription for the webhook handler.
       // The subscription is tied to the user; the webhook resolves the owner
@@ -1674,11 +1751,28 @@ async function checkoutFor(
 // dashboard can show the same first-charge date without importing Stripe).
 export { passSubscriptionStart };
 
+/**
+ * The Intl locale each checkout language formats its pass end date in. English
+ * keeps the short en-GB form ("3 Feb 2027"); every other language spells the
+ * month out the way its own calendar does ("3. Februar 2027", "3 février
+ * 2027", "3 de febrero de 2027", "3 de fevereiro de 2027", "2027年2月3日",
+ * "3. februar 2027").
+ */
+const PASS_DATE_LOCALES: Record<CheckoutLocale, string> = {
+  en: 'en-GB',
+  de: 'de-DE',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  pt: 'pt-BR',
+  ja: 'ja-JP',
+  nb: 'nb-NO',
+};
+
 /** "3 Feb 2027" / "3. Februar 2027", always in UTC like the pass itself. */
 export function passEndDateLabel(date: Date, locale: CheckoutLocale): string {
-  return new Intl.DateTimeFormat(locale === 'de' ? 'de-DE' : 'en-GB', {
+  return new Intl.DateTimeFormat(PASS_DATE_LOCALES[locale], {
     day: 'numeric',
-    month: locale === 'de' ? 'long' : 'short',
+    month: locale === 'en' ? 'short' : 'long',
     year: 'numeric',
     timeZone: 'UTC',
   }).format(date);
@@ -1687,7 +1781,8 @@ export function passEndDateLabel(date: Date, locale: CheckoutLocale): string {
 /**
  * The hosted page text for a pass. The obligation and the end date sit right
  * above the pay button, with the 14-day full refund and its link. No discount,
- * no urgency, and never the word trial.
+ * no urgency, and never the word trial. One deck per locale, in the same
+ * register as checkoutCustomText above.
  */
 function passCustomText(
   locale: CheckoutLocale,
@@ -1695,30 +1790,93 @@ function passCustomText(
   endsAt: Date,
 ): Stripe.Checkout.SessionCreateParams.CustomText {
   const until = passEndDateLabel(endsAt, locale);
-  if (locale === 'de') {
-    return {
-      submit: {
-        message:
-          `Einmalige Zahlung. Personal bis zum ${until}. Es verlängert sich nichts automatisch, es gibt nichts zu kündigen. ` +
-          `Volle Erstattung innerhalb von 14 Tagen: [Widerrufsrecht](${appUrl}/de/withdrawal). ` +
-          'Fragen vor dem Kauf: hello@mcpemails.com',
-      },
-      after_submit: {
-        message: 'Sie werden zu mcpemails.com zurückgeleitet.',
-      },
-    };
+  const withdrawalUrl = `${appUrl}${checkoutLocalePrefix(locale)}/withdrawal`;
+  switch (locale) {
+    case 'de':
+      return {
+        submit: {
+          message:
+            `Einmalige Zahlung. Personal bis zum ${until}. Es verlängert sich nichts automatisch, es gibt nichts zu kündigen. ` +
+            `Volle Erstattung innerhalb von 14 Tagen: [Widerrufsrecht](${withdrawalUrl}). ` +
+            'Fragen vor dem Kauf: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Sie werden zu mcpemails.com zurückgeleitet.',
+        },
+      };
+    case 'fr':
+      return {
+        submit: {
+          message:
+            `Paiement unique. Personal jusqu'au ${until}. Rien ne se renouvelle, rien à résilier. ` +
+            `Remboursement intégral pendant 14 jours : [droit de rétractation](${withdrawalUrl}). ` +
+            "Une question avant d'acheter : hello@mcpemails.com",
+        },
+        after_submit: {
+          message: 'Redirection vers mcpemails.com.',
+        },
+      };
+    case 'es':
+      return {
+        submit: {
+          message:
+            `Un solo pago. Personal hasta el ${until}. Nada se renueva y no hay nada que cancelar. ` +
+            `Reembolso completo en un plazo de 14 días: [derecho de desistimiento](${withdrawalUrl}). ` +
+            'Dudas antes de comprar: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Te llevamos de vuelta a mcpemails.com.',
+        },
+      };
+    case 'pt':
+      return {
+        submit: {
+          message:
+            `Pagamento único. Personal até ${until}. Nada se renova e não há nada para cancelar. ` +
+            `Reembolso integral em até 14 dias: [direito de arrependimento](${withdrawalUrl}). ` +
+            'Dúvidas antes de comprar: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Você será redirecionado ao mcpemails.com.',
+        },
+      };
+    case 'ja':
+      return {
+        submit: {
+          message:
+            `お支払いは1回のみです。${until}までPersonalをご利用いただけます。自動更新はなく、解約の手続きも不要です。` +
+            `14日以内なら全額返金します（[14日間の返金について](${withdrawalUrl})）。` +
+            'ご購入前のご質問はhello@mcpemails.comまでお寄せください。',
+        },
+        after_submit: {
+          message: 'mcpemails.comに戻ります。',
+        },
+      };
+    case 'nb':
+      return {
+        submit: {
+          message:
+            `Betales én gang. Personal til ${until}. Ingenting fornyes, og det er ingenting å si opp. ` +
+            `Full refusjon innen 14 dager: [angrerett](${withdrawalUrl}). ` +
+            'Spørsmål før du kjøper: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Vi tar deg tilbake til mcpemails.com.',
+        },
+      };
+    case 'en':
+      return {
+        submit: {
+          message:
+            `Paid once. Personal until ${until}. Nothing renews and there is nothing to cancel. ` +
+            `Full refund within 14 days: [right of withdrawal](${withdrawalUrl}). ` +
+            'Questions before you buy: hello@mcpemails.com',
+        },
+        after_submit: {
+          message: 'Taking you back to mcpemails.com.',
+        },
+      };
   }
-  return {
-    submit: {
-      message:
-        `Paid once. Personal until ${until}. Nothing renews and there is nothing to cancel. ` +
-        `Full refund within 14 days: [right of withdrawal](${appUrl}/withdrawal). ` +
-        'Questions before you buy: hello@mcpemails.com',
-    },
-    after_submit: {
-      message: 'Taking you back to mcpemails.com.',
-    },
-  };
 }
 
 /**
@@ -1902,7 +2060,7 @@ export async function runPassCheckout(input: {
       allowed_payment_method_types: ['card'],
       billing_address_collection: 'auto',
       adaptive_pricing: adaptivePricingParam(),
-      locale,
+      locale: stripeCheckoutLocale(locale),
       submit_type: 'pay',
       custom_text: passCustomText(locale, appUrl, endsAt),
       // A real invoice for the buyer and for bookkeeping, which books sales
