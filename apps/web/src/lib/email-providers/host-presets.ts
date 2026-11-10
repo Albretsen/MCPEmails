@@ -575,7 +575,10 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     // The account password works until two-factor is on; then an app password.
     id: 'seznam',
     label: 'Seznam',
-    domains: ['seznam.cz', 'email.cz'],
+    // seznam.cz, email.cz and post.cz are the three domains Seznam offers
+    // (blog.seznam.cz, 2017); imap.email.cz and imap.post.cz answer with the
+    // same banner, but Seznam documents only the seznam.cz names.
+    domains: ['seznam.cz', 'email.cz', 'post.cz'],
     hostSuffixes: ['imap.seznam.cz', 'smtp.seznam.cz'],
     imapHost: 'imap.seznam.cz',
     imapPort: 993,
@@ -910,6 +913,305 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     smtpHost: 'smtp.world4you.com',
     smtpPort: 587,
     smtpSecurity: 'starttls',
+  },
+  // ── Italy (research 2026-11-10). Settings from each provider's own help
+  // page; every host below completed a TLS handshake with a verified chain
+  // and answered CAPABILITY or EHLO, except where the comment says otherwise.
+  {
+    // Aruba domain mailboxes (nome@tuodominio.ext): guide.aruba.it lists
+    // imaps/smtps.aruba.it with SSL and authentication always required. The
+    // address is always a custom domain, so the host is the key; Aruba's MX
+    // names for hosted domains were not verified, so none are listed.
+    id: 'aruba',
+    label: 'Aruba',
+    hostSuffixes: ['imaps.aruba.it', 'smtps.aruba.it', 'pop3s.aruba.it'],
+    imapHost: 'imaps.aruba.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtps.aruba.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Aruba's free @aruba.it mailboxes document the names without the s.
+    id: 'aruba-free',
+    label: 'Aruba',
+    domains: ['aruba.it'],
+    hostSuffixes: ['imap.aruba.it', 'smtp.aruba.it', 'pop3.aruba.it'],
+    imapHost: 'imap.aruba.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.aruba.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Libero Mail (Italiaonline): aiuto.libero.it names libero.it, iol.it,
+    // blu.it and inwind.it as the domains on these hosts. With Password
+    // Sicura on, a 16-character app password; the account password is not
+    // refused otherwise, so no flag.
+    id: 'libero',
+    label: 'Libero Mail',
+    domains: ['libero.it', 'iol.it', 'blu.it', 'inwind.it'],
+    hostSuffixes: ['imapmail.libero.it', 'smtp.libero.it', 'popmail.libero.it'],
+    imapHost: 'imapmail.libero.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.libero.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Virgilio Mail, same company, its own names (aiuto.virgilio.it).
+    id: 'virgilio',
+    label: 'Virgilio Mail',
+    domains: ['virgilio.it'],
+    hostSuffixes: ['in.virgilio.it', 'out.virgilio.it'],
+    imapHost: 'in.virgilio.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'out.virgilio.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // TIM Mail documents 143 and 587 with STARTTLS only (tim.it assistenza,
+    // protocolli-posta); 993 and 465 time out. Each domain has its own hosts.
+    // Mail apps are allowed on a mailbox tied to an active TIM line, or from
+    // TIM's own network; see the tim fix row.
+    id: 'tim',
+    label: 'TIM Mail',
+    domains: ['tim.it'],
+    hostSuffixes: ['imap.tim.it', 'smtp.tim.it', 'pop.tim.it'],
+    imapHost: 'imap.tim.it',
+    imapPort: 143,
+    imapSecurity: 'starttls',
+    smtpHost: 'smtp.tim.it',
+    smtpPort: 587,
+    smtpSecurity: 'starttls',
+  },
+  {
+    id: 'tim-alice',
+    label: 'TIM Mail',
+    domains: ['alice.it'],
+    hostSuffixes: ['in.alice.it', 'out.alice.it'],
+    imapHost: 'in.alice.it',
+    imapPort: 143,
+    imapSecurity: 'starttls',
+    smtpHost: 'out.alice.it',
+    smtpPort: 587,
+    smtpSecurity: 'starttls',
+  },
+  {
+    // The s in imaps/smtps.tin.it does not mean implicit TLS: TIM lists the
+    // same 143/587 STARTTLS ports for tin.it.
+    id: 'tim-tin',
+    label: 'TIM Mail',
+    domains: ['tin.it'],
+    hostSuffixes: ['imaps.tin.it', 'smtps.tin.it', 'pops.tin.it'],
+    imapHost: 'imaps.tin.it',
+    imapPort: 143,
+    imapSecurity: 'starttls',
+    smtpHost: 'smtps.tin.it',
+    smtpPort: 587,
+    smtpSecurity: 'starttls',
+  },
+  {
+    // Tiscali: IMAP on 993 answers. smtp.tiscali.it:465 is the documented
+    // sending host, but from outside Tiscali's network it greets with "554
+    // ESMTP server not available from your IP" (and offers only a 1024-bit DH
+    // key), so the connect form ends up offering reading only. The settings
+    // are still the ones Tiscali documents, which is what the lookup shows.
+    id: 'tiscali',
+    label: 'Tiscali Mail',
+    domains: ['tiscali.it'],
+    hostSuffixes: ['imap.tiscali.it', 'smtp.tiscali.it', 'pop.tiscali.it'],
+    imapHost: 'imap.tiscali.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.tiscali.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  // ── PEC, Italian certified email. All three providers serve ordinary
+  // IMAP/SMTP; the password rule differs, see the pec content and fix rows.
+  {
+    // Aruba PEC: @pec.it and pec.<domain> mailboxes. The MX for pec.it is
+    // mx.pec.aruba.it, under the same suffix, so a custom PEC domain is found
+    // through its MX. With verifica in 2 passaggi on, a six-month password for
+    // mail programs; the mailbox password works otherwise, so no flag.
+    id: 'aruba-pec',
+    label: 'Aruba PEC',
+    domains: ['pec.it'],
+    hostSuffixes: ['.pec.aruba.it'],
+    imapHost: 'imaps.pec.aruba.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtps.pec.aruba.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Legalmail (InfoCert): operating manual, mbox and sendm under
+    // cert.legalmail.it, which also covers the mx.cert.legalmail.it MX. The
+    // login is the User ID and mailbox password, or an optional Application
+    // Password; nothing is refused by default, so no flag.
+    id: 'legalmail',
+    label: 'Legalmail',
+    domains: ['legalmail.it'],
+    hostSuffixes: ['.cert.legalmail.it'],
+    imapHost: 'mbox.cert.legalmail.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'sendm.cert.legalmail.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Poste Italiane Postecert: the webmail password (Account Poste
+    // Verificato) never works in a client; a client password is generated in
+    // the PEC dashboard and expires every 90 days (poste.it PEC FAQ).
+    id: 'postecert',
+    label: 'Poste PEC',
+    domains: ['postecert.it'],
+    hostSuffixes: ['.postecert.it'],
+    imapHost: 'mail.postecert.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'mail.postecert.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://www.poste.it/assistenza/faq-posta-elettronica-certificata',
+  },
+  {
+    // PEC postecertifica, Poste's current product, same rule.
+    id: 'postecertifica',
+    label: 'Poste PEC',
+    domains: ['postecertifica.it'],
+    hostSuffixes: ['.postecertifica.it'],
+    imapHost: 'mail.postecertifica.it',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'mail.postecertifica.it',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+    requiresAppPassword: true,
+    appPasswordHelpUrl: 'https://www.poste.it/assistenza/faq-posta-elettronica-certificata',
+  },
+  // ── Czechia and Poland (research 2026-11-10). The Polish portals and
+  // Seznam were already in the registry; these entries give the connect form
+  // and a typed host the same answer the /connect page prints.
+  {
+    // Centrum.cz (Economia): freemail.help.economia.cz lists the centrum.cz
+    // settings for cbox.cz, mujmail.cz "and other" domains too. SMTP needs the
+    // free enlarged mailbox first; with two-factor on, an aplikační heslo.
+    id: 'centrum',
+    label: 'Centrum.cz',
+    domains: ['centrum.cz', 'cbox.cz', 'mujmail.cz'],
+    hostSuffixes: ['imap.centrum.cz', 'smtp.centrum.cz', 'pop3.centrum.cz'],
+    imapHost: 'imap.centrum.cz',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.centrum.cz',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Atlas.cz: its own IMAP name, Centrum's SMTP.
+    id: 'atlas',
+    label: 'Atlas.cz',
+    domains: ['atlas.cz'],
+    hostSuffixes: ['imap.atlas.cz', 'pop3.atlas.cz'],
+    imapHost: 'imap.atlas.cz',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.centrum.cz',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    id: 'volny',
+    label: 'Volný.cz',
+    domains: ['volny.cz'],
+    hostSuffixes: ['imap.volny.cz', 'smtp.volny.cz', 'pop3.volny.cz'],
+    imapHost: 'imap.volny.cz',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.volny.cz',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // WP Poczta: IMAP has to be switched on under Opcje > IMAP/POP; with
+    // two-step login, a mail-program password (pomoc.wp.pl).
+    id: 'wp',
+    label: 'WP Poczta',
+    domains: ['wp.pl'],
+    hostSuffixes: ['imap.wp.pl', 'smtp.wp.pl', 'pop3.wp.pl'],
+    imapHost: 'imap.wp.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.wp.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // o2.pl (same group as WP): one name for both halves (pomoc.o2.pl).
+    id: 'o2-pl',
+    label: 'o2.pl',
+    domains: ['o2.pl'],
+    hostSuffixes: ['poczta.o2.pl'],
+    imapHost: 'poczta.o2.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'poczta.o2.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Onet Poczta: each protocol has its own switch under Konto Główne; with
+    // two-step verification, a hasło do aplikacji (pomoc.poczta.onet.pl).
+    id: 'onet',
+    label: 'Onet Poczta',
+    domains: ['onet.pl', 'op.pl', 'poczta.onet.pl'],
+    hostSuffixes: ['.poczta.onet.pl'],
+    imapHost: 'imap.poczta.onet.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.poczta.onet.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Interia: one host for both halves; the domain list is the one on
+    // pomoc.poczta.interia.pl's parameters page. Mail programs must be
+    // enabled (korzystam z programu pocztowego: TAK) and are blocked while
+    // two-step login is on.
+    id: 'interia',
+    label: 'Interia',
+    domains: ['interia.pl', 'interia.eu', 'poczta.fm', 'intmail.pl', 'interia.com', 'vip.interia.pl', 'interiowy.pl', 'adresik.net', 'pacz.to', 'pisz.to', 'ogarnij.se'],
+    hostSuffixes: ['poczta.interia.pl'],
+    imapHost: 'poczta.interia.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'poczta.interia.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Gazeta.pl Poczta (pomoc.gazeta.pl): the IMAP banner is Onet's, the
+    // login is a Gazeta.pl account.
+    id: 'gazeta-pl',
+    label: 'Gazeta.pl Poczta',
+    domains: ['gazeta.pl'],
+    hostSuffixes: ['imap.gazeta.pl', 'smtp.gazeta.pl'],
+    imapHost: 'imap.gazeta.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.gazeta.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
   },
 ];
 

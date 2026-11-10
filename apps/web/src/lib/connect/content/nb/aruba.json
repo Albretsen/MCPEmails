@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "https://guide.aruba.it/hosting-e-domini/email/gestione-email/caratteristiche-acquisto-gestione/caratteristiche-caselle-posta-dominio"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "usernameForm": "Hele adressen din, inkludert domenet: nome@tuodominio.it, eller nome@aruba.it på en gratis postkasse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Aruba MCP-server: koble Aruba-e-post til Claude",
+    "description": "MCP-server for Aruba-e-post. Koble postkassene på Aruba-domenet ditt (info@, amministrazione@) til Claude og ChatGPT over IMAP på imaps.aruba.it:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "Aruba-e-post + AI",
+    "titleLine1": "MCP-server for Aruba-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, amministrazione@ og ditt eget navn på et domene hos Aruba? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassens passord, ikke Aruba-kundeinnloggingen din.",
+    "answer": "Claude når ikke en Aruba-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imaps.aruba.it port 993 og logger inn med hele adressen og passordet som er satt på den postkassen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Arubas egen veiledning oppgir nøyaktig disse vertene for en postkasse på ditt eget domene, med smtps.aruba.it på port 465 for sending og autentisering alltid påkrevd. En gratis @aruba.it-postkasse bruker imap.aruba.it og smtp.aruba.it i stedet. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, ikke kundeinnloggingen",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, gratis @aruba.it-postkasse", "host": "imap.aruba.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, gratis @aruba.it-postkasse", "host": "smtp.aruba.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene gjelder en postkasse på ditt eget domene, de to under en gratis @aruba.it-postkasse. Begge parene ble verifisert via en direkte TLS-tilkobling. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Flere postkasser på Aruba-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler Aruba seg til: IMAP over TLS og postkassepassordet",
+    "body": "Aruba tilbyr IMAP for domenepostkasser på <code>imaps.aruba.it</code> port 993 og SMTP på <code>smtps.aruba.it</code> port 465, begge med implisitt TLS, og veiledningen sier at SMTP-serveren alltid krever autentisering med adressen og passordet dens. Brukernavnet er hele adressen: Aruba ber deg skrive hele e-postadressen i brukernavnfeltet, aldri bare den lokale delen. Passordet er det som er satt på postkassen i Arubas kontrollpanel, og det er ikke passordet du bruker for å logge inn i Arubas kundeområde. Aruba dokumenterer også et ukryptert alternativ på ditt eget domenenavn (<code>imap.tuodominio.it</code> på port 143, <code>smtp.tuodominio.it</code> på 587 eller 25), men TLS-kravet er eksplisitt: en klient må støtte minst TLS 1.2, og det er aruba.it-navnene som har et sertifikat som stemmer, så det er dem MCPEmails bruker."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet i Arubas kontrollpanel",
+      "p": "Logg inn i Arubas kontrollpanel, åpne e-posttjenesten for domenet og gå til <b>Caselle di posta</b>. Hver adresse har sitt eget passord der, i boksen <b>Gestione caselle</b>, med <b>Modifica</b> ved siden av. Kjenner du det ikke, setter du et nytt for den postkassen; innloggingen til kundeområdet er en annen pålogging og blir avvist av IMAP."
+    },
+    {
+      "h": "Sjekk at IMAP er aktivt på domenet, på eldre planer",
+      "p": "Arubas veiledning sier at IMAP bare virker hvis IMAP-tilleggstjenesten er aktiv på domenet. Den er inkludert i alle nåværende pakker, så dette gjelder bare en Hosting Basic-plan aktivert før juni 2017, der IMAP måtte kjøpes separat. En avvist innlogging på en slik plan skyldes tillegget, ikke passordet."
+    },
+    {
+      "h": "Lim adressen og passordet inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel info@tuodominio.it, og skriv inn postkassepassordet. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "To passord, og bare postkassepassordet virker",
+      "p": "Aruba-kunder logger inn i kundeområdet med et brukernavn og et passord, og det er det paret de fleste griper til. IMAP sjekker passordet til den enkelte postkassen, satt under Caselle di posta i kontrollpanelet (bare postmaster-postkassen starter med Aruba-kontoens passord). De to er separate påloggingsdetaljer, så en avvist innlogging på en Aruba-adresse er som regel kundeområdets passord limt inn i et skjema som ville ha postkassepassordet."
+    },
+    {
+      "h": "Gratis @aruba.it-postkasser bruker andre vertsnavn",
+      "p": "En postkasse på ditt eget domene bruker <code>imaps.aruba.it</code> og <code>smtps.aruba.it</code>. De gratis @aruba.it-postkassene ligger på <code>imap.aruba.it</code> og <code>smtp.aruba.it</code>, med samme porter og samme TLS. Begge parene svarer med samme Dovecot-banner i dag, men Aruba dokumenterer dem hver for seg, og innstillingene som forhåndsutfylles her, følger adressen du skriver."
+    },
+    {
+      "h": "Gamle Hosting Basic-planer trenger IMAP-tillegget",
+      "p": "Aruba er tydelig på at et IMAP-oppsett bare lykkes når IMAP-tjenesten er aktiv på domenet. Den er inkludert i alle nåværende pakker; på en Hosting Basic-plan fra før juni 2017 er den et separat kjøp. Blir hvert eneste passord du prøver avvist på et gammelt domene, sjekk tillegget før du tilbakestiller noe."
+    },
+    {
+      "h": "En grense på 100 MB per melding, håndhevet ved sending",
+      "p": "Aruba begrenser en melding til 100 MB inn og ut, inkludert kodede vedlegg. SMTP-serveren annonserer en høyere grense, men det er postkasseregelen som gjelder, så en stor fil avvises ved sending i stedet for å bli kuttet."
+    }
+  ],
+  "limits": [
+    "Aruba annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle. I en italiensk postkasse betyr det vanligvis Posta in arrivo, Posta inviata, Bozze og Cestino. Har du omdøpt en mappe, oppgi den når du ber om en flytting.",
+    "En domenepostkasse starter på 1 GB (5 GB med GigaMail-tillegget). En full postkasse slutter å ta imot e-post, så be agenten arkivere eller slette når en kvoteadvarsel dukker opp."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Aruba-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Aruba-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til Aruba-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Aruba?",
+      "a": "For en postkasse på ditt eget domene er IMAP imaps.aruba.it på port 993 med implisitt TLS og SMTP smtps.aruba.it på port 465, også implisitt TLS, med autentisering påkrevd. For en gratis @aruba.it-postkasse er vertene imap.aruba.it og smtp.aruba.it på de samme portene. Brukernavnet er hele adressen din. Alle fire vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Aruba-passordet mitt avvist i en e-postklient?",
+      "a": "Som regel fordi det er kundeområdets passord og ikke postkassepassordet. IMAP sjekker passordet som er satt på den enkelte adressen under Caselle di posta i kontrollpanelet. På en Hosting Basic-plan fra før juni 2017 er den andre årsaken IMAP-tillegget, som må være aktivt på domenet."
+    },
+    {
+      "q": "Kan jeg koble til en Aruba PEC-postkasse på samme måte?",
+      "a": "Ja, på andre verter. Aruba PEC bruker imaps.pec.aruba.it og smtps.pec.aruba.it, og når totrinnsverifisering er på, krever den et eget passord for e-postprogrammer. MCPEmails har en egen side om å koble til PEC-postkasser, Aruba PEC inkludert, med de detaljene."
+    },
+    {
+      "q": "Lagres Aruba-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Aruba via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din Aruba-postkassene dine",
+    "sub": "Koble til Aruba-e-post på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

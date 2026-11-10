@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "https://pomoc.gazeta.pl/pomoc/7,154322,19745058.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Gazeta.pl-passord",
+    "helpUrl": "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "usernameForm": "Hele adressen din: login@gazeta.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Gazeta.pl Poczta til Claude og enhver MCP-klient",
+    "description": "Koble en Gazeta.pl-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på imap.gazeta.pl:993 og SMTP på smtp.gazeta.pl:465 med Gazeta.pl-passordet ditt og login@gazeta.pl som brukernavn."
+  },
+  "hero": {
+    "eyebrow": "Gazeta.pl Poczta + AI",
+    "titleLine1": "Koble Gazeta.pl Poczta til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Gazeta.pl-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Gazeta.pl Poczta på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.gazeta.pl port 993 og logger inn med login@gazeta.pl og Gazeta.pl-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Gazeta.pls hjelp dokumenterer nøyaktig disse vertene, med smtp.gazeta.pl på port 465 og SMTP-innlogging påkrevd, og reklamerer med SMTP-, IMAP- og POP3-tilgang for e-postprogrammer på alle postkasser. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Gazeta.pl-passordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Gazeta.pl seg til: IMAP og Gazeta.pl-passordet ditt",
+    "body": "Gazeta.pl tilbyr IMAP på <code>imap.gazeta.pl</code> port 993 og SMTP på <code>smtp.gazeta.pl</code> port 465, begge SSL/TLS, og veiledningene for Thunderbird og Outlook sier at du skal slå på SMTP-innlogging og bruke hele adressen, login@gazeta.pl, som brukernavn. Passordet er det du bruker på poczta.gazeta.pl. Det finnes ingen IMAP-bryter å lete etter og ingen krav til abonnement: selve postkassesiden reklamerer med tilgang fra e-postprogrammer over SMTP, IMAP og POP3. IMAP-serveren svarer under gazeta.pl-navnet med Onets banner, som røper hvor Agora drifter tjenesten, men innloggingen er en Gazeta.pl-konto og vertene er Gazeta.pls egne; et Onet-passord virker ikke her, og omvendt."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sørg for at du kan logge inn på poczta.gazeta.pl",
+      "p": "Åpne poczta.gazeta.pl i en nettleser og logg inn med adressen og passordet ditt. Det er det paret IMAP sjekker. Har du glemt passordet, tilbakestiller du det der først; et e-postprogram kan ikke."
+    },
+    {
+      "h": "Sjekk totrinnsinnlogging på kontoen",
+      "p": "Innloggingssiden til Gazeta.pl tilbyr <b>logowanie dwustopniowe</b>. Gazeta.pls hjelp sier ikke hvordan et e-postprogram logger inn når den er på, og dokumenterer ikke noe app-passord, så er totrinnsinnlogging aktivert og IMAP-innloggingen avvises, er det det første du skal se på. Med den av er kontopassordet påloggingen."
+    },
+    {
+      "h": "Lim adressen og passordet inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel login@gazeta.pl, og skriv inn passordet. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Brukernavnet er hele adressen, med SMTP-innlogging slått på",
+      "p": "Gazeta.pls veiledning gjentar det for begge serverne: brukernavnet er login@gazeta.pl, ikke bare login, og den utgående serveren må ha autentisering slått på med det samme paret. En klient som bare fyller inn den lokale delen, avvises på IMAP, og en som lar SMTP-autentisering stå av, avvises ved sending mens lesing virker, noe som ser ut som to ulike problemer, men er ett."
+    },
+    {
+      "h": "Onets server, Gazeta.pls innlogging",
+      "p": "IMAP-banneret på imap.gazeta.pl sier Onet server ready, fordi Agora kjører postkassen på Onets plattform. Det er ikke en Onet-konto. Vertene er gazeta.pl-navnene Gazeta.pl dokumenterer, passordet er Gazeta.pl-passordet ditt, og hjelpesidene som gjelder, er pomoc.gazeta.pl, ikke Onets. Gazeta.pls veiledning nevner bare gazeta.pl-vertene, så bruk dem og ikke Onets."
+    },
+    {
+      "h": "Ingen IDLE, ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE",
+      "p": "Serveren annonserer SASL-IR og LITERAL+ og mekanismene PLAIN, LOGIN og XOAUTH2, men ingen av utvidelsene som gjør en postkasse billig å organisere. Ny e-post finnes ved polling, som er slik MCPEmails jobber uansett; arkivering kjøres som en kopi, et flagg og en expunge; og Sendt, Utkast og Papirkurv matches på de polske navnene sine i stedet for å bli annonsert etter rolle, så oppgi mappen hvis agenten ikke finner den."
+    }
+  ],
+  "limits": [
+    "Et vedlegg er begrenset til 50 MB, så en større fil avvises ved sending i stedet for å bli kuttet. Gazeta.pl beskriver postkassen som stor og oppgir ingen størrelse i tall.",
+    "Gazeta.pl tilbyr totrinnsinnlogging, men dokumenterer ikke noe app-passord for e-postprogrammer. Slår du den på og IMAP-innloggingen begynner å feile, er Gazeta.pls hjelp stedet å spørre."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Gazeta.pl Poczta?",
+      "a": "Ikke direkte. Claude har ingen innebygd Gazeta.pl-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til gazeta.pl-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Gazeta.pl?",
+      "a": "IMAP er imap.gazeta.pl på port 993 med SSL/TLS. SMTP er smtp.gazeta.pl på port 465, også SSL/TLS, med innlogging påkrevd. Brukernavnet er hele adressen din, login@gazeta.pl, og passordet er Gazeta.pl-passordet ditt. Begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Gazeta.pl-passordet mitt avvist i en e-postklient?",
+      "a": "Sjekk brukernavnet først: det må være hele adressen, login@gazeta.pl. Sjekk så at passordet logger deg inn på poczta.gazeta.pl, og om totrinnsinnlogging er på, siden Gazeta.pl ikke dokumenterer noe eget passord for e-postprogrammer. For sending må SMTP-innlogging være slått på med det samme paret."
+    },
+    {
+      "q": "Er Gazeta.pl-e-post det samme som Onet Poczta?",
+      "a": "Nei. Serveren bak imap.gazeta.pl identifiserer seg som Onets, men postkassen er en Gazeta.pl-konto med egen innlogging, egne verter og egne hjelpesider. Bruk gazeta.pl-vertene og Gazeta.pl-passordet ditt."
+    },
+    {
+      "q": "Lagres Gazeta.pl-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Gazeta.pl via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Gazeta.pl-innboks",
+    "sub": "Koble til Gazeta.pl Poczta på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

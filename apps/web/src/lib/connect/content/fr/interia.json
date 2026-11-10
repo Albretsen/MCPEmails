@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Interia n'annonce ni MOVE ni SPECIAL-USE : le classement passe donc par un déplacement par copie, marquage et purge, et les dossiers Envoyés, Brouillons et Corbeille sont identifiés par leur nom. Sur une boîte polonaise, ils s'appellent généralement Wysłane, Kopie robocze et Kosz, alors nommez le dossier si un agent ne le trouve pas.",
-    "Activer la connexion en deux étapes sur le compte Interia déconnecte la boîte de tous les clients de messagerie, MCPEmails compris, et aucun mot de passe d'application n'existe pour rétablir l'accès."
+    "Activer la connexion en deux étapes sur le compte Interia déconnecte la boîte de tous les clients de messagerie, MCPEmails compris, et aucun mot de passe d'application n'existe pour rétablir l'accès.",
+    "Un compte Interia gratuit autorise 1 Go de transfert par jour depuis les programmes de messagerie (PocztaPRO : 15 Go) ; une fois ce volume épuisé, l'envoi et l'accès depuis les clients de messagerie s'arrêtent pendant 24 heures. Un message est plafonné à 100 Mo."
   ],
   "faq": [
     {

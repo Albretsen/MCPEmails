@@ -417,6 +417,43 @@
       "seznam": {
         "password": "Hvis tofaktorautentisering (dvoufázové ověření) er på, slutter Seznam-passordet ditt å virke her. Sett et Heslo pro aplikace under Zabezpečení účtu og bruk det."
       },
+      "aruba": {
+        "password": "Aruba sjekker passordet til denne postkassen, satt under Gestione caselle i Aruba-panelet, ikke innloggingen til Aruba-kundeområdet. På en Hosting Basic-plan fra før juni 2017 er IMAP et eget tillegg som må være aktivt på domenet."
+      },
+      "libero": {
+        "password": "Med Password Sicura på avviser Libero og Virgilio det vanlige passordet i e-postapper. Åpne Password per App i kontoområdet og bruk Password Specifica per Applicazioni på 16 tegn som vises der; det er ett passord for alle appene du kobler til."
+      },
+      "tim": {
+        "line": "TIM tillater e-postapper bare på en postkasse som er knyttet til en aktiv TIM-fastlinje eller -mobillinje. Uten det slipper TIM e-postapper inn kun fra sitt eget nett, og det er ikke MCPEmails."
+      },
+      "tiscali": {
+        "password": "Tiscali vil ha Tiscali Mail-passordet ditt sammen med hele adressen. Hjelpesidene beskriver tofaktorautentisering bare for innlogging i webmailen og sier ingenting om e-postapper, så er den på og innloggingen feiler, er det det første du bør sjekke."
+      },
+      "arubaPec": {
+        "password": "Med verifica in 2 passaggi på avviser Aruba PEC postkassepassordet i e-postapper. Generer en Password per programmi di posta under Gestione account PEC, deretter Sicurezza, og bruk den. Den utløper etter seks måneder."
+      },
+      "legalmail": {
+        "password": "Legalmail logger inn med User ID eller PEC-adressen og postkassens passord; en User ID skrives i feltet Brukernavn under Avanserte innstillinger. Bruker du heller et Application Password, oppretter du et 16-sifret under Password applicative i kontoinnstillingene; hvert av dem har sin egen utløpsdato, så sjekk at det ikke har gått ut."
+      },
+      "postecert": {
+        "password": "På PEC Postecertifica åpner du PEC-dashbordet, velger Genera password og bruker det klientpassordet; webmail-passordet godtas aldri, og klientpassordet utløper hver 90. dag."
+      },
+      "centrum": {
+        "password": "Med dvoufaktorové ověření på avviser Centrum, Atlas og Volný passordet ditt i e-postapper. Generer et aplikační heslo i seksjonen Dvoufaktorové ověření i webinnstillingene, på en datamaskin, og bruk det.",
+        "smtp": "Sending krever den gratis utvidede postkassen (navýšení schránky): bekreft et telefonnummer i webinnstillingene, og test så på nytt."
+      },
+      "wp": {
+        "imap": "Slå på IMAP i {provider}: Opcje, fanen IMAP/POP, deretter IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "Med logowanie dwustopniowe på oppretter du et hasło do programu pocztowego under Bezpieczeństwo, Logowanie dwustopniowe, og bruker det i stedet for {provider}-passordet ditt."
+      },
+      "onet": {
+        "protocols": "Lås opp IMAP og SMTP i Onet Poczta: Ustawienia (tannhjulet), Konto, fanen Konto Główne, deretter bryteren på flisen til hver protokoll.",
+        "appPassword": "Med weryfikacja dwuetapowa på genererer du et hasło do aplikacji under Bezpieczeństwo i Onet Konto og bruker det i stedet for Onet-passordet ditt."
+      },
+      "interia": {
+        "program": "I Interia åpner du Ustawienia, Ustawienia główne, fanen Parametry, og setter korzystam z programu pocztowego til TAK.",
+        "twoStep": "Interia blokkerer e-postprogrammer så lenge logowanie dwuetapowe er på, og har ingen app-passord. Slå det av for å koble til."
+      },
       "gmx": {
         "imap": "{provider} slår av POP3- og IMAP-tilgang som standard. Slå det på under E-Mail-Einstellungen, deretter POP3/IMAP.",
         "twoFactor": "Med tofaktorautentisering på bruker du et appassord i stedet for det vanlige passordet."

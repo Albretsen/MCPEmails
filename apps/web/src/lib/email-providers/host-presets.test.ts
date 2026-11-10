@@ -205,6 +205,51 @@ test('Brazilian and DACH consumer domains resolve from the address', () => {
   );
 });
 
+test('Italian, Czech and Polish addresses resolve from the address, with the documented ports', () => {
+  const cases: [string, string, number, number][] = [
+    ['a@aruba.it', 'aruba-free', 993, 465],
+    ['a@libero.it', 'libero', 993, 465],
+    ['a@inwind.it', 'libero', 993, 465],
+    ['a@virgilio.it', 'virgilio', 993, 465],
+    // TIM documents 143 and 587 with STARTTLS only; 993 and 465 do not answer.
+    ['a@tim.it', 'tim', 143, 587],
+    ['a@alice.it', 'tim-alice', 143, 587],
+    ['a@tin.it', 'tim-tin', 143, 587],
+    ['a@tiscali.it', 'tiscali', 993, 465],
+    ['a@pec.it', 'aruba-pec', 993, 465],
+    ['a@legalmail.it', 'legalmail', 993, 465],
+    ['a@postecert.it', 'postecert', 993, 465],
+    ['a@postecertifica.it', 'postecertifica', 993, 465],
+    ['a@centrum.cz', 'centrum', 993, 465],
+    ['a@atlas.cz', 'atlas', 993, 465],
+    ['a@volny.cz', 'volny', 993, 465],
+    ['a@post.cz', 'seznam', 993, 465],
+    ['a@wp.pl', 'wp', 993, 465],
+    ['a@o2.pl', 'o2-pl', 993, 465],
+    ['a@op.pl', 'onet', 993, 465],
+    ['a@poczta.fm', 'interia', 993, 465],
+    ['a@gazeta.pl', 'gazeta-pl', 993, 465],
+  ];
+  for (const [email, id, imapPort, smtpPort] of cases) {
+    const preset = findMailHostPreset({ email });
+    assert.equal(preset?.id, id, email);
+    assert.equal(preset?.imapPort, imapPort, email);
+    assert.equal(preset?.smtpPort, smtpPort, email);
+  }
+  assert.equal(prefillFromEmail('a@tim.it')?.imapSecurity, 'starttls');
+  // A mailbox on the customer's own domain is known from the host, and for
+  // Aruba PEC and Legalmail from the MX name under the same suffix.
+  assert.equal(findMailHostPreset({ email: 'a@firm.example', host: 'imaps.aruba.it' })?.id, 'aruba');
+  assert.equal(findMailHostPresetByMx('mx.pec.aruba.it')?.id, 'aruba-pec');
+  assert.equal(findMailHostPresetByMx('mx.cert.legalmail.it')?.id, 'legalmail');
+  // Atlas has its own IMAP name and sends through Centrum.
+  assert.equal(findMailHostPreset({ host: 'imap.atlas.cz' })?.smtpHost, 'smtp.centrum.cz');
+  // Poste never takes the webmail password in a client; Aruba PEC does until
+  // two-step verification is on, so only Poste is flagged.
+  assert.equal(prefillFromEmail('a@postecert.it')?.requiresAppPassword, true);
+  assert.equal(prefillFromEmail('a@pec.it')?.requiresAppPassword, false);
+});
+
 test('custom domains are recognised from the MX the host publishes', () => {
   const cases: [string, string, string][] = [
     ['mx.core.locaweb.com.br', 'locaweb', 'email-ssl.com.br'],

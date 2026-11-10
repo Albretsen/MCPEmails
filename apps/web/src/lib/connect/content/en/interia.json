@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Interia does not advertise MOVE or SPECIAL-USE, so filing runs as copy plus flag plus expunge, and Sent, Drafts and Trash are matched by name. On a Polish mailbox those are usually Wysłane, Kopie robocze and Kosz, so name the folder if an agent cannot find it.",
-    "Enabling two-step login on the Interia account disconnects the mailbox from every mail client, MCPEmails included, and no app password exists to restore it."
+    "Enabling two-step login on the Interia account disconnects the mailbox from every mail client, MCPEmails included, and no app password exists to restore it.",
+    "A free Interia account allows 1 GB of mail-program transfer a day (PocztaPRO: 15 GB); once it is used up, sending and mail-client access stop for 24 hours. A message is capped at 100 MB."
   ],
   "faq": [
     {

@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Folder roles are matched by name rather than announced by the server, because SPECIAL-USE is not advertised.",
-    "A per-application credential exists only if you enable two-step login. Without it, the connection holds your main account password."
+    "A per-application credential exists only if you enable two-step login. Without it, the connection holds your main account password.",
+    "WP's terms let it switch off a protocol such as IMAP or SMTP that the account has not used for 90 days, and delete an account not signed in to for 180 days. A mailbox left idle may need IMAP switched on again under Opcje. Attachments are capped at 100 MB."
   ],
   "faq": [
     {

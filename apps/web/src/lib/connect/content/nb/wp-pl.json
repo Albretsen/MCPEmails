@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Mapperoller matches etter navn i stedet for å bli annonsert av serveren, fordi SPECIAL-USE ikke annonseres.",
-    "En pålogging per program finnes bare hvis du slår på totrinnsinnlogging. Uten den holder tilkoblingen hovedpassordet til kontoen din."
+    "En pålogging per program finnes bare hvis du slår på totrinnsinnlogging. Uten den holder tilkoblingen hovedpassordet til kontoen din.",
+    "WPs vilkår lar dem slå av en protokoll som IMAP eller SMTP som kontoen ikke har brukt på 90 dager, og slette en konto som ikke er logget inn på i 180 dager. En postkasse som har stått ubrukt, kan trenge at IMAP slås på igjen under Opcje. Vedlegg er begrenset til 100 MB."
   ],
   "faq": [
     {

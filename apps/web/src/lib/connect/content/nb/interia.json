@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Interia annonserer ikke MOVE eller SPECIAL-USE, så sortering skjer som kopi pluss flagg pluss expunge, og Sendt, Utkast og Papirkurv matches på navn. I en polsk postkasse heter de vanligvis Wysłane, Kopie robocze og Kosz, så oppgi mappen hvis en agent ikke finner den.",
-    "Slår du på totrinnsinnlogging på Interia-kontoen, kobles postkassen fra alle e-postklienter, også MCPEmails, og det finnes ikke noe app-passord som kan gjenopprette tilgangen."
+    "Slår du på totrinnsinnlogging på Interia-kontoen, kobles postkassen fra alle e-postklienter, også MCPEmails, og det finnes ikke noe app-passord som kan gjenopprette tilgangen.",
+    "En gratis Interia-konto tillater 1 GB overføring via e-postprogrammer per dag (PocztaPRO: 15 GB); når den er brukt opp, stopper sending og tilgang fra e-postklienter i 24 timer. En melding er begrenset til 100 MB."
   ],
   "faq": [
     {

@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "https://freemail.help.economia.cz/articles/95768-casto-kladene-dotazy"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Centrum, o una aplikační heslo si tienes dos factores",
+    "helpUrl": "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "usernameForm": "Tu dirección completa, incluido el dominio: jmeno@centrum.cz, jmeno@atlas.cz o jmeno@volny.cz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Centrum.cz, Atlas.cz y Volný.cz a Claude y a cualquier cliente MCP",
+    "description": "Conecta un buzón de Centrum.cz, Atlas.cz o Volný.cz a Claude, Cursor y cualquier cliente MCP por IMAP en imap.centrum.cz:993. Enviar requiere el buzón ampliado gratuito (navýšená schránka); con dos factores, una contraseña de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Centrum.cz + IA",
+    "titleLine1": "Conecta el correo de Centrum.cz a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Centrum, Atlas o Volný. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder al correo de Centrum.cz por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.centrum.cz en el puerto 993, iniciando sesión con tu dirección completa y tu contraseña de Centrum, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Atlas.cz y Volný.cz funcionan en la misma plataforma de Economia con sus propios nombres IMAP, imap.atlas.cz e imap.volny.cz. Dos reglas del proveedor: enviar por SMTP solo funciona en un buzón ampliado (navýšená schránka), que es gratis y requiere un número de teléfono en los ajustes web, y con la verificación de dos factores activada, los programas de correo inician sesión con una aplikační heslo en lugar de la contraseña de la cuenta. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de la cuenta, o una de aplicación con dos factores",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @atlas.cz", "host": "imap.atlas.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @atlas.cz", "host": "smtp.centrum.cz", "port": 465, "security": "tls" },
+      { "label": "IMAP, @volny.cz", "host": "imap.volny.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @volny.cz", "host": "smtp.volny.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son de @centrum.cz, y la página de ayuda indica usarlas también para sus otros dominios, como @cbox.cz y @mujmail.cz. Atlas y Volný tienen sus propios nombres IMAP debajo. Todos los servidores se verificaron mediante una conexión TLS real. Para cualquier otra dirección, usa el",
+      "label": "buscador de ajustes de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Cómo se conecta Centrum.cz: IMAP, y SMTP una vez ampliado el buzón",
+    "body": "Centrum ofrece IMAP en <code>imap.centrum.cz</code> en el puerto 993 con SSL/TLS y SMTP en <code>smtp.centrum.cz</code> en el puerto 465 con SSL/TLS (el 587 con STARTTLS también está documentado), con autenticación activada y la dirección entera como nombre de usuario. El mismo sitio de ayuda cubre Atlas.cz y Volný.cz: <code>imap.atlas.cz</code> envía a través de smtp.centrum.cz, mientras que Volný tiene tanto <code>imap.volny.cz</code> como <code>smtp.volny.cz</code>. Para cualquier otro dominio de la plataforma, Centrum indica usar los ajustes de centrum.cz. No hay ningún interruptor de IMAP que buscar, pero sí una condición para enviar que la página de ayuda resume en una frase: para usar SMTP necesitas un buzón ampliado, que es gratis y se hace en los ajustes web con un número de teléfono. Un buzón básico tiene 100 MB; uno ampliado, 15 GB. Con la verificación de dos factores activada, las preguntas frecuentes indican que los programas de correo inician sesión con una contraseña de aplicación generada en la sección <b>Dvoufaktorové ověření</b> de los ajustes web, que la versión móvil y la app no muestran."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Amplía el buzón para que SMTP funcione",
+      "p": "Inicia sesión en el webmail desde un ordenador, abre los ajustes del buzón y completa la ampliación gratuita (<b>navýšení schránky</b>) confirmando un número de teléfono. Centrum vincula SMTP a esto: sin ella, el inicio de sesión IMAP funciona y la comprobación de envío falla. La ampliación también lleva el buzón de 100 MB a 15 GB."
+    },
+    {
+      "h": "Con dos factores activados, genera una aplikační heslo",
+      "p": "Si usas <b>dvoufaktorové ověření</b>, los programas de correo rechazan la contraseña de tu cuenta. En los ajustes web abre la sección <b>Dvoufaktorové ověření</b> y genera ahí una contraseña de aplicación; la versión móvil del buzón y la app no la ofrecen. Usa ese valor en MCPEmails. Con los dos factores desactivados, la credencial es tu contraseña normal de Centrum."
+    },
+    {
+      "h": "Pega la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa con su dominio y pega la contraseña que corresponda. Los servidores y puertos vienen rellenados para las direcciones de centrum.cz, atlas.cz y volny.cz. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Leer funciona y enviar falla: el buzón no se ha ampliado",
+      "p": "Este es el fallo propio de Centrum, y es fácil malinterpretarlo porque la mitad IMAP va bien. La página de ayuda es explícita en que SMTP necesita un buzón ampliado (la navýšení es gratis y se hace en los ajustes web con un número de teléfono). Hasta entonces, la comprobación de envío en MCPEmails se rechaza y el formulario de conexión ofrece solo lectura. Haz la ampliación, vuelve a probar, y el envío llega con ella."
+    },
+    {
+      "h": "Los dos factores necesitan una contraseña de aplicación, y solo los ajustes web de escritorio la emiten",
+      "p": "Con dvoufaktorové ověření activado, las preguntas frecuentes indican iniciar sesión en los programas de correo con una aplikační heslo generada en la sección Dvoufaktorové ověření, y señalan que ese ajuste no está disponible desde la versión móvil del buzón ni desde la app móvil. Así que si gestionas la cuenta desde el teléfono, la contraseña que necesitas solo se puede crear desde un ordenador. El propio rechazo del inicio de sesión no da ninguna pista de cuál de las dos credenciales esperaba."
+    },
+    {
+      "h": "Un servidor IMAP escueto: sin IDLE, sin MOVE, sin UIDPLUS",
+      "p": "El saludo anuncia IMAP4rev1, LITERAL+, ID, SASL-IR y AUTH=PLAIN, y nada más. Sin IDLE, el correo nuevo se detecta consultando periódicamente, que es como funciona MCPEmails de todos modos. Sin MOVE, archivar un mensaje se ejecuta como una copia, una marca y un expunge, y sin UIDPLUS no se devuelve el identificador nuevo de la copia. Ninguna de las dos cosas es grave; organizar en bloque simplemente es más lento de lo que permitiría la lista de capacidades de un proveedor más grande. Si la sincronización de carpetas se comporta mal en un cliente de escritorio, la ayuda de Centrum sugiere poner el prefijo de ruta IMAP en INBOX."
+    },
+    {
+      "h": "Atlas y Volný comparten la plataforma, pero no el nombre IMAP",
+      "p": "Una dirección @atlas.cz inicia sesión en <code>imap.atlas.cz</code> y envía a través de smtp.centrum.cz; una dirección @volny.cz usa <code>imap.volny.cz</code> y <code>smtp.volny.cz</code>. La página de ayuda da a Atlas su propio nombre IMAP en lugar del de Centrum, así que úsalo. MCPEmails rellena el par correcto a partir de la dirección que escribes, y el servidor SMTP se identifica como una máquina de centrum.cz en todos los casos, lo cual es normal."
+    }
+  ],
+  "limits": [
+    "SMTP solo está disponible en un buzón ampliado (navýšená schránka). Hasta que se haga la ampliación gratuita en los ajustes web, el buzón se conecta solo para lectura.",
+    "El servidor SMTP limita cada mensaje a 25 MB, incluidos los adjuntos codificados, así que un archivo grande se rechaza al enviarlo en lugar de recortarse.",
+    "Centrum no anuncia SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en checo eso suele significar Doručené, Odeslané, Koncepty y Koš. Indica la carpeta cuando pidas mover algo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Centrum.cz, Atlas.cz o Volný.cz?",
+      "a": "No directamente. Claude no tiene un conector de Centrum integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón centrum.cz, atlas.cz o volny.cz le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Centrum.cz?",
+      "a": "IMAP es imap.centrum.cz en el puerto 993 con SSL/TLS. SMTP es smtp.centrum.cz en el puerto 465 con SSL/TLS (o el 587 con STARTTLS), con autenticación obligatoria. Atlas usa imap.atlas.cz con smtp.centrum.cz; Volný usa imap.volny.cz y smtp.volny.cz. El nombre de usuario es tu dirección completa. Todos los servidores se confirmaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué MCPEmails puede leer mi correo de Centrum pero no enviar?",
+      "a": "Porque enviar por SMTP necesita un buzón ampliado. La ayuda de Centrum indica que la ampliación es gratis y se hace en los ajustes web desde un ordenador confirmando un número de teléfono. Una vez hecha, vuelve a probar la conexión y el envío funciona."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Centrum en un cliente de correo?",
+      "a": "Si la verificación de dos factores está activada, los programas de correo necesitan una aplikační heslo generada en la sección Dvoufaktorové ověření de los ajustes web, que solo está disponible desde la versión de escritorio. Si los dos factores están desactivados, comprueba que el nombre de usuario es la dirección entera con su dominio y que una dirección de Atlas o Volný está usando su propio servidor IMAP."
+    },
+    {
+      "q": "¿Se almacena mi correo de Centrum en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Centrum por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Centrum.cz",
+    "sub": "Conecta Centrum, Atlas o Volný en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "https://pomoc.gazeta.pl/pomoc/7,154322,19745058.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Gazeta.pl",
+    "helpUrl": "https://pomoc.gazeta.pl/pomoc/7,154322,32746451,instrukcja-konfiguracji-konta-e-mail-thunderbird-outlook.html",
+    "usernameForm": "Tu dirección completa: login@gazeta.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Gazeta.pl Poczta a Claude y a cualquier cliente MCP",
+    "description": "Conecta un buzón de Gazeta.pl a Claude, Cursor y cualquier cliente MCP por IMAP en imap.gazeta.pl:993 y SMTP en smtp.gazeta.pl:465 con tu contraseña de Gazeta.pl y login@gazeta.pl como nombre de usuario."
+  },
+  "hero": {
+    "eyebrow": "Gazeta.pl Poczta + IA",
+    "titleLine1": "Conecta Gazeta.pl Poczta a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Gazeta.pl. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder a Gazeta.pl Poczta por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.gazeta.pl en el puerto 993, iniciando sesión con login@gazeta.pl y tu contraseña de Gazeta.pl, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La ayuda de Gazeta.pl documenta exactamente estos servidores, con smtp.gazeta.pl en el puerto 465 y autenticación SMTP obligatoria, y anuncia acceso SMTP, IMAP y POP3 para programas de correo en todos los buzones. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Tu contraseña de Gazeta.pl",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Gazeta.pl: IMAP y tu contraseña de Gazeta.pl",
+    "body": "Gazeta.pl ofrece IMAP en <code>imap.gazeta.pl</code> en el puerto 993 y SMTP en <code>smtp.gazeta.pl</code> en el puerto 465, ambos con SSL/TLS, y sus instrucciones para Thunderbird y Outlook indican activar la autenticación SMTP y usar la dirección entera, login@gazeta.pl, como nombre de usuario. La contraseña es la que usas en poczta.gazeta.pl. No hay ningún interruptor de IMAP que buscar ni ninguna condición de plan: la propia página del buzón anuncia acceso desde programas de correo por SMTP, IMAP y POP3. El servidor IMAP responde bajo el nombre gazeta.pl con el saludo de Onet, lo que te dice dónde aloja Agora el servicio, pero el acceso es una cuenta de Gazeta.pl y los servidores son los propios de Gazeta.pl; una contraseña de Onet no funciona aquí, ni al revés."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Asegúrate de que puedes iniciar sesión en poczta.gazeta.pl",
+      "p": "Abre poczta.gazeta.pl en el navegador e inicia sesión con tu dirección y tu contraseña. Ese es el par que comprueba IMAP. Si has olvidado la contraseña, restablécela ahí primero; un programa de correo no puede hacerlo."
+    },
+    {
+      "h": "Revisa el inicio de sesión en dos pasos de la cuenta",
+      "p": "La página de inicio de sesión de Gazeta.pl ofrece <b>logowanie dwustopniowe</b>. La ayuda de Gazeta.pl no dice cómo inicia sesión un programa de correo una vez activado, y no documenta ninguna contraseña de aplicación, así que si el inicio de sesión en dos pasos está activado y el inicio de sesión IMAP es rechazado, eso es lo primero que hay que mirar. Con él desactivado, la credencial es la contraseña de la cuenta."
+    },
+    {
+      "h": "Pega la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo login@gazeta.pl, e introduce la contraseña. Los servidores y puertos vienen rellenados con los valores verificados de esta página. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El nombre de usuario es la dirección entera, con la autenticación SMTP activada",
+      "p": "Las instrucciones de Gazeta.pl lo repiten para ambos servidores: el nombre de usuario es login@gazeta.pl, no el login a solas, y el servidor de salida debe tener la autenticación activada con el mismo par. Un cliente que rellena solo la parte local es rechazado en IMAP, y uno que deja la autenticación SMTP desactivada es rechazado al enviar mientras leer funciona, lo que parecen dos problemas distintos y es uno solo."
+    },
+    {
+      "h": "Servidor de Onet, acceso de Gazeta.pl",
+      "p": "El saludo IMAP en imap.gazeta.pl dice Onet server ready, porque Agora aloja el buzón en la plataforma de Onet. No es una cuenta de Onet. Los servidores son los nombres gazeta.pl que Gazeta.pl documenta, la contraseña es la tuya de Gazeta.pl, y las páginas de ayuda que aplican son las de pomoc.gazeta.pl, no las de Onet. Las instrucciones de Gazeta.pl solo nombran los servidores gazeta.pl, así que usa esos y no los de Onet."
+    },
+    {
+      "h": "Sin IDLE, sin MOVE, sin UIDPLUS, sin SPECIAL-USE",
+      "p": "El servidor anuncia SASL-IR y LITERAL+ y los mecanismos PLAIN, LOGIN y XOAUTH2, pero ninguna de las extensiones que hacen barato organizar un buzón. El correo nuevo se detecta consultando periódicamente, que es como funciona MCPEmails de todos modos; archivar se ejecuta como una copia, una marca y un expunge; y Enviados, Borradores y Papelera se identifican por sus nombres en polaco en lugar de anunciarse por función, así que indica la carpeta si el agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "Los adjuntos tienen un límite de 50 MB, así que un archivo mayor se rechaza al enviarlo en lugar de recortarse. Gazeta.pl describe el buzón como grande y no publica ninguna cifra de tamaño.",
+    "Gazeta.pl ofrece inicio de sesión en dos pasos, pero no documenta ninguna contraseña de aplicación para programas de correo. Si lo activas y el inicio de sesión IMAP empieza a fallar, la ayuda de Gazeta.pl es el sitio donde preguntar."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Gazeta.pl Poczta?",
+      "a": "No directamente. Claude no tiene un conector de Gazeta.pl integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como MCPEmails a tu buzón de gazeta.pl le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Gazeta.pl?",
+      "a": "IMAP es imap.gazeta.pl en el puerto 993 con SSL/TLS. SMTP es smtp.gazeta.pl en el puerto 465, también con SSL/TLS y autenticación obligatoria. El nombre de usuario es tu dirección completa, login@gazeta.pl, y la contraseña es tu contraseña de Gazeta.pl. Ambos servidores se confirmaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Gazeta.pl en un cliente de correo?",
+      "a": "Revisa primero el nombre de usuario: tiene que ser la dirección entera, login@gazeta.pl. Después comprueba que la contraseña te permite entrar en poczta.gazeta.pl, y si el inicio de sesión en dos pasos está activado, ya que Gazeta.pl no documenta ninguna contraseña aparte para programas de correo. Para enviar, la autenticación SMTP tiene que estar activada con el mismo par."
+    },
+    {
+      "q": "¿El correo de Gazeta.pl es lo mismo que Onet Poczta?",
+      "a": "No. El servidor detrás de imap.gazeta.pl se identifica como el de Onet, pero el buzón es una cuenta de Gazeta.pl con su propio acceso, sus propios servidores y sus propias páginas de ayuda. Usa los servidores gazeta.pl y tu contraseña de Gazeta.pl."
+    },
+    {
+      "q": "¿Se almacena mi correo de Gazeta.pl en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Gazeta.pl por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Gazeta.pl",
+    "sub": "Conecta Gazeta.pl Poczta en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

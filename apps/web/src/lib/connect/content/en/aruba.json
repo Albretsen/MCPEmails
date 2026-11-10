@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "https://guide.aruba.it/hosting-e-domini/email/gestione-email/caratteristiche-acquisto-gestione/caratteristiche-caselle-posta-dominio"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "usernameForm": "Your full address, including the domain: nome@tuodominio.it, or nome@aruba.it on a free mailbox.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Aruba MCP Server: Connect Aruba Mail to Claude",
+    "description": "MCP server for Aruba mail. Connect the mailboxes on your Aruba domain (info@, amministrazione@) to Claude and ChatGPT over IMAP at imaps.aruba.it:993 with the mailbox password."
+  },
+  "hero": {
+    "eyebrow": "Aruba email + AI",
+    "titleLine1": "MCP server for Aruba mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running info@, amministrazione@ and your own name on a domain hosted at Aruba? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP with the password of the mailbox, not your Aruba customer login.",
+    "answer": "Claude cannot reach an Aruba mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imaps.aruba.it on port 993, signing in with the full address and the password set on that mailbox, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Aruba's own guide lists exactly these hosts for a mailbox on your domain, with smtps.aruba.it on port 465 for sending and authentication always required. A free @aruba.it mailbox uses imap.aruba.it and smtp.aruba.it instead. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, not the customer login",
+    "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, free @aruba.it mailbox", "host": "imap.aruba.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, free @aruba.it mailbox", "host": "smtp.aruba.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "The first two rows are for a mailbox on your own domain, the two below for a free @aruba.it mailbox. Both pairs were verified from a live TLS connection. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Several mailboxes on your Aruba domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How Aruba connects: IMAP over TLS and the mailbox password",
+    "body": "Aruba serves IMAP for domain mailboxes at <code>imaps.aruba.it</code> on port 993 and SMTP at <code>smtps.aruba.it</code> on port 465, both with implicit TLS, and its guide states that the SMTP server always requires authentication with the address and its password. The username is the complete address: Aruba says to type the full email address into the username field, never the local part alone. The password is the one set on the mailbox in the Aruba control panel, which is not the password you use to sign in to the Aruba customer area. Aruba also documents an unencrypted alternative on your own domain name (<code>imap.tuodominio.it</code> on port 143, <code>smtp.tuodominio.it</code> on 587 or 25), but its TLS requirement is explicit: a client must support at least TLS 1.2, and the aruba.it names are the ones with a certificate that matches, so those are the ones MCPEmails uses."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Find or set the mailbox password in the Aruba control panel",
+      "p": "Sign in to the Aruba control panel, open the email service for the domain and go to <b>Caselle di posta</b>. Each address has its own password there, in the <b>Gestione caselle</b> box, with <b>Modifica</b> next to it. If you do not know it, set a new one for that mailbox; your customer-area login is a different credential and will be refused by IMAP."
+    },
+    {
+      "h": "Check that IMAP is active on the domain, on older plans",
+      "p": "Aruba's guide says IMAP works only if the IMAP add-on service is active on the domain. It is included in every current package, so this only concerns a Hosting Basic plan activated before June 2017, where IMAP had to be bought separately. A rejected login on such a plan is the add-on, not the password."
+    },
+    {
+      "h": "Paste the address and password into MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the full address such as info@tuodominio.it, and enter the mailbox password. The hosts and ports are prefilled from the verified values on this page. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Two passwords, and only the mailbox one works",
+      "p": "Aruba customers sign in to the customer area with a login and password, and that is the pair most people reach for. IMAP checks the password of the individual mailbox, set under Caselle di posta in the control panel (only the postmaster mailbox starts out with the Aruba account password). The two are separate credentials, so a refused login on an Aruba address is usually the customer-area password pasted into a form that wanted the mailbox one."
+    },
+    {
+      "h": "Free @aruba.it mailboxes use different host names",
+      "p": "A mailbox on your own domain uses <code>imaps.aruba.it</code> and <code>smtps.aruba.it</code>. The free @aruba.it mailboxes are on <code>imap.aruba.it</code> and <code>smtp.aruba.it</code>, same ports and same TLS. Both pairs answer with the same Dovecot banner today, but Aruba documents them separately, and the settings prefilled here follow the address you type."
+    },
+    {
+      "h": "Old Hosting Basic plans need the IMAP add-on",
+      "p": "Aruba is explicit that an IMAP configuration only succeeds when the IMAP service is active on the domain. It is included in all current packages; on a Hosting Basic plan from before June 2017 it is a separate purchase. If every password you try is refused on an old domain, check the add-on before resetting anything."
+    },
+    {
+      "h": "A 100 MB message cap, enforced at send time",
+      "p": "Aruba caps a message at 100 MB in and out, encoded attachments included. The SMTP server advertises a larger limit, but the mailbox rule is the one that applies, so a large file is refused when it is sent rather than trimmed."
+    }
+  ],
+  "limits": [
+    "Aruba does not advertise SPECIAL-USE, so folders are matched by name rather than by role. On an Italian mailbox that usually means Posta in arrivo, Posta inviata, Bozze and Cestino. If you have renamed a folder, name it when you ask for a move.",
+    "A domain mailbox starts at 1 GB (5 GB with the GigaMail option). A mailbox that fills up stops receiving, so ask the agent to archive or delete when a quota warning appears."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Aruba email?",
+      "a": "Not directly. Claude has no built-in Aruba connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to your Aruba mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Aruba IMAP and SMTP settings?",
+      "a": "For a mailbox on your own domain, IMAP is imaps.aruba.it on port 993 with implicit TLS and SMTP is smtps.aruba.it on port 465, also implicit TLS, with authentication required. For a free @aruba.it mailbox the hosts are imap.aruba.it and smtp.aruba.it on the same ports. The username is your full address. All four hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Aruba password rejected in a mail client?",
+      "a": "Usually because it is the customer-area password rather than the mailbox password. IMAP checks the password set on the individual address under Caselle di posta in the control panel. On a Hosting Basic plan from before June 2017 the other cause is the IMAP add-on, which has to be active on the domain."
+    },
+    {
+      "q": "Can I connect an Aruba PEC mailbox the same way?",
+      "a": "Yes, on different hosts. Aruba PEC uses imaps.pec.aruba.it and smtps.pec.aruba.it, and once two-step verification is on it wants a separate password for mail programs. MCPEmails has a page on connecting PEC mailboxes, Aruba PEC included, with those details."
+    },
+    {
+      "q": "Is my Aruba mail stored on your servers?",
+      "a": "No. Messages are fetched live from Aruba over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your Aruba mailboxes",
+    "sub": "Connect Aruba mail in minutes. One mailbox free forever, no card required."
+  }
+}
