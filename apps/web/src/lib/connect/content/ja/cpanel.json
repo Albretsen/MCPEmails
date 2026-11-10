@@ -1,0 +1,107 @@
+{
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "メールアドレス全体（you@yourdomain.comなど）。cPanelアカウントのログイン情報は使いません。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "cPanel用MCPサーバー：cPanelのメールをClaudeに接続",
+    "description": "cPanelメール用のMCPサーバー。独自ドメインの会社用メールボックス（info@、sales@など）を、どのcPanelホスティングでもIMAP経由でClaudeとChatGPTに接続できます。"
+  },
+  "hero": {
+    "eyebrow": "cPanel + AI",
+    "titleLine1": "cPanelメール用のMCPサーバー：",
+    "titleLine2": "会社のメールボックスをすべて、ClaudeとChatGPTに",
+    "lead": "cPanelのホスティングで、独自ドメインのinfo@、sales@、support@、invoices@を運用していますか。各メールボックスを1つのワークスペースに接続すれば、AIエージェントがそのすべてを横断して動きます。IMAPとメールボックスのパスワードでメールの閲覧、検索、送信、返信、予約送信、整理ができ、同じメールボックスを1つだけでなくすべてのMCPクライアントで使えます。",
+    "meta0": "最初のメールボックスは無料、残りはプランで",
+    "meta1": "メールボックスのパスワードだけ、OAuthの設定なし",
+    "meta2": "メールはその場で取得、保存はしません",
+    "answer": "Claudeは自力ではcPanelに届きません。MCPEmailsはホスト型のMCPサーバーで、メールボックスのパスワードを使ってIMAPで接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。設定は2分ほどです。info@やsales@といった会社用アドレスは、それぞれ独立したメールボックスとして接続します。1つは無料、Personalは3つ、Proは最大10、Businessは必要な数だけです。"
+  },
+  "persona": {
+    "intro": "cPanelホスティングに会社用メールボックスが複数ありますか？",
+    "label": "各プランで接続できる数を見る",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "cPanelの接続方法：IMAPとメールボックスのパスワード",
+    "body": "cPanelのメールボックス、つまりRoundcubeやHordeのウェブメールで読んでいるあのメールボックスは、cPanelの「Email Accounts」（メールアカウント）で設定したパスワードを使ってIMAP/SMTPで接続します。アプリ パスワードもOAuthもありません。ホストはたいてい<code>mail.yourdomain.com</code>で、正確な値はcPanelの「Email Accounts」から「Connect Devices」（デバイスの接続）を開いた先の「Mail Client Manual Settings」に表示されます。暗号化なしの列ではなく、SSL/TLSの安全な列を使ってください。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "cPanelで設定値を読み取る",
+      "p": "cPanelで「Email Accounts」を開き、対象のメールボックスの「Connect Devices」をクリックします。「Mail Client Manual Settings」から、安全なIMAPとSMTPのホストとポートをコピーします。メールボックスのパスワードがわからなければ、同じ画面で新しいものを設定してください。"
+    },
+    {
+      "h": "MCPEmailsに貼り付ける",
+      "p": "IMAP / SMTPを選び、cPanelのメールアドレス、上記のホスト、パスワードを追加すれば、受信トレイが安全に接続されます。"
+    },
+    {
+      "h": "MCP URLをAIクライアントに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "「cPanelのメールサーバー」は存在せず、あるのはあなたのサーバーだけ。その名前を知っているのはパネルだけです",
+      "p": "cPanelはホスティング会社が動かしているソフトウェアであって、メールサービスではありません。だから、あらかじめ入力しておける共通のホスト名がないのです。各アカウントは、それが置かれているマシンで応答します。あなたのアカウントについて正しい値を示す唯一の場所は、<b>Email Accounts</b>、そのアドレスの行の<b>Connect Devices</b>、その先の<b>Mail Client Manual Settings</b>ブロックです。そこにcPanelは2つの表を表示します。IMAPが993、POP3が995、SMTPが465の<b>Secure SSL/TLS Settings</b>と、143、110、587の非SSLの表です。後者は無視してください。受信サーバーと送信サーバーは、安全な表に印字されたとおりに、たとえ自分のドメインにまったく似ていないホストでも、そのままコピーします。"
+    },
+    {
+      "h": "mail.yourdomain.comはたいてい名前解決でき、たいてい証明書の検証で失敗します",
+      "p": "cPanelの既定の案内は<code>mail.example.com</code>で、この名前は通常は正しいマシンを指しています。平文のポートが動いているように見えるのはそのためです。ところがTLS越しではうまくいかないことが多いのです。サーバーが提示する証明書が、あなたのドメインではなく共有サーバーのものだからです。cPanelはこれを名前の置き換えで処理します。cPanel自身のドキュメントによれば、ドメインに有効な証明書がないときはサーバーのホスト名を、証明書がホスト名と一致しないときは<code>mail</code>サブドメインを使います。この置き換えこそが、Connect Devicesの値が時おり見たこともないホスト名になっている理由です。それでもその値を使ってください。ここでの証明書の不一致は名前の問題であって攻撃ではなく、警告をクリックして進むのは間違った対処です。"
+    },
+    {
+      "h": "メールボックスは、見た目は完全に正常なまま、ログインや送信を制限されていることがあります",
+      "p": "cPanelは各メールボックスに<b>Restrictions</b>（制限）ブロックを設けており、<b>Email Accounts</b>から<b>Manage</b>で開けます。Logging InをSuspendにすると、パスワードを変えずにウェブメールとすべてのメールクライアントがブロックされます。Sending Outgoing EmailはSuspendにすると送信メッセージを拒否し、<b>Hold</b>にすると黙って4日間キューに入れたあと諦めます。AIエージェントにとって最もたちが悪いのはHoldです。送信は受理され、成功したように見え、何も届きません。メールが消えるように見えたら、他を調べる前にRestrictionsを開いてください。"
+    },
+    {
+      "h": "ホスティング会社が独自の変種を公開していることがあり、その場合はホスティング会社が正です",
+      "p": "このページはcPanelの一般的なパターンです。個々のホスティング会社はここから逸脱し、その違いを自分で文書化しています。たとえばBluehostは<code>mail.example.com</code>を暗号化なしのブロックにだけ置き、安全な側には素のドメインを指定します。A2 Hosting（現hosting.com）は、共有証明書がサーバーをカバーしているため、<code>mi3-ss78.a2hosting.com</code>のようなサーバーのフルネームを使うよう案内しています。お使いのホスティング会社専用のページがあれば、正確な値が載っているのでそちらに従ってください。ない場合は、自分のcPanel内のConnect Devicesパネルが最終的な答えです。"
+    }
+  ],
+  "limits": [
+    "cPanelのメールボックスのホストはあらかじめ入力できません。ホスト名は共有サービスではなくあなたのサーバーに属するためです。Connect Devicesから貼り付けてください。",
+    "ホスティング会社によっては、共有プランで外向きのサブミッションをファイアウォールで止めていたり、外部IMAPを無効にしていたりします。その場合でもcPanelは設定値を表示するので、そこでの拒否は設定の問題ではなくホスティング会社への質問です。",
+    "MCPEmailsが接続するのはメールボックスです。転送設定、エイリアス、自動応答、フィルター、容量制限はcPanel側にあり、AIクライアントからは見えません。"
+  ],
+  "faq": [
+    {
+      "q": "ClaudeはcPanelのメールで使えますか？",
+      "a": "直接は使えません。ClaudeにはcPanelメールサーバー用の内蔵コネクタがありません。MCPEmailsのようなMCPサーバーをIMAP経由でメールボックスに接続すると、デスクトップのメールクライアントと同じ認証情報で、Claudeがメールの閲覧、検索、送信、返信、予約送信、整理をできるようになり、同じ接続がCursorやChatGPTからも使えます。"
+    },
+    {
+      "q": "cPanelのIMAPとSMTPの設定は何ですか？",
+      "a": "ポートは標準どおりです。IMAPが993、SMTPが465で、どちらも暗黙的TLSです。143と587は使うべきでない暗号化なしの対応ポートです。ホスト名は標準ではなく、ホスティングアカウントごとに異なります。Email Accounts、Connect Devices、Mail Client Manual Settingsの順に開き、Secure SSL/TLSの表から取ってください。"
+    },
+    {
+      "q": "cPanelのメールサーバーのホスト名はどこで確認できますか？",
+      "a": "cPanelにサインインし、Email Accountsを開いて、アドレスの横のConnect Devicesをクリックします。Mail Client Manual Settingsまでスクロールし、Secure SSL/TLSの表から受信サーバーと送信サーバーを読み取ってください。mail.yourdomain.comのこともあれば、素のドメインや、ホスティング会社のサーバー名のこともあります。そこに印字されている値が、TLSで正しいものです。"
+    },
+    {
+      "q": "mail.mydomain.comで証明書の警告が出るのはなぜですか？",
+      "a": "サーバーが、あなたのドメインではなく共有マシン向けに発行された証明書を提示しているからです。入力した名前はその証明書に含まれていないため、厳格に検証するクライアントは接続を拒否します。対処法は、cPanelがSecure SSL/TLSの表に載せているホスト名、つまり証明書が実際にカバーしている名前に接続することです。"
+    },
+    {
+      "q": "cPanelのメールパスワードが拒否されるのはなぜですか？",
+      "a": "主な原因は3つです。個々のメールアドレスに設定したパスワードではなく、cPanelアカウントのログイン情報を使っている。Restrictionsでそのメールボックスの「Logging In」がSuspendになっている。あるいは、別の場所に名前解決されるホスト名を指している。Email AccountsからManageを開いてメールボックスのパスワードを再設定し、同じ画面でRestrictionsを確認してください。"
+    },
+    {
+      "q": "私のcPanelのメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにあなた自身のサーバーからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "cPanelのメールボックスをすべて1つのエージェントに",
+    "sub": "最初のcPanelメールボックスは無料で接続、カード不要。Personalは3つ、Proは最大10、Businessは必要な数だけ接続できます。"
+  }
+}

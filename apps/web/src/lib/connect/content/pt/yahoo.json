@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Como o Yahoo se conecta: uma senha de app",
-    "body": "O Yahoo Mail se conecta via IMAP/SMTP com uma <b>senha de app do Yahoo</b>. Gere uma em Segurança da conta do Yahoo, em Conexões externas, e cole no MCPEmails junto com seu endereço do Yahoo. Se a opção não aparecer, ative a verificação em duas etapas e procure de novo. Sem dança de OAuth, sem pop-ups no navegador."
+    "body": "O Yahoo Mail se conecta via IMAP/SMTP com uma <b>senha de app do Yahoo</b>. Gere uma em Segurança da conta do Yahoo, em Conexões externas, e cole no MCPEmails junto com seu endereço do Yahoo. Se a opção não aparecer, ative a verificação em duas etapas e procure de novo. Sem rodeios de OAuth, sem pop-ups no navegador."
   },
   "setup": [
     {

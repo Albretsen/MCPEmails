@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.mdaemon.com/mdaemon/en/default-domain-and-servers_ports.html",
+    "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "https://help.mdaemon.com/MDaemon/en/screening_location-screening.html",
+    "https://help.mdaemon.com/mdaemon/en/ssl_lets-encrypt.html",
+    "https://knowledge.mdaemon.com/what-ports-need-to-be-open-for-mdaemon-to-communicate-through-a-firewall"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da conta",
+    "helpUrl": "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "usernameForm": "O endereço completo da caixa de correio como aparece no Account Manager, por exemplo you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail do MDaemon no Claude: IMAP, MCP e Screening",
+    "description": "Conecte uma caixa de correio do MDaemon ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Onde ficam os campos de porta, e por que o Location Screening bloqueia um cliente hospedado."
+  },
+  "hero": {
+    "eyebrow": "MDaemon + IA",
+    "titleLine1": "Conecte o MDaemon ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "O MDaemon roda o e-mail no seu próprio servidor Windows há anos sem pedir licença a ninguém. Colocar um agente de IA nele não precisa mudar isso: o MCPEmails se conecta via IMAP comum e busca cada mensagem ao vivo.",
+    "answer": "O Claude não consegue acessar um servidor MDaemon sozinho. O MCPEmails é um servidor MCP hospedado que se conecta ao seu via IMAP, no seu próprio hostname, na porta IMAP SSL, que o MDaemon define como 993 por padrão, com a senha da conta do Account Manager. Isso permite que o Claude, o Cursor ou qualquer cliente MCP leia, pesquise, envie e organize os e-mails dessa caixa de correio. O MDaemon é um software que você roda, então não há host compartilhado para consultar: o servidor precisa ser alcançável pela internet, a conta precisa ter o acesso IMAP habilitado, e os recursos de screening do MDaemon precisam deixar a conexão passar. Uma caixa de entrada é grátis.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha da conta, acesso IMAP ligado",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o MDaemon se conecta: acesso IMAP por conta, na porta IMAP SSL",
+    "body": "Duas telas decidem se um cliente de e-mail consegue alcançar uma caixa de correio do MDaemon. A primeira é a lista de portas, que o MDaemon guarda em <b>Setup, depois Server Settings, depois DNS and IPs</b>, um lugar pouco óbvio para procurar. Essa tela tem campos separados para a porta IMAP de entrada e para a porta IMAP SSL, ao lado dos equivalentes de SMTP, MSA e POP, e o MDaemon vem com 143 e 993. A segunda é por caixa de correio: no Account Manager, cada conta tem uma tela <b>Mail Services</b> que define quais serviços ela pode usar, com uma caixa de seleção <b>Enable IMAP access</b> ao lado de POP, MultiPOP e MDaemon Connector. O acesso pelo Webmail é controlado à parte, em uma tela própria, então uma conta pode funcionar perfeitamente no navegador e recusar todos os clientes de e-mail. A credencial é a senha comum da conta. O MDaemon não tem esquema de senha de app."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. Uma caixa de entrada é grátis para sempre e não pede cartão, então você pode testar primeiro com uma caixa de correio real do MDaemon."
+    },
+    {
+      "h": "Confirme as portas e o certificado",
+      "p": "No MDaemon, abra Setup, Server Settings, depois DNS and IPs, e leia o campo da porta IMAP SSL. Se alguém a tirou da 993, você precisa do número real. Depois confira em Security, Security Manager, SSL and TLS qual certificado o MDaemon está servindo e se a tarefa do Let's Encrypt ainda o está renovando."
+    },
+    {
+      "h": "Habilite o acesso IMAP na conta",
+      "p": "Abra o Account Manager, encontre a caixa de correio e, na tela Mail Services dela, confira se <b>Enable IMAP access</b> está marcado. Depois adicione a caixa de entrada no MCPEmails: escolha IMAP / SMTP, informe o hostname do seu MDaemon, o endereço completo e a senha da conta."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "O Location Screening derruba a conexão por causa de onde ela veio",
+      "p": "Esse é o problema específico do MDaemon, e produz o sintoma menos útil de todas as configurações desta página. O Location Screening bloqueia conexões de entrada pelo país associado ao endereço IP de origem, e o MDaemon o aplica ao IMAP tanto quanto ao SMTP, POP, Webmail, ActiveSync, Remote Administration e o resto. Muitos servidores MDaemon estão configurados para permitir um país e recusar o mundo, porque isso faz sentido quando todos os usuários estão em um escritório só. Um servidor MCP hospedado se conecta de um data center, e esse data center pode muito bem geolocalizar em outro lugar. A conexão é recusada antes mesmo da tentativa de autenticação, então nada aparece nos logs de e-mail e o cliente informa timeout ou reset. A evidência está no log de Screening. Permita os endereços relevantes, ou o país para o qual eles resolvem, antes de concluir qualquer coisa sobre credenciais. A mesma seção de Screening traz o Dynamic Screening, que bloqueia um endereço depois de repetidas falhas de autenticação, então uma senha errada salva algumas vezes pode deixar você trancado para fora pelo intervalo configurado."
+    },
+    {
+      "h": "Os campos de porta não fazem nada até você aplicá-los",
+      "p": "A documentação do próprio MDaemon é explícita: alterar o valor de uma porta não tem efeito até você clicar no botão que aplica a mudança, e do contrário ela espera a próxima inicialização do servidor. Em uma máquina que está no ar há meses, uma edição feita às pressas pode ficar sem aplicação indefinidamente, e a tela e o socket discordam. A porta IMAP SSL também é um campo com um valor dentro, não uma constante fixa, e instalações endurecidas às vezes a tiram da 993. Leia o número nessa tela em vez de presumir o padrão, e confirme de fora da rede com <code>Test-NetConnection mail.yourdomain.com -Port 993</code> antes de abrir um chamado."
+    },
+    {
+      "h": "Os certificados vêm de um script PowerShell incluído, não de um serviço em execução",
+      "p": "O MDaemon não roda um cliente ACME próprio. Ele traz um script PowerShell na pasta <code>MDaemon\\LetsEncrypt</code>, configurado e disparado a partir da tela Let's Encrypt em Security, e esse script completa o desafio http-01 gravando arquivos na pasta HTTP do Webmail. Portanto, ele precisa da porta 80 livre e do Webmail realmente servindo nela, além do PowerShell 5.1 e do .NET Framework 4.7.2 na máquina. Coloque o IIS na frente do MDaemon, mova o Webmail para outra porta ou feche a 80 depois da configuração, e a renovação agendada para em silêncio. O certificado na 993 funciona bem até o dia em que vence, e aí todos os clientes rigorosos falham de uma vez. Quando o script dá certo, o MDaemon aplica o novo certificado ao MDaemon, ao Webmail e ao Remote Administration juntos."
+    }
+  ],
+  "limits": [
+    "Servidores MDaemon costumam ficar atrás do firewall da empresa com só a porta 25 publicada, e isto precisa também de uma conexão IMAP de entrada. Abrir a 993 para a internet é uma decisão de quem é dono desse firewall, não uma configuração do MDaemon. Se a resposta for não, o MCPEmails pode ser hospedado por você na mesma rede interna, onde ele alcança o MDaemon do jeito que um cliente de desktop na rede local já alcança.",
+    "A validação de TLS é rigorosa. O certificado autoassinado padrão do MDaemon, ou um vencido, é recusado sem opção de continuar mesmo assim.",
+    "O envio sai pelo serviço SMTP do seu próprio MDaemon, então a entregabilidade depende dos seus registros SPF, DKIM e DMARC e da reputação do endereço de onde o seu servidor envia."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o MDaemon?",
+      "a": "Não diretamente. O Claude não tem conector para o MDaemon e não consegue abrir um socket IMAP com um servidor que você hospeda. Conectar um servidor MCP como o MCPEmails ao seu host MDaemon dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar uma caixa de correio dele, com as mesmas credenciais que qualquer cliente de desktop usaria."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do MDaemon?",
+      "a": "O hostname é o seu próprio servidor. As portas vêm de Setup, Server Settings, DNS and IPs, onde o MDaemon guarda campos separados para a porta IMAP de entrada e para a porta IMAP SSL, com 143 e 993 como padrão. SMTP, MSA e a porta SMTP SSL estão na mesma tela. Faça login com o endereço de e-mail completo e a senha da conta."
+    },
+    {
+      "q": "Por que minha conta do MDaemon recusa IMAP mas funciona no Webmail?",
+      "a": "Porque são duas permissões diferentes. O Account Manager dá a cada conta uma tela Mail Services com a caixa de seleção Enable IMAP access, enquanto o acesso pelo navegador é concedido em uma tela separada, Web Services. Uma conta com o Webmail ligado e o IMAP desligado se comporta exatamente assim, e conferir hostnames não vai mudar nada."
+    },
+    {
+      "q": "O MDaemon precisa de senha de app?",
+      "a": "Não. O MDaemon não tem recurso de senha específica de app. Os clientes de e-mail autenticam com a senha da própria conta, que você define no Account Manager. Se a conta usa autenticação em dois fatores no Webmail, isso vale para a interface do navegador e não para a sessão IMAP."
+    },
+    {
+      "q": "Minha conexão dá timeout sem nenhuma entrada no log. O que está acontecendo?",
+      "a": "Confira o log de Screening. O Location Screening do MDaemon recusa conexões de países que você não permitiu, antes da autenticação e antes de o log de e-mail registrar qualquer coisa, e ele se aplica ao IMAP. Um serviço hospedado se conecta de um endereço de data center que pode resolver para outro país. O Dynamic Screening pode produzir o mesmo silêncio depois de repetidos logins com falha."
+    },
+    {
+      "q": "Meu e-mail do MDaemon fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no seu servidor MDaemon via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do MDaemon",
+    "sub": "Conecte uma caixa de correio do seu próprio servidor MDaemon. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "https://docs.mailcow.email/",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "メールボックスのパスワード",
+    "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "usernameForm": "メールボックス一覧に表示されているとおりのメールボックスのアドレス全体（you@yourdomain.comなど）。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "mailcowをClaude、Cursor、MCPクライアントに接続",
+    "description": "mailcowのメールボックスをClaude、Cursor、ChatGPTに993のIMAPで接続。acme-mailcowがMAILCOW_HOSTNAMEにしか証明書を出さない理由と、SKIP_LETS_ENCRYPTが壊すもの。"
+  },
+  "hero": {
+    "eyebrow": "mailcow + AI",
+    "titleLine1": "mailcowをClaudeに接続、",
+    "titleLine2": "そしてCursor、ChatGPT、あらゆるMCPクライアントにも",
+    "lead": "mailcowはDovecot、Postfix、SOGoを1つのスタックにまとめて提供しています。その上にMCPサーバーを足せば、自分でホストしているメールボックスの中で、エージェントがメールの閲覧、検索、送信、返信、予約送信、振り分けをできるようになります。",
+    "answer": "Claudeは自力ではmailcowサーバーに届きません。MCPEmailsはホスト型のMCPサーバーで、mailcow.confでMAILCOW_HOSTNAMEに設定したホスト名に対して、メールボックス一覧のメールボックスのパスワードを使い、ポート993のIMAPでmailcowに接続するので、Claude、Cursor、どのMCPクライアントからでもそのメールの閲覧、検索、送信、整理ができます。共通のホストはありません。サーバーはあなたのもので、インターネットに公開されている必要があり、acme-mailcowが発行した証明書に載っているホスト名そのもので接続しなければなりません。受信トレイ1つは無料です。",
+    "meta0": "受信トレイ1つはずっと無料",
+    "meta1": "mailcow UIで設定したメールボックスのパスワード",
+    "meta2": "メールはその場で取得、保存はしません"
+  },
+  "method": {
+    "title": "mailcowの接続方法：MAILCOW_HOSTNAMEの993へ",
+    "body": "mailcowはDocker Composeのスタックで、メールの半分はIMAPがDovecot、サブミッションがPostfixなので、プロトコルの振る舞いはごく普通で、よく知られたものです。mailcowに固有なのはホスト名です。スタックには正規の名前がちょうど1つ、<code>MAILCOW_HOSTNAME</code>があり、インストール時に<code>mailcow.conf</code>で設定して、その後はまず変更されません。IMAPとSMTPのホストとして使うのはこの名前です。Dovecotは993で暗黙的TLS、143でSTARTTLSに応答します。Postfixは465と587に応答します。認証情報は「構成」の「メールボックス」で設定したメールボックスのパスワードであって、mailcow UI自体に使う管理者パスワードではありません。両者は別のアカウントで、管理者ログインはメールボックスではありません。"
+  },
+  "setup": [
+    {
+      "h": "無料アカウントを作成する",
+      "p": "MCPEmailsに新規登録します。カードは不要です。Freeプランでは受信トレイ1つをずっと接続できます。"
+    },
+    {
+      "h": "mailcow.confからMAILCOW_HOSTNAMEを読み取る",
+      "p": "ホスト上で<code>grep MAILCOW_HOSTNAME /opt/mailcow-dockerized/mailcow.conf</code>を実行します。その値が、素のドメインでもマシン自身の名前でもなく、IMAPとSMTPのホスト名です。acme-mailcowが証明書を要求した名前だからです。"
+    },
+    {
+      "h": "メールボックスとそのパスワードを確認する",
+      "p": "mailcow UIで「構成」、次に「メールボックス」を開きます。アドレスが有効であることを確認し、パスワードがわからなければそこで新しいものを設定します。その後、MCPEmailsで受信トレイを追加します。IMAP / SMTPを選び、MAILCOW_HOSTNAMEのホストとメールボックスの認証情報を入力してください。"
+    },
+    {
+      "h": "MCP URLをAIに貼り付ける",
+      "p": "https://mcpemails.com/api/mcpをClaude、Cursor、ChatGPTに貼り付けて認可すれば、エージェントがその受信トレイを使えるようになります。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "証明書がカバーするのはMAILCOW_HOSTNAMEと、ほかにはほぼ何もありません",
+      "p": "acme-mailcowが証明書を要求するのは、<code>MAILCOW_HOSTNAME</code>に加えて、追加した各メールドメインの<code>autodiscover.</code>と<code>autoconfig.</code>、そして<code>ADDITIONAL_SAN</code>に列挙したものです。素のapexドメインはその一覧にありません。そのため<code>yourdomain.com:993</code>への接続は、証明書自体は完全に有効でも名前が一致しないので検証に失敗します。MAILCOW_HOSTNAMEの値をそのまま使えば、不一致は消えます。"
+    },
+    {
+      "h": "SKIP_LETS_ENCRYPTは、ブラウザーが隠してくれるsnakeoil証明書を残します",
+      "p": "<code>mailcow.conf</code>で<code>SKIP_LETS_ENCRYPT=y</code>が設定されているか、acme-mailcowがチャレンジを一度も完了していない場合、スタックはインストール時に生成した自己署名証明書を出し続けます。全員が何か月も前にブラウザーの警告をクリックして忘れているので、手元では何も壊れて見えませんが、きちんと検証するクライアントは接続を拒否します。UIを信用せず、<code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code>で実際に流れているものを確認してください。"
+    },
+    {
+      "h": "ポート80に届かなくなると、証明書の更新が静かに止まります",
+      "p": "mailcowのACMEクライアントはHTTP-01チャレンジを使い、ドキュメントはmailcowがポート80で到達可能でなければならないと明記しています。セットアップ後に80をファイアウォールで閉じたり、スタックの前に別のウェブサーバーを置いたりした運用者は、発行済みの証明書がしばらく更新されたあと更新されなくなるという状態になります。993のIMAPは期限が切れる日まで動き続け、その日にすべてのクライアントが一斉に失敗します。80を開けておけないなら、配備をDNS-01チャレンジに切り替えてください。"
+    },
+    {
+      "h": "ポートをプライベートなインターフェイスに公開すると、外からはサーバーが見えなくなります",
+      "p": "<code>mailcow.conf</code>のポートのバインドはポートだけでなくアドレスも取ります。<code>IMAPS_PORT=127.0.0.1:993</code>のようなバインドはプロキシの背後でmailcowを動かす普通の方法ですが、<code>docker ps</code>ではコンテナーが健全に見えるのに、ホストの外からは誰もそのポートを開けないことを意味します。認証情報を疑う前に、別のネットワークにあるマシンから到達性を確認してください。"
+    }
+  ],
+  "limits": [
+    "ホスト型のMCPサーバーはスタックへ外からIMAP接続を開く必要があるため、プライベートなインターフェイスにだけ公開されたmailcowや、VPN経由でしか届かないmailcowはこの方法では接続できません。993に外部から何も触れさせたくなければ、mailcowと並べてMCPEmailsをセルフホストすることもできます。",
+    "送信は自分のPostfixが担当するので、その先でメッセージが受け入れられるかどうかは、SPF、DKIM、DMARCのレコードと、IPがどこかのリストに載っていないかに完全に依存します。"
+  ],
+  "faq": [
+    {
+      "q": "Claudeはmailcowで使えますか？",
+      "a": "単体では使えません。Claudeにmailcowのコネクタはなく、あなたが運用するサーバーへIMAPセッションを開くこともできません。MCPEmailsのようなMCPサーバーをmailcowに接続すると、お使いのどのMCPクライアントでも、Claudeがその上のメールボックスを閲覧、検索、送信、返信、予約送信、整理できるようになります。"
+    },
+    {
+      "q": "mailcowのIMAPとSMTPの設定は何ですか？",
+      "a": "ホストはMAILCOW_HOSTNAMEで、mailcow.confから読み取れます。IMAPはポート993で暗黙的TLS、または143でSTARTTLSです。サブミッションは465で暗黙的TLS、または587でSTARTTLSです。メールボックスのアドレス全体と、mailcow UIでそのメールボックスに設定したパスワードでログインします。"
+    },
+    {
+      "q": "mailcowのログインが拒否されるのはなぜですか？",
+      "a": "最も多い原因は、メールボックスではなくmailcowの管理者アカウントを使っていることです。管理者ログインはウェブUIのためだけに存在し、背後にIMAPのメールボックスはありません。「構成」の「メールボックス」に表示されるアドレスを使っていること、そしてそのメールボックスが無効ではなく有効であることを確認してください。"
+    },
+    {
+      "q": "mailcowとDovecotは同じものですか？",
+      "a": "mailcowはDovecotをIMAPサーバーとして、Postfix、SOGo、Rspamdとともに、ウェブUI付きのDocker Composeスタックにパッケージしたものです。DovecotのIMAPの振る舞いについて言えることはすべてここにも当てはまるので、リスナーやフォルダーの役割を直接変える必要があるなら、Dovecotのページも読む価値があります。"
+    },
+    {
+      "q": "私のメールはそちらのサーバーに保存されますか？",
+      "a": "保存されません。メッセージはリクエストごとにmailcowサーバーからIMAPでその場で取得し、AIクライアントに渡します。認証情報は保存時に暗号化され、メッセージ本文は保持しません。"
+    }
+  ],
+  "ctaBand": {
+    "title": "AIにmailcowの受信トレイを渡す",
+    "sub": "自分のスタックのメールボックスを接続。受信トレイ1つはずっと無料、カード不要。"
+  }
+}

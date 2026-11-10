@@ -1,0 +1,107 @@
+{
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da caixa de correio",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "O endereço de e-mail completo, por exemplo you@yourdomain.com. Nunca o login da sua conta cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP para cPanel: conecte o e-mail do cPanel ao Claude",
+    "description": "Servidor MCP para e-mail no cPanel. Conecte várias caixas de correio da empresa no seu domínio (contato@, vendas@) ao Claude e ao ChatGPT via IMAP, em qualquer hospedagem com cPanel."
+  },
+  "hero": {
+    "eyebrow": "cPanel + IA",
+    "titleLine1": "Servidor MCP para e-mail no cPanel:",
+    "titleLine2": "todas as caixas da empresa, no Claude e no ChatGPT",
+    "lead": "Tem contato@, vendas@, suporte@ e financeiro@ no seu próprio domínio, em uma hospedagem com cPanel? Conecte cada caixa de correio a um único workspace e seu agente de IA trabalha em todas elas. Leia, pesquise, envie, responda, agende e organize e-mails via IMAP com a senha da caixa de correio, e use as mesmas caixas em todos os clientes MCP, não só em um.",
+    "meta0": "Primeira caixa de correio grátis, planos para as demais",
+    "meta1": "Senha da caixa de correio, sem configurar OAuth",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados",
+    "answer": "O Claude não consegue acessar o cPanel sozinho. O MCPEmails é um servidor MCP hospedado que faz essa conexão via IMAP com a senha da caixa de correio, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. A configuração leva uns dois minutos. Cada endereço da empresa, como contato@ ou vendas@, entra como uma caixa de correio própria: uma caixa é grátis, o Personal conecta três, o Pro até 10 e o Business quantas você precisar."
+  },
+  "persona": {
+    "intro": "Várias caixas de correio da empresa em uma hospedagem com cPanel?",
+    "label": "Veja o que cada plano conecta",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Como o cPanel se conecta: IMAP e a senha da caixa de correio",
+    "body": "Uma caixa de correio do cPanel, aquela que você lê no webmail Roundcube ou Horde, se conecta via IMAP/SMTP com a senha definida no cPanel em Contas de e-mail. Não existe senha de app nem OAuth. O host costuma ser <code>mail.yourdomain.com</code>, e o cPanel mostra os valores exatos em Contas de e-mail, Conectar dispositivos, no bloco Mail Client Manual Settings (configurações manuais do cliente de e-mail). Use a coluna segura SSL/TLS, não a sem criptografia."
+  },
+  "setup": [
+    {
+      "h": "Crie uma conta grátis",
+      "p": "Crie sua conta no MCPEmails, sem cartão. O plano gratuito conecta uma caixa de entrada, para sempre."
+    },
+    {
+      "h": "Leia suas configurações no cPanel",
+      "p": "No cPanel, abra Contas de e-mail e clique em Conectar dispositivos na linha da caixa de correio. Copie os hosts e as portas seguras de IMAP e SMTP do bloco Mail Client Manual Settings. Se não souber a senha da caixa de correio, defina uma nova na mesma tela."
+    },
+    {
+      "h": "Cole no MCPEmails",
+      "p": "Escolha IMAP / SMTP, informe seu endereço do cPanel, os hosts acima e a senha para conectar a caixa de entrada com segurança."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Não existe um servidor de e-mail do cPanel, só o seu servidor, e o painel é a única autoridade sobre o nome dele",
+      "p": "O cPanel é um software que a sua empresa de hospedagem roda, não um serviço de e-mail, então não há hostname compartilhado para preencher. Cada conta responde na máquina em que está hospedada. O único lugar que mostra a verdade para a sua conta é <b>Contas de e-mail</b>, depois <b>Conectar dispositivos</b> na linha do endereço, depois o bloco <b>Mail Client Manual Settings</b>. Ali o cPanel exibe duas tabelas: <b>Secure SSL/TLS Settings</b>, com IMAP na 993, POP3 na 995 e SMTP na 465, e uma tabela sem SSL com 143, 110 e 587, que você deve ignorar. Copie o servidor de entrada e o de saída da tabela segura exatamente como aparecem, inclusive quando o host não se parece em nada com o seu domínio."
+    },
+    {
+      "h": "mail.seudominio.com.br quase sempre resolve e quase sempre falha na validação do certificado",
+      "p": "A orientação padrão do cPanel é <code>mail.example.com</code>, e esse nome normalmente aponta para a máquina certa, por isso as portas sem criptografia parecem funcionar. Via TLS, muitas vezes não funciona, porque o certificado que o servidor apresenta é do servidor compartilhado, não do seu domínio. O cPanel resolve isso substituindo o nome: a própria documentação diz que o sistema usa o hostname do servidor quando o domínio não tem um certificado válido, e usa o subdomínio <code>mail</code> quando o certificado não bate com o hostname. Essa substituição é exatamente o motivo de o valor em Conectar dispositivos ser, às vezes, um hostname que você nunca viu. Use-o mesmo assim. Uma divergência de certificado aqui é um problema de nome, não um ataque, e aceitar o aviso é a correção errada."
+    },
+    {
+      "h": "Uma caixa de correio pode estar bloqueada para login ou envio e parecer perfeitamente saudável",
+      "p": "O cPanel coloca um bloco <b>Restrictions</b> (restrições) em cada caixa de correio, acessível em <b>Contas de e-mail</b>, depois <b>Manage</b>. Logging In pode ser definido como Suspend, o que bloqueia o webmail e todos os clientes de e-mail sem mudar a senha. Sending Outgoing Email pode ser definido como Suspend, que rejeita as mensagens de saída, ou como <b>Hold</b>, que as enfileira em silêncio por quatro dias e depois desiste. Para um agente de IA, o Hold é o pior dos três: o envio é aceito, parece ter dado certo, e nada chega nunca. Se os e-mails parecem sumir, abra Restrictions antes de investigar qualquer outra coisa."
+    },
+    {
+      "h": "Sua hospedagem pode publicar uma variante própria dessas configurações, e a hospedagem vence",
+      "p": "Esta página é o padrão genérico do cPanel. Empresas de hospedagem fogem dele e documentam a diferença por conta própria. A Bluehost, por exemplo, coloca <code>mail.example.com</code> só no bloco sem criptografia e usa o domínio puro no bloco seguro. A A2 Hosting, hoje hosting.com, manda usar o nome completo do servidor, como <code>mi3-ss78.a2hosting.com</code>, porque o certificado compartilhado cobre o servidor. Se tivermos uma página para a sua hospedagem específica, siga aquela, porque ela traz os valores exatos. Quando não tivermos, o painel Conectar dispositivos dentro do seu próprio cPanel é a palavra final."
+    }
+  ],
+  "limits": [
+    "Não conseguimos preencher os hosts de uma caixa de correio do cPanel, porque o hostname pertence ao seu servidor e não a um serviço compartilhado. Você precisa colá-lo a partir de Conectar dispositivos.",
+    "Algumas hospedagens bloqueiam o envio externo no firewall ou desativam o IMAP externo nos planos compartilhados. O cPanel continua mostrando as configurações nesse caso, então uma recusa ali é uma pergunta para a sua hospedagem, não um problema de configuração.",
+    "O MCPEmails conecta a caixa de correio. Encaminhadores, aliases, respostas automáticas, filtros e cotas ficam no cPanel e não são visíveis para o seu cliente de IA."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com e-mail do cPanel?",
+      "a": "Não diretamente. O Claude não tem conector integrado para servidores de e-mail com cPanel. Conectar um servidor MCP como o MCPEmails à caixa de correio via IMAP dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar, com as mesmas credenciais que um cliente de e-mail de desktop usaria, e a mesma conexão funciona também no Cursor e no ChatGPT."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do cPanel?",
+      "a": "As portas são as padrão: IMAP na 993 e SMTP na 465, ambas com TLS implícito, com 143 e 587 como equivalentes sem criptografia que você não deve usar. O hostname não é padrão e muda de uma conta de hospedagem para outra. Pegue-o em Contas de e-mail, Conectar dispositivos, Mail Client Manual Settings, e use a tabela Secure SSL/TLS."
+    },
+    {
+      "q": "Como descubro o hostname do servidor de e-mail do meu cPanel?",
+      "a": "Entre no cPanel, abra Contas de e-mail e clique em Conectar dispositivos ao lado do endereço. Role até Mail Client Manual Settings e leia o servidor de entrada e o de saída na tabela Secure SSL/TLS. Pode ser mail.seudominio.com.br, o seu domínio puro ou um nome de servidor da sua hospedagem. O que estiver impresso ali é o correto para TLS."
+    },
+    {
+      "q": "Por que recebo um aviso de certificado para mail.meudominio.com.br?",
+      "a": "Porque o servidor apresenta um certificado emitido para a máquina compartilhada, não para o seu domínio. O nome que você digitou não está nesse certificado, então um cliente que valida com rigor recusa a conexão. A correção é conectar ao hostname que o cPanel lista na tabela Secure SSL/TLS, que é o nome que o certificado realmente cobre."
+    },
+    {
+      "q": "Por que a senha do meu e-mail do cPanel é rejeitada?",
+      "a": "Três causas dominam. Você usou o login da sua conta cPanel em vez da senha definida no endereço de e-mail específico. A caixa de correio está com Logging In definido como Suspend em Restrictions. Ou você está apontando para um hostname que resolve para outro lugar. Redefina a senha da caixa de correio em Contas de e-mail, depois Manage, e confira Restrictions na mesma tela."
+    },
+    {
+      "q": "Meu e-mail do cPanel fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no seu próprio servidor via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Coloque todas as caixas do cPanel em um só agente",
+    "sub": "Conecte sua primeira caixa de correio do cPanel grátis, sem cartão. O Personal conecta três, o Pro até 10 e o Business quantas você precisar."
+  }
+}

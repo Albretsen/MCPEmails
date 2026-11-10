@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://github.com/Zimbra/adminguide/blob/master/imap.adoc",
+    "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Guide",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Manual:Installing_,_Configuring,_Disabling_the_Zimbra_Proxy",
+    "https://zimbra.github.io/adminguide/8.8.11/index.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da caixa de correio",
+    "helpUrl": "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "usernameForm": "O endereço completo da conta como o Zimbra o guarda, por exemplo you@yourdomain.com, inclusive para contas em um alias de domínio.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Zimbra no Claude: IMAP na 993, ou 7993 sem proxy",
+    "description": "Conecte uma caixa de correio do Zimbra ao Claude, ao Cursor e ao ChatGPT via IMAP. A 993 é do proxy, o mailboxd escuta na 7993, e há quatro lugares em que o IMAP pode estar desligado."
+  },
+  "hero": {
+    "eyebrow": "Zimbra + IA",
+    "titleLine1": "Conecte o Zimbra ao Claude,",
+    "titleLine2": "ao Cursor, ao ChatGPT e a qualquer cliente MCP",
+    "lead": "O Zimbra guarda o e-mail da sua organização há anos e fala um IMAP perfeitamente comum. É tudo de que um agente de IA precisa para ler, pesquisar, enviar, responder, agendar e arquivar dentro de uma caixa de correio de verdade.",
+    "answer": "O Claude não consegue acessar um servidor Zimbra sozinho. O MCPEmails é um servidor MCP hospedado que se conecta ao seu via IMAP, no seu próprio hostname, na porta 993 quando o proxy do Zimbra está instalado, com a senha da caixa de correio, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. O Zimbra é um software que a sua organização roda, então não há hostname compartilhado para publicar, e vale conferir a porta em vez de presumir: 993 e 143 pertencem ao proxy do Zimbra, enquanto o mailboxd em si escuta na 7993 e na 7143. O servidor precisa ser alcançável pela internet e o certificado precisa ser validado. Uma caixa de entrada é grátis.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha da caixa de correio, IMAP habilitado na COS",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o Zimbra se conecta: o proxy na frente, o mailboxd atrás",
+    "body": "O arranjo de IMAP do Zimbra tem duas camadas, e saber com qual delas você está falando economiza uma tarde inteira. O servidor IMAP embutido roda dentro do processo <code>zimbra-mailboxd</code> e vem instalado por padrão, controlado por <code>zimbraImapServerEnabled</code> e <code>zimbraImapSSLServerEnabled</code>, ambos TRUE por padrão. As portas dele são <code>zimbraImapBindPort</code>, cujo padrão é <b>7143</b>, e <code>zimbraImapSSLBindPort</code>, cujo padrão é <b>7993</b>. As conhecidas 143 e 993 são as portas do proxy, <code>zimbraImapProxyBindPort</code> e <code>zimbraImapSSLProxyBindPort</code>, servidas pelo Zimbra IMAP and POP proxy, que inspeciona a conexão e a encaminha para o servidor de caixas de correio que guarda aquela conta. Versões mais novas também trazem um <code>zimbra-imapd</code> independente ao lado do servidor embutido. A credencial é a senha comum da caixa de correio, a mesma usada no Zimbra Web Client. O Zimbra não tem mecanismo de senha de app."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. Uma caixa de entrada é grátis para sempre e não pede cartão, o que basta para testar com uma conta real do Zimbra."
+    },
+    {
+      "h": "Confirme que o IMAP está habilitado e descubra qual porta responde",
+      "p": "No console de administração, abra Configure, depois Global Settings, depois IMAP, e confira <b>Enable IMAP services</b> e <b>Enable SSL for IMAP service</b>. Depois confirme de fora qual porta está realmente escutando: <code>openssl s_client -connect mail.yourdomain.com:993</code>, e se não houver resposta, tente a 7993. No servidor, <code>zmprov gs yourserver</code> informa as portas de bind em uso."
+    },
+    {
+      "h": "Confira a classe de serviço e adicione a conta",
+      "p": "Abra Configure, depois Class of Service, depois a classe a que a conta pertence, e veja as opções de POP/IMAP em Preferences. Uma classe com o IMAP desligado recusa todas as contas dela. Depois adicione a caixa de entrada no MCPEmails: escolha IMAP / SMTP, informe o hostname do seu Zimbra, o endereço completo e a senha da caixa de correio."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A porta 993 pertence ao proxy, então um servidor sem proxy responde na 7993",
+      "p": "O processo de caixas de correio do Zimbra não escuta na 993. Ele escuta na <b>7993</b> para IMAP sobre SSL e na 7143 para IMAP sem criptografia, e as portas padrão são servidas pelo pacote separado Zimbra IMAP and POP proxy, que encaminha cada conexão para o armazenamento certo. Em uma instalação de servidor único em que o <code>zimbra-proxy</code> nunca foi selecionado, ou em que um administrador o removeu, nada responde na 993 e o cliente informa uma conexão recusada que parece problema de firewall. Use a 7993 nesse caso, mas entenda a troca: em uma implantação com vários servidores, é o proxy que sabe qual armazenamento guarda determinada conta, então conectar direto na 7993 de um nó só funciona se a caixa de correio realmente estiver naquele nó. Se você tem mais de um servidor de caixas de correio, restaurar o proxy é a resposta certa, não contorná-lo."
+    },
+    {
+      "h": "O certificado na 993 é o do proxy, e é autoassinado até alguém trocar",
+      "p": "Como o proxy encerra a conexão, o certificado que um cliente valida na 993 é o que o nginx está segurando, não necessariamente o que o mailboxd apresenta na 7993. Os dois podem divergir, e é assim que um servidor passa na verificação em uma porta e falha na outra. O Zimbra também instala um certificado autoassinado na configuração inicial, e muitas implantações nunca o trocaram porque o cliente web é acessado por outro caminho ou porque todo mundo aceitou o aviso em 2019. Os certificados são implantados com <code>zmcertmgr</code> e vistos no console de administração, mas o único teste que conta é o que está no fio: rode <code>openssl s_client -connect mail.yourdomain.com:993</code> de uma máquina de fora e leia a cadeia que volta. A validação rigorosa não é opcional do nosso lado, então um certificado autoassinado ou vencido encerra a conversa antes da autenticação."
+    },
+    {
+      "h": "O IMAP pode estar desligado em quatro lugares diferentes",
+      "p": "O Zimbra organiza a configuração em camadas, e cada camada pode recusar uma conexão por conta própria enquanto as outras parecem corretas. As configurações globais, em Configure, depois Global Settings, depois IMAP, trazem a chave mestra <b>Enable IMAP services</b>. Cada servidor tem configurações próprias, onde se definem os números das portas IMAP e IMAP SSL e onde o servidor embutido pode ser desligado, via <code>zimbraImapServerEnabled</code> e <code>zimbraImapSSLServerEnabled</code>. Cada classe de serviço traz opções de POP e IMAP que valem para todas as contas dela. E uma conta individual pode sobrescrever a classe. A linha de comando lê tudo na mesma ordem: <code>zmprov gcf</code> para a configuração global, <code>zmprov gs</code> para um servidor, <code>zmprov gc</code> para uma classe de serviço e <code>zmprov ga</code> para uma conta. Desça essa lista em vez de adivinhar, porque a falha é idêntica em todos os níveis."
+    }
+  ],
+  "limits": [
+    "Seu servidor Zimbra precisa aceitar uma conexão IMAP de entrada vinda da internet. Uma implantação publicada só dentro da rede corporativa ou atrás de uma VPN não pode ser alcançada por um serviço hospedado. O MCPEmails pode ser hospedado por você dentro da mesma rede, o que costuma ser uma conversa mais fácil com a equipe de segurança do que abrir uma porta.",
+    "Só e-mail atravessa uma conexão IMAP. Calendários, contatos, tarefas e a pasta de arquivos do Zimbra são servidos pelo cliente web dele e por CalDAV, CardDAV ou pela API do Zimbra, então um agente conectado assim trabalha só com e-mail.",
+    "O envio sai pelo seu próprio MTA do Zimbra, então a entregabilidade é regida pelos seus registros SPF, DKIM e DMARC exatamente como para qualquer outro cliente do servidor."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Zimbra?",
+      "a": "Não diretamente. O Claude não tem conector para o Zimbra e não consegue abrir uma sessão IMAP com um servidor que a sua organização roda. Conectar um servidor MCP como o MCPEmails ao seu host Zimbra dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar uma caixa de correio dele, com as mesmas credenciais que o Zimbra Web Client usa, e a mesma caixa de entrada passa a funcionar no Cursor ou no ChatGPT."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do Zimbra?",
+      "a": "O hostname é o seu próprio servidor Zimbra. O IMAP é 993 com TLS implícito e 143 com STARTTLS quando o proxy do Zimbra está instalado, que é o caso mais comum. Sem o proxy, as portas do próprio mailboxd são 7993 e 7143. O envio normalmente é 587 com STARTTLS ou 465 com TLS implícito. Faça login com o endereço completo da conta e a senha da caixa de correio."
+    },
+    {
+      "q": "Por que nada responde na porta 993?",
+      "a": "Provavelmente o Zimbra IMAP and POP proxy não está instalado ou foi desativado, porque 993 e 143 são portas do proxy e não do servidor de caixas de correio. Tente a 7993, que é o padrão de zimbraImapSSLBindPort no próprio mailboxd. Em uma implantação com vários servidores de caixas de correio, restabelecer o proxy é melhor do que conectar direto em um nó."
+    },
+    {
+      "q": "Por que minha senha do Zimbra é rejeitada se o webmail funciona?",
+      "a": "Porque acesso web e acesso IMAP são permissões separadas. Confira primeiro as opções de POP e IMAP na classe de serviço da conta, depois as sobrescritas da própria conta, depois se os serviços IMAP estão habilitados em Global Settings. Qualquer uma delas pode recusar um login IMAP enquanto o Zimbra Web Client segue funcionando normalmente."
+    },
+    {
+      "q": "O Zimbra precisa de senha de app?",
+      "a": "Não. O Zimbra não emite senhas específicas de app, e um cliente de e-mail autentica com a senha da própria conta. Se a sua implantação usa autenticação em dois fatores no cliente web, pergunte ao administrador como ela está configurada para clientes de e-mail, já que essa política é definida por classe de serviço e não globalmente pelo Zimbra."
+    },
+    {
+      "q": "Meu e-mail do Zimbra fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no seu servidor Zimbra via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do Zimbra",
+    "sub": "Conecte uma caixa de correio do seu próprio servidor Zimbra. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}
