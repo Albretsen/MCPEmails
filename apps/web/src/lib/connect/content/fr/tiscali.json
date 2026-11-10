@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Connectez Tiscali Mail à Claude et à tout client MCP",
-    "description": "Connectez Tiscali Mail à Claude, Cursor et tout client MCP via IMAP sur imap.tiscali.it:993 avec votre mot de passe Tiscali. Lecture, recherche et organisation fonctionnent ; le serveur SMTP de Tiscali refuse les connexions hors de son réseau, donc pas l'envoi."
+    "description": "Connectez Tiscali Mail à Claude, Cursor et tout client MCP via IMAP sur imap.tiscali.it:993 avec votre mot de passe Tiscali. Lecture, recherche et organisation fonctionnent ; le serveur SMTP de Tiscali refuse les connexions hors de son réseau, donc l'envoi non."
   },
   "hero": {
     "eyebrow": "Tiscali Mail + IA",
@@ -56,7 +56,7 @@
       "p": "Avant même le refus, la négociation TLS sur smtp.tiscali.it ne propose qu'un échange Diffie-Hellman avec une clé de 1024 bits. OpenSSL, à son niveau de sécurité par défaut, s'arrête sur dh key too small, et les bibliothèques TLS qui ont abandonné le DH à corps fini ne peuvent plus négocier du tout. Les clients de bureau aux réglages anciens passent ; un serveur actuel, non. Avec la règle sur l'IP, l'envoi depuis MCPEmails est donc bloqué deux fois, et c'est pourquoi cette page le dit clairement plutôt que de proposer un contournement."
     },
     {
-      "h": "La double authentification est documentée pour le compte, pas pour les programmes de messagerie",
+      "h": "L'authentification à deux facteurs est documentée pour le compte, pas pour les programmes de messagerie",
       "p": "L'aide de Tiscali explique comment activer l'authentification à deux facteurs avec une application et des codes de secours, et comment se connecter au webmail avec elle. Elle ne dit pas si un programme de messagerie continue de fonctionner ensuite avec le mot de passe du compte, et ne documente aucun mot de passe d'application. Si vous l'activez et que la connexion IMAP se met à échouer, les pages de Tiscali sont l'endroit où poser la question, et cette page sera mise à jour quand elles y répondront."
     },
     {

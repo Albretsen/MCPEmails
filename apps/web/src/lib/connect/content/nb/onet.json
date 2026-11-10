@@ -60,10 +60,10 @@
     },
     {
       "h": "Totrinnsverifisering og e-postprogrammer krever et app-passord",
-      "p": "I motsetning til Interia blokkerer ikke Onet e-postprogrammer når du slår på totrinnsverifisering; de flyttes over på en egen pålogging. Hjelpen kaller app-passord nødvendige når totrinnsverifisering og e-postklienter brukes sammen, og genererer dem under Bezpieczeństwo i Onet Konto. Fellen er at nettleserpassordet ditt da i det stille er feil, og avslaget ser helt likt ut som en skrivefeil. Onet anbefaler også et eget app-passord per program selv uten totrinnsverifisering, noe som er god praksis: sletter du ett, avsluttes det programmets tilgang og ingenting annet."
+      "p": "I motsetning til Interia blokkerer ikke Onet e-postprogrammer når du slår på totrinnsverifisering; de flyttes over på en egen pålogging. Hjelpen kaller app-passord nødvendige når totrinnsverifisering og e-postklienter brukes sammen, og genererer dem under Bezpieczeństwo i Onet Konto. Fellen er at nettleserpassordet ditt dermed blir feil uten at du får beskjed, og avslaget ser helt likt ut som en skrivefeil. Onet anbefaler også et eget app-passord per program selv uten totrinnsverifisering, noe som er god praksis: sletter du ett, avsluttes det programmets tilgang og ingenting annet."
     },
     {
-      "h": "Ingen IDLE og ingen MOVE, så både arkivering og ferskhet koster ekstra rundturer",
+      "h": "Ingen IDLE og ingen MOVE, så både arkivering og oppdaging av ny e-post koster ekstra rundturer",
       "p": "Onets IMAP-banner annonserer SASL-IR og LITERAL+, men ikke IDLE, så ny e-post oppdages ved polling i stedet for å bli pushet over en åpen tilkobling. Det mangler også MOVE og UIDPLUS, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og den nye ID-en til kopien må finnes ved å søke i målmappen. Ingen av delene er fatale; masseorganisering er tregere enn det ser ut, og en flytting er ikke atomisk."
     }
   ],
@@ -90,7 +90,7 @@
       "a": "Ja. Onets hjelp beskriver app-passord (hasła do aplikacji) for innlogging i Onet Poczta fra eksterne programmer, generert under Bezpieczeństwo i innstillingene for Onet Konto, og kaller dem nødvendige når totrinnsverifisering og e-postklienter brukes sammen. Et slettet app-passord avslutter det programmets tilgang umiddelbart."
     },
     {
-      "q": "Gjorde Onet IMAP betalt?",
+      "q": "Har Onet begynt å ta betalt for IMAP?",
       "a": "Onets egen kunngjøring sier at e-postprogrammer fra 5. mai 2026 kobler til bare over IMAP, og at innehavere av evigvarende kontoer kan bruke IMAP uten tilleggsavgifter; den presiserer ikke vilkårene for andre kontoer på den siden, og pakkesammenligningen ligger på oferta.poczta.onet.pl. Avvises IMAP-innloggingen din med protokollene låst opp og riktig passord, sjekk hva kontoens pakke tillater der."
     },
     {

@@ -66,7 +66,7 @@
     },
     {
       "h": "Tofaktor krever et app-passord, og bare nettinnstillingene på datamaskin utsteder det",
-      "p": "Med dvoufaktorové ověření på sier FAQ-en at e-postprogrammer skal logge inn med et aplikační heslo generert i seksjonen Dvoufaktorové ověření, og påpeker at denne innstillingen ikke kan nås fra mobilversjonen av postkassen eller mobilappen. Styrer du kontoen fra en telefon, kan passordet du trenger altså bare lages fra en datamaskin. Selve avslaget gir ikke noe hint om hvilken av de to påloggingene serveren ville ha."
+      "p": "Med dvoufaktorové ověření på sier FAQ-en at e-postprogrammer skal logge inn med et aplikační heslo generert i seksjonen Dvoufaktorové ověření, og påpeker at denne innstillingen ikke kan nås fra mobilversjonen av postkassen eller mobilappen. Administrerer du kontoen fra en telefon, kan passordet du trenger altså bare lages fra en datamaskin. Selve avslaget gir ikke noe hint om hvilken av de to påloggingene serveren ville ha."
     },
     {
       "h": "En naken IMAP-server: ingen IDLE, ingen MOVE, ingen UIDPLUS",
