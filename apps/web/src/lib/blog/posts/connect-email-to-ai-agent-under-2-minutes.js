@@ -31,7 +31,7 @@ Before you touch a provider, decide how your AI agent will talk to MCPEmails. Th
 
 1. In claude.ai, go to **Customize → Connectors → Add connector**.
 2. Paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Click **Connect**, sign in to your MCPEmails account, and choose the access: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
+3. Click **Connect**, sign in to your MCPEmails account, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
 
 That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). For a client-specific walkthrough, see how to [connect Claude to your email](/blog/connect-claude-to-email) or [connect ChatGPT to your email](/blog/connect-chatgpt-to-email).
 

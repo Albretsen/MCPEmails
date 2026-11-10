@@ -92,7 +92,7 @@ MCPEmails donne à Claude des outils de messagerie ciblés, et non un mot de pas
 - **Organiser :** \`email_organize\` déplace, étiquette, marque et archive les messages.
 - **Gérer brouillons, dossiers, planification et contacts :** \`draft\`, \`folder\`, \`schedule\` et \`contact_search\` couvrent le reste d'un flux de messagerie pratique.
 
-Claude lit vos e-mails en appelant des outils : il vérifie les nouveaux messages quand vous le lui demandez, et rien n'est poussé dans la conversation dès qu'un e-mail arrive. Si votre propre code a besoin d'un push, les espaces de travail Pro et Business peuvent ajouter un webhook signé de nouveau message sous Clés API dans le tableau de bord.
+Claude lit vos e-mails en appelant des outils : il vérifie les nouveaux messages quand vous le lui demandez, et rien n'est poussé dans la conversation dès qu'un e-mail arrive. Si votre propre code a besoin d'un push, les espaces de travail Pro et Business peuvent ajouter un webhook signé pour les nouveaux messages, sur la page **Clés API** du tableau de bord.
 
 ## Résoudre les problèmes de connexion et de configuration Claude
 
