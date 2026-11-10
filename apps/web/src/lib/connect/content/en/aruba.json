@@ -51,7 +51,7 @@
     },
     {
       "h": "Find or set the mailbox password in the Aruba control panel",
-      "p": "Sign in to the Aruba customer area, open the hosting or email service for the domain and go to the mailbox management section (<b>Gestione caselle</b>). Each address has its own password there. If you do not know it, set a new one for that mailbox; your customer-area login is a different credential and will be refused by IMAP."
+      "p": "Sign in to the Aruba control panel, open the email service for the domain and go to <b>Caselle di posta</b>. Each address has its own password there, in the <b>Gestione caselle</b> box, with <b>Modifica</b> next to it. If you do not know it, set a new one for that mailbox; your customer-area login is a different credential and will be refused by IMAP."
     },
     {
       "h": "Check that IMAP is active on the domain, on older plans",
@@ -65,7 +65,7 @@
   "gotchas": [
     {
       "h": "Two passwords, and only the mailbox one works",
-      "p": "Aruba customers sign in to the customer area with a login and password, and that is the pair most people reach for. IMAP checks the password of the individual mailbox, set in the mailbox management section of the hosting or email panel. The two can be identical by coincidence and are different by design, so a refused login on an Aruba address is usually the customer-area password pasted into a form that wanted the mailbox one."
+      "p": "Aruba customers sign in to the customer area with a login and password, and that is the pair most people reach for. IMAP checks the password of the individual mailbox, set under Caselle di posta in the control panel (only the postmaster mailbox starts out with the Aruba account password). The two are separate credentials, so a refused login on an Aruba address is usually the customer-area password pasted into a form that wanted the mailbox one."
     },
     {
       "h": "Free @aruba.it mailboxes use different host names",
@@ -95,7 +95,7 @@
     },
     {
       "q": "Why is my Aruba password rejected in a mail client?",
-      "a": "Usually because it is the customer-area password rather than the mailbox password. IMAP checks the password set on the individual address in Gestione caselle. On a Hosting Basic plan from before June 2017 the other cause is the IMAP add-on, which has to be active on the domain."
+      "a": "Usually because it is the customer-area password rather than the mailbox password. IMAP checks the password set on the individual address under Caselle di posta in the control panel. On a Hosting Basic plan from before June 2017 the other cause is the IMAP add-on, which has to be active on the domain."
     },
     {
       "q": "Can I connect an Aruba PEC mailbox the same way?",

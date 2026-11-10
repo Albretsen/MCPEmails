@@ -34,8 +34,8 @@
       "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, and does not ask for a card."
     },
     {
-      "h": "Check two-factor authentication in the Area personale",
-      "p": "Tiscali offers two-factor authentication under <b>Sicurezza</b> in the Area personale, with an authenticator app and backup codes. Its pages describe it for the webmail and the account area and do not say how a mail program signs in once it is on, so if two-factor is enabled and your login is refused, that is the first thing to check. With it off, your Tiscali Mail password is the credential."
+      "h": "Check two-factor authentication in the Area Personale",
+      "p": "Tiscali offers two-factor authentication in the <b>Area Personale</b> of Tiscali Mail, with an authenticator app such as Microsoft or Google Authenticator and one-time backup codes. Its guide describes it for the webmail login and does not say how a mail program signs in once it is on, so if two-factor is enabled and your login is refused, that is the first thing to check. With it off, your Tiscali Mail password is the credential."
     },
     {
       "h": "Enter the address and password, and choose reading only when asked",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Two-factor is documented for the account, not for mail programs",
-      "p": "Tiscali's help explains how to enable two-factor authentication with an app and backup codes and how to sign in to the webmail with it. It does not say whether a mail program keeps working with the account password afterwards, and it documents no app-specific password. If you turn it on and the IMAP login starts failing, Tiscali's own pages are the place to ask, and this page will be updated when they answer the question."
+      "p": "Tiscali's help explains how to enable two-factor authentication with an authenticator app and backup codes and how to sign in to the webmail with it. It does not say whether a mail program keeps working with the account password afterwards, and it documents no app-specific password. If you turn it on and the IMAP login starts failing, Tiscali's support is the place to ask, and this page will be updated when its guide answers the question."
     },
     {
       "h": "No SASL-IR, and POP allows one device at a time",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Does Tiscali have app passwords?",
-      "a": "Tiscali documents two-factor authentication for the Area personale but no application-specific password, and does not say how mail programs sign in with two-factor on. With two-factor off, the account password is the credential for IMAP."
+      "a": "Tiscali documents two-factor authentication in the Area Personale but no application-specific password, and does not say how mail programs sign in with two-factor on. With two-factor off, the account password is the credential for IMAP."
     },
     {
       "q": "Is my Tiscali mail stored on your servers?",

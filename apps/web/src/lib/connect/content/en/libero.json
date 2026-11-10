@@ -7,7 +7,7 @@
   ],
   "auth": {
     "method": "account-password",
-    "label": "Libero Mail password, or a Password specifica per applicazioni with Password Sicura on",
+    "label": "Libero Mail password, or the Password Specifica per Applicazioni once Password Sicura is on",
     "helpUrl": "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
     "usernameForm": "Your full address including the domain: nome@libero.it, nome@iol.it, nome@blu.it, nome@inwind.it or nome@virgilio.it.",
     "status": "active"
@@ -21,7 +21,7 @@
     "titleLine1": "Connect Libero Mail to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real Libero or Virgilio mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you already use, in every MCP client rather than just one.",
-    "answer": "Claude cannot reach Libero Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imapmail.libero.it on port 993, signing in with your full address and your Libero Mail password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The same Italiaonline platform serves iol.it, blu.it and inwind.it addresses on the Libero hosts, and Virgilio Mail on in.virgilio.it and out.virgilio.it. If you have turned on Password Sicura, the account password stops working in mail programs and a 16-character Password specifica per applicazioni takes its place. One inbox is free, forever.",
+    "answer": "Claude cannot reach Libero Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imapmail.libero.it on port 993, signing in with your full address and your Libero Mail password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The same Italiaonline platform serves iol.it, blu.it and inwind.it addresses on the Libero hosts, and Virgilio Mail on in.virgilio.it and out.virgilio.it. If you have turned on Password Sicura, the account password stops working in mail programs and a 16-character Password Specifica per Applicazioni takes its place. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "Account password, unless Password Sicura is on",
     "meta2": "Email fetched live, never stored"
@@ -39,7 +39,7 @@
   },
   "method": {
     "title": "How Libero Mail connects: IMAP and your Libero password",
-    "body": "Libero serves IMAP at <code>imapmail.libero.it</code> on port 993 and SMTP at <code>smtp.libero.it</code> on port 465, both with SSL/TLS and authentication required on SMTP. Libero's help is specific about the username: always the full address with its domain, whether that is @libero.it, @iol.it, @blu.it or @inwind.it, and the password of your Libero Mail account. Virgilio Mail, run by the same company, publishes its own names, <code>in.virgilio.it</code> on 993 and <code>out.virgilio.it</code> on 465, with the same rules. There is no IMAP switch to find in the webmail and no plan condition: IMAP is documented for every mailbox. What changes the password is <b>Password Sicura</b>, Libero's two-step login. Once it is on, Libero states that the normal password keeps working in the browser only, and mail programs need a <b>Password specifica per applicazioni</b> generated from the account area."
+    "body": "Libero serves IMAP at <code>imapmail.libero.it</code> on port 993 and SMTP at <code>smtp.libero.it</code> on port 465, both with SSL/TLS and authentication required on SMTP. Libero's help is specific about the username: always the full address with its domain, whether that is @libero.it, @iol.it, @blu.it or @inwind.it, and the password of your Libero Mail account. Virgilio Mail, run by the same company, publishes its own names, <code>in.virgilio.it</code> on 993 and <code>out.virgilio.it</code> on 465, with the same rules. There is no IMAP switch to find in the webmail and no plan condition: IMAP is documented for every mailbox. What changes the password is <b>Password Sicura</b>, Libero's two-step login. Once it is on, Libero states that the normal password keeps working in the browser, and apps and mail programs need the 16-character <b>Password Specifica per Applicazioni</b> from the <b>Password per App</b> section of the account area."
   },
   "setup": [
     {
@@ -48,11 +48,11 @@
     },
     {
       "h": "Check whether Password Sicura is on",
-      "p": "Sign in to Libero Mail in a browser and click the <b>Account</b> icon at the top right. If you see <b>Attiva Password Sicura</b>, it is off and your ordinary Libero password is the one to use. If it is already on, open the <b>Sicurezza</b> area and look for <b>Password per App</b>. Virgilio shows the same screens under <b>Impostazioni Password Sicura</b> at account.virgilio.it."
+      "p": "Sign in to Libero Mail in a browser and open the gear icon (<b>Impostazioni</b>) at the top right. If the menu offers <b>Attiva Password Sicura</b>, it is off and your ordinary Libero password is the one to use. If it is already on, the same menu opens the Password Sicura settings, where <b>Vedi Password per App</b> shows the password for mail programs. Virgilio keeps the same settings under <b>Impostazioni Password Sicura</b> in the account area at account.virgilio.it."
     },
     {
-      "h": "With Password Sicura on, generate an app password",
-      "p": "Under <b>Password per App</b>, create a new password and name it MCPEmails. Libero generates a 16-character string, shown once. It is valid for mail programs only; your normal password still signs you in to the webmail. Make one per program you connect."
+      "h": "With Password Sicura on, use the app password",
+      "p": "Under <b>Password per App</b>, click <b>Genera Password</b>. Libero issues one 16-character Password Specifica per Applicazioni, the same one for every app and mail program you connect, and it replaces your normal password there only; the normal password still signs you in to the webmail."
     },
     {
       "h": "Paste the address and password into MCPEmails",
@@ -62,7 +62,7 @@
   "gotchas": [
     {
       "h": "Password Sicura silently retires your password for mail programs",
-      "p": "Libero's own troubleshooting article puts it first: if you cannot sign in from a mail program and Password Sicura is on, check that you are entering the Password specifica per app rather than the account password. The failure looks like a typo, because the server answers with a plain refusal. The fix is the <b>Password per App</b> section of the account area, and the 16-character value it generates. Turning Password Sicura off again puts the account password back in charge."
+      "p": "Libero's help is explicit: with Password Sicura on, an app or mail program that is refused is almost always one still holding the account password instead of the Password Specifica per Applicazioni. The failure looks like a typo, because the server answers with a plain refusal. The fix is the <b>Password per App</b> section of the account area, and the 16-character value it shows. Turning Password Sicura off again puts the account password back in charge."
     },
     {
       "h": "Four months without a login and the mailbox is switched off",
@@ -74,11 +74,11 @@
     },
     {
       "h": "Outgoing messages stop at 25 MB",
-      "p": "Libero and Virgilio cap an outgoing message at 25 MB; above that, the webmail offers its DriveMail link instead. The SMTP server advertises 50 MB, but the mailbox rule is the one that applies to a client, so a large attachment is refused at send time rather than trimmed. Corporate proxies, Libero notes, can also block POP and IMAP connections to outside mailboxes, which is not a problem for a hosted server but explains failures from an office network."
+      "p": "Libero documents a 25 MB cap on an outgoing message, from the website and from the app alike; above that, the webmail converts the message to a DriveMail link, which carries up to 2 GB. The SMTP server advertises 50 MB, but the mailbox rule is the one to plan for, so a large attachment is better sent as a link than pushed through a client."
     }
   ],
   "limits": [
-    "Libero does not advertise SPECIAL-USE, so folders are matched by name rather than by role. On an Italian mailbox that usually means Posta in arrivo, Inviata, Bozze and Cestino. If you have renamed a folder, name it when you ask for a move.",
+    "Libero does not advertise SPECIAL-USE, so folders are matched by name rather than by role. On an Italian mailbox that usually means Posta in arrivo, Posta inviata, Bozze and Cestino. If you have renamed a folder, name it when you ask for a move.",
     "A standard Libero mailbox cannot forward all mail to an outside address; that is a Mail Plus feature. It does not affect an IMAP connection, which reads the mailbox in place."
   ],
   "faq": [
@@ -92,11 +92,11 @@
     },
     {
       "q": "Why is my Libero password rejected in a mail client?",
-      "a": "Almost always because Password Sicura is on. Libero then accepts the account password in the browser only, and mail programs need a Password specifica per applicazioni generated under Password per App in the account area. The other cause is a mailbox deactivated after four months without a login, which you reactivate by signing in to the webmail."
+      "a": "Almost always because Password Sicura is on. Libero then accepts the account password in the browser only, and apps and mail programs need the 16-character Password Specifica per Applicazioni shown under Password per App in the account area. The other cause is a mailbox deactivated after four months without a login, which you reactivate by signing in to the webmail."
     },
     {
       "q": "Do I need Libero Mail Plus for IMAP?",
-      "a": "No. Libero's configuration guide lists IMAP without any plan condition, and its Mail Plus pages describe the paid benefits as no advertising, external forwarding, aliases, more space and exemption from the inactivity rule. IMAP is not among them."
+      "a": "No. Libero's configuration guide lists IMAP without any plan condition, and its Mail Plus pages describe the paid benefits as no advertising, forwarding to outside addresses, disposable aliases, more space, priority support and exemption from the inactivity rule. IMAP is not among them."
     },
     {
       "q": "Does this work for Virgilio Mail too?",
