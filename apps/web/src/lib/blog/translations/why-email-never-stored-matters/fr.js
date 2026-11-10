@@ -27,7 +27,7 @@ Votre vraie boîte mail réside chez Google, Microsoft ou Fastmail, derrière le
 
 ### Une surface de violation plus grande
 
-C’est la partie que les gens sous-estiment. Si la base de données du fournisseur fuit, l’attaquant n’obtient pas vos *identifiants*, il obtient vos *courriels*, déjà déchiffrés et indexés, prêts à être lus. Pas besoin de se connecter à votre compte. La partie la plus dommageable d’une fuite de courriel, c’est le courriel lui-même, et un outil tout-copier l’a obligeamment rassemblé au même endroit. Vous héritez de leur posture de sécurité en plus de celle de votre fournisseur.
+C’est la partie que les gens sous-estiment. Si la base de données du fournisseur fuit, l’attaquant n’obtient pas vos *identifiants* : il obtient vos *courriels*, déjà déchiffrés et indexés, prêts à être lus. Pas besoin de se connecter à votre compte. La partie la plus dommageable d’une fuite de courriel, c’est le courriel lui-même, et un outil tout-copier l’a obligeamment rassemblé au même endroit. Vous héritez de leur posture de sécurité en plus de celle de votre fournisseur.
 
 ### Une rétention à laquelle vous devez penser
 
@@ -60,7 +60,7 @@ Si vous voulez les rouages plus profonds du modèle d’identifiants (jetons OAu
 
 Le « jamais stocké » n’est pas gratuit. Il y a un coût réel, et je préfère le nommer plutôt que faire comme s’il n’existait pas.
 
-Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) (opérateurs Gmail, KQL Outlook, recherche texte IMAP) qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et le push est limité : nous ne surveillons pas de copie synchronisée, donc un agent dans une conversation réagit aux nouveaux messages en interrogeant régulièrement (par exemple, \`email_read\` avec l’action \`list\` et \`unread: true\` à intervalles réguliers). Pour votre propre code, les espaces de travail Pro et Business peuvent ajouter un webhook de nouveaux messages, qui transporte des identifiants de messages, pas du courrier.
+Comme nous ne tenons pas d’index local, la recherche s’exécute contre la recherche de votre fournisseur à chaque fois. Vous obtenez une [recherche native du fournisseur](/docs) (opérateurs Gmail, KQL Outlook, recherche texte IMAP) qui est puissante, mais c’est leur latence et leur sémantique de requête, pas un index sur mesure réglé par nous. Et le push est limité : nous ne surveillons pas de copie synchronisée, donc un agent dans une conversation réagit aux nouveaux messages en interrogeant régulièrement (par exemple, \`email_read\` avec l’action \`list\` et \`unread: true\` à intervalles réguliers). Pour votre propre code, les espaces de travail Pro et Business peuvent ajouter un webhook de nouveau message, qui transporte des identifiants de messages, pas du courrier.
 
 Pour la plupart des gens, c’est un compromis facile. Une recherche légèrement plus lente et une boucle d’interrogation, en échange de ne jamais créer une seconde copie de vos données les plus sensibles. Je prends.
 
