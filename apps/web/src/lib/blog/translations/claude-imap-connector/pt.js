@@ -80,7 +80,7 @@ Essa última capacidade merece cuidado. A exclusão permanente por IMAP pula a L
 
 Um conector IMAP é abrangente, mas não torna todos os provedores iguais.
 
-- **Sem push de e-mails recebidos:** o MCPEmails funciona apenas por requisição e resposta. Ele não envia webhooks nem aciona o Claude quando uma mensagem chega. Um fluxo automatizado precisa consultar em intervalos, por exemplo listando os e-mails não lidos.
+- **Sem push de e-mails recebidos no Claude:** as ferramentas MCP funcionam por requisição e resposta, então nada aciona o Claude quando uma mensagem chega. Um fluxo baseado em chat consulta em intervalos, por exemplo listando os e-mails não lidos. O seu próprio código pode, em vez disso, ser acordado por um webhook de e-mail novo, que os espaços de trabalho Pro e Business adicionam em Chaves de API.
 - **A busca varia conforme o transporte:** filtros estruturados de remetente, assunto, texto e data funcionam em todos os provedores, mas o IMAP genérico não suporta o filtro de busca \`has_attachment\`. A sintaxe de busca nativa de cada provedor não é portável.
 - **Pastas não são marcadores do Gmail:** o IMAP move uma mensagem entre pastas, enquanto o Gmail pode aplicar vários marcadores a uma mesma mensagem. A diferença prática está explicada em [marcadores do Gmail vs. pastas IMAP](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **Enviar exige SMTP:** um login IMAP que funciona prova que o Claude alcança os e-mails recebidos, não que o host, a porta ou a permissão de envio SMTP estão corretos. Teste uma mensagem inofensiva de saída antes de confiar em um fluxo de resposta.

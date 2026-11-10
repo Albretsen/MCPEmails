@@ -55,7 +55,7 @@ Um punhado de ferramentas consolidadas, baseadas em ações, cobre toda a superf
 - \`email_compose\` (ação \`reply\`): o mesmo, e define os cabeçalhos de encadeamento (In-Reply-To, References) por você
 - \`email_organize\`: mover, excluir, sinalizar ou arquivar (uma ação por chamada)
 
-Uma limitação que vale declarar logo de cara: isto é **consulta, não push**. Não há webhooks. Para reagir a e-mails novos, seu agente consulta em uma rotina, por exemplo \`email_read\` (ação \`list\`) com \`unread: true\`. Qualquer resposta automática que você construir funciona com temporizador, não com gatilho instantâneo. O [guia para construir uma resposta automática](/blog/build-email-auto-responder-mcp-agent) mostra como fazer isso bem.
+Uma coisa que vale saber logo de cara: as ferramentas em si funcionam por **requisição e resposta**. O servidor responde quando o agente pergunta, e o jeito mais simples de reagir a e-mails novos é consultar em uma rotina, por exemplo \`email_read\` (ação \`list\`) com \`unread: true\`. Se você prefere ser avisado, os espaços de trabalho Pro e Business podem adicionar um webhook em **Chaves de API** no painel: o MCPEmails então faz um POST assinado para a sua URL quando chega e-mail novo, com os IDs das mensagens, que o agente abre com \`email_read\`. O [guia para construir uma resposta automática](/blog/build-email-auto-responder-mcp-agent) mostra os dois padrões.
 
 Uma rodada de triagem matinal fica assim:
 
@@ -88,7 +88,7 @@ Mesmo endpoint, mesmas ferramentas, dois caminhos de entrada, dependendo de o se
 
 ### Clientes com OAuth (sem chave de API)
 
-claude.ai, Claude Desktop, Cursor e clientes parecidos conectam com OAuth 2.0 Authorization Code + PKCE e registro dinâmico de cliente (RFC 7591). No claude.ai, é **Personalizar → Conectores → Adicionar conector**, colar a URL do endpoint MCP, clicar em Conectar, entrar na sua conta do MCPEmails e aprovar. Os tokens ficam limitados exatamente ao que você aprova: \`read:email\`, \`send:email\` ou os dois. Para passo a passo detalhado, veja [configurar o Claude com sua caixa de entrada](/blog/connect-claude-to-email) e [adicionar seu e-mail ao ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor e clientes parecidos conectam com OAuth 2.0 Authorization Code + PKCE e registro dinâmico de cliente (RFC 7591). No claude.ai, é **Personalizar → Conectores → Adicionar conector**, colar a URL do endpoint MCP, clicar em Conectar, entrar na sua conta do MCPEmails e aprovar. Os tokens ficam limitados exatamente ao que você aprova na tela de consentimento: **Somente leitura**, **Padrão**, **Acesso total** ou um conjunto **Personalizado** de permissões individuais. Para passo a passo detalhado, veja [configurar o Claude com sua caixa de entrada](/blog/connect-claude-to-email) e [adicionar seu e-mail ao ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clientes sem OAuth (chave de API)
 
@@ -98,20 +98,20 @@ De qualquer forma, você revoga qualquer conexão no painel com um clique. Pegue
 
 ## Isso é seguro? E os limites de taxa
 
-Resposta curta: sim, e o texto [é seguro dar a um agente de IA acesso ao e-mail?](/blog/is-it-safe-to-give-ai-agent-email-access) apresenta o argumento completo. O modelo guarda capacidades com escopo, não a sua senha; as credenciais são criptografadas; nada é armazenado; o envio fica no seu provedor; o acesso é revogado com um clique.
+Sim, e o texto [é seguro dar a um agente de IA acesso ao e-mail?](/blog/is-it-safe-to-give-ai-agent-email-access) apresenta o argumento completo. O modelo guarda capacidades com escopo, não a sua senha; as credenciais são criptografadas; nada é armazenado; o envio fica no seu provedor; o acesso é revogado com um clique.
 
 Sobre limites de taxa, cada espaço de trabalho tem um teto por minuto que cresce com o plano (veja [preços](/pricing)), e cada chave de API recebe janelas por minuto, por hora e por dia dimensionadas para esse plano, então uma chave pode usar o teto inteiro e várias chaves o compartilham. Quando você atinge um limite, o servidor devolve um erro que admite nova tentativa, com um valor \`retry_after\` em segundos. Respeite-o. E nunca repita às cegas um envio de \`email_compose\`: você vai mandar duplicados.
 
 ## Preços
 
-Os planos são precificados por caixas conectadas. As chaves de API são ilimitadas em todos os níveis, e os níveis também diferem em limite de pico, retenção de análises, recursos de equipe e suporte.
+Os planos são precificados por caixas conectadas. As chaves de API são ilimitadas em todos os níveis, e os níveis também diferem em limite de pico, histórico de análises, recursos de equipe e suporte.
 
-- **Free, US$ 0 para sempre.** Sem cartão. Uma caixa conectada, 60 solicitações/min, 30 dias de análises, central de ajuda e suporte por e-mail.
-- **Personal, US$ 9/mês** (ou US$ 86,40/ano, US$ 7,20/mês). Até três caixas conectadas, 120 solicitações/min, 90 dias de análises, suporte prioritário por e-mail.
-- **Pro, US$ 15/mês** (ou US$ 144/ano, US$ 12/mês). Até 10 caixas conectadas, 300 solicitações/min, 2 anos de análises, suporte prioritário por e-mail.
-- **Business, US$ 39/mês** (ou US$ 374,40/ano, US$ 31,20/mês). Tudo do Pro, mais 10 caixas incluídas e US$ 3/mês por caixa extra, membros ilimitados com papéis, administradores que aprovam envios retidos, um espaço de trabalho separado por cliente ou empresa, 1.000 solicitações/min.
+- **Free.** Sem cartão, para sempre. Uma caixa conectada, análises de uso, central de ajuda e suporte por e-mail.
+- **Personal.** Mais caixas para uma pessoa, limite de pico maior, histórico de análises mais longo, suporte prioritário por e-mail.
+- **Pro.** Para uma pessoa que toca um negócio: ainda mais caixas, limite de pico maior ainda, anos de histórico de análises e webhooks de e-mail novo.
+- **Business.** Tudo do Pro, mais um bloco de caixas incluídas com preço por caixa acima dele, membros ilimitados com papéis, administradores que aprovam envios retidos e um espaço de trabalho separado por cliente ou empresa.
 
-Detalhamento completo na [página de preços](/pricing).
+Os preços e o número de caixas atuais estão na [página de preços](/pricing).
 
 ## Comece agora
 

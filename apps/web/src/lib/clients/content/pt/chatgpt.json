@@ -16,7 +16,7 @@
     "meta0": "1 caixa de entrada grátis, para sempre",
     "meta1": "OAuth, sem precisar de chave de API",
     "meta2": "E-mails buscados ao vivo, nunca armazenados",
-    "answer": "Em chatgpt.com, abra Plugins, Personal (Pessoal), Add (Adicionar) e depois Adicionar servidor MCP personalizado. Dê o nome MCPEmails, cole https://mcpemails.com/api/mcp em Conexão, escolha OAuth, marque a caixa de confirmação, clique em Criar como plugin e faça login no MCPEmails. Servidores MCP personalizados podem ser adicionados nos planos Go e pagos. Em um chat, digite @ e escolha MCPEmails."
+    "answer": "Em chatgpt.com, abra Plugins, Personal (Pessoais), Add (Adicionar) e depois Adicionar servidor MCP personalizado. Dê o nome MCPEmails, cole https://mcpemails.com/api/mcp em Conexão, escolha OAuth, marque a caixa de confirmação, clique em Criar como plugin e faça login no MCPEmails. Servidores MCP personalizados podem ser adicionados nos planos Go e pagos. Em um chat, digite @ e escolha MCPEmails."
   },
   "method": {
     "title": "Como o ChatGPT se conecta: OAuth, sem chave de API",
@@ -29,7 +29,7 @@
     },
     {
       "h": "Abra \"Adicionar servidor MCP personalizado\"",
-      "p": "Em chatgpt.com, abra <b>Plugins</b>, depois <b>Personal</b> (Pessoal), clique em <b>Add</b> (Adicionar) no canto superior direito e escolha <b>Adicionar servidor MCP personalizado</b>. Isso funciona só na web: o app para celular não consegue adicionar um."
+      "p": "Em chatgpt.com, abra <b>Plugins</b>, depois <b>Personal</b> (Pessoais), clique em <b>Add</b> (Adicionar) no canto superior direito e escolha <b>Adicionar servidor MCP personalizado</b>. Isso funciona só na web: o app para celular não consegue adicionar um."
     },
     {
       "h": "Preencha o servidor",

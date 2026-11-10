@@ -26,7 +26,7 @@ O Cursor aceita OAuth 2.0 para servidores MCP, que é o caminho sem dor. Não h�
 
 1. Abra as configurações do Cursor e encontre a seção de servidores MCP.
 2. Adicione um novo servidor com a URL \`https://www.mcpemails.com/api/mcp\`.
-3. O Cursor abre uma janela do navegador. Entre na sua conta do MCPEmails e aprove os escopos que o agente deve ter: \`read:email\`, \`send:email\` ou os dois.
+3. O Cursor abre uma janela do navegador. Entre na sua conta do MCPEmails e aprove o nível de acesso que o agente deve ter: **Somente leitura**, **Padrão**, **Acesso total** ou um conjunto personalizado de permissões.
 4. A conexão fica verde e as ferramentas de e-mail aparecem na lista de ferramentas do Cursor.
 
 Por baixo dos panos, isso é OAuth 2.0 com authorization code e PKCE, e o token que o Cursor guarda tem escopo exatamente igual ao que você aprovou. Se você concedeu só \`read:email\`, o agente literalmente não consegue enviar. Quando terminar, revogue a conexão em **Painel → Chaves de API** (as concessões OAuth também ficam ali) com um clique, e o acesso do Cursor acaba na hora.
@@ -101,13 +101,13 @@ O agente roda \`inbox_list\`, depois \`email_read\` com a ação \`list\` e \`un
 
 Ele chama \`email_compose\` com a ação \`reply\`, a conversa é mantida, e a resposta sai pelo meu próprio Gmail, então chega a partir do meu endereço, com a reputação do meu domínio. Para ver prompts de triagem em mais detalhes, leia [como fazer um agente de IA triar e resumir sua caixa de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Uma limitação, sendo franco: não há webhooks. O servidor não envia novos e-mails para você. Se você quer que o agente reaja a mensagens que chegam, faça polling: \`email_read\` com a ação \`list\` e \`unread: true\` em um intervalo definido. É uma escolha de design deliberada, e ela molda a forma como você constrói qualquer coisa reativa, como uma [resposta automática via MCP](/blog/build-email-auto-responder-mcp-agent).
+Uma limitação: as ferramentas MCP nunca chamam você. Se você quer que o agente reaja a mensagens que chegam, faça polling, chamando \`email_read\` com a ação \`list\` e \`unread: true\` em um intervalo definido, ou deixe um webhook de e-mail novo acordar o seu código (os espaços de trabalho Pro e Business adicionam um em Chaves de API no painel, e ele envia os IDs das mensagens para a sua URL). De um jeito ou de outro, isso molda a forma como você constrói qualquer coisa reativa, como uma [resposta automática via MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Limites de taxa para acesso por script
 
 Se você usa o servidor a partir de um cron job ou de um loop de agente apertado, fique de olho nos limites. Cada plano tem um teto por minuto para o espaço de trabalho inteiro, e cada chave de API tem janelas por minuto, por hora e por dia dimensionadas para o plano, então uma chave pode usar todo o teto por minuto do plano e várias chaves o dividem. Respostas bem-sucedidas de \`tools/call\` trazem \`RateLimit-Limit\`, \`RateLimit-Remaining\` e \`RateLimit-Reset\`, e uma resposta 429 traz \`Retry-After\`. Veja a [página de preços](/pricing) para o teto de cada plano.
 
-Quando você atinge um limite de taxa, o servidor devolve um erro que pode ser repetido (código \`-32003\`) com \`data.retry_after\` em segundos. Respeite: espere esse tempo e tente de novo. Mas nem tudo pode ser repetido: se você esgotar a franquia mensal de ações do seu plano, a chamada devolve um resultado de ferramenta normal com \`isError: true\` e um bloco \`_meta["com.mcpemails/usage_limit"]\`, sem \`retry_after\`, e nenhuma quantidade de novas tentativas resolve antes de \`reset_at\`. E nunca repita às cegas um envio com \`email_compose\` após uma falha genérica; você vai disparar duplicatas. Verifique primeiro se ele foi mesmo enviado.
+Quando você atinge um limite de taxa, o servidor devolve um erro que pode ser repetido (código \`-32003\`) com \`data.retry_after\` em segundos. Respeite: espere esse tempo e tente de novo. Mas nem tudo pode ser repetido: se um espaço de trabalho atingir um limite de uso do plano, a chamada devolve um resultado de ferramenta normal com \`isError: true\` e um bloco \`_meta["com.mcpemails/usage_limit"]\`, sem \`retry_after\`, e nenhuma quantidade de novas tentativas resolve antes de \`reset_at\`. E nunca repita às cegas um envio com \`email_compose\` após uma falha genérica; você vai disparar duplicatas. Verifique primeiro se ele foi mesmo enviado.
 
 ## Para fechar
 

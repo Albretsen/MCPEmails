@@ -33,7 +33,7 @@ Isso não é uma exclusividade do Gmail. As assinaturas valem para **todos** os 
 
 **1. O editor de assinatura no painel.** Abra uma caixa de entrada no painel do MCPEmails e edite a assinatura ali mesmo. Cada caixa tem a sua, então você dá a cada endereço o tom certo.
 
-**2. Peça ao Claude.** Há uma ferramenta \`signature\`, então você define ou altera a assinatura em linguagem natural sem sair do chat:
+**2. Peça ao Claude.** Há uma ferramenta \`signature_set\` (e \`signature_get\` para ler a atual de volta), então você define ou altera a assinatura em linguagem natural sem sair do chat:
 
 > "Defina minha assinatura da caixa do trabalho como: Sam Rivera, Fundador, Acme, calendly.com/sam"
 
@@ -66,7 +66,7 @@ Todos: Gmail, Outlook, Fastmail, iCloud e qualquer outra conta IMAP. O MCPEmails
 Sim. Use a opção \`include_signature\` (basta dizer ao Claude para pular a assinatura) em uma mensagem curta pontual. Sua assinatura salva continua valendo para o restante.
 
 **Como defino minha assinatura?**
-De dois jeitos: editando por caixa de entrada no painel, ou pedindo ao Claude, por exemplo "defina minha assinatura como…", pela ferramenta \`signature\`.
+De dois jeitos: editando por caixa de entrada no painel, ou pedindo ao Claude, por exemplo "defina minha assinatura como…", o que aciona a ferramenta \`signature_set\`.
 
 ## Resumo
 

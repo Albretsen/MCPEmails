@@ -4,7 +4,7 @@
   "sub": "O ChatGPT acessa o {provider} por meio de um servidor MCP personalizado, que você adiciona no chatgpt.com com o ChatGPT Go ou um plano pago.",
   "steps": [
     "Conecte o {provider} ao MCPEmails com os passos acima.",
-    "No chatgpt.com, abra Plugins, Personal (Pessoal), clique em Add (Adicionar) e depois em Adicionar servidor MCP personalizado.",
+    "No chatgpt.com, abra Plugins, Personal (Pessoais), clique em Add (Adicionar) e depois em Adicionar servidor MCP personalizado.",
     "Dê o nome MCPEmails, cole <code>https://mcpemails.com/api/mcp</code> em Conexão, escolha OAuth, confirme, clique em Criar como plugin e entre no MCPEmails.",
     "Em um chat, digite <b>@</b> e escolha MCPEmails. Repita quando uma pergunta seguinte precisar dos seus e-mails."
   ],

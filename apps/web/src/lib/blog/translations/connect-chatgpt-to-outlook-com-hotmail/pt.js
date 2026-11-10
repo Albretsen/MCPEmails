@@ -38,7 +38,7 @@ Guias antigos mandam criar uma senha de app e informar as configurações IMAP d
 
 ## Passo 2: adicionar o MCPEmails ao ChatGPT
 
-1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar) no canto superior direito.
+1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoais), e clique em **Add** (Adicionar) no canto superior direito.
 2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
 3. Em **Conexão**, cole esta URL:
 

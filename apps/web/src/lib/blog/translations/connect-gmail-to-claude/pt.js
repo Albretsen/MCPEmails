@@ -45,7 +45,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Clique em **Continuar**, confira as configurações de login que o Claude detectou (os padrões servem) e clique em **Adicionar**.
-5. Faça login com sua conta do MCPEmails e aprove os escopos que você quer: \`read:email\`, \`send:email\` ou os dois.
+5. Faça login com sua conta do MCPEmails e aprove o nível de acesso que você quer: **Somente leitura**, **Padrão**, **Acesso total** ou um conjunto personalizado de permissões.
 6. Em um chat, clique em **+** no canto inferior esquerdo, escolha **Conectores** e ative o MCPEmails.
 
 No plano Team ou Enterprise, um Owner adiciona o conector uma vez em **Configurações da organização → Conectores**. Os membros então abrem **Personalizar → Conectores**, localizam o MCPEmails e clicam em **Conectar**.
@@ -78,7 +78,7 @@ Depois de conectado, o Claude trabalha com um pequeno conjunto de ferramentas co
 
 O Claude também tem um conector de Gmail próprio, e ele também consegue enviar. [O Claude consegue ler meu e-mail e enviar e-mails?](/blog/can-claude-read-my-email) compara esse conector com o MCPEmails, caixa de correio por caixa de correio.
 
-Uma coisa para saber desde já: o MCPEmails funciona por consulta. Não há webhooks push, então o Claude reage a e-mails novos quando você pede para verificar, não no instante em que uma mensagem chega. Para quase todo fluxo de trabalho de assistente, esse é exatamente o modelo certo.
+Uma coisa para saber desde já: o Claude reage a e-mails novos quando você pede para verificar, não no instante em que uma mensagem chega. Para quase todo fluxo de trabalho de assistente, esse é exatamente o modelo certo. (Com o seu próprio código é diferente: os espaços de trabalho Pro e Business podem adicionar em Chaves de API um webhook que faz um POST para a sua URL quando chega e-mail novo.)
 
 ## É seguro conectar o Gmail ao Claude?
 
@@ -109,7 +109,7 @@ Não. Você cola uma senha de app, uma credencial separada que o Google gera e q
 
 ## Resumindo
 
-É isso: uma senha de app do Google, uma URL de endpoint, e o Claude consegue ler, pesquisar e enviar seus e-mails de verdade, sem nunca armazená-los. O plano Free não custa nada, não pede cartão e conecta uma caixa de entrada; o Personal custa $9/mês para até três caixas de entrada, e o Pro conecta até 10 (veja os [preços](/pricing)).
+É isso: uma senha de app do Google, uma URL de endpoint, e o Claude consegue ler, pesquisar e enviar seus e-mails de verdade, sem nunca armazená-los. O plano Free não custa nada, não pede cartão e conecta uma caixa de entrada; os planos pagos adicionam mais (veja os [preços](/pricing)).
 
 Pronto para começar? [Conecte seu Gmail grátis](/signup), cole o endpoint no Claude e peça para ele resumir seus e-mails não lidos.`,
 };

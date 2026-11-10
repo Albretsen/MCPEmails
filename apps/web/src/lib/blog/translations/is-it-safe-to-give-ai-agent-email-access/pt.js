@@ -3,7 +3,7 @@ const translation = {
   description:
     'É seguro dar a um agente de IA acesso ao e-mail? Depende da arquitetura. Veja os riscos reais e a lista de verificação que torna a conexão segura.',
   coverAlt: 'É seguro dar a um agente de IA acesso ao e-mail: riscos e proteções explicados, com o MCPEmails',
-  content: `Resposta curta: pode ser, mas a segurança mora na arquitetura, não no marketing. Dar a um agente de IA acesso ao e-mail é seguro quando o serviço busca seus e-mails ao vivo em vez de copiá-los, criptografa suas credenciais direito, trabalha com escopos mínimos e permite cortar o acesso com um clique. É arriscado quando qualquer um desses quatro pontos falta. O segredo é saber quais perguntas fazer antes de conectar uma caixa.
+  content: `Pode ser, mas a segurança mora na arquitetura, não no marketing. Dar a um agente de IA acesso ao e-mail é seguro quando o serviço busca seus e-mails ao vivo em vez de copiá-los, criptografa suas credenciais direito, trabalha com escopos mínimos e permite cortar o acesso com um clique. É arriscado quando qualquer um desses quatro pontos falta. O segredo é saber quais perguntas fazer antes de conectar uma caixa.
 
 Essa é a objeção que mais ouço, e é justa. Sua caixa de entrada é o centro de redefinição de senhas, o arquivo de contratos, a sua vida privada. Entregar as chaves a um modelo de linguagem parece imprudente. Então vamos falar com franqueza sobre o que pode dar errado de verdade e depois ver como é uma configuração cuidadosa. Se você quer o panorama geral primeiro, o guia principal sobre [como dar ao seu agente de IA acesso ao e-mail](/blog/how-to-give-your-ai-agent-email-access) cobre toda a configuração; este texto é sobre a questão da confiança em si.
 
@@ -35,7 +35,7 @@ Veja como o MCPEmails trata cada risco. Sou suspeito para falar, porque fui eu q
 
 **As credenciais são criptografadas com AES-256-GCM em repouso.** Sua senha de app ou token OAuth é criptografado antes de tocar o banco de dados. É descriptografado nos nossos servidores só quando uma solicitação precisa, e nunca é enviado ao seu agente. A chave de criptografia é um segredo do servidor, separado do banco de dados, então um despejo do banco sozinho é inútil. Esse é o único dado seu que persistimos, e é o que tratamos com mais cuidado.
 
-**Os escopos são mínimos por projeto.** Quando você conecta um agente, aprova exatamente duas permissões possíveis: \`read:email\` e \`send:email\`. Quer um agente que resume mas nunca pode enviar? Conceda só \`read:email\`. O sistema não tem uma marreta de "acesso total", porque não haveria nada a ganhar com ela. Se você está pesando como os agentes se autenticam, [OAuth ou chaves de API para acesso de IA ao e-mail](/blog/oauth-vs-api-keys-ai-email-access) explica qual usar em cada caso.
+**Os escopos são mínimos por projeto.** Quando você conecta um agente, a tela de consentimento oferece **Somente leitura**, **Padrão** e **Acesso total**, mais um cartão **Personalizado** em que cada uma das nove permissões (ler, pesquisar, enviar, pastas, excluir, rascunhos, contatos, agendamento, automações) tem o próprio interruptor. Quer um agente que resume mas nunca pode enviar? Escolha Somente leitura, e \`send:email\` nunca é emitido. Até o Acesso total é uma lista nomeada, visível na tela, não um cheque em branco. Se você está pesando como os agentes se autenticam, [OAuth ou chaves de API para acesso de IA ao e-mail](/blog/oauth-vs-api-keys-ai-email-access) explica qual usar em cada caso.
 
 **O envio passa pelo seu próprio provedor.** Quando o agente envia um e-mail, ele sai pelo seu Gmail, pelo seu Microsoft 365 ou pelo seu próprio servidor SMTP. Nunca retransmitimos mensagens a partir do nosso domínio. Sua reputação de remetente e sua entregabilidade continuam inteiramente suas, e não há pool de IPs compartilhado para envenenar.
 
@@ -56,7 +56,7 @@ Se uma ferramenta passa nos seis, o risco residual é pequeno e administrável. 
 
 ## Uma nota sobre o que não fazemos
 
-Franqueza gera mais confiança do que listas de recursos, então duas limitações que vale declarar. Não enviamos notificações push ao seu agente. Não há webhooks; para reagir a e-mails novos, seu agente consulta em uma rotina. É uma decisão de projeto, não um descuido, e evita que o servidor mantenha uma conexão permanente com a sua caixa. Segundo: não conseguimos proteger você de um agente em que você confiou demais. Se você dá a um agente autônomo acesso de envio e zero revisão, a injeção de prompt é um risco real, e isso é da configuração, não do transporte. Reduza o escopo e mantenha uma pessoa nas ações irreversíveis.
+Duas limitações que vale declarar. Primeira: um agente dentro de um chat não é avisado quando chega e-mail; ele verifica em uma rotina. O único push que oferecemos é um webhook assinado de e-mail novo para uma URL sua, no Pro e no Business, e ele carrega IDs de mensagens, nunca o corpo. Segunda: não conseguimos proteger você de um agente em que você confiou demais. Se você dá a um agente autônomo acesso de envio e zero revisão, a injeção de prompt é um risco real, e isso é da configuração, não do transporte. Reduza o escopo e mantenha uma pessoa nas ações irreversíveis.
 
 ## Então, é seguro?
 

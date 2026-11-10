@@ -25,7 +25,7 @@
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API. Nos planos Team e Enterprise, um Owner adiciona o conector em Organization settings → Connectors (configurações da organização, conectores), e depois os membros clicam em \"Connect\" em Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "No chatgpt.com, abra Plugins → Personal (Pessoal), clique em \"Add\" (Adicionar) no canto superior direito e depois em \"Adicionar servidor MCP personalizado\". Não dá para fazer isso no app para celular.",
+      "step1": "No chatgpt.com, abra Plugins → Personal (Pessoais), clique em \"Add\" (Adicionar) no canto superior direito e depois em \"Adicionar servidor MCP personalizado\". Não dá para fazer isso no app para celular.",
       "step2": "Dê o nome MCPEmails e cole a URL acima em \"Conexão\".",
       "step3": "Escolha OAuth, marque \"Entendo e quero continuar\" e clique em \"Criar como plugin\".",
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API.",

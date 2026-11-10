@@ -18,7 +18,7 @@ A [página de ajuda sobre apps conectados](https://help.openai.com/en/articles/1
 3. **Abra o plugin no ChatGPT.** Vá em **Configurações**, depois **Plugins**, e escolha **iCloud Mail**.
 4. **Informe seu endereço do iCloud e a senha específica de app.** A OpenAI pede um endereço terminado em @icloud.com, @me.com ou @mac.com.
 
-Sua senha normal da Conta Apple não funciona aqui. É regra da Apple para todo app que não é da própria Apple, e é o mesmo tipo de senha que um app de e-mail de terceiros usa.
+Sua senha normal da Conta Apple não funciona aqui. A Apple dá a apps de outros desenvolvedores dois caminhos: um app compatível pode ser autorizado com a própria Conta Apple, e todos os outros usam uma senha específica de app. O plugin da OpenAI usa a senha, o mesmo tipo que um app de e-mail de terceiros usa.
 
 ## O que o plugin do iCloud Mail consegue fazer
 
@@ -56,7 +56,7 @@ Cada plugin é uma conexão própria, com login próprio, e é preciso dizer ao 
 
 ## iCloud Mail no Claude
 
-O Claude tem dois conectores de e-mail próprios, um para o Gmail e outro para contas corporativas do Microsoft 365. Não há opção de iCloud no Claude, e a Apple não oferece um login para o iCloud Mail que um terceiro pudesse usar no lugar de uma senha. [O Claude pode ler meus e-mails?](/blog/can-claude-read-my-email) percorre as opções do Claude caixa por caixa.
+O Claude tem dois conectores de e-mail próprios, um para o Gmail e outro para contas corporativas do Microsoft 365. Não há opção de iCloud no Claude. A Apple até permite que um app de terceiros compatível autorize o iCloud Mail com a Conta Apple em vez de uma senha específica de app, mas o Claude não tem um conector assim, e o MCPEmails conecta o iCloud com uma senha específica de app via IMAP. [O Claude pode ler meus e-mails?](/blog/can-claude-read-my-email) percorre as opções do Claude caixa por caixa.
 
 Para usar o iCloud no Claude, você adiciona um servidor MCP que guarda a conexão com o iCloud, e é isso que o MCPEmails é. Ele se conecta ao iCloud do mesmo jeito que o plugin da OpenAI, com uma senha específica de app via IMAP, e depois serve a caixa a qualquer app que fale o Model Context Protocol: Claude, ChatGPT, Cursor e os outros [clientes compatíveis](/docs/clients).
 

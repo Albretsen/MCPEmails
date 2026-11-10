@@ -20,7 +20,7 @@ Você nunca cola um ID de caixa em um prompt. O agente chama \`inbox_list\`, que
 
 Dois detalhes que vale saber:
 
-- **A descoberta é gratuita.** \`inbox_list\` é a única ferramenta que não conta na franquia mensal de ações do plano Free, então o agente pode se reorientar sem custo.
+- **A descoberta é gratuita.** \`inbox_list\` nunca é contabilizado, então o agente pode se reorientar sem custo.
 - **Seletores em conflito são recusados, não adivinhados.** Uma chamada com um \`inbox_id\` de uma caixa e um endereço \`inbox\` de outra é recusada, e o erro cita os dois. A causa mais comum é um ID antigo arrastado de um ponto anterior da conversa. Diga ao agente para tentar de novo só com o endereço.
 
 ## Limite um pedido a uma caixa
@@ -37,7 +37,7 @@ Esta é a parte que as pessoas erram: **uma chamada alcança uma caixa.** Listar
 
 - Deixe-o chamar \`inbox_list\` primeiro, ou diga quantas contas você tem. Se ele presumir uma, vai relatar uma com toda a confiança.
 - Peça uma resposta consolidada ("uma lista única, marcada com a conta de origem"), ou você recebe três relatórios separados.
-- O volume cresce com o número de caixas. Uma triagem em três caixas são pelo menos três ações faturáveis, não uma.
+- O volume cresce com o número de caixas. Uma triagem em três caixas são pelo menos três chamadas, não uma.
 
 ## Nomes e identidade do remetente
 
@@ -90,12 +90,12 @@ Configurações mistas são o caso normal, e os provedores discordam sobre o que
 
 Os planos são precificados por caixas conectadas:
 
-- **Free, US$ 0.** Uma caixa conectada. 150 ações de e-mail faturáveis por mês-calendário UTC, com os 3 primeiros dias sem contagem. Essa franquia mensal vale para espaços de trabalho criados em ou após 2026-09-13; espaços de trabalho criados antes estão isentos.
-- **Personal, US$ 9 por mês ou US$ 86,40 por ano.** Três caixas conectadas, ações de e-mail ilimitadas, limite de pico 2x, suporte prioritário por e-mail.
-- **Pro, US$ 15 por mês ou US$ 144 por ano.** Até 10 caixas conectadas, limite de pico 5x, histórico de análises mais longo.
-- **Business, US$ 39 por mês ou US$ 374,40 por ano.** 10 caixas incluídas e US$ 3 por mês para cada caixa extra, membros ilimitados com papéis sem custo adicional, administradores que aprovam envios retidos, um espaço de trabalho separado por cliente ou empresa.
+- **Free.** Uma caixa conectada.
+- **Personal.** Algumas caixas para uma pessoa, limite de pico maior, suporte prioritário por e-mail.
+- **Pro.** Mais caixas para uma pessoa que toca um negócio, limite de pico maior ainda, histórico de análises mais longo, webhooks de e-mail novo.
+- **Business.** Um bloco de caixas incluídas com preço por caixa acima dele, membros ilimitados com papéis sem custo adicional, administradores que aprovam envios retidos, um espaço de trabalho separado por cliente ou empresa.
 
-Uma rotina entre caixas custa uma ação por caixa, então o número de caixas pesa no volume tanto quanto os seus hábitos. Detalhes em [preços](/pricing).
+Uma rotina entre caixas é uma chamada por caixa, então o número de caixas pesa no volume tanto quanto os seus hábitos. Os preços e o número de caixas atuais estão em [preços](/pricing).
 
 ## Perguntas frequentes
 
