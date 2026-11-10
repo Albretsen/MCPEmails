@@ -34,8 +34,8 @@
       "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
     },
     {
-      "h": "Sjekk tofaktorautentisering i Area personale",
-      "p": "Tiscali tilbyr tofaktorautentisering under <b>Sicurezza</b> i Area personale, med en autentiseringsapp og reservekoder. Sidene beskriver den for webmailen og kontoområdet og sier ikke hvordan et e-postprogram logger inn når den er på, så er tofaktor aktivert og innloggingen din avvises, er det det første du skal sjekke. Med den av er Tiscali Mail-passordet ditt påloggingen."
+      "h": "Sjekk tofaktorautentisering i Area Personale",
+      "p": "Tiscali tilbyr tofaktorautentisering i <b>Area Personale</b> i Tiscali Mail, med en autentiseringsapp som Microsoft eller Google Authenticator og engangskoder som reserve. Veiledningen beskriver den for innlogging i webmailen og sier ikke hvordan et e-postprogram logger inn når den er på, så er tofaktor aktivert og innloggingen din avvises, er det det første du skal sjekke. Med den av er Tiscali Mail-passordet ditt påloggingen."
     },
     {
       "h": "Skriv inn adressen og passordet, og velg bare lesing når du blir spurt",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Tofaktor er dokumentert for kontoen, ikke for e-postprogrammer",
-      "p": "Tiscalis hjelp forklarer hvordan du slår på tofaktorautentisering med en app og reservekoder, og hvordan du logger inn i webmailen med den. Den sier ikke om et e-postprogram fortsetter å virke med kontopassordet etterpå, og dokumenterer ikke noe app-spesifikt passord. Slår du den på og IMAP-innloggingen begynner å feile, er Tiscalis egne sider stedet å spørre, og denne siden oppdateres når de svarer på spørsmålet."
+      "p": "Tiscalis hjelp forklarer hvordan du slår på tofaktorautentisering med en autentiseringsapp og reservekoder, og hvordan du logger inn i webmailen med den. Den sier ikke om et e-postprogram fortsetter å virke med kontopassordet etterpå, og dokumenterer ikke noe app-spesifikt passord. Slår du den på og IMAP-innloggingen begynner å feile, er Tiscalis support stedet å spørre, og denne siden oppdateres når veiledningen deres svarer på spørsmålet."
     },
     {
       "h": "Ingen SASL-IR, og POP tillater én enhet om gangen",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Har Tiscali app-passord?",
-      "a": "Tiscali dokumenterer tofaktorautentisering for Area personale, men ikke noe programspesifikt passord, og sier ikke hvordan e-postprogrammer logger inn med tofaktor på. Med tofaktor av er kontopassordet påloggingen for IMAP."
+      "a": "Tiscali dokumenterer tofaktorautentisering i Area Personale, men ikke noe programspesifikt passord, og sier ikke hvordan e-postprogrammer logger inn med tofaktor på. Med tofaktor av er kontopassordet påloggingen for IMAP."
     },
     {
       "q": "Lagres Tiscali-e-posten min på serverne deres?",

@@ -51,7 +51,7 @@
     },
     {
       "h": "Finn eller sett postkassepassordet i Arubas kontrollpanel",
-      "p": "Logg inn i Arubas kundeområde, åpne webhotell- eller e-posttjenesten for domenet og gå til postkasseadministrasjonen (<b>Gestione caselle</b>). Hver adresse har sitt eget passord der. Kjenner du det ikke, setter du et nytt for den postkassen; innloggingen til kundeområdet er en annen pålogging og blir avvist av IMAP."
+      "p": "Logg inn i Arubas kontrollpanel, åpne e-posttjenesten for domenet og gå til <b>Caselle di posta</b>. Hver adresse har sitt eget passord der, i boksen <b>Gestione caselle</b>, med <b>Modifica</b> ved siden av. Kjenner du det ikke, setter du et nytt for den postkassen; innloggingen til kundeområdet er en annen pålogging og blir avvist av IMAP."
     },
     {
       "h": "Sjekk at IMAP er aktivt på domenet, på eldre planer",
@@ -65,7 +65,7 @@
   "gotchas": [
     {
       "h": "To passord, og bare postkassepassordet virker",
-      "p": "Aruba-kunder logger inn i kundeområdet med et brukernavn og et passord, og det er det paret de fleste griper til. IMAP sjekker passordet til den enkelte postkassen, satt i postkasseadministrasjonen i webhotell- eller e-postpanelet. De to kan tilfeldigvis være like, men er forskjellige med vilje, så en avvist innlogging på en Aruba-adresse er som regel kundeområdets passord limt inn i et skjema som ville ha postkassepassordet."
+      "p": "Aruba-kunder logger inn i kundeområdet med et brukernavn og et passord, og det er det paret de fleste griper til. IMAP sjekker passordet til den enkelte postkassen, satt under Caselle di posta i kontrollpanelet (bare postmaster-postkassen starter med Aruba-kontoens passord). De to er separate påloggingsdetaljer, så en avvist innlogging på en Aruba-adresse er som regel kundeområdets passord limt inn i et skjema som ville ha postkassepassordet."
     },
     {
       "h": "Gratis @aruba.it-postkasser bruker andre vertsnavn",
@@ -95,7 +95,7 @@
     },
     {
       "q": "Hvorfor blir Aruba-passordet mitt avvist i en e-postklient?",
-      "a": "Som regel fordi det er kundeområdets passord og ikke postkassepassordet. IMAP sjekker passordet som er satt på den enkelte adressen i Gestione caselle. På en Hosting Basic-plan fra før juni 2017 er den andre årsaken IMAP-tillegget, som må være aktivt på domenet."
+      "a": "Som regel fordi det er kundeområdets passord og ikke postkassepassordet. IMAP sjekker passordet som er satt på den enkelte adressen under Caselle di posta i kontrollpanelet. På en Hosting Basic-plan fra før juni 2017 er den andre årsaken IMAP-tillegget, som må være aktivt på domenet."
     },
     {
       "q": "Kan jeg koble til en Aruba PEC-postkasse på samme måte?",

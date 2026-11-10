@@ -51,7 +51,7 @@
     },
     {
       "h": "Trouvez ou définissez le mot de passe de la boîte dans le panneau de contrôle Aruba",
-      "p": "Connectez-vous à l'espace client Aruba, ouvrez le service d'hébergement ou de messagerie du domaine et allez dans la section de gestion des boîtes (<b>Gestione caselle</b>). Chaque adresse y a son propre mot de passe. Si vous ne le connaissez pas, définissez-en un nouveau pour cette boîte ; le mot de passe de l'espace client est un identifiant différent et sera refusé par IMAP."
+      "p": "Connectez-vous au panneau de contrôle Aruba, ouvrez le service de messagerie du domaine et allez dans <b>Caselle di posta</b>. Chaque adresse y a son propre mot de passe, dans l'encadré <b>Gestione caselle</b>, avec <b>Modifica</b> à côté. Si vous ne le connaissez pas, définissez-en un nouveau pour cette boîte ; le mot de passe de l'espace client est un identifiant différent et sera refusé par IMAP."
     },
     {
       "h": "Vérifiez qu'IMAP est actif sur le domaine, sur les anciennes offres",
@@ -65,7 +65,7 @@
   "gotchas": [
     {
       "h": "Deux mots de passe, et seul celui de la boîte fonctionne",
-      "p": "Les clients Aruba se connectent à l'espace client avec un identifiant et un mot de passe, et c'est ce couple que la plupart des gens saisissent d'instinct. IMAP vérifie le mot de passe de la boîte individuelle, défini dans la section de gestion des boîtes du panneau d'hébergement ou de messagerie. Les deux peuvent être identiques par coïncidence et sont distincts par conception : une connexion refusée sur une adresse Aruba, c'est le plus souvent le mot de passe de l'espace client collé dans un formulaire qui attendait celui de la boîte."
+      "p": "Les clients Aruba se connectent à l'espace client avec un identifiant et un mot de passe, et c'est ce couple que la plupart des gens saisissent d'instinct. IMAP vérifie le mot de passe de la boîte individuelle, défini sous Caselle di posta dans le panneau de contrôle (seule la boîte postmaster démarre avec le mot de passe du compte Aruba). Ce sont deux identifiants distincts : une connexion refusée sur une adresse Aruba, c'est le plus souvent le mot de passe de l'espace client collé dans un formulaire qui attendait celui de la boîte."
     },
     {
       "h": "Les boîtes gratuites @aruba.it utilisent d'autres noms de serveurs",
@@ -95,7 +95,7 @@
     },
     {
       "q": "Pourquoi mon mot de passe Aruba est-il refusé dans un client de messagerie ?",
-      "a": "Généralement parce qu'il s'agit du mot de passe de l'espace client et non de celui de la boîte. IMAP vérifie le mot de passe défini sur l'adresse individuelle dans Gestione caselle. Sur une offre Hosting Basic antérieure à juin 2017, l'autre cause est l'option IMAP, qui doit être active sur le domaine."
+      "a": "Généralement parce qu'il s'agit du mot de passe de l'espace client et non de celui de la boîte. IMAP vérifie le mot de passe défini sur l'adresse individuelle sous Caselle di posta dans le panneau de contrôle. Sur une offre Hosting Basic antérieure à juin 2017, l'autre cause est l'option IMAP, qui doit être active sur le domaine."
     },
     {
       "q": "Puis-je connecter une boîte Aruba PEC de la même façon ?",

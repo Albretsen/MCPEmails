@@ -34,8 +34,8 @@
       "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
     },
     {
-      "h": "Vérifiez l'authentification à deux facteurs dans l'Area personale",
-      "p": "Tiscali propose l'authentification à deux facteurs sous <b>Sicurezza</b> dans l'Area personale, avec une application d'authentification et des codes de secours. Ses pages la décrivent pour le webmail et l'espace du compte sans dire comment un programme de messagerie se connecte une fois qu'elle est activée ; donc si elle est active et que votre connexion est refusée, c'est la première chose à vérifier. Si elle est désactivée, votre mot de passe Tiscali Mail est l'identifiant."
+      "h": "Vérifiez l'authentification à deux facteurs dans l'Area Personale",
+      "p": "Tiscali propose l'authentification à deux facteurs dans l'<b>Area Personale</b> de Tiscali Mail, avec une application d'authentification comme Microsoft ou Google Authenticator et des codes de secours à usage unique. Son guide la décrit pour la connexion au webmail sans dire comment un programme de messagerie se connecte une fois qu'elle est activée ; donc si elle est active et que votre connexion est refusée, c'est la première chose à vérifier. Si elle est désactivée, votre mot de passe Tiscali Mail est l'identifiant."
     },
     {
       "h": "Saisissez l'adresse et le mot de passe, et choisissez la lecture seule quand on vous le propose",
@@ -57,7 +57,7 @@
     },
     {
       "h": "L'authentification à deux facteurs est documentée pour le compte, pas pour les programmes de messagerie",
-      "p": "L'aide de Tiscali explique comment activer l'authentification à deux facteurs avec une application et des codes de secours, et comment se connecter au webmail avec elle. Elle ne dit pas si un programme de messagerie continue de fonctionner ensuite avec le mot de passe du compte, et ne documente aucun mot de passe d'application. Si vous l'activez et que la connexion IMAP se met à échouer, les pages de Tiscali sont l'endroit où poser la question, et cette page sera mise à jour quand elles y répondront."
+      "p": "L'aide de Tiscali explique comment activer l'authentification à deux facteurs avec une application d'authentification et des codes de secours, et comment se connecter au webmail avec elle. Elle ne dit pas si un programme de messagerie continue de fonctionner ensuite avec le mot de passe du compte, et ne documente aucun mot de passe d'application. Si vous l'activez et que la connexion IMAP se met à échouer, le support de Tiscali est l'endroit où poser la question, et cette page sera mise à jour quand son guide y répondra."
     },
     {
       "h": "Pas de SASL-IR, et POP n'autorise qu'un appareil à la fois",
@@ -83,7 +83,7 @@
     },
     {
       "q": "Tiscali propose-t-il des mots de passe d'application ?",
-      "a": "Tiscali documente l'authentification à deux facteurs pour l'Area personale mais aucun mot de passe spécifique aux applications, et ne dit pas comment les programmes de messagerie se connectent quand elle est activée. Si elle est désactivée, le mot de passe du compte est l'identifiant pour IMAP."
+      "a": "Tiscali documente l'authentification à deux facteurs dans l'Area Personale mais aucun mot de passe spécifique aux applications, et ne dit pas comment les programmes de messagerie se connectent quand elle est activée. Si elle est désactivée, le mot de passe du compte est l'identifiant pour IMAP."
     },
     {
       "q": "Mon courrier Tiscali est-il stocké sur vos serveurs ?",

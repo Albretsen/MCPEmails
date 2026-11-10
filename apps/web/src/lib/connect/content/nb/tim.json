@@ -53,7 +53,7 @@
     },
     {
       "h": "Bruk TIM Mail-passordet ditt og hele adressen",
-      "p": "TIM utsteder ikke noe eget passord for e-postprogrammer. Logg inn med adressen skrevet helt ut, inkludert domenet, og passordet du bruker på mail.tim.it. Fulgte postkassen med en TIM-linje og du aldri har satt et passord for webmailen, gjør du det først i TIMs hjelpeområde."
+      "p": "TIM utsteder ikke noe eget passord for e-postprogrammer. Logg inn med adressen skrevet helt ut, inkludert domenet, og passordet du bruker på mail.tim.it. Har du glemt det, tilbakestiller TIMs side <b>Recupera Username e Password</b> det, forutsatt at et mobilnummer for gjenoppretting er registrert på postkassen; uten det ber TIM om et signert skjema og kopi av legitimasjon."
     },
     {
       "h": "Lim adressen og passordet inn i MCPEmails",

@@ -53,7 +53,7 @@
     },
     {
       "h": "Utilisez votre mot de passe TIM Mail et l'adresse complète",
-      "p": "TIM n'émet pas de mot de passe distinct pour les programmes de messagerie. Connectez-vous avec l'adresse écrite en entier, domaine compris, et le mot de passe que vous utilisez sur mail.tim.it. Si la boîte est venue avec une ligne TIM et que vous n'avez jamais défini de mot de passe pour le webmail, faites-le d'abord dans l'espace d'assistance TIM."
+      "p": "TIM n'émet pas de mot de passe distinct pour les programmes de messagerie. Connectez-vous avec l'adresse écrite en entier, domaine compris, et le mot de passe que vous utilisez sur mail.tim.it. Si vous l'avez oublié, la page <b>Recupera Username e Password</b> de TIM le réinitialise, à condition qu'un numéro de mobile de récupération soit enregistré sur la boîte ; sans cela, TIM demande un formulaire signé et une copie d'une pièce d'identité."
     },
     {
       "h": "Collez l'adresse et le mot de passe dans MCPEmails",

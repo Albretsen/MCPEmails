@@ -51,7 +51,7 @@
     },
     {
       "h": "Busca o establece la contraseña del buzón en el panel de control de Aruba",
-      "p": "Inicia sesión en el área de cliente de Aruba, abre el servicio de hosting o de correo del dominio y entra en la sección de gestión de buzones (<b>Gestione caselle</b>). Cada dirección tiene ahí su propia contraseña. Si no la conoces, establece una nueva para ese buzón; tu acceso al área de cliente es una credencial distinta e IMAP la rechazará."
+      "p": "Inicia sesión en el panel de control de Aruba, abre el servicio de correo del dominio y entra en <b>Caselle di posta</b>. Cada dirección tiene ahí su propia contraseña, en el recuadro <b>Gestione caselle</b>, con <b>Modifica</b> al lado. Si no la conoces, establece una nueva para ese buzón; tu acceso al área de cliente es una credencial distinta e IMAP la rechazará."
     },
     {
       "h": "Comprueba que IMAP está activo en el dominio, en los planes antiguos",
@@ -65,7 +65,7 @@
   "gotchas": [
     {
       "h": "Dos contraseñas, y solo la del buzón funciona",
-      "p": "Los clientes de Aruba entran en el área de cliente con un usuario y una contraseña, y ese es el par que casi todo el mundo intenta primero. IMAP comprueba la contraseña del buzón concreto, establecida en la sección de gestión de buzones del panel de hosting o de correo. Las dos pueden coincidir por casualidad, pero son distintas por diseño, así que un inicio de sesión rechazado en una dirección de Aruba suele ser la contraseña del área de cliente pegada en un formulario que pedía la del buzón."
+      "p": "Los clientes de Aruba entran en el área de cliente con un usuario y una contraseña, y ese es el par que casi todo el mundo intenta primero. IMAP comprueba la contraseña del buzón concreto, establecida en Caselle di posta dentro del panel de control (solo el buzón postmaster empieza con la contraseña de la cuenta de Aruba). Son dos credenciales distintas, así que un inicio de sesión rechazado en una dirección de Aruba suele ser la contraseña del área de cliente pegada en un formulario que pedía la del buzón."
     },
     {
       "h": "Los buzones gratuitos @aruba.it usan otros nombres de servidor",
@@ -95,7 +95,7 @@
     },
     {
       "q": "¿Por qué se rechaza mi contraseña de Aruba en un cliente de correo?",
-      "a": "Normalmente porque es la contraseña del área de cliente y no la del buzón. IMAP comprueba la contraseña establecida en la dirección concreta en Gestione caselle. En un plan Hosting Basic anterior a junio de 2017, la otra causa es el servicio adicional de IMAP, que tiene que estar activo en el dominio."
+      "a": "Normalmente porque es la contraseña del área de cliente y no la del buzón. IMAP comprueba la contraseña establecida en la dirección concreta en Caselle di posta, dentro del panel de control. En un plan Hosting Basic anterior a junio de 2017, la otra causa es el servicio adicional de IMAP, que tiene que estar activo en el dominio."
     },
     {
       "q": "¿Puedo conectar un buzón PEC de Aruba de la misma forma?",

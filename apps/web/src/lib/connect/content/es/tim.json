@@ -53,7 +53,7 @@
     },
     {
       "h": "Usa tu contraseña de TIM Mail y la dirección completa",
-      "p": "TIM no emite ninguna contraseña aparte para programas de correo. Inicia sesión con la dirección escrita entera, incluido el dominio, y la contraseña que usas en mail.tim.it. Si el buzón vino con una línea TIM y nunca has establecido una contraseña para el webmail, hazlo primero en el área de asistencia de TIM."
+      "p": "TIM no emite ninguna contraseña aparte para programas de correo. Inicia sesión con la dirección escrita entera, incluido el dominio, y la contraseña que usas en mail.tim.it. Si la has olvidado, la página <b>Recupera Username e Password</b> de TIM la restablece, siempre que el buzón tenga un número de móvil de recuperación; sin él, TIM pide un formulario firmado y una copia de un documento de identidad."
     },
     {
       "h": "Pega la dirección y la contraseña en MCPEmails",

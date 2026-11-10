@@ -34,8 +34,8 @@
       "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
     },
     {
-      "h": "Revisa la autenticación de dos factores en el Area personale",
-      "p": "Tiscali ofrece autenticación de dos factores en <b>Sicurezza</b>, dentro del Area personale, con una app de autenticación y códigos de respaldo. Sus páginas la describen para el webmail y el área de la cuenta y no dicen cómo inicia sesión un programa de correo una vez activada, así que si tienes los dos factores activados y tu inicio de sesión es rechazado, eso es lo primero que hay que revisar. Con ellos desactivados, la credencial es tu contraseña de Tiscali Mail."
+      "h": "Revisa la autenticación de dos factores en el Area Personale",
+      "p": "Tiscali ofrece autenticación de dos factores en el <b>Area Personale</b> de Tiscali Mail, con una app de autenticación como Microsoft o Google Authenticator y códigos de respaldo de un solo uso. Su guía la describe para el inicio de sesión en el webmail y no dice cómo inicia sesión un programa de correo una vez activada, así que si tienes los dos factores activados y tu inicio de sesión es rechazado, eso es lo primero que hay que revisar. Con ellos desactivados, la credencial es tu contraseña de Tiscali Mail."
     },
     {
       "h": "Introduce la dirección y la contraseña, y elige solo lectura cuando se te pregunte",
@@ -57,7 +57,7 @@
     },
     {
       "h": "Los dos factores están documentados para la cuenta, no para los programas de correo",
-      "p": "La ayuda de Tiscali explica cómo activar la autenticación de dos factores con una app y códigos de respaldo y cómo entrar en el webmail con ella. No dice si un programa de correo sigue funcionando después con la contraseña de la cuenta, y no documenta ninguna contraseña específica de aplicación. Si la activas y el inicio de sesión IMAP empieza a fallar, las propias páginas de Tiscali son el sitio donde preguntar, y esta página se actualizará cuando respondan a la pregunta."
+      "p": "La ayuda de Tiscali explica cómo activar la autenticación de dos factores con una app de autenticación y códigos de respaldo y cómo entrar en el webmail con ella. No dice si un programa de correo sigue funcionando después con la contraseña de la cuenta, y no documenta ninguna contraseña específica de aplicación. Si la activas y el inicio de sesión IMAP empieza a fallar, el soporte de Tiscali es el sitio donde preguntar, y esta página se actualizará cuando su guía responda a la pregunta."
     },
     {
       "h": "Sin SASL-IR, y POP solo permite un dispositivo a la vez",
@@ -83,7 +83,7 @@
     },
     {
       "q": "¿Tiene Tiscali contraseñas de aplicación?",
-      "a": "Tiscali documenta la autenticación de dos factores para el Area personale, pero ninguna contraseña específica de aplicación, y no dice cómo inician sesión los programas de correo con los dos factores activados. Con los dos factores desactivados, la contraseña de la cuenta es la credencial para IMAP."
+      "a": "Tiscali documenta la autenticación de dos factores en el Area Personale, pero ninguna contraseña específica de aplicación, y no dice cómo inician sesión los programas de correo con los dos factores activados. Con los dos factores desactivados, la contraseña de la cuenta es la credencial para IMAP."
     },
     {
       "q": "¿Se almacena mi correo de Tiscali en sus servidores?",
