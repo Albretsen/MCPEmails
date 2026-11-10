@@ -2,15 +2,15 @@ const post = {
   slug: 'how-to-give-your-ai-agent-email-access',
   title: 'How to Give Your AI Agent Access to Email (The Complete 2026 Guide)',
   description:
-    'Give your AI agent read and send access to a real inbox over MCP — Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
+    'Give your AI agent read and send access to a real inbox over MCP: Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',
-  coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
+  coverAlt: 'How to give your AI agent access to email over MCP (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: "2026-06-02T09:00:00.000Z",
   updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['MCP', 'AI agents', 'Email', 'Tutorial'],
   featured: true,
-  content: `To give an AI agent access to email, you connect your inbox to an MCP server and point your agent at one endpoint URL. The agent then gets a small set of tools for reading, searching, and sending mail. The hard part isn't the agent — it's doing this without leaking your password into a prompt, a log, or a vector store. That last mile is what this guide is about.
+  content: `To give an AI agent access to email, you connect your inbox to an MCP server and point your agent at one endpoint URL. The agent then gets a small set of tools for reading, searching, and sending mail. The hard part isn't the agent; it's doing this without leaking your password into a prompt, a log, or a vector store. That last mile is what this guide is about.
 
 If you just want the fast path: connect an inbox in the dashboard, paste the MCP endpoint into [claude.ai](https://claude.ai), Claude Desktop, Cursor, or your own agent, and call \`inbox_list\` first. The rest of this post explains what's actually happening, why the security model matters, and how to wire up every supported provider.
 
@@ -28,7 +28,7 @@ Hooking a model up to email looks trivial until you try it for real. Three thing
 2. **Credentials are radioactive.** A mailbox password sitting in a chat transcript or a log line is a breach waiting to happen. You cannot let the model hold the secret.
 3. **Email is shaped badly for agents.** MIME, threading headers, HTML versus plain text, attachments, folders that are really labels. The model needs a clean response, not RFC 5322.
 
-The naive DIY fix — hand the model an IMAP library and your password — fails all three at once. Most "Gmail MCP server" repos on GitHub stop right there.
+The naive DIY fix (hand the model an IMAP library and your password) fails all three at once. Most "Gmail MCP server" repos on GitHub stop right there.
 
 ## How MCPEmails solves it
 
@@ -44,7 +44,7 @@ The app password or OAuth token for each inbox is encrypted before it's written 
 
 ### Sending goes through your own provider
 
-When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCPEmails never relays from its own domain. Your deliverability and domain reputation stay entirely yours — no shared-IP spam-folder roulette.
+When the agent sends or replies, the mail leaves through your Gmail, your Microsoft 365, or your SMTP server. MCPEmails never relays from its own domain. Your deliverability and domain reputation stay entirely yours: no shared-IP spam-folder roulette.
 
 ### It's standard MCP over HTTP
 
@@ -52,17 +52,17 @@ The server speaks Streamable HTTP per the MCP 2025-06-18 spec. No SDK to install
 
 ## The tools your agent gets
 
-A handful of consolidated, action-based tools cover the whole surface area: reading, composing, organizing, plus more for folders, scheduling, and contacts. The agent always starts with \`inbox_list\` to discover what's connected and grab each inbox's ID — it never hardcodes a UUID.
+A handful of consolidated, action-based tools cover the whole surface area: reading, composing, organizing, plus more for folders, scheduling, and contacts. The agent always starts with \`inbox_list\` to discover what's connected and grab each inbox's ID; it never hardcodes a UUID.
 
-- \`inbox_list\` — discover connected accounts and their capabilities
-- \`email_read\` (action \`list\`) — paginated, newest-first, per inbox
-- \`email_read\` (action \`read\`) — parsed plain text, optional sanitized HTML, optional attachments
-- \`email_read\` (action \`search\`) — provider-native syntax (Gmail operators, Outlook KQL, IMAP text search)
-- \`email_compose\` (action \`send\`) — compose with CC/BCC, HTML, and attachments up to 10 MB total
-- \`email_compose\` (action \`reply\`) — same, and it sets the threading headers (In-Reply-To, References) for you
-- \`email_organize\` — move, delete, flag, or archive (one action per call)
+- \`inbox_list\`: discover connected accounts and their capabilities
+- \`email_read\` (action \`list\`): paginated, newest-first, per inbox
+- \`email_read\` (action \`read\`): parsed plain text, optional sanitized HTML, optional attachments
+- \`email_read\` (action \`search\`): provider-native syntax (Gmail operators, Outlook KQL, IMAP text search)
+- \`email_compose\` (action \`send\`): compose with CC/BCC, HTML, and attachments up to 10 MB total
+- \`email_compose\` (action \`reply\`): same, and it sets the threading headers (In-Reply-To, References) for you
+- \`email_organize\`: move, delete, flag, or archive (one action per call)
 
-One honest limitation worth stating up front: this is **polling, not push**. There are no webhooks. To react to new mail, your agent polls on a schedule, for example \`email_read\` (action \`list\`) with \`unread: true\`. Any auto-responder you build works on a timer, not an instant trigger. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows how to do this well.
+One thing to know up front: the tools themselves are **request and response**. The server answers when your agent asks, and the simplest way to react to new mail is to poll on a schedule, for example \`email_read\` (action \`list\`) with \`unread: true\`. If you want a push instead, Pro and Business workspaces can add a webhook under **API Keys** in the dashboard: MCPEmails then sends a signed POST to your URL when new mail arrives, with message IDs your agent opens with \`email_read\`. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows both patterns.
 
 A morning-triage run reads like this:
 
@@ -101,28 +101,28 @@ claude.ai, Claude Desktop, Cursor, and similar clients connect with OAuth 2.0 Au
 
 Cline, JetBrains, custom scripts, and raw cURL use a scoped API key. Create one in **Dashboard → API Keys**, pick its scopes, and copy it (it's shown once). Pass it as \`Authorization: Bearer <api-key>\`. Full setup for these is in [email for AI agents in Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode), and the trade-off between the two approaches is covered in [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access).
 
-Either way, you revoke any connection from the dashboard in one click. Grab the exact endpoint URL from [the docs](/docs) — copy it from there rather than typing it by hand.
+Either way, you revoke any connection from the dashboard in one click. Grab the exact endpoint URL from [the docs](/docs); copy it from there rather than typing it by hand.
 
 ## Is this safe? And the rate limits
 
-Short answer: yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
+Yes, and the [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) post makes the full case. The model holds scoped capabilities, not your password; credentials are encrypted; nothing is stored; sending stays on your provider; access revokes in one click.
 
 On rate limits, each workspace has a per-minute ceiling that scales with your plan (see [pricing](/pricing)), and each API key gets per-minute, hourly and daily windows sized to that plan, so one key can use the whole ceiling and several keys share it. When you hit a limit the server returns a retryable error with a \`retry_after\` value in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send: you'll send duplicates.
 
 ## Pricing
 
-Plans are priced by connected inboxes. API keys are unlimited on every tier, and tiers also differ on burst rate, analytics retention, team features, and support.
+Plans are priced by connected inboxes. API keys are unlimited on every tier, and tiers also differ on burst rate, analytics history, team features, and support.
 
-- **Free, $0 forever.** No card. One connected inbox, 60 req/min, 30-day analytics, help center and email support.
-- **Personal, $9/month** (or $86.40/year, $7.20/month). Up to three connected inboxes, 120 req/min, 90-day analytics, priority email support.
-- **Pro, $15/month** (or $144/year, $12/month). Up to 10 connected inboxes, 300 req/min, 2-year analytics, priority email support.
-- **Business, $39/month** (or $374.40/year, $31.20/month). Everything in Pro, plus 10 mailboxes included and $3/month for each extra, unlimited members with roles, admins who approve held sends, a separate workspace per client or business, 1,000 req/min.
+- **Free.** Free forever, no card. One connected inbox, usage analytics, the help center and email support.
+- **Personal.** More inboxes for one person, a higher burst rate, longer analytics history, priority email support.
+- **Pro.** For one person running a business: more inboxes again, a higher burst rate still, years of analytics history, and webhooks for new mail.
+- **Business.** Everything in Pro, plus a block of included mailboxes with a per-mailbox price above it, unlimited members with roles, admins who approve held sends, and a separate workspace per client or business.
 
-Full breakdown on the [pricing page](/pricing).
+Current prices and inbox counts are on the [pricing page](/pricing).
 
 ## Get started
 
-Connect an inbox, paste the endpoint into your agent, and call \`inbox_list\`. That's the whole onboarding. [Start free](/signup) or skim the [quick-start](/docs#quickstart) — you'll have an agent reading real mail in a couple of minutes.`,
+Connect an inbox, paste the endpoint into your agent, and call \`inbox_list\`. That's the whole onboarding. [Start free](/signup) or skim the [quick-start](/docs#quickstart); you'll have an agent reading real mail in a couple of minutes.`,
 };
 
 export default post;

@@ -2,9 +2,9 @@ const post = {
   slug: 'ai-agent-email-workflows-and-prompts',
   title: 'Reusable AI Agent Email Workflows: Inbox Triage Prompts That Stay Useful',
   description:
-    'Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCPEmails workflow prompts—without building a separate tool for every email habit.',
+    'Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCPEmails workflow prompts, without building a separate tool for every email habit.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'Reusable AI agent inbox workflow prompts — MCPEmails',
+  coverAlt: 'Reusable AI agent inbox workflow prompts (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:10:00.000Z',
   updatedAt: '2026-08-02T09:10:00.000Z',
@@ -18,7 +18,7 @@ MCPEmails includes user-invoked workflow prompts for those routines. They are st
 
 Email has many small habits: “show me what needs a response,” “find invoices,” “clean up newsletters,” “review tomorrow’s scheduled messages.” It would be easy to create one tool for each habit. That makes an agent harder to guide and harder for a person to understand.
 
-Instead, MCPEmails keeps a compact set of core capabilities—read, search, organize, compose, draft, and schedule—and uses prompts to express the routine. A prompt tells the agent how to combine the existing capabilities thoughtfully. The product stays learnable, while your workflows stay flexible.
+Instead, MCPEmails keeps a compact set of core capabilities (read, search, organize, compose, draft, and schedule) and uses prompts to express the routine. A prompt tells the agent how to combine the existing capabilities thoughtfully. The product stays learnable, while your workflows stay flexible.
 
 ## The workflows worth starting with
 
@@ -36,7 +36,7 @@ This is a good example of an agent helping with memory without becoming a spam m
 
 ### Newsletter and receipt cleanup
 
-For repetitive mail, state the boundary before any organization happens: “Find marketing newsletters older than 30 days, show me the first 20 candidates, and wait for confirmation before moving them.” The agent can search and organize with the same small set of email actions it uses everywhere else.
+For repetitive mail, state the boundary before any organization happens: “Find marketing newsletters older than a month, show me the first 20 candidates, and wait for confirmation before moving them.” The agent can search and organize with the same small set of email actions it uses everywhere else.
 
 If you want a recurring cleanup habit, use the workflow prompt as the dependable starting instruction. Avoid a custom automation for every sender unless the rule is genuinely stable.
 

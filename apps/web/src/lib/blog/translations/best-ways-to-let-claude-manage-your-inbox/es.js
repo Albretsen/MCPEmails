@@ -1,7 +1,7 @@
 const translation = {
   title: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026',
   description: 'Un repaso sin rodeos a las mejores formas de dejar que Claude gestione tu bandeja en 2026: integraciones nativas, servidores MCP propios, copiar y pegar, extensiones de navegador y MCP gestionado.',
-  coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 — MCPEmails',
+  coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 (MCPEmails)',
   content: `Si quieres que Claude lea, clasifique y responda de verdad tu correo, en 2026 tienes cinco opciones reales: un servidor de correo MCP alojado, un servidor MCP propio que tú mismo ejecutas, copiar y pegar hilos en el chat, una extensión de navegador o una integración nativa en el cliente. Para la mayoría de la gente, un servidor MCP alojado es la decisión acertada, porque funciona en segundos y nunca almacena tu correo. El resto tiene cada uno su nicho, y un par son peores de lo que parecen.
 
 Esto es un repaso, no un anuncio. Voy a recorrer todos los enfoques: dónde brillan, dónde se desmoronan y cuál elegiría yo en cada situación. Si quieres el contexto completo de lo que ocurre por debajo, empieza por la guía base: [cómo darle a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access).
@@ -10,26 +10,26 @@ Esto es un repaso, no un anuncio. Voy a recorrer todos los enfoques: dónde bril
 
 Antes de comparar herramientas, ten claro qué exige el trabajo. "Gestiona mi bandeja" casi siempre significa alguna combinación de esto:
 
-- **Acceso de lectura** — recuperar mensajes recientes, leer un hilo completo, buscar por remitente o palabra clave.
-- **Acceso de envío** — redactar y enviar respuestas, con el hilado correcto para que la conversación no se bifurque.
-- **Varias cuentas** — tu Gmail del trabajo y tu iCloud personal, no solo una.
-- **Confianza** — le estás dando a una IA acceso a años de correspondencia privada. ¿Dónde viven las credenciales? ¿Alguien almacena el cuerpo del correo?
+- **Acceso de lectura:** recuperar mensajes recientes, leer un hilo completo, buscar por remitente o palabra clave.
+- **Acceso de envío:** redactar y enviar respuestas, con el hilado correcto para que la conversación no se bifurque.
+- **Varias cuentas:** tu Gmail del trabajo y tu iCloud personal, no solo una.
+- **Confianza:** le estás dando a una IA acceso a años de correspondencia privada. ¿Dónde viven las credenciales? ¿Alguien almacena el cuerpo del correo?
 
 Pon esos cuatro puntos frente a cada opción. Las diferencias se ven enseguida.
 
 ## Opción 1: un servidor de correo MCP alojado
 
-Es el enfoque del [Model Context Protocol](https://modelcontextprotocol.io), gestionado por ti. Conectas tu bandeja una vez en un panel, pegas una única URL de endpoint en Claude y el agente obtiene un conjunto limpio de herramientas de correo. Claude las invoca como cualquier otra herramienta: \`inbox_list\` para ver tus cuentas, \`email_read\` para listar, leer o buscar mensajes, \`email_compose\` para enviar, responder o reenviar, más \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` y \`contact_search\` para marcas, carpetas, borradores, programación y contactos. Son el núcleo de las 21 herramientas, y la mayoría elige su operación con un parámetro \`action\`.
+Es el enfoque del [Model Context Protocol](https://modelcontextprotocol.io), gestionado por ti. Conectas tu bandeja una vez en un panel, pegas una única URL de endpoint en Claude y el agente obtiene un conjunto limpio de herramientas de correo. Claude las invoca como cualquier otra herramienta: \`inbox_list\` para ver tus cuentas, \`email_read\` para listar, leer o buscar mensajes, \`email_compose\` para enviar, responder o reenviar, más \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` y \`contact_search\` para marcas, carpetas, borradores, programación y contactos. Son el núcleo del conjunto de herramientas, y la mayoría elige su operación con un parámetro \`action\`.
 
 MCPEmails es el que yo desarrollo, así que tómate la recomendación con eso en mente, pero lo que lo hace ganar para la mayoría es la arquitectura, no el marketing. Cada llamada a una herramienta consulta tu proveedor en vivo (IMAP/SMTP para Gmail y la mayoría de proveedores, Microsoft Graph para Outlook), entrega el mensaje a Claude y lo descarta. **El cuerpo del correo nunca se almacena.** Por cada bandeja se guarda un token de OAuth o una contraseña de aplicación cifrados, con cifrado AES-256-GCM en reposo, descifrados en nuestros servidores solo cuando una petición los necesita, y nunca enviados a Claude. Aparte de eso, solo guardamos los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse. Si quieres la versión larga de por qué eso importa, lee [por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters).
 
 La configuración es realmente rápida. En claude.ai vas a **Customize → Connectors → Add connector**, pegas \`https://www.mcpemails.com/api/mcp\`, pulsas Connect, inicias sesión en tu cuenta de MCPEmails y apruebas los permisos que quieras (\`read:email\`, \`send:email\` o ambos). Sin clave de API, sin SDK, sin archivo de configuración. Hay una [guía de conexión en dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) si quieres el paso a paso. La [guía completa para conectar Claude a tu correo](/blog/connect-claude-to-email) recorre después cada proveedor uno por uno.
 
-**Ideal para:** casi todo el mundo — usuarios no técnicos, gente con Gmail, Outlook e IMAP a la vez, cualquiera a quien le importe que el cuerpo no se almacene.
+**Ideal para:** casi todo el mundo (usuarios no técnicos, gente con Gmail, Outlook e IMAP a la vez, cualquiera a quien le importe que el cuerpo no se almacene).
 
-**Las contrapartidas, sin rodeos:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y no hay webhooks. Para reaccionar al correo nuevo, Claude tiene que sondear: llamar a \`email_read\` con \`action: list\` y \`unread: true\` de forma programada. Las notificaciones push no existen en MCP. Cualquier herramienta que afirme reaccionar al correo en tiempo real o está sondeando por debajo o está almacenando tu correo.
+**Contrapartidas:** es un servicio de terceros dentro de tu ruta de autenticación (puedes revocar desde el panel con un clic, pero confías en el modelo de seguridad del proveedor). Y MCP en sí no tiene push: para reaccionar al correo nuevo dentro de un chat, Claude tiene que sondear, llamando a \`email_read\` con \`action: list\` y \`unread: true\` de forma programada. Para tu propio código, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel, y MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo. Cualquier herramienta que afirme reaccionar en tiempo real sin una de esas dos vías o está sondeando por debajo o está almacenando tu correo.
 
-El plan Gratis cuesta $0 para siempre, con una bandeja conectada y un límite de ráfaga de 60 peticiones por minuto. Personal ($9/mes) conecta hasta tres bandejas y sube el límite de ráfaga; Pro ($15/mes) conecta hasta 10; Business añade miembros y roles. Aquí el coste rara vez es el factor decisivo.
+El plan Gratis es gratis para siempre, con una bandeja conectada. Personal añade bandejas y un límite de ráfaga más alto, Pro añade más todavía, y Business añade miembros y roles. Aquí el coste rara vez es el factor decisivo; las cifras actuales están en la [página de precios](/pricing).
 
 ## Opción 2: un servidor MCP propio / autoalojado
 
@@ -37,7 +37,7 @@ El mismo protocolo, tu infraestructura. Hay servidores MCP de Gmail de código a
 
 **Ideal para:** ingenieros que quieren control total, un entorno aislado o sujeto a normativa, o cualquiera que se niegue rotundamente a pasar credenciales por un tercero.
 
-**Las contrapartidas, sin rodeos:** te ocupas del registro de la app de OAuth, de la renovación de tokens, del cifrado en reposo y del tiempo de actividad. La mayoría de los repos públicos de MCP de Gmail solo admiten Gmail: añadir Outlook implica una integración aparte con Microsoft Graph, e IMAP es una tercera ruta de código. El servidor "gratis" te cuesta horas reales de ingeniería, y un almacén de credenciales a medio hacer es menos seguro que uno alojado bien hecho. Lo desglosé en detalle en [servidor MCP de Gmail alojado frente a autoalojado](/blog/hosted-vs-self-hosted-gmail-mcp-server); en resumen, autoaloja solo si el control compensa el mantenimiento.
+**Contrapartidas:** te ocupas del registro de la app de OAuth, de la renovación de tokens, del cifrado en reposo y del tiempo de actividad. La mayoría de los repos públicos de MCP de Gmail solo admiten Gmail: añadir Outlook implica una integración aparte con Microsoft Graph, e IMAP es una tercera ruta de código. El servidor "gratis" te cuesta horas reales de ingeniería, y un almacén de credenciales a medio hacer es menos seguro que uno alojado bien hecho. Lo desglosé en detalle en [servidor MCP de Gmail alojado frente a autoalojado](/blog/hosted-vs-self-hosted-gmail-mcp-server); en resumen, autoaloja solo si el control compensa el mantenimiento.
 
 ## Opción 3: copiar y pegar en el chat
 
@@ -45,7 +45,7 @@ La opción sin configuración. Seleccionas un correo, lo pegas en Claude, pides 
 
 **Ideal para:** algo puntual. Redactar una única respuesta delicada cuando no quieres montar nada.
 
-**Las contrapartidas, sin rodeos:** no escala más allá de un mensaje, Claude no puede ver el resto del hilo ni buscar en tu archivo, y la integración eres tú: cada copia, cada pegado y cada envío es manual. Eso no es "gestionar tu bandeja". Es usar Claude como asistente de redacción con una entrada con forma de correo.
+**Contrapartidas:** no escala más allá de un mensaje, Claude no puede ver el resto del hilo ni buscar en tu archivo, y la integración eres tú: cada copia, cada pegado y cada envío es manual. Eso no es "gestionar tu bandeja". Es usar Claude como asistente de redacción con una entrada con forma de correo.
 
 ## Opción 4: una extensión de navegador
 
@@ -53,7 +53,7 @@ Extensiones que inyectan una barra lateral de IA en la interfaz web de Gmail. Le
 
 **Ideal para:** gente que vive todo el día en el cliente web de Gmail y quiere borradores sin salir de la pestaña.
 
-**Las contrapartidas, sin rodeos:** están atadas a la interfaz web de un único proveedor, así que se rompen cuando Gmail reorganiza su DOM y no hacen nada por Outlook, iCloud o un cliente de escritorio. Muchas leen la página entera y la enrutan por su propio backend, que es exactamente la pregunta sobre almacenamiento que deberías estar haciéndote. Y están ligadas al navegador: Claude no puede actuar sobre tu correo desde un terminal, un script o claude.ai. Si te importa el lado de la seguridad, vale la pena leer [¿es seguro darle a un agente de IA acceso al correo?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de instalar nada que lea toda tu bandeja.
+**Contrapartidas:** están atadas a la interfaz web de un único proveedor, así que se rompen cuando Gmail reorganiza su DOM y no hacen nada por Outlook, iCloud o un cliente de escritorio. Muchas leen la página entera y la enrutan por su propio backend, que es exactamente la pregunta sobre almacenamiento que deberías estar haciéndote. Y están ligadas al navegador: Claude no puede actuar sobre tu correo desde un terminal, un script o claude.ai. Si te importa el lado de la seguridad, vale la pena leer [¿es seguro darle a un agente de IA acceso al correo?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de instalar nada que lea toda tu bandeja.
 
 ## Opción 5: integraciones nativas en el cliente
 
@@ -61,7 +61,7 @@ Algunos clientes de correo están empezando a incorporar funciones de IA integra
 
 **Ideal para:** si tu cliente concreto ya la tiene y solo usas ese cliente.
 
-**Las contrapartidas, sin rodeos:** estás atado a lo que el proveedor haya decidido admitir. Cambia de cliente o añade una segunda cuenta de correo en un proveedor distinto y la integración no te sigue. Las condiciones de tratamiento de datos son las que el proveedor haya redactado, y varían muchísimo. La cobertura en 2026 sigue siendo desigual.
+**Contrapartidas:** estás atado a lo que el proveedor haya decidido admitir. Cambia de cliente o añade una segunda cuenta de correo en un proveedor distinto y la integración no te sigue. Las condiciones de tratamiento de datos son las que el proveedor haya redactado, y varían muchísimo. La cobertura en 2026 sigue siendo desigual.
 
 ## Entonces, ¿cuál deberías usar de verdad?
 

@@ -64,7 +64,7 @@ Una interacción real tiene este aspecto. Pongamos que le pides a Claude que te 
 3. Para cualquier cosa que parezca importante, llama a \`email_read\` con \`action: "read"\` para extraer el cuerpo completo.
 4. Resume, y si has aprobado el acceso de envío, puede redactar una respuesta con \`email_compose\` (\`action: "reply"\`), que fija automáticamente las cabeceras de hilo para que la respuesta caiga en la conversación correcta.
 
-Una limitación honesta que conviene saber de entrada: esto es **sondeo, no notificaciones push**. No hay webhooks. El servidor no avisará a tu agente cuando llegue correo nuevo. Para reaccionar a correo nuevo, el agente tiene que comprobarlo periódicamente. Es una concesión deliberada, y define cómo construirías algo como un [autorrespondedor](/blog/build-email-auto-responder-mcp-agent) o una [rutina de clasificación de la bandeja](/blog/ai-agent-triage-summarize-inbox).
+Una limitación que conviene saber de entrada: MCP en sí es **sondeo, no notificaciones push**. El servidor responde cuando el agente pregunta y nunca le avisa, así que un agente dentro de un chat reacciona al correo nuevo comprobándolo periódicamente. (MCPEmails sí ofrece un webhook de correo nuevo para tu propio código, en Pro y Business.) Eso define cómo construirías algo como un [autorrespondedor](/blog/build-email-auto-responder-mcp-agent) o una [rutina de clasificación de la bandeja](/blog/ai-agent-triage-summarize-inbox).
 
 ## Servidor alojado frente a construir el tuyo
 

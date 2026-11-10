@@ -86,7 +86,7 @@ MCPEmails donne à ChatGPT des outils ciblés plutôt qu'un mot de passe ou une 
 - **Brouillons, dossiers et planification :** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` et \`schedule_list\`.
 - **Le reste :** \`contact_search\`, \`signature_get\`, \`signature_set\`, plus \`automation\` et \`automation_read\` pour les règles récurrentes.
 
-Une limite à anticiper : MCPEmails fonctionne par interrogation. Il n'y a ni webhooks ni événements initiés par le serveur, donc ChatGPT vérifie les nouveaux e-mails quand vous le lui demandez, pas au moment où un message arrive.
+Une limite à anticiper : dans une conversation, ChatGPT vérifie les nouveaux e-mails quand vous le lui demandez, pas au moment où un message arrive. Rien dans le connecteur ne réveille ChatGPT de lui-même. (Votre propre code, lui, peut être réveillé : les espaces de travail Pro et Business peuvent ajouter sous Clés API un webhook qui envoie un POST à votre URL quand un nouveau message arrive.)
 
 ## OpenAI Codex dans le terminal
 
@@ -124,7 +124,7 @@ Non. Codex est une surface en terminal : il utilise une clé API limitée dans u
 Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis supprimé. Seul l'identifiant chiffré du fournisseur est conservé. [Pourquoi ne jamais stocker les e-mails compte](/blog/why-email-never-stored-matters) explique le raisonnement.
 
 **Combien cela coûte-t-il ?**
-L'offre gratuite couvre une boîte connectée et 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce quota mensuel s'applique aux espaces de travail créés à partir du 2026-09-13 ; ceux créés avant en sont exemptés. Les forfaits payants ajoutent des boîtes et des actions e-mail illimitées : voir les [tarifs](/pricing).
+L'offre gratuite couvre une boîte connectée, avec les limites indiquées sur la page des [tarifs](/pricing). Les forfaits payants ajoutent des boîtes.
 
 ## Étape suivante
 

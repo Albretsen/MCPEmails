@@ -21,9 +21,9 @@ Three failures are worth designing against: **cross-client leakage**, where a to
 
 A workspace is the unit of separation. Inboxes, members, API keys, and activity live inside one, and the boundary is enforced in the database with row-level security rather than by careful filtering in application code. A key issued in the Acme workspace cannot read a Bolt mailbox, whatever the prompt says.
 
-More than one workspace is a **Business** feature ($39/month, $374.40/year), which also brings unlimited members with roles at no extra cost, and 10 mailboxes included with $3 a month for each one after that. The subscription attaches to your account rather than to one workspace, so one Business subscription covers every client workspace you create. Name each after the client, connect only that client's inboxes inside it, and switch between them in the dashboard sidebar.
+More than one workspace is a **Business** feature, which also brings unlimited members with roles at no extra cost, and a block of included mailboxes with a per-mailbox price for each one after that. The subscription attaches to your account rather than to one workspace, so one Business subscription covers every client workspace you create. Name each after the client, connect only that client's inboxes inside it, and switch between them in the dashboard sidebar.
 
-Below Business the plans are one person in one workspace: **Pro** ($15/month, $144/year) connects up to 10 inboxes, **Personal** ($9/month) three, **Free** one. Cheaper, and every mailbox shares one blast radius. See [pricing](/pricing) and the [provider matrix](/docs/providers).
+Below Business the plans are one person in one workspace: **Pro** for someone running a business across several inboxes, **Personal** for a few, **Free** for one. Cheaper, and every mailbox shares one blast radius. Current prices and inbox counts are on [pricing](/pricing), and the [provider matrix](/docs/providers) covers each provider.
 
 ## Members and roles
 

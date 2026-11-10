@@ -20,7 +20,7 @@ Nunca pegas el identificador de un buzón en un prompt. El agente llama a \`inbo
 
 Dos detalles que conviene conocer:
 
-- **El descubrimiento es gratis.** \`inbox_list\` es la única herramienta que no consume la asignación mensual de acciones del plan Gratis, así que un agente puede reorientarse sin coste alguno.
+- **El descubrimiento es gratis.** \`inbox_list\` no se contabiliza nunca, así que un agente puede reorientarse sin coste alguno.
 - **Los selectores contradictorios se rechazan, no se adivinan.** Una llamada que lleva un \`inbox_id\` de un buzón y una dirección \`inbox\` de otro distinto se rechaza, y el error nombra los dos. La causa habitual es un identificador antiguo arrastrado desde antes en la conversación. Dile al agente que lo reintente solo con la dirección.
 
 ## Limita una solicitud a un solo buzón
@@ -37,7 +37,7 @@ Esta es la parte que la gente entiende mal: **una llamada llega a un solo buzón
 
 - Deja que llame primero a \`inbox_list\`, o dile cuántas cuentas tienes. Si supone que hay una, informará con total seguridad sobre una sola.
 - Pide una respuesta combinada («una sola lista, etiquetada con la cuenta de la que viene»), o recibirás tres informes separados.
-- El volumen crece con el número de buzones. Un triaje de tres buzones son al menos tres acciones facturables, no una.
+- El volumen crece con el número de buzones. Un triaje de tres buzones son al menos tres llamadas, no una.
 
 ## Nombres e identidad de remitente
 
@@ -90,12 +90,12 @@ Las configuraciones mixtas son lo normal, y los proveedores no se ponen de acuer
 
 Los buzones conectados son lo que marca el precio de los planes:
 
-- **Gratis, $0.** Un buzón conectado. 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Esa asignación mensual se aplica a los espacios de trabajo creados el 2026-09-13 o después; los espacios de trabajo creados antes están exentos.
-- **Personal, $9 al mes o $86,40 al año.** Tres buzones conectados, acciones de correo ilimitadas, el doble de límite de ráfaga y soporte prioritario por correo.
-- **Pro, $15 al mes o $144 al año.** Hasta 10 buzones conectados, cinco veces el límite de ráfaga e historial de analíticas más largo.
-- **Business, $39 al mes o $374,40 al año.** 10 buzones incluidos y $3 al mes por cada uno extra, miembros ilimitados con roles sin coste adicional, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio.
+- **Gratis.** Un buzón conectado.
+- **Personal.** Unos cuantos buzones para una sola persona, un límite de ráfaga más alto y soporte prioritario por correo.
+- **Pro.** Más buzones para una persona que lleva un negocio, un límite de ráfaga aún mayor, un historial de analíticas más largo y webhooks de correo nuevo.
+- **Business.** Un bloque de buzones incluidos con un precio por buzón a partir de ahí, miembros ilimitados con roles sin coste adicional, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.
 
-Una rutina entre buzones cuesta una acción por buzón, así que tu número de buzones marca el volumen tanto como tus hábitos. Detalles en [precios](/pricing).
+Una rutina entre buzones es una llamada por buzón, así que tu número de buzones marca el volumen tanto como tus hábitos. Los precios y el número de buzones actuales están en [precios](/pricing).
 
 ## Preguntas frecuentes
 

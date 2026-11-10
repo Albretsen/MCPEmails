@@ -2,7 +2,7 @@ const translation = {
   title: 'AI 邮箱访问该用 OAuth 还是 API 密钥？该怎么选',
   description: 'AI 邮箱访问选 OAuth 还是 API 密钥：claude.ai、Claude Desktop、Cursor 用 OAuth；Cline、JetBrains 和脚本用受限 API 密钥。',
   coverAlt: '连接 AI 智能体到邮箱时的 OAuth 与 API 密钥对比 — MCPEmails',
-  content: `当你通过 MCPEmails 把 AI 智能体连接到邮箱时，有两种认证方式可选：OAuth 或 API 密钥。简短的答案是：如果你的客户端支持 OAuth（claude.ai、Claude Desktop、Cursor），就用 OAuth；如果不支持（Cline、JetBrains、脚本、cURL），就用受限的 API 密钥。两者访问的是同一个端点，暴露的是同一套工具。区别在于由谁来管理这个密钥，以及你能多容易地随时断开它。
+  content: `当你通过 MCPEmails 把 AI 智能体连接到邮箱时，有两种认证方式可选：OAuth 或 API 密钥。如果你的客户端支持 OAuth（claude.ai、Claude Desktop、Cursor），就用 OAuth；如果不支持（Cline、JetBrains、脚本、cURL），就用受限的 API 密钥。两者访问的是同一个端点，暴露的是同一套工具。区别在于由谁来管理这个密钥，以及你能多容易地随时断开它。
 
 这并不是一个用安全换便利、必须牺牲其中一方的权衡。两条路径都被严格限定在 \`read:email\`、\`send:email\` 或两者之内，而且都能在仪表盘上一键撤销。真正的问题是哪一种更适合你实际在用的客户端。想了解这一切如何连成一体的全貌，可以先看支柱指南：[如何让你的 AI 智能体访问邮箱](/blog/how-to-give-your-ai-agent-email-access)。
 
@@ -25,7 +25,7 @@ OAuth 是免密钥的那条路。不是由你生成一个凭据再把它粘贴�
 - **Authorization Code + PKCE**（RFC 7636），因此从不会传输任何 client secret。PKCE 正是保护移动端和单页应用登录的同一套机制。
 - **Dynamic Client Registration**（RFC 7591），因此客户端会自行注册，你这边无需任何手动设置。
 - **令牌会自动刷新**，在受支持的客户端内部完成。你不用盯着过期时间操心。
-- **权限范围就是你在同意页上批准的那些**：\`read:email\`、\`send:email\`，或两者。
+- **权限范围就是你在同意页上批准的那些**：只读、标准、完全访问，或一组自定义的单项权限。
 
 实际的好处是：令牌永远不会以一个明文字符串的形式出现，也就不会被你意外提交、记录到日志，或粘贴进错误的对话里。当你想切断访问时，在仪表盘里撤销这个连接，智能体立刻就被挡在门外。至于这种撤销为什么真的重要——邮箱本身始终保持原样，因为在我们这边[邮件从不被存储](/blog/why-email-never-stored-matters)。
 
@@ -36,7 +36,7 @@ OAuth 是免密钥的那条路。不是由你生成一个凭据再把它粘贴�
 你在 **Dashboard → API Keys** 里创建一个：
 
 1. 给密钥起一个日后你能认出来的名字（\`cline-laptop\`、\`triage-cron\`）。
-2. 选择它的权限范围：\`read:email\`、\`send:email\`，或两者。
+2. 选择它的权限范围：从 \`read:email\` 起步，只有必须发送时才加上 \`send:email\`，文件夹、删除、草稿、联系人、定时和自动化这些权限也只在任务需要时才加。
 3. 复制它。它只会显示**一次**，之后再也不显示。如果丢了，就重新创建一个。
 
 密钥长得像 \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`，你在每次请求时都要带上它：

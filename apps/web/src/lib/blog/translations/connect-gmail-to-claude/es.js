@@ -77,7 +77,7 @@ Una vez conectado, Claude trabaja con un pequeño conjunto de herramientas conso
 
 Claude también tiene un conector de Gmail propio, y también puede enviar. [¿Puede Claude leer tu correo y enviar emails?](/blog/can-claude-read-my-email) lo compara con MCPEmails, buzón por buzón.
 
-Conviene saberlo de entrada: MCPEmails funciona por sondeo. No hay webhooks push, así que Claude reacciona al correo nuevo cuando le pides que lo revise, no en el instante en que llega un mensaje. Para casi cualquier flujo de trabajo de asistente, ese es exactamente el modelo adecuado.
+Conviene saberlo de entrada: Claude reacciona al correo nuevo cuando le pides que lo revise, no en el instante en que llega un mensaje. Para casi cualquier flujo de trabajo de asistente, ese es exactamente el modelo adecuado. (Tu propio código es distinto: los espacios de trabajo Pro y Business pueden añadir un webhook en Claves de API que hace un POST a tu URL cuando llega correo nuevo.)
 
 ## ¿Es seguro conectar Gmail con Claude?
 
@@ -108,7 +108,7 @@ No. Pegas una contraseña de aplicación, una credencial aparte que genera Googl
 
 ## Conclusión
 
-Eso es todo: una contraseña de aplicación de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El plan Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Personal cuesta $9/mes y conecta hasta tres; Pro conecta hasta 10 (consulta [precios](/pricing)).
+Eso es todo: una contraseña de aplicación de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El plan Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; los planes de pago añaden más (consulta [precios](/pricing)).
 
 ¿Listo? [Conecta tu Gmail gratis](/signup), pega el endpoint en Claude y pídele que te resuma el correo no leído.`,
 };

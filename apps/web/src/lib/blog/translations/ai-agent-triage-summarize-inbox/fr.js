@@ -2,8 +2,8 @@ const translation = {
   title: 'Comment faire trier et résumer votre boîte de réception par votre agent IA',
   description:
     'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
-  coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP — MCPEmails',
-  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` — avec \`action: list\` et \`unread: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants — puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
+  coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP, par MCPEmails',
+  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` (avec \`action: list\` et \`unread: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants), puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
 
 Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble une bonne sortie, et comment exécuter la même boucle de façon planifiée pour que votre tri matinal soit fait avant même que vous ne vous installiez. Il suppose que votre agent a déjà accès à votre messagerie via [MCPEmails](/blog/how-to-give-your-ai-agent-email-access). Si vous n’avez pas encore connecté de boîte, le [guide de connexion en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) vous y amène d’abord.
 
@@ -11,11 +11,11 @@ Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble 
 
 Chaque session de tri suit les mêmes cinq étapes. Votre agent détermine l’ordre tout seul une fois que vous décrivez l’objectif, mais il est utile de savoir ce qui se passe sous le capot :
 
-1. \`inbox_list\` — découvrir les boîtes connectées et leurs UUID \`inbox_id\`. L’agent ne code jamais un UUID en dur ; il en cherche un ici.
-2. \`email_read\` avec \`action: list\` et \`unread: true\` — récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
-3. \`email_read\` avec \`action: read\` — ouvrir le corps complet des quelques messages qui méritent une lecture détaillée.
-4. Résumer et prioriser — du pur raisonnement, aucun appel d’outil. Le modèle regroupe, classe et explique.
-5. \`email_compose\` avec \`action: reply\` (facultatif) — rédiger ou envoyer pour ceux qui appellent une réponse.
+1. \`inbox_list\` : découvrir les boîtes connectées et leurs UUID \`inbox_id\`. L’agent ne code jamais un UUID en dur ; il en cherche un ici.
+2. \`email_read\` avec \`action: list\` et \`unread: true\` : récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
+3. \`email_read\` avec \`action: read\` : ouvrir le corps complet des quelques messages qui méritent une lecture détaillée.
+4. Résumer et prioriser : du pur raisonnement, aucun appel d’outil. Le modèle regroupe, classe et explique.
+5. \`email_compose\` avec \`action: reply\` (facultatif) : rédiger ou envoyer pour ceux qui appellent une réponse.
 
 Les étapes 1 à 4 sont en lecture seule. Si vous vous êtes connecté avec [une autorisation OAuth ou une clé API](/blog/oauth-vs-api-keys-ai-email-access) limitée au périmètre \`read:email\`, l’agent est physiquement incapable d’envoyer quoi que ce soit, ce qui est exactement ce que vous voulez pour un résumé automatisé que vous parcourrez plus tard.
 
@@ -23,7 +23,7 @@ Les étapes 1 à 4 sont en lecture seule. Si vous vous êtes connecté avec [une
 
 Commencez simple. C’est celui que je lance la plupart des jours. Collez-le dans Claude (ou n’importe quel client MCP connecté à MCPEmails) et laissez-le travailler :
 
-> Regarde ma boîte de réception principale. Récupère tout ce qui n’est pas lu, puis donne-moi un résumé réparti en trois catégories : à répondre aujourd’hui, pour info / peut attendre, et probablement du bruit. Pour chaque élément des deux premières catégories, donne-moi une ligne : de qui ça vient et ce qu’ils veulent. N’ouvre rien dont je n’ai pas besoin — survole d’abord les objets et les expéditeurs, ne lis le corps que quand l’objet est ambigu.
+> Regarde ma boîte de réception principale. Récupère tout ce qui n’est pas lu, puis donne-moi un résumé réparti en trois catégories : à répondre aujourd’hui, pour info / peut attendre, et probablement du bruit. Pour chaque élément des deux premières catégories, donne-moi une ligne : de qui ça vient et ce qu’ils veulent. N’ouvre rien dont je n’ai pas besoin : survole d’abord les objets et les expéditeurs, ne lis le corps que quand l’objet est ambigu.
 
 Remarquez ce que fait ce prompt. Il dit à l’agent de s’appuyer sur les métadonnées de \`email_read\` (action list) (expéditeur, objet, extrait) et de n’appeler \`email_read\` avec \`action: read\` que parcimonieusement. Cela garde la session rapide et bien en dessous des limites de débit : chaque clé API reçoit des fenêtres dimensionnées selon le plafond par minute de votre forfait, et plusieurs clés partagent ce plafond (voir [tarifs](/pricing)). Une file de 40 messages non lus triée ainsi représente peut-être une douzaine d’appels d’outils, pas quarante.
 
@@ -49,45 +49,45 @@ C’est réellement utile, d’une manière qu’une boîte brute ne l’est pas
 
 ## Prompt 2 : tri en profondeur avec priorités et raisonnement
 
-Quand le nombre de non-lus est moche — un lundi après un long week-end — je veux plus que des catégories. Je veux que l’agent défende son classement pour que je puisse lui faire confiance :
+Quand le nombre de non-lus est moche, un lundi après un long week-end par exemple, je veux plus que des catégories. Je veux que l’agent défende son classement pour que je puisse lui faire confiance :
 
 > Ma boîte est un chantier. Trie tout ce qui n’est pas lu des 4 derniers jours. Classe les 8 premiers selon leur urgence réelle, pas selon le volume sonore de l’expéditeur. Pour chacun, indique-moi l’échéance s’il y en a une, qui est bloqué, et ton raisonnement en une phrase pour ce rang. Lis le corps complet de tout ce qui figure dans ton top 8 pour ne pas avoir à deviner.
 
 La phrase « pas selon le volume sonore de l’expéditeur » a son importance. Sans elle, les agents accordent trop de poids aux objets en MAJUSCULES et aux « URGENT » des systèmes automatisés. Avec elle, vous obtenez du jugement :
 
 \`\`\`text
-1. Priya — blocked on staging creds since Thu. A teammate can't ship
+1. Priya: blocked on staging creds since Thu. A teammate can't ship
    until you respond. No formal deadline but it's costing time now.
-2. Stripe dispute — hard deadline in 5 days, money attached, but you
+2. Stripe dispute: hard deadline in 5 days, money attached, but you
    have buffer so it's #2 not #1.
-3. Dana (Acme) — contract sign-off by Fri. Important, not yet urgent.
+3. Dana (Acme): contract sign-off by Fri. Important, not yet urgent.
 ...
 \`\`\`
 
-Pour ce prompt, l’agent appellera \`email_read\` avec \`action: read\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCPEmails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes — un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
+Pour ce prompt, l’agent appellera \`email_read\` avec \`action: read\` huit fois, une fois par élément du top, parce que vous lui avez demandé d’arrêter de deviner. C’est le bon compromis : quelques appels supplémentaires pour des classements sur lesquels vous pouvez agir. Si l’agent atteint effectivement une limite en cours d’exécution, MCPEmails renvoie une erreur réessayable avec une valeur \`retry_after\` en secondes ; un client bien élevé attend ce délai et reprend plutôt que de marteler le serveur.
 
 ## Prompt 3 : un tri qui se termine par une réponse
 
 Le tri prend plus de valeur quand il boucle les choses. Une fois que vous faites confiance aux résumés, laissez l’agent rédiger. Je garde un humain dans la boucle pour les envois, donc mon prompt demande des brouillons, pas le pilote automatique :
 
-> Même tri que d’habitude. Pour tout ce qui est dans « à répondre aujourd’hui » et que je peux régler en deux phrases, rédige la réponse et montre-la-moi. N’envoie pas encore — je dirai « envoie 1 et 3 » ou je les modifierai. Reprends mon ton habituel : court, direct, sans remplissage corporate.
+> Même tri que d’habitude. Pour tout ce qui est dans « à répondre aujourd’hui » et que je peux régler en deux phrases, rédige la réponse et montre-la-moi. N’envoie pas encore : je dirai « envoie 1 et 3 » ou je les modifierai. Reprends mon ton habituel : court, direct, sans remplissage corporate.
 
 L’agent exécute la boucle en lecture seule, puis écrit les brouillons en ligne. Quand vous dites « envoie 1 et 3 », il appelle \`email_compose\` avec \`action: reply\` pour ces deux-là. Les réponses s’insèrent automatiquement dans le fil : MCPEmails définit pour vous les en-têtes \`In-Reply-To\` et \`References\`, de sorte que votre réponse atterrit dans la bonne conversation au lieu d’en démarrer une nouvelle. Le courrier part via votre propre fournisseur (le SMTP de Gmail, Microsoft Graph ou le SMTP de votre fournisseur), de sorte que la délivrabilité et la réputation de votre domaine restent les vôtres. Rien n’est relayé depuis un quelconque domaine d’envoi partagé.
 
-Si vous voulez aller plus loin et vous retirer complètement de la boucle, c’est une autre forme d’automatisation — voyez [construire un répondeur automatique avec un agent MCP](/blog/build-email-auto-responder-mcp-agent) pour les garde-fous que je mettrais en place avant de laisser un agent envoyer sans surveillance.
+Si vous voulez aller plus loin et vous retirer complètement de la boucle, c’est une autre forme d’automatisation : voyez [construire un répondeur automatique avec un agent MCP](/blog/build-email-auto-responder-mcp-agent) pour les garde-fous que je mettrais en place avant de laisser un agent envoyer sans surveillance.
 
 ## Exécuter le tri de façon planifiée
 
-Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCPEmails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread: true\` sur une minuterie.
+Une limite à connaître : MCP fonctionne en **interrogation, pas en notification poussée.** Les outils répondent quand votre agent les appelle, et un agent dans une conversation n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread: true\` sur une minuterie, ou votre propre code doit être réveillé par un webhook de nouveau message, que les espaces de travail Pro et Business peuvent ajouter sous Clés API dans le tableau de bord.
 
-En pratique, cela signifie l’une de deux configurations :
+En pratique, cela signifie l’une de deux configurations pour un agent dans une conversation :
 
-- Une tâche planifiée — une entrée cron, une tâche planifiée dans votre plateforme d’agent, ou la planification propre à Claude si votre client la prend en charge — qui déclenche le prompt de résumé du matin à 8 h, puis de nouveau après le déjeuner. Deux fois par jour couvre la plupart des gens.
+- Une tâche planifiée (une entrée cron, une tâche planifiée dans votre plateforme d’agent, ou la planification propre à Claude si votre client la prend en charge) qui déclenche le prompt de résumé du matin à 8 h, puis de nouveau après le déjeuner. Deux fois par jour couvre la plupart des gens.
 - Une boucle d’agent toujours active qui interroge toutes les quelques minutes pendant les heures de travail. C’est excessif pour une boîte personnelle et cela consomme du débit pour peu de gain. Réservez-le aux boîtes réellement sensibles au temps comme support@ ou alerts@.
 
 J’utilise la version par tâche planifiée. Deux interrogations par jour, chacune un unique prompt de résumé du matin sur ma boîte principale. Cela coûte une poignée d’appels d’outils et dépose un récapitulatif net devant moi avant même que j’ouvre le client de messagerie. Pour la plupart des gens, ça l’emporte sur une boucle en temps réel sur tous les axes qui comptent.
 
-Quelle que soit la cadence que vous choisissez, gardez l’interrogation honnête : interroger plus souvent ne veut pas dire plus vite, ça veut juste dire plus de requêtes contre le même plafond de 60 à 1 000 par minute. Adaptez l’intervalle à la vitesse réelle à laquelle la boîte bouge.
+Quelle que soit la cadence que vous choisissez, gardez l’interrogation honnête : interroger plus souvent ne veut pas dire plus vite, ça veut juste dire plus de requêtes contre le même plafond par minute fixé par votre forfait. Adaptez l’intervalle à la vitesse réelle à laquelle la boîte bouge.
 
 ## Quelques détails qui rendent le tri nettement meilleur
 
@@ -96,7 +96,7 @@ Quelle que soit la cadence que vous choisissez, gardez l’interrogation honnêt
 - **Plafonnez les lectures.** « N’ouvre le corps que quand l’objet est ambigu » ou « lis le top 8 » garde les sessions rapides et bon marché. Un « lis tout » sans limite est lent et rarement meilleur.
 - **Restez en lecture seule jusqu’à ce que vous lui fassiez confiance.** Tournez avec un périmètre \`read:email\` pendant une semaine. N’ajoutez \`send:email\` qu’une fois que les brouillons sont systématiquement bons.
 
-Si le tri est le premier workflow que vous essayez, c’est un bon point de départ — c’est en lecture seule, le bénéfice est immédiat, et il construit la confiance que vous voudrez avoir avant de céder l’accès en envoi. Pour plus d’idées une fois à l’aise, voici [sept choses qu’un agent IA peut faire avec un accès à la boîte de réception](/blog/7-things-ai-agent-can-do-with-inbox-access).
+Si le tri est le premier workflow que vous essayez, c’est un bon point de départ : c’est en lecture seule, le bénéfice est immédiat, et il construit la confiance que vous voudrez avoir avant de céder l’accès en envoi. Pour plus d’idées une fois à l’aise, voici [sept choses qu’un agent IA peut faire avec un accès à la boîte de réception](/blog/7-things-ai-agent-can-do-with-inbox-access).
 
 ## Essayez sur votre propre boîte
 

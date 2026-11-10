@@ -83,11 +83,11 @@ Activez **Vérifier avant d'envoyer** (Review before sending) sur n'importe quel
 ## Combien de boîtes chaque offre connecte
 
 - **Offre gratuite :** une boîte.
-- **Personal :** trois boîtes.
-- **Pro :** jusqu'à 10 boîtes, avec un seul identifiant.
-- **Business :** 10 boîtes incluses et 3 $ par mois pour chaque boîte en plus, et quand une deuxième personne a besoin de son propre identifiant.
+- **Personal :** quelques boîtes, pour une seule personne.
+- **Pro :** plus de boîtes, toujours avec un seul identifiant.
+- **Business :** un lot de boîtes incluses avec un tarif par boîte au-delà, et quand une deuxième personne a besoin de son propre identifiant.
 
-Une entreprise avec info@, ventes@ et factures@ plus votre propre adresse, cela fait quatre boîtes, donc Pro. Les prix actuels figurent sur la [page des tarifs](/pricing), et [MCPEmails pour les entreprises](/for/business) montre comment une seule personne gère toutes les boîtes de l'entreprise depuis un seul agent.
+Une entreprise avec info@, ventes@ et factures@ plus votre propre adresse, cela fait quatre boîtes, ce qui vous place sur Pro. Le nombre de boîtes et les prix actuels figurent sur la [page des tarifs](/pricing), et [MCPEmails pour les entreprises](/for/business) montre comment une seule personne gère toutes les boîtes de l'entreprise depuis un seul agent.
 
 ## FAQ
 

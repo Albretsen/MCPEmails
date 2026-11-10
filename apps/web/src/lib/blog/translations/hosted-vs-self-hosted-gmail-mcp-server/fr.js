@@ -1,11 +1,11 @@
 const translation = {
   title: 'Serveur MCP Gmail hébergé ou auto-hébergé : avantages, inconvénients et coûts',
   description:
-    'Serveur MCP Gmail hébergé ou auto-hébergé, comparés en toute franchise : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
-  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé — MCPEmails',
+    'Serveur MCP Gmail hébergé ou auto-hébergé, comparés : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
+  coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé, par MCPEmails',
   content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCPEmails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
 
-Voici le bilan honnête. J'ai construit un serveur hébergé, j'ai donc un parti pris, mais je vais vous dire exactement où l'auto-hébergement l'emporte et quel profil de personne devrait le choisir. Si vous voulez d'abord le modèle au niveau des verbes, le [guide complet pour donner à un agent IA l'accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est l'article pilier à lire en parallèle.
+Voici le bilan. J'ai construit un serveur hébergé, j'ai donc un parti pris, mais je vais vous dire exactement où l'auto-hébergement l'emporte et quel profil de personne devrait le choisir. Si vous voulez d'abord le modèle au niveau des verbes, le [guide complet pour donner à un agent IA l'accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est l'article pilier à lire en parallèle.
 
 ## Ce que « serveur MCP Gmail auto-hébergé » veut vraiment dire
 
@@ -23,7 +23,7 @@ Le code tourne sur votre matériel. Aucun tiers ne se place jamais entre votre a
 
 ### C'est gratuit en dollars
 
-Pas d'abonnement. L'API Gmail elle-même est gratuite, quel que soit le volume qu'un agent atteindra. Si votre temps vaut peu face à 9 $/mois (ou 15 $/mois dès qu'il vous faut plus de trois boîtes), le calcul penche pour la solution maison.
+Pas d'abonnement. L'API Gmail elle-même est gratuite, quel que soit le volume qu'un agent atteindra. Si votre temps vaut peu face à un abonnement Personal ou Pro, le calcul penche pour la solution maison.
 
 ### Vous pouvez l'adapter à tout
 
@@ -35,7 +35,7 @@ Maintenant, la partie que les READMEs des dépôts passent sous silence.
 
 ### Vous gérez la configuration OAuth
 
-Un projet Google Cloud, un écran de consentement OAuth, les bons scopes, et — si vous voulez que quelqu'un d'autre que vous l'utilise — le processus de vérification d'application de Google, qui est un véritable examen avec un véritable délai de traitement. Trompez-vous sur un scope et vous voilà de retour dans la console. C'est l'étape qui engloutit un après-midi la première fois, et une bouchée plus petite chaque fois qu'un jeton expire ou que Google change une règle.
+Un projet Google Cloud, un écran de consentement OAuth, les bons scopes et, si vous voulez que quelqu'un d'autre que vous l'utilise, le processus de vérification d'application de Google, qui est un véritable examen avec un véritable délai de traitement. Trompez-vous sur un scope et vous voilà de retour dans la console. C'est l'étape qui engloutit un après-midi la première fois, et une bouchée plus petite chaque fois qu'un jeton expire ou que Google change une règle.
 
 ### Vous gérez le stockage et le chiffrement des identifiants
 
@@ -45,7 +45,7 @@ Le faire correctement, c'est chiffrer le jeton au repos, garder la clé de chiff
 
 ### Vous gérez l'hébergement et la disponibilité
 
-Un serveur localhost meurt quand votre ordinateur portable se met en veille. Si vous voulez que l'agent trie le courrier à 6 h du matin ou tourne sans surveillance, il vous faut un processus toujours actif — un VPS, un conteneur, une politique de redémarrage, du TLS, de la supervision. C'est du travail d'ops, et ça ne cesse jamais d'être du travail d'ops.
+Un serveur localhost meurt quand votre ordinateur portable se met en veille. Si vous voulez que l'agent trie le courrier à 6 h du matin ou tourne sans surveillance, il vous faut un processus toujours actif : un VPS, un conteneur, une politique de redémarrage, du TLS, de la supervision. C'est du travail d'ops, et ça ne cesse jamais d'être du travail d'ops.
 
 ### Vous gérez les mises à jour et les correctifs de sécurité
 
@@ -55,7 +55,7 @@ MCP est jeune. La spécification évolue, Google fait tourner ses exigences, et 
 
 Le dépôt que vous avez choisi gère Gmail. Le jour où vous ajoutez un compte Outlook ou une adresse iCloud, vous intégrez Microsoft Graph ou câblez vous-même IMAP et SMTP, avec un deuxième modèle d'authentification et un deuxième lot de cas particuliers. La plupart des serveurs DIY restent Gmail uniquement parce que le deuxième fournisseur est un projet à part entière.
 
-## L'argument de l'hébergé : MCPEmails, en toute franchise
+## L'argument de l'hébergé : MCPEmails
 
 Un serveur MCP hébergé inverse le compromis. Vous renoncez à faire tourner le code ; vous récupérez tout le temps que la liste ci-dessus vous aurait coûté.
 
@@ -69,19 +69,19 @@ L'identifiant de la boîte (le mot de passe d'application ou le jeton OAuth) est
 
 ### Le multi-fournisseur est offert
 
-Le même point de terminaison et les mêmes outils principaux — \`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` pour les drapeaux et les dossiers, plus \`folder\`, \`draft\`, \`schedule\` et \`contact_search\` — fonctionnent avec Gmail, Outlook, iCloud, Fastmail et n'importe quelle boîte IMAP. Ajoutez un compte Outlook la semaine prochaine et rien ne change pour votre agent.
+Le même point de terminaison et les mêmes outils principaux (\`inbox_list\`, \`email_read\`, \`email_compose\`, \`email_organize\` pour les drapeaux et les dossiers, plus \`folder\`, \`draft\`, \`schedule\` et \`contact_search\`) fonctionnent avec Gmail, Outlook, iCloud, Fastmail et n'importe quelle boîte IMAP. Ajoutez un compte Outlook la semaine prochaine et rien ne change pour votre agent.
 
 ### L'envoi reste sur votre fournisseur
 
 MCPEmails ne relaie jamais le courrier depuis son propre domaine. \`email_compose\` (avec l'action \`send\`) part via votre fournisseur (Gmail ou un autre fournisseur via SMTP, ou Microsoft Graph pour Outlook), de sorte que la réputation de votre domaine et votre délivrabilité restent les vôtres. C'est la même propriété que vous obtiendriez en auto-hébergeant, sans avoir à la construire.
 
-### Le coût honnête : vous faites confiance à un prestataire
+### Le vrai coût : vous faites confiance à un prestataire
 
 C'est le vrai compromis, et je ne vais pas l'enjoliver. Avec un serveur hébergé, votre jeton chiffré se trouve dans la base de données de quelqu'un d'autre et les appels de votre agent transitent par le code de quelqu'un d'autre. Vous faites confiance au fait que le chiffrement est réel, que les contrôles d'accès tiennent, et que l'entreprise ne fait pas une bêtise. Pour la plupart des gens, cette confiance est bien placée et fait gagner énormément de temps. Si votre modèle de menace l'interdit catégoriquement, auto-hébergez. C'est la raison légitime de le faire.
 
 ## Ce que ça coûte en dollars
 
-MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit tourne à 60 requêtes/minute avec 30 jours d'analytics, le centre d'aide et le support par e-mail. [Personal est à 9 $/mois](/pricing) (jusqu'à trois boîtes connectées, 120 req/min, 90 jours d'analytics, support prioritaire par e-mail), Pro est à 15 $/mois (jusqu'à 10 boîtes connectées, 300 req/min, 2 ans d'analytics), et Business est à 39 $/mois (10 boîtes incluses plus 3 $/mois par boîte en plus, membres avec rôles, un espace de travail distinct par client). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Soyez honnête sur les heures.
+MCPEmails est gratuit pour démarrer : une boîte connectée, des clés API illimitées, sans carte bancaire. L'offre Gratuit comprend des analytics d'utilisation, le centre d'aide et le support par e-mail. [Personal](/pricing) ajoute des boîtes, une limite de pointe plus élevée, un historique d'analytics plus long et le support prioritaire par e-mail ; Pro ajoute encore des boîtes, une limite de pointe plus élevée encore, des années d'historique d'analytics et les webhooks pour les nouveaux messages ; Business inclut un lot de boîtes avec un tarif par boîte au-delà, des membres avec rôles et un espace de travail distinct par client. Les tarifs à jour sont sur la [page des tarifs](/pricing). L'auto-hébergement, c'est 0 $ d'abonnement plus le coût de votre VPS et de vos heures. Comptez les heures correctement.
 
 ## Alors, lequel choisir ?
 
@@ -89,7 +89,7 @@ Choisissez **l'auto-hébergé** si vous êtes un ingénieur qui aime la plomberi
 
 Choisissez **l'hébergé** si vous voulez un point de terminaison fonctionnel dès aujourd'hui, que vous préférez ne pas être d'astreinte pour votre propre infrastructure e-mail, que vous ajouterez probablement Outlook, iCloud ou une boîte IMAP à un moment donné, et que vous voulez que le chiffrement des identifiants soit pris en charge par des gens qui le maintiennent à plein temps. C'est le cas de la plupart des gens, y compris la plupart des ingénieurs qui pourraient le construire mais ont mieux à faire.
 
-Si vous hésitez encore sur la manière dont un agent devrait atteindre votre boîte mail, [les meilleures façons de laisser Claude gérer votre boîte de réception](/blog/best-ways-to-let-claude-manage-your-inbox) compare les options plus larges. Quand vous êtes prêt, [commencez gratuitement](/signup) ou parcourez [la documentation](/docs) — connecter une boîte Gmail prend vraiment environ une minute.`,
+Si vous hésitez encore sur la manière dont un agent devrait atteindre votre boîte mail, [les meilleures façons de laisser Claude gérer votre boîte de réception](/blog/best-ways-to-let-claude-manage-your-inbox) compare les options plus larges. Quand vous êtes prêt, [commencez gratuitement](/signup) ou parcourez [la documentation](/docs) : connecter une boîte Gmail prend vraiment environ une minute.`,
 };
 
 export default translation;

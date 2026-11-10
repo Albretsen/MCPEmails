@@ -84,7 +84,7 @@ MCPEmails 交给 ChatGPT 的是一组聚焦的邮件工具，而不是一个密�
 - **草稿、文件夹与定时：** \`draft\`、\`draft_list\`、\`folder\`、\`folder_list\`、\`schedule\` 和 \`schedule_list\`。
 - **其余：** \`contact_search\`、\`signature_get\`、\`signature_set\`，以及用于周期性规则的 \`automation\` 和 \`automation_read\`。
 
-有一个限制需要提前考虑：MCPEmails 基于轮询。没有 webhook，也没有服务器主动发起的事件，所以 ChatGPT 只在你要求时才去查看新邮件，而不是邮件一到就知道。
+有一个限制需要提前考虑：在聊天里，ChatGPT 只在你要求时才去查看新邮件，而不是邮件一到就知道。连接器里没有任何东西会自行唤醒 ChatGPT。（你自己的代码可以被唤醒：Pro 和 Business 工作区可以在 API 密钥页面添加一个 webhook，新邮件到达时它会向你的 URL 发送 POST。）
 
 ## 终端里的 OpenAI Codex
 
@@ -122,7 +122,7 @@ Codex 与 ChatGPT 连接器是不同的平台，浏览器 OAuth 流程在这里�
 不会。每封邮件都是为发起该请求的那次调用从你的服务商实时获取，随后即被丢弃。只有加密后的服务商凭据会被保留。[为什么"不存储邮件"很重要](/blog/why-email-never-stored-matters)解释了背后的理由。
 
 **价格是多少？**
-免费方案包含一个已连接收件箱，以及每个 UTC 自然月 150 次计费邮件操作，前 3 天不计入。该月度额度适用于 2026 年 9 月 13 日及之后创建的工作区，更早创建的工作区不受此限制。Personal 每月 $9，可连接 3 个收件箱，邮件操作不限量；Pro 每月 $15，最多 10 个收件箱。详见[价格](/pricing)。
+免费方案包含一个已连接收件箱，限额见[价格页](/pricing)。付费方案增加收件箱。
 
 ## 下一步
 

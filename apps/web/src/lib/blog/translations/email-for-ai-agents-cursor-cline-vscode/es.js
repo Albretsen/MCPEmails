@@ -78,12 +78,12 @@ Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` 
 
 Ambas vías exponen la misma superficie. Un puñado de herramientas consolidadas, basadas en acciones, cubren el trabajo:
 
-- \`inbox_list\` — llama siempre a esta primero para descubrir las bandejas de entrada conectadas y sus IDs.
-- \`email_read\` (acción \`list\`) — paginada, primero las más recientes.
-- \`email_read\` (acción \`read\`) — texto plano analizado, HTML saneado opcional, adjuntos.
+- \`inbox_list\`: llama siempre a esta primero para descubrir las bandejas de entrada conectadas y sus IDs.
+- \`email_read\` (acción \`list\`): paginada, primero las más recientes.
+- \`email_read\` (acción \`read\`): texto plano analizado, HTML saneado opcional, adjuntos.
 - \`email_read\` (acción \`search\`): búsqueda por remitente, asunto, fecha, estado de no leído y otros campos estructurados, traducida a la búsqueda propia de cada proveedor.
-- \`email_compose\` (acción \`send\`) — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB.
-- \`email_compose\` (acción \`reply\`) — ajusta por ti las cabeceras In-Reply-To y References para que el hilo se mantenga intacto.
+- \`email_compose\` (acción \`send\`): redacta con CC/BCC, HTML y adjuntos de hasta 10 MB.
+- \`email_compose\` (acción \`reply\`): ajusta por ti las cabeceras In-Reply-To y References para que el hilo se mantenga intacto.
 
 Hay algunas más para marcas y movimientos (\`email_organize\`), carpetas, envío programado y contactos, pero esas pocas hacen el grueso del trabajo real.
 
@@ -101,13 +101,13 @@ El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y
 
 Llama a \`email_compose\` con la acción \`reply\`, el hilo se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces sondeo (polling): \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autorrespondedor sobre MCP](/blog/build-email-auto-responder-mcp-agent).
+Una limitación: las herramientas MCP nunca te llaman a ti. Si quieres que el agente reaccione a los mensajes entrantes, haces sondeo (polling), con \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica, o dejas que un webhook de correo nuevo despierte tu código (los espacios de trabajo Pro y Business añaden uno en Claves de API dentro del panel, y hace un POST con los IDs de los mensajes a tu URL). En cualquier caso, condiciona cómo construyes cualquier cosa reactiva, como un [autorrespondedor sobre MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Límites de tasa para el acceso por scripts
 
 Si manejas el servidor desde un trabajo de cron o un bucle de agente apretado, ten en cuenta los límites. Cada plan tiene un tope por minuto para todo el espacio de trabajo, y cada API key recibe ventanas por minuto, por hora y por día dimensionadas según ese plan, así que una sola clave puede usar todo el tope por minuto del plan y varias claves lo comparten. Las respuestas correctas de \`tools/call\` llevan \`RateLimit-Limit\`, \`RateLimit-Remaining\` y \`RateLimit-Reset\`, y un 429 lleva \`Retry-After\`. Consulta la [página de precios](/pricing) para el tope de cada plan.
 
-Cuando alcanzas un límite de tasa, el servidor devuelve un error que se puede reintentar (código \`-32003\`) con \`data.retry_after\` en segundos. Respétalo: espera ese tiempo y vuelve a intentarlo. Pero no todo es reintentable: si agotas la asignación mensual de acciones de tu plan, la llamada devuelve un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\`, sin \`retry_after\`, y ningún reintento lo resuelve antes de \`reset_at\`. Y nunca reintentes a ciegas un envío de \`email_compose\` ante un fallo genérico; dispararás duplicados. Comprueba primero si de verdad se envió.
+Cuando alcanzas un límite de tasa, el servidor devuelve un error que se puede reintentar (código \`-32003\`) con \`data.retry_after\` en segundos. Respétalo: espera ese tiempo y vuelve a intentarlo. Pero no todo es reintentable: si un espacio de trabajo alcanza un límite de uso del plan, la llamada devuelve un resultado de herramienta normal con \`isError: true\` y un bloque \`_meta["com.mcpemails/usage_limit"]\`, sin \`retry_after\`, y ningún reintento lo resuelve antes de \`reset_at\`. Y nunca reintentes a ciegas un envío de \`email_compose\` ante un fallo genérico; dispararás duplicados. Comprueba primero si de verdad se envió.
 
 ## Para terminar
 

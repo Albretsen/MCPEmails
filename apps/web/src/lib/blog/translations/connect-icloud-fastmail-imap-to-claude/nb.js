@@ -22,7 +22,7 @@ App-passordet blir den ene legitimasjonen MCPEmails lagrer for den innboksen, [k
 3. Klikk på **+** (Generate an app-specific password), gi det en etikett som \`MCPEmails\`, og bekreft med passordet til Apple-kontoen din.
 4. Apple viser deg et passord i formatet \`abcd-efgh-ijkl-mnop\`. Kopier det nå. Du kan ikke se det igjen senere.
 
-Du må ha tofaktorautentisering slått på for Apple-kontoen din — app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCPEmails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem. [Innstillingssiden for iCloud Mail](/connect/icloud) viser de samme verdiene.
+Du må ha tofaktorautentisering slått på for Apple-kontoen din; app-spesifikke passord er ikke tilgjengelige uten det. IMAP-verten for iCloud er \`imap.mail.me.com\` og SMTP er \`smtp.mail.me.com\`, men MCPEmails fyller dem inn for deg når du velger iCloud som leverandør, så du trenger vanligvis ikke å røre dem. [Innstillingssiden for iCloud Mail](/connect/icloud) viser de samme verdiene.
 
 ## Generer et app-passord for Fastmail
 
@@ -42,14 +42,14 @@ For Yahoo, Zoho, Yandex, en selvhostet e-postserver eller noe annet med et IMAP-
 - **E-postadressen din** som brukernavn
 - **App-passordet** som passord
 
-Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også — men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din. For porter, TLS-moduser og feilsøking på andre verter, se den [fullstendige guiden til IMAP-koblingen](/blog/claude-imap-connector).
+Hvis du faktisk bare har et vanlig passord og leverandøren ikke tilbyr app-passord, fungerer det også, men et app-passord er det riktige valget. Det begrenser skadeomfanget. Tilbakekall det, og bare denne tilkoblingen dør, ikke hele kontoen din. For porter, TLS-moduser og feilsøking på andre verter, se den [fullstendige guiden til IMAP-koblingen](/blog/claude-imap-connector).
 
 ## Koble til innboksen i MCPEmails
 
 Når du har kopiert passordet:
 
 1. Åpne dashbordet og gå til **Inboxes → Connect Inbox**.
-2. Velg leverandøren din — **iCloud**, **Fastmail** eller **Generic IMAP**.
+2. Velg leverandøren din: **iCloud**, **Fastmail** eller **Generic IMAP**.
 3. Lim inn e-postadressen din og det app-spesifikke passordet. For generisk IMAP, bekreft også verten og porten.
 4. Lagre. Innboksen er live på under ett minutt.
 
@@ -63,11 +63,11 @@ I claude.ai:
 
 1. Gå til **Customize → Connectors**.
 2. Klikk på **Add connector** og lim inn endepunktet: \`https://www.mcpemails.com/api/mcp\`
-3. Klikk på **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn de tilgangene du vil ha — \`read:email\`, \`send:email\`, eller begge.
+3. Klikk på **Connect**, logg inn med MCPEmails-kontoen din, og godkjenn de tilgangene du vil ha: \`read:email\`, \`send:email\`, eller begge.
 
-Ingen API-nøkkel, ingen konfigurasjonsfil. claude.ai bruker OAuth med PKCE under panseret, og tokenet Claude får er begrenset til nøyaktig det du godkjente. Hvis du er på en klient som ikke kan gjøre OAuth — Cursor, Cline, et cURL-skript — lager du i stedet en avgrenset nøkkel, som jeg dekker i [e-posttilgang for Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
+Ingen API-nøkkel, ingen konfigurasjonsfil. claude.ai bruker OAuth med PKCE under panseret, og tokenet Claude får er begrenset til nøyaktig det du godkjente. Hvis du er på en klient som ikke kan gjøre OAuth (Cursor, Cline, et cURL-skript), lager du i stedet en avgrenset nøkkel, som jeg dekker i [e-posttilgang for Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Når den er tilkoblet, la Claude kjøre \`inbox_list\` først. Den returnerer innboksen din og dens \`inbox_id\`, så du trenger aldri å kopiere og lime inn en UUID. Derfra er det [kjerneverktøyene](/docs) — \`email_read\` (liste, lese og søke i meldinger), \`email_compose\` (sende, svare, videresende) og \`email_organize\` — pluss noen flere for mapper, utkast, planlegging og kontakter. Hvert av dem styres med en \`action\`-parameter.
+Når den er tilkoblet, la Claude kjøre \`inbox_list\` først. Den returnerer innboksen din og dens \`inbox_id\`, så du trenger aldri å kopiere og lime inn en UUID. Derfra er det [kjerneverktøyene](/docs): \`email_read\` (liste, lese og søke i meldinger), \`email_compose\` (sende, svare, videresende) og \`email_organize\`, pluss noen flere for mapper, utkast, planlegging og kontakter. Hvert av dem styres med en \`action\`-parameter.
 
 En prompt for å bekrefte at det fungerer:
 
@@ -81,14 +81,14 @@ Her er delen folk overser. En vanlig sletting flytter meldingen til papirkurven 
 
 På de andre IMAP-vertene er det enklere. Fastmail, iCloud, Yahoo, Zoho, Yandex og generisk IMAP støtter alle **hard expunge**: Claude kan fjerne en melding permanent, ikke bare kaste den i papirkurven. Hvis du vil ha en agent som faktisk rydder opp etter seg, lar IMAP (eller Outlook) den gjøre det. Nyttig, og også en grunn til å være bevisst på hvilke tilganger du gir. Expunge er ugjenkallelig.
 
-Søk oppfører seg også litt annerledes. Gmail får hele operatorsyntaksen sin, Outlook bruker KQL, og IMAP-leverandører bruker IMAP-tekstsøk — kapabelt, men ikke like uttrykksfullt som Gmails operatorer. Verdt å vite hvis du skriver søketunge prompts.
+Søk oppfører seg også litt annerledes. Gmail får hele operatorsyntaksen sin, Outlook bruker KQL, og IMAP-leverandører bruker IMAP-tekstsøk, som er kapabelt, men ikke like uttrykksfullt som Gmails operatorer. Verdt å vite hvis du skriver søketunge prompts.
 
 ## Hva du kan bygge når den er tilkoblet
 
 Mekanikken er den samme uansett leverandør, så enhver arbeidsflyt du har sett for Gmail fungerer på Fastmail- eller iCloud-innboksen din. Noen som bærer sin egen vekt:
 
 - Morgentriagering som flagger det som trenger et menneske og skriver utkast til svar på resten. Se [innbokstriagering og oppsummering](/blog/ai-agent-triage-summarize-inbox).
-- En tilnærmet sanntids auto-svarer. Ett ærlig forbehold: MCPEmails er pollbasert, ikke push — det finnes ingen webhooks, så agenten sjekker etter ny post på en tidsplan. [Auto-svarer-byggingen](/blog/build-email-auto-responder-mcp-agent) forklarer hvordan du gjør det godt.
+- En tilnærmet sanntids auto-svarer. Ett forbehold: inne i en chat sjekker agenten etter ny post på en tidsplan; push krever en webhook for ny post, som Pro- og Business-arbeidsområder kan legge til under API-nøkler. [Auto-svarer-byggingen](/blog/build-email-auto-responder-mcp-agent) forklarer begge deler.
 
 Hvis du fortsatt vurderer om du i det hele tatt skal koble e-post til en agent, start med hovedartikkelen: [hvordan du gir AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
 

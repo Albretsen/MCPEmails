@@ -1,8 +1,8 @@
 const translation = {
   title: 'OAuth ou clés API pour l’accès e-mail de l’IA : que choisir ?',
   description: 'OAuth ou clés API pour l’accès e-mail de l’IA : OAuth pour claude.ai, Claude Desktop et Cursor ; une clé API restreinte pour Cline, JetBrains et les scripts.',
-  coverAlt: 'OAuth versus clés API pour connecter les agents IA à l’e-mail — MCPEmails',
-  content: `Lorsque vous connectez un agent IA à votre e-mail via MCPEmails, vous vous authentifiez de deux façons possibles : par OAuth ou par une clé API. En bref : OAuth si votre client le prend en charge (claude.ai, Claude Desktop, Cursor), et une clé API restreinte sinon (Cline, JetBrains, scripts, cURL). Les deux atteignent le même point de terminaison et exposent les mêmes outils. La différence tient à qui gère le secret et à la facilité avec laquelle vous pouvez tout couper.
+  coverAlt: 'OAuth versus clés API pour connecter les agents IA à l’e-mail, par MCPEmails',
+  content: `Lorsque vous connectez un agent IA à votre e-mail via MCPEmails, vous vous authentifiez de deux façons possibles : par OAuth ou par une clé API. Utilisez OAuth si votre client le prend en charge (claude.ai, Claude Desktop, Cursor), et une clé API restreinte sinon (Cline, JetBrains, scripts, cURL). Les deux atteignent le même point de terminaison et exposent les mêmes outils. La différence tient à qui gère le secret et à la facilité avec laquelle vous pouvez tout couper.
 
 Il ne s’agit pas d’un compromis entre sécurité et commodité où vous sacrifiez l’un pour l’autre. Les deux chemins sont limités exactement à \`read:email\`, \`send:email\`, ou les deux, et tous deux peuvent être révoqués depuis le tableau de bord en un clic. La vraie question est de savoir lequel convient au client que vous utilisez réellement. Pour une vue d’ensemble de la façon dont tout cela s’articule, commencez par le guide de référence, [comment donner à votre agent IA l’accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access).
 
@@ -10,7 +10,7 @@ Il ne s’agit pas d’un compromis entre sécurité et commodité où vous sacr
 
 Utilisez **OAuth** quand votre client MCP le prend en charge. Cela concerne aujourd’hui claude.ai, Claude Desktop et Cursor. Vous collez une URL, vous vous connectez, vous approuvez les scopes, et c’est terminé. Aucun secret à copier, aucun secret à stocker, aucun secret à divulguer.
 
-Utilisez une **clé API** quand votre client n’a pas de flux OAuth. Cline, l’assistant IA de JetBrains, une tâche cron Python, un script shell qui fait transiter du JSON-RPC via cURL — tous ont besoin d’un jeton bearer. Vous en créez un dans le tableau de bord, vous le restreignez, vous le copiez une fois, et vous le passez dans l’en-tête \`Authorization\`.
+Utilisez une **clé API** quand votre client n’a pas de flux OAuth. Cline, l’assistant IA de JetBrains, une tâche cron Python, un script shell qui fait transiter du JSON-RPC via cURL : tous ont besoin d’un jeton bearer. Vous en créez un dans le tableau de bord, vous le restreignez, vous le copiez une fois, et vous le passez dans l’en-tête \`Authorization\`.
 
 Si les deux sont possibles pour un même client, choisissez OAuth. Moins de secrets dans vos fichiers de configuration reste toujours le meilleur choix par défaut.
 
@@ -25,18 +25,18 @@ En coulisses, c’est un OAuth standard et à jour :
 - **Authorization Code + PKCE** (RFC 7636), donc aucun secret client n’est jamais transmis. PKCE est le même mécanisme qui protège les connexions des applications mobiles et monopages.
 - **Dynamic Client Registration** (RFC 7591), donc le client s’enregistre lui-même sans aucune configuration manuelle de votre côté.
 - **Les jetons se renouvellent automatiquement** dans les clients pris en charge. Vous n’avez pas à surveiller une expiration.
-- **Les scopes correspondent exactement à ce que vous approuvez** sur l’écran de consentement : \`read:email\`, \`send:email\`, ou les deux.
+- **Les scopes correspondent exactement à ce que vous approuvez** sur l’écran de consentement : Lecture seule, Standard, Accès complet, ou un jeu personnalisé de permissions individuelles.
 
 L’avantage concret : le jeton n’apparaît jamais sous la forme d’une chaîne de caractères que vous pourriez accidentellement commiter, journaliser ou coller dans la mauvaise conversation. Quand vous voulez couper l’accès, vous révoquez la connexion dans le tableau de bord et l’agent est verrouillé immédiatement. Et si cette révocation compte vraiment, c’est parce que la boîte de réception elle-même reste intacte : [l’e-mail n’est jamais stocké](/blog/why-email-never-stored-matters) chez nous, dès le départ.
 
 ## Comment les clés API fonctionnent ici
 
-Certains clients ne parlent pas OAuth. Ce n’est pas un reproche. Cline, JetBrains et tout ce que vous écrivez vous-même attendent simplement un jeton bearer, qui est la manière plus ancienne — et parfaitement valable — d’authentifier une machine.
+Certains clients ne parlent pas OAuth. Ce n’est pas un reproche. Cline, JetBrains et tout ce que vous écrivez vous-même attendent simplement un jeton bearer, qui est la manière plus ancienne, et parfaitement valable, d’authentifier une machine.
 
 Vous en créez une dans **Dashboard → API Keys** :
 
 1. Nommez la clé d’une façon qui vous parlera plus tard (\`cline-laptop\`, \`triage-cron\`).
-2. Choisissez ses scopes : \`read:email\`, \`send:email\`, ou les deux.
+2. Choisissez ses scopes : partez de \`read:email\`, ajoutez \`send:email\` seulement si elle doit envoyer, et les scopes dossiers, suppression, brouillons, contacts, planification et automatisations seulement si la tâche en a besoin.
 3. Copiez-la. Elle est affichée **une seule fois** et jamais plus. Si vous la perdez, vous en créez une nouvelle.
 
 La clé ressemble à \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, et vous la passez à chaque requête :
@@ -56,7 +56,7 @@ Un appel JSON-RPC brut pour lister vos boîtes de réception ressemble à ceci :
 }
 \`\`\`
 
-Envoyez cela en POST vers \`https://mcpemails.com/api/mcp\` avec l’en-tête bearer et vous récupérez vos boîtes de réception connectées et leurs identifiants. À partir de là, l’agent appelle \`email_read\` (avec \`action\` réglé sur list, read ou search) et \`email_compose\` (\`action\` send, reply ou forward) — les outils principaux, plus \`email_organize\`, \`folder\`, \`schedule\` et \`contact_search\` pour les drapeaux, les dossiers, la planification et les contacts.
+Envoyez cela en POST vers \`https://mcpemails.com/api/mcp\` avec l’en-tête bearer et vous récupérez vos boîtes de réception connectées et leurs identifiants. À partir de là, l’agent appelle \`email_read\` (avec \`action\` réglé sur list, read ou search) et \`email_compose\` (\`action\` send, reply ou forward), les outils principaux, plus \`email_organize\`, \`folder\`, \`schedule\` et \`contact_search\` pour les drapeaux, les dossiers, la planification et les contacts.
 
 La seule chose que les clés API exigent de vous et qu’OAuth ne demande pas : traitez la clé comme un mot de passe. C’est un secret à longue durée de vie, en clair. Placez-le dans une variable d’environnement, pas dans du code source que vous pousserez sur GitHub. Si une clé fuite, révoquez-la depuis le tableau de bord et passez à une nouvelle.
 
@@ -74,7 +74,7 @@ Votre client est claude.ai, Claude Desktop ou Cursor. Vous ne voulez aucun secre
 
 ### Utilisez une clé API si…
 
-Votre client n’a pas de support OAuth — Cline, JetBrains, les exécuteurs d’outils façon OpenAI, ou votre propre code. Vous scriptez contre le point de terminaison avec cURL ou un petit programme. Vous avez besoin d’un identifiant stable qu’un processus sans interface peut utiliser sans qu’un humain ait à cliquer sur un écran de consentement. Une clé restreinte est exactement ce qu’il faut ici, et il existe un guide complet pour les [clients Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
+Votre client n’a pas de support OAuth : Cline, JetBrains, les exécuteurs d’outils façon OpenAI, ou votre propre code. Vous scriptez contre le point de terminaison avec cURL ou un petit programme. Vous avez besoin d’un identifiant stable qu’un processus sans interface peut utiliser sans qu’un humain ait à cliquer sur un écran de consentement. Une clé restreinte est exactement ce qu’il faut ici, et il existe un guide complet pour les [clients Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
 Une dernière chose vraie quel que soit votre choix : les limites de débit. Chaque espace de travail dispose d’un plafond par minute fixé par son plan (voir les [tarifs](/pricing)), et chaque clé API reçoit des fenêtres par minute, par heure et par jour dimensionnées selon ce plan : une seule clé peut utiliser tout le plafond, et plusieurs clés le partagent. Quand vous atteignez une limite, le serveur vous renvoie une valeur \`retry_after\` en secondes. Respectez-la, et ne réessayez jamais à l’aveugle un envoi via \`email_compose\` : vous enverriez le message deux fois.
 

@@ -77,7 +77,7 @@ Når den er tilkoblet, jobber Claude gjennom et lite sett med konsoliderte verkt
 
 Claude har også en egen Gmail-kobling, og den kan også sende. [Kan Claude lese e-posten min og sende e-post?](/blog/can-claude-read-my-email) sammenligner den med MCPEmails, postkasse for postkasse.
 
-Én ting å forvente på forhånd: MCPEmails er poll-basert. Det finnes ingen push-webhooks, så Claude reagerer på ny post når du ber den sjekke, ikke i det øyeblikket en melding kommer inn. For nesten alle assistent-arbeidsflyter er det akkurat den riktige modellen.
+Én ting å forvente på forhånd: Claude reagerer på ny post når du ber den sjekke, ikke i det øyeblikket en melding kommer inn. For nesten alle assistent-arbeidsflyter er det akkurat den riktige modellen. (Din egen kode er noe annet: Pro- og Business-arbeidsområder kan legge til en webhook under API-nøkler som poster til URL-en din når det kommer ny post.)
 
 ## Er det trygt å koble Gmail til Claude?
 
@@ -108,7 +108,7 @@ Nei. Du limer inn et apppassord, en egen legitimasjon som Google genererer og so
 
 ## Oppsummering
 
-Det er hele greia: ett Google-apppassord, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din, uten noensinne å lagre den. Gratisnivået koster ingenting, krever ikke kort og kobler til én innboks; Personal koster $9 per måned for opptil tre, og Pro kobler til opptil 10 (se [priser](/pricing)).
+Det er hele greia: ett Google-apppassord, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din, uten noensinne å lagre den. Gratisnivået koster ingenting, krever ikke kort og kobler til én innboks; de betalte planene legger til flere (se [priser](/pricing)).
 
 Klar? [Koble til Gmailen din gratis](/signup), lim inn endepunktet i Claude, og be den oppsummere den uleste posten din.`,
 };

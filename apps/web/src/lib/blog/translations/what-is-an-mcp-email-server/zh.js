@@ -64,7 +64,7 @@ MCP 邮件服务器用**动作**取而代之。代理看不见协议。它看到
 3. 对任何看起来重要的邮件，它带上 \`action: "read"\` 调用 \`email_read\` 拉取完整正文。
 4. 它做总结，并且如果你已批准发送权限，它可以用 \`email_compose\`（\`action: "reply"\`）起草一封回复——这会自动设置好线程头，让回复落进正确的会话里。
 
-有一个值得事先了解的诚实限制：这是**轮询，而不是推送**。没有 webhook。新邮件到达时，服务器不会主动通知你的代理。要对新邮件做出反应，代理必须按某个时间表去查。这是个刻意的取舍，它也决定了你会怎么去搭建像[自动回复器](/blog/build-email-auto-responder-mcp-agent)或[收件箱分拣例程](/blog/ai-agent-triage-summarize-inbox)这样的东西。
+有一个值得事先了解的限制：MCP 本身是**轮询，而不是推送**。服务器只在代理发问时作答，从不主动通知它，所以聊天里的代理是按某个时间表去查来对新邮件做出反应。（MCPEmails 为你自己的代码提供新邮件 webhook，在 Pro 和 Business 上可用。）这也决定了你会怎么去搭建像[自动回复器](/blog/build-email-auto-responder-mcp-agent)或[收件箱分拣例程](/blog/ai-agent-triage-summarize-inbox)这样的东西。
 
 ## 托管服务器 vs. 自己搭建
 
