@@ -150,11 +150,13 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
   basePlanItem,
   getPlanByStripePriceId,
+  isBusinessSeatPriceId,
   PLANS,
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { syncBusinessSeats } from '@/lib/stripe/business-seats';
 import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
 import { hasPaidInvoice, neverPaidSepa } from '@/lib/stripe/sepa-entitlement';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
@@ -172,9 +174,16 @@ import {
   isGrandfathered,
   queueCancellationSequence,
   queueDunningSequence,
+  queuePaymentRestart,
   resolveRecipient,
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
+import {
+  hasRecentSuccessfulCall,
+  keptRestartPrice,
+  paymentRestartMode,
+  restartDecision,
+} from '@/lib/billing/payment-restart';
 import {
   CONFIRM_PAYMENT_DECLINE_CODE,
   type LifecyclePayload,
@@ -744,7 +753,7 @@ async function handleCheckoutSessionCompleted(
   }
   const synced = await syncPlanFromCheckoutSession(session, 'checkout.session.completed');
   if (!synced) return;
-  const { userId, resolvedPlan, resolvedInterval } = synced;
+  const { userId, resolvedPlan, resolvedInterval, perPerson } = synced;
 
   if (resolvedPlan === 'free') return;
   // Bound once, narrowed, for the `after()` closures below.
@@ -833,6 +842,8 @@ async function handleCheckoutSessionCompleted(
           }
           : null,
         sessionId: session.id,
+        // Business billed per person: the email lists the per-person features.
+        perPerson: purchasedPlan === 'pro' && perPerson,
         // The buyer's referral link is looked up from this, for the one
         // "give a month, get a month" line (src/lib/referrals/link.ts).
         userId,
@@ -866,6 +877,8 @@ async function syncPlanFromCheckoutSession(
   userId: string | null;
   resolvedPlan: PlanId | 'free';
   resolvedInterval: BillingInterval | null;
+  /** The base price is a per-person Business seat price. */
+  perPerson: boolean;
 } | null> {
   if (session.mode !== 'subscription') return null;
 
@@ -907,6 +920,7 @@ async function syncPlanFromCheckoutSession(
   // Resolved from the price the customer actually subscribed to; the checkout
   // metadata is only the fallback.
   let resolvedInterval: BillingInterval | null = null;
+  let perPerson = false;
 
   if (subscriptionId) {
     try {
@@ -921,6 +935,7 @@ async function syncPlanFromCheckoutSession(
       // plan_id (they should agree, but the subscription is authoritative).
       const priceId = basePlanItem(subscription.items.data)?.price?.id;
       const resolved = getPlanByStripePriceId(priceId);
+      perPerson = isBusinessSeatPriceId(priceId ?? null);
       if (resolved) {
         resolvedPlan = resolved.plan.id;
         resolvedInterval = resolved.interval;
@@ -968,7 +983,7 @@ async function syncPlanFromCheckoutSession(
 
   if (resolvedPlan !== 'free') await unparkAfterCheckout(customerId, userId, resolvedPlan);
 
-  return { userId, resolvedPlan, resolvedInterval };
+  return { userId, resolvedPlan, resolvedInterval, perPerson };
 }
 
 /**
@@ -1420,6 +1435,10 @@ async function handleSubscriptionUpserted(
     after(async () => {
       const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
       if (owner) await syncMailboxAddon(owner);
+      // Business billed per person: the seat quantity follows the people
+      // who are billable now (business-seats.ts). No-op with the switch off
+      // and on any base price that is not a seat price; never throws.
+      if (owner) await syncBusinessSeats(owner);
       // A paid subscription on the founder price takes its place in the
       // counter and gets the cohort tag. No-op for any other price.
       await recordFounderPlace({
@@ -1611,10 +1630,17 @@ async function handleSubscriptionDeleted(
   // this event is exactly when a cancelled subscription reaches its end and the
   // win-back schedule starts to make sense.
   if (lifecycleQueueingEnabled() && customerId) {
+    // A card that ran out of retries, on an account still in use, gets the
+    // restart email (payment-restart.ts) right away. When it is queued it is
+    // the last word: the pending final dunning notice is dropped instead of
+    // brought forward, and the cancellation question is left out below.
+    const restartQueued = await maybeQueuePaymentRestart(subscription, customerId);
+
     await cancelDunningForCustomer(
       createServiceRoleClient(),
       customerId,
       'subscription_deleted',
+      { finalNotice: restartQueued ? 'cancel' : 'bring_forward' },
     );
 
     // And queue the cancellation series if nothing queued it already.
@@ -1631,8 +1657,92 @@ async function handleSubscriptionDeleted(
     // the subscription itself, and asking someone who just deleted everything
     // why they left, then trying to win them back, is mail they did not want.
     if (!isAccountDeletionCancellation(subscription)) {
-      await maybeQueueCancellationOnDelete(subscription, customerId);
+      await maybeQueueCancellationOnDelete(subscription, customerId, { includeQuestion: !restartQueued });
     }
+  }
+}
+
+/**
+ * payment_failed_restart: queue it when Stripe ended the subscription for a
+ * failed payment and the owner made a successful MCP call in the last 7 days.
+ * Behind PAYMENT_RESTART_EMAIL_ENABLED (off | dry_run | on). Returns true only
+ * when a row was queued. Never throws: it runs after the plan write.
+ */
+async function maybeQueuePaymentRestart(
+  subscription: Stripe.Subscription,
+  customerId: string,
+): Promise<boolean> {
+  try {
+    const reason = subscription.cancellation_details?.reason ?? null;
+    if (reason !== 'payment_failed') return false;
+    const mode = paymentRestartMode();
+    if (mode === 'off') return false;
+
+    const db = createServiceRoleClient();
+    const userId = await resolveUserId(db, customerId, subscription.metadata?.user_id ?? null);
+    const accountDeleted =
+      isAccountDeletionCancellation(subscription) || (await accountState(db, userId)) !== 'live';
+    const holdsPass = Boolean(userId && (await getActivePass(db, userId)));
+    const item = basePlanItem(subscription.items.data);
+    const resolved = item?.price ? getPlanByStripePriceId(item.price) : null;
+    const recentSuccessfulCall = userId ? await hasRecentSuccessfulCall(db, userId) : false;
+    const recipient =
+      accountDeleted || !recentSuccessfulCall
+        ? null
+        : await resolveRecipient(db, await stripeCustomerEmail(customerId), userId);
+
+    const decision = restartDecision({
+      mode,
+      cancellationReason: reason,
+      accountDeleted,
+      holdsPass,
+      recentSuccessfulCall,
+      plan: resolved ? { planId: resolved.plan.id, interval: resolved.interval } : null,
+      hasRecipient: Boolean(recipient),
+    });
+    if (!decision.send || !recipient) {
+      console.log(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: no restart email (${decision.send ? 'no_recipient' : decision.skip}).`,
+      );
+      return false;
+    }
+
+    // Checked now so the email only promises the old price when the link will
+    // keep it. Checkout checks again on the click.
+    const kept = await keptRestartPrice({
+      stripe,
+      stripeCustomerId: customerId,
+      subscriptionId: subscription.id,
+      planId: decision.planId,
+      interval: decision.interval,
+    });
+
+    if (mode === 'dry_run') {
+      console.log(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: restart email WOULD be queued (dry_run; plan=${decision.planId}/${decision.interval}, keeps_price=${kept ? 'yes' : 'no'}).`,
+      );
+      return false;
+    }
+
+    const queued = await queuePaymentRestart({
+      db,
+      target: { stripeCustomerId: customerId, userId, recipient },
+      subscriptionId: subscription.id,
+      payload: {
+        planId: decision.planId,
+        amountCents: kept ? item?.price?.unit_amount ?? null : null,
+        currency: subscription.currency ?? null,
+        restartInterval: decision.interval,
+        restartKeepsPrice: Boolean(kept),
+        restartFromSubscriptionId: subscription.id,
+      },
+    });
+    return queued > 0;
+  } catch (err) {
+    console.error('[stripe-webhook] maybeQueuePaymentRestart failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
   }
 }
 
@@ -1660,6 +1770,7 @@ async function resyncPassNoticesAfterSubscription(customerId: string, userId: st
 async function maybeQueueCancellationOnDelete(
   subscription: Stripe.Subscription,
   customerId: string,
+  options: { includeQuestion?: boolean } = {},
 ): Promise<void> {
   try {
     const db = createServiceRoleClient();
@@ -1721,6 +1832,7 @@ async function maybeQueueCancellationOnDelete(
         periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
         grandfathered: await isGrandfathered(db, userId),
       },
+      includeQuestion: options.includeQuestion,
     });
   } catch (err) {
     console.error('[stripe-webhook] maybeQueueCancellationOnDelete failed, swallowed:', {
@@ -1763,7 +1875,7 @@ async function maybeQueueCancellationOnDelete(
  *
  *   next_payment_attempt === null AND attempt_count <= 1
  *     Stripe scheduled no retry and has barely tried. Rather than start a
- *     fourteen-day sequence on an invoice nothing is going to happen to, this
+ *     month-long sequence on an invoice nothing is going to happen to, this
  *     falls through to the log. See the review notes: this case also means
  *     Smart Retries is off, which is a configuration problem, not an email one.
  *     EXCEPT for `authentication_required` (SCA / 3DS): the customer's bank
@@ -1855,7 +1967,8 @@ async function queueDunningForInvoice(
   if (!lifecycleQueueingEnabled()) return;
 
   // Stripe scheduled no retry and has barely tried. The ordinary sequence
-  // asserts that "the card gets retried automatically over the next two weeks",
+  // asserts that "the card gets retried automatically over the next month"
+  // (STRIPE_RETRY_WINDOW_DAYS in src/lib/billing/retry-window.ts),
   // so starting it on an invoice nothing is going to happen to would put a
   // falsehood in four emails. Deliberately narrow: a null next_payment_attempt
   // on a SECOND or later attempt is the normal end of a retry schedule and
@@ -2008,10 +2121,14 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
     if (cancelled > 0) await recordRecoveredBy(db, customerId, invoice.id);
   }
 
+  // Any successful charge on this customer, including the first invoice of a
+  // NEW subscription started from the restart email's link (checkout reuses
+  // the customer), means they are back: the win-backs and an unsent restart
+  // email stop here.
   await cancelOpenSequence({
     db,
     stripeCustomerId: customerId,
-    templates: ['winback_14', 'winback_30'],
+    templates: ['winback_14', 'winback_30', 'payment_failed_restart'],
     reason: 'subscription_reactivated',
   });
 }

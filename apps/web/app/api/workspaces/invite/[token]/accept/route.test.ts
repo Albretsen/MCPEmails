@@ -40,6 +40,31 @@ nodeMock.module('@/lib/supabase/server', {
   },
 });
 
+// The real NextRequest / NextResponse (the cookie assertions need them), with
+// `after` run inline: outside a Next request scope the real one throws.
+const realNextServer = await import('next/server');
+const afterTasks: Array<Promise<unknown>> = [];
+nodeMock.module('next/server', {
+  namedExports: {
+    NextRequest: realNextServer.NextRequest,
+    NextResponse: realNextServer.NextResponse,
+    after: (task: () => unknown) => {
+      afterTasks.push(Promise.resolve().then(task));
+    },
+  },
+});
+
+// Business billed per person: the accept re-syncs the owner's seat count.
+const seatSyncs: string[] = [];
+nodeMock.module('@/lib/stripe/business-seats', {
+  namedExports: {
+    syncBusinessSeatsForWorkspace: async (workspaceId: string) => {
+      seatSyncs.push(workspaceId);
+      return { status: 'skipped', reason: 'switch_off' };
+    },
+  },
+});
+
 const route = await import('./route.ts');
 const { ACTIVE_WORKSPACE_COOKIE } = await import('@/lib/workspace/active');
 
@@ -66,14 +91,29 @@ test('accepting sets the joined workspace as the active one', async () => {
   assert.equal(cookie?.path, '/');
 });
 
+test('accepting re-syncs the per-person seat count of the joined workspace, after the response', async () => {
+  user = { id: 'user-1' };
+  rpcResult = { data: [{ workspace_id: 'ws-team', workspace_slug: 'team', role: 'member' }], error: null };
+  seatSyncs.length = 0;
+  afterTasks.length = 0;
+
+  await accept();
+  await Promise.all(afterTasks);
+
+  assert.deepEqual(seatSyncs, ['ws-team']);
+});
+
 test('a refused invite leaves the active workspace alone', async () => {
   user = { id: 'user-1' };
   rpcResult = { data: null, error: { code: 'P0003', message: 'invite_expired' } };
 
+  seatSyncs.length = 0;
   const res = await accept();
 
   assert.notEqual(res.status, 200);
   assert.equal(res.cookies.get(ACTIVE_WORKSPACE_COOKIE), undefined);
+  await Promise.all(afterTasks);
+  assert.deepEqual(seatSyncs, [], 'a refused invite changes nobody\'s bill');
 });
 
 test('a signed-out caller is a 401 and sets nothing', async () => {

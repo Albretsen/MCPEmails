@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkMemberLimit } from '@/lib/plans/check-member-limit';
 import { sendInviteEmail } from '@/lib/email/send-invite';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
 /**
  * POST /api/workspaces/invite
@@ -242,6 +243,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     console.error('[invite] Insert failed:', insertError?.message);
     return NextResponse.json({ error: 'Failed to create invite.' }, { status: 500 });
   }
+
+  // Security audit view (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'invite_sent',
+    target: normalizedEmail,
+    details: { role },
+  });
 
   // 11. Send the invite email.
   //

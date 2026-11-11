@@ -4,6 +4,8 @@
 // 20261024230000_webhook_endpoints. Service role only.
 // ---------------------------------------------------------------------------
 
+import { parseCredentialScope, scopeAllows } from "../visibility.ts";
+
 export type WebhookPayloadMode = "ids" | "headers";
 
 /** What one attempt needs about a leased delivery and its endpoint. */
@@ -62,6 +64,13 @@ export interface WebhookStore {
     messageCount: number;
   }): Promise<number>;
   leaseDue(limit: number, leaseSeconds: number): Promise<LeasedDelivery[]>;
+  /**
+   * May this endpoint receive events for this inbox? An endpoint acts as the
+   * person who created it (`created_by`; null = the workspace owner), and gets
+   * only inboxes that person may see now (the visibility rule,
+   * ../visibility.ts). Throws when it cannot be read.
+   */
+  endpointSeesInbox(endpointId: string, inboxId: string): Promise<boolean>;
   /** Null when the lease no longer held the row (nothing was written). */
   recordAttempt(record: AttemptRecord): Promise<{ endpointId: string; endpointDisabled: boolean } | null>;
 }
@@ -75,6 +84,25 @@ function fail(what: string, error: { code?: string } | null): never {
 
 export function supabaseWebhookStore(db: Db): WebhookStore {
   return {
+    async endpointSeesInbox(endpointId, inboxId) {
+      const endpoint = await db
+        .from("webhook_endpoints")
+        .select("workspace_id, created_by")
+        .eq("id", endpointId)
+        .maybeSingle();
+      if (endpoint.error) fail("webhook_endpoint_read_failed", endpoint.error);
+      const row = endpoint.data as { workspace_id?: string; created_by?: string | null } | null;
+      if (!row?.workspace_id) return false;
+      // created_by null is resolved to the workspace owner inside the function.
+      const { data, error } = await db.rpc("credential_inbox_scope", {
+        p_workspace_id: row.workspace_id,
+        p_user_id: row.created_by ?? null,
+        p_inbox_ids: null,
+      });
+      if (error) fail("webhook_scope_failed", error);
+      return scopeAllows(parseCredentialScope(data), inboxId);
+    },
+
     async hasTargets(inboxId) {
       const { data, error } = await db.rpc("webhook_has_targets", { p_inbox_id: inboxId });
       if (error) fail("webhook_targets_failed", error);

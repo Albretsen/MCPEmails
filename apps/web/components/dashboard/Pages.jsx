@@ -39,6 +39,8 @@ import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { HeardAboutCard } from './HeardAboutCard';
 import { SsoSettingsSection } from './SsoSettingsSection';
+import { RecipientRuleSection } from './RecipientRuleSection';
+import { AuditExportLink, AuditTeamChanges, personLabel } from './AuditTeamChanges';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { MorningBriefSection } from './MorningBriefSection';
 import { InboxInstructionsEditor } from './InboxInstructionsEditor';
@@ -1709,7 +1711,7 @@ export function reconnectSupportHref(erroredInboxes) {
   return supportContactHref(providers.length === 1 ? providers[0] : null, null);
 }
 
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null, hiddenInboxes = [], currentUserId = null, showVisibilityControl = false, multiMember = false, onVisibilityChanged = null }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1726,7 +1728,13 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
   const erroredCount = erroredInboxes.length;
   // Parked inboxes (src/lib/billing/parking.ts) are listed, greyed, but do not
   // hold a slot under the cap: the same count the server's checkInboxLimit uses.
-  const activeCount = inboxes.filter(ib => !ib.parked).length;
+  // Other people's private inboxes (owner/admin only, metadata): listed under
+  // the table with Disconnect as their only action. Removed locally the moment
+  // a disconnect succeeds; the server refresh then drops them for good.
+  const [removedHiddenIds, setRemovedHiddenIds] = useState([]);
+  const hiddenList = (hiddenInboxes ?? []).filter(ib => !removedHiddenIds.includes(ib.id));
+  // They still hold a slot under the cap, so they count here too.
+  const activeCount = inboxes.filter(ib => !ib.parked).length + hiddenList.filter(ib => !ib.parked).length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
@@ -1790,6 +1798,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
     try {
       await onRemove(confirmInbox.id);
       // onRemove resolves on success; App.jsx handles state update and toast.
+      if (confirmInbox.hiddenFromViewer) setRemovedHiddenIds(ids => [...ids, confirmInbox.id]);
       setConfirmInbox(null);
     } catch {
       // onRemove rejects on API error; App.jsx already showed an error toast.
@@ -1875,7 +1884,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // interval choice. Everything below maps
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
-        const offer = inboxCapOffer(maxInboxes, { businessShaped });
+        const offer = inboxCapOffer(maxInboxes, { businessShaped, seatPricing: Boolean(stripePrices?.pro?.perPerson) });
         // Founder keys for Business while the founder price is open.
         const capCopy = founderCapCopy(offer, stripePrices);
         // Null when annual cannot be sold for this plan, in which case the
@@ -2308,6 +2317,15 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         )}
       </div>
 
+      {hiddenList.length > 0 && (
+        <HiddenInboxesSection
+          inboxes={hiddenList}
+          canManage={canManage}
+          onDisconnect={(ib) => handleDisconnectRequest({ ...ib, hiddenFromViewer: true })}
+          t={t}
+        />
+      )}
+
       {multiInbox && <MultiInboxInvite variant={multiInbox} placement="inboxes" onConnect={onConnect} />}
 
       {/* Inbox detail / diagnostics modal */}
@@ -2331,6 +2349,15 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           // The review gate is owner/admin-only (lib/workspace/roles.ts).
           canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
+          visibilityEditable={
+            // Switch on: Business, or any workspace with more than one member
+            // (a downgraded team can still change it). Switch off: only to
+            // open up a private mailbox once someone else has joined, so a
+            // backfilled private inbox is never stuck out of a new member's reach.
+            (showVisibilityControl || (multiMember && detailInboxLive.visibility === 'private'))
+            && userRole !== 'viewer' && Boolean(currentUserId) && detailInboxLive.ownerUserId === currentUserId
+          }
+          onVisibilityChanged={onVisibilityChanged}
         />
       )}
 
@@ -3586,6 +3613,112 @@ function DraftEditorInboxPreference({
   );
 }
 
+/**
+ * Private / Company-wide for an inbox the viewer connected (the Business
+ * privacy model, migration 20261111190000). Only the inbox's owner sees it;
+ * PATCH /api/inboxes/[id]/visibility refuses everyone else as well.
+ */
+export function InboxVisibilityControl({ inbox, onChanged, t }) {
+  const [value, setValue] = useState(inbox.visibility);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const change = async (next) => {
+    if (next === value || saving) return;
+    const previous = value;
+    setValue(next);
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/inboxes/${inbox.id}/visibility`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visibility: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || (data.visibility !== 'private' && data.visibility !== 'company')) throw new Error('save');
+      setValue(data.visibility);
+      onChanged?.(inbox.id, data.visibility);
+    } catch {
+      setValue(previous);
+      setError(t('inboxes.visibility.saveError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'grid', gap: 4, justifyItems: 'end' }}>
+      <select
+        aria-label={t('inboxes.visibility.label')}
+        value={value}
+        disabled={saving}
+        onChange={e => change(e.target.value)}
+        style={{
+          padding: '4px 8px',
+          border: '1px solid var(--border-1)',
+          borderRadius: 8,
+          fontSize: 12.5,
+          fontFamily: 'var(--font-sans)',
+          background: 'var(--bg-input, var(--bg-card))',
+          color: 'var(--fg-1)',
+        }}
+      >
+        <option value="private">{t('inboxes.visibility.private')}</option>
+        <option value="company">{t('inboxes.visibility.company')}</option>
+      </select>
+      <span style={{ fontSize: 11.5, color: error ? 'var(--red-700)' : 'var(--fg-3)' }} role={error ? 'alert' : undefined}>
+        {error || (value === 'company' ? t('inboxes.visibility.companyHint') : t('inboxes.visibility.privateHint'))}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Other people's private inboxes, for a workspace owner or admin: address,
+ * owner and status from workspace_inbox_directory, and Disconnect as the only
+ * action. Opening one is not possible (the server answers 404).
+ */
+export function HiddenInboxesSection({ inboxes, canManage, onDisconnect, t }) {
+  return (
+    <div className="approvals-decided">
+      <div className="approvals-decided-title">{t('inboxes.visibility.othersTitle')}</div>
+      <p style={{ margin: '0 0 8px', fontSize: 12.5, color: 'var(--fg-3)' }}>{t('inboxes.visibility.othersNote')}</p>
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <tbody>
+            {inboxes.map(ib => (
+              <tr key={ib.id}>
+                <td className="mono">{ib.address}</td>
+                <td style={{ color: 'var(--fg-3)' }}>
+                  {ib.ownerName ? t('inboxes.visibility.ownedBy', { name: ib.ownerName }) : null}
+                </td>
+                <td>
+                  <Badge tone="neutral">{t('inboxes.visibility.private')}</Badge>
+                  {ib.parked ? <> <Badge tone="neutral">{t('inboxes.statusParked')}</Badge></> : null}
+                  {!ib.parked && ib.status === 'error' ? <> <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge></> : null}
+                </td>
+                <td className="right">
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    icon="trash"
+                    aria-label={t('inboxes.disconnectInbox')}
+                    disabled={!canManage}
+                    onClick={() => onDisconnect(ib)}
+                  >
+                    {""}
+                  </Btn>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 const InboxDetailRow = ({ label, children }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border-1)' }}>
     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', flexShrink: 0 }}>{label}</span>
@@ -3640,7 +3773,7 @@ export function InboxAdvancedSection({ inbox, t, onConnectionChanged, proFeature
   );
 }
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, canManageInbox = true, canManageReview = true, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, canManageInbox = true, canManageReview = true, historyDays = 30, visibilityEditable = false, onVisibilityChanged = null }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -3712,6 +3845,11 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               </InboxDetailRow>
             )}
             <InboxDetailRow label={t('inboxes.detail.connectedOn')}>{formatDate(inbox.createdAt)}</InboxDetailRow>
+            {visibilityEditable && (inbox.visibility === 'private' || inbox.visibility === 'company') && (
+              <InboxDetailRow label={t('inboxes.visibility.label')}>
+                <InboxVisibilityControl inbox={inbox} onChanged={onVisibilityChanged} t={t} />
+              </InboxDetailRow>
+            )}
             <InboxDetailRow label={t('inboxes.detail.lastCall')}>
               {inbox.lastCallAt ? formatLastUsed(inbox.lastCallAt, t) : t('inboxes.detail.lastCallNone', { days: historyDays })}
             </InboxDetailRow>
@@ -6263,6 +6401,10 @@ const BILLING_PLANS = [
     name: PLAN_DISPLAY_NAMES.pro,
     // Only what Business does today: see the features note on PLANS.pro.
     featureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessFeature2', 'billing.plans.businessFeature3', 'billing.plans.businessFeature4', 'billing.plans.businessFeature5'],
+    // Business billed per person (stripePrices.pro.perPerson): "members at no
+    // extra cost" and the flat mailbox line stop being true, so these replace
+    // the list above. Numbers pinned by business-seat-copy.test.ts.
+    seatFeatureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessSeatFeaturePrivate', 'billing.plans.businessSeatFeatureCompany', 'billing.plans.businessSeatFeatureRoles', 'billing.plans.businessFeature4', 'billing.plans.businessSeatFeatureRules', 'billing.plans.businessSeatFeatureAudit'],
     highlighted: false,
   },
 ];
@@ -6368,6 +6510,10 @@ function BillingSection({
   const [interval, setInterval] = useState('year');
   const [upgrading, setUpgrading] = useState(null); // planId while loading
   const [openingPortal, setOpeningPortal] = useState(false);
+  // Business billed per person (stripePrices.pro.perPerson, only while the
+  // business_seat_pricing switch is on). Nothing to choose: checkout bills
+  // max(minimum, people who connect a mailbox), and the bill follows them.
+  const businessMinPeople = stripePrices?.pro?.perPerson?.minPeople ?? null;
   const automaticUpgradeStarted = useRef(false);
   const { locale } = useAppLocale();
   // The quote an existing subscriber must accept before their live
@@ -7115,6 +7261,7 @@ function BillingSection({
 
                 const isCurrentPlanMatch = currentPlan === plan.id;
                 const isLoading = upgrading === plan.id;
+                const perPerson = plan.id === 'pro' && businessMinPeople != null;
                 return (
                   <div
                     key={plan.id}
@@ -7166,10 +7313,18 @@ function BillingSection({
                         </span>
                         {!isCustom && (
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                            {t('billing.perMonth')}
+                            {t(perPerson ? 'billing.perPersonPerMonth' : 'billing.perMonth')}
                           </span>
                         )}
                       </div>
+                      {perPerson && !isCustom && (
+                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 4, lineHeight: 1.4 }}>
+                          {t('billing.businessPerPersonNote', {
+                            price: formatAmountCents(monthlyCents, locale),
+                            min: businessMinPeople,
+                          })}
+                        </div>
+                      )}
                       {!isCustom && interval === 'year' && (
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11.5, color: 'var(--fg-3)', marginTop: 2 }}>
                           {t('billing.billedYearly', { total: yearlyAnnualTotal })}
@@ -7188,7 +7343,7 @@ function BillingSection({
 
                     {/* Feature list */}
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {plan.featureKeys.map(featKey => (
+                      {(perPerson && plan.seatFeatureKeys ? plan.seatFeatureKeys : plan.featureKeys).map(featKey => (
                         <li key={featKey} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                           <Icon name="check" size={12} color="var(--mint-600)" style={{ flexShrink: 0, marginTop: 2 }} />
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.4 }}>
@@ -8243,6 +8398,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         onWorkspaceUpdate={onWorkspaceUpdate}
       />
 
+      {/* Advanced: the Business recipient rule (owner/admin on Business only). */}
+      <RecipientRuleSection workspace={workspace} userRole={userRole} />
+
       {/* Morning brief (Pro): renders nothing unless the feature is visible. */}
       <MorningBriefSection workspace={workspace} inboxes={inboxes} proFeatures={proFeatures} />
 
@@ -8621,6 +8779,7 @@ function AuditTable({ entries }) {
       <thead>
         <tr>
           <th>{t('security.colTool')}</th>
+          <th>{t('security.colPerson')}</th>
           <th>{t('security.colInbox')}</th>
           <th>{t('security.colApiKey')}</th>
           <th>{t('security.colTimestamp')}</th>
@@ -8639,6 +8798,13 @@ function AuditTable({ entries }) {
               >
                 {entry.tool}
               </code>
+            </td>
+
+            {/* Person the call acted as (activity_log.user_id) */}
+            <td>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: entry.person ? 'var(--fg-2)' : 'var(--fg-4)' }}>
+                {entry.person ? personLabel(entry.person, t) : '–'}
+              </span>
             </td>
 
             {/* Inbox */}
@@ -8737,6 +8903,7 @@ function AuditTable({ entries }) {
  */
 export function SecurityPage({ auditLog, userRole }) {
   const t = useTranslations('dashboard');
+  const canManageAudit = userRole === 'owner' || userRole === 'admin';
   const initialEntries = auditLog?.entries ?? [];
   const initialTotal   = auditLog?.total    ?? 0;
   const pageSize       = auditLog?.pageSize ?? PAGE_SIZE;
@@ -8800,6 +8967,9 @@ export function SecurityPage({ auditLog, userRole }) {
       {/* SAML single sign-on: owner/admin on the enterprise plan only */}
       <SsoSettingsSection userRole={userRole} />
 
+      {/* Team changes and the CSV export: owners and admins only. */}
+      {canManageAudit && <AuditTeamChanges />}
+
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
@@ -8810,6 +8980,7 @@ export function SecurityPage({ auditLog, userRole }) {
                 : t('security.auditSub')}
             </div>
           </div>
+          {canManageAudit && totalPages <= 1 && <AuditExportLink source="calls" />}
           {/* Pagination controls: only shown when there is more than one page */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
@@ -8841,6 +9012,7 @@ export function SecurityPage({ auditLog, userRole }) {
               >
                 {''}
               </Btn>
+              {canManageAudit && <AuditExportLink source="calls" />}
             </div>
           )}
         </div>

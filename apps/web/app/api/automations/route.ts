@@ -7,6 +7,7 @@ import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 // predicate is imported rather than duplicated. If the two ever diverge,
 // split them: silently sharing a role set is how one of them ends up wrong.
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
+import { visibleInboxIds } from '@/lib/inboxes/visibility';
 import {
   RULE_COLUMNS,
   assertWorkspaceResources,
@@ -70,7 +71,12 @@ export async function GET() {
     .limit(MAX_RULES);
   if (error) return NextResponse.json({ error: 'Failed to load automations.' }, { status: 500 });
 
-  const rows = (rules ?? []) as Array<Record<string, unknown>>;
+  // Rules on someone else's private inbox are left out, for every role: the
+  // filter and action describe that person's mail (migration 20261111190000).
+  const visible = await visibleInboxIds(c.db, c.workspaceId, c.user.id);
+  const rows = ((rules ?? []) as Array<Record<string, unknown>>).filter(
+    (row) => typeof row.inbox_id === 'string' && visible.has(row.inbox_id.toLowerCase()),
+  );
 
   // Last run per rule. Fetched as one flat, workspace-scoped page and reduced
   // in memory rather than as a PostgREST embed: an embedded resource cannot be
@@ -126,7 +132,7 @@ export async function POST(request: NextRequest) {
   if (!isUuid(body.inbox_id)) return NextResponse.json({ error: 'Choose the inbox this automation runs against.' }, { status: 400 });
   if (!isUuid(body.api_key_id)) return NextResponse.json({ error: 'Choose the API key this automation acts with.' }, { status: 400 });
 
-  const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id);
+  const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id, c.user.id);
   if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
 
   // A label works on every provider, but not every NAME does: on IMAP a label

@@ -27,11 +27,12 @@ const OWNER = '00000000-0000-0000-0000-0000000000a1';
 type Answer = { data?: unknown; count?: number | null; error?: { message: string } | null };
 
 /** A service-role stub that answers the three reads and counts them. */
-function fakeDb(opts: { flag?: Answer; count?: Answer; owner?: Answer }) {
+function fakeDb(opts: { flag?: Answer; count?: Answer; owner?: Answer; seat?: Answer }) {
   const reads = { flag: 0, count: 0, owner: 0 };
   const db = {
     from(table: string) {
       let kind: 'flag' | 'count' | 'owner' = table === 'pricing_switches' ? 'flag' : 'owner';
+      let key: unknown = null;
       const builder: Record<string, unknown> = {};
       Object.assign(builder, {
         select: (_cols: string, o?: { head?: boolean }) => {
@@ -42,8 +43,13 @@ function fakeDb(opts: { flag?: Answer; count?: Answer; owner?: Answer }) {
           }
           return builder;
         },
-        eq: () => builder,
+        eq: (_col: string, value: unknown) => ((key = value), builder),
         maybeSingle: async () => {
+          // The per-person Business switch (business-seats.ts): off unless a
+          // test says otherwise, and not counted as a founder flag read.
+          if (key === 'business_seat_pricing') {
+            return { data: { enabled: false }, error: null, ...opts.seat };
+          }
           reads.flag += 1;
           return { data: { enabled: true }, error: null, ...opts.flag };
         },
@@ -74,6 +80,19 @@ test('flag on, places open, new owner: an offer', async () => {
   const offer = await currentFounderOffer({ db, ownerId: OWNER, now: OPEN });
   assert.equal(offer?.placesLeft, 14);
   assert.equal(offer?.monthlyPriceId, 'price_founder_month');
+});
+
+test('Business billed per person (business_seat_pricing on): no founder offer', async () => {
+  resetFounderOfferCaches();
+  const { db } = fakeDb({ count: { count: 6 }, seat: { data: { enabled: true } } });
+  assert.equal(await currentFounderOffer({ db, ownerId: OWNER, now: OPEN, fresh: true }), null);
+});
+
+test('a failed per-person switch read leaves the founder offer as it was', async () => {
+  resetFounderOfferCaches();
+  const { db } = fakeDb({ count: { count: 6 }, seat: { error: { message: 'boom' } } });
+  const offer = await quiet(() => currentFounderOffer({ db, ownerId: OWNER, now: OPEN, fresh: true }));
+  assert.equal(offer?.placesLeft, 14);
 });
 
 test('flag off: no offer', async () => {

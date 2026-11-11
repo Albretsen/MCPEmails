@@ -423,6 +423,9 @@ export function noInboxMode(response: unknown, logErrorCode: string | null): "li
   const result = (response as { result?: ToolResultLike } | null)?.result;
   if (!result || typeof result !== "object") return null;
   if (logErrorCode === "no_inbox_connected" && result.isError === true) return "error";
+  // Teammates own private mailboxes (Business): the answer is "ask them to
+  // make one company-wide or connect your own", not the first-run text.
+  if (typeof result.structuredContent?.["private_mailboxes_owned_by_teammates"] === "number") return null;
   if (result.isError !== true && result.structuredContent?.["setup_required"] === true) return "list";
   return null;
 }

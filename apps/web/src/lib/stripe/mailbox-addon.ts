@@ -7,12 +7,14 @@ import {
   canonicalPriceId,
   extraMailboxQuantity,
   getPlanByStripePriceId,
+  isBusinessSeatPriceId,
   mailboxAddonItem,
   mailboxAddonPriceId,
   twinOfPriceId,
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
+import { countCompanyInboxes, syncBusinessSeats } from '@/lib/stripe/business-seats';
 
 /**
  * Business bills mailboxes above the included ten as a second subscription
@@ -23,7 +25,10 @@ import {
  * subscription OWNER owns. A Business subscription covers all of them (the
  * webhook projects the plan onto each owned workspace), so the count is the
  * owner's, not one workspace's, and a member who connects a mailbox in the
- * owner's workspace adds to the owner's bill.
+ * owner's workspace adds to the owner's bill. On a per-person Business
+ * subscription (base item on a seat price, business-seats.ts) only
+ * company-wide mailboxes count: a private mailbox is paid for by its owner's
+ * seat. `syncMailboxAddonForWorkspace` also re-syncs that seat count.
  *
  * WHEN IT RUNS. After a connect route adds an inbox, after an inbox or a
  * workspace is deleted, and when the webhook sees a Business subscription
@@ -70,6 +75,8 @@ export interface MailboxAddonState {
   interval: BillingInterval | null;
   /** The add-on item, when present. */
   addonItem: { id: string; priceId: string; quantity: number } | null;
+  /** The base item is a per-person Business price (business-seats.ts). */
+  seatPriced: boolean;
 }
 
 export function readMailboxAddonState(subscription: Pick<Stripe.Subscription, 'items'>): MailboxAddonState {
@@ -83,6 +90,7 @@ export function readMailboxAddonState(subscription: Pick<Stripe.Subscription, 'i
     addonItem: addon
       ? { id: addon.id, priceId: addon.price.id, quantity: addon.quantity ?? 0 }
       : null,
+    seatPriced: isBusinessSeatPriceId(base?.price?.id ?? null),
   };
 }
 
@@ -186,7 +194,13 @@ export async function syncMailboxAddonForWorkspace(
       .eq('id', workspaceId)
       .maybeSingle();
     if (error || !data?.owner_id) return { status: 'skipped', reason: 'no_owner' };
-    return await syncMailboxAddon(data.owner_id, resolved);
+    const result = await syncMailboxAddon(data.owner_id, resolved);
+    // Every connect and delete route calls this one function, and a person's
+    // first or last mailbox in a workspace moves the per-person seat count
+    // too. A no-op with the switch off or on any price that is not a seat
+    // price; it never throws.
+    await syncBusinessSeats(data.owner_id, resolved);
+    return result;
   } catch (err) {
     return failed(err);
   }
@@ -211,9 +225,8 @@ export async function syncMailboxAddon(
     // A comped or hand-seeded Business plan has no subscription to bill.
     if (!billing.stripe_subscription_id) return { status: 'skipped', reason: 'no_subscription' };
 
-    const count = await countOwnedInboxes(db, ownerId);
-    if (count === null) return { status: 'skipped', reason: 'count_failed' };
-    const extra = extraMailboxQuantity(count);
+    const allCount = await countOwnedInboxes(db, ownerId);
+    if (allCount === null) return { status: 'skipped', reason: 'count_failed' };
 
     const subscription = await stripe.subscriptions.retrieve(billing.stripe_subscription_id);
     if (!ENTITLED.has(subscription.status)) return { status: 'skipped', reason: 'not_entitled' };
@@ -222,6 +235,15 @@ export async function syncMailboxAddon(
     // flight must not be billed for the plan it is leaving.
     const state = readMailboxAddonState(subscription);
     if (state.planId !== 'pro' || !state.interval) return { status: 'skipped', reason: 'not_business' };
+
+    // Business billed per person (business-seats.ts): a private mailbox is
+    // covered by its owner's seat, so only company-wide mailboxes count
+    // toward the ten. Decided by the base price, not the switch, so a flat
+    // $39 / founder subscription keeps counting every mailbox whatever the
+    // switch says, and a per-person one never pays twice for a mailbox.
+    const count = state.seatPriced ? await countCompanyInboxes(db, ownerId) : allCount;
+    if (count === null) return { status: 'skipped', reason: 'count_failed' };
+    const extra = extraMailboxQuantity(count);
 
     const from = state.addonItem?.quantity ?? 0;
     const items = mailboxAddonItemChanges({

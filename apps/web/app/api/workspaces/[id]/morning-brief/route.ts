@@ -8,6 +8,7 @@ import {
   normalizeMorningBriefInput,
 } from '@/lib/morning-brief/settings';
 import { canManageWorkspace, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
+import { canAccessInbox } from '@/lib/inboxes/visibility';
 
 /**
  * /api/workspaces/[id]/morning-brief: the workspace's daily brief settings
@@ -34,6 +35,7 @@ type Params = { params: Promise<{ id: string }> };
 
 interface Scope {
   workspaceId: string;
+  userId: string;
   allowed: boolean;
   canManage: boolean;
 }
@@ -72,7 +74,7 @@ async function authorize(params: Params['params']): Promise<Authorized> {
   ]);
   // Not visible: the same answer as any unmatched /api path.
   if (!access.visible) return fail('Not found.', 404);
-  return { ok: true, scope: { workspaceId, allowed: access.allowed, canManage: canManageWorkspace(role) } };
+  return { ok: true, scope: { workspaceId, userId: user.id, allowed: access.allowed, canManage: canManageWorkspace(role) } };
 }
 
 export async function GET(_request: NextRequest, { params }: Params): Promise<NextResponse> {
@@ -157,6 +159,19 @@ export async function PUT(request: NextRequest, { params }: Params): Promise<Nex
       .is('deleted_at', null)
       .maybeSingle();
     if (error || !inbox) return NextResponse.json({ error: 'invalid_inbox' }, { status: 400 });
+    // The brief goes to this inbox, so it must be one the caller may use (the
+    // Business privacy model, 20261111190000). A save that keeps the stored
+    // inbox is not a new choice and is let through.
+    if (!(await canAccessInbox(service, input.value.inbox_id, scope.userId))) {
+      const { data: stored } = await service
+        .from('morning_briefs')
+        .select('inbox_id')
+        .eq('workspace_id', scope.workspaceId)
+        .maybeSingle();
+      if (stored?.inbox_id !== input.value.inbox_id) {
+        return NextResponse.json({ error: 'invalid_inbox' }, { status: 400 });
+      }
+    }
   }
 
   const { error } = await service.from('morning_briefs').upsert(

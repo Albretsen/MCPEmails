@@ -253,6 +253,7 @@ export function ApprovalReview({ review, csrfToken }) {
           {review.body.unavailable ? (
             <p className="review-body-note">
               {t(`approvals.review.body${review.body.unavailable === 'withheld_role' ? 'WithheldRole'
+                : review.body.unavailable === 'withheld_private' ? 'WithheldPrivate'
                 : review.body.unavailable === 'stored_with_provider' ? 'StoredWithProvider'
                 : review.body.unavailable === 'decrypt_failed' ? 'DecryptFailed'
                 : 'Absent'}`)}

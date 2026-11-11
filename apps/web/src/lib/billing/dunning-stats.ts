@@ -276,6 +276,12 @@ export interface OutcomeSummary {
   medianDaysToRecover: number | null;
   /** How many recovered sequences the median is taken over. */
   recoveredWithTiming: number;
+  /**
+   * Recovered more than 14 days after the sequence started: the part of the
+   * retry window that only exists since it went from 2 weeks to 1 month
+   * (retry-window.ts). The read-out for that change.
+   */
+  recoveredAfterDay14: number;
   /** SCA first, then by sequence count. */
   byDeclineCode: DeclineCodeRow[];
   /** Recovered sequences by who fixed it. */
@@ -291,6 +297,9 @@ export interface DeletionRow {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The Stripe retry window before 2026-11-11 (retry-window.ts history). */
+export const LEGACY_RETRY_WINDOW_DAYS = 14;
 
 export function median(values: number[]): number | null {
   if (values.length === 0) return null;
@@ -356,6 +365,7 @@ export function summariseOutcomes(rows: DunningRow[], deletions: DeletionRow[] =
   const byCode = new Map<string, DeclineCodeRow>();
   const recoveredBy: Record<RecoveredBy, number> = { customer: 0, retry: 0, unknown: 0, not_recorded: 0 };
   const days: number[] = [];
+  let recoveredAfterDay14 = 0;
   let recovered = 0;
   let lost = 0;
   let open = 0;
@@ -383,7 +393,9 @@ export function summariseOutcomes(rows: DunningRow[], deletions: DeletionRow[] =
       recovered += 1;
       recoveredBy[normaliseRecoveredBy(seq.recoveredBy)] += 1;
       if (seq.startedAt != null && seq.recoveredAt != null && seq.recoveredAt >= seq.startedAt) {
-        days.push((seq.recoveredAt - seq.startedAt) / DAY_MS);
+        const d = (seq.recoveredAt - seq.startedAt) / DAY_MS;
+        days.push(d);
+        if (d > LEGACY_RETRY_WINDOW_DAYS) recoveredAfterDay14 += 1;
       }
     } else if (outcome === 'lost') {
       lost += 1;
@@ -402,6 +414,7 @@ export function summariseOutcomes(rows: DunningRow[], deletions: DeletionRow[] =
     recoveryRate: closed >= MIN_SEQUENCES_FOR_RATE ? recovered / closed : null,
     medianDaysToRecover: median(days),
     recoveredWithTiming: days.length,
+    recoveredAfterDay14,
     byDeclineCode: [...byCode.values()].sort(
       (a, b) =>
         Number(b.sca) - Number(a.sca) ||

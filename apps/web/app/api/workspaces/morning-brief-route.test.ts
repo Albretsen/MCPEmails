@@ -41,6 +41,8 @@ interface World {
   gate: { visible: boolean; allowed: boolean };
   stored: Record<string, unknown> | null;
   tableMissing: boolean;
+  /** inbox_visible_to() for the caller (the Business privacy model). */
+  inboxVisible: boolean;
   gateReads: number;
   calls: Call[];
 }
@@ -55,6 +57,7 @@ function reset(overrides: Partial<World> = {}): void {
     gate: { visible: true, allowed: true },
     stored: null,
     tableMissing: false,
+    inboxVisible: true,
     gateReads: 0,
     calls: [],
     ...overrides,
@@ -86,6 +89,10 @@ function resolve(call: Call): { data: unknown; error: unknown } {
 
 function client(kind: 'user' | 'service') {
   return {
+    rpc: async (name: string) => {
+      assert.equal(name, 'inbox_visible_to');
+      return { data: world.inboxVisible, error: null };
+    },
     from(table: string) {
       const call: Call = { client: kind, table, op: 'select', columns: null, filters: [], payload: null };
       const run = () => {
@@ -242,4 +249,17 @@ test('missing table: 503 unavailable on both methods', async () => {
   reset({ tableMissing: true });
   assert.equal((await get()).status, 503);
   assert.equal((await put(GOOD)).status, 503);
+});
+
+test("privacy: the brief cannot be pointed at someone else's private inbox", async () => {
+  reset({ inboxVisible: false });
+  const res = await put(GOOD);
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error, 'invalid_inbox');
+  assert.equal(world.stored, null);
+});
+
+test('privacy: a save that keeps the stored inbox is let through even if it is not visible', async () => {
+  reset({ inboxVisible: false, stored: { ...GOOD } });
+  assert.equal((await put({ ...GOOD, hour: 8 })).status, 200);
 });

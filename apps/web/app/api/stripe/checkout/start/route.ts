@@ -4,11 +4,15 @@ import { PERSONAL_PASS_3M } from '@/lib/stripe/plans';
 import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 
 /**
- * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>][&recovered_from=<cs_...>]
+ * GET /api/stripe/checkout/start?plan=<planId>&interval=<month|year>[&lang=<locale>][&recovered_from=<cs_...>][&restart=<sub_...>]
  * GET /api/stripe/checkout/start?product=personal_pass_3m[&lang=<locale>][&arm=<arm>][&from=<surface>]
  *
  * `recovered_from` is the expired session an abandoned-checkout reminder links
  * from. It only goes into the new session's metadata.
+ *
+ * `restart` is the subscription a card-failure restart email links from
+ * (src/lib/billing/payment-restart.ts). The core keeps that subscription's
+ * price when every check there passes, and sells today's price otherwise.
  *
  * `product=personal_pass_3m` buys the 3-month Personal pass instead (one
  * payment, runPassCheckout); `plan` and `interval` are then ignored. `arm` is
@@ -97,6 +101,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const locale = request.nextUrl.searchParams.get('lang');
   // Set only by the abandoned-checkout reminder's link; validated in the core.
   const recoveredFrom = request.nextUrl.searchParams.get('recovered_from');
+  // Set only by the restart email after a card-failure cancel
+  // (payment-restart.ts); validated, and its price checked, in the core.
+  const restartFrom = request.nextUrl.searchParams.get('restart');
   const product = request.nextUrl.searchParams.get('product');
 
   // Vercel's geolocation of this request, for the EUR currency choice and VAT
@@ -115,6 +122,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           interval,
           locale,
           ...(recoveredFrom ? { recoveredFrom } : {}),
+          ...(restartFrom ? { restartFrom } : {}),
           ...(country ? { country } : {}),
         });
 

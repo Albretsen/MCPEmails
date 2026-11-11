@@ -48,6 +48,7 @@ import {
 import type { LimitClass, RateLimiter } from "./rate-limit.ts";
 import type { ApiKeyRow, McpSeam } from "./seam.ts";
 import { planSlug, type Store, toAssistantAllowance } from "./store.ts";
+import { type InboxScope, keyInboxIds, scopeAllows } from "./visibility.ts";
 
 export interface AppDeps {
   mcp: McpSeam;
@@ -75,6 +76,8 @@ export interface AppDeps {
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
 const KEY_TTL_MS = 10 * 60_000;
 const INBOX_LIST_TTL_MS = 60_000;
+/** Same as the membership cache (auth.ts): visibility changes land within it. */
+const SCOPE_TTL_MS = 60_000;
 const REQUEST_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const VIEWER_SCOPES = ["read:email", "search:email"];
 
@@ -193,7 +196,11 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
   const health = deps.health ?? new InboxHealth(now);
   const threads = deps.threads ?? new ThreadMemory();
   const keys = new Map<string, { row: ApiKeyRow; at: number }>();
+  // Keyed by workspace AND user: two members of one workspace can see
+  // different inboxes (visibility.ts), so a list is never shared between them.
   const inboxLists = new Map<string, { inboxes: Inbox[]; at: number }>();
+  const listKey = (workspaceId: string, userId: string) => `${workspaceId}:${userId}`;
+  const scopes = new Map<string, { scope: InboxScope; at: number }>();
 
   const workspaceKey = async (workspaceId: string, timing: Timing): Promise<ApiKeyRow> => {
     const hit = keys.get(workspaceId);
@@ -210,7 +217,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     }
   };
 
-  /** Fill the key and inbox-row caches from a membership load that carried them (store.ts). */
+  /** Fill the key cache from a membership load that carried it (store.ts). Inbox rows: `seedInboxRows`. */
   const seeded = new WeakSet<Membership[]>();
   const seedFromMemberships = (rows: Membership[]): void => {
     // Once per load, not per request: the gate hands back the same array until
@@ -226,32 +233,84 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         if (keys.size > 5000) keys.clear();
         keys.set(m.workspace_id, { row: key, at: now() });
       }
-      for (const inbox of m.inbox_rows ?? []) {
-        if (inbox.workspace_id !== m.workspace_id) continue;
-        // Every row, whatever its status: a row in 'error' is exactly what
-        // `/session` has to report and what a mail call must not dial.
-        health.observe(inbox as unknown as HealthRow);
-        if (inbox.status === "active") inboxRows.remember(inbox);
-      }
     }
   };
 
-  /** The key row an executor sees for this caller. `human` adds the send-gate marker. */
-  const callerKey = (row: ApiKeyRow, membership: Membership, human: boolean): ApiKeyRow => ({
+  /**
+   * Fill the inbox-row and health caches from the membership's rows, once per
+   * load, and only with rows this member may see. (store.ts already cut them
+   * down; this is the second check, because both caches are shared by every
+   * user of the isolate and are read by inbox id.)
+   */
+  const seededRows = new WeakSet<Membership>();
+  const seedInboxRows = (m: Membership, scope: InboxScope): void => {
+    if (seededRows.has(m)) return;
+    seededRows.add(m);
+    for (const inbox of m.inbox_rows ?? []) {
+      if (inbox.workspace_id !== m.workspace_id || !scopeAllows(scope, inbox.id)) continue;
+      // Every row, whatever its status: a row in 'error' is exactly what
+      // `/session` has to report and what a mail call must not dial.
+      health.observe(inbox as unknown as HealthRow);
+      if (inbox.status === "active") inboxRows.remember(inbox);
+    }
+  };
+
+  /**
+   * The inboxes this member may see in this workspace. From the membership
+   * load when it carried the ACL, else one RPC, cached per (workspace, user).
+   * A failed read refuses the request: never "everything".
+   */
+  const inboxScope = async (membership: Membership, userId: string, timing: Timing): Promise<InboxScope> => {
+    if (membership.inbox_scope) return membership.inbox_scope;
+    const key = listKey(membership.workspace_id, userId);
+    const hit = scopes.get(key);
+    if (hit && now() - hit.at < SCOPE_TTL_MS) return hit.scope;
+    const started = performance.now();
+    try {
+      const scope = await deps.store.inboxScope(membership.workspace_id, userId);
+      if (scopes.size > 5000) scopes.clear();
+      scopes.set(key, { scope, at: now() });
+      return scope;
+    } catch {
+      throw new ApiError(503, "internal_error", "Could not check which inboxes you can use. Try again.", {
+        retryable: true,
+      });
+    } finally {
+      timing.db += performance.now() - started;
+    }
+  };
+
+  /**
+   * The key row an executor sees for this caller. `human` adds the send-gate
+   * marker. It acts as the signed-in person: `created_by` is them (the stored
+   * row's is null, it belongs to nobody), and `inbox_ids` is what they may see,
+   * so every executor's own allow-list check (resolveInbox, inbox_list, the
+   * selectors, the workspace-wide lists) applies the visibility rule.
+   */
+  const callerKey = (row: ApiKeyRow, membership: Membership, scope: InboxScope, userId: string, human: boolean): ApiKeyRow => ({
     ...row,
+    created_by: userId,
     scopes: canWrite(membership.role) ? row.scopes : row.scopes.filter((s) => VIEWER_SCOPES.includes(s)),
-    inbox_ids: null,
+    inbox_ids: keyInboxIds(scope),
     ...(human ? { firstPartyHuman: true as const } : {}),
   });
 
-  const mailEnvFor = (row: ApiKeyRow, membership: Membership, requestId: string, arrival: number): MailEnv => ({
+  const mailEnvFor = (
+    row: ApiKeyRow,
+    membership: Membership,
+    scope: InboxScope,
+    userId: string,
+    requestId: string,
+    arrival: number,
+  ): MailEnv => ({
     mcp: deps.mcp,
     pool: deps.pool,
     arrival,
     imapDial: deps.imapDial,
     inboxes: inboxRows,
     threads,
-    apiKey: callerKey(row, membership, true),
+    apiKey: callerKey(row, membership, scope, userId, true),
+    canSee: (inboxId) => scopeAllows(scope, inboxId),
     canWrite: canWrite(membership.role),
     health,
     // Both writes happen after the response (EdgeRuntime.waitUntil when the
@@ -281,25 +340,32 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     // list for the rest of its TTL. Other isolates still hold theirs for up to
     // INBOX_LIST_TTL_MS; there is no cross-isolate signal.
     onInboxGone: () => {
-      inboxLists.delete(membership.workspace_id);
+      const prefix = `${membership.workspace_id}:`;
+      for (const key of [...inboxLists.keys()]) if (key.startsWith(prefix)) inboxLists.delete(key);
     },
     now,
   });
 
-  const listInboxes = async (env: MailEnv, workspaceId: string, timings: OpTimings): Promise<Inbox[]> => {
-    const hit = inboxLists.get(workspaceId);
+  const listInboxes = async (env: MailEnv, workspaceId: string, userId: string, timings: OpTimings): Promise<Inbox[]> => {
+    const key = listKey(workspaceId, userId);
+    const hit = inboxLists.get(key);
     if (hit && now() - hit.at < INBOX_LIST_TTL_MS) return hit.inboxes;
     const outcome = await runExecutor(env, { tool: "inbox_list", args: {} }, { inboxId: null, flow: {}, timings });
     const body = resultJson(outcome.result) as { inboxes?: Inbox[] };
     // `inbox_list` also lists parked inboxes (status "parked", outside the
     // plan's inbox cap, see mcp-server/parked-inbox.ts) so an assistant can
     // explain them. The web client cannot use one, so it never sees one.
+    // The key's inbox_ids already narrowed the listing to what this person
+    // may see; `canSee` is the same rule applied once more to what came back.
     const inboxes = Array.isArray(body.inboxes)
-      ? body.inboxes.filter((inbox) => (inbox as { status?: unknown }).status !== "parked")
+      ? body.inboxes.filter((inbox) =>
+        (inbox as { status?: unknown }).status !== "parked" &&
+        typeof inbox.inbox_id === "string" && (env.canSee?.(inbox.inbox_id) ?? false)
+      )
       : [];
     if (outcome.logStatus === "success") {
       if (inboxLists.size > 2000) inboxLists.clear();
-      inboxLists.set(workspaceId, { inboxes, at: now() });
+      inboxLists.set(key, { inboxes, at: now() });
     }
     return inboxes;
   };
@@ -341,7 +407,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
    * only sender identity.
    */
   type SessionInbox = Inbox & InboxState;
-  const sessionInboxList = (listed: Inbox[], membership: Membership): SessionInbox[] => {
+  const sessionInboxList = (listed: Inbox[], membership: Membership, scope: InboxScope): SessionInbox[] => {
     const workspaceId = membership.workspace_id;
     const out: SessionInbox[] = listed.map((inbox) => ({
       ...inbox,
@@ -351,6 +417,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     for (const raw of membership.inbox_rows ?? []) {
       const row = raw as unknown as HealthRow;
       if (row.workspace_id !== workspaceId || row.status !== "error" || seen.has(row.id)) continue;
+      if (!scopeAllows(scope, row.id)) continue;
       const address = row.email_address ?? "";
       const name = row.display_name || address;
       out.push({
@@ -577,7 +644,12 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       const keyStarted = performance.now();
       const keyRow = await workspaceKey(membership.workspace_id, timing);
       fields["key_ms"] = Math.round(performance.now() - keyStarted);
-      const env = mailEnvFor(keyRow, membership, requestId, arrival);
+      // Which inboxes this person may see here. Every inbox the handlers
+      // below touch is checked against it (MailEnv.canSee, the key's inbox_ids).
+      const scope = await inboxScope(membership, user.id, timing);
+      if (scope.restricted) fields["inbox_scope"] = scope.ids.length;
+      seedInboxRows(membership, scope);
+      const env = mailEnvFor(keyRow, membership, scope, user.id, requestId, arrival);
 
       // ── routes ────────────────────────────────────────────────────────────
       if (pushRoute && deps.push) {
@@ -586,7 +658,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
           workspaceId: membership.workspace_id,
           userAgent: req.headers.get("user-agent"),
           inboxIds: async () =>
-            (await listInboxes(env, membership.workspace_id, { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 }))
+            (await listInboxes(env, membership.workspace_id, user.id, { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 }))
               .map((inbox) => inbox.inbox_id),
         });
         Object.assign(fields, outcome.fields);
@@ -602,7 +674,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         const profileStarted = performance.now();
         const [profile, inboxes, allowance] = await Promise.all([
           deps.store.userProfile(user.id).catch(() => null),
-          listInboxes(env, membership.workspace_id, timings),
+          listInboxes(env, membership.workspace_id, user.id, timings),
           readAllowance(membership, { auth: 0, db: 0, provider: 0 }, requestId),
         ]);
         // Three database reads side by side (the inbox list is one too: no
@@ -610,7 +682,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         // Adding each one's own duration reported more "db" than the request took.
         timing.db += performance.now() - profileStarted;
         fields["inboxes"] = inboxes.length;
-        const sessionInboxes = sessionInboxList(inboxes, membership);
+        const sessionInboxes = sessionInboxList(inboxes, membership, scope);
         fields["inboxes_attention"] = sessionInboxes.filter((i) => i.status !== "ok").length;
         return json({
           user: { id: user.id, email: user.email, display_name: profile?.display_name ?? null },
@@ -686,12 +758,12 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         throw new ApiError(503, "provider_error", "The assistant is not available.", { retryable: true });
       }
       const timings: OpTimings = { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 };
-      const inboxes = await listInboxes(env, membership.workspace_id, timings);
+      const inboxes = await listInboxes(env, membership.workspace_id, user.id, timings);
       const assistantDeps = buildAssistantDeps({
         mcp: deps.mcp,
         store: deps.store,
         mailEnv: env,
-        assistantKey: callerKey(keyRow, membership, false),
+        assistantKey: callerKey(keyRow, membership, scope, user.id, false),
         canWrite: canWrite(membership.role),
         user,
         workspaceId: membership.workspace_id,

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import {
   CONTENT_MAILBOX,
   COUPONS,
+  DEFAULT_PRICING_SWITCHES,
   PERSONAS,
   PRICES,
   PRODUCTS,
@@ -86,7 +87,7 @@ test('the route handles exactly the events the endpoint subscribes to', () => {
 test('catalog covers every STRIPE_PRICE_* env the web app reads, once each', () => {
   const envs = PRICES.map((p) => p.env);
   assert.equal(new Set(envs).size, envs.length);
-  assert.equal(envs.length, 18);
+  assert.equal(envs.length, 20);
   for (const price of PRICES) assert.ok(PRODUCTS.some((p) => p.key === price.product), price.env);
   const sources = ['plans.ts', 'eur-launch-plan.ts'].map((file) =>
     readFileSync(new URL(`../apps/web/src/lib/stripe/${file}`, import.meta.url), 'utf8'),
@@ -113,6 +114,30 @@ test('EUR options: prod today without --with-eur, launch rule with it', () => {
   assert.equal(eurOptionFor(byEnv('STRIPE_PRICE_PRO_MONTHLY'), true), null);
   // Founder prices carry an exclusive EUR option in prod already.
   assert.deepEqual(eurOptionFor(byEnv('STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY'), false), { unit_amount: 2900, tax_behavior: 'exclusive' });
+});
+
+test('the two per-person Business prices: $29 and $278.40 on the Business product, with lookup keys', () => {
+  const byEnv = (env) => PRICES.find((p) => p.env === env);
+  const month = byEnv('STRIPE_PRICE_BUSINESS_SEAT_MONTHLY');
+  const year = byEnv('STRIPE_PRICE_BUSINESS_SEAT_YEARLY');
+  assert.equal(month.product, 'business');
+  assert.equal(year.product, 'business');
+  assert.equal(month.amount, 2900);
+  assert.equal(year.amount, 27840);
+  assert.equal(year.amount, Math.round(month.amount * 12 * 0.8), 'the same 20% annual discount as every plan');
+  const params = priceCreateParams(month, 'prod_b', false);
+  assert.equal(params.lookup_key, 'business_seat_month');
+  assert.equal(priceCreateParams(year, 'prod_b', false).lookup_key, 'business_seat_year');
+  assert.deepEqual(params.recurring, { interval: 'month', interval_count: 1, usage_type: 'licensed' });
+  assert.equal(params.tax_behavior, 'exclusive');
+  assert.equal('currency_options' in params, false, 'no EUR option until --with-eur');
+  assert.deepEqual(priceCreateParams(year, 'prod_b', true).currency_options, {
+    eur: { unit_amount: 27840, tax_behavior: 'inclusive' },
+  });
+  assert.equal(DEFAULT_PRICING_SWITCHES.business_seat_pricing, true, 'staging runs per person');
+  const business = PRODUCTS.find((p) => p.key === 'business');
+  assert.match(business.description, /per person/);
+  assert.doesNotMatch(business.description, /no extra cost|Unlimited members|\u2014/);
 });
 
 test('price create params mirror the spec', () => {

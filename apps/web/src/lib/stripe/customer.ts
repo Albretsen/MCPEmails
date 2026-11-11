@@ -83,8 +83,9 @@ export async function getOrCreateStripeCustomer(
     );
 
   if (writeError) {
-    // The customer was created in Stripe but couldn't be saved. Surface so the
-    // caller can retry (the customer is recoverable via user_id metadata).
+    // The customer was created in Stripe but couldn't be saved. Delete it so a
+    // retry does not leave one empty customer per attempt, then surface.
+    await deleteStripeCustomerQuietly(customer.id);
     throw new Error(
       `Stripe customer ${customer.id} created but could not be saved for user ${userId}: ${writeError.message}`,
     );
@@ -99,8 +100,60 @@ export async function getOrCreateStripeCustomer(
     .maybeSingle();
 
   if (after?.stripe_customer_id && after.stripe_customer_id !== customer.id) {
+    // Lost the race: ours was never saved, so nothing will ever use it.
+    await deleteStripeCustomerQuietly(customer.id);
     return { customerId: after.stripe_customer_id, created: false };
   }
 
   return { customerId: customer.id, created: true };
+}
+
+/** Delete a customer this request created. Never throws; logs on failure. */
+async function deleteStripeCustomerQuietly(customerId: string): Promise<boolean> {
+  try {
+    await stripe.customers.del(customerId);
+    return true;
+  } catch (err) {
+    console.error('[stripe-customer] could not delete unused customer', {
+      customerId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/**
+ * Undo `getOrCreateStripeCustomer` for a checkout that failed before Stripe
+ * returned a session. Call it ONLY when that call answered `created: true`
+ * in the same request: the customer is minutes old and nothing else holds it.
+ *
+ * Clears `user_billing.stripe_customer_id` first, and only while the row still
+ * names this customer and carries no subscription, so a concurrent request
+ * that already saw the id is never left pointing at a deleted customer
+ * without a reason; then deletes the customer in Stripe. If the row moved on,
+ * the customer is left alone. Never throws: a failed clean-up is logged and
+ * the checkout's own error stands.
+ */
+export async function discardNewStripeCustomer(userId: string, customerId: string): Promise<void> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from('user_billing')
+      .update({ stripe_customer_id: null })
+      .eq('user_id', userId)
+      .eq('stripe_customer_id', customerId)
+      .is('stripe_subscription_id', null)
+      .select('user_id');
+    if (error) {
+      console.error('[stripe-customer] could not clear unused customer', { customerId, error: error.message });
+      return;
+    }
+    if (!data || data.length === 0) return;
+    await deleteStripeCustomerQuietly(customerId);
+  } catch (err) {
+    console.error('[stripe-customer] discard failed', {
+      customerId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }

@@ -5,7 +5,8 @@
  * Fourteen templates in two categories, and the split between them is the most
  * important thing in this file.
  *
- * TRANSACTIONAL (dunning_1/3/7/14, card_expiry_30/7, cancel_ask)
+ * TRANSACTIONAL (dunning_1/3/7/14, card_expiry_30/7, cancel_ask,
+ * payment_failed_restart)
  *   Service messages about a broken or about-to-break payment on a contract the
  *   customer is already in. They need no opt-in and they are NOT suppressible.
  *   A customer who unsubscribed from a win-back in March must still be told in
@@ -108,6 +109,13 @@ import { lifecycleFrom, lifecycleReplyTo, unsubscribeUrl } from '@/lib/email/lif
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { CANCEL_REASONS, CANCEL_REASON_EMAIL_LABELS } from '@/lib/billing/cancel-reasons';
 import { issueFeedbackToken } from '@/lib/billing/feedback-token';
+import {
+  STRIPE_RETRY_WINDOW_DAYS,
+  daysLeftPhrase,
+  finalNoticeDayOffset,
+  retryDaysLeft,
+  retryWindowPhrase,
+} from '@/lib/billing/retry-window';
 import { planActionUrl, planEndingLinksOn } from '@/lib/billing/plan-action-links';
 
 // ---------------------------------------------------------------------------
@@ -144,6 +152,7 @@ export const BILLING_TEMPLATES = [
   'pass_ended',
   'pause_started',
   'pause_ending_3',
+  'payment_failed_restart',
   'plan_ending_5d',
   'annual_renewal_30',
 ] as const;
@@ -201,13 +210,31 @@ export function categoryOf(template: BillingTemplate): BillingCategory {
   return template.startsWith('winback_') ? 'marketing' : 'transactional';
 }
 
-/** Offsets from the triggering event, in days. Row 0 is queued due immediately. */
+/**
+ * Offsets from the triggering event, in days. Row 0 is queued due immediately.
+ *
+ * The last row keeps its template id `dunning_14` (the ledger, the unique index
+ * and the admin board key on it) but is timed from the Stripe retry window:
+ * the last week of it (src/lib/billing/retry-window.ts). With the 28-day
+ * window that is day 21. Its copy reads its own day off this table, so moving
+ * the window moves the sentence with it.
+ */
 export const DUNNING_SCHEDULE: ReadonlyArray<{ template: BillingTemplate; dayOffset: number }> = [
   { template: 'dunning_1', dayOffset: 0 },
   { template: 'dunning_3', dayOffset: 3 },
   { template: 'dunning_7', dayOffset: 7 },
-  { template: 'dunning_14', dayOffset: 14 },
+  { template: 'dunning_14', dayOffset: finalNoticeDayOffset() },
 ];
+
+/** The scheduled day of a dunning template, from DUNNING_SCHEDULE. */
+function dunningDay(template: BillingTemplate): number {
+  return DUNNING_SCHEDULE.find((s) => s.template === template)?.dayOffset ?? 0;
+}
+
+/** "about 27 days" of retries left on the day `template` is scheduled. */
+function retriesLeftOn(template: BillingTemplate): string {
+  return daysLeftPhrase(retryDaysLeft(dunningDay(template), STRIPE_RETRY_WINDOW_DAYS));
+}
 
 /** Offsets from the date the paid period ENDS, in days. */
 export const WINBACK_SCHEDULE: ReadonlyArray<{ template: BillingTemplate; dayOffset: number }> = [
@@ -497,6 +524,26 @@ export type LifecyclePayload = {
   stripeCustomerId?: string | null;
   /** Unix seconds; the period end half of the scope key. */
   periodEndSeconds?: number | null;
+
+  // ── Dunning close-out and the restart email ──────────────────────────────
+
+  /**
+   * Set on a pending `dunning_14` when the webhook brings it forward because
+   * Stripe has already closed the subscription. The email then says the plan
+   * has closed instead of "the retries end in about a week".
+   */
+  subscriptionClosed?: boolean;
+  /**
+   * payment_failed_restart: true when the ended subscription's price was
+   * checked at queue time and the restart link will keep it
+   * (src/lib/billing/payment-restart.ts). False or absent: the copy promises
+   * nothing about the price and says the checkout page shows it.
+   */
+  restartKeepsPrice?: boolean;
+  /** payment_failed_restart: the plan's billing interval, for the link. */
+  restartInterval?: 'month' | 'year' | null;
+  /** payment_failed_restart: the ended subscription, carried in the link. */
+  restartFromSubscriptionId?: string | null;
 };
 
 export interface ComposedLifecycleEmail {
@@ -1115,6 +1162,156 @@ function composeConfirmPayment(
 }
 
 // ---------------------------------------------------------------------------
+// The final dunning notice, in the last week of the retry window
+// ---------------------------------------------------------------------------
+
+/**
+ * `dunning_14` on its scheduled day: the last reminder while the plan is
+ * still running. Days are read from the retry window constant, never written
+ * down, so this sentence moves with the Stripe setting.
+ */
+function composeFinalDunningNotice(ctx: {
+  category: BillingCategory;
+  base: string;
+  payUrl: string;
+  yourPlan: string;
+  consequence: string | null;
+  confirm: boolean;
+}): ComposedLifecycleEmail {
+  const { category, base, payUrl, yourPlan, consequence, confirm } = ctx;
+  const left = retriesLeftOn('dunning_14');
+  const lead = confirm
+    ? `This is the last reminder about the renewal for ${yourPlan}, which is still waiting for your bank's approval. If it is not approved, the subscription closes in ${left}.`
+    : `This is the last reminder about the declined card on ${yourPlan}. The retries end in ${left}, and if none of them goes through, the subscription closes.`;
+  const running = 'Your plan is still running today. Nothing has been taken away yet.';
+  const fix = confirm
+    ? 'One approval with your bank ends this:'
+    : 'One card update ends this, and the next retry picks it up on its own:';
+  const stop = 'If you meant to stop, you do not have to do anything. Leave it and it closes itself.';
+
+  const body = [
+    lead,
+    '',
+    running,
+    '',
+    consequence ? 'WHEN IT CLOSES' : '',
+    consequence ?? '',
+    consequence ? NOTHING_DELETED : '',
+    consequence ? '' : '',
+    fix,
+    payUrl,
+    '',
+    stop,
+    '',
+    SUPPORT_FOOTER_TEXT,
+    '',
+    'MCPEmails',
+    base,
+    '',
+    POSTAL_ADDRESS_LINE,
+  ]
+    .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
+    .join('\n');
+
+  return {
+    subject: confirm
+      ? 'Last reminder: your MCPEmails payment still needs your approval'
+      : 'Last reminder about your MCPEmails payment',
+    category,
+    body,
+    htmlBody: shell({
+      title: 'Last reminder about your payment',
+      html:
+        p(lead) +
+        p(running) +
+        (consequence ? h('When it closes') + p(consequence) + p(NOTHING_DELETED) : '') +
+        p(stop),
+      ctaUrl: payUrl,
+      ctaLabel: confirm ? CONFIRM_CTA : 'Update the card',
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The restart email (payment_failed_restart)
+// ---------------------------------------------------------------------------
+
+/**
+ * The restart link: the checkout start route with the same plan and interval
+ * and the ended subscription, which lets checkout keep the old price when it
+ * still may (src/lib/billing/payment-restart.ts). Null without a plan or an
+ * interval: a link to the wrong plan is worse than the pricing page.
+ */
+export function paymentRestartUrl(base: string, payload: LifecyclePayload): string | null {
+  const interval = payload.restartInterval;
+  if (!payload.planId || payload.planId === 'free') return null;
+  if (interval !== 'month' && interval !== 'year') return null;
+  const params = new URLSearchParams({ plan: payload.planId, interval });
+  if (payload.restartFromSubscriptionId) params.set('restart', payload.restartFromSubscriptionId);
+  return `${base}/api/stripe/checkout/start?${params.toString()}`;
+}
+
+/**
+ * The plan ended because the card payment did not go through. Plain and
+ * factual: what happened, that nothing is deleted, one link to restart the
+ * same plan. No threat, no discount, no other plan.
+ */
+function composePaymentRestart(ctx: {
+  category: BillingCategory;
+  base: string;
+  payload: LifecyclePayload;
+  name: string | null;
+  amount: string | null;
+}): ComposedLifecycleEmail {
+  const { category, base, payload, name, amount } = ctx;
+  const url = paymentRestartUrl(base, payload) ?? `${base}/pricing`;
+  const planWords = name ? `Your ${name} plan` : 'Your MCPEmails plan';
+  const lead = `${planWords} has ended because the card payment for it did not go through, even after the automatic retries.`;
+  const free = 'Your account is on Free now. You can keep using it there.';
+  const per = payload.restartInterval === 'year' ? 'a year' : 'a month';
+  const priceLine =
+    payload.restartKeepsPrice && amount
+      ? `If you want the plan back, this link restarts it at the price you had, ${amount} ${per}. It takes about a minute, and you can use a different card.`
+      : payload.restartKeepsPrice
+        ? 'If you want the plan back, this link restarts it at the price you had. It takes about a minute, and you can use a different card.'
+        : 'If you want the plan back, this link restarts it. The checkout page shows the price before you pay, and you can use a different card.';
+  const noAction = 'If you do not want it back, there is nothing to do.';
+
+  const body = [
+    lead,
+    '',
+    free,
+    NOTHING_DELETED,
+    '',
+    noAction,
+    '',
+    priceLine,
+    url,
+    '',
+    SUPPORT_FOOTER_TEXT,
+    '',
+    'MCPEmails',
+    base,
+    '',
+    POSTAL_ADDRESS_LINE,
+  ].join('\n');
+
+  return {
+    subject: name ? `Your MCPEmails ${name} plan has ended` : 'Your MCPEmails plan has ended',
+    category,
+    body,
+    htmlBody: shell({
+      title: 'Your plan has ended',
+      html: p(lead) + p(free) + p(NOTHING_DELETED) + p(noAction) + p(priceLine),
+      ctaUrl: url,
+      ctaLabel: name ? `Restart ${name}` : 'Restart the plan',
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Composition
 // ---------------------------------------------------------------------------
 
@@ -1268,6 +1465,7 @@ export function composeBillingEmail(
         ? `Your bank declined the card we have on file, so the ${amount} renewal for ${yourPlan} did not go through.`
         : `Your bank declined the card we have on file, so the renewal for ${yourPlan} did not go through.`;
 
+      const keepsFailing = `The card gets retried automatically over the next ${retryWindowPhrase()}. If it never goes through, the subscription closes.`;
       const lines: string[] = [lead, ''];
       const blocks: string[] = [p(lead)];
 
@@ -1283,14 +1481,13 @@ export function composeBillingEmail(
         'next hour.',
         '',
         'IF IT KEEPS FAILING',
-        'The card gets retried automatically over the next two weeks. If it never',
-        'goes through, the subscription closes.',
+        keepsFailing,
       );
       blocks.push(
         h('Nothing has stopped working'),
         p('Your plan is still running and your agent has not lost anything. We keep paid access on while the card is being retried, so there is no rush in the next hour.'),
         h('If it keeps failing'),
-        p('The card gets retried automatically over the next two weeks. If it never goes through, the subscription closes.'),
+        p(keepsFailing),
       );
       if (consequence) {
         lines.push(consequence);
@@ -1340,11 +1537,11 @@ export function composeBillingEmail(
       const lead = amount
         ? `Three days on, the ${amount} for ${yourPlan} still has not gone through.`
         : `Three days on, the renewal for ${yourPlan} still has not gone through.`;
+      const stillRunning = `Your plan is still running. We do not cut access off while a card is being retried, and there are ${retriesLeftOn('dunning_3')} of retries left.`;
       const body = [
         lead,
         '',
-        'Your plan is still running. We do not cut access off while a card is being',
-        'retried, and there are about eleven days of retries left.',
+        stillRunning,
         '',
         decline ? `Your bank is still saying: ${decline.reason}.` : '',
         decline ? decline.fix : '',
@@ -1373,7 +1570,7 @@ export function composeBillingEmail(
           title: 'The card is still being declined',
           html:
             p(lead) +
-            p('Your plan is still running. We do not cut access off while a card is being retried, and there are about eleven days of retries left.') +
+            p(stillRunning) +
             (decline ? p(`Your bank is still saying: ${decline.reason}. ${decline.fix}`) : '') +
             p('If you would rather stop paying for this, that is a completely fine answer and you can ignore this. It closes on its own.'),
           ctaUrl: payUrl,
@@ -1385,7 +1582,7 @@ export function composeBillingEmail(
 
     case 'dunning_7': {
       const subject = 'A week of failed payments on your MCPEmails account';
-      const lead = `It has been a week of the card being declined on ${yourPlan}, and there is about a week of retries left before the subscription closes.`;
+      const lead = `It has been a week of the card being declined on ${yourPlan}, and there are ${retriesLeftOn('dunning_7')} of retries left before the subscription closes.`;
       const body = [
         lead,
         '',
@@ -1426,6 +1623,20 @@ export function composeBillingEmail(
     }
 
     case 'dunning_14': {
+      // Two moments, one template id. Scheduled, it goes out in the last week
+      // of Stripe's retry window while the plan is still running (the
+      // ordinary case). Brought forward by the webhook because Stripe has
+      // already closed the subscription, it says so (`subscriptionClosed`).
+      if (!payload.subscriptionClosed) {
+        return composeFinalDunningNotice({
+          category,
+          base,
+          payUrl,
+          yourPlan,
+          consequence,
+          confirm: isConfirmPayment(payload),
+        });
+      }
       const subject = 'Last note about your MCPEmails payment';
       const lead = `This is the last email about the declined card on ${yourPlan}. The retries are finished, so the subscription is closing.`;
       const body = [
@@ -1541,6 +1752,12 @@ export function composeBillingEmail(
     // plan. Nothing is keyed to a reason, nothing asks "are you sure", and no
     // discount: the email confirms what the customer did.
     // ─────────────────────────────────────────────────────────────────────
+    // The plan ended on a failed card, and the owner is still using the
+    // product. Transactional: it is about this customer's own bill and the
+    // contract that just ended, with one link back to the same plan.
+    case 'payment_failed_restart':
+      return composePaymentRestart({ category, base, payload, name, amount });
+
     case 'cancel_ask': {
       const subject = 'Your MCPEmails cancellation is confirmed';
       const until = endsOn

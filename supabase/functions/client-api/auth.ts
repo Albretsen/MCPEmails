@@ -32,6 +32,7 @@
 
 import { ApiError, forbidden, unauthenticated } from "./errors.ts";
 import type { ApiKeyRow, InboxRow } from "./seam.ts";
+import type { InboxScope } from "./visibility.ts";
 
 export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
 
@@ -50,7 +51,14 @@ export interface Membership {
    * field and never spreads this object.
    */
   web_client_key?: ApiKeyRow | null;
+  /** Only the inboxes visible to THIS member (see `inbox_scope`). */
   inbox_rows?: InboxRow[];
+  /**
+   * Which inboxes of this workspace the member may see (visibility.ts), when
+   * the same round trip carried the inbox ACL. Absent: app.ts asks the
+   * database (`credential_inbox_scope`) before any inbox is touched.
+   */
+  inbox_scope?: InboxScope;
 }
 
 export interface AuthedUser {

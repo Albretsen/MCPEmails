@@ -21,6 +21,10 @@ on:
   # build from. They gate on the same "CI passed" check, so it runs there too.
   push:
     branches: [main, staging]
+  # Dispatched by sync-staging.yml after it merges main into staging: a push
+  # made with GITHUB_TOKEN starts no workflows, and the staging Vercel
+  # projects wait for "CI passed" on that merge commit.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}

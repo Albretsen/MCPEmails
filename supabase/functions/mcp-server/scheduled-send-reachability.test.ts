@@ -95,6 +95,19 @@ type Row = Record<string, unknown>;
  * different query from `.is("deleted_at", null)`. Collapsing the two here would
  * make that defect invisible.
  */
+/**
+ * credential_inbox_scope (inbox visibility, migration 20261111190000): nothing
+ * in these fixtures is anyone's hidden private inbox, so every key is
+ * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
+ */
+function visibilityRpc(name: string, args: Record<string, unknown>) {
+  return Promise.resolve(
+    name === "credential_inbox_scope"
+      ? { data: { restricted: false, inbox_ids: args.p_inbox_ids ?? null }, error: null }
+      : { data: null, error: { message: `unexpected rpc ${name}` } },
+  );
+}
+
 function recordingClient(tables: Record<string, Row[]>) {
   const queries: RecordedQuery[] = [];
 
@@ -199,7 +212,7 @@ function recordingClient(tables: Record<string, Row[]>) {
     return builder;
   };
 
-  return { client: { from }, queries, tables };
+  return { client: { from, rpc: visibilityRpc }, queries, tables };
 }
 
 /** A row as production stores it, projected down to what these paths read. */

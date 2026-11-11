@@ -339,6 +339,19 @@ export async function runSends(
   const log = deps.log ?? (() => {});
   const gate = readGate(options.limits);
   const reads = new Map<string, Promise<Map<string, { from: string; subject: string }> | undefined>>();
+  // Per pass: may endpoint E receive inbox I's events (visibility rule).
+  const sees = new Map<string, Promise<boolean>>();
+  const endpointSees = (delivery: LeasedDelivery): Promise<boolean> => {
+    const key = `${delivery.endpoint_id}:${delivery.inbox_id}`;
+    let answer = sees.get(key);
+    if (!answer) {
+      answer = deps.store.endpointSeesInbox(delivery.endpoint_id, delivery.inbox_id!);
+      // A failed read is retried by the next pass, never answered with a send.
+      answer.catch(() => sees.delete(key));
+      sees.set(key, answer);
+    }
+    return answer;
+  };
 
   /** Sender and subject for a headers payload, or undefined when they must not or could not be read. */
   const headersFor = (delivery: LeasedDelivery) => {
@@ -381,7 +394,21 @@ export async function runSends(
         : delivery.attempt >= MAX_ATTEMPTS
         ? "attempts_exhausted"
         : null;
-      if (abandon) {
+      // The endpoint's creator may no longer see this inbox (it is somebody
+      // else's private inbox, or they left the workspace): nothing is sent,
+      // not even the ids. Checked before anything is read from the mailbox.
+      let visibility: "visible" | "hidden" | "unknown" = "visible";
+      if (!abandon) {
+        visibility = await endpointSees(delivery).then((ok) => ok ? "visible" : "hidden", () => "unknown");
+      }
+      if (visibility === "unknown") {
+        // Left leased: it is due again when the lease runs out, with no
+        // attempt counted.
+        log("webhook_visibility_failed", { delivery_id: delivery.delivery_id, endpoint_id: delivery.endpoint_id });
+        report.failed++;
+        return;
+      }
+      if (abandon || visibility === "hidden") {
         await deps.store.recordAttempt({
           deliveryId: delivery.delivery_id,
           leaseId: delivery.lease_id,
@@ -391,7 +418,7 @@ export async function runSends(
           nextAt: null,
           maxFailures: DISABLE_AFTER_FAILURES,
           maxFailingSeconds: DISABLE_AFTER_FAILING_MS / 1000,
-          abandonCode: abandon,
+          abandonCode: abandon ?? "inbox_not_visible",
         }).catch(() => null);
         report.abandoned++;
         return;
