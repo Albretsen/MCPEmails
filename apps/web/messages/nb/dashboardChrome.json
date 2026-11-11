@@ -632,6 +632,16 @@
     "switchBusy": "Klargjør...",
     "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
   },
+  "annualSwitch": {
+    "title": "Bytt til årlig fakturering",
+    "body": "Betal for {plan} én gang i året og spar {percent} % sammenlignet med månedlig betaling.",
+    "current": "De ubrukte dagene i inneværende måned blir kreditert, så dagens belastning blir litt lavere enn et helt år. Du ser det nøyaktige beløpet før noe blir belastet.",
+    "cta": "Bytt til årlig",
+    "busy": "Forbereder...",
+    "noticeBody": "Du betaler for {plan} hver måned. Årlig fakturering koster {percent} % mindre.",
+    "noticeCta": "Se årlig fakturering",
+    "close": "Lukk"
+  },
   "founder": {
     "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",
     "places": "{left} av {total} plasser igjen",

@@ -198,6 +198,8 @@
     "test:pricing-seasonal-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-seasonal-ui.test.mjs",
     "test:seasonal-offer-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs src/lib/billing/seasonal-offer-view.test.mjs components/dashboard/seasonal-offer-ui.test.mjs",
     "test:seasonal-switch": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/stripe/seasonal-switch.test.ts app/api/seasonal-offer/route.test.ts",
+    "test:annual-switch": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/billing/annual-switch.test.ts src/lib/billing/annual-renewal-reminder.test.ts app/api/billing/annual-switch/route.test.ts",
+    "test:annual-switch-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/annual-switch-ui.test.mjs",
     "test:google-sign-in": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/auth/google/route.test.ts",
     "test:microsoft-sign-in": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/auth/microsoft-sign-in.test.ts app/auth/microsoft/route.test.ts app/auth/callback/route.microsoft.test.ts",
     "test:acquisition-device": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/acquisition-device.test.mjs src/lib/acquisition-device-stamp.test.ts app/auth/callback/route.device.test.ts",

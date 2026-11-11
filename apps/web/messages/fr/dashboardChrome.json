@@ -632,6 +632,16 @@
     "switchBusy": "Préparation...",
     "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
   },
+  "annualSwitch": {
+    "title": "Passer à la facturation annuelle",
+    "body": "Payez {plan} une fois par an et économisez {percent} % par rapport au paiement mensuel.",
+    "current": "Les jours non utilisés de votre mois en cours sont crédités, donc le montant prélevé aujourd'hui est un peu inférieur à une année complète. Vous voyez le montant exact avant tout prélèvement.",
+    "cta": "Passer à l'annuel",
+    "busy": "Préparation...",
+    "noticeBody": "Vous payez {plan} chaque mois. La facturation annuelle coûte {percent} % de moins.",
+    "noticeCta": "Voir la facturation annuelle",
+    "close": "Fermer"
+  },
   "founder": {
     "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",
     "places": "Places restantes : {left} sur {total}",

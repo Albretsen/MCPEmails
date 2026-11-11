@@ -632,6 +632,16 @@
     "switchBusy": "Preparing...",
     "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
   },
+  "annualSwitch": {
+    "title": "Switch to annual billing",
+    "body": "Pay for {plan} once a year and save {percent}% compared with paying monthly.",
+    "current": "The unused days of your current month are credited, so today's charge is a bit less than a full year. You see the exact amount before anything is charged.",
+    "cta": "Switch to annual",
+    "busy": "Preparing...",
+    "noticeBody": "You pay for {plan} every month. Annual billing costs {percent}% less.",
+    "noticeCta": "See annual billing",
+    "close": "Close"
+  },
   "founder": {
     "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",
     "places": "{left} of {total} places left",

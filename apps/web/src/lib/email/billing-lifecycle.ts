@@ -154,6 +154,7 @@ export const BILLING_TEMPLATES = [
   'pause_ending_3',
   'payment_failed_restart',
   'plan_ending_5d',
+  'annual_renewal_30',
 ] as const;
 
 export type BillingTemplate = (typeof BILLING_TEMPLATES)[number];
@@ -184,6 +185,16 @@ export type PassTemplate = (typeof PASS_TEMPLATES)[number];
 export function isPassTemplate(template: string): template is PassTemplate {
   return (PASS_TEMPLATES as ReadonlyArray<string>).includes(template);
 }
+
+/**
+ * The notice 30 days before an ANNUAL subscription renews (migration
+ * 20261111140200, src/lib/billing/annual-renewal-reminder.ts). Keyed on the
+ * Stripe customer with scope_key `${subscriptionId}:${periodEndSeconds}`, one
+ * per subscription and period. Transactional: it is about the customer's own
+ * upcoming charge, so no consent and no unsubscribe. No upsell, no refund
+ * line: the 14-day refund in the terms (5.4) covers a FIRST charge only.
+ */
+export const ANNUAL_RENEWAL_TEMPLATE = 'annual_renewal_30' as const satisfies BillingTemplate;
 
 export type BillingCategory = 'transactional' | 'marketing';
 
@@ -1911,6 +1922,64 @@ export function composeBillingEmail(
             whileLines.map((line) => p(line)).join('') +
             p(resumes) +
             pLink('You can resume early, extend the pause or cancel at any time from your billing page:', billingUrl) +
+            pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
+          ctaUrl: billingUrl,
+          ctaLabel: 'Open billing',
+          footerNote: SUPPORT_FOOTER,
+        }),
+      };
+    }
+
+    case 'annual_renewal_30': {
+      const renewsOn = longDate(payload.periodEnd);
+      // Without a date and an amount this email has nothing true to say.
+      if (!renewsOn || !amount) return null;
+      // Opens the billing page's quote for the same plan, billed monthly
+      // (BillingSection reads ?switch_interval=month). No plan id in the URL.
+      const monthlyUrl = `${billingUrl}?switch_interval=month`;
+      const subject = name
+        ? `Your MCPEmails ${name} plan renews on ${renewsOn}`
+        : `Your MCPEmails plan renews on ${renewsOn}`;
+      const lead = `${yourPlan.charAt(0).toUpperCase()}${yourPlan.slice(1)} is billed once a year and renews on ${renewsOn}. On that day we charge ${amount} to the payment method on file.`;
+      const nothing = 'There is nothing to do if you want to keep it.';
+      const cancelText = `If you would rather not renew, cancel before ${renewsOn} from your billing page. Your plan stays active until that date.`;
+      const monthlyText = `To pay monthly instead, switch before ${renewsOn}. You see the exact amount before anything changes.`;
+      const cancelLine = `You can also cancel without signing in: ${base}${CANCEL_PATH}`;
+
+      const factRows: Array<[string, string]> = [];
+      if (name) factRows.push(['Plan', `${name}, billed yearly`]);
+      factRows.push(['Renews on', renewsOn]);
+      factRows.push(['Amount', amount]);
+
+      const body = [
+        lead,
+        '',
+        nothing,
+        '',
+        `${cancelText} ${billingUrl}`,
+        `${monthlyText} ${monthlyUrl}`,
+        cancelLine,
+        '',
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: 'Your annual plan renews soon',
+          html:
+            p(lead) +
+            facts(factRows) +
+            p(nothing) +
+            pLink(cancelText, billingUrl) +
+            pLink(monthlyText, monthlyUrl) +
             pLink('You can also cancel without signing in:', `${base}${CANCEL_PATH}`),
           ctaUrl: billingUrl,
           ctaLabel: 'Open billing',
