@@ -5,7 +5,11 @@
  * pause, or resume early. Behind BILLING_PAUSE_ENABLED (internal accounts
  * always), 404 for everyone else.
  *
- * Body: { action, months?, keepInboxIds?, confirm? }
+ * Body: { action, months?, keepInboxIds?, confirm?, source? }
+ *   source                        optional: where the pause click came from
+ *                                 (plan_ending_email | cancel_email |
+ *                                 billing_page), written to the
+ *                                 pause_started funnel row's entry_point
  *   quote                         read only: state, eligibility, the lengths
  *                                 on offer with their resume date and amount,
  *                                 and the inbox picker for Free's one inbox
@@ -63,6 +67,7 @@ import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
 import { primaryWorkspaceId } from '@/lib/analytics/billing-funnel';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import type { LifecyclePayload } from '@/lib/email/billing-lifecycle';
+import { planActionSource } from '@/lib/billing/plan-action-links';
 
 const ACTIONS = new Set(['quote', 'pause', 'extend', 'resume_early']);
 
@@ -178,7 +183,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await cancelOpenSequence({
           db,
           stripeCustomerId: customerId,
-          templates: ['cancel_ask', 'winback_14', 'winback_30'],
+          templates: ['cancel_ask', 'winback_14', 'winback_30', 'plan_ending_5d'],
           reason: 'subscription_reactivated',
         });
       }
@@ -221,6 +226,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         stage: update.stage,
         outcome: 'success',
         category: update.stage === 'pause_resumed' ? 'early' : facts.planId ?? 'unknown',
+        entryPoint: update.stage === 'pause_started' ? planActionSource(body.source) : null,
       });
     } catch (err) {
       console.error('[billing/pause] funnel write failed, swallowed:', err instanceof Error ? err.message : String(err));

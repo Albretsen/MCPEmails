@@ -62,6 +62,7 @@ function ctx(over: Partial<ReminderContext> = {}): ReminderContext {
       unsubscribeToken: 'tok-123',
     },
     workspaceId: workspaceIn('send'),
+    ownerCountries: [],
     internal: false,
     subscriptionStatus: null,
     completedSince: false,
@@ -454,4 +455,73 @@ test('reminderLocale allow-lists', () => {
   assert.equal(reminderLocale('zh'), 'en');
   assert.equal(reminderLocale('FR'), 'en');
   assert.equal(reminderLocale(undefined), 'en');
+});
+
+// ---------------------------------------------------------------------------
+// Soft opt-in for owners positively outside Europe (owner decision 2026-11-11)
+// ---------------------------------------------------------------------------
+
+const START = new Date((NOW_S - 48 * 3600) * 1000);
+const LIVE = { startAt: START, live: true };
+const DRY = { startAt: START, live: false };
+
+function noConsent(countries: Array<string | null>, workspaceId = workspaceIn('send')): ReminderContext {
+  const c = ctx({ ownerCountries: countries, workspaceId });
+  c.owner!.marketingConsentAt = null;
+  return c;
+}
+
+test('soft opt-in: a known non-European owner without consent is reminded once live', () => {
+  const d = decide(session(), noConsent(['US']), NOW, LIVE);
+  assert.equal(d.kind, 'send');
+  assert.equal(d.kind === 'send' && d.target.arm, 'soft_opt_in');
+});
+
+test('soft opt-in: European or unknown owners without consent still get nothing', () => {
+  for (const countries of [['DE'], ['GB'], [null], [], ['US', 'NO']]) {
+    assert.deepEqual(decide(session(), noConsent(countries), NOW, LIVE), { kind: 'skip', reason: 'no_consent' }, String(countries));
+  }
+});
+
+test('soft opt-in: no start date, or a session created before it, gets nothing', () => {
+  assert.deepEqual(decide(session(), noConsent(['US']), NOW), { kind: 'skip', reason: 'no_consent' });
+  const late = { startAt: new Date((NOW_S - 3600) * 1000), live: true };
+  assert.deepEqual(decide(session(), noConsent(['US']), NOW, late), { kind: 'skip', reason: 'no_consent' });
+});
+
+test('soft opt-in: the holdout applies to this arm too', () => {
+  assert.equal(decide(session(), noConsent(['BR'], workspaceIn('holdout')), NOW, LIVE).kind, 'holdout');
+});
+
+test('soft opt-in: logged only (no row, no send) until the expansion is live', async () => {
+  const store = new MemoryStore(noConsent(['US']));
+  const s = recordingSender();
+  const out = await handleExpiredSession({ session: session(), store, send: s.send, mode: 'on', now: NOW, expansion: DRY });
+  assert.equal(out, 'would_send');
+  assert.equal(store.rows.length, 0);
+  assert.equal(s.sent.length, 0);
+  // A consented buyer is unaffected by the expansion dry run.
+  const consented = new MemoryStore(ctx());
+  assert.equal(await handleExpiredSession({ session: session(), store: consented, send: s.send, mode: 'on', now: NOW, expansion: DRY }), 'sent');
+});
+
+test('soft opt-in: live send carries its own footer reason and a working opt-out', async () => {
+  const store = new MemoryStore(noConsent(['US']));
+  const s = recordingSender();
+  const out = await handleExpiredSession({ session: session(), store, send: s.send, mode: 'on', now: NOW, expansion: LIVE });
+  assert.equal(out, 'sent');
+  assert.match(s.sent[0].text, /started a checkout on your MCPEmails account/);
+  assert.doesNotMatch(s.sent[0].text, /asked for product tips/);
+  assert.match(s.sent[0].headers['List-Unsubscribe'], /tok-123/);
+});
+
+test('soft opt-in footer is translated in every locale', () => {
+  const en = composeAbandonedCheckout({ planId: 'personal', interval: 'month', locale: 'en', resumeUrl: 'https://x.test', unsubscribeToken: 't', arm: 'soft_opt_in' })!;
+  for (const locale of REMINDER_LOCALES) {
+    const c = composeAbandonedCheckout({ planId: 'personal', interval: 'month', locale, resumeUrl: 'https://x.test', unsubscribeToken: 't', arm: 'soft_opt_in' })!;
+    const consented = composeAbandonedCheckout({ planId: 'personal', interval: 'month', locale, resumeUrl: 'https://x.test', unsubscribeToken: 't' })!;
+    assert.notEqual(c.text, consented.text, locale);
+    if (locale !== 'en') assert.notEqual(c.text.split('\n').at(-4), en.text.split('\n').at(-4), locale);
+    assert.doesNotMatch(c.text, /—/);
+  }
 });

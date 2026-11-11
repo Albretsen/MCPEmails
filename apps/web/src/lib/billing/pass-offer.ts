@@ -11,6 +11,8 @@
  *   cap_banner       the Usage banner, once the workspace has been at the
  *                    action cap or the inbox cap for 72 hours (capBannerDue)
  *   paywall_email_3  step 3 of the paywall follow-up email
+ *   free_reset_email the monthly "your Free actions reset" email, promotional
+ *                    arms only (src/lib/email/free-reset-email.ts)
  *   pass_reminder    the last-7-days banner for someone who holds a pass; not
  *                    part of the experiment (they already bought)
  *
@@ -69,7 +71,16 @@ export type PassArm = 'holdout' | 'pass';
 /** Variant 0 of the experiment, and what an unknown or draft experiment serves. */
 export const PASS_CONTROL: PassArm = 'holdout';
 
-export const PASS_OFFER_SURFACES = ['checkout_return', 'cap_banner', 'paywall_email_3', 'pass_reminder'] as const;
+export const PASS_OFFER_SURFACES = [
+  'checkout_return',
+  'cap_banner',
+  'paywall_email_3',
+  'pass_reminder',
+  'free_reset_email',
+] as const;
+
+/** Surfaces rendered on the server (emails); a browser never asks for them. */
+export const SERVER_PASS_SURFACES: ReadonlySet<PassOfferSurface> = new Set(['paywall_email_3', 'free_reset_email']);
 export type PassOfferSurface = (typeof PASS_OFFER_SURFACES)[number];
 
 /** The surfaces that are part of the holdout test (pass_reminder is for holders). */
@@ -77,6 +88,7 @@ const EXPERIMENT_SURFACES: ReadonlySet<PassOfferSurface> = new Set([
   'checkout_return',
   'cap_banner',
   'paywall_email_3',
+  'free_reset_email',
 ]);
 
 export function isPassOfferSurface(value: unknown): value is PassOfferSurface {
@@ -418,7 +430,7 @@ export async function evaluatePassOffer(input: {
 }): Promise<PassOfferAnswer> {
   const now = input.now ?? new Date();
   const mode = personalPassMode();
-  if (mode === 'off' || input.surface === 'paywall_email_3') return HIDDEN;
+  if (mode === 'off' || SERVER_PASS_SURFACES.has(input.surface)) return HIDDEN;
   try {
     const db = input.db ?? createServiceRoleClient();
     const { data: workspace } = await db
@@ -500,7 +512,7 @@ export function passCheckoutHref(options: {
 export async function paywallEmailPassLine(
   workspaceId: string,
   now: Date = new Date(),
-  options: { db?: Db; store?: ExperimentStore; base?: string } = {},
+  options: { db?: Db; store?: ExperimentStore; base?: string; surface?: 'paywall_email_3' | 'free_reset_email' } = {},
 ): Promise<{ endsOn: string; url: string } | null> {
   const mode = personalPassMode();
   if (mode === 'off') return null;
@@ -536,7 +548,7 @@ export async function paywallEmailPassLine(
       year: 'numeric',
       timeZone: 'UTC',
     }).format(passEndsAt(now));
-    return { endsOn, url: passCheckoutHref({ base, arm, surface: 'paywall_email_3' }) };
+    return { endsOn, url: passCheckoutHref({ base, arm, surface: options.surface ?? 'paywall_email_3' }) };
   } catch (err) {
     console.error('[pass-offer] paywall email line failed', {
       error: err instanceof Error ? err.message : String(err),

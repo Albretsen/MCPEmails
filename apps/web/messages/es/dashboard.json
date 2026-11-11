@@ -124,6 +124,25 @@
     "waitingLive": "Esta página se actualiza sola cuando llega la primera llamada.",
     "waitingStopped": "Todavía no hay ninguna llamada. Recarga esta página después de probar un prompt."
   },
+  "heardAbout": {
+    "title": "¿Cómo conociste MCPEmails?",
+    "sub": "Un clic nos ayuda a saber dónde nos encuentra la gente. Es opcional.",
+    "dismiss": "Cerrar",
+    "send": "Enviar",
+    "otherLabel": "¿Dónde conociste MCPEmails?",
+    "otherPlaceholder": "Cuéntanos dónde (opcional)",
+    "options": {
+      "chatgpt": "Respuesta de ChatGPT",
+      "claude": "Respuesta de Claude",
+      "gemini": "Respuesta de Gemini o de la IA de Google",
+      "google_search": "Búsqueda en Google",
+      "colleague": "Un compañero o amigo",
+      "directory": "Directorio de apps o listado MCP",
+      "video": "YouTube o vídeo",
+      "forum": "Reddit o un foro",
+      "other": "Otro"
+    }
+  },
   "firstWeek": {
     "title": "Tu primera semana",
     "sub": "Unos pasos para que MCPEmails forme parte de tu día.",
@@ -938,7 +957,11 @@
       "freeConfirm": "Cambiar a Free",
       "freeBody": "Tu plan sigue activo hasta el {date}, que ya has pagado. Después, la cuenta pasa a Free. No se elimina nada.",
       "freeToast": "Hecho. Tu plan sigue activo hasta el {date} y después pasa a Free.",
-      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
+      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan.",
+      "endsBanner": "Tu plan {plan} termina el {date}. No se elimina nada.",
+      "keepMyPlan": "Mantener mi plan",
+      "keepPlanBody": "Se quita la cancelación programada. {plan} continúa y se renueva el {date} por {amount}, como antes. Hoy no se cobra nada.",
+      "keepPlanToast": "Tu plan {plan} continúa."
     },
     "cancelReason": {
       "prompt": "Has cancelado tu plan. Si quieres contarnos por qué, basta con un toque.",

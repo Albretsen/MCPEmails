@@ -1477,7 +1477,7 @@ async function handleSubscriptionUpserted(
     await cancelOpenSequence({
       db: createServiceRoleClient(),
       stripeCustomerId: customerId,
-      templates: ['cancel_ask', 'winback_14', 'winback_30'],
+      templates: ['cancel_ask', 'winback_14', 'winback_30', 'plan_ending_5d'],
       reason: 'subscription_reactivated',
     });
   }
