@@ -124,7 +124,7 @@
     "test:approvals": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs src/lib/approvals/approvals.test.ts app/api/approvals/routes.test.ts",
     "test:approvals-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/approvals/approval-review-ui.test.mjs",
     "test:activation-help": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/activation-help.test.ts",
-    "test:paywall-followup": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/paywall-followup.test.ts src/lib/email/pro-price-notice.test.ts app/api/internal/pro-price-notice/dispatch/route.test.ts",
+    "test:paywall-followup": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/paywall-followup.test.ts src/lib/email/lifecycle-region.test.ts src/lib/email/free-reset-email.test.ts src/lib/email/pro-price-notice.test.ts app/api/internal/pro-price-notice/dispatch/route.test.ts",
     "test:abandoned-checkout": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/abandoned-checkout.test.ts",
     "test:first-30-days": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/retention/first-30-days.test.ts src/lib/retention/first-30-days-go-live.test.ts",
     "test:inbox-alert": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/retention/inbox-alert.test.ts",

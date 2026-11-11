@@ -52,6 +52,8 @@ interface Copy {
   cta: string;
   footerNote: string;
   unsubscribeReason: string;
+  /** For owners without the signup opt-in (the soft opt-in arm). */
+  softOptInReason: string;
   unsubscribeLink: string;
   notAffected: string;
   textUnsubscribe: string;
@@ -70,6 +72,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Continue to checkout',
     footerNote: 'Replies come straight to me, not a ticket queue.',
     unsubscribeReason: 'You are getting this because you asked for product tips and offers when you signed up.',
+    softOptInReason: 'You are getting this because you started a checkout on your MCPEmails account.',
     unsubscribeLink: 'Unsubscribe from these',
     notAffected: 'Billing and account notices are not affected.',
     textUnsubscribe: 'Unsubscribe',
@@ -86,6 +89,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Fortsett til betaling',
     footerNote: 'Svar kommer rett til meg, ikke til en sakskø.',
     unsubscribeReason: 'Du får denne fordi du ba om produkttips og tilbud da du registrerte deg.',
+    softOptInReason: 'Du får denne fordi du startet et kjøp på MCPEmails-kontoen din.',
     unsubscribeLink: 'Meld deg av disse',
     notAffected: 'Fakturerings- og kontovarsler påvirkes ikke.',
     textUnsubscribe: 'Meld deg av',
@@ -102,6 +106,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Continuar con el pago',
     footerNote: 'Las respuestas me llegan directamente a mí, no a una cola de tickets.',
     unsubscribeReason: 'Recibes este correo porque pediste consejos y ofertas del producto al registrarte.',
+    softOptInReason: 'Recibes este correo porque iniciaste una compra en tu cuenta de MCPEmails.',
     unsubscribeLink: 'Darte de baja de estos correos',
     notAffected: 'Los avisos de facturación y de la cuenta no se ven afectados.',
     textUnsubscribe: 'Darte de baja',
@@ -118,6 +123,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Reprendre le paiement',
     footerNote: "Les réponses m'arrivent directement, pas dans une file de tickets.",
     unsubscribeReason: 'Vous recevez cet e-mail parce que vous avez demandé des conseils et des offres lors de votre inscription.',
+    softOptInReason: 'Vous recevez cet e-mail parce que vous avez commencé un achat sur votre compte MCPEmails.',
     unsubscribeLink: 'Se désabonner de ces e-mails',
     notAffected: 'Les avis de facturation et de compte ne sont pas concernés.',
     textUnsubscribe: 'Se désabonner',
@@ -134,6 +140,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Zum Bezahlvorgang',
     footerNote: 'Antworten landen direkt bei mir, nicht in einem Ticketsystem.',
     unsubscribeReason: 'Sie erhalten diese E-Mail, weil Sie bei der Registrierung Produkttipps und Angebote angefordert haben.',
+    softOptInReason: 'Sie erhalten diese E-Mail, weil Sie in Ihrem MCPEmails-Konto einen Kauf begonnen haben.',
     unsubscribeLink: 'Von diesen E-Mails abmelden',
     notAffected: 'Rechnungs- und Kontohinweise sind davon nicht betroffen.',
     textUnsubscribe: 'Abmelden',
@@ -150,6 +157,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: 'Continuar para o pagamento',
     footerNote: 'As respostas chegam direto para mim, não para uma fila de chamados.',
     unsubscribeReason: 'Você está recebendo este e-mail porque pediu dicas e ofertas do produto ao criar sua conta.',
+    softOptInReason: 'Você está recebendo este e-mail porque iniciou uma compra na sua conta MCPEmails.',
     unsubscribeLink: 'Cancelar a inscrição destes e-mails',
     notAffected: 'Os avisos de cobrança e de conta não são afetados.',
     textUnsubscribe: 'Cancelar inscrição',
@@ -166,6 +174,7 @@ const COPY: Record<ReminderLocale, Copy> = {
     cta: '決済を続ける',
     footerNote: '返信はチケット管理システムではなく、私に直接届きます。',
     unsubscribeReason: 'このメールは、登録時に製品のヒントやお得な情報の受け取りを希望された方にお送りしています。',
+    softOptInReason: 'このメールは、MCPEmails アカウントで購入手続きを開始された方にお送りしています。',
     unsubscribeLink: 'このメールの配信を停止する',
     notAffected: '請求とアカウントに関するお知らせは引き続き届きます。',
     textUnsubscribe: '配信停止',
@@ -263,6 +272,8 @@ export interface AbandonedCheckoutInput {
   resumeUrl: string;
   /** The recipient's own users.unsubscribe_token. Required; null = no email. */
   unsubscribeToken: string | null | undefined;
+  /** consented (default) or soft_opt_in; only the footer reason differs. */
+  arm?: 'consented' | 'soft_opt_in';
 }
 
 export interface ComposedAbandonedCheckout {
@@ -280,6 +291,7 @@ export function composeAbandonedCheckout(input: AbandonedCheckoutInput): Compose
   if (!plan) return null;
 
   const c = COPY[input.locale] ?? COPY.en;
+  const reason = input.arm === 'soft_opt_in' ? c.softOptInReason : c.unsubscribeReason;
   const unsub = unsubscribeUrl(token, ABANDONED_CHECKOUT_CATEGORY);
   const paragraphs = [c.intro(plan.name, input.interval), c.help, c.refund];
 
@@ -292,7 +304,7 @@ export function composeAbandonedCheckout(input: AbandonedCheckoutInput): Compose
     'Asgeir',
     'MCPEmails',
     '',
-    `${c.unsubscribeReason} ${c.textUnsubscribe}: ${unsub}`,
+    `${reason} ${c.textUnsubscribe}: ${unsub}`,
     c.notAffected,
     '',
     POSTAL_ADDRESS_LINE,
@@ -306,7 +318,7 @@ export function composeAbandonedCheckout(input: AbandonedCheckoutInput): Compose
     ctaLabel: c.cta,
     footerNote: c.footerNote,
     unsubscribeUrl: unsub,
-    unsubscribeReason: c.unsubscribeReason,
+    unsubscribeReason: reason,
     unsubscribeLink: c.unsubscribeLink,
     notAffected: c.notAffected,
   });
