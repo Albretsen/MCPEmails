@@ -185,7 +185,7 @@ export const entries = [
     href: '/signup',
     verdict:
       'Puts several mailboxes from different providers behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail on our server until a person approves it.',
-    price: 'Free: 1 inbox, 150 email actions a month, first 3 days uncounted. Personal is $9 a month for 3 inboxes ($86.40 a year), Pro is $15 a month for up to 10 ($144 a year), and Business is $39 a month with 10 included and $3 a month for each extra. Paid plans bill monthly or yearly.',
+    price: 'Free: 1 inbox, 150 email actions a month, first 3 days uncounted. Personal is $9 a month for 3 inboxes ($86.40 a year), Pro is $15 a month for up to 10 ($144 a year), and Business is $29 per person a month for a team (2 people minimum), with up to 10 private mailboxes per person and 10 company-wide ones included, then $3 a month for each extra. Paid plans bill monthly or yearly.',
     pros: [
       'Outlook and Microsoft 365 over Microsoft Graph with Sign in with Microsoft; Gmail with a Google app password; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
       'OAuth 2.1 with dynamic client registration, S256 PKCE and 9 permission scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.',
@@ -398,7 +398,7 @@ export const tableSub = 'The five hosted services, and running it yourself. Comp
 export const rows = [
   {
     label: 'Billed per',
-    us: 'Plan, with inboxes included. Business adds $3/mo per mailbox past 10.',
+    us: 'Plan, with inboxes included. Business is per person, and adds $3/mo per company-wide mailbox past 10.',
     mailboxmcp: 'Mailbox, plus optional Team Access per account.',
     anymailmcp: 'Account (up to 5 mailboxes), or company domain on Team.',
     mailmcp: 'Mailbox, with discounts from the 5th.',

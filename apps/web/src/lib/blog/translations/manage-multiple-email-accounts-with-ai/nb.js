@@ -93,7 +93,7 @@ Tilkoblede postkasser er det planene prises på:
 - **Free.** Én tilkoblet postkasse.
 - **Personal.** Noen få postkasser for én person, høyere burst-grense, prioritert e-poststøtte.
 - **Pro.** Flere postkasser for én person som driver en virksomhet, enda høyere burst-grense, lengre analysehistorikk, webhooks for ny post.
-- **Business.** Et antall postkasser inkludert, med en pris per postkasse utover det, ubegrenset antall medlemmer med roller uten ekstra kostnad, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
+- **Business.** For et team, med pris per person: hver person kobler til sine egne postkasser privat, felles adresser deles i hele firmaet (et antall inkludert, med en pris per postkasse utover det), roller, administratorer som godkjenner tilbakeholdte sendinger, et eget arbeidsområde per kunde eller virksomhet.
 
 En rutine på tvers av postkasser er ett kall per postkasse, så antallet postkasser driver volumet like mye som vanene dine gjør. Gjeldende priser og antall postkasser finner du på [prissiden](/pricing).
 

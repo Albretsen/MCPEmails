@@ -89,7 +89,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
 - **Provider‑agnostic search** — Gmail syntax, Microsoft Graph KQL and IMAP `SEARCH` are normalized behind one `email_read` (`action: "search"`) interface.
-- **Business‑ready**: several workspaces, unlimited members with roles, and admin approval of held sends on the Business plan.
+- **Business‑ready**: on the Business plan each person connects their own mailboxes privately and shared addresses are company‑wide, with roles, admin approval of held sends, recipient rules, a per‑person audit log with CSV export, and several workspaces.
 
 ## Tools
 
@@ -189,17 +189,18 @@ Notes:
 
 ## Pricing
 
-The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects up to 10 for one person running a business, and Business includes 10 mailboxes, charges $3 a month for each extra one, and adds unlimited people with roles and a separate workspace per client. Annual billing saves about 20%.
+The value metric is **connected inboxes**. Free connects one mailbox, Personal connects up to three, Pro connects up to 10 for one person running a business, and Business is for a team, billed per person: $29 a month for each person who connects a mailbox, 2 people minimum. On Business each person connects up to 10 private mailboxes of their own, and company‑wide mailboxes are shared with the team (10 included, then $3 a month each). Annual billing saves about 20%.
 
 | | **Free** | **Personal** | **Pro** | **Business** |
 | --- | --- | --- | --- | --- |
-| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $39/mo · $374.40/yr ($31.20/mo) |
-| Connected inboxes | 1 | 3 | 10 | 10 included, then $3/mo each ($28.80/yr) |
+| Price | $0 | $9/mo · $86.40/yr ($7.20/mo) | $15/mo · $144/yr ($12/mo) | $29/person/mo · $278.40/person/yr ($23.20/mo), 2 people minimum |
+| Connected inboxes | 1 | 3 | 10 | Up to 10 private per person, plus 10 company‑wide included, then $3/mo each ($28.80/yr) |
 | Email actions / month | 150 (first 3 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
 | API keys | Unlimited | Unlimited | Unlimited | Unlimited |
-| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles, no extra cost |
+| Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, billed per person who connects a mailbox; anyone without one is free |
 | Fair‑use rate limit | 60 req/min | 120 req/min | 300 req/min | 1,000 req/min |
 | Roles, admin send approval, several workspaces | No | No | No | ✅ |
+| Recipient rules, audit log with CSV export, VAT ID on invoices | No | No | No | ✅ |
 | Support | Community | Email | Email | Email |
 
 Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.

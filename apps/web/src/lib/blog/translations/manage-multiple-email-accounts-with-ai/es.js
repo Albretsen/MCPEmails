@@ -93,7 +93,7 @@ Los buzones conectados son lo que marca el precio de los planes:
 - **Gratis.** Un buzón conectado.
 - **Personal.** Unos cuantos buzones para una sola persona, un límite de ráfaga más alto y soporte prioritario por correo.
 - **Pro.** Más buzones para una persona que lleva un negocio, un límite de ráfaga aún mayor, un historial de analíticas más largo y webhooks de correo nuevo.
-- **Business.** Un bloque de buzones incluidos con un precio por buzón a partir de ahí, miembros ilimitados con roles sin coste adicional, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.
+- **Business.** Para un equipo, con precio por persona: cada persona conecta sus propios buzones en privado, las direcciones compartidas son de toda la empresa (un bloque incluido, con un precio por buzón a partir de ahí), roles, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.
 
 Una rutina entre buzones es una llamada por buzón, así que tu número de buzones marca el volumen tanto como tus hábitos. Los precios y el número de buzones actuales están en [precios](/pricing).
 

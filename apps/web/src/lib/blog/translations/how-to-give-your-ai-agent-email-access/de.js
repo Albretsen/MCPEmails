@@ -109,7 +109,7 @@ Die Tarife bemessen sich nach verbundenen Postfächern. API-Schlüssel sind in j
 - **Free**, dauerhaft kostenlos. Keine Karte. Ein verbundenes Postfach, Nutzungsanalyse, Hilfe-Center und Support per E-Mail.
 - **Personal**: mehrere verbundene Postfächer, höhere Burst-Rate, längerer Analyseverlauf, bevorzugter Support per E-Mail.
 - **Pro**: für eine Person, die ein Unternehmen führt, mit noch mehr verbundenen Postfächern, noch höherer Burst-Rate, mehrjährigem Analyseverlauf und Webhooks für neue E-Mails.
-- **Business**: alles aus Pro, dazu ein enthaltenes Kontingent an Postfächern mit einem Preis pro weiterem Postfach, unbegrenzt viele Mitglieder mit Rollen, Admins, die angehaltene Sendungen freigeben, und ein eigener Workspace pro Kunde oder Unternehmen.
+- **Business**: alles aus Pro, für ein Team und pro Person abgerechnet. Die eigenen Postfächer jeder Person bleiben privat, gemeinsame Postfächer gelten für das ganze Unternehmen (ein Kontingent inklusive, mit einem Preis pro weiterem Postfach), dazu Rollen, Admins, die angehaltene Sendungen freigeben, ein Audit-Log mit CSV-Export und ein eigener Workspace pro Kunde oder Unternehmen.
 
 Die aktuellen Preise und Postfachzahlen stehen auf der [Preisseite](/pricing).
 

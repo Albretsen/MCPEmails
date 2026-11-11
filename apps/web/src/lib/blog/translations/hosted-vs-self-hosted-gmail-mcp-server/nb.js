@@ -81,7 +81,7 @@ Dette er den reelle byttehandelen, og jeg skal ikke pynte på den. Med en hostet
 
 ## Hva det koster i kroner
 
-MCPEmails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kommer med bruksanalyse, hjelpesenter og e-poststøtte. [Personal](/pricing) legger til innbokser, en høyere burst-grense, lengre analysehistorikk og prioritert e-poststøtte; Pro legger til flere innbokser igjen, en enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post; Business har et antall postkasser inkludert, med en pris per postkasse utover det, medlemmer med roller og et eget arbeidsområde per kunde. Gjeldende priser står på [prissiden](/pricing). Selvhosting har ingen abonnementskostnad, bare det VPS-en din og timene dine koster. Tell timene skikkelig.
+MCPEmails er gratis å komme i gang med: én tilkoblet innboks, ubegrenset antall API-nøkler, uten kredittkort. Gratisnivået kommer med bruksanalyse, hjelpesenter og e-poststøtte. [Personal](/pricing) legger til innbokser, en høyere burst-grense, lengre analysehistorikk og prioritert e-poststøtte; Pro legger til flere innbokser igjen, en enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post; Business er for et team med pris per person, med private postkasser for hver person, felles postkasser for hele firmaet (et antall inkludert, med en pris per postkasse utover det), roller og et eget arbeidsområde per kunde. Gjeldende priser står på [prissiden](/pricing). Selvhosting har ingen abonnementskostnad, bare det VPS-en din og timene dine koster. Tell timene skikkelig.
 
 ## Så hva bør du velge?
 
