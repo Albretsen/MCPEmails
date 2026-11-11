@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { clientIpFromHeaders } from '@/lib/sso/audit';
-import { appUrl } from '@/lib/email/lifecycle';
-import { generateReferralCode } from '@/lib/referrals/code';
+import { ensureReferralCode, referralLinkFor } from '@/lib/referrals/link';
 import { CODE_ENTRY_WINDOW_DAYS, REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
 import { attachReferral } from '@/lib/referrals/attach';
 import {
@@ -14,7 +13,6 @@ import {
   recordReferralEvent,
   referralIpHash,
   referrerRewardsLast365d,
-  type Db,
   type ReferralStripeApi,
 } from '@/lib/referrals/server';
 
@@ -86,33 +84,6 @@ async function session(): Promise<Session> {
   };
 }
 
-/** The caller's code, created on first use. A collision just draws again. */
-async function ensureCode(db: Db, userId: string): Promise<{ code: string; disabled: boolean } | null> {
-  const { data: existing } = await db
-    .from('referral_codes')
-    .select('code, disabled_at')
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (existing) return { code: existing.code, disabled: existing.disabled_at != null };
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const code = generateReferralCode();
-    const { error } = await db.from('referral_codes').insert({ user_id: userId, code });
-    if (!error) return { code, disabled: false };
-    if (error.code !== '23505') {
-      console.error('[referrals] code insert failed', { error: error.message });
-      return null;
-    }
-    // 23505 on user_id: a parallel GET created it. On code: draw again.
-    const { data: raced } = await db
-      .from('referral_codes')
-      .select('code, disabled_at')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (raced) return { code: raced.code, disabled: raced.disabled_at != null };
-  }
-  return null;
-}
-
 export async function GET(): Promise<NextResponse> {
   const s = await session();
   if (!s.ok) return s.response;
@@ -120,7 +91,7 @@ export async function GET(): Promise<NextResponse> {
 
   const db = createServiceRoleClient();
   const now = new Date();
-  const code = await ensureCode(db, s.userId);
+  const code = await ensureReferralCode(db, s.userId);
   if (!code) return NextResponse.json({ error: 'Referrals are temporarily unavailable.' }, { status: 503 });
 
   const [billing, rewardsLast365d, alreadyReferred, summary] = await Promise.all([
@@ -157,7 +128,7 @@ export async function GET(): Promise<NextResponse> {
   return NextResponse.json({
     enabled: true,
     code: code.code,
-    link: code.disabled ? null : `${appUrl()}/r/${code.code}`,
+    link: code.disabled ? null : referralLinkFor(code.code),
     creditBalanceCents: credit,
     creditCurrency,
     rewardsLast365d,

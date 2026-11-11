@@ -135,7 +135,8 @@
     "openSearch": "Abrir búsqueda (Command K)",
     "navWorkflows": "Flujos de trabajo",
     "navAutomations": "Automatizaciones",
-    "navInvite": "Invita a un amigo"
+    "navInvite": "Invita a un amigo",
+    "invitePromo": "Regala un mes, consigue un mes"
   },
   "topbar": {
     "mcpLabel": "Endpoint MCP",

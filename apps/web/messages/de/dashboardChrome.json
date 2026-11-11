@@ -135,7 +135,8 @@
     "openSearch": "Suche öffnen (Befehlstaste K)",
     "navWorkflows": "Workflows",
     "navAutomations": "Automatisierungen",
-    "navInvite": "Freunde einladen"
+    "navInvite": "Freunde einladen",
+    "invitePromo": "Einen Monat schenken, einen Monat bekommen"
   },
   "topbar": {
     "mcpLabel": "MCP-Endpunkt",

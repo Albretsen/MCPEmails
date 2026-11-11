@@ -428,3 +428,42 @@ test('carries the withdrawal information the contract confirmation owes a consum
   assert.match(email.body, /\/withdrawal\b/);
   assert.match(email.htmlBody, /href="[^"]*\/withdrawal"/);
 });
+
+test('with a referral link: one "give a month, get a month" line and the link, in the program terms', () => {
+  const link = 'https://mcpemails.com/r/ABCD2345';
+  const email = buildPurchaseConfirmationEmail({
+    planId: 'solo',
+    interval: 'month',
+    amountTotalCents: 2900,
+    currency: 'usd',
+    referralLink: link,
+  });
+  assert.match(email.body, /GIVE A MONTH, GET A MONTH/);
+  assert.match(email.body, /first payment is 14 days old, you both get a free month\./);
+  assert.ok(email.body.includes(`\n${link}\n`), 'the link on its own line');
+  assert.ok(email.htmlBody.includes(`href="${link}"`));
+  assert.ok(!(email.body + email.htmlBody).includes('—'), 'no em dash');
+  assert.ok(!/30 days/.test(email.body + email.htmlBody));
+});
+
+test('without a referral link, or with one that is not an /r/ link, there is no referral line', () => {
+  for (const referralLink of [undefined, null, '', 'javascript:alert(1)', 'https://evil.example/r/abc<script>']) {
+    const email = buildPurchaseConfirmationEmail({
+      planId: 'personal',
+      interval: 'month',
+      amountTotalCents: 500,
+      currency: 'usd',
+      referralLink,
+    });
+    assert.ok(!/give a month/i.test(email.body + email.htmlBody), String(referralLink));
+  }
+});
+
+test('the send uses a referral link it is handed', async () => {
+  process.env.RESEND_API_KEY = 're_stub_key_not_a_real_credential';
+  const calls = await withStubbedFetch(
+    async () => json(200, { id: 'stubbed-message-id' }),
+    () => sendPurchaseConfirmationEmail({ ...SEND_INPUT, referralLink: 'https://mcpemails.com/r/ABCD2345' }),
+  );
+  assert.ok(String(calls[0].payload.text).includes('https://mcpemails.com/r/ABCD2345'));
+});
