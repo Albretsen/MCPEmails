@@ -124,6 +124,25 @@
     "waitingLive": "Esta página se atualiza sozinha quando a primeira chamada chegar.",
     "waitingStopped": "Ainda nenhuma chamada. Recarregue esta página depois de testar um prompt."
   },
+  "heardAbout": {
+    "title": "Como você conheceu o MCPEmails?",
+    "sub": "Um clique nos ajuda a saber onde as pessoas nos encontram. Opcional.",
+    "dismiss": "Fechar",
+    "send": "Enviar",
+    "otherLabel": "Onde você ouviu falar do MCPEmails?",
+    "otherPlaceholder": "Conte onde (opcional)",
+    "options": {
+      "chatgpt": "Resposta do ChatGPT",
+      "claude": "Resposta do Claude",
+      "gemini": "Resposta do Gemini ou da IA do Google",
+      "google_search": "Pesquisa no Google",
+      "colleague": "Um colega ou amigo",
+      "directory": "Diretório de apps ou lista de MCP",
+      "video": "YouTube ou vídeo",
+      "forum": "Reddit ou fórum",
+      "other": "Outro"
+    }
+  },
   "firstWeek": {
     "title": "Sua primeira semana",
     "sub": "Alguns passos para o MCPEmails entrar na sua rotina.",

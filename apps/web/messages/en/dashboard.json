@@ -124,6 +124,25 @@
     "waitingLive": "This page updates by itself when the first call arrives.",
     "waitingStopped": "Still no call. Reload this page after you try a prompt."
   },
+  "heardAbout": {
+    "title": "How did you hear about MCPEmails?",
+    "sub": "One click helps us learn where people find us. Optional.",
+    "dismiss": "Dismiss",
+    "send": "Send",
+    "otherLabel": "Where did you hear about MCPEmails?",
+    "otherPlaceholder": "Tell us where (optional)",
+    "options": {
+      "chatgpt": "ChatGPT answer",
+      "claude": "Claude answer",
+      "gemini": "Gemini or Google AI answer",
+      "google_search": "Google search",
+      "colleague": "A colleague or friend",
+      "directory": "App directory or MCP listing",
+      "video": "YouTube or video",
+      "forum": "Reddit or forum",
+      "other": "Other"
+    }
+  },
   "firstWeek": {
     "title": "Your first week",
     "sub": "A few steps that help MCPEmails become part of your day.",

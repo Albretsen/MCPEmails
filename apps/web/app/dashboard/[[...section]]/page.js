@@ -1049,6 +1049,20 @@ export default async function DashboardPage({ params, searchParams }) {
     ? await fetchReferralTileFacts(supabase, workspace.id, plan)
     : null;
 
+  // "How did you hear about MCPEmails?" (components/dashboard/HeardAboutCard.jsx):
+  // true only while workspaces.heard_about_at is NULL, for the owner. Its own
+  // read so a missing column (code deployed before 20261111150000_heard_about)
+  // costs this one card, never the workspace query above; an error is false.
+  let heardAboutPending = false;
+  if (workspace && workspace.owner_id === user.id) {
+    const { data: heardRow, error: heardError } = await supabase
+      .from('workspaces')
+      .select('heard_about_at')
+      .eq('id', workspace.id)
+      .maybeSingle();
+    heardAboutPending = !heardError && heardRow != null && heardRow.heard_about_at == null;
+  }
+
   // The single Streamable HTTP MCP endpoint clients connect to.
   const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
 
@@ -1196,6 +1210,8 @@ export default async function DashboardPage({ params, searchParams }) {
         // The referral program: OUR rollout gate, internal only for now.
         // Without it there is no Invite entry, tile or code field.
         referralEnabled,
+        // The one-time "How did you hear about MCPEmails?" card on the Overview.
+        heardAboutPending,
         // The Pro feature gate for this workspace: { visible, allowed }.
         proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
         // Whether the connect modal offers "Prefer to sign in with Google?"

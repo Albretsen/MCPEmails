@@ -35,7 +35,7 @@
 // ---------------------------------------------------------------------------
 
 /** The version the signup form shows today. */
-export const MARKETING_CONSENT_VERSION = 'signup_checkbox_v1';
+export const MARKETING_CONSENT_VERSION = 'signup_checkbox_v2';
 
 /**
  * Every version ever shown, mapped to its exact English wording. Append only.
@@ -44,6 +44,8 @@ export const MARKETING_CONSENT_VERSION = 'signup_checkbox_v1';
  */
 export const MARKETING_CONSENT_WORDING = Object.freeze({
   signup_checkbox_v1: 'Email me product tips and offers. Unsubscribe anytime.',
+  // 2026-11-11: names the concrete benefit (v1 was ticked by ~5% of signups).
+  signup_checkbox_v2: 'Send me setup tips, product updates and occasional offers by email. Unsubscribe any time.',
 });
 
 /** Cookie that carries a ticked box across the OAuth round trip. */

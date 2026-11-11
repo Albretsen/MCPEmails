@@ -124,6 +124,25 @@
     "waitingLive": "Siden oppdateres av seg selv når det første kallet kommer.",
     "waitingStopped": "Fortsatt ingen kall. Last inn siden på nytt etter at du har prøvd en forespørsel."
   },
+  "heardAbout": {
+    "title": "Hvordan hørte du om MCPEmails?",
+    "sub": "Ett klikk hjelper oss å forstå hvor folk finner oss. Valgfritt.",
+    "dismiss": "Lukk",
+    "send": "Send",
+    "otherLabel": "Hvor hørte du om MCPEmails?",
+    "otherPlaceholder": "Fortell oss hvor (valgfritt)",
+    "options": {
+      "chatgpt": "Svar fra ChatGPT",
+      "claude": "Svar fra Claude",
+      "gemini": "Svar fra Gemini eller Google AI",
+      "google_search": "Google-søk",
+      "colleague": "En kollega eller venn",
+      "directory": "Appkatalog eller MCP-oversikt",
+      "video": "YouTube eller video",
+      "forum": "Reddit eller forum",
+      "other": "Annet"
+    }
+  },
   "firstWeek": {
     "title": "Din første uke",
     "sub": "Noen steg som gjør MCPEmails til en del av hverdagen din.",
