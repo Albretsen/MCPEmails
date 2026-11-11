@@ -2444,6 +2444,39 @@ export type Database = {
         }
         Relationships: []
       }
+      help_article_feedback: {
+        Row: {
+          article_id: string
+          created_at: string
+          helpful: boolean
+          id: string
+          locale: string
+          updated_at: string
+          user_id: string | null
+          voter_key: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          helpful: boolean
+          id?: string
+          locale: string
+          updated_at?: string
+          user_id?: string | null
+          voter_key: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          helpful?: boolean
+          id?: string
+          locale?: string
+          updated_at?: string
+          user_id?: string | null
+          voter_key?: string
+        }
+        Relationships: []
+      }
       inbox_alert_sends: {
         Row: {
           arm: string
@@ -2603,6 +2636,7 @@ export type Database = {
       }
       inbox_send_brakes: {
         Row: {
+          fanout_content_hash: string | null
           fanout_hold_until: string | null
           inbox_id: string
           refusal_pause_until: string | null
@@ -2610,6 +2644,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          fanout_content_hash?: string | null
           fanout_hold_until?: string | null
           inbox_id: string
           refusal_pause_until?: string | null
@@ -2617,6 +2652,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          fanout_content_hash?: string | null
           fanout_hold_until?: string | null
           inbox_id?: string
           refusal_pause_until?: string | null
@@ -6053,6 +6089,8 @@ export type Database = {
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
+          annual_switch_dismiss_count: number
+          annual_switch_dismissed_at: string | null
           bulk_undo_hidden: boolean
           card_diagnostics: boolean
           chat_checkout_link_enabled: boolean
@@ -6062,6 +6100,7 @@ export type Database = {
           display_name: string
           draft_editor_enabled: boolean
           draft_editor_hidden: boolean
+          fanout_recipient_limit: number | null
           free_action_cap_exempt: boolean
           grace_end_note_seen_at: string | null
           grandfathered: boolean
@@ -6121,6 +6160,8 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          annual_switch_dismiss_count?: number
+          annual_switch_dismissed_at?: string | null
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6130,6 +6171,7 @@ export type Database = {
           display_name: string
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
+          fanout_recipient_limit?: number | null
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
@@ -6189,6 +6231,8 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          annual_switch_dismiss_count?: number
+          annual_switch_dismissed_at?: string | null
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6198,6 +6242,7 @@ export type Database = {
           display_name?: string
           draft_editor_enabled?: boolean
           draft_editor_hidden?: boolean
+          fanout_recipient_limit?: number | null
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
@@ -6432,6 +6477,7 @@ export type Database = {
         }[]
       }
       dispatch_activation_help: { Args: never; Returns: undefined }
+      dispatch_annual_renewal_reminder: { Args: never; Returns: undefined }
       dispatch_billing_lifecycle: {
         Args: { p_mode?: string }
         Returns: undefined
@@ -6439,12 +6485,14 @@ export type Database = {
       dispatch_black_week_email: { Args: never; Returns: undefined }
       dispatch_eur_launch: { Args: never; Returns: undefined }
       dispatch_first_30_days: { Args: never; Returns: undefined }
+      dispatch_free_reset_email: { Args: never; Returns: undefined }
       dispatch_inbox_alert: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_morning_briefs: { Args: never; Returns: undefined }
       dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
       dispatch_pass_expiry: { Args: never; Returns: undefined }
       dispatch_paywall_followup: { Args: never; Returns: undefined }
+      dispatch_plan_ending_reminder: { Args: never; Returns: undefined }
       dispatch_pro_price_notice: { Args: never; Returns: undefined }
       dispatch_referrals: { Args: never; Returns: undefined }
       dispatch_reminders: { Args: never; Returns: undefined }
@@ -6754,10 +6802,7 @@ export type Database = {
         }[]
       }
       growth_heard_about: {
-        Args: {
-          p_internal_domains?: string[]
-          p_internal_emails?: string[]
-        }
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
         Returns: {
           answer: string
           paid: number
@@ -7396,6 +7441,7 @@ export type Database = {
         }[]
       }
       my_workspace_ids: { Args: never; Returns: string[] }
+      next_support_ticket_ref: { Args: never; Returns: string }
       onboarding_convert_on: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -7434,6 +7480,7 @@ export type Database = {
       purge_operational_history: { Args: never; Returns: Json }
       purge_outbound_send_events: { Args: never; Returns: Json }
       purge_send_history: { Args: never; Returns: Json }
+      purge_support_history: { Args: never; Returns: Json }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
