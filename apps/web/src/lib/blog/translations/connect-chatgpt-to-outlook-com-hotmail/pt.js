@@ -18,7 +18,7 @@ Se ele recusar, o motivo é o tipo de conta. Uma conta pessoal da Microsoft não
 ## O que você precisa
 
 - Uma conta pessoal da Microsoft com uma caixa do Outlook: outlook.com, hotmail.com, live.com ou msn.com, inclusive versões por país, como hotmail.com.br ou outlook.com.br.
-- **ChatGPT Go ou um plano pago, no chatgpt.com em um navegador.** A OpenAI permite que esses planos adicionem um servidor MCP personalizado. O Free não pode, e não dá para adicionar um pelo aplicativo de celular.
+- **Um plano pago do ChatGPT, no chatgpt.com em um navegador.** A página de ajuda da OpenAI lista servidores MCP personalizados para Business e Enterprise/Edu, com ferramentas de leitura e busca apenas no Pro, e não menciona o Go nem o Plus. O Free não pode adicionar um, e o aplicativo de celular também não.
 - Uma conta no MCPEmails. [Comece grátis](/signup); o plano gratuito conecta uma caixa de entrada.
 
 O MCPEmails conversa com o ChatGPT pelo Model Context Protocol de um lado e com a sua caixa pelo Microsoft Graph do outro.
@@ -87,7 +87,7 @@ Não. Cada vez que o ChatGPT pede uma mensagem, o MCPEmails a busca ao vivo na M
 ## Perguntas frequentes
 
 **Posso conectar o ChatGPT ao Hotmail ou ao Outlook.com?**
-Sim, com um servidor MCP personalizado. Conecte o endereço ao MCPEmails com Conectar com a Microsoft, adicione \`https://mcpemails.com/api/mcp\` ao ChatGPT em Plugins, e o ChatGPT pode ler, pesquisar, enviar e organizar seus e-mails do Outlook.com, Hotmail, Live ou MSN. Adicionar um servidor MCP personalizado exige o ChatGPT Go ou um plano pago.
+Sim, com um servidor MCP personalizado. Conecte o endereço ao MCPEmails com Conectar com a Microsoft, adicione \`https://mcpemails.com/api/mcp\` ao ChatGPT em Plugins, e o ChatGPT pode ler, pesquisar, enviar e organizar seus e-mails do Outlook.com, Hotmail, Live ou MSN. Adicionar um servidor MCP personalizado exige um plano pago no chatgpt.com: a OpenAI cita Business e Enterprise/Edu para suporte completo e o Pro só para ferramentas de leitura e busca.
 
 **O plugin do Outlook no ChatGPT funciona com conta pessoal?**
 A página de ajuda da OpenAI não diz que sim, e usuários relatam receber no login a mensagem de que só contas de empresa ou de instituição de ensino podem se conectar. A configuração documentada depende de um administrador do Microsoft Entra da organização, que uma conta pessoal não tem.

@@ -17,7 +17,7 @@
     "sub": "De blir ofte slått sammen, men de skiller seg på de to tingene som teller: hvilke postkasser de når, og hvilke apper de virker i.",
     "apps": {
       "h": "Koblinger bygd inn i en AI-app",
-      "p": "Gmail- og Microsoft 365-koblingene i Claude, og Gmail- og Outlook-appene i ChatGPT. Ingenting å installere, og de sender e-post nå. De virker bare inne i den ene appen, og Microsoft 365-koblingen i Claude kan ikke koble til private Outlook.com- eller Hotmail-kontoer."
+      "p": "Gmail- og Microsoft 365-koblingene i Claude, og Gmail- og Outlook-appene i ChatGPT. Ingenting å installere, og de sender e-post nå. De virker bare inne i den ene appen, og Microsoft 365-koblingen i Claude godtar en privat Outlook.com- eller Hotmail-konto bare på Free, Pro, Max og Ultra, ikke på Team eller Enterprise."
     },
     "provider": {
       "h": "E-postleverandørens egen MCP-server",
@@ -62,7 +62,7 @@
       "portable": "Virker i andre AI-apper"
     },
     "values": {
-      "reachApps": "Gmail. Microsoft 365-jobbkontoer i Claude, Outlook i ChatGPT.",
+      "reachApps": "Gmail. Microsoft 365-jobbkontoer i Claude, pluss en privat Microsoft-konto på Claudes individuelle abonnementer. Outlook i ChatGPT.",
       "reachProvider": "Bare den leverandøren: Fastmail, Zoho eller Gmail i Googles forhåndsversjon.",
       "reachUs": "Gmail, Outlook og Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex, all IMAP.",
       "sendProvider": "Fastmail og Zoho sender. Googles forhåndsversjon lager bare utkast.",
@@ -83,7 +83,7 @@
       },
       {
         "q": "E-postleverandøren min har sin egen MCP-server. Trenger jeg noe mer?",
-        "a": "Kanskje ikke. Fastmail og Zoho Mail har offisielle MCP-servere som virker i alle MCP-klienter, og Googles Gmail MCP-server er i forhåndsversjon for utviklere. Hver av dem når bare sin egen leverandør. MCPEmails er for flere postkasser bak én tilkobling, for iCloud, Yahoo, Yandex og andre IMAP-verter, og for private Outlook.com-kontoer, som Microsoft 365-koblingen i Claude ikke kan koble til."
+        "a": "Kanskje ikke. Fastmail og Zoho Mail har offisielle MCP-servere som virker i alle MCP-klienter, og Googles Gmail MCP-server er i forhåndsversjon for utviklere. Hver av dem når bare sin egen leverandør. MCPEmails er for flere postkasser bak én tilkobling, for iCloud, Yahoo, Yandex og andre IMAP-verter, og for en privat Outlook.com-konto på et Claude Team- eller Enterprise-abonnement, der Microsoft 365-koblingen i Claude ikke tilbyr private kontoer."
       },
       {
         "q": "Hva kan MCPEmails gjøre som de innebygde koblingene ikke kan?",
@@ -112,6 +112,11 @@
       "zohoMcp": "Zoho Mail MCP: kom i gang",
       "googleGmailMcp": "Google for Developers: sett opp Gmail MCP-serveren"
     }
+  },
+  "guide": {
+    "h": "Vil du ha hele kartet over alternativene?",
+    "p": "Innebygde koblinger, driftede MCP-tjenester, skrivebordsapper, selvdrift og automatiseringsverktøy, for Yahoo, IMAP, egne domener og flere postkasser, datert og med kilder.",
+    "link": "Les: slik kobler du enhver e-postkonto til Claude eller ChatGPT"
   },
   "ctaBand": {
     "title": "Gi AI-en din alle innboksene du har",

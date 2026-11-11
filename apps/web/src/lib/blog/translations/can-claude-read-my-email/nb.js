@@ -8,7 +8,7 @@ const translation = {
 
 Denne siden hjelper deg å finne ut hvilket tilfelle som gjelder deg. Fakta om produktene til Anthropic og Google er hentet fra selskapenes egne sider i oktober 2026. Produktene endrer seg ofte, så hver del lenker til siden den bygger på.
 
-**Hopp til:** [Gmail](#gmail-claudes-egen-kobling) · [Microsoft 365](#outlook-og-microsoft-365-bare-jobbkontoer) · [Det de innebygde koblingene ikke dekker](#det-de-innebygde-koblingene-ikke-dekker) · [MCPEmails](#slik-fyller-mcpemails-hullet) · [Sending](#kan-claude-sende-e-post) · [Vanlige spørsmål](#vanlige-spørsmål)
+**Hopp til:** [Gmail](#gmail-claudes-egen-kobling) · [Microsoft 365](#outlook-og-microsoft-365-jobbkontoer-og-personlige-kontoer-på-individuelle-abonnementer) · [Det de innebygde koblingene ikke dekker](#det-de-innebygde-koblingene-ikke-dekker) · [MCPEmails](#slik-fyller-mcpemails-hullet) · [Sending](#kan-claude-sende-e-post) · [Vanlige spørsmål](#vanlige-spørsmål)
 
 ## Gmail: Claudes egen kobling
 
@@ -30,16 +30,16 @@ Google dokumenterer også den samme Gmail MCP-serveren som en del av [Workspace 
 
 Er Gmail den eneste postkassen din og Claude den eneste KI-appen du bruker, kan den innebygde koblingen være alt du trenger.
 
-## Outlook og Microsoft 365: bare jobbkontoer
+## Outlook og Microsoft 365: jobbkontoer, og personlige kontoer på individuelle abonnementer
 
-Claudes Microsoft 365-kobling leser Outlook-e-post for kontoer som hører til en bedrifts Microsoft 365-tenant.
+Claudes Microsoft 365-kobling leser Outlook-e-post for jobb- og skolekontoer i en bedrifts Microsoft 365-tenant og, på Free, Pro, Max og Ultra, for en personlig Microsoft-konto.
 
 - **Lesing og søk** dekker hovedpostkassen din, arkivmappen og delte postkasser du har tilgang til.
-- **Sending er av som standard.** Koblingen starter skrivebeskyttet. Når skriveverktøyene er slått på, kan Claude sende og videresende e-post og lage, redigere og slette utkast. Meldinger med vedlegg avvises av skriveverktøyene.
-- **En administrator må godkjenne den.** En global administrator i Microsoft Entra i organisasjonen din må gi samtykke før noen der kan koble til, og på nytt før skriveverktøyene virker.
-- **Personlige kontoer avvises.** [Anthropics artikkel](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) er tydelig: adresser som @outlook.com og @hotmail.com kan ikke brukes til å koble til.
+- **Sending.** For en jobb- eller skolekonto starter koblingen skrivebeskyttet; når skriveverktøyene er slått på, kan Claude sende og videresende e-post og lage, redigere og slette utkast. For en personlig konto er skriveverktøyene med, og Claude spør før den sender. Meldinger med vedlegg avvises av skriveverktøyene uansett.
+- **En administrator må godkjenne jobbkontoer.** En global administrator i Microsoft Entra i organisasjonen din må gi samtykke før noen der kan koble til, og på nytt før skriveverktøyene virker. En personlig konto trenger ingen administrator.
+- **Personlige kontoer virker på individuelle abonnementer.** [Anthropics artikkel](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) sier at en Outlook.com-, Hotmail-, Live- eller MSN-konto kobles til på Free, Pro, Max og Ultra, og at Team- og Enterprise-abonnementer ikke får se det valget.
 
-En personlig Outlook.com-, Hotmail- eller Live-adresse har altså ingen innebygd vei inn i Claude. [Koble Claude til Outlook.com og Hotmail](/blog/connect-claude-to-outlook-com-hotmail) viser veien som fungerer.
+Én personlig Outlook.com-, Hotmail- eller Live-adresse har altså en innebygd vei inn i Claude på et individuelt abonnement, uten vedlegg. For et Team- eller Enterprise-abonnement, vedlegg eller flere postkasser viser [Koble Claude til Outlook.com og Hotmail](/blog/connect-claude-to-outlook-com-hotmail) veien via en egendefinert kobling.
 
 ## Det de innebygde koblingene ikke dekker
 
@@ -91,7 +91,7 @@ Den sender fra den ene Google-kontoen du har koblet til. Claude ser bare metadat
 
 ### Claudes Microsoft 365-kobling
 
-Den starter skrivebeskyttet. Når skriveverktøyene er slått på, noe som krever at en global administrator i Microsoft Entra godkjenner de utvidede tillatelsene, kan Claude sende og videresende e-post og lage, redigere og slette utkast. Skriveverktøyene avviser alle meldinger med vedlegg, og personlige Outlook.com- og Hotmail-adresser kan ikke brukes til å koble til i det hele tatt.
+For en jobb- eller skolekonto starter den skrivebeskyttet. Når skriveverktøyene er slått på, noe som krever at en global administrator i Microsoft Entra godkjenner de utvidede tillatelsene, kan Claude sende og videresende e-post og lage, redigere og slette utkast. For en personlig konto på Free, Pro, Max eller Ultra er skriveverktøyene med, og Claude spør før den sender. Uansett avviser skriveverktøyene alle meldinger med vedlegg.
 
 ### Slik sender MCPEmails
 
@@ -127,7 +127,7 @@ Ja. Anthropic oppgir sending, svar og videresending for Gmail-koblingen, og hver
 Ja, med Claudes innebygde Gmail-kobling, for Google-kontoen du kobler til. Vil du bruke mer enn én Google-konto, eller Gmail sammen med andre leverandører i samme samtale, kobler du dem til gjennom MCPEmails med et Google-apppassord.
 
 **Kan Claude få tilgang til e-posten min i Outlook eller Hotmail?**
-Jobb- og skolekontoer i Microsoft 365 kan bruke Claudes Microsoft 365-kobling etter at en administrator har godkjent den. Personlige Outlook.com- og Hotmail-adresser kan ikke det. MCPEmails kobler til begge med Logg på med Microsoft, men en jobbkonto kan fortsatt trenge at IT-ansvarlig godkjenner appen én gang for organisasjonen.
+Jobb- og skolekontoer i Microsoft 365 kan bruke Claudes Microsoft 365-kobling etter at en administrator har godkjent den, og en personlig Outlook.com- eller Hotmail-adresse kobles til den på Free, Pro, Max og Ultra, uten vedlegg. MCPEmails kobler til begge på alle Claude-abonnementer, med vedlegg, men en jobbkonto kan fortsatt trenge at IT-ansvarlig godkjenner appen én gang for organisasjonen.
 
 **Kan Claude lese e-post fra Yahoo eller iCloud?**
 Ikke med en innebygd kobling. Koble postkassen til MCPEmails med et app-passord fra Yahoo eller Apple, og legg deretter til MCPEmails i Claude.

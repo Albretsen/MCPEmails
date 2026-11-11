@@ -4,6 +4,13 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd, APP_URL } 
 import * as N from '@/lib/compare/native-connectors.mjs';
 import CompareClient from '../../../components/marketing/CompareClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { getPost, getPostLocales } from '@/lib/blog/posts';
+
+/** Whether the roundup guide the page links to is translated into `locale`. */
+function guideInLocale(locale) {
+  const post = getPost('connect-any-email-to-claude-and-chatgpt');
+  return Boolean(post && getPostLocales(post).includes(locale));
+}
 
 /**
  * /native-connectors-vs-mcp: Claude's and ChatGPT's built-in connectors and the
@@ -93,7 +100,13 @@ export default async function ComparePage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <CompareClient c={c} checkedOn={formatDate(locale, N.CHECKED_ON)} isEnglish={locale === 'en'} locale={locale} />
+      <CompareClient
+        c={c}
+        checkedOn={formatDate(locale, N.CHECKED_ON)}
+        isEnglish={locale === 'en'}
+        locale={locale}
+        guideInLocale={guideInLocale(locale)}
+      />
     </>
   );
 }

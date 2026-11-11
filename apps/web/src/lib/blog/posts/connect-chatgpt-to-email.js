@@ -8,7 +8,7 @@ const post = {
     'Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-26T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
   content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCPEmails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
@@ -19,7 +19,7 @@ Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT run
 
 ## What you need
 
-- **ChatGPT Go or a paid plan, on the web.** OpenAI lets Go and paid plans add custom MCP servers on chatgpt.com. You cannot add one in the mobile app. On Business and Enterprise, an admin or owner may need to add it for the workspace.
+- **A paid ChatGPT plan, on the web.** OpenAI's [help page on custom MCP servers](https://help.openai.com/en/articles/12584461) lists them for Business and Enterprise/Edu workspaces on chatgpt.com, with read and fetch tools only on Pro; it does not mention Go or Plus. You cannot add one in the mobile app. On Business and Enterprise, an admin or owner adds and publishes it for the workspace.
 - **A free MCPEmails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
 - **One mailbox.** Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
 
@@ -109,7 +109,7 @@ Scope the key tightly. Read-only is usually correct for a coding agent: one that
 
 ## Troubleshooting
 
-- **No option to add a custom MCP server.** Custom MCP servers are added on chatgpt.com in a browser, not in the mobile app, and need Go or a paid plan. On a Business or Enterprise workspace, an admin or owner may need to add it.
+- **No option to add a custom MCP server.** Custom MCP servers are added on chatgpt.com in a browser, not in the mobile app. OpenAI lists them for Business and Enterprise/Edu, with read and fetch tools only on Pro, so on a Business or Enterprise workspace an admin or owner may need to add it.
 - **The connector fails on its first tool call.** It was probably created with no authentication. Delete it and recreate it with OAuth.
 - **The connector is created, but ChatGPT answers without touching your mail.** MCPEmails was not picked for that message. Type **@**, pick MCPEmails, and ask again.
 - **The provider rejects your password.** Use a provider-generated app password, not your web sign-in password. Some providers only issue one once two-factor authentication is on.

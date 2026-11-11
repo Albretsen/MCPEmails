@@ -76,7 +76,7 @@ MCPEmails lohnt einen Blick, wenn:
 - **Sie mehr als ein Postfach haben.** Verbinden Sie iCloud, Gmail, Yahoo, Outlook.com, GMX und Firmenpostfächer per IMAP mit einem Konto, und jeder Client sieht alle über eine URL. [Mehrere E-Mail-Konten in Claude und ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) zeigt, wie der Agent sie auseinanderhält.
 - **Sie E-Mails ablegen und aufräumen wollen**, nicht nur lesen: Ordner, Verschieben, Archivieren, geplante Sendungen und feste Regeln.
 
-In ChatGPT wird MCPEmails als benutzerdefinierter MCP-Server hinzugefügt, was OpenAI auf chatgpt.com in Go und den kostenpflichtigen Tarifen erlaubt, nicht in Free. Die [Einrichtungsseite für ChatGPT](/docs/chatgpt) enthält die Schritte.
+In ChatGPT wird MCPEmails als benutzerdefinierter MCP-Server hinzugefügt, den OpenAI auf chatgpt.com für Business und Enterprise/Edu aufführt, in Pro nur mit Lese- und Abruf-Tools und in Free gar nicht. Die [Einrichtungsseite für ChatGPT](/docs/chatgpt) enthält die Schritte.
 
 Ihre E-Mails werden von MCPEmails nie gespeichert. Jede Nachricht wird live von Apple abgerufen, wenn der Agent danach fragt, und nur das verschlüsselte App-spezifische Passwort wird aufbewahrt. Widerrufen Sie dieses Passwort bei Apple, ist das Postfach sofort getrennt.
 

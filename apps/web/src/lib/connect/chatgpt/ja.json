@@ -1,7 +1,7 @@
 {
   "eyebrow": "ChatGPT",
   "title": "ChatGPTで{provider}を使う",
-  "sub": "ChatGPTはカスタムMCPサーバーを通じて{provider}にアクセスします。サーバーはChatGPT Goまたは有料プランでchatgpt.comから追加します。",
+  "sub": "ChatGPTはカスタムMCPサーバーを通じて{provider}にアクセスします。サーバーは有料プランでchatgpt.comから追加します。",
   "steps": [
     "上の手順で{provider}をMCPEmailsに接続します。",
     "chatgpt.comで「プラグイン」、「Personal」（個人）を開き、「Add」（追加）、「カスタム MCP サーバーを追加」の順にクリックします。",
@@ -12,7 +12,7 @@
   "blogLink": "ChatGPTをメールに接続する方法",
   "faqQ": "ChatGPTは{provider}のメールを読めますか？",
   "faqQMailName": "ChatGPTは{provider}を読めますか？",
-  "faqA": "はい。{provider}をMCPEmailsに接続すれば読めます。chatgpt.comで、URLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。ChatGPT Goと有料プランで使えます。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
+  "faqA": "はい。{provider}をMCPEmailsに接続すれば読めます。chatgpt.comで、URLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。これには有料プランが必要で、OpenAIのヘルプページではフルサポートの対象としてBusinessとEnterprise/Edu、読み取り専用ツールの対象としてProが挙げられています。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
   "directorySub": "ChatGPTは、ChatGPTのプラグインディレクトリにあるMCPEmailsのプラグイン「Any Mailbox」を通じて{provider}にアクセスします。",
   "directorySteps": [
     "上の手順で{provider}をMCPEmailsに接続します。",

@@ -1,104 +1,103 @@
 {
   "_sources": [
-    "https://webmail.sfr.fr/",
-    "https://actuneuf.com/sfr/internet/imap",
-    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
-    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/problemes-acces-boite-email-sfr.html",
+    "https://webmail.sfr.fr/"
   ],
   "auth": {
-    "method": "mail-password",
-    "label": "SFR Mail 密码",
-    "helpUrl": "https://webmail.sfr.fr/",
-    "usernameForm": "包含域名的完整地址：prenom.nom@sfr.fr。",
+    "method": "account-password",
+    "label": "SFR 密码",
+    "helpUrl": "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "usernameForm": "你的完整 SFR 地址，prenom.nom@sfr.fr，或 @neuf.fr、@cegetel.net、@club-internet.fr、@9online.fr、@9business.fr 上的同样形式。",
     "status": "active"
   },
   "meta": {
-    "title": "SFR Mail IMAP 设置与 Claude MCP 接入",
-    "description": "通过 imap.sfr.fr:993 将 SFR Mail 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。SFR Mail 密码与你的 Espace Client 密码是分开的。"
+    "title": "SFR Mail 的 IMAP 设置与 Claude MCP 访问",
+    "description": "用你的 SFR 地址和密码，在 imap.sfr.fr:993 将 SFR Mail 邮箱连接到 Claude、Cursor 和任何 MCP 客户端，设置以 SFR 文档为准。需要 TLS 1.2 或 1.3。"
   },
   "hero": {
     "eyebrow": "SFR Mail + AI",
-    "titleLine1": "将你的 SFR 邮箱连接到",
-    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
-    "lead": "为你的 AI 代理接入一个真正的 SFR 收件箱。用属于邮箱本身、而不是客户账户的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 SFR 邮箱。MCPEmails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.sfr.fr 的 993 端口，用你完整的 sfr.fr 地址和 SFR Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。值得提前了解的故障点是凭据：SFR Mail 有自己的密码，与你的 Espace Client 密码分开，修改其中一个不会改变另一个。一个收件箱永久免费。",
+    "titleLine1": "把你的 SFR 邮箱",
+    "titleLine2": "连接到 Claude、Cursor 和任何 MCP 客户端",
+    "lead": "给你的 AI 代理一个真实的 SFR 收件箱。用你在 Webmail SFR 已经使用的 SFR 地址和密码，通过 IMAP 阅读、搜索、发送、回复、定时和整理邮件。",
+    "answer": "Claude 无法自行访问 SFR 邮箱。MCPEmails 是一个托管的 MCP 服务器，通过 IMAP 在 imap.sfr.fr 的 993 端口连接它，用你完整的 sfr.fr 地址和 SFR 密码认证，让 Claude、Cursor 或任何 MCP 客户端都能阅读、搜索、发送和整理邮件。SFR 自己的帮助页面为所有 @sfr.fr、@neuf.fr、@cegetel.net 和 @9online.fr 邮箱给出的正是这些服务器：imap.sfr.fr 的 993 端口和 smtp.sfr.fr 的 465 端口，SSL/TLS，TLS 1.2 或 1.3，账户名为完整地址，密码为你的普通密码。没有需要生成的应用密码。一个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "SFR Mail 密码，而不是 Espace Client 密码",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta1": "你的 SFR 密码，TLS 1.2 或 1.3",
+    "meta2": "邮件实时读取，从不存储"
   },
   "method": {
-    "title": "SFR 如何连接：IMAP，以及邮箱自己的密码",
-    "body": "SFR 在 <code>imap.sfr.fr</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.sfr.fr</code> 的 465 端口提供 SMTP 提交，并要求认证。两台服务器均已通过实时 TLS 连接确认，由所有 SFR 邮箱共享；没有需要按地区或按客户查询的信息。SFR 的特殊之处在于凭据模型。sfr.fr 上的 Espace Client 和 SFR Mail 是两个账户、两个密码。你可以把它们设成同一个字符串，但它们始终相互独立：更换 Espace Client 密码不会影响邮箱密码，邮件客户端照常工作；而更换邮箱密码会让所有客户端掉线，Espace Client 则不受影响。邮箱密码要在 SFR Mail 内部、配置邮箱的设置部分中修改，而不是在客户门户中。"
+    "title": "SFR 如何连接：IMAP 993、SMTP 465，一个 SFR 密码",
+    "body": "SFR 在关于配置邮件程序的帮助页面上记录了它的服务器。发信用 <code>smtp.sfr.fr</code>，465 端口 SSL/TLS 或 587 端口 STARTTLS，使用 TLS 1.2 或 1.3；通过 IMAP 收信用 <code>imap.sfr.fr</code>，993 端口，TLS 1.2、1.3 或 SSL/TLS。两台主机均已通过实时 TLS 连接确认，并由所有 SFR 邮箱共用，因此没有地区性或按客户区分的信息需要查找。账户名是完整地址，SFR 自己的示例是 prenom.nom@sfr.fr；密码被简单地描述为“普通”密码，也就是你在 Webmail SFR 使用的那个，SFR 说 Webmail 已经用你的 Espace Client 凭据配置好了。SFR 还补充了一项值得注意的要求：Webmail 不再支持 SSL 以及 TLS 1.0 和 1.1，并要求邮件程序用户改用 TLS 1.2 或 1.3。MCPEmails 只以 TLS 1.2 或更高版本连接，因此满足该条件。SFR 页面上有一处奇怪之处：在 IMAP 标题下它贴了一个 Numericable 的示例，账户名写成 @numericable.fr。对于 SFR 地址，账户名就是 SFR 地址本身；Numericable 服务器是面向 @numericable.fr 和 @noos.fr 邮箱的另一个独立章节。"
   },
   "setup": [
     {
-      "h": "创建免费 MCPEmails 账户",
-      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+      "h": "创建免费的 MCPEmails 账户",
+      "p": "在 mcpemails.com 注册。免费方案永久连接一个收件箱，不需要银行卡。"
     },
     {
-      "h": "在网页邮箱中确认或重置 SFR Mail 密码",
-      "p": "用要连接的地址登录 webmail.sfr.fr。打开设置（右上角的工具或 <b>Réglages</b> 控件），进入配置邮箱的部分（<b>Configuration de mes boîtes mails</b>）。修改密码的功能就在那里。IMAP 服务器检查的是这个凭据，而不是你在 sfr.fr 的 Espace Client 中输入的那个。"
+      "h": "先在 Webmail SFR 核对地址和密码",
+      "p": "用你想连接的完整地址和 SFR 密码登录 webmail.sfr.fr。SFR 自己的故障排除建议也是如此：标识符就是你的 SFR 邮箱地址，邮件程序被拒绝时应先对照 Webmail 检查。如果 Webmail 也拒绝你，请先从 Espace Client 重置密码再继续。"
     },
     {
-      "h": "考虑给代理一个辅助地址",
-      "p": "SFR 允许用户在同一个邮箱配置页面中，在线路附带的主地址之外创建额外的地址和别名。如果你不想把所有熟人都在用的地址交给代理，可以在那里再创建一个并连接它。服务器和端口都相同。"
+      "h": "注意域名和 TLS 版本",
+      "p": "同一组服务器服务于 @sfr.fr、@neuf.fr、@cegetel.net、@club-internet.fr、@9online.fr 和 @9business.fr 地址。@numericable.fr 或 @noos.fr 邮箱则使用 imap.numericable.fr 和 smtps.numericable.fr，见 SFR 页面的 Numericable 章节。无论什么来连接，都必须支持 TLS 1.2 或 1.3，MCPEmails 支持。"
     },
     {
       "h": "在 MCPEmails 中添加邮箱",
-      "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@sfr.fr），粘贴 SFR Mail 密码。SFR 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@sfr.fr）和你的 SFR 密码。SFR 的主机和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，授权，你的代理就拥有了这个收件箱。"
     }
   ],
   "gotchas": [
     {
-      "h": "Espace Client 密码和 SFR Mail 密码是两回事",
-      "p": "这是在 SFR 上最浪费时间的故障，因为两种凭据属于同一个人，日常都被叫作 <b>mot de passe SFR</b>（SFR 密码），而且输入邮件客户端时哪一个都不会给出能说明问题的错误。它们是相互独立的账户：修改其中一个不会改变另一个，即使你过去曾有意把它们设成同一个值、并以为它们仍然同步。客户端登录被拒时，请进入 SFR Mail 本身重置邮箱密码，然后在 MCPEmails 中使用完全相同的值。"
+      "h": "登录失败次数过多，或六个月未使用，SFR 会封锁邮箱",
+      "p": "SFR 的访问问题页面列出了会导致 SFR 邮箱被封锁的情形：连接失败尝试过多、短时间内发送过多邮件，或短时间内从多个 IP 地址发送，并补充说最近六个月未使用的地址也可能被封锁。一个反复重试错误密码的邮件程序正是第一种情形。SFR 的补救办法是更改密码，并在每台设备、浏览器和邮件程序中输入新密码。所以请先在 Webmail 中确认密码正确，再让任何客户端（包括 MCPEmails）反复尝试。"
     },
     {
-      "h": "不支持 SASL-IR，默认它存在的客户端会收到一个光秃秃的 BAD",
-      "p": "SFR 的 IMAP 问候语短得不能再短（<code>* OK IMAP4 ready</code>），也不声明 <code>SASL-IR</code>。因此服务器会拒绝在 <code>AUTHENTICATE</code> 命令中一并发送凭据的一步认证，回复一个不带任何说明的 <code>BAD</code>，与凭据错误无法区分。考虑到上面提到的密码混淆，这是一个特别糟糕的组合：SFR 登录失败最可能的两个原因产生的是同一条消息。MCPEmails 会识别 <code>BAD</code> 并用两步交换重试，所以这一半已经替你处理好了。"
+      "h": "没有 SASL-IR，默认支持它的客户端只会收到一个光秃秃的 BAD",
+      "p": "SFR 的 IMAP 横幅短到不能再短（<code>* OK IMAP4 ready</code>），而且不声明 <code>SASL-IR</code>。因此服务器会拒绝把凭据随 <code>AUTHENTICATE</code> 命令一并发送的一步认证，并回以一个没有任何说明的 <code>BAD</code>，与凭据错误毫无区别。MCPEmails 会识别这个 <code>BAD</code> 并改用两步交换重试，所以这一半已经替你处理好了，但这也是其他 IMAP 工具连接 SFR 时报密码错误的原因。"
     },
     {
-      "h": "发信上限为 20 MB，对法国 ISP 来说偏低",
-      "p": "<code>smtp.sfr.fr</code> 声明的最大邮件大小为 20,971,520 字节。这是整封邮件编码后的大小，而 base64 会让附件膨胀约三分之一，所以磁盘上超过约 15 MB 的文件是发不出去的。被要求转发大附件的代理会在提交时收到明确的 SMTP 拒绝，而不是慢慢发送或稍后退信。"
+      "h": "发信上限 20 MB，对法国运营商来说偏低",
+      "p": "<code>smtp.sfr.fr</code> 声明的最大邮件大小为 20,971,520 字节。这是整封邮件编码后的大小，而 base64 会让附件膨胀约三分之一，所以磁盘上超过约 15 MB 的文件发不出去。要求代理转发大附件时，它会在提交阶段收到明确的 SMTP 拒绝，而不是发送缓慢或事后退信。SFR 还会暂停发信过多过快的邮箱的发送，因此批量任务应当放慢节奏。"
     },
     {
-      "h": "法语命名的邮箱，没有 IDLE、MOVE 和 SPECIAL-USE",
-      "p": "服务器一个都没有声明。没有 <code>IDLE</code>，新邮件要通过轮询发现，而不是在打开的连接上推送。没有 <code>MOVE</code>，归档要经过复制、更新标记再删除。没有 <code>SPECIAL-USE</code>，已发送、草稿和已删除文件夹按名称匹配，SFR 邮箱通常将它们命名为 <b>Envoyés</b>、<b>Brouillons</b> 和 <b>Corbeille</b>。它确实提供 <code>UIDPLUS</code>，所以至少复制的邮件会返回新 UID，无需通过搜索查找。"
+      "h": "法语文件夹名的邮箱，没有 IDLE、MOVE 和 SPECIAL-USE",
+      "p": "服务器三者都不声明。没有 <code>IDLE</code>，新邮件靠轮询发现，而不是在打开的连接上被推送。没有 <code>MOVE</code>，归档要执行复制、更新标记和 expunge。没有 <code>SPECIAL-USE</code>，已发送、草稿和已删除文件夹按名称匹配，而 SFR 邮箱通常把它们叫作 <b>Envoyés</b>、<b>Brouillons</b> 和 <b>Corbeille</b>。它倒是提供 <code>UIDPLUS</code>，所以复制的邮件至少会报告新的 UID，无需再搜索定位。"
     }
   ],
   "limits": [
-    "20 MB 的提交上限，是代理从该邮箱发出任何内容的实际上限。",
-    "由于没有 IDLE，像“回复一到就告诉我”这样的指令，受限于邮箱的轮询频率，而不是 SFR 的投递速度。",
-    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+    "20 MB 的提交上限是你的代理从这个邮箱发出任何内容的实际天花板。",
+    "没有 IDLE，像“一有回复就告诉我”这样的指令受限于邮箱的轮询频率，而不是 SFR 的投递速度。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。若连接在操作中途断开，一封邮件可能短暂地同时出现在两个文件夹中。"
   ],
   "faq": [
     {
       "q": "Claude 能用 SFR Mail 吗？",
-      "a": "不能单独使用。Claude 没有内置的 SFR 连接器。通过 IMAP 将 MCPEmails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+      "a": "不能单独使用。Claude 没有内置的 SFR 连接器。把 MCPEmails 这样的 MCP 服务器通过 IMAP 指向邮箱，Claude 就能阅读、搜索、发送、回复、定时和整理邮件，同一连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
     },
     {
       "q": "SFR 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 imap.sfr.fr，端口 993，隐式 TLS。SMTP 为 smtp.sfr.fr，端口 465，同样是隐式 TLS，并需要认证。用户名是你完整的 sfr.fr 地址，密码是你的 SFR Mail 密码。两台服务器均已通过实时 TLS 连接确认，由所有 SFR 邮箱共享。"
+      "a": "IMAP 为 imap.sfr.fr，端口 993，SSL/TLS。SMTP 为 smtp.sfr.fr，端口 465，SSL/TLS，或 587 端口 STARTTLS，需要认证且使用 TLS 1.2 或 1.3。账户名是你完整的 sfr.fr 地址，密码是你的 SFR 密码。两台主机均已通过实时 TLS 连接确认，就是 SFR 帮助页面列出的那两台。"
     },
     {
-      "q": "为什么邮件客户端拒绝我的 SFR 密码？",
-      "a": "几乎总是因为那是 Espace Client 密码，而不是 SFR Mail 密码。两个账户相互独立，修改其中一个不会影响另一个。登录 webmail.sfr.fr，在设置中打开邮箱配置部分，在那里重置邮件密码，并在客户端中使用完全相同的值。"
+      "q": "为什么我的 SFR 密码在邮件客户端中被拒绝？",
+      "a": "先在 Webmail SFR 中检查，这也是 SFR 自己的建议：如果那里能用，就是邮件程序有拼写错误、服务器填错或 TLS 版本过旧。如果 Webmail 也拒绝，邮箱可能因失败尝试过多或六个月未使用而被封锁；从 Espace Client 更改密码并在所有地方输入新密码。频繁更换 IP 地址的 VPN 也可能让 SFR 把这些尝试视为可疑。"
     },
     {
-      "q": "SFR 会签发应用密码吗？",
-      "a": "SFR 没有为邮件客户端公布应用专用密码机制。它有的是一个本来就与客户账户密码分开的邮箱密码，作用类似：你可以更换它而不影响 Espace Client 登录，更换 Espace Client 密码也不会让客户端断开。"
+      "q": "SFR 提供应用密码吗？",
+      "a": "不提供。SFR 没有为邮件程序发布任何应用专用密码。其页面把密码描述为“普通”密码：与 Webmail SFR 相同的那个，账户名为你的完整地址。"
     },
     {
-      "q": "我能给代理一个 SFR 辅助地址吗？",
-      "a": "可以。SFR 用户可以在 SFR Mail 设置的邮箱配置页面中创建额外的地址和别名。辅助地址通过同样的 imap.sfr.fr 和 smtp.sfr.fr 服务器连接，还能让代理的活动远离你的联系人真正使用的地址。"
+      "q": "哪些 SFR 地址使用这些服务器？",
+      "a": "SFR 为 imap.sfr.fr 和 smtp.sfr.fr 列出了 @sfr.fr、@neuf.fr、@cegetel.net 和 @9online.fr，其故障排除页面又把 @club-internet.fr 和 @9business.fr 列为 SFR 地址。Numericable 和 Noos 邮箱（@numericable.fr、@noos.fr 及相关域名）在相同端口上使用 imap.numericable.fr 和 smtps.numericable.fr。"
     },
     {
       "q": "我的 SFR 邮件会存储在你们的服务器上吗？",
-      "a": "不会。每次请求时都通过 IMAP 从 SFR 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+      "a": "不会。每次请求时邮件都通过 IMAP 从 SFR 实时读取并交给你的 AI 客户端。凭据静态加密，邮件正文不保留。"
     }
   ],
   "ctaBand": {
     "title": "给你的 AI 一个 SFR 收件箱",
-    "sub": "几分钟即可连接 SFR Mail。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟内连接 SFR Mail。一个收件箱永久免费，无需银行卡。"
   }
 }

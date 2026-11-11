@@ -18,7 +18,7 @@
     "meta0": "受信トレイ1つはずっと無料",
     "meta1": "OAuth、APIキー不要",
     "meta2": "メールはその場で取得、保存はしません",
-    "answer": "ChatGPTで「プラグイン」を開き、プラグインディレクトリでMCPEmailsのAny Mailboxを見つけて「プラグインをインストール」、続いて「接続」をクリックします。MCPEmailsにログインし、ChatGPTがアクセスできる受信トレイとアクセスの範囲を選びます。チャットでは@と入力してAny Mailboxを選びます。プラグインを使わない場合は、chatgpt.comでURLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。これはChatGPT Goと有料プランで使えます。"
+    "answer": "ChatGPTで「プラグイン」を開き、プラグインディレクトリでMCPEmailsのAny Mailboxを見つけて「プラグインをインストール」、続いて「接続」をクリックします。MCPEmailsにログインし、ChatGPTがアクセスできる受信トレイとアクセスの範囲を選びます。チャットでは@と入力してAny Mailboxを選びます。プラグインを使わない場合は、chatgpt.comでURLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。OpenAIが対象として挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用のアクセスに限られ、いずれもWeb版です。"
   },
   "method": {
     "title": "ChatGPTの接続方法：OAuth、APIキー不要",
@@ -46,7 +46,7 @@
   "fallback": {
     "eyebrow": "プラグインを使わない場合",
     "title": "同じサーバーをカスタムMCPサーバーとして追加する",
-    "sub": "ChatGPTのアカウントやワークスペースでAny Mailboxが使えない場合は、代わりにMCPEmailsをカスタムMCPサーバーとして追加します。chatgpt.comでChatGPT Goと有料プランなら使え、同じメールボックスにアクセスできます。",
+    "sub": "ChatGPTのアカウントやワークスペースでAny Mailboxが使えない場合は、代わりにMCPEmailsをカスタムMCPサーバーとして追加します。同じメールボックスにアクセスできます。OpenAIのヘルプページでは、chatgpt.comのカスタムMCPサーバーの対象としてBusinessとEnterprise/Eduが挙げられ、Proでは読み取りと取得のツールに限られます。GoとPlusへの言及はありません。",
     "steps": [
       {
         "h": "「カスタム MCP サーバーを追加」を開く",
@@ -69,7 +69,7 @@
   "gotchas": [
     {
       "h": "インストールは1回、あとはチャットで使われているか確認",
-      "p": "Any MailboxはすべてのChatGPTプランでプラグインディレクトリからインストールできます。BusinessとEnterpriseでは、管理者が先にワークスペースでプラグインを有効にする必要がある場合があります。代替手段のカスタムMCPサーバーはウェブ版のみで、ChatGPT Goか有料プランが必要です。どちらの場合も、見落とされがちな手順はチャット側にあります。ChatGPTがメールを見ずに答えたら、<b>@</b>と入力してAny Mailbox（カスタムサーバーならMCPEmails）を選び、そのメッセージで使わせてください。"
+      "p": "プラグインディレクトリはすべてのChatGPTプランで利用できます。BusinessとEnterpriseでは、管理者が先にワークスペースでプラグインを有効にする必要がある場合があります。代替手段のカスタムMCPサーバーはウェブ版のみで、有料プランが必要です。OpenAIが対象として挙げているのはBusinessとEnterprise/Eduで、Proでは読み取りと取得のツールに限られます。どちらの場合も、見落とされがちな手順はチャット側にあります。ChatGPTがメールを見ずに答えたら、<b>@</b>と入力してAny Mailbox（カスタムサーバーならMCPEmails）を選び、そのメッセージで使わせてください。"
     },
     {
       "h": "コネクタを作成するときは、認証なしではなくOAuthを選んでください",
@@ -96,7 +96,7 @@
     },
     {
       "q": "ChatGPTでカスタムMCPサーバーを追加できないのはなぜですか？",
-      "a": "カスタムMCPサーバーはGoと有料プランで、chatgpt.comから追加できます。モバイルアプリにはその機能がありません。BusinessまたはEnterpriseのワークスペースでは、管理者またはオーナーが追加する必要がある場合があります。MCPEmailsを追加したのにChatGPTが使わないなら、チャットで<b>@</b>と入力してMCPEmailsを選んでください。選択は一度に1つのメッセージにだけ適用されます。Any Mailboxプラグインにはこうした制限がないので、代わりにプラグインディレクトリからインストールしてください。"
+      "a": "カスタムMCPサーバーはchatgpt.comから追加します。モバイルアプリにはその機能がありません。OpenAIのヘルプページでは、フルサポートの対象としてBusinessとEnterprise/Edu（追加と公開ができるのは管理者またはオーナーのみ）、読み取りと取得のツールに限った対象としてProが挙げられています。GoとPlusへの言及はありません。Any Mailboxプラグインのほうが簡単です。プラグインディレクトリはすべてのChatGPTプランで利用できます。MCPEmailsを追加したのにChatGPTが使わないなら、チャットで<b>@</b>と入力してMCPEmailsを選んでください。選択は一度に1つのメッセージにだけ適用されます。"
     },
     {
       "q": "ChatGPTにAPIキーは必要ですか？",

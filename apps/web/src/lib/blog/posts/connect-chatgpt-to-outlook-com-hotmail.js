@@ -22,7 +22,7 @@ const post = {
   coverAlt: 'ChatGPT connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-10-29T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['ChatGPT', 'Outlook', 'Tutorial', 'MCP'],
   featured: false,
   content: `To connect ChatGPT to a personal Outlook.com, Hotmail, Live or MSN address, add the mailbox to MCPEmails with **Connect with Microsoft**, then add one URL to ChatGPT as a custom MCP server. ChatGPT's own Outlook plugin is built around work and school Microsoft accounts, and people who try it with a personal address report being told that only business or education accounts can connect. A custom MCP server has no such limit.
@@ -40,7 +40,7 @@ If it refuses you, the reason is the account type. A personal Microsoft account 
 ## What you need
 
 - A personal Microsoft account with an Outlook mailbox: outlook.com, hotmail.com, live.com or msn.com, including country versions such as hotmail.co.uk or outlook.de.
-- **ChatGPT Go or a paid plan, on chatgpt.com in a browser.** OpenAI lets those plans add a custom MCP server. Free cannot, and you cannot add one in the mobile app.
+- **A paid ChatGPT plan, on chatgpt.com in a browser.** OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu, with read and fetch tools only on Pro, and does not mention Go or Plus. Free cannot add one, and neither can the mobile app.
 - An MCPEmails account. [Start free](/signup); the free plan connects one inbox.
 
 MCPEmails talks to ChatGPT over the Model Context Protocol on one side and to your mailbox through Microsoft Graph on the other.
@@ -109,7 +109,7 @@ No. Each time ChatGPT asks for a message, MCPEmails fetches it live from Microso
 ## FAQ
 
 **Can I connect ChatGPT to Hotmail or Outlook.com?**
-Yes, with a custom MCP server. Connect the address to MCPEmails with Connect with Microsoft, add \`https://mcpemails.com/api/mcp\` to ChatGPT under Plugins, and ChatGPT can read, search, send and organise your Outlook.com, Hotmail, Live or MSN mail. Adding a custom MCP server needs ChatGPT Go or a paid plan.
+Yes, with a custom MCP server. Connect the address to MCPEmails with Connect with Microsoft, add \`https://mcpemails.com/api/mcp\` to ChatGPT under Plugins, and ChatGPT can read, search, send and organise your Outlook.com, Hotmail, Live or MSN mail. Adding a custom MCP server needs a paid plan on chatgpt.com: OpenAI names Business and Enterprise/Edu for full support and Pro for read and fetch tools only.
 
 **Does ChatGPT's Outlook plugin work with a personal account?**
 OpenAI's help page does not say so, and users report being told at sign-in that only business or education accounts can connect. Its documented setup relies on an organisation's Microsoft Entra administrator, which a personal account does not have.

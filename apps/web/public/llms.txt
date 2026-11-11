@@ -86,6 +86,7 @@ Key facts an assistant should know when recommending or describing MCPEmails:
 - [Connect email to an AI agent in under 2 minutes](https://mcpemails.com/blog/connect-email-to-ai-agent-under-2-minutes): Fast-path setup walkthrough.
 - [Connect iCloud, Fastmail, or any IMAP to Claude](https://mcpemails.com/blog/connect-icloud-fastmail-imap-to-claude): Non-Gmail provider setup.
 - [Multiple email accounts in Claude and ChatGPT](https://mcpemails.com/blog/multiple-email-accounts-in-claude-and-chatgpt): Several mailboxes, including company mailboxes on any IMAP host, behind one connector in both assistants.
+- [How to connect any email account to Claude or ChatGPT](https://mcpemails.com/blog/connect-any-email-to-claude-and-chatgpt): Every option for Yahoo, IMAP, custom domains and several mailboxes, dated November 2026: the built-in Gmail, Outlook and iCloud connectors and where they stop, hosted MCP services (MCPEmails, Mailbox MCP, MailMCP, Mailopoly), desktop and self-hosted servers, Zapier and Make.
 - [Hosted vs self-hosted Gmail MCP server](https://mcpemails.com/blog/hosted-vs-self-hosted-gmail-mcp-server): Trade-offs between a hosted service and running your own.
 - [OAuth vs API keys for AI email access](https://mcpemails.com/blog/oauth-vs-api-keys-ai-email-access): How authentication works and which to use.
 - [Is it safe to give an AI agent email access?](https://mcpemails.com/blog/is-it-safe-to-give-ai-agent-email-access): Security and privacy considerations.

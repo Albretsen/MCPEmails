@@ -9,7 +9,7 @@
     "method": "account-password",
     "label": "Optimum ID password",
     "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
-    "usernameForm": "Your full address, whichever Optimum domain it uses: name@optimum.net, name@optonline.net or a Suddenlink address.",
+    "usernameForm": "Your full address (name@optimum.net, name@optonline.net or a Suddenlink address), which Optimum's troubleshooting page gives as the username. Its server-settings page says the Optimum ID alone, the part before the @. If one form is refused, try the other.",
     "status": "active"
   },
   "meta": {
@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "How Optimum connects: IMAP with your ordinary Optimum ID",
-    "body": "Optimum runs one mail host for all its brands. <code>mail.optimum.net</code> answers IMAP on port 993 over TLS under its own certificate, and Optimum documents the same name for submission on port 465. Addresses on <code>optimum.net</code>, <code>optonline.net</code> and the Suddenlink domains that Optimum absorbed all land on it. Authentication is refreshingly plain: your <b>Optimum ID</b> and its password, entered with the full email address as the username. Optimum issues no app-specific passwords and has no third party access switch to find, so a login that fails here is a real credential problem rather than a hidden setting. The one thing to know before you point an agent at the mailbox is that Optimum stopped creating email accounts on 4 May 2021 and tells anyone who wants a new address to go to Gmail, Outlook.com or Yahoo instead."
+    "body": "Optimum runs one mail host for all its brands. <code>mail.optimum.net</code> answers IMAP on port 993 over TLS under its own certificate, and Optimum documents the same name for submission on port 465. Addresses on <code>optimum.net</code>, <code>optonline.net</code> and the Suddenlink domains that Optimum absorbed all land on it. Authentication is your <b>Optimum ID</b> and its password, with one wrinkle: Optimum's troubleshooting page says the username is the full email address, while its server-settings page says it is the Optimum ID alone, the part before the @. Try the full address first and the ID if that is refused. Optimum issues no app-specific passwords and has no third party access switch to find, so a login that fails here is a real credential problem rather than a hidden setting. The one thing to know before you point an agent at the mailbox is that Optimum stopped creating email accounts on 4 May 2021 and tells anyone who wants a new address to go to Gmail, Outlook.com or Yahoo instead."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Enter the address and the Optimum ID password",
-      "p": "In MCPEmails choose IMAP / SMTP, put the whole address in the username field, such as <code>name@optonline.net</code>, and use the password for that Optimum ID. The host is prefilled and was verified from a live TLS connection."
+      "p": "In MCPEmails choose IMAP / SMTP, put the whole address in the username field, such as <code>name@optonline.net</code>, and use the password for that Optimum ID. If the full address is refused, enter the Optimum ID alone, the part before the @, under Advanced, which is the form Optimum's server-settings page gives. The host is prefilled for both directions and was verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -69,7 +69,7 @@
   "limits": [
     "The mailbox is capped at 5 GB with no paid upgrade, and sending and receiving stop when it fills.",
     "Optimum has issued no new email accounts since 4 May 2021, so only an existing address can be connected.",
-    "The Optimum submission host did not answer our probe on port 465, so we publish no verified capability list for outgoing mail on this provider."
+    "Optimum's submission host greets on port 465 but did not answer our EHLO in time; port 587 with STARTTLS answered with LOGIN and PLAIN. Optimum documents 465 as the recommended port and 587 as legacy, so the table keeps 465."
   ],
   "faq": [
     {
@@ -78,7 +78,7 @@
     },
     {
       "q": "What are the Optimum IMAP settings?",
-      "a": "IMAP is mail.optimum.net on port 993 with implicit TLS, verified from a live TLS connection on the date shown on this page. For submission, Optimum documents the same hostname on port 465; our own probe of that port got no answer, so the outgoing side is not verified here. The username is your full email address and the password is the one for your Optimum ID."
+      "a": "IMAP is mail.optimum.net on port 993 with implicit TLS, verified from a live TLS connection on the date shown on this page. SMTP is mail.optimum.net on port 465 with SSL, the port Optimum recommends; the host greeted our probe there, and port 587 with STARTTLS answered with the LOGIN and PLAIN mechanisms. The username is your full email address, or the Optimum ID alone if that is refused, and the password is the one for your Optimum ID."
     },
     {
       "q": "Do I need an app password for Optimum email?",

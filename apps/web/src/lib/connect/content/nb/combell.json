@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "https://www.combell.com/en/help/kb/change-the-password-of-your-mailbox/",
+    "https://www.combell.com/en/blog/combell-basic-e-mail-configuration-made-easy-thanks-to-autodiscover/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "usernameForm": "Hele adressen din, for eksempel info@uwbedrijf.be. Combells veiledninger bruker hele e-postadressen som brukernavn for begge servere.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Combell MCP-server: koble Combell-e-post til Claude",
+    "description": "MCP-server for Combell Basic-postkasser. Koble postkassene på domenet ditt (info@, facturatie@) til Claude, ChatGPT og Cursor via IMAP på imap.mailprotect.be:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "Combell-e-post + AI",
+    "titleLine1": "MCP-server for Combell-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, facturatie@ og ditt eget navn på et domene hos Combell? Koble hver Basic-postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med postkassens passord i stedet for My Combell-innloggingen din.",
+    "answer": "Claude når ikke en Combell-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.mailprotect.be port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Combells hjelp dokumenterer nøyaktig disse vertene for en Basic-postkasse: imap.mailprotect.be på 993 med SSL/TLS og smtp-auth.mailprotect.be på 465 med SSL/TLS, med hele adressen som brukernavn. En Exchange- eller Microsoft 365-postkasse hos Combell er et annet produkt og kobles til på en annen måte. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, Basic-postkasser",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på Combell-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler Combell seg til: mailprotect.be-vertene, IMAP på 993 og SMTP på 465",
+    "body": "Combells Basic-postkasser ligger på en delt plattform med egne navn. Innkommende server er <code>imap.mailprotect.be</code> på port 993 med SSL/TLS og utgående server er <code>smtp-auth.mailprotect.be</code> på port 465 med SSL/TLS, begge med hele adressen som brukernavn og postkassepassordet. Combells Outlook-veiledning oppgir 465; Apple Mail- og Thunderbird-veiledningene gir 587 med STARTTLS på samme vert, og begge svarte på en direkte TLS-tilkobling, det samme gjorde IMAP på 993. IMAP-serveren kjører Dovecot og annonserer IDLE men ikke MOVE, og SMTP-serveren godtar PLAIN og LOGIN med en meldingsgrense på 50 MB. Combell publiserer også autodiscover-oppføringer for Basic-postkasser, som er grunnen til at Outlook og Thunderbird vanligvis finner disse innstillingene selv; MCPEmails har dem forhåndsutfylt. Passordet er det som er satt på postkassen, under <b>Mailboxes</b> i kontrollpanelet eller under <b>Settings</b>, <b>Password</b> i webmailen."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk at adressen er en Basic-postkasse",
+      "p": "I My Combell åpner du <b>My products</b> og <b>E-mail hosting</b>. En Basic-postkasse styres under <b>Manage e-mail</b>, <b>Mailboxes</b>. Er adressen i stedet en Exchange- eller Microsoft 365-postkasse, bruker den ikke mailprotect.be-vertene; en Microsoft 365-postkasse kobler du til gjennom Microsoft-innloggingen i MCPEmails."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet",
+      "p": "Fortsatt under <b>Mailboxes</b> klikker du <b>Manage</b> ved siden av adressen og bruker <b>Edit password</b>. Webmailen tilbyr det samme under <b>Settings</b>, <b>Password</b>. Dette postkassepassordet er det IMAP sjekker, ikke My Combell-innloggingen din."
+    },
+    {
+      "h": "Skriv dem inn i MCPEmails og lim MCP-URL-en inn i AI-en din",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel info@uwbedrijf.be, og postkassepassordet. Vertene <code>imap.mailprotect.be</code> og <code>smtp-auth.mailprotect.be</code> er forhåndsutfylt med 993 og 465 og ble bekreftet via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Basic, Exchange og Microsoft 365 er tre ulike postkasser hos Combell",
+      "p": "Combell selger en Basic-postkasse, en Exchange-postkasse og en Microsoft 365-postkasse, og bare Basic ligger på <code>imap.mailprotect.be</code>. Combells egen passordveiledning advarer om at en Exchange-postkasse låser seg etter innlogginger med feil passord, og at et nytt passord kan ta opptil 15 minutter å slå gjennom der, så å lime mailprotect.be-innstillinger inn på en Exchange-adresse gjør verre enn å mislykkes. Sjekk produktet under My products før du begynner; en Microsoft 365-postkasse kobles til gjennom Microsoft-innloggingen i stedet."
+    },
+    {
+      "h": "Sertifikatet på IMAP-verten bærer et annet merkenavn",
+      "p": "Da vi koblet til <code>imap.mailprotect.be</code>, var sertifikatet som ble presentert utstedt til mail.register.be og hadde imap.mailprotect.be blant navnene sine, så det validerer rent; SMTP-verten presenterer ett for <code>*.mailprotect.be</code>. Det er verdt å vite fordi noen e-postprogrammer viser sertifikatets første navn i en dialog, og et Register.be-navn på en Combell-postkasse er forventet, ikke et tegn på feil server."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE på serveren",
+      "p": "Dovecot bak <code>imap.mailprotect.be</code> annonserer <code>IDLE</code> men hverken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv gjenkjennes på navn i stedet for på en rolle serveren oppgir. På en nederlandsk postkasse heter de ofte Verzonden, Concepten og Prullenbak; nevn mappen i instruksjonen hvis agenten ikke finner den."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 50 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Disse innstillingene gjelder bare Basic-postkasser. Exchange- og Microsoft 365-postkasser hos Combell er egne produkter med egen tilkobling."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Combell-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Combell-kobling. Peker du en MCP-server som MCPEmails mot en Basic-postkasse via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Combell?",
+      "a": "For en Basic-postkasse er IMAP imap.mailprotect.be på port 993 med SSL/TLS og SMTP smtp-auth.mailprotect.be på port 465 med SSL/TLS, eller 587 med STARTTLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvor endrer jeg et Combell-postkassepassord?",
+      "a": "I My Combell under My products, E-mail hosting, Manage e-mail, så Mailboxes: klikk Manage ved siden av adressen og velg Edit password. Eller i webmailen under Settings, Password. Endrer du det, kobles alle e-postprogrammer og MCPEmails fra til det nye passordet er skrevet inn."
+    },
+    {
+      "q": "Kan jeg koble til en Combell Exchange- eller Microsoft 365-postkasse på samme måte?",
+      "a": "Ikke med disse vertene. De hører til Basic-postkasser. En Microsoft 365-postkasse hos Combell kobles til gjennom Microsoft-innloggingen i MCPEmails; en Exchange-postkasse har sine egne serverinnstillinger fra Combell."
+    },
+    {
+      "q": "Lagres Combell-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra Combell via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din Combell-postkassene dine",
+    "sub": "Koble til en Combell Basic-postkasse på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

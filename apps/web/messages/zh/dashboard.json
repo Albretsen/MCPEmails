@@ -30,7 +30,7 @@
       "step3": "选择 OAuth，勾选 \"I understand and want to continue\"，然后点击 \"Create as a plugin\"。",
       "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。",
       "step5": "在对话中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。",
-      "note": "ChatGPT Go 和付费套餐都可以添加自定义 MCP 服务器。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
+      "note": "OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu 工作区，Pro 仅限只读访问，均在 chatgpt.com 上添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
@@ -123,6 +123,25 @@
     "itWorksDesc": "你的 AI 应用刚刚第一次调用了 MCPEmails。在同一个对话中继续即可。",
     "waitingLive": "第一次调用到达时，本页会自动更新。",
     "waitingStopped": "仍未收到调用。试过提示词后请刷新本页。"
+  },
+  "heardAbout": {
+    "title": "您是如何了解到 MCPEmails 的？",
+    "sub": "点一下，帮助我们了解大家从哪里找到我们。可选。",
+    "dismiss": "关闭",
+    "send": "发送",
+    "otherLabel": "您从哪里了解到 MCPEmails？",
+    "otherPlaceholder": "告诉我们来源（可选）",
+    "options": {
+      "chatgpt": "ChatGPT 的回答",
+      "claude": "Claude 的回答",
+      "gemini": "Gemini 或 Google AI 的回答",
+      "google_search": "Google 搜索",
+      "colleague": "同事或朋友",
+      "directory": "应用目录或 MCP 列表",
+      "video": "YouTube 或视频",
+      "forum": "Reddit 或论坛",
+      "other": "其他"
+    }
   },
   "firstWeek": {
     "title": "你的第一周",
@@ -790,7 +809,11 @@
       "freeConfirm": "切换到 Free",
       "freeBody": "您的套餐在 {date} 之前保持有效（已付费）。之后账户将改为 Free。不会删除任何内容。",
       "freeToast": "完成。您的套餐在 {date} 之前保持有效，之后改为 Free。",
-      "pendingCheckout": "您的订阅已安排暂停或套餐切换。请先在此页面使用“提前恢复”或“保留”，然后再更改套餐。"
+      "pendingCheckout": "您的订阅已安排暂停或套餐切换。请先在此页面使用“提前恢复”或“保留”，然后再更改套餐。",
+      "endsBanner": "你的 {plan} 方案将于 {date} 结束。不会删除任何内容。",
+      "keepMyPlan": "保留我的方案",
+      "keepPlanBody": "已取消计划中的结束。{plan} 将照常继续，并于 {date} 以 {amount} 续订。今天不会扣费。",
+      "keepPlanToast": "你的 {plan} 方案将继续。"
     },
     "cancelReason": {
       "prompt": "您已取消套餐。如果愿意告诉我们原因，点一下即可。",

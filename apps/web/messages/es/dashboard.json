@@ -30,7 +30,7 @@
       "step3": "Elige OAuth, marca «I understand and want to continue» y haz clic en «Create as a plugin».",
       "step4": "Inicia sesión con MCPEmails para autorizar. No se necesita clave de API.",
       "step5": "En un chat, escribe @ y elige MCPEmails. La elección vale solo para ese mensaje, así que vuelve a mencionarlo con @ cuando una pregunta de seguimiento necesite tu correo.",
-      "note": "Los servidores MCP personalizados se pueden añadir con ChatGPT Go y los planes de pago. En Business y Enterprise, puede que tenga que añadirlo un administrador o propietario."
+      "note": "OpenAI ofrece los servidores MCP personalizados para los espacios de trabajo Business y Enterprise/Edu, con acceso de solo lectura en Pro, en chatgpt.com. En Business y Enterprise, puede que tenga que añadirlo un administrador o propietario."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",
@@ -123,6 +123,25 @@
     "itWorksDesc": "Tu app de IA acaba de hacer su primera llamada a MCPEmails. Sigue en el mismo chat.",
     "waitingLive": "Esta página se actualiza sola cuando llega la primera llamada.",
     "waitingStopped": "Todavía no hay ninguna llamada. Recarga esta página después de probar un prompt."
+  },
+  "heardAbout": {
+    "title": "¿Cómo conociste MCPEmails?",
+    "sub": "Un clic nos ayuda a saber dónde nos encuentra la gente. Es opcional.",
+    "dismiss": "Cerrar",
+    "send": "Enviar",
+    "otherLabel": "¿Dónde conociste MCPEmails?",
+    "otherPlaceholder": "Cuéntanos dónde (opcional)",
+    "options": {
+      "chatgpt": "Respuesta de ChatGPT",
+      "claude": "Respuesta de Claude",
+      "gemini": "Respuesta de Gemini o de la IA de Google",
+      "google_search": "Búsqueda en Google",
+      "colleague": "Un compañero o amigo",
+      "directory": "Directorio de apps o listado MCP",
+      "video": "YouTube o vídeo",
+      "forum": "Reddit o un foro",
+      "other": "Otro"
+    }
   },
   "firstWeek": {
     "title": "Tu primera semana",
@@ -938,7 +957,11 @@
       "freeConfirm": "Cambiar a Free",
       "freeBody": "Tu plan sigue activo hasta el {date}, que ya has pagado. Después, la cuenta pasa a Free. No se elimina nada.",
       "freeToast": "Hecho. Tu plan sigue activo hasta el {date} y después pasa a Free.",
-      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
+      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan.",
+      "endsBanner": "Tu plan {plan} termina el {date}. No se elimina nada.",
+      "keepMyPlan": "Mantener mi plan",
+      "keepPlanBody": "Se quita la cancelación programada. {plan} continúa y se renueva el {date} por {amount}, como antes. Hoy no se cobra nada.",
+      "keepPlanToast": "Tu plan {plan} continúa."
     },
     "cancelReason": {
       "prompt": "Has cancelado tu plan. Si quieres contarnos por qué, basta con un toque.",

@@ -18,7 +18,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "OAuth, no API key needed",
     "meta2": "Email fetched live, never stored",
-    "answer": "In ChatGPT, open Plugins, find Any Mailbox by MCPEmails in the plugin directory and click Install plugin, then Connect. Sign in to MCPEmails and choose which mailboxes ChatGPT can reach and how much access it gets. In a chat, type @ and pick Any Mailbox. Without the plugin, add a custom MCP server on chatgpt.com with the URL https://mcpemails.com/api/mcp and OAuth; that works on ChatGPT Go and paid plans."
+    "answer": "In ChatGPT, open Plugins, find Any Mailbox by MCPEmails in the plugin directory and click Install plugin, then Connect. Sign in to MCPEmails and choose which mailboxes ChatGPT can reach and how much access it gets. In a chat, type @ and pick Any Mailbox. Without the plugin, add a custom MCP server on chatgpt.com with the URL https://mcpemails.com/api/mcp and OAuth; OpenAI lists that for Business and Enterprise/Edu, with read-only access on Pro, on the web."
   },
   "method": {
     "title": "How ChatGPT connects: OAuth, no API key",
@@ -46,7 +46,7 @@
   "fallback": {
     "eyebrow": "Without the plugin",
     "title": "Add the same server as a custom MCP server",
-    "sub": "If Any Mailbox is not available in your ChatGPT account or workspace, add MCPEmails as a custom MCP server instead. That works on chatgpt.com with ChatGPT Go and paid plans, and it reaches the same mailboxes.",
+    "sub": "If Any Mailbox is not available in your ChatGPT account or workspace, add MCPEmails as a custom MCP server instead. It reaches the same mailboxes. OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu on chatgpt.com, with read and fetch tools only on Pro; Go and Plus are not mentioned.",
     "steps": [
       {
         "h": "Open Add custom MCP server",
@@ -69,7 +69,7 @@
   "gotchas": [
     {
       "h": "Install once, then make sure the chat is using it",
-      "p": "Any Mailbox installs from the plugin directory on every ChatGPT plan. On Business and Enterprise, an admin may need to make the plugin available for the workspace first. The custom MCP server, the fallback, is web-only and needs ChatGPT Go or a paid plan. In both cases the step people miss is in the chat: if ChatGPT answers without looking at your mail, type <b>@</b> and pick Any Mailbox (or MCPEmails, for the custom server) so that message uses it."
+      "p": "The plugin directory is open on every ChatGPT plan. On Business and Enterprise, an admin may need to make the plugin available for the workspace first. The custom MCP server, the fallback, is web-only and needs a paid plan: OpenAI lists it for Business and Enterprise/Edu, with read and fetch tools only on Pro. In both cases the step people miss is in the chat: if ChatGPT answers without looking at your mail, type <b>@</b> and pick Any Mailbox (or MCPEmails, for the custom server) so that message uses it."
     },
     {
       "h": "Pick OAuth, not no-authentication, when you create the custom server",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Why can I not add a custom MCP server in ChatGPT?",
-      "a": "Custom MCP servers can be added on Go and paid plans, on chatgpt.com: the mobile app does not offer it. On a Business or Enterprise workspace, an admin or owner may need to add it. The Any Mailbox plugin has none of these limits, so install it from the plugin directory instead. If MCPEmails is added but ChatGPT does not use it, type <b>@</b> in the chat and pick it; the pick applies to one message at a time."
+      "a": "Custom MCP servers are added on chatgpt.com: the mobile app does not offer it. OpenAI's help page names Business and Enterprise/Edu for full support, where only an admin or owner can add and publish one, and Pro for read and fetch tools only; Go and Plus are not mentioned. The Any Mailbox plugin is the simpler route: the plugin directory is open on every ChatGPT plan. If MCPEmails is added but ChatGPT does not use it, type <b>@</b> in the chat and pick it; the pick applies to one message at a time."
     },
     {
       "q": "Do I need an API key for ChatGPT?",

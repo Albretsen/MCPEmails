@@ -1,7 +1,7 @@
 {
   "eyebrow": "ChatGPT",
   "title": "Bruk {provider} i ChatGPT",
-  "sub": "ChatGPT når {provider} gjennom en egendefinert MCP-server, som du legger til på chatgpt.com med ChatGPT Go eller et betalt abonnement.",
+  "sub": "ChatGPT når {provider} gjennom en egendefinert MCP-server, som du legger til på chatgpt.com med et betalt abonnement.",
   "steps": [
     "Koble {provider} til MCPEmails med stegene over.",
     "På chatgpt.com åpner du Plugins, Personal, klikker Add og så Add custom MCP server.",
@@ -12,7 +12,7 @@
   "blogLink": "Slik kobler du ChatGPT til e-posten din",
   "faqQ": "Kan ChatGPT lese e-posten min i {provider}?",
   "faqQMailName": "Kan ChatGPT lese e-posten min i {provider}?",
-  "faqA": "Ja, når {provider} er koblet til MCPEmails. Legg til en egendefinert MCP-server på chatgpt.com med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Det fungerer med ChatGPT Go og betalte abonnementer. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
+  "faqA": "Ja, når {provider} er koblet til MCPEmails. Legg til en egendefinert MCP-server på chatgpt.com med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Det krever et betalt abonnement: OpenAIs hjelpeside nevner Business og Enterprise/Edu for full støtte og Pro for bare leseverktøy. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
   "directorySub": "ChatGPT når {provider} gjennom Any Mailbox, MCPEmails-pluginen i pluginkatalogen i ChatGPT.",
   "directorySteps": [
     "Koble {provider} til MCPEmails med stegene over.",

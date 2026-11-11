@@ -26,7 +26,7 @@
   },
   "answerSection": {
     "title": "Claude Desktopでメールに使えるMCPサーバーはどれですか？",
-    "body": "Claude Desktopはカスタムコネクタとして追加したリモートMCPサーバーをすべて受け付けるので、MCPEmailsのようなホスト型のメールサーバーはclaude.aiとまったく同じように動きます。<b>カスタマイズ</b>、<b>コネクタ</b>を開き、<code>https://mcpemails.com/api/mcp</code>を追加してログインするだけです。その1つのURLでGmail、Outlook.com、Microsoft 365、iCloud、Yahoo、任意のIMAPメールボックスをカバーします。Claude純正のGmailコネクタとMicrosoft 365コネクタもClaude Desktopに表示されますが、それぞれ1つのプロバイダーしか扱わず、Microsoft 365のものは職場または学校のアカウントしか受け付けません。<code>claude_desktop_config.json</code>から起動するローカルサーバーも動きますが、あなたのコンピューター上で実行され、メールのログイン情報をそこにあるファイルに保持します。"
+    "body": "Claude Desktopはカスタムコネクタとして追加したリモートMCPサーバーをすべて受け付けるので、MCPEmailsのようなホスト型のメールサーバーはclaude.aiとまったく同じように動きます。<b>カスタマイズ</b>、<b>コネクタ</b>を開き、<code>https://mcpemails.com/api/mcp</code>を追加してログインするだけです。その1つのURLでGmail、Outlook.com、Microsoft 365、iCloud、Yahoo、任意のIMAPメールボックスをカバーします。Claude純正のGmailコネクタとMicrosoft 365コネクタもClaude Desktopに表示されますが、それぞれ1つのプロバイダーしか扱わず、Microsoft 365のものが個人のOutlook.comアカウントを受け付けるのはFree、Pro、Max、Ultraの各プランに限られ、添付ファイルは扱えません。<code>claude_desktop_config.json</code>から起動するローカルサーバーも動きますが、あなたのコンピューター上で実行され、メールのログイン情報をそこにあるファイルに保持します。"
   },
   "setup": [
     {

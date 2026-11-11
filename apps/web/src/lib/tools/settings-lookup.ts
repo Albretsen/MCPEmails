@@ -223,6 +223,17 @@ export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
   onet: 'onet',
   interia: 'interia',
   'gazeta-pl': 'gazeta-pl',
+  // Web hosts (2026-11-11). Hostpoint's preset predates its page; the two
+  // Websupport platforms share one page.
+  hostpoint: 'hostpoint',
+  'cyber-folks': 'cyber-folks',
+  transip: 'transip',
+  combell: 'combell',
+  websupport: 'websupport',
+  'websupport-cz': 'websupport',
+  'reg-ru': 'reg-ru',
+  stackmail: 'stackmail',
+  arsys: 'arsys',
 });
 
 /**
@@ -232,7 +243,7 @@ export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
  * own host is only a generic fallback, and OVH's connect page says the number
  * "works for one customer and returns nothing for the next".
  */
-const CLUSTER_PRESETS = new Set(['ovh-exchange', 'hostedemail']);
+const CLUSTER_PRESETS = new Set(['ovh-exchange', 'hostedemail', 'cyber-folks']);
 
 /**
  * Addresses of the providers the registry marks `limited`, beyond the single

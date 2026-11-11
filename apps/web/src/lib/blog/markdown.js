@@ -157,6 +157,32 @@ export function renderMarkdown(markdown, { hrefFor = (href) => href } = {}) {
       continue;
     }
 
+    // table: a header row, a separator row of dashes, then body rows. Cells
+    // are split on `|`; the outer pipes are optional. Wrapped in a div so a
+    // wide comparison scrolls sideways on a phone instead of breaking the page.
+    if (/^\s*\|/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+      paragraph = flushParagraph(paragraph);
+      const cells = (row) =>
+        row
+          .trim()
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
+          .split('|')
+          .map((c) => inline(c.trim(), hrefFor));
+      const head = cells(lines[i]);
+      i += 2;
+      const body = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])) {
+        body.push(cells(lines[i]));
+        i++;
+      }
+      const tr = (cols, tag) => `<tr>${cols.map((c) => `<${tag}>${c}</${tag}>`).join('')}</tr>`;
+      html.push(
+        `<div class="blog-table-wrap"><table><thead>${tr(head, 'th')}</thead><tbody>${body.map((r) => tr(r, 'td')).join('')}</tbody></table></div>`,
+      );
+      continue;
+    }
+
     // unordered list
     if (/^\s*[-*]\s+/.test(line)) {
       paragraph = flushParagraph(paragraph);

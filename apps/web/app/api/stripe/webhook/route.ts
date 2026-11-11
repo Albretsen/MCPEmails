@@ -833,6 +833,9 @@ async function handleCheckoutSessionCompleted(
           }
           : null,
         sessionId: session.id,
+        // The buyer's referral link is looked up from this, for the one
+        // "give a month, get a month" line (src/lib/referrals/link.ts).
+        userId,
         // 'unpaid' for a delayed method (SEPA Direct Debit): the email then
         // says the debit is processing instead of "payment received".
         paymentStatus: session.payment_status ?? null,
@@ -1477,7 +1480,7 @@ async function handleSubscriptionUpserted(
     await cancelOpenSequence({
       db: createServiceRoleClient(),
       stripeCustomerId: customerId,
-      templates: ['cancel_ask', 'winback_14', 'winback_30'],
+      templates: ['cancel_ask', 'winback_14', 'winback_30', 'plan_ending_5d'],
       reason: 'subscription_reactivated',
     });
   }

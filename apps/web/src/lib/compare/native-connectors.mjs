@@ -40,7 +40,7 @@ export const CHECKED_ON = '2026-10-19';
 export const DATE_PUBLISHED = '2026-05-29';
 
 /** Last content change, for JSON-LD and the sitemap. */
-export const DATE_MODIFIED = '2026-10-20';
+export const DATE_MODIFIED = '2026-11-11';
 
 export const PATH = '/native-connectors-vs-mcp';
 
@@ -54,7 +54,7 @@ export const NOT_STATED = 'notStated';
 export const SOURCES = [
   { id: 'claudeGoogle', url: 'https://support.claude.com/en/articles/10166901-use-google-workspace-connectors', checkedOn: '2026-10-19' },
   { id: 'claudeGmailListing', url: 'https://claude.com/connectors/gmail', checkedOn: '2026-10-19' },
-  { id: 'claudeM365', url: 'https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector', checkedOn: '2026-10-19' },
+  { id: 'claudeM365', url: 'https://support.claude.com/en/articles/15183774-connect-to-microsoft-365', checkedOn: '2026-11-11' },
   { id: 'chatgptReleaseNotes', url: 'https://help.openai.com/en/articles/6825453-chatgpt-release-notes', checkedOn: '2026-10-19' },
   { id: 'chatgptApps', url: 'https://help.openai.com/en/articles/11487775-apps-in-chatgpt', checkedOn: '2026-10-19' },
   { id: 'fastmailMcp', url: 'https://www.fastmail.help/hc/en-us/articles/15869557281295', checkedOn: '2026-10-19' },

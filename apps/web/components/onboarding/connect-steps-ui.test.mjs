@@ -104,7 +104,7 @@ test('ChatGPT gets the Plugins steps and the plan note; a command client gets th
   const { view, update } = await render(t, AddToAiStep, props({ client: 'chatgpt', clientLabel: 'ChatGPT' }));
   const steps = view.container.querySelector('[data-testid="onb-chatgpt-steps"]').textContent;
   assert.ok(steps.includes('Plugins') && steps.includes('Add custom MCP server') && steps.includes('@MCPEmails'));
-  assert.ok(view.container.textContent.includes('Go plan'));
+  assert.ok(view.container.textContent.includes('paid plan'));
   await update(props({ client: 'claude_code', clientLabel: 'Claude Code' }));
   assert.ok(view.container.querySelector('[data-testid="onb-command"]').textContent.includes(`claude mcp add --transport http mcpemails ${MCP}`));
 });

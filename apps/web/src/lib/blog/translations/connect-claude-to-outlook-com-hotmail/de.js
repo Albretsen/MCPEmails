@@ -1,22 +1,25 @@
 const translation = {
   title: 'Claude mit Hotmail und Outlook.com verbinden (private Microsoft-Konten)',
   description:
-    'Der Microsoft 365-Konnektor von Claude akzeptiert keine privaten Microsoft-Konten. So verbinden Sie ein Postfach bei Hotmail, Outlook.com, Live oder MSN mit Claude: Anmeldung bei Microsoft und eine einzige URL für einen benutzerdefinierten Konnektor.',
+    'Der Microsoft 365-Konnektor von Claude nimmt in den Tarifen Free, Pro, Max und Ultra jetzt auch ein privates Microsoft-Konto an. Wann das reicht, und wie Sie Hotmail, Outlook.com, Live oder MSN mit Anhängen, mehreren Postfächern oder im Team-Tarif über eine einzige URL für einen benutzerdefinierten Konnektor mit Claude verbinden.',
   coverAlt: 'Claude über MCPEmails mit einem privaten Postfach bei Outlook.com oder Hotmail verbunden',
-  content: `Um Claude mit einer privaten Adresse bei Outlook.com, Hotmail, Live oder MSN zu verbinden, fügen Sie das Postfach mit **Mit Microsoft verbinden** zu MCPEmails hinzu und tragen dann eine einzige URL als benutzerdefinierten Konnektor in Claude ein. Der eigene Microsoft 365-Konnektor von Claude setzt einen geschäftlichen Microsoft-Mandanten voraus, und laut Anthropic lassen sich private Microsoft-Konten damit nicht nutzen. Ein benutzerdefinierter Konnektor hat diese Voraussetzung nicht. Eine alte hotmail.com-Adresse funktioniert deshalb genauso wie eine neue outlook.com-Adresse. Alle Einstellungen auf einen Blick finden Sie auf der Seite [Outlook mit Claude verbinden](/connect/outlook).
+  content: `Es gibt zwei Wege, Claude mit einer privaten Adresse bei Outlook.com, Hotmail, Live oder MSN zu verbinden. Der eigene Microsoft 365-Konnektor von Claude nimmt in den Tarifen Free, Pro, Max und Ultra ein privates Microsoft-Konto an, ganz ohne Administrator. Der andere Weg ist MCPEmails: Sie fügen das Postfach mit **Mit Microsoft verbinden** hinzu und tragen dann eine einzige URL als benutzerdefinierten Konnektor in Claude ein. Der zweite Weg deckt ab, was der eingebaute Konnektor auslässt: Anhänge, mehrere Postfächer hinter einer Verbindung, die Tarife Team und Enterprise sowie dasselbe Postfach in ChatGPT oder jedem anderen MCP-Client. Eine alte hotmail.com-Adresse funktioniert auf beiden Wegen genauso wie eine neue outlook.com-Adresse. Alle Einstellungen auf einen Blick finden Sie auf der Seite [Outlook mit Claude verbinden](/connect/outlook).
 
 Diese Anleitung gilt für private Microsoft-Konten in Claude. Wenn Ihre E-Mails in einem Arbeits- oder Schulkonto bei Microsoft 365 liegen, lesen Sie stattdessen die [Anleitung für Outlook und Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
-## Warum der Microsoft 365-Konnektor von Claude private Konten ablehnt
+## Was der Microsoft 365-Konnektor von Claude mit einem privaten Konto kann
 
-Die [Hilfeseite von Anthropic zum Microsoft 365-Konnektor](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) nennt zwei Bedingungen, bevor sich jemand verbinden kann:
+Der Artikel [Connect to Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) von Anthropic deckt jetzt auch private Konten ab. In den Tarifen Free, Pro, Max und Ultra verbinden Sie ein Konto bei Outlook.com, Hotmail, Live oder MSN selbst; ein Administrator ist nicht nötig. Der Konnektor erreicht Outlook und OneDrive, und seine Schreib-Tools sind enthalten. Claude kann also E-Mails entwerfen und senden und Kalendereinträge verwalten, nachdem es Sie vorher gefragt hat.
 
-- Das Konto muss zu einem Microsoft Entra-Mandanten gehören, der an einen Microsoft Business-Tarif gebunden ist.
-- Ein Globaler Administrator dieses Mandanten muss die Integration zuerst autorisieren.
+Drei Grenzen aus demselben Artikel sind für E-Mail wichtig:
 
-Auf derselben Seite steht, dass private Microsoft-Konten, etwa Adressen mit @outlook.com oder @hotmail.com, nicht für die Verbindung verwendet werden können. Hinter einem privaten Konto stehen weder ein geschäftlicher Mandant noch ein Administrator. Es gibt also nichts zu genehmigen und keine Einstellung, mit der Sie das ändern könnten. Der Konnektor ist für Organisationen gedacht: Er durchsucht SharePoint, OneDrive, Outlook und Teams, und er hat nur Lesezugriff, bis ein Administrator die Schreib-Tools einschaltet.
+- **Keine Anhänge in den Schreib-Tools.** Claude kann darüber keine E-Mail mit Anhang senden, weiterleiten oder entwerfen.
+- **Nicht in Team und Enterprise.** Diese Tarife bekommen die Option für private Konten nicht angezeigt. Eine private Hotmail-Adresse neben einem Arbeitstarif hat also keinen eingebauten Weg.
+- **Nur in Claude, nur für das Konto, mit dem Sie sich anmelden.** Gmail hat einen eigenen Konnektor; Postfächer bei iCloud, Yahoo und IMAP haben keinen, und nichts davon lässt sich in ChatGPT oder einen anderen MCP-Client mitnehmen.
 
-An Ihrem Postfach liegt es nicht. Claude braucht nur einen anderen Weg dorthin.
+Arbeits- oder Schulkonten sind ein anderer Fall: Dort muss weiterhin ein Globaler Administrator in Microsoft Entra zustimmen, bevor sich jemand in der Organisation verbinden kann. Die [Anleitung für Outlook und Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) und die [Seite zur Admin-Zustimmung](/docs/microsoft-365-admin-consent) behandeln das.
+
+Wenn Ihnen ein privates Outlook.com-Postfach in Claude ohne Anhänge reicht, erledigt das der eingebaute Konnektor. Der Rest dieser Anleitung ist der Weg für alles andere.
 
 ## Was Sie brauchen
 
@@ -93,10 +96,10 @@ Nein. Jedes Mal, wenn Claude eine Nachricht anfordert, ruft MCPEmails sie live b
 ## FAQ
 
 **Kann ich Claude mit Outlook.com oder Hotmail verbinden?**
-Ja. Der eingebaute Microsoft 365-Konnektor von Claude unterstützt keine privaten Microsoft-Konten, ein benutzerdefinierter Konnektor aber schon. Verbinden Sie die Adresse mit „Mit Microsoft verbinden“ bei MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` in Claude unter Anpassen → Konnektoren hinzu, und Claude kann Ihre E-Mails bei Outlook.com, Hotmail, Live oder MSN lesen, durchsuchen, senden und organisieren.
+Ja, auf zwei Wegen. In Free, Pro, Max oder Ultra nimmt der eingebaute Microsoft 365-Konnektor von Claude ein privates Microsoft-Konto direkt an, allerdings ohne Anhänge. Für Anhänge, mehrere Postfächer, einen Team- oder Enterprise-Tarif oder dasselbe Postfach in ChatGPT verbinden Sie die Adresse mit „Mit Microsoft verbinden“ bei MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` in Claude unter Anpassen → Konnektoren hinzu, und Claude kann Ihre E-Mails bei Outlook.com, Hotmail, Live oder MSN lesen, durchsuchen, senden und organisieren.
 
 **Warum lehnt der Microsoft 365-Konnektor von Claude meine Hotmail-Adresse ab?**
-Laut der Hilfeseite von Anthropic braucht dieser Konnektor einen Microsoft Entra-Mandanten, der an einen Microsoft Business-Tarif gebunden ist, und einen Globalen Administrator, der ihn autorisiert. Private Microsoft-Konten lassen sich damit nicht verwenden. Ein privates Konto hat weder Mandanten noch Administrator.
+Prüfen Sie den Tarif. Laut Anthropic verbinden sich private Microsoft-Konten in Free, Pro, Max und Ultra, und die Tarife Team und Enterprise bekommen diese Option nicht angezeigt. Eine Arbeits- oder Schuladresse ist etwas anderes: Dort muss zuerst ein Globaler Administrator im Microsoft Entra-Mandanten zustimmen. In einem Team- oder Enterprise-Tarif ist MCPEmails als benutzerdefinierter Konnektor der Weg für eine private Adresse.
 
 **Brauche ich ein App-Passwort oder IMAP-Einstellungen?**
 Nein. Private Microsoft-Konten verbinden sich über die Anmeldung mit Microsoft und Microsoft Graph. Microsoft akzeptiert bei diesen Konten keine Anmeldung per Passwort aus E-Mail-Apps anderer Hersteller mehr, ein App-Passwort käme also ohnehin nicht durch.

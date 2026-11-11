@@ -54,6 +54,13 @@ export const ENTRIES = [
   },
   {
     date: '2026-11-11',
+    kind: 'added',
+    title: 'Setup guides for eight more web hosts, and five reviewed ISP guides',
+    body:
+      "New connect guides for mailboxes on your own domain at cyber_Folks, TransIP, Combell, Hostpoint, Websupport, REG.RU, 20i StackMail and Arsys, each checked against the host's own help pages. When you connect a mailbox from one of these hosts, MCPEmails fills in the server settings and points you at the host's own help page if the sign-in is refused. The Optimum, Rogers, SFR, StartMail and Spark Xtra guides are now published too, after a review against each provider's current help.",
+  },
+  {
+    date: '2026-11-11',
     kind: 'fixed',
     title: 'Accepting a workspace invite opens that workspace',
     body:

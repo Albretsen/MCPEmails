@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochty-na-hostingee",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/problemyy/ogranicheniye-imap-soyedineniyy"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "usernameForm": "Hele adressen din, name@your.domain, slik REG.RU skriver det. Et kyrillisk domene skrives inn som Punycode, for eksempel @xn--d1acufc.xn--p1ai for @домен.рф.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "REG.RU MCP-server: koble e-post på REG.RU-hosting til Claude",
+    "description": "MCP-server for e-post på REG.RU-hosting. Koble postkassene på domenet ditt (info@, zakaz@) til Claude, ChatGPT og Cursor via IMAP på mail.hosting.reg.ru:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "REG.RU-e-post + AI",
+    "titleLine1": "MCP-server for REG.RU-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, zakaz@ og ditt eget navn på et domene hos REG.RU? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med passordet til postkassen du opprettet i hostingpanelet.",
+    "answer": "Claude når ikke en REG.RU-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på mail.hosting.reg.ru port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. REG.RUs hjelp oppgir mail.hosting.reg.ru som server i begge retninger over en kryptert tilkobling, med 993 for IMAP og 465 for SMTP, og hele adressen som innlogging. Denne siden dekker postkasser på REG.RU-hosting, opprettet i ispmanager, cPanel eller Plesk; REG.RUs andre e-postprodukter har egne verter. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, hosting-e-post",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på REG.RU-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler REG.RU seg til: mail.hosting.reg.ru på 993 og 465",
+    "body": "REG.RUs side om e-postprogrammer gir ett navn for krypterte tilkoblinger til en postkasse på hostingen: <code>mail.hosting.reg.ru</code>, som innkommende og utgående server. Porttabellen oppgir 993 for IMAP og 465 for SMTP med SSL/TLS, og 143 og 587 for ukryptert bruk; siden legger til, i Thunderbird- og The Bat!-avsnittene, at det krypterte oppsettet er tilgjengelig på Linux-hosting. Innloggingen er hele adressen, <code>name@ваш.домен</code> i REG.RUs egen notasjon, med postkassepassordet som er satt i panelet. Verten svarte på en direkte TLS-tilkobling med et sertifikat for <code>*.hosting.reg.ru</code> over TLS 1.2, et kort <code>IMAP4 ready</code>-banner som annonserer UIDPLUS, IDLE og QUOTA, og en SMTP-hilsen med PLAIN og LOGIN og en meldingsgrense på 50 MB. IMAP-serveren annonserer ikke SASL-IR, som MCPEmails håndterer med totrinns autentiseringsutveksling. Selve postkassen opprettes i hostingpanelet: i ispmanager under <b>Почта</b>, <b>Создать ящик</b>, etter at e-postdomenet finnes under <b>Почтовые домены</b>."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Opprett eller finn postkassen i hostingpanelet",
+      "p": "I ispmanager åpner du <b>Почта</b>. Domenet må først finnes under <b>Почтовые домены</b>; så spør <b>Создать ящик</b> om navnet før @, domenet og et passord. I cPanel ligger det samme under <b>Почта</b>, <b>Почтовые учетные записи</b>, og i Plesk under <b>Почта</b>, <b>Создать адрес электронной почты</b>. REG.RU sier en ny postkasse er i drift innen en time. Passordet du setter der er det IMAP sjekker."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel info@your.domain, med postkassepassordet. For et .рф-domene skriver du domenedelen som Punycode, slik REG.RUs egne iOS-instruksjoner gjør. Verten <code>mail.hosting.reg.ru</code> er forhåndsutfylt i begge retninger, med 993 og SSL for IMAP og 465 og SSL for SMTP, og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bare hosting-e-post: Яндекс 360 og andre REG.RU-e-postprodukter bruker andre verter",
+      "p": "REG.RU videreselger flere e-posttjenester, og deres egen hjelpeside sender Mail.ru-adresser til imap.mail.ru og Yandex-adresser til imap.yandex.ru, hver med den leverandørens app-passord eller tilgangsbryter. <code>mail.hosting.reg.ru</code> er for en postkasse opprettet inne i hostingpanelet ditt. Kjører domenets e-post på Яндекс 360 eller en annen tjeneste du bestilte gjennom REG.RU, følg den leverandørens side i stedet; verten her vil avvise innloggingen."
+    },
+    {
+      "h": "Et tak på 36 prosesser på delt hosting, og IMAP-tilkoblinger teller",
+      "p": "REG.RUs feilsøkingsside forklarer at delt hosting tillater høyst 36 samtidig kjørende prosesser, og at hver åpen IMAP-tilkobling er en av dem. Flere e-postprogrammer på flere enheter kan nå taket, og da oppfører e-posten og nettstedet på samme konto seg ustabilt. REG.RUs råd er å begrense hver klient til én bufret tilkobling. MCPEmails åpner en tilkobling per forespørsel og lukker den, i stedet for å holde flere åpne, så det legger lite til tellingen; når du taket, er programmene som holder tilkoblinger åpne de du bør trimme."
+    },
+    {
+      "h": "Sending er begrenset per dag og per melding",
+      "p": "REG.RUs side om hosting-e-post setter grensene: 3 000 meldinger per 24 timer på vanlig hosting og 9 000 på VIP-planer, høyst 150 mottakere i én melding, en maksimal meldingsstørrelse på 50 MB, og 10 meldinger om dagen på en prøvekonto. Dagsgrensen gjelder hele hostingkontoen, e-post sendt av skript inkludert, og sending gjenopptas neste dag. En prøvekonto er ikke stedet å teste en agent som sender."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 50 MB, som stemmer med REG.RUs oppgitte grense. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Serveren forhandler TLS 1.2, ikke 1.3. Det er fortsatt en moderne, verifisert tilkobling; det betyr bare at håndtrykket ser eldre ut enn hos de fleste vertene på dette nettstedet."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med e-post på REG.RU-hosting?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd REG.RU-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for REG.RU?",
+      "a": "For en postkasse på REG.RU-hosting er IMAP mail.hosting.reg.ru på port 993 med SSL/TLS og SMTP mail.hosting.reg.ru på port 465 med SSL/TLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. Verten ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir passordet til REG.RU-postkassen min avvist?",
+      "a": "Sjekk tre ting: at postkassen finnes i hostingpanelet og ikke ligger på et annet REG.RU-e-postprodukt som Яндекс 360, at brukernavnet er hele adressen med Punycode-domene for .рф, og at passordet er det som er satt på postkassen i ispmanager, cPanel eller Plesk, og ikke passordet til REG.RU-kontoen din."
+    },
+    {
+      "q": "Trenger REG.RU et app-passord?",
+      "a": "Nei, ikke for e-post på hostingen. Postkassepassordet autentiserer både IMAP og SMTP. App-passord dukker opp på REG.RUs hjelpeside bare for Mail.ru- og Yandex-postkasser, som er andre tjenester."
+    },
+    {
+      "q": "Lagres REG.RU-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra REG.RU via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din REG.RU-postkassene dine",
+    "sub": "Koble til e-post på REG.RU-hosting på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

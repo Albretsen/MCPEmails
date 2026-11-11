@@ -85,7 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const { planId, interval, confirm, locale, offer, quotedPriceId, product, arm, surface } =
+  const { planId, interval, confirm, locale, offer, quotedPriceId, product, arm, surface, source } =
     body as Record<string, unknown>;
 
   if (product !== undefined && product !== PERSONAL_PASS_3M.id) {
@@ -107,6 +107,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           ...(country ? { country } : {}),
           ...(offer !== undefined ? { quotedOffer: offer } : {}),
           ...(quotedPriceId !== undefined ? { quotedPriceId } : {}),
+          // Funnel label only ('annual_switch' from the annual card).
+          ...(source === 'annual_switch' ? { source } : {}),
         });
 
   if (outcome.kind === 'checkout') {

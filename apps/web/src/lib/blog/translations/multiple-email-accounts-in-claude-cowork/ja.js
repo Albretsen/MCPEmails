@@ -1,9 +1,9 @@
 const translation = {
   title: 'Claude Coworkで複数のメールアカウントを使う方法（個人用Outlookにも対応）',
   description:
-    'Claude CoworkのGmailコネクタで使えるGoogleアカウントは1つだけで、Microsoft 365コネクタは個人用のOutlookアドレスを受け付けません。職場と個人の複数の受信トレイを、1つのCoworkタスクで扱う方法を説明します。',
+    'Claude Coworkは、Gmailコネクタで1つのGoogleアカウントに、Microsoft 365コネクタでログインした1つのMicrosoftアカウントにアクセスできます。職場と個人の複数の受信トレイを、1つのCoworkタスクで扱う方法を説明します。',
   coverAlt: 'GmailやOutlook.comを含む職場と個人のメールアカウントを、1つのClaude Coworkタスクに接続した様子',
-  content: `**Claude CoworkはClaudeのチャットと同じコネクタを使うため、メールに関する制限も同じです。Gmailコネクタで使えるGoogleアカウントは1つだけで、Microsoft 365コネクタで使えるのは職場のMicrosoft 365アカウントだけです。** 個人用のOutlook.comやHotmailのアドレス、2つ目のGmail、IMAPホスト上の会社のメールボックスには、カスタムコネクタが必要です。MCPEmailsのようなMCPサーバーを使えば、カスタムコネクタ1つで、接続したすべてのメールボックスをそれぞれの名前でCoworkタスクから使えます。
+  content: `**Claude CoworkはClaudeのチャットと同じコネクタを使うため、メールに関する制限も同じです。Gmailコネクタで使えるGoogleアカウントは1つだけ、Microsoft 365コネクタで使えるMicrosoftアカウントも1つだけで、個人用のOutlook.comアカウントを受け付けるのはFree、Pro、Max、Ultraの各プランに限られます。** 2つ目のGmail、TeamやEnterpriseプランでの個人用のOutlook.comやHotmailのアドレス、IMAPホスト上の会社のメールボックス、添付ファイル付きの送信には、カスタムコネクタが必要です。MCPEmailsのようなMCPサーバーを使えば、カスタムコネクタ1つで、接続したすべてのメールボックスをそれぞれの名前でCoworkタスクから使えます。
 
 **目次：** [組み込みコネクタ](#coworkの組み込みメールコネクタで使えるもの) · [複数の受信トレイ](#1つのcoworkタスクで複数の受信トレイを使う) · [設定](#設定方法) · [権限](#送信は自分の管理下に置く) · [よくある質問](#よくある質問)
 
@@ -12,7 +12,7 @@ const translation = {
 Anthropicの[Coworkガイド](https://support.claude.com/en/articles/13345190-get-started-with-cowork)では、コネクタはチャットと同じ**カスタマイズ → コネクタ**ページで管理します。現在、ClaudeアプリではチャットとCoworkが同じ画面にまとめられています。Claudeアカウントで接続しているものが、そのままCoworkタスクで使えるものです。
 
 - **Gmail。** ClaudeのGmailコネクタは、メールの閲覧、検索、下書き作成、送信ができます。[Anthropicの記事](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors)には「接続したGoogleアカウント」へのアクセスと書かれており、2つ目のアカウントの追加には触れていません。このコネクタで個人用と仕事用のGmailを並べて使うことはできません。
-- **Microsoft 365。** [Microsoft 365コネクタ](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector)は、企業のMicrosoft 365テナントに属するアカウント向けです。最初にグローバル管理者の同意が必要で、読み取り専用の状態から始まり、@outlook.comや@hotmail.comのような個人用Microsoftアカウントは接続できません。
+- **Microsoft 365。** [Microsoft 365コネクタ](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365)が受け付けるのは、職場や学校のアカウント（最初にグローバル管理者の同意が必要で、読み取り専用の状態から始まります）か、Free、Pro、Max、Ultraの各プランでは@outlook.comや@hotmail.comのような個人用Microsoftアカウント（管理者は不要）です。TeamとEnterpriseのプランには個人用の選択肢が表示されず、書き込みツールは添付ファイルを拒否します。
 - **それ以外のすべて。** Yahoo、iCloud、Fastmail、Zoho、IONOS、自社のメールサーバーには、Claudeの組み込みコネクタがありません。
 
 つまり、職場のメールボックスに加えて個人用のOutlook.comや2つ目のGmailを使う、というよくある組み合わせは、組み込みコネクタだけではCoworkで扱えません。
@@ -71,7 +71,7 @@ Coworkタスクは多くの手順を自分で進めるため、確認なしで�
 Claudeの組み込みGmailコネクタでは使えません。Anthropicはこのコネクタについて、接続した1つのGoogleアカウントにアクセスすると説明しています。両方のアカウントをGoogleのアプリ パスワードでMCPEmailsに接続し、MCPEmailsをカスタムコネクタとして追加すれば、Coworkタスクから両方を使えます。
 
 **Coworkで個人用のOutlook.comやHotmailのメールを読めますか？**
-ClaudeのMicrosoft 365コネクタでは読めません。このコネクタは個人用Microsoftアカウントを受け付けないためです。アドレスをMicrosoftでのログインでMCPEmailsに接続し、MCPEmailsをClaudeに追加してください。手順は[ClaudeをHotmail・Outlook.comに接続する方法](/blog/connect-claude-to-outlook-com-hotmail)にあります。
+Free、Pro、Max、Ultraなら、ClaudeのMicrosoft 365コネクタで読めます（添付ファイルは不可）。TeamやEnterpriseのプランの場合、または添付ファイルやほかのメールボックスも一緒に使いたい場合は、アドレスをMicrosoftでのログインでMCPEmailsに接続し、MCPEmailsをClaudeに追加してください。手順は[ClaudeをHotmail・Outlook.comに接続する方法](/blog/connect-claude-to-outlook-com-hotmail)にあります。
 
 **カスタムコネクタはCoworkで使えますか？**
 はい。Anthropicは、カスタムコネクタをClaude、Cowork、Claude Desktopで使えるとしています。ただし、インターネットからアクセスできるリモートサーバーである必要があります。デスクトップの設定ファイルで指定したローカルサーバーは、Coworkでは使えません。

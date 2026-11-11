@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "https://support.hostpoint.ch/de/technisches/e-mail/haeufig-gestellte-fragen/e-mail-einstellungen-auf-einen-blick"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "usernameForm": "Hele adressen din, for eksempel info@ihre-firma.ch. Hostpoint oppgir e-postadressen som brukernavn og passordet du definerte i Control Panel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Hostpoint MCP-server: koble Hostpoint-e-post til Claude",
+    "description": "MCP-server for Hostpoint-e-post. Koble postkassene på det sveitsiske domenet ditt (info@, buchhaltung@) til Claude, ChatGPT og Cursor via IMAP på imap.mail.hostpoint.ch:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "Hostpoint-e-post + AI",
+    "titleLine1": "MCP-server for Hostpoint-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, buchhaltung@ og ditt eget navn på et domene hos Hostpoint? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med passordet du definerte for postkassen i Hostpoints Control Panel.",
+    "answer": "Claude når ikke en Hostpoint-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.mail.hostpoint.ch port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Hostpoints innstillingsside oppgir nøyaktig disse vertene: imap.mail.hostpoint.ch på 993 med SSL og asmtp.mail.hostpoint.ch på 465 med SSL (587 med STARTTLS som alternativ), med SMTP-autentisering slått på og passordet du satte i Control Panel. Det finnes ikke noe app-passord og ingenting å aktivere. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord fra Control Panel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på Hostpoint-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler Hostpoint seg til: imap.mail.hostpoint.ch på 993, asmtp på 465",
+    "body": "Hostpoint oppgir ett par verter for alle postkassene de hoster. Innkommende server er <code>imap.mail.hostpoint.ch</code> på port 993 med SSL, eller 143 med STARTTLS, og utgående server er <code>asmtp.mail.hostpoint.ch</code> på port 465 med SSL, eller 587 med STARTTLS, med SMTP-autentisering som Hostpoint sier må være aktivert. Brukernavnet er e-postadressen din og passordet er det du definerte i Control Panel; Hostpoint kaller innloggingsmekanismene CLEAR TEXT for IMAP og PLAIN for SMTP, som er samme PLAIN-mekanisme som serveren annonserer. Begge vertene svarte på en direkte TLS-tilkobling under et sertifikat for <code>*.mail.hostpoint.ch</code>: et Dovecot-banner på IMAP og en Exim-hilsen på SMTP med en meldingsgrense på 50 MB. Én historisk merknad fra Hostpoints side: postkasser opprettet før 1. juni 2014 trenger IMAP-stiprefikset satt til INBOX i noen e-postprogrammer; nyere trenger ingenting."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet i Hostpoints Control Panel",
+      "p": "Logg inn i Hostpoints Control Panel og åpne e-postdelen for domenet. Hver adresse har sitt eget passord der, det Hostpoints innstillingsside kaller passordet du definerte i Control Panel. Kjenner du det ikke, setter du et nytt for den postkassen; Hostpoint-kundeinnloggingen din er en annen pålogging og blir avvist av IMAP."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel info@ihre-firma.ch, med postkassepassordet. Vertene <code>imap.mail.hostpoint.ch</code> og <code>asmtp.mail.hostpoint.ch</code> er forhåndsutfylt med 993 og 465, begge SSL, og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Utgående vert er asmtp, ikke smtp",
+      "p": "Hostpoints sendevert er <code>asmtp.mail.hostpoint.ch</code>, der a-en står for autentisert. En klient som av gammel vane er satt opp med smtp.mail.hostpoint.ch peker på et navn Hostpoint ikke dokumenterer for sending. MCPEmails forhåndsutfyller asmtp-navnet, og SMTP-autentisering er alltid på, som er innstillingen Hostpoint sier må være aktivert."
+    },
+    {
+      "h": "Bare PLAIN på IMAP, og ingen MOVE",
+      "p": "Dovecot bak <code>imap.mail.hostpoint.ch</code> annonserer bare <code>AUTH=PLAIN</code> på IMAP, mens SMTP godtar PLAIN og LOGIN. Verktøy som er låst til LOGIN-mekanismen får en avvisning i autentiseringssteget på IMAP; MCPEmails bruker PLAIN. Kapabilitetslisten før innlogging har hverken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og mappene for sendt, utkast og papirkurv gjenkjennes på navn. På en tyskspråklig postkasse heter de ofte Gesendet, Entwürfe og Papierkorb; nevn mappen i instruksjonen hvis agenten ikke finner den."
+    },
+    {
+      "h": "Postkasser fra før juni 2014 kan gjemme mappene sine under INBOX",
+      "p": "Hostpoints side sier at kontoer opprettet før 1. juni 2014 trenger spesielle IMAP-innstillinger: IMAP-stiprefikset satt til INBOX, med eller uten punktum til slutt avhengig av programmet. På en slik postkasse ligger mappene under INBOX i stedet for ved siden av. MCPEmails lister mapper med navnene serveren returnerer, så en agent finner dem likevel; virker en mappe borte, be om den med full sti."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 50 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Hostpoint-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Hostpoint-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Hostpoint?",
+      "a": "IMAP er imap.mail.hostpoint.ch på port 993 med SSL. SMTP er asmtp.mail.hostpoint.ch på port 465 med SSL, eller 587 med STARTTLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er det du definerte i Control Panel. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Hostpoint-passordet mitt avvist i et e-postprogram?",
+      "a": "Som regel fordi det er Hostpoint-kundeinnloggingen og ikke postkassepassordet. IMAP sjekker passordet som er definert for den enkelte adressen i Control Panel. Sett et nytt der og bruk nøyaktig den verdien."
+    },
+    {
+      "q": "Trenger Hostpoint et app-passord?",
+      "a": "Nei. Hostpoint har ingen ordning med app-spesifikke passord. Postkassepassordet autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres Hostpoint-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra Hostpoint via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din Hostpoint-postkassene dine",
+    "sub": "Koble til Hostpoint-e-post på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

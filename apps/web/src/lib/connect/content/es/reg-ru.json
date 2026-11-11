@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochty-na-hostingee",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/problemyy/ogranicheniye-imap-soyedineniyy"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "usernameForm": "Tu dirección completa, name@your.domain, tal como la escribe REG.RU. Un dominio cirílico se introduce como Punycode, por ejemplo @xn--d1acufc.xn--p1ai para @домен.рф.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de REG.RU: conecta el correo del hosting de REG.RU a Claude",
+    "description": "Servidor MCP para el correo en el hosting de REG.RU. Conecta los buzones de tu dominio (info@, zakaz@) a Claude, ChatGPT y Cursor por IMAP en mail.hosting.reg.ru:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo REG.RU + IA",
+    "titleLine1": "Servidor MCP para el correo de REG.RU:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, zakaz@ y tu propio nombre en un dominio alojado en REG.RU? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón que creaste en el panel de hosting.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de REG.RU. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en mail.hosting.reg.ru, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La ayuda de REG.RU nombra mail.hosting.reg.ru como servidor en ambos sentidos para una conexión cifrada, con 993 para IMAP y 465 para SMTP, y la dirección completa como usuario. Esta página cubre los buzones del hosting de REG.RU, creados en ispmanager, cPanel o Plesk; los demás productos de correo de REG.RU tienen sus propios hosts. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, correo del hosting",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de REG.RU?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta REG.RU: mail.hosting.reg.ru en 993 y 465",
+    "body": "La página de clientes de correo de REG.RU da un solo nombre para las conexiones cifradas a un buzón de su hosting: <code>mail.hosting.reg.ru</code>, como servidor entrante y saliente. Su tabla de puertos lista 993 para IMAP y 465 para SMTP con SSL/TLS, y 143 y 587 para uso sin cifrar; la página añade, en sus secciones de Thunderbird y The Bat!, que la configuración cifrada está disponible en el hosting Linux. El usuario es la dirección completa, <code>name@ваш.домен</code> en la notación de REG.RU, con la contraseña del buzón fijada en el panel. El host respondió a una conexión TLS real con un certificado para <code>*.hosting.reg.ru</code> sobre TLS 1.2, un breve banner <code>IMAP4 ready</code> que anuncia UIDPLUS, IDLE y QUOTA, y un saludo SMTP con PLAIN y LOGIN y un límite de mensaje de 50 MB. El servidor IMAP no anuncia SASL-IR, lo que MCPEmails resuelve con el intercambio de autenticación en dos pasos. El buzón se crea en el panel de hosting: en ispmanager bajo <b>Почта</b>, <b>Создать ящик</b>, una vez que el dominio de correo existe bajo <b>Почтовые домены</b>."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Crea o localiza el buzón en el panel de hosting",
+      "p": "En ispmanager, abre <b>Почта</b>. El dominio debe existir primero bajo <b>Почтовые домены</b>; después <b>Создать ящик</b> pide el nombre antes de la @, el dominio y una contraseña. En cPanel lo mismo está bajo <b>Почта</b>, <b>Почтовые учетные записи</b>, y en Plesk bajo <b>Почта</b>, <b>Создать адрес электронной почты</b>. REG.RU dice que un buzón nuevo funciona en menos de una hora. La contraseña que fijas ahí es la que IMAP comprueba."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, por ejemplo info@your.domain, con la contraseña del buzón. Para un dominio .рф, introduce la parte del dominio como Punycode, como hacen las propias instrucciones de iOS de REG.RU. El host <code>mail.hosting.reg.ru</code> viene rellenado en ambos sentidos, con 993 y SSL para IMAP y 465 y SSL para SMTP, y se verificó con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Solo correo del hosting: Яндекс 360 y otros productos de correo de REG.RU usan otros hosts",
+      "p": "REG.RU revende varios servicios de correo, y su propia página de ayuda envía las direcciones de Mail.ru a imap.mail.ru y las de Yandex a imap.yandex.ru, cada una con la contraseña de aplicación o el interruptor de acceso de ese proveedor. <code>mail.hosting.reg.ru</code> es para un buzón creado dentro de tu panel de hosting. Si el correo de tu dominio funciona en Яндекс 360 u otro servicio contratado a través de REG.RU, sigue la página de ese proveedor; el host de aquí rechazará el inicio de sesión."
+    },
+    {
+      "h": "Un techo de 36 procesos en el hosting compartido, y las conexiones IMAP cuentan",
+      "p": "La página de resolución de problemas de REG.RU explica que el hosting compartido permite como máximo 36 procesos en ejecución simultánea, y que cada conexión IMAP abierta es uno de ellos. Varios programas de correo en varios dispositivos pueden alcanzar el techo, y entonces el correo y el sitio web de la misma cuenta se comportan de forma inestable. El consejo de REG.RU es limitar cada cliente a una conexión en caché. MCPEmails abre una conexión por petición y la cierra, en lugar de mantener varias inactivas, así que añade poco al recuento; si llegas al límite, los programas que mantienen conexiones abiertas son los que hay que recortar."
+    },
+    {
+      "h": "El envío está limitado por día y por mensaje",
+      "p": "La página de correo del hosting de REG.RU fija los límites: 3.000 mensajes por 24 horas en el hosting normal y 9.000 en los planes VIP, no más de 150 destinatarios en un mensaje, un tamaño máximo de mensaje de 50 MB, y 10 mensajes al día en una cuenta de prueba. El límite diario cubre toda la cuenta de hosting, incluido el correo enviado por scripts, y el envío se reanuda al día siguiente. Una cuenta de prueba no es el sitio para probar un agente que envía."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 50 MB, que coincide con el límite indicado por REG.RU. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El servidor negocia TLS 1.2, no 1.3. Sigue siendo una conexión moderna y verificada; solo significa que el saludo parece más antiguo que el de la mayoría de hosts de este sitio."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo del hosting de REG.RU?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para REG.RU. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de REG.RU?",
+      "a": "Para un buzón del hosting de REG.RU, IMAP es mail.hosting.reg.ru en el puerto 993 con SSL/TLS y SMTP es mail.hosting.reg.ru en el puerto 465 con SSL/TLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. El host se confirmó con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Por qué se rechaza la contraseña de mi buzón de REG.RU?",
+      "a": "Comprueba tres cosas: que el buzón existe en el panel de hosting y no está en otro producto de correo de REG.RU como Яндекс 360, que el usuario es la dirección completa con el dominio en Punycode para .рф, y que la contraseña es la fijada en el buzón en ispmanager, cPanel o Plesk y no la de tu cuenta de REG.RU."
+    },
+    {
+      "q": "¿Necesita REG.RU una contraseña de aplicación?",
+      "a": "No, no para el correo de su hosting. La contraseña del buzón autentica tanto IMAP como SMTP. Las contraseñas de aplicación aparecen en la página de ayuda de REG.RU solo para buzones de Mail.ru y Yandex, que son servicios distintos."
+    },
+    {
+      "q": "¿Se almacena mi correo de REG.RU en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en REG.RU por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de REG.RU",
+    "sub": "Conecta el correo del hosting de REG.RU en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "https://www.transip.eu/knowledgebase/306-creating-a-new-email-address/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "usernameForm": "Votre adresse complète, par exemple info@jouwdomein.nl. TransIP indique l'adresse e-mail complète comme identifiant pour IMAP comme pour SMTP.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP TransIP : connectez le mail TransIP à Claude",
+    "description": "Serveur MCP pour l'hébergement mail de TransIP. Connectez les boîtes de votre domaine (info@, facturen@) à Claude, ChatGPT et Cursor en IMAP sur imap.transip.email:993 avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "Mail TransIP + IA",
+    "titleLine1": "Serveur MCP pour le mail TransIP :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez info@, facturen@ et votre propre nom sur un domaine chez TransIP ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe que vous avez défini pour la boîte dans le panneau de contrôle TransIP.",
+    "answer": "Claude ne peut pas atteindre seul une boîte TransIP. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.transip.email, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. La base de connaissances de TransIP donne exactement ces paramètres pour son hébergement mail : imap.transip.email sur 993 avec SSL, smtp.transip.email sur 465 avec SSL, et l'adresse complète comme identifiant sur les deux. Pas de mot de passe d'application, rien à activer. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, rien à activer",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine TransIP ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment TransIP se connecte : IMAP sur 993 et SMTP sur 465, une seule paire d'hôtes",
+    "body": "TransIP fait tourner une seule plateforme de messagerie pour toutes les boîtes de son hébergement mail, il n'y a donc aucun numéro de serveur à chercher. Le serveur entrant est <code>imap.transip.email</code> sur le port 993 avec SSL et le serveur sortant <code>smtp.transip.email</code> sur le port 465 avec SSL, tous deux avec l'adresse complète comme identifiant et le mot de passe défini pour cette adresse. Les deux hôtes ont répondu à une connexion TLS réelle sous un certificat pour <code>*.transip.email</code> ; le port 587 avec STARTTLS fonctionne aussi pour l'envoi, bien que TransIP documente le 465. Le serveur IMAP se présente par une courte bannière <code>IMAP4 ready</code> et annonce UIDPLUS, IDLE et QUOTA, et le serveur SMTP accepte PLAIN et LOGIN avec une limite de message de 37 Mo. Les boîtes elles-mêmes se créent dans le panneau de contrôle TransIP sous <b>Email Hosting</b>, où chacune reçoit 2 Go de stockage et son propre mot de passe, et c'est ce mot de passe qu'IMAP vérifie."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Retrouvez ou définissez le mot de passe de la boîte dans le panneau TransIP",
+      "p": "Connectez-vous au panneau de contrôle TransIP, ouvrez <b>Email Hosting</b> dans le menu de gauche et sélectionnez votre domaine sous <b>Products</b>. Chaque adresse figure à côté de <b>Email boxes</b> ; cliquez sur l'une d'elles pour changer son mot de passe ou sa taille, ou utilisez <b>+ Add mailbox</b> pour en créer une. Le mot de passe que vous y définissez est celui de la boîte, distinct de votre identifiant de compte TransIP."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple info@jouwdomein.nl, avec le mot de passe de la boîte. Les hôtes <code>imap.transip.email</code> et <code>smtp.transip.email</code> sont préremplis avec 993 et 465, tous deux en SSL, et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ces hôtes concernent l'hébergement mail TransIP, pas une offre cPanel ou DirectAdmin",
+      "p": "TransIP vend aussi de l'hébergement web avec cPanel et DirectAdmin, et les boîtes créées dans ces panneaux vivent sur ce serveur, avec le nom d'hôte propre au serveur. La paire <code>imap.transip.email</code> et <code>smtp.transip.email</code> appartient à l'hébergement mail propre de TransIP, les boîtes gérées sous Email Hosting dans le panneau de contrôle. Si votre adresse a été créée dans cPanel ou DirectAdmin, utilisez l'hôte affiché par ce panneau."
+    },
+    {
+      "h": "Le mot de passe de la boîte n'est pas celui de votre compte TransIP",
+      "p": "Les clients TransIP se connectent au panneau de contrôle avec un identifiant de compte, et une boîte a un mot de passe à elle, défini à sa création ou modifié ensuite en cliquant sur l'adresse sous Email boxes. IMAP vérifie le mot de passe de la boîte. Une connexion refusée sur une adresse TransIP est presque toujours le mot de passe du compte collé dans un formulaire qui voulait celui de la boîte."
+    },
+    {
+      "h": "2 Go par boîte, et pas de MOVE sur le serveur",
+      "p": "Chaque boîte TransIP démarre à 2 Go, avec de la capacité supplémentaire à commander, et le serveur annonce QUOTA, l'utilisation est donc lisible. La liste de capacités avant connexion n'a ni <code>MOVE</code> ni <code>SPECIAL-USE</code> : classer un message s'exécute comme une copie, une mise à jour de drapeau et un expunge, et les dossiers envoyés, brouillons et corbeille sont reconnus par leur nom. Si vous avez renommé un dossier, nommez-le quand vous demandez un déplacement. <code>UIDPLUS</code> est présent, un message copié signale donc son nouvel identifiant."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message d'environ 37 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "Les redirections et les groupes d'adresses se configurent dans le panneau de contrôle TransIP, pas en IMAP ; un agent ne peut donc ni les créer ni les modifier."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail TransIP ?",
+      "a": "Pas seul. Claude n'a pas de connecteur TransIP intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de TransIP ?",
+      "a": "IMAP est imap.transip.email sur le port 993 avec SSL. SMTP est smtp.transip.email sur le port 465 avec SSL, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. Les deux hôtes ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Où changer le mot de passe d'une boîte TransIP ?",
+      "a": "Dans le panneau de contrôle TransIP sous Email Hosting : sélectionnez le domaine sous Products et cliquez sur l'adresse à côté de Email boxes. Vous pouvez y changer son mot de passe et sa taille. Le changer déconnecte tous les logiciels de messagerie et MCPEmails jusqu'à la saisie du nouveau mot de passe."
+    },
+    {
+      "q": "TransIP exige-t-il un mot de passe d'application ?",
+      "a": "Non. TransIP n'a pas de dispositif de mots de passe spécifiques aux applications pour son hébergement mail. Le mot de passe de la boîte authentifie IMAP comme SMTP."
+    },
+    {
+      "q": "Mon courrier TransIP est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez TransIP en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes TransIP",
+    "sub": "Connectez le mail TransIP en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

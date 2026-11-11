@@ -1,0 +1,112 @@
+{
+  "_sources": [
+    "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "https://www.websupport.sk/podpora/kb/nastavenie-posty-v-microsoft-365-outlook/",
+    "https://www.websupport.sk/podpora/kb/prihlasovanie-do-emailovej-schranky-zo-zahranicia-geo-ip/",
+    "https://www.websupport.cz/podpora/kb/nastaveni-posty-v-telefonu-s-ios/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "usernameForm": "Hele adressen din, for eksempel info@vasafirma.sk. Websupports veiledninger oppgir e-postadressen din som brukernavn for begge servere.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Websupport MCP-server: koble Websupport-e-post til Claude",
+    "description": "MCP-server for Websupport-e-post. Koble postkassene på domenet ditt (info@, fakturacia@) til Claude, ChatGPT og Cursor via IMAP på imap.m1.websupport.sk:993, etter å ha tillatt innloggingslandet i GEO ochrana."
+  },
+  "hero": {
+    "eyebrow": "Websupport-e-post + AI",
+    "titleLine1": "MCP-server for Websupport-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, fakturacia@ og ditt eget navn på et domene hos Websupport? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med postkassepassordet, så snart postkassens landliste slipper inn en tilkobling fra utenfor Sentral-Europa.",
+    "answer": "Claude når ikke en Websupport-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.m1.websupport.sk port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Websupports hjelp oppgir imap.m1.websupport.sk på 993 med SSL og smtp.m1.websupport.sk på 465 med SSL, eller 587 med TLS, og viser til WebAdmin under Emaily, Prihlasovacie údaje for de nøyaktige navnene til postkassen din. Det ene steget folk snubler i er GEO ochrana: som standard godtar en Websupport-postkasse bare innlogginger fra Slovakia, Tsjekkia, Ungarn og Østerrike, og MCPEmails kobler til fra utenfor disse landene, så listen må utvides eller beskyttelsen slås av for den postkassen først. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, GEO ochrana utvidet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Websupport.cz-postkasse", "host": "imap.websupport.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, Websupport.cz-postkasse", "host": "smtp.websupport.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene gjelder en postkasse på den slovakiske plattformen, de to under en hos Websupport.cz. Begge parene ble bekreftet via en direkte TLS-tilkobling; WebAdmin viser dine nøyaktige navn under Prihlasovacie údaje. For andre adresser, bruk",
+      "label": "oppslaget for e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Flere postkasser på Websupport-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler Websupport seg til: IMAP på 993, SMTP på 465, og en landliste",
+    "body": "Websupports feilsøkingsside oppgir innkommende server som <code>imap.m1.websupport.sk</code> på port 993 med SSL og utgående server som <code>smtp.m1.websupport.sk</code> på port 465 med SSL/TLS, eller 587 med TLS, med e-postadressen din som brukernavn og postkassepassordet. Outlook-veiledningen legger til at navnene for din egen postkasse står i WebAdmin på admin.websupport.sk under <b>Emaily</b>, <b>Prihlasovacie údaje</b>, og der ser du etter hvis dine avviker. Begge vertene svarte på en direkte TLS-tilkobling under et sertifikat for <code>*.m1.websupport.sk</code>, med et Dovecot-banner på IMAP og en meldingsgrense på 32 MB på SMTP. Den tsjekkiske plattformen bruker <code>imap.websupport.cz</code> og <code>smtp.websupport.cz</code> på samme porter, fra Websupport.cz' egen iOS-veiledning. Det som gjør Websupport annerledes er GEO ochrana, en landliste per postkasse som bestemmer hvor en innlogging kan komme fra. Websupports side slår fast at innlogging som standard er mulig fra Slovakia, Tsjekkia, Ungarn og Østerrike. MCPEmails kobler til fra servere i USA, med et nytt forsøk via Tyskland når en leverandør blokkerer den første adressen, så til listen er utvidet avviser serveren innloggingen som om passordet var feil."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Utvid GEO ochrana for postkassen i WebAdmin",
+      "p": "I WebAdmin åpner du domenet under <b>Služby</b>, går til <b>E-maily</b>, klikker på de tre prikkene i enden av postkasseraden og velger <b>Upraviť</b>. Under <b>Pokročilé nastavenia</b>, <b>GEO ochrana</b> legger du til USA og Tyskland blant de tillatte landene og klikker <b>Uložiť</b>. Websupport sier endringen slår gjennom innen 15 minutter. Alternativet, fra webmailen via <b>Ísť do adminu</b> og <b>Mailbox settings</b>, er å slå GEO-beskyttelsen av for den postkassen, noe Websupport påpeker at svekker beskyttelsen."
+    },
+    {
+      "h": "Les servernavnene og postkassepassordet",
+      "p": "Under <b>Emaily</b>, <b>Prihlasovacie údaje</b> i WebAdmin finner du IMAP- og SMTP-navnene for postkassen og muligheten til å endre passordet. Passordet er postkassens eget, ikke WebAdmin-innloggingen din. Websupport foreslår å teste det i webmailen først, som også bekrefter at landlisten er riktig."
+    },
+    {
+      "h": "Skriv dem inn i MCPEmails og lim MCP-URL-en inn i AI-en din",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel info@vasafirma.sk, og postkassepassordet. Vertene <code>imap.m1.websupport.sk</code> og <code>smtp.m1.websupport.sk</code> er forhåndsutfylt med 993 og 465 og ble bekreftet via en direkte TLS-tilkobling; endre dem hvis Prihlasovacie údaje viser andre navn. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GEO ochrana avviser innloggingen før passordet i det hele tatt sjekkes",
+      "p": "Dette er Websupport-feilen som ser mest ut som feil passord uten å være det. Standardlisten av land er Slovakia, Tsjekkia, Ungarn og Østerrike, og en innlogging fra andre steder avvises. MCPEmails er ikke i noen av de landene: serverne som kaller e-postleverandøren din kjører i USA, og reléforsøket kjører fra Tyskland. Legg til begge landene under <b>GEO ochrana</b> for postkassen, eller slå beskyttelsen av for den, og vent de 15 minuttene Websupport nevner før du tester igjen. Samme liste gjelder sending, så en postkasse som leser fint men ikke kan sende, er som regel en der SMTP ble forsøkt fra et land som ennå ikke sto på listen."
+    },
+    {
+      "h": "Websupport.sk og Websupport.cz bruker ulike vertsnavn",
+      "p": "Den slovakiske plattformen dokumenterer <code>imap.m1.websupport.sk</code> og <code>smtp.m1.websupport.sk</code>; den tsjekkiske dokumenterer <code>imap.websupport.cz</code> og <code>smtp.websupport.cz</code>, på samme porter med SSL. Begge kjører samme Dovecot og samme inngangsservere, men hvert sertifikat dekker bare sitt eget navn, så bruk paret som hører til plattformen domenet ditt er hostet på. Prihlasovacie údaje i WebAdmin viser alltid det riktige for postkassen din."
+    },
+    {
+      "h": "Sending er begrenset per postkasse og per domene",
+      "p": "Websupports side setter grensene til 300 meldinger i timen for en postkasse og 2 000 i timen for et domene. Overskrider du en av dem, blokkeres sending i 60 minutter, og meldinger sendt under blokkeringen leveres ikke og må sendes på nytt. En agent som jobber seg gjennom en lang liste svar bør ta det rolig; MCPEmails' egen sendetakt ligger godt under disse tallene ved normal bruk."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 32 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Sending er begrenset til 300 meldinger i timen per postkasse og 2 000 i timen per domene; overskrides en grense, blokkeres sending i 60 minutter."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Websupport-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Websupport-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Websupport?",
+      "a": "For den slovakiske plattformen er IMAP imap.m1.websupport.sk på port 993 med SSL og SMTP smtp.m1.websupport.sk på port 465 med SSL, eller 587 med TLS, med autentisering påkrevd. For Websupport.cz er vertene imap.websupport.cz og smtp.websupport.cz på samme porter. Brukernavnet er hele adressen din og passordet er postkassepassordet. Alle fire vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Websupport-passordet mitt avvist i et e-postprogram?",
+      "a": "Oftest på grunn av GEO ochrana: postkassen godtar som standard bare innlogginger fra Slovakia, Tsjekkia, Ungarn og Østerrike, og en tilkobling fra andre steder avvises på samme måte som et feil passord. Legg til USA og Tyskland i listen i WebAdmin, eller slå beskyttelsen av for postkassen, vent 15 minutter og prøv igjen. Feiler det fortsatt, sjekk passordet under Prihlasovacie údaje."
+    },
+    {
+      "q": "Trenger Websupport et app-passord?",
+      "a": "Nei. Websupport har ingen ordning med app-spesifikke passord. Postkassepassordet autentiserer både IMAP og SMTP, forutsatt at innloggingslandet er tillatt."
+    },
+    {
+      "q": "Lagres Websupport-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra Websupport via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din Websupport-postkassene dine",
+    "sub": "Utvid GEO ochrana én gang, koble så til på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

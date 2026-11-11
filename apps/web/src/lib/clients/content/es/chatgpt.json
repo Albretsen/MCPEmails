@@ -18,7 +18,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "OAuth, sin clave de API",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
-    "answer": "En ChatGPT, abre Plugins, busca Any Mailbox de MCPEmails en el directorio de plugins y haz clic en Install plugin y luego en Connect. Inicia sesión en MCPEmails y elige a qué bandejas puede acceder ChatGPT y con cuánto acceso. En un chat, escribe @ y elige Any Mailbox. Sin el plugin, añade un servidor MCP personalizado en chatgpt.com con la URL https://mcpemails.com/api/mcp y OAuth; funciona con ChatGPT Go y los planes de pago."
+    "answer": "En ChatGPT, abre Plugins, busca Any Mailbox de MCPEmails en el directorio de plugins y haz clic en Install plugin y luego en Connect. Inicia sesión en MCPEmails y elige a qué bandejas puede acceder ChatGPT y con cuánto acceso. En un chat, escribe @ y elige Any Mailbox. Sin el plugin, añade un servidor MCP personalizado en chatgpt.com con la URL https://mcpemails.com/api/mcp y OAuth; OpenAI lo ofrece para Business y Enterprise/Edu, con acceso de solo lectura en Pro, en la web."
   },
   "method": {
     "title": "Cómo se conecta ChatGPT: OAuth, sin clave de API",
@@ -46,7 +46,7 @@
   "fallback": {
     "eyebrow": "Sin el plugin",
     "title": "Añade el mismo servidor como servidor MCP personalizado",
-    "sub": "Si Any Mailbox no está disponible en tu cuenta o espacio de trabajo de ChatGPT, añade MCPEmails como servidor MCP personalizado. Funciona en chatgpt.com con ChatGPT Go y los planes de pago, y llega a los mismos buzones.",
+    "sub": "Si Any Mailbox no está disponible en tu cuenta o espacio de trabajo de ChatGPT, añade MCPEmails como servidor MCP personalizado. Llega a los mismos buzones. La página de ayuda de OpenAI ofrece los servidores MCP personalizados para Business y Enterprise/Edu en chatgpt.com, solo con herramientas de lectura y obtención en Pro; no menciona Go ni Plus.",
     "steps": [
       {
         "h": "Abre Add custom MCP server",
@@ -69,7 +69,7 @@
   "gotchas": [
     {
       "h": "Instálalo una vez y asegúrate de que el chat lo usa",
-      "p": "Any Mailbox se instala desde el directorio de plugins en todos los planes de ChatGPT. En Business y Enterprise, puede que un administrador tenga que habilitar el plugin para el espacio de trabajo primero. El servidor MCP personalizado, la alternativa, solo está en la web y necesita ChatGPT Go o un plan de pago. En ambos casos, el paso que se olvida está en el chat: si ChatGPT responde sin mirar tu correo, escribe <b>@</b> y elige Any Mailbox (o MCPEmails, para el servidor personalizado) para que ese mensaje lo use."
+      "p": "El directorio de plugins está abierto en todos los planes de ChatGPT. En Business y Enterprise, puede que un administrador tenga que habilitar el plugin para el espacio de trabajo primero. El servidor MCP personalizado, la alternativa, solo está en la web y requiere un plan de pago: OpenAI lo ofrece para Business y Enterprise/Edu, solo con herramientas de lectura y obtención en Pro. En ambos casos, el paso que se olvida está en el chat: si ChatGPT responde sin mirar tu correo, escribe <b>@</b> y elige Any Mailbox (o MCPEmails, para el servidor personalizado) para que ese mensaje lo use."
     },
     {
       "h": "Elige OAuth, no sin autenticación, al crear el conector",
@@ -96,7 +96,7 @@
     },
     {
       "q": "¿Por qué no puedo añadir un servidor MCP personalizado en ChatGPT?",
-      "a": "Los servidores MCP personalizados se añaden con Go y los planes de pago, en chatgpt.com: la app móvil no ofrece la opción. En un espacio de trabajo Business o Enterprise, puede que un administrador o propietario tenga que añadirlo. Si MCPEmails está añadido pero ChatGPT no lo usa, escribe <b>@</b> en el chat y elige MCPEmails; la selección vale para un mensaje cada vez. El plugin Any Mailbox no tiene ninguno de estos límites, así que instálalo desde el directorio de plugins."
+      "a": "Los servidores MCP personalizados se añaden en chatgpt.com: la app móvil no ofrece la opción. La página de ayuda de OpenAI nombra Business y Enterprise/Edu para la compatibilidad completa, donde solo un administrador o propietario puede añadir y publicar uno, y Pro solo para herramientas de lectura y obtención; Go y Plus no se mencionan. El plugin Any Mailbox es la vía más sencilla: el directorio de plugins está abierto en todos los planes de ChatGPT. Si MCPEmails está añadido pero ChatGPT no lo usa, escribe <b>@</b> en el chat y elige MCPEmails; la selección vale para un mensaje cada vez."
     },
     {
       "q": "¿Necesito una clave de API para ChatGPT?",

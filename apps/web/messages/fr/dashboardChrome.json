@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "Mettre à jour le paiement",
     "paymentIssueConfirm": "Votre banque vous demande de confirmer le dernier paiement. Votre offre reste active.",
     "paymentIssueConfirmCta": "Confirmer le paiement",
+    "inboxAlertOne": "{address} doit être reconnectée. Sa connexion ne fonctionne plus : votre application d'IA ne peut plus lire, rédiger ni envoyer depuis cette boîte.",
+    "inboxAlertMany": "{count} boîtes doivent être reconnectées. Leur connexion ne fonctionne plus : votre application d'IA ne peut plus les utiliser.",
+    "inboxAlertReconnect": "Reconnecter",
+    "inboxAlertOpenInboxes": "Ouvrir les boîtes",
     "inviteSentNotDelivered": "Invitation créée pour {email}, mais l'e-mail n'a pas pu être envoyé. Utilisez Renvoyer sur l'invitation en attente.",
     "inviteResent": "Invitation renvoyée à {email}.",
     "inviteResendFailed": "Impossible de renvoyer l'invitation.",
@@ -135,7 +139,8 @@
     "openSearch": "Ouvrir la recherche (Command K)",
     "navWorkflows": "Workflows",
     "navAutomations": "Automatisations",
-    "navInvite": "Inviter un ami"
+    "navInvite": "Inviter un ami",
+    "invitePromo": "Offrez un mois, recevez un mois"
   },
   "topbar": {
     "mcpLabel": "Point de terminaison MCP",
@@ -631,6 +636,16 @@
     "switchCta": "Passer à l'annuel",
     "switchBusy": "Préparation...",
     "ended": "L'offre Black Week est terminée, rien n'a donc été débité. Les montants ci-dessus correspondent au prix habituel."
+  },
+  "annualSwitch": {
+    "title": "Passer à la facturation annuelle",
+    "body": "Payez {plan} une fois par an et économisez {percent} % par rapport au paiement mensuel.",
+    "current": "Les jours non utilisés de votre mois en cours sont crédités, donc le montant prélevé aujourd'hui est un peu inférieur à une année complète. Vous voyez le montant exact avant tout prélèvement.",
+    "cta": "Passer à l'annuel",
+    "busy": "Préparation...",
+    "noticeBody": "Vous payez {plan} chaque mois. La facturation annuelle coûte {percent} % de moins.",
+    "noticeCta": "Voir la facturation annuelle",
+    "close": "Fermer"
   },
   "founder": {
     "line": "Prix fondateur : {price} $ par mois, conservé tant que votre abonnement reste actif. Réservé aux {total} premières entreprises ou jusqu'au 31 décembre 2026, selon ce qui arrive en premier. Chaque boîte supplémentaire coûte {addon} $ par mois.",

@@ -30,7 +30,7 @@
       "step3": "OAuthを選び、「理解したうえで続行します」にチェックを入れて、「プラグインとして作成」をクリックします。",
       "step4": "MCPEmailsでログインして承認します。APIキーは不要です。",
       "step5": "チャットで@を入力してMCPEmailsを選びます。選択はそのメッセージにだけ適用されるため、続けてメールを使うときは再度@メンションしてください。",
-      "note": "カスタムMCPサーバーはChatGPT Goと有料プランで追加できます。BusinessとEnterpriseでは、管理者またはオーナーによる追加が必要な場合があります。"
+      "note": "OpenAIがカスタムMCPサーバーの対象として挙げているのはBusinessとEnterprise/Eduのワークスペースで、Proでは読み取り専用のアクセスに限られ、いずれもchatgpt.comで追加します。BusinessとEnterpriseでは、管理者またはオーナーによる追加が必要な場合があります。"
     },
     "cursor": {
       "step1": "~/.cursor/mcp.json（グローバル）または.cursor/mcp.json（プロジェクト）を編集します。",
@@ -123,6 +123,25 @@
     "itWorksDesc": "AIアプリがMCPEmailsを初めて呼び出しました。同じチャットでそのまま続けてください。",
     "waitingLive": "最初の呼び出しが届くと、このページは自動で更新されます。",
     "waitingStopped": "まだ呼び出しがありません。プロンプトを試してから、このページを再読み込みしてください。"
+  },
+  "heardAbout": {
+    "title": "MCPEmails をどこで知りましたか？",
+    "sub": "ワンクリックで、どこで知っていただいたかを教えてください。任意です。",
+    "dismiss": "閉じる",
+    "send": "送信",
+    "otherLabel": "MCPEmails をどこで知りましたか",
+    "otherPlaceholder": "知ったきっかけ（任意）",
+    "options": {
+      "chatgpt": "ChatGPT の回答",
+      "claude": "Claude の回答",
+      "gemini": "Gemini または Google AI の回答",
+      "google_search": "Google 検索",
+      "colleague": "同僚や友人",
+      "directory": "アプリディレクトリや MCP 一覧",
+      "video": "YouTube や動画",
+      "forum": "Reddit やフォーラム",
+      "other": "その他"
+    }
   },
   "firstWeek": {
     "title": "最初の1週間",
@@ -938,7 +957,11 @@
       "freeConfirm": "Freeに変更",
       "freeBody": "プランは支払い済みの{date}まで有効です。その後、アカウントはFreeに移行します。何も削除されません。",
       "freeToast": "完了しました。プランは{date}まで有効で、その後Freeに移行します。",
-      "pendingCheckout": "サブスクリプションに一時停止またはプラン変更が予約されています。先にこのページの「早めに再開」または「維持」を使ってから、プランを変更してください。"
+      "pendingCheckout": "サブスクリプションに一時停止またはプラン変更が予約されています。先にこのページの「早めに再開」または「維持」を使ってから、プランを変更してください。",
+      "endsBanner": "{plan}プランは{date}に終了します。データは削除されません。",
+      "keepMyPlan": "プランを継続",
+      "keepPlanBody": "予定されていた終了を取り消します。{plan}はこれまでどおり継続し、{date}に{amount}で更新されます。本日の請求はありません。",
+      "keepPlanToast": "{plan}プランを継続します。"
     },
     "cancelReason": {
       "prompt": "プランを解約しました。理由を教えていただける場合は、1つ選ぶだけで十分です。",

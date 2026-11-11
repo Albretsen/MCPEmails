@@ -22,7 +22,7 @@ Um servidor MCP é o caminho que entrega à IA a sua caixa de correio de verdade
 ## O que você precisa
 
 - Um endereço do Yahoo Mail: yahoo.com, uma versão por país como yahoo.com.br, ou o endereço ymail.com ou rocketmail.com com que você se cadastrou.
-- **Para o ChatGPT:** o plano Go ou um plano pago, no chatgpt.com em um navegador. A OpenAI não permite que o plano Free adicione um servidor MCP personalizado, e não dá para adicionar um pelo aplicativo de celular.
+- **Para o ChatGPT:** um plano pago, no chatgpt.com em um navegador. A página de ajuda da OpenAI lista servidores MCP personalizados para Business e Enterprise/Edu, com ferramentas de leitura e busca apenas no Pro, e não menciona o Go nem o Plus. O Free não pode adicionar um, e o aplicativo de celular também não.
 - **Para o Claude:** qualquer plano, inclusive o Free, que permite um conector personalizado.
 - Uma conta gratuita no MCPEmails. [Crie a sua aqui](/signup); o plano gratuito conecta uma caixa de entrada.
 
@@ -105,7 +105,7 @@ Você escolhe o que cada app de IA pode fazer quando aprova a conexão: só ler,
 
 - **O Yahoo rejeita a senha.** Use uma senha de aplicativo, não a sua senha do Yahoo, e cole sem espaços.
 - **Não aparece a opção de criar senha de aplicativo.** Ative a verificação em duas etapas na página de segurança da conta primeiro.
-- **O ChatGPT não tem a opção de adicionar servidor MCP personalizado.** Você precisa do plano Go ou de um plano pago, no chatgpt.com em um navegador.
+- **O ChatGPT não tem a opção de adicionar servidor MCP personalizado.** Você precisa de um plano pago, no chatgpt.com em um navegador: a OpenAI lista Business e Enterprise/Edu, com acesso somente leitura no Pro.
 - **A IA responde sem ler seus e-mails.** No ChatGPT, mencione o MCPEmails com @ naquela mensagem. No Claude, confira se o MCPEmails está ativado em Conectores.
 - **Você tem Yahoo e outra caixa de correio.** Conecte as duas ao MCPEmails. [Várias contas de e-mail no Claude e no ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) explica como a IA as distingue.
 

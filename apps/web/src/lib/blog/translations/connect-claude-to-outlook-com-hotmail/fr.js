@@ -1,22 +1,25 @@
 const translation = {
   title: 'Connecter Claude à Hotmail et Outlook.com (comptes personnels)',
   description:
-    "Le connecteur Microsoft 365 de Claude n'accepte pas les comptes Microsoft personnels. Connectez une boîte Hotmail, Outlook.com, Live ou MSN à Claude avec Se connecter avec Microsoft et une seule URL de connecteur personnalisé.",
+    "Le connecteur Microsoft 365 de Claude accepte désormais un compte Microsoft personnel sur les formules Free, Pro, Max et Ultra. Quand cela suffit, et comment connecter Hotmail, Outlook.com, Live ou MSN à Claude avec les pièces jointes, plusieurs boîtes ou une formule Team grâce à une seule URL de connecteur personnalisé.",
   coverAlt: 'Claude connecté à une boîte Outlook.com ou Hotmail personnelle via MCPEmails',
-  content: `Pour connecter Claude à une adresse personnelle Outlook.com, Hotmail, Live ou MSN, vous ajoutez la boîte à MCPEmails avec **Se connecter avec Microsoft**, puis vous ajoutez une seule URL dans Claude comme connecteur personnalisé. Le connecteur Microsoft 365 de Claude exige un tenant Microsoft professionnel, et Anthropic précise que les comptes Microsoft personnels ne peuvent pas l'utiliser. Un connecteur personnalisé n'a pas cette contrainte : une vieille adresse hotmail.com fonctionne exactement comme une adresse outlook.com récente.
+  content: `Il existe deux façons de connecter Claude à une adresse personnelle Outlook.com, Hotmail, Live ou MSN. Le connecteur Microsoft 365 de Claude accepte un compte Microsoft personnel sur les formules Free, Pro, Max et Ultra, sans qu'aucun administrateur intervienne. L'autre voie est MCPEmails : vous ajoutez la boîte avec **Se connecter avec Microsoft**, puis vous ajoutez une seule URL dans Claude comme connecteur personnalisé. Cette seconde voie couvre ce que le connecteur intégré laisse de côté : les pièces jointes, plusieurs boîtes derrière une seule connexion, les formules Team et Enterprise, et la même boîte dans ChatGPT ou tout autre client MCP. Une vieille adresse hotmail.com fonctionne exactement comme une adresse outlook.com récente dans les deux cas.
 
 Ce guide concerne les comptes Microsoft personnels dans Claude. Si votre messagerie est un compte Microsoft 365 professionnel ou scolaire, lisez plutôt le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
-## Pourquoi le connecteur Microsoft 365 de Claude refuse les comptes personnels
+## Ce que le connecteur Microsoft 365 de Claude fait avec un compte personnel
 
-La [page d'aide d'Anthropic sur le connecteur Microsoft 365](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) pose deux conditions avant toute connexion :
+L'article [Connect to Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) d'Anthropic couvre désormais les comptes personnels. Sur les formules Free, Pro, Max et Ultra, vous pouvez connecter vous-même un compte Outlook.com, Hotmail, Live ou MSN ; aucun administrateur n'est nécessaire. Le connecteur atteint Outlook et OneDrive, et ses outils d'écriture sont inclus : Claude peut donc rédiger et envoyer des e-mails et gérer des événements de calendrier après vous avoir demandé votre accord.
 
-- Le compte doit appartenir à un tenant Microsoft Entra rattaché à un abonnement Microsoft Business.
-- Un administrateur général de ce tenant doit d'abord autoriser l'intégration.
+Trois limites du même article comptent pour les e-mails :
 
-La même page indique que les comptes Microsoft personnels, comme les adresses @outlook.com ou @hotmail.com, ne peuvent pas être utilisés pour se connecter. Un compte personnel n'a ni tenant professionnel ni administrateur derrière lui : il n'y a donc rien à approuver, et aucun réglage à modifier pour que cela fonctionne. Ce connecteur est conçu pour les organisations : il effectue des recherches dans SharePoint, OneDrive, Outlook et Teams, et ses autorisations restent en lecture seule tant qu'un administrateur n'a pas activé les outils d'écriture.
+- **Pas de pièces jointes dans les outils d'écriture.** Claude ne peut pas envoyer, transférer ni rédiger un e-mail avec une pièce jointe par ce connecteur.
+- **Pas sur Team ni Enterprise.** Ces formules ne voient pas l'option de compte personnel, donc une adresse Hotmail personnelle à côté d'une formule professionnelle n'a aucune voie intégrée.
+- **Dans Claude uniquement, pour le compte avec lequel vous vous connectez.** Gmail a son propre connecteur ; iCloud, Yahoo et les boîtes IMAP n'en ont aucun, et rien ne se transpose dans ChatGPT ni dans un autre client MCP.
 
-Votre boîte, elle, n'a aucun problème. Claude a simplement besoin d'un autre chemin pour y accéder.
+Les comptes professionnels ou scolaires sont un cas différent : un administrateur général Microsoft Entra doit toujours donner son consentement avant que quiconque dans l'organisation puisse se connecter. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) et la [page sur le consentement administrateur](/docs/microsoft-365-admin-consent) expliquent cette procédure.
+
+Si une seule boîte Outlook.com personnelle dans Claude, sans pièces jointes, vous suffit, le connecteur intégré fait l'affaire. Le reste de ce guide décrit la voie pour tout le reste.
 
 ## Ce qu'il vous faut
 
@@ -93,10 +96,10 @@ Non. Chaque fois que Claude demande un message, MCPEmails le récupère en direc
 ## FAQ
 
 **Puis-je connecter Claude à Outlook.com ou Hotmail ?**
-Oui. Le connecteur Microsoft 365 intégré à Claude ne prend pas en charge les comptes Microsoft personnels, mais un connecteur personnalisé, si. Connectez l'adresse à MCPEmails avec Se connecter avec Microsoft, ajoutez \`https://mcpemails.com/api/mcp\` dans Claude sous Personnaliser → Connecteurs, et Claude peut lire, rechercher, envoyer et ranger vos e-mails Outlook.com, Hotmail, Live ou MSN.
+Oui, de deux façons. Sur Free, Pro, Max ou Ultra, le connecteur Microsoft 365 intégré à Claude accepte directement un compte Microsoft personnel, sans pièces jointes. Pour les pièces jointes, plusieurs boîtes, une formule Team ou Enterprise, ou la même boîte dans ChatGPT, connectez l'adresse à MCPEmails avec Se connecter avec Microsoft, ajoutez \`https://mcpemails.com/api/mcp\` dans Claude sous Personnaliser → Connecteurs, et Claude peut lire, rechercher, envoyer et ranger vos e-mails Outlook.com, Hotmail, Live ou MSN.
 
 **Pourquoi le connecteur Microsoft 365 de Claude refuse-t-il mon adresse Hotmail ?**
-La page d'aide d'Anthropic indique que ce connecteur nécessite un tenant Microsoft Entra rattaché à un abonnement Microsoft Business et un administrateur général pour l'autoriser, et que les comptes Microsoft personnels ne peuvent pas être utilisés. Un compte personnel n'a ni tenant ni administrateur.
+Vérifiez la formule. Anthropic indique que les comptes Microsoft personnels se connectent sur Free, Pro, Max et Ultra, et que les formules Team et Enterprise ne voient pas cette option. Une adresse professionnelle ou scolaire est un autre cas : un administrateur général de son tenant Microsoft Entra doit d'abord donner son consentement. Sur une formule Team ou Enterprise, MCPEmails en connecteur personnalisé est la voie pour une adresse personnelle.
 
 **Ai-je besoin d'un mot de passe d'application ou des paramètres IMAP ?**
 Non. Les comptes Microsoft personnels se connectent avec Se connecter avec Microsoft et Microsoft Graph. Microsoft n'accepte plus la connexion par mot de passe depuis les applications de messagerie tierces sur ces comptes, donc un mot de passe d'application ne permettrait de toute façon pas de se connecter.

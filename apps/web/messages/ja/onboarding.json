@@ -206,7 +206,7 @@
         "step2": "「カスタム MCP サーバーを追加」を選び、名前をMCPEmailsにして、下のURLをServer URLに貼り付けます。",
         "step3": "「理解したうえで続行します」にチェックを入れ、「プラグインとして作成」をクリックし、続いてConnect MCPEmailsをクリックしてアクセスを許可します。",
         "step4": "チャットで @MCPEmails と入力すると使えます。",
-        "note": "カスタムMCPサーバーは、Goプランとすべての有料プランで、chatgpt.comのブラウザー版で利用できます。"
+        "note": "カスタムMCPサーバーには有料プランが必要で、chatgpt.comのブラウザー版で追加します。OpenAIが挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用のアクセスに限られます。"
       },
       "key": {
         "creating": "{client}用のAPIキーを作成しています",
