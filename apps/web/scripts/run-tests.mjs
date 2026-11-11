@@ -113,7 +113,11 @@ await Promise.all(Array.from({ length: Math.min(concurrency, suites.length) }, w
 const named = new Set(
   suites
     .flatMap((name) => scripts[name].split(/\s+/))
-    .map((word) => word.replace(/^['"]|['"]$/g, '').replace(/^\.\//, '')),
+    .map((word) => word.replace(/^['"]|['"]$/g, '').replace(/^\.\//, ''))
+    // `node --test` reads every path as a glob, so a Next.js folder such as
+    // `[token]` is a character class and the file silently runs 0 tests. A
+    // script names it as `[[]token[]]`; count that as the literal path.
+    .map((word) => word.replaceAll('[[]', '[').replaceAll('[]]', ']')),
 );
 const testFiles = execFileSync('git', ['ls-files', '--', '*.test.js', '*.test.mjs', '*.test.ts', '*.test.tsx', '*.test.jsx'], {
   cwd: webRoot,
