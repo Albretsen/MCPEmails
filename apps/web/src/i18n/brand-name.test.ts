@@ -41,8 +41,15 @@ test('Organization and WebSite say "MCPEmails" and list the other spellings', ()
   for (const [type, id] of [['Organization', 'orgId'], ['WebSite', 'siteId']]) {
     const body = graphNode(type, id);
     assert.match(body, /name: 'MCPEmails',/, type);
-    assert.match(body, /alternateName: \['MCP Emails', 'mcpemails', 'mcpemails\.com'\],/, type);
+    // One list for every node (productAlternateNames), so the spellings cannot
+    // disagree between nodes. The list itself: the three spellings, plus the
+    // ChatGPT plugin-directory name while that listing is live.
+    assert.match(body, /alternateName: productAlternateNames\(\),/, type);
   }
+  const list = seoSource.match(/export function productAlternateNames\(\): string\[\] \{\n\s*return \[\n([\s\S]*?)\n\s*\];/);
+  assert.ok(list, 'productAlternateNames not found in src/i18n/seo.ts');
+  assert.match(list[1], /'MCP Emails',\n\s*'mcpemails',\n\s*'mcpemails\.com',/);
+  assert.match(list[1], /CHATGPT_DIRECTORY_LISTING_URL \? \[CHATGPT_APP_NAME\] : \[\]/);
   assert.match(seoSource, /'@type': 'SoftwareApplication',\n\s*name: 'MCPEmails',/);
   assert.match(seoSource, /'@type': 'Product',\n\s*'@id': [^\n]*\n\s*name: 'MCPEmails',/);
 });

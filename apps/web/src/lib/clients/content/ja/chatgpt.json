@@ -2,21 +2,23 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://help.openai.com/en/articles/12584461"
+    "https://help.openai.com/en/articles/12584461",
+    "https://help.openai.com/en/articles/20001256 (Plugins in ChatGPT: the plugin directory, Install plugin, Connect, @)",
+    "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
-    "title": "メールをChatGPTに接続する：MCPコネクタの設定",
-    "description": "開発者モードとカスタムMCPコネクタで、ChatGPTに本物の受信トレイを追加。OAuthでAPIキー不要、メールの閲覧、検索、送信、予約送信ができます。受信トレイ1つは無料。"
+    "title": "メールをChatGPTに接続する：Any Mailboxプラグインの設定",
+    "description": "ChatGPTに本物の受信トレイを。ChatGPTのプラグインディレクトリからAny Mailboxをインストールし、MCPEmailsにログインして受信トレイを選ぶだけ。OAuthでAPIキー不要。受信トレイ1つは無料。"
   },
   "hero": {
     "eyebrow": "ChatGPT + メール",
     "titleLine1": "受信トレイをChatGPTに",
-    "titleLine2": "カスタムMCPコネクタとして接続する",
-    "lead": "1つのURLを指すカスタムMCPサーバーを追加すると、ChatGPTが本物のメールを閲覧、検索、送信、返信、転送、予約送信、整理できるようになります。",
+    "titleLine2": "Any Mailboxプラグインで接続する",
+    "lead": "ChatGPTのプラグインディレクトリにあるMCPEmailsのプラグイン「Any Mailbox」をインストールしてログインすると、ChatGPTが本物のメールを閲覧、検索、送信、返信、転送、予約送信、整理できるようになります。",
     "meta0": "受信トレイ1つはずっと無料",
     "meta1": "OAuth、APIキー不要",
     "meta2": "メールはその場で取得、保存はしません",
-    "answer": "chatgpt.comで「プラグイン」、「Personal」（個人）、「Add」（追加）、「カスタム MCP サーバーを追加」の順に開きます。名前をMCPEmailsにし、「接続」の欄にhttps://mcpemails.com/api/mcpを貼り付け、OAuthを選び、確認のチェックボックスにチェックを入れて「プラグインとして作成」をクリックし、MCPEmailsでログインします。カスタムMCPサーバーはGoと有料プランで追加できます。チャットでは@と入力してMCPEmailsを選びます。"
+    "answer": "ChatGPTで「プラグイン」を開き、プラグインディレクトリでMCPEmailsのAny Mailboxを見つけて「プラグインをインストール」、続いて「接続」をクリックします。MCPEmailsにログインし、ChatGPTがアクセスできる受信トレイとアクセスの範囲を選びます。チャットでは@と入力してAny Mailboxを選びます。プラグインを使わない場合は、chatgpt.comでURLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。これはChatGPT Goと有料プランで使えます。"
   },
   "method": {
     "title": "ChatGPTの接続方法：OAuth、APIキー不要",
@@ -25,33 +27,53 @@
   "setup": [
     {
       "h": "無料アカウントを作成し、メールボックスを接続する",
-      "p": "mcpemails.comで新規登録し（カード不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。受信トレイ1つはずっと無料です。"
+      "p": "mcpemails.comで新規登録し（カード不要）、ダッシュボードの「受信トレイ」でメールボックスを接続します。OutlookとMicrosoft 365はSign in with Microsoftで、Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandexはアプリ用パスワードで、その他のメールボックスはIMAPとSMTPで接続します。受信トレイ1つはずっと無料です。"
     },
     {
-      "h": "「カスタム MCP サーバーを追加」を開く",
-      "p": "chatgpt.comで<b>プラグイン</b>、<b>Personal</b>（個人）の順に開き、右上の<b>Add</b>（追加）をクリックして<b>カスタム MCP サーバーを追加</b>を選びます。これはウェブ版でのみ可能で、モバイルアプリからは追加できません。"
+      "h": "プラグインディレクトリからAny Mailboxをインストールする",
+      "p": "Any Mailboxは、MCPEmailsがChatGPTのプラグインディレクトリに公開しているプラグインです。ChatGPTのサイドバーで<b>プラグイン</b>を開き、Any Mailboxを見つけて（または下のリンクから掲載ページを開いて）、<b>プラグインをインストール</b>、続いて<b>接続</b>をクリックします。ディレクトリはすべてのChatGPTプランで、ウェブ、デスクトップ、モバイルから利用できます。"
     },
     {
-      "h": "サーバーの情報を入力する",
-      "p": "名前をMCPEmailsにし、<b>接続</b>の欄に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。"
+      "h": "MCPEmailsにログインする",
+      "p": "ChatGPTからMCPEmailsに移動します。メールボックスを登録しているアカウントでログインしてください。すでにログイン済みなら、そのまま同意画面に進みます。"
     },
     {
-      "h": "OAuthを選んでログインする",
-      "p": "<b>OAuth</b>を選び、<b>理解したうえで続行します</b>にチェックを入れて<b>プラグインとして作成</b>をクリックし、MCPEmailsでログインしてChatGPTに持たせたいスコープを承認します。"
-    },
-    {
-      "h": "チャットでメンションする",
-      "p": "チャットで<b>@</b>と入力してMCPEmailsを選びます。選択はそのメッセージにだけ適用されるので、続きのやり取りでメールが必要になったら、もう一度@メンションしてください。"
+      "h": "受信トレイとアクセス範囲を選び、@で使う",
+      "p": "同意画面では、ChatGPTに与えるアクセスの範囲を選びます。読み取り専用、標準、フルアクセス、または権限を1つずつ選ぶカスタムです。すべての受信トレイか特定の受信トレイを選び、<b>アクセスを許可</b>をクリックします。ChatGPTに戻ってチャットで<b>@</b>と入力してAny Mailboxを選ぶか、そのままメールについて質問してください。ChatGPTは、依頼に合うインストール済みプラグインを使います。"
     }
   ],
+  "listingLink": "ChatGPTのプラグインディレクトリにあるAny Mailbox",
+  "fallback": {
+    "eyebrow": "プラグインを使わない場合",
+    "title": "同じサーバーをカスタムMCPサーバーとして追加する",
+    "sub": "ChatGPTのアカウントやワークスペースでAny Mailboxが使えない場合は、代わりにMCPEmailsをカスタムMCPサーバーとして追加します。chatgpt.comでChatGPT Goと有料プランなら使え、同じメールボックスにアクセスできます。",
+    "steps": [
+      {
+        "h": "「カスタム MCP サーバーを追加」を開く",
+        "p": "chatgpt.comで<b>プラグイン</b>、<b>Personal</b>（個人）の順に開き、右上の<b>Add</b>（追加）をクリックして<b>カスタム MCP サーバーを追加</b>を選びます。これはウェブ版でのみ可能で、モバイルアプリからは追加できません。"
+      },
+      {
+        "h": "サーバーの情報を入力する",
+        "p": "名前をMCPEmailsにし、<b>接続</b>の欄に<code>https://mcpemails.com/api/mcp</code>を貼り付けます。"
+      },
+      {
+        "h": "OAuthを選んでログインする",
+        "p": "<b>OAuth</b>を選び、<b>理解したうえで続行します</b>にチェックを入れて<b>プラグインとして作成</b>をクリックし、MCPEmailsでログインしてChatGPTに持たせたいスコープを承認します。"
+      },
+      {
+        "h": "チャットでメンションする",
+        "p": "チャットで<b>@</b>と入力してMCPEmailsを選びます。選択はそのメッセージにだけ適用されるので、続きのやり取りでメールが必要になったら、もう一度@メンションしてください。"
+      }
+    ]
+  },
   "gotchas": [
     {
-      "h": "追加はウェブで、選択はメッセージごとに",
-      "p": "カスタムMCPサーバーはchatgpt.comでGoと有料プランなら追加できます。モバイルアプリからは追加できません。BusinessとEnterpriseでは、管理者またはオーナーがワークスペースに追加する必要がある場合があります。見落とされがちなのは最後の手順です。ChatGPTがMCPEmailsを使うのは、あなたが<b>@</b>と入力してそれを選んだメッセージだけなので、続きのやり取りでメールが必要になったら、もう一度@メンションしてください。"
+      "h": "インストールは1回、あとはチャットで使われているか確認",
+      "p": "Any MailboxはすべてのChatGPTプランでプラグインディレクトリからインストールできます。BusinessとEnterpriseでは、管理者が先にワークスペースでプラグインを有効にする必要がある場合があります。代替手段のカスタムMCPサーバーはウェブ版のみで、ChatGPT Goか有料プランが必要です。どちらの場合も、見落とされがちな手順はチャット側にあります。ChatGPTがメールを見ずに答えたら、<b>@</b>と入力してAny Mailbox（カスタムサーバーならMCPEmails）を選び、そのメッセージで使わせてください。"
     },
     {
       "h": "コネクタを作成するときは、認証なしではなくOAuthを選んでください",
-      "p": "コネクタのフォームは認証方法を尋ねます。このサーバーは匿名の呼び出しを拒否します。未認証のリクエストにはOAuth検出のポインターを含む401が返り、準拠したクライアントはそれに従ってフローを開始します。認証なしを選ぶと、設定時ではなく最初のツール呼び出しで失敗するコネクタができあがり、それは分かりにくい順番の失敗です。"
+      "p": "コネクタのフォームは認証方法を尋ねます。このサーバーは匿名の呼び出しを拒否します。未認証のリクエストにはOAuth検出のポインターを含む401が返り、準拠したクライアントはそれに従ってフローを開始します。認証なしを選ぶと、設定時ではなく最初のツール呼び出しで失敗するコネクタができあがり、それは分かりにくい順番の失敗です。プラグインではこの質問は出ません。常にOAuthでログインします。"
     },
     {
       "h": "読み取り専用は現実的な選択肢で、最初の一歩としてはしばしば正解です",
@@ -66,11 +88,15 @@
   "faq": [
     {
       "q": "ChatGPTは私のメールを読んだり送ったりできますか？",
-      "a": "カスタムMCPコネクタを通せば、できます。ChatGPTは自力ではメールボックスに届きません。コネクタをMCPEmailsに向けると、設定時に承認したスコープの範囲内で、メールの閲覧、検索、送信、返信、転送、整理、予約送信のツールを持てます。"
+      "a": "はい。ChatGPTのプラグインディレクトリにあるMCPEmailsのプラグイン「Any Mailbox」をインストールするか、MCPEmailsをカスタムMCPサーバーとして追加します。どちらでも、ログイン時に承認したアクセスの範囲内で、ChatGPTはメールの閲覧、検索、送信、返信、転送、整理、予約送信のツールを持てます。"
+    },
+    {
+      "q": "Any MailboxはMCPEmailsと同じものですか？",
+      "a": "はい。Any Mailboxは、MCPEmailsがChatGPTのプラグインディレクトリで使っている名前で、公開元はMCPEmailsです。https://mcpemails.com/api/mcpのカスタムMCPサーバーと同じアカウント、メールボックス、同意画面を使うので、どちらか一方で十分です。"
     },
     {
       "q": "ChatGPTでカスタムMCPサーバーを追加できないのはなぜですか？",
-      "a": "カスタムMCPサーバーはGoと有料プランで、chatgpt.comから追加できます。モバイルアプリにはその機能がありません。BusinessまたはEnterpriseのワークスペースでは、管理者またはオーナーが追加する必要がある場合があります。MCPEmailsを追加したのにChatGPTが使わないなら、チャットで<b>@</b>と入力してMCPEmailsを選んでください。選択は一度に1つのメッセージにだけ適用されます。"
+      "a": "カスタムMCPサーバーはGoと有料プランで、chatgpt.comから追加できます。モバイルアプリにはその機能がありません。BusinessまたはEnterpriseのワークスペースでは、管理者またはオーナーが追加する必要がある場合があります。MCPEmailsを追加したのにChatGPTが使わないなら、チャットで<b>@</b>と入力してMCPEmailsを選んでください。選択は一度に1つのメッセージにだけ適用されます。Any Mailboxプラグインにはこうした制限がないので、代わりにプラグインディレクトリからインストールしてください。"
     },
     {
       "q": "ChatGPTにAPIキーは必要ですか？",
@@ -91,6 +117,6 @@
   ],
   "ctaBand": {
     "title": "ChatGPTに本物の受信トレイを渡す",
-    "sub": "コネクタ1つで、接続したすべてのメールボックスに。受信トレイ1つはずっと無料。"
+    "sub": "プラグイン1つで、接続したすべてのメールボックスに。受信トレイ1つはずっと無料。"
   }
 }

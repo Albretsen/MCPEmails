@@ -20,6 +20,7 @@ import { AI_CLIENT_NAMES, orderClients, signupClientParam } from '@/lib/clients/
 import { usePreferredClient } from './PreferredClient';
 import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 import { languageTag } from '@/i18n/locale-policy.mjs';
+import { CHATGPT_DIRECTORY_LISTING_URL, splitOnListingUrl } from '@/lib/connect/chatgpt.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1315,9 +1316,28 @@ function FaqItem({ q, a }) {
       {/* Always in the DOM, hidden until opened: the answers are emitted as
           FAQPage JSON-LD, and markup may only describe text the page actually
           serves. Rendering on click left them out of the HTML entirely. */}
-      <div className="faq-a" hidden={!open}>{a}</div>
+      <div className="faq-a" hidden={!open}><FaqAnswer text={a} /></div>
     </div>
   );
+}
+
+/**
+ * An answer, with any {listingUrl} token turned into a link to the Any Mailbox
+ * listing in the ChatGPT plugin directory (CHATGPT_DIRECTORY_LISTING_URL). The
+ * JSON-LD in app/[locale]/page.tsx writes the same URL out as text, so the
+ * markup and the page say the same thing.
+ */
+function FaqAnswer({ text }) {
+  const parts = splitOnListingUrl(text);
+  if (parts.length === 1 || !CHATGPT_DIRECTORY_LISTING_URL) return parts.join('');
+  return parts.flatMap((part, i) => (i === 0
+    ? [part]
+    : [
+        <a key={i} href={CHATGPT_DIRECTORY_LISTING_URL} target="_blank" rel="noopener noreferrer">
+          {CHATGPT_DIRECTORY_LISTING_URL}
+        </a>,
+        part,
+      ]));
 }
 
 /**

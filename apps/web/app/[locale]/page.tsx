@@ -6,6 +6,7 @@ import { routing } from '@/i18n/routing';
 import { requireLocale } from '@/i18n/require-locale';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
+import { fillListingUrl } from '@/lib/connect/chatgpt.mjs';
 
 export async function generateMetadata({
   params,
@@ -64,7 +65,12 @@ export default async function HomePage({
   const jsonLd = homeJsonLd(locale, {
     name: t('title'),
     description: t('description'),
-    faq: Array.isArray(faqItems) ? faqItems : [],
+    // {listingUrl} in an answer is the Any Mailbox listing in the ChatGPT
+    // plugin directory; the visible FAQ renders it as a link, the markup as
+    // the URL itself.
+    faq: Array.isArray(faqItems)
+      ? faqItems.map((f: { q: string; a: string }) => ({ q: f.q, a: fillListingUrl(f.a) }))
+      : [],
   });
 
   return (

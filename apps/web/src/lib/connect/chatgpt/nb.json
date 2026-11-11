@@ -13,12 +13,12 @@
   "faqQ": "Kan ChatGPT lese e-posten min i {provider}?",
   "faqQMailName": "Kan ChatGPT lese e-posten min i {provider}?",
   "faqA": "Ja, når {provider} er koblet til MCPEmails. Legg til en egendefinert MCP-server på chatgpt.com med URL-en https://mcpemails.com/api/mcp og OAuth-innlogging. Det fungerer med ChatGPT Go og betalte abonnementer. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri.",
-  "directorySub": "ChatGPT når {provider} gjennom Any Mailbox-appen fra MCPEmails.",
+  "directorySub": "ChatGPT når {provider} gjennom Any Mailbox, MCPEmails-pluginen i pluginkatalogen i ChatGPT.",
   "directorySteps": [
     "Koble {provider} til MCPEmails med stegene over.",
-    "Åpne Any Mailbox i appkatalogen i ChatGPT og klikk Connect.",
-    "Logg inn hos MCPEmails og godkjenn tilgangen du vil gi ChatGPT."
+    "I ChatGPT åpner du Plugins, finner Any Mailbox i pluginkatalogen og klikker Install plugin, så Connect.",
+    "Logg inn hos MCPEmails og velg hvilke innbokser ChatGPT skal nå. I en samtale skriver du <b>@</b> og velger Any Mailbox."
   ],
-  "directoryLink": "Any Mailbox i appkatalogen i ChatGPT",
-  "directoryFaqA": "Ja, når {provider} er koblet til MCPEmails. Installer Any Mailbox fra appkatalogen i ChatGPT og logg inn hos MCPEmails. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri."
+  "directoryLink": "Any Mailbox i pluginkatalogen i ChatGPT",
+  "directoryFaqA": "Ja, når {provider} er koblet til MCPEmails. Installer Any Mailbox fra pluginkatalogen i ChatGPT og logg inn hos MCPEmails. ChatGPT får bare tilgangen du godkjenner, og e-posten hentes direkte og lagres aldri."
 }
