@@ -220,7 +220,7 @@ function inboxHeadline(
   const max = PLANS[planId].limits.maxInboxes;
   const free = PLANS.free.limits.maxInboxes;
   if (planId === 'pro' && perPerson) {
-    return `Billed per person who connects a mailbox, ${BUSINESS_MIN_SEATS} people minimum; admins and viewers without one are free. ` +
+    return `Billed per person who connects a mailbox, ${BUSINESS_MIN_SEATS} people minimum; anyone without one of their own is free, whatever their role. ` +
       `${BUSINESS_INCLUDED_INBOXES} company-wide mailboxes are included, and each extra one is ` +
       `${formatPriceCents(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS, 'en-US', currency ?? 'usd')} a month.`;
   }

@@ -40,12 +40,17 @@ test('Stripe Tax on adds automatic tax only; the paperwork no longer rides on it
 });
 
 test('every session collects the tax ID and company name, with the customer_update an existing customer needs', () => {
-  assert.deepEqual(checkoutPaperworkParams(), {
+  assert.deepEqual(checkoutPaperworkParams(false), {
+    tax_id_collection: { enabled: true },
+    customer_update: { name: 'auto' },
+  });
+  // The address is written back only when the session calculates tax.
+  assert.deepEqual(checkoutPaperworkParams(true), {
     tax_id_collection: { enabled: true },
     customer_update: { name: 'auto', address: 'auto' },
   });
   // Optional for the buyer: a consumer is never made to enter a tax ID.
-  assert.equal('required' in checkoutPaperworkParams().tax_id_collection, false);
+  assert.equal('required' in checkoutPaperworkParams(false).tax_id_collection, false);
 });
 
 test('the payment method configuration is sent only when set and well formed', () => {

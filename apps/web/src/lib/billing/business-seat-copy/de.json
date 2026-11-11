@@ -3,7 +3,7 @@
     "desc": "Für ein Team: Jede Person verbindet ihre eigenen Postfächer privat, und die gemeinsamen Adressen des Unternehmens sind unternehmensweit.",
     "per": "/Person/Monat",
     "billedYearly": "${yearly}/Jahr pro Person, jährlich abgerechnet",
-    "minimum": "Mindestens {min} Personen. Sie zahlen für jede Person, die ein Postfach verbindet; Admins und Betrachter ohne eigenes Postfach sind kostenlos.",
+    "minimum": "Mindestens {min} Personen. Sie zahlen für jede Person, die ein Postfach verbindet; wer kein eigenes Postfach hat, ist kostenlos, unabhängig von der Rolle.",
     "features": [
       "Alles aus Pro",
       "Private Postfächer für jede Person, bis zu {private} pro Person",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "Für ein Team",
       "title": "Jede Person betreut ihre eigene E-Mail, die gemeinsamen Adressen alle zusammen",
-      "sub": "Business kostet ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Admins und Betrachter ohne eigenes Postfach sind kostenlos.",
+      "sub": "Business kostet ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Wer kein eigenes Postfach hat, ist kostenlos, unabhängig von der Rolle.",
       "items": {
         "private": {
           "h": "Standardmäßig privat",
@@ -83,11 +83,11 @@
         "h": "Business, ${price} pro Person und Monat: ein Team",
         "p": "Mindestens {min} Personen, abgerechnet für jede Person, die ein Postfach verbindet. Bis zu {private} private Postfächer pro Person, dazu {included} unternehmensweite, danach je ${addon} pro Monat."
       },
-      "note": "Admins und Betrachter ohne eigenes Postfach sind kostenlos, und Sie können pro Unternehmen oder Kunde einen eigenen Workspace führen."
+      "note": "Wer kein eigenes Postfach hat, ist kostenlos, und Sie können pro Unternehmen oder Kunde einen eigenen Workspace führen."
     },
     "faq": {
       "0": "Ja, wenn eine Person die Postfächer betreut. Pro ist ein Login mit bis zu 10 verbundenen Postfächern, sodass eine Person info@, vertrieb@, rechnung@ und support@ mit einem Agenten betreuen kann. Sobald Kolleginnen und Kollegen einen eigenen Login brauchen, kostet Business ${price} pro Person und Monat: Das eigene Postfach jeder Person bleibt privat, und die gemeinsamen Adressen sind unternehmensweit.",
-      "5": "Free, Personal und Pro sind Tarife mit einem Login. Bei Business meldet sich jede Kollegin und jeder Kollege mit einem eigenen Konto an und verbindet das eigene Postfach, das privat bleibt, während unternehmensweite Postfächer wie info@ geteilt werden. Sie zahlen ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Admins und Betrachter, die kein Postfach verbinden, kosten nichts.",
+      "5": "Free, Personal und Pro sind Tarife mit einem Login. Bei Business meldet sich jede Kollegin und jeder Kollege mit einem eigenen Konto an und verbindet das eigene Postfach, das privat bleibt, während unternehmensweite Postfächer wie info@ geteilt werden. Sie zahlen ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Wer kein Postfach verbindet, kostet nichts, unabhängig von der Rolle.",
       "extra": [
         {
           "q": "Kann ein Admin mein Postfach lesen?",

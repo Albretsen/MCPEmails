@@ -3,7 +3,7 @@
     "desc": "Pour une équipe : chaque personne connecte ses propres boîtes en privé, et les adresses communes de l'entreprise sont partagées avec toute l'entreprise.",
     "per": "/personne/mois",
     "billedYearly": "Facturé {yearly} $/an par personne",
-    "minimum": "{min} personnes minimum. Vous payez pour chaque personne qui connecte une boîte ; les administrateurs et observateurs sans boîte à eux sont gratuits.",
+    "minimum": "{min} personnes minimum. Vous payez pour chaque personne qui connecte une boîte ; toute personne sans boîte à elle est gratuite, quel que soit son rôle.",
     "features": [
       "Tout ce qu'inclut Pro",
       "Des boîtes privées pour chaque personne, jusqu'à {private} chacune",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "Pour une équipe",
       "title": "Chacun gère son courrier, et les adresses communes ensemble",
-      "sub": "Business coûte {price} $ par mois pour chaque personne qui connecte une boîte, {min} personnes minimum. Les administrateurs et observateurs sans boîte à eux sont gratuits.",
+      "sub": "Business coûte {price} $ par mois pour chaque personne qui connecte une boîte, {min} personnes minimum. Toute personne sans boîte à elle est gratuite, quel que soit son rôle.",
       "items": {
         "private": {
           "h": "Privé par défaut",
@@ -83,11 +83,11 @@
         "h": "Business, {price} $ par personne et par mois : une équipe",
         "p": "{min} personnes minimum, facturé pour chaque personne qui connecte une boîte. Jusqu'à {private} boîtes privées par personne, plus {included} partagées, puis {addon} $ par mois chacune."
       },
-      "note": "Les administrateurs et observateurs sans boîte à eux sont gratuits, et vous pouvez avoir un espace de travail distinct par entreprise ou par client."
+      "note": "Toute personne sans boîte à elle est gratuite, et vous pouvez avoir un espace de travail distinct par entreprise ou par client."
     },
     "faq": {
       "0": "Oui, si une seule personne gère les boîtes. Pro, c'est un identifiant avec jusqu'à 10 boîtes connectées : une seule personne peut gérer info@, ventes@, factures@ et support@ depuis un agent. Quand des collègues ont besoin de leur propre identifiant, Business coûte {price} $ par personne et par mois : la boîte de chacun reste privée, et les adresses communes sont partagées avec toute l'entreprise.",
-      "5": "Free, Personal et Pro sont des offres à un seul identifiant. Avec Business, chaque collègue se connecte avec son propre compte et connecte sa propre boîte, qui reste privée, tandis que les boîtes partagées comme info@ sont communes. Vous payez {price} $ par mois pour chaque personne qui connecte une boîte, {min} personnes minimum. Les administrateurs et observateurs qui ne connectent aucune boîte ne coûtent rien.",
+      "5": "Free, Personal et Pro sont des offres à un seul identifiant. Avec Business, chaque collègue se connecte avec son propre compte et connecte sa propre boîte, qui reste privée, tandis que les boîtes partagées comme info@ sont communes. Vous payez {price} $ par mois pour chaque personne qui connecte une boîte, {min} personnes minimum. Toute personne qui ne connecte aucune boîte ne coûte rien, quel que soit son rôle.",
       "extra": [
         {
           "q": "Un administrateur peut-il lire ma boîte ?",

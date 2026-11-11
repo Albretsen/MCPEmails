@@ -131,7 +131,13 @@ export async function GET(request: NextRequest): Promise<Response> {
   }
 
   const reader = manager ? service : supabase;
-  const result = await fetchAuditCallsPage(reader, service, workspaceId, { page, pageSize, filters });
+  const result = await fetchAuditCallsPage(reader, service, workspaceId, {
+    page,
+    pageSize,
+    filters,
+    // A member never sees someone else's call that named no inbox.
+    memberUserId: manager ? null : user.id,
+  });
   if (!result.ok) {
     console.error('[audit-log] calls query failed:', result.error);
     return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });

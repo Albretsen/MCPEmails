@@ -3,7 +3,8 @@ import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
-import { isInboxVisibility, ownsInbox } from '@/lib/inboxes/visibility';
+import { isInboxVisibility, ownsInbox, privateInboxLimitErrorBody } from '@/lib/inboxes/visibility';
+import { checkPrivateInboxLimit } from '@/lib/plans/check-private-inbox-limit';
 import { canManageInboxes, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
 import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
@@ -75,6 +76,16 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
   if (inbox.visibility === visibility) return NextResponse.json({ visibility });
 
   const service = createServiceRoleClient();
+  // Making a mailbox private adds one to this person's private count, so the
+  // per-person cap of Business seat pricing applies exactly as on connect
+  // (402 private_inbox_limit_reached; no cap when the switch is off or the
+  // subscription is not seat-priced). Company-wide never adds a private one.
+  if (visibility === 'private') {
+    const privateLimit = await checkPrivateInboxLimit({ db: service, workspaceId: inbox.workspace_id, userId: user.id });
+    if (privateLimit.atLimit) {
+      return NextResponse.json(privateInboxLimitErrorBody(privateLimit), { status: 402 });
+    }
+  }
   const { data: saved, error: updateError } = await service
     .from('inboxes')
     .update({ visibility, updated_at: new Date().toISOString() })

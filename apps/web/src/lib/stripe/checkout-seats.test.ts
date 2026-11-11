@@ -264,7 +264,7 @@ test('Personal and Pro checkouts are untouched by the switch, paperwork on every
   await runCheckout({ planId: 'solo', interval: 'month', locale: 'en' });
   assert.deepEqual(sessions[0].line_items, [{ price: 'price_solo_month', quantity: 1 }]);
   assert.deepEqual(sessions[0].tax_id_collection, { enabled: true });
-  assert.deepEqual(sessions[0].customer_update, { name: 'auto', address: 'auto' });
+  assert.deepEqual(sessions[0].customer_update, { name: 'auto' }, 'tax off: the name only, never the address');
   assert.equal('automatic_tax' in sessions[0], false, 'tax calculation still follows its own switch');
 });
 
@@ -316,6 +316,19 @@ test('a per-person subscriber switching to yearly keeps per-person pricing and i
   });
   await buy({ interval: 'year', confirmChange: true });
   assert.deepEqual((updates[0].items as unknown[])[0], { id: 'si_base', price: 'price_seat_year', quantity: 2 });
+});
+
+test('switch off: a per-person subscriber switching interval stays on seat prices, never the flat price', async () => {
+  reset({
+    seat: false,
+    billing: SUBSCRIBED('pro'),
+    currentPrice: 'price_seat_month',
+    currentQuantity: 3,
+    ...FOUR_PEOPLE,
+  });
+  await buy({ interval: 'year', confirmChange: true });
+  assert.equal(updates.length, 1);
+  assert.deepEqual((updates[0].items as unknown[])[0], { id: 'si_base', price: 'price_seat_year', quantity: 4 });
 });
 
 test('leaving a per-person price sets the plan item back to quantity 1', async () => {

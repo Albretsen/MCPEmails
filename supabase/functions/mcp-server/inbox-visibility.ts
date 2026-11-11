@@ -100,6 +100,14 @@ export async function credentialCanReachInbox(
   apiKeyId: string | null | undefined,
   workspaceId: string,
   inboxId: string,
+  /**
+   * The person the stored row says it acts as (scheduled_sends / reminders
+   * `created_by`), when set. Wins over the key's creator: a web mail client
+   * request runs on the workspace's shared key, whose creator is null (the
+   * workspace owner), and records the signed-in member here. The key's own
+   * inbox allow-list still applies.
+   */
+  actingUserId?: string | null,
 ): Promise<boolean> {
   if (!apiKeyId) return false;
   try {
@@ -109,7 +117,7 @@ export async function credentialCanReachInbox(
       .eq("id", apiKeyId)
       .maybeSingle();
     if (error || !key || key.workspace_id !== workspaceId) return false;
-    const scope = await readCredentialScope(db, workspaceId, key.created_by ?? null, key.inbox_ids ?? null);
+    const scope = await readCredentialScope(db, workspaceId, actingUserId ?? key.created_by ?? null, key.inbox_ids ?? null);
     return inboxAllowed(effectiveInboxIds(key.inbox_ids ?? null, scope), inboxId);
   } catch {
     return false;
@@ -189,4 +197,15 @@ export function scopeForKey(
   keyId: string,
 ): CredentialScope | null {
   return answer && answer.keyId === keyId ? answer.scope : null;
+}
+
+/**
+ * The key an approved send dispatches with. A key nobody minted (created_by
+ * null: the web mail client's shared key) acts as the approval's requester,
+ * the person whose request was held; a minted key always acts as its creator.
+ */
+export function approvalActingKey<K extends { created_by?: string | null }>(key: K, requestedBy: unknown): K {
+  if (key.created_by) return key;
+  if (typeof requestedBy !== "string" || !requestedBy) return key;
+  return { ...key, created_by: requestedBy };
 }

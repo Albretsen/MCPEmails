@@ -3,7 +3,7 @@
     "desc": "Para uma equipe: cada pessoa conecta suas próprias caixas de correio de forma privada, e os endereços compartilhados da empresa ficam disponíveis para toda a empresa.",
     "per": "/pessoa/mês",
     "billedYearly": "Cobrado ${yearly}/ano por pessoa",
-    "minimum": "Mínimo de {min} pessoas. Você paga por cada pessoa que conecta uma caixa de correio; administradores e visualizadores sem caixa própria não pagam.",
+    "minimum": "Mínimo de {min} pessoas. Você paga por cada pessoa que conecta uma caixa de correio; quem não tem caixa própria não paga, seja qual for o papel.",
     "features": [
       "Tudo do Pro",
       "Caixas de correio privadas para cada pessoa, até {private} cada",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "Para uma equipe",
       "title": "Cada um cuida do próprio e-mail, e dos endereços compartilhados em conjunto",
-      "sub": "O Business custa ${price} por mês para cada pessoa que conecta uma caixa de correio, mínimo de {min} pessoas. Administradores e visualizadores sem caixa própria não pagam.",
+      "sub": "O Business custa ${price} por mês para cada pessoa que conecta uma caixa de correio, mínimo de {min} pessoas. Quem não tem caixa própria não paga, seja qual for o papel.",
       "items": {
         "private": {
           "h": "Privada por padrão",
@@ -83,11 +83,11 @@
         "h": "Business, ${price} por pessoa por mês: uma equipe",
         "p": "Mínimo de {min} pessoas, cobrança por pessoa que conecta uma caixa. Até {private} caixas privadas por pessoa, mais {included} compartilhadas, depois ${addon} por mês cada."
       },
-      "note": "Administradores e visualizadores sem caixa própria não pagam, e você pode ter um espaço de trabalho separado por empresa ou cliente."
+      "note": "Quem não tem caixa própria não paga, e você pode ter um espaço de trabalho separado por empresa ou cliente."
     },
     "faq": {
       "0": "Sim, se uma pessoa cuida das caixas. O Pro é um login com até 10 caixas de correio conectadas, então uma só pessoa pode cuidar de contato@, vendas@, faturas@ e suporte@ com um agente. Quando colegas precisam do próprio login, o Business custa ${price} por pessoa por mês: a caixa de cada um continua privada, e os endereços compartilhados ficam disponíveis para toda a empresa.",
-      "5": "Free, Personal e Pro são planos de um login só. No Business cada colega entra com a própria conta e conecta a própria caixa, que continua privada, enquanto caixas compartilhadas como contato@ são de todos. Você paga ${price} por mês por cada pessoa que conecta uma caixa, mínimo de {min} pessoas. Administradores e visualizadores que não conectam nenhuma caixa não custam nada.",
+      "5": "Free, Personal e Pro são planos de um login só. No Business cada colega entra com a própria conta e conecta a própria caixa, que continua privada, enquanto caixas compartilhadas como contato@ são de todos. Você paga ${price} por mês por cada pessoa que conecta uma caixa, mínimo de {min} pessoas. Quem não conecta nenhuma caixa não custa nada, seja qual for o papel.",
       "extra": [
         {
           "q": "Um administrador pode ler minha caixa de correio?",

@@ -250,6 +250,31 @@ test('privacy details: a member gets 404; owner/admin get no subject, recipients
   }
 });
 
+test('privacy: a recipient-rule hold on someone else\'s private inbox shows owner/admin the recipients, never the subject', async () => {
+  for (const role of ['owner', 'admin']) {
+    seedPrivate(role);
+    tables.send_approvals[0].hold_reason = 'recipient_rule';
+    const queue = await (await list.GET()).json();
+    const row = queue.approvals[0];
+    assert.equal(row.redacted, true, role);
+    assert.deepEqual(row.summary, { to: ['colleague@example.com'], cc: [], bcc_count: 1 }, role);
+    assert.equal(JSON.stringify(queue).includes('Notes'), false, 'no subject in the queue');
+
+    const body = await (await get()).json();
+    assert.equal(body.redacted, true);
+    assert.deepEqual(body.to, ['colleague@example.com']);
+    assert.deepEqual(body.bcc, ['drop@evil.example'], 'the Bcc addresses the rule may have held');
+    assert.equal(body.bcc_count, 1);
+    assert.equal(body.subject, '');
+    assert.equal(JSON.stringify(body).includes('Notes'), false, 'no subject');
+    assert.equal(JSON.stringify(body).includes('secret words'), false, 'no body');
+  }
+  // A member still gets nothing.
+  seedPrivate('member');
+  tables.send_approvals[0].hold_reason = 'recipient_rule';
+  assert.equal((await get()).status, 404);
+});
+
 test('privacy decide (PATCH): the inbox owner decides their own private inbox as a member', async () => {
   seedPrivate('member', 'user-1');
   decisions.length = 0;

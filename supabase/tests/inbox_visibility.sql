@@ -9,8 +9,10 @@
 --     workspace_inbox_directory(), never the row (signature etc.);
 --   * a non-member sees nothing;
 --   * credential_inbox_scope() narrows a key to its creator's view;
---   * the owner trigger: default on insert, immutable on a live row, reset to
---     private when a soft-deleted row is revived by someone else;
+--   * the owner trigger: default on insert, immutable on a live row, a fresh
+--     row (never the old one) when someone else reconnects a disconnected
+--     address, reset to private when a revival with another owner slips by;
+--   * the visibility default follows business_seat_pricing (off = company);
 --   * the backfill rule and the business_seat_pricing switch row.
 --
 -- Run with: supabase test db
@@ -18,7 +20,7 @@
 
 BEGIN;
 
-SELECT plan(48);
+SELECT plan(53);
 
 -- ------------------------------------------------------------
 -- 0. Fixtures (as the migration owner, which bypasses RLS)
@@ -91,7 +93,9 @@ SELECT 'b150aaaa-0000-0000-0000-00000000000a', i, 'email_read', 'success'
 SELECT has_column('public', 'inboxes', 'owner_user_id', 'inboxes.owner_user_id exists');
 SELECT has_column('public', 'inboxes', 'visibility', 'inboxes.visibility exists');
 SELECT col_not_null('public', 'inboxes', 'visibility', 'visibility is NOT NULL');
-SELECT col_default_is('public', 'inboxes', 'visibility', 'private', 'new inboxes default to private');
+SELECT col_default_is('public', 'inboxes', 'visibility', 'default_inbox_visibility()',
+  'the visibility default is the switch-driven function');
+SELECT is(public.default_inbox_visibility(), 'company', 'switch off: new inboxes default to company (today''s behaviour)');
 SELECT throws_ok(
   $$UPDATE public.inboxes SET visibility = 'everyone' WHERE id = 'b1501111-0000-0000-0000-000000000002'$$,
   '23514', NULL, 'visibility only takes private or company');
@@ -116,8 +120,59 @@ INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status) V
   ('b1501111-0000-0000-0000-000000000009', 'b150aaaa-0000-0000-0000-00000000000a', 'imap', 'noowner@vis.invalid', 'active');
 SELECT is(
   (SELECT owner_user_id::text || '|' || visibility FROM public.inboxes WHERE id = 'b1501111-0000-0000-0000-000000000009'),
-  'b1500000-0000-0000-0000-0000000000a1|private',
-  'an insert without an owner falls back to the workspace owner, private');
+  'b1500000-0000-0000-0000-0000000000a1|company',
+  'an insert without an owner falls back to the workspace owner; switch off so company');
+UPDATE public.inboxes SET visibility = 'private' WHERE id = 'b1501111-0000-0000-0000-000000000009';
+
+-- Switch on: new inboxes start private.
+UPDATE public.pricing_switches SET enabled = true WHERE key = 'business_seat_pricing';
+INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status, owner_user_id) VALUES
+  ('b1501111-0000-0000-0000-00000000000a', 'b150aaaa-0000-0000-0000-00000000000a', 'imap', 'switchon@vis.invalid', 'active',
+   'b1500000-0000-0000-0000-0000000000a3');
+SELECT is((SELECT visibility FROM public.inboxes WHERE id = 'b1501111-0000-0000-0000-00000000000a'),
+  'private', 'switch on: a new inbox defaults to private');
+UPDATE public.pricing_switches SET enabled = false WHERE key = 'business_seat_pricing';
+DELETE FROM public.inboxes WHERE id = 'b1501111-0000-0000-0000-00000000000a';
+
+-- Reconnect after disconnect, the connect routes' upsert. M disconnected
+-- 'reuse@'; N connecting the same address gets a FRESH row, never M's id
+-- (and so never M's signature, instructions or history).
+INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status, owner_user_id, visibility,
+                            signature_text, ai_instructions, deleted_at) VALUES
+  ('b1501111-0000-0000-0000-00000000000b', 'b150aaaa-0000-0000-0000-00000000000a', 'imap', 'reuse@vis.invalid', 'active',
+   'b1500000-0000-0000-0000-0000000000a3', 'private', 'M old signature', 'M old instructions', now());
+INSERT INTO public.inboxes (workspace_id, provider, email_address, status, owner_user_id, deleted_at)
+VALUES ('b150aaaa-0000-0000-0000-00000000000a', 'imap', 'reuse@vis.invalid', 'active',
+        'b1500000-0000-0000-0000-0000000000a4', NULL)
+ON CONFLICT (workspace_id, email_address) DO UPDATE
+  SET owner_user_id = EXCLUDED.owner_user_id, status = EXCLUDED.status, deleted_at = NULL;
+SELECT is(
+  (SELECT count(*)::int FROM public.inboxes
+    WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a' AND email_address = 'reuse@vis.invalid'
+      AND deleted_at IS NULL AND id <> 'b1501111-0000-0000-0000-00000000000b'
+      AND owner_user_id = 'b1500000-0000-0000-0000-0000000000a4'
+      AND signature_text IS NULL AND ai_instructions IS NULL),
+  1, 'another person reconnecting a disconnected address gets a fresh row with none of the old settings');
+SELECT is(
+  (SELECT email_address || '|' || owner_user_id::text || '|' || (deleted_at IS NOT NULL)::text
+     FROM public.inboxes WHERE id = 'b1501111-0000-0000-0000-00000000000b'),
+  'reuse@vis.invalid#retired-b1501111-0000-0000-0000-00000000000b|b1500000-0000-0000-0000-0000000000a3|true',
+  'the old row stays soft-deleted and M''s, under a retired address');
+
+-- The same person reconnecting revives their own row (history comes back).
+UPDATE public.inboxes SET deleted_at = now()
+ WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a' AND email_address = 'reuse@vis.invalid';
+INSERT INTO public.inboxes (workspace_id, provider, email_address, status, owner_user_id, deleted_at)
+VALUES ('b150aaaa-0000-0000-0000-00000000000a', 'imap', 'reuse@vis.invalid', 'active',
+        'b1500000-0000-0000-0000-0000000000a4', NULL)
+ON CONFLICT (workspace_id, email_address) DO UPDATE
+  SET owner_user_id = EXCLUDED.owner_user_id, status = EXCLUDED.status, deleted_at = NULL;
+SELECT is(
+  (SELECT count(*)::int FROM public.inboxes
+    WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a' AND email_address LIKE 'reuse@vis.invalid%'),
+  2, 'the same person reconnecting revives their own row, no third row');
+DELETE FROM public.inboxes
+ WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a' AND email_address LIKE 'reuse@vis.invalid%';
 
 UPDATE public.inboxes SET owner_user_id = 'b1500000-0000-0000-0000-0000000000a4'
  WHERE id = 'b1501111-0000-0000-0000-000000000001';
@@ -126,14 +181,14 @@ SELECT is(
   'b1500000-0000-0000-0000-0000000000a3'::uuid,
   'the owner of a live inbox cannot be changed (a reconnect upsert by someone else keeps it)');
 
--- Revival by a different person starts private.
+-- Backstop: a direct revival with a different owner starts private.
 UPDATE public.inboxes SET visibility = 'company', deleted_at = now() WHERE id = 'b1501111-0000-0000-0000-000000000009';
 UPDATE public.inboxes SET deleted_at = NULL, owner_user_id = 'b1500000-0000-0000-0000-0000000000a4'
  WHERE id = 'b1501111-0000-0000-0000-000000000009';
 SELECT is(
   (SELECT owner_user_id::text || '|' || visibility FROM public.inboxes WHERE id = 'b1501111-0000-0000-0000-000000000009'),
   'b1500000-0000-0000-0000-0000000000a4|private',
-  'a soft-deleted inbox revived by someone else is theirs and private');
+  'a soft-deleted inbox revived directly by someone else is theirs and private');
 UPDATE public.inboxes SET deleted_at = now() WHERE id = 'b1501111-0000-0000-0000-000000000009';
 
 -- ------------------------------------------------------------
@@ -184,7 +239,7 @@ SELECT is((SELECT count(*)::int FROM public.inboxes WHERE id = 'b1501111-0000-00
 SELECT is((SELECT count(*)::int FROM public.reminders), 1, '[N] sees reminders of the company inbox only');
 SELECT is((SELECT count(*)::int FROM public.scheduled_sends), 1, '[N] sees scheduled sends of the company inbox only');
 SELECT is((SELECT count(*)::int FROM public.activity_log WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a'),
-  2, '[N] sees activity of the company inbox and inbox-less rows only');
+  1, '[N] sees activity of the company inbox only (the inbox-less row is the owner''s, 20261111130000)');
 SELECT is((SELECT count(*)::int FROM public.workspace_inbox_directory('b150aaaa-0000-0000-0000-00000000000a')),
   1, '[N] the directory lists only what N can see');
 UPDATE public.scheduled_sends SET status = 'cancelled' WHERE inbox_id = 'b1501111-0000-0000-0000-000000000001';

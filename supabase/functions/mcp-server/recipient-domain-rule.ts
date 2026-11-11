@@ -35,6 +35,18 @@ export const RECIPIENT_RULE_UNAVAILABLE = "recipient_rule_unavailable";
 export const RECIPIENT_RULE_REFUSED = "recipient_rule_refused";
 
 /**
+ * The approved-send re-run found recipients outside the rule, and the person
+ * who approved it is not an owner or admin. Nothing was sent; the dispatcher
+ * puts the approval back on the hold as a recipient-rule hold.
+ */
+export const RECIPIENT_RULE_REHOLD = "recipient_rule_rehold";
+
+/** Roles whose approval stands for the recipient rule (the company's policy). */
+export function approverOverridesRecipientRule(role: unknown): boolean {
+  return role === "owner" || role === "admin";
+}
+
+/**
  * The stored list as the rule uses it: lower-cased, trimmed, without a leading
  * `@`, de-duplicated. null (or an empty list) means any recipient is allowed.
  */

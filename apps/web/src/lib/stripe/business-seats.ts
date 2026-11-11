@@ -17,11 +17,13 @@ import {
  * before it reads anything else. A read that fails counts as off.
  *
  * WHO IS BILLABLE for a Business subscription owned by user U: the distinct
- * users among U, plus every member with role `admin` or `member` of a
- * non-deleted workspace U owns who owns at least one non-deleted mailbox in
- * that same workspace (`inboxes.owner_user_id`). Viewers never count. An admin
- * with no mailbox of their own is free. A person in two of U's workspaces is
- * one person. Stripe quantity = max(BUSINESS_MIN_SEATS, billable people).
+ * users among U, plus every member of a non-deleted workspace U owns who owns
+ * at least one non-deleted mailbox in that same workspace
+ * (`inboxes.owner_user_id`), WHATEVER their role: a viewer who still owns a
+ * mailbox (for example one demoted after connecting it) counts. Anyone without
+ * a mailbox of their own is free, admins included. A person in two of U's
+ * workspaces is one person. Stripe quantity = max(BUSINESS_MIN_SEATS,
+ * billable people).
  *
  * WHICH SUBSCRIPTIONS. Only one whose base item is on a seat price
  * (STRIPE_PRICE_BUSINESS_SEAT_*). The flat $39 Business, the founder price and
@@ -55,9 +57,6 @@ import {
 export const BUSINESS_SEAT_SWITCH_KEY = 'business_seat_pricing';
 
 type Db = SupabaseClient<Database>;
-
-/** Roles that become billable once they own a mailbox. */
-const BILLABLE_ROLES = new Set(['admin', 'member']);
 
 // ---------------------------------------------------------------------------
 // The switch
@@ -139,7 +138,6 @@ export function billablePeopleFrom(input: {
   }
   const people = new Set<string>([input.ownerId]);
   for (const member of input.members) {
-    if (!BILLABLE_ROLES.has(member.role)) continue;
     if (ownsInboxIn.has(`${member.workspace_id}:${member.user_id}`)) people.add(member.user_id);
   }
   return people.size;
@@ -206,7 +204,6 @@ export async function countBillablePeople(db: Db, ownerId: string): Promise<numb
         .from('workspace_members')
         .select('workspace_id, user_id, role')
         .in('workspace_id', ids)
-        .in('role', [...BILLABLE_ROLES])
         .order('workspace_id', { ascending: true })
         .order('user_id', { ascending: true })
         .range(from, to),

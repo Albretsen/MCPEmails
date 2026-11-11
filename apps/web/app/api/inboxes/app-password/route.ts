@@ -457,8 +457,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
-      // The person connecting owns it; visibility keeps its 'private' default
-      // (a DB trigger keeps the owner of a live row unchanged on reconnect).
+      // The person connecting owns it. visibility is left to the column default
+      // (company while business_seat_pricing is off, private when on). A DB
+      // trigger keeps the owner of a live row on reconnect, and gives another
+      // person reconnecting a disconnected address a fresh row.
       owner_user_id: user.id,
       provider: 'imap',
       service,

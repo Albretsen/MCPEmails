@@ -77,18 +77,28 @@ export function checkoutTaxParams(env: Env = process.env):
  *   customer_update     REQUIRED, not cosmetic. Every session we create passes
  *                       an existing `customer` (getOrCreateStripeCustomer), and
  *                       Stripe refuses tax_id_collection on an existing
- *                       customer unless Checkout may write the name and the
- *                       address it collects back onto that customer.
+ *                       customer unless Checkout may write the business name
+ *                       back onto it: `name: 'auto'`. `address: 'auto'` is
+ *                       added only while automatic tax is on, which needs the
+ *                       billing address on the customer to calculate tax;
+ *                       without it Checkout has no reason to overwrite the
+ *                       customer's address.
  *
- * Tax calculation is still decided by `checkoutTaxParams` alone.
+ * Tax calculation is still decided by `checkoutTaxParams` alone. Pass whether
+ * THIS session sends `automatic_tax` (STRIPE_FORCE_USD can drop it).
  */
-export function checkoutPaperworkParams(): {
-  tax_id_collection: { enabled: true };
-  customer_update: { name: 'auto'; address: 'auto' };
-} {
+export function checkoutPaperworkParams(automaticTax: boolean):
+  | { tax_id_collection: { enabled: true }; customer_update: { name: 'auto' } }
+  | { tax_id_collection: { enabled: true }; customer_update: { name: 'auto'; address: 'auto' } } {
+  if (automaticTax) {
+    return {
+      tax_id_collection: { enabled: true },
+      customer_update: { name: 'auto', address: 'auto' },
+    };
+  }
   return {
     tax_id_collection: { enabled: true },
-    customer_update: { name: 'auto', address: 'auto' },
+    customer_update: { name: 'auto' },
   };
 }
 

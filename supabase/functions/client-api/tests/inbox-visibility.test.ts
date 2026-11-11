@@ -481,3 +481,22 @@ Deno.test("webhook store: an endpoint acts as its creator (null: the owner, insi
   assertEquals((db.recorded[3].args as { p_user_id: unknown }).p_user_id, null);
   assertEquals(await store.endpointSeesInbox("ep-gone", COMPANY), false, "no endpoint row: nothing");
 });
+
+Deno.test("a send scheduled from the web client on a member's private inbox acts as that member, not the shared key", async () => {
+  // mcp-server stores scheduled_sends.created_by = apiKey.created_by, and the
+  // dispatcher checks THAT person can still use the mailbox. The shared web
+  // client key's own created_by is null (the workspace owner, who cannot see
+  // B's private inbox), so the executor must get B.
+  const { seam, handle } = rig();
+  const res = await handle(mail(tokenB, "schedule_create", PRIVATE_B, {
+    to: ["x@example.test"],
+    subject: "s",
+    body: "b",
+    send_at: "2099-01-01T09:00:00Z",
+    idempotency_key: "k-sched-1",
+  }));
+  assertEquals(res.status, 200);
+  const call = seam.calls.find((c) => c.tool === "schedule_create")!;
+  assertEquals(call.apiKey.created_by, OTHER_USER_ID);
+  assertEquals(call.apiKey.inbox_ids, [PRIVATE_B, COMPANY]);
+});

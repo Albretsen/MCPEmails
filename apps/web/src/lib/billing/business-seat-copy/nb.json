@@ -3,7 +3,7 @@
     "desc": "For et team: hver person kobler til sine egne postkasser privat, og firmaets felles adresser deles med hele firmaet.",
     "per": "/person/måned",
     "billedYearly": "Faktureres ${yearly}/år per person",
-    "minimum": "Minst {min} personer. Du betaler for hver person som kobler til en postkasse; administratorer og lesere uten egen postkasse er gratis.",
+    "minimum": "Minst {min} personer. Du betaler for hver person som kobler til en postkasse; alle uten egen postkasse er gratis, uansett rolle.",
     "features": [
       "Alt i Pro",
       "Private postkasser for hver person, opptil {private} hver",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "For et team",
       "title": "Alle tar sin egen e-post, og de felles adressene sammen",
-      "sub": "Business koster ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Administratorer og lesere uten egen postkasse er gratis.",
+      "sub": "Business koster ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Alle uten egen postkasse er gratis, uansett rolle.",
       "items": {
         "private": {
           "h": "Privat som standard",
@@ -83,11 +83,11 @@
         "h": "Business, ${price} per person i måneden: et team",
         "p": "Minst {min} personer, fakturert for hver person som kobler til en postkasse. Opptil {private} private postkasser per person, pluss {included} felles, deretter ${addon} i måneden per stykk."
       },
-      "note": "Administratorer og lesere uten egen postkasse er gratis, og dere kan ha et eget arbeidsområde per firma eller kunde."
+      "note": "Alle uten egen postkasse er gratis, og dere kan ha et eget arbeidsområde per firma eller kunde."
     },
     "faq": {
       "0": "Ja, hvis én person håndterer postkassene. Pro er én innlogging med opptil 10 tilkoblede postkasser, så én person kan drive info@, salg@, faktura@ og support@ fra én agent. Når kolleger trenger sin egen innlogging, koster Business ${price} per person i måneden: hver persons egen postkasse forblir privat, og de felles adressene deles med hele firmaet.",
-      "5": "Free, Personal og Pro er planer med én innlogging. På Business logger hver kollega inn med sin egen konto og kobler til sin egen postkasse, som forblir privat for dem, mens felles postkasser som info@ deles. Du betaler ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Administratorer og lesere som ikke kobler til noen postkasse, koster ingenting.",
+      "5": "Free, Personal og Pro er planer med én innlogging. På Business logger hver kollega inn med sin egen konto og kobler til sin egen postkasse, som forblir privat for dem, mens felles postkasser som info@ deles. Du betaler ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Alle som ikke kobler til noen postkasse, koster ingenting, uansett rolle.",
       "extra": [
         {
           "q": "Kan en administrator lese postkassen min?",

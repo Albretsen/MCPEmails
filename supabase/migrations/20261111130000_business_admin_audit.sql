@@ -30,6 +30,10 @@
 -- ON DELETE action (there is no user_id index, and one is not worth its write
 -- cost for a column nothing filters on). A dangling id after an account is
 -- deleted names nobody: the audit view shows it as a former member.
+-- activity_log is the hottest table: never queue behind a long lock (and
+-- block every tool call behind us). Fail fast instead; re-run when quiet.
+SET lock_timeout = '3s';
+
 ALTER TABLE public.activity_log ADD COLUMN IF NOT EXISTS user_id uuid;
 
 COMMENT ON COLUMN public.activity_log.user_id IS
@@ -77,6 +81,85 @@ CREATE TRIGGER activity_log_fill_user_id
 -- SELECT, so nothing else is needed; stated for the catalog tests.
 GRANT SELECT (user_id) ON public.activity_log TO authenticated;
 
+-- A call that named no inbox (inbox_id null: a cross-inbox "all" call, a
+-- listing) can still reveal what someone else's agent did. Members see such
+-- a row only when they made it; owners and admins see every row (they already
+-- see every call's metadata in the audit view). Rows with an inbox keep the
+-- visibility rule from 20261111120000. Replaces the policy on the parent and
+-- on every partition, and the one future partitions get.
+DO $$
+DECLARE
+  pname text;
+BEGIN
+  FOR pname IN
+    SELECT 'activity_log'
+    UNION ALL
+    SELECT c.relname
+      FROM pg_inherits i
+      JOIN pg_class c      ON c.oid = i.inhrelid
+      JOIN pg_class parent ON parent.oid = i.inhparent
+      JOIN pg_namespace n  ON n.oid = parent.relnamespace
+     WHERE n.nspname = 'public' AND parent.relname = 'activity_log'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pname || '_select_members', pname);
+    EXECUTE format(
+      'CREATE POLICY %I ON public.%I FOR SELECT TO authenticated USING ('
+      'workspace_id = ANY(public.my_workspace_ids()) '
+      'AND (inbox_id = ANY ((SELECT public.my_visible_inbox_ids())::uuid[]) '
+      'OR (inbox_id IS NULL AND (user_id = (SELECT auth.uid()) '
+      'OR workspace_id = ANY ((SELECT public.sso_admin_workspace_ids())::uuid[])))))',
+      pname || '_select_members', pname
+    );
+  END LOOP;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.ensure_activity_log_partitions(months_ahead int DEFAULT 3)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  target_date  date;
+  p_name       text;
+  range_start  text;
+  range_end    text;
+  i            int;
+BEGIN
+  FOR i IN 0..months_ahead LOOP
+    target_date := date_trunc('month', now())::date + (i || ' months')::interval;
+    p_name      := 'activity_log_' || to_char(target_date, 'YYYY_MM');
+    range_start := to_char(target_date, 'YYYY-MM-DD');
+    range_end   := to_char(target_date + interval '1 month', 'YYYY-MM-DD');
+
+    IF NOT EXISTS (
+      SELECT 1
+      FROM   pg_class     c
+      JOIN   pg_namespace n ON n.oid = c.relnamespace
+      WHERE  n.nspname = 'public'
+      AND    c.relname  = p_name
+    ) THEN
+      EXECUTE format(
+        'CREATE TABLE public.%I PARTITION OF public.activity_log FOR VALUES FROM (%L) TO (%L)',
+        p_name, range_start, range_end
+      );
+      EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', p_name);
+      EXECUTE format(
+        'CREATE POLICY %I ON public.%I FOR SELECT TO authenticated USING ('
+        'workspace_id = ANY(public.my_workspace_ids()) '
+        'AND (inbox_id = ANY ((SELECT public.my_visible_inbox_ids())::uuid[]) '
+        'OR (inbox_id IS NULL AND (user_id = (SELECT auth.uid()) '
+        'OR workspace_id = ANY ((SELECT public.sso_admin_workspace_ids())::uuid[])))))',
+        p_name || '_select_members', p_name
+      );
+    END IF;
+  END LOOP;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION public.ensure_activity_log_partitions(int) FROM PUBLIC, anon, authenticated;
+
+RESET lock_timeout;
+
 -- ------------------------------------------------------------
 -- 2. workspace_audit_events
 -- ------------------------------------------------------------
@@ -104,10 +187,11 @@ CREATE TABLE IF NOT EXISTS public.workspace_audit_events (
                  )),
   -- What it was done to: an invited address, a member's user id, an inbox id.
   target         text CHECK (target IS NULL OR length(target) <= 320),
-  -- Small, value-free context: a role, a visibility, a domain list. Never
-  -- message content, never a token.
+  -- Small, value-free context: a role, a visibility, a domain-list diff
+  -- (recipientRuleAuditDetails: at most 15 domains per list plus counts).
+  -- Never message content, never a token. 16 KB leaves the largest diff room.
   details        jsonb NOT NULL DEFAULT '{}'::jsonb
-                   CHECK (jsonb_typeof(details) = 'object' AND pg_column_size(details) <= 4096),
+                   CHECK (jsonb_typeof(details) = 'object' AND pg_column_size(details) <= 16384),
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 

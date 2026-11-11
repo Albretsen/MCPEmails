@@ -5,6 +5,7 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
+  approvalActingKey,
   credentialCanReachInbox,
   effectiveInboxIds,
   inboxAllowed,
@@ -157,6 +158,28 @@ Deno.test("credentialCanReachInbox: acts as the key's creator; missing or foreig
   assert(!(await credentialCanReachInbox(db, "k-x", WS, PRIV_A)));
   assert(!(await credentialCanReachInbox(db, "missing", WS, COMPANY)));
   assert(!(await credentialCanReachInbox(db, null, WS, COMPANY)));
+});
+
+Deno.test("credentialCanReachInbox: a stored row's created_by wins over the shared web client key's null creator", async () => {
+  // The web mail client runs on a key nobody minted (created_by null, which
+  // acts as the workspace owner A). The row records who really asked.
+  const db = fakeDb({ keys: [{ id: "k-web", workspace_id: WS, created_by: null, inbox_ids: null }] });
+  assert(await credentialCanReachInbox(db, "k-web", WS, PRIV_A), "no created_by: acts as the owner");
+  assert(await credentialCanReachInbox(db, "k-web", WS, PRIV_A, A), "A set it up on A's private inbox");
+  assert(!(await credentialCanReachInbox(db, "k-web", WS, PRIV_A, B)), "B never reaches A's private inbox");
+  assert(await credentialCanReachInbox(db, "k-web", WS, COMPANY, B));
+  const last = db.rpcCalls.at(-1) as Record<string, unknown>;
+  assertEquals(last.p_user_id, B, "the scope is asked for the acting user");
+});
+
+Deno.test("approvalActingKey: the shared key acts as the requester; a minted key keeps its creator", () => {
+  type Key = { id: string; created_by: string | null };
+  const web: Key = { id: "k-web", created_by: null };
+  const minted: Key = { id: "k-a", created_by: A };
+  assertEquals(approvalActingKey(web, B), { id: "k-web", created_by: B });
+  assertEquals(approvalActingKey(minted, B), { id: "k-a", created_by: A });
+  assertEquals(approvalActingKey(web, null), { id: "k-web", created_by: null });
+  assertEquals(approvalActingKey(web, 42), { id: "k-web", created_by: null });
 });
 
 // ── inboxesVisibleToAudienceOf (morning brief) ─────────────────────────────

@@ -14,7 +14,7 @@
 
 BEGIN;
 
-SELECT plan(38);
+SELECT plan(40);
 
 -- ------------------------------------------------------------
 -- 0. Fixtures (as the migration owner, which bypasses RLS)
@@ -113,7 +113,10 @@ INSERT INTO public.activity_log (id, workspace_id, api_key_id, inbox_id, tool_na
    'c2a22222-0000-0000-0000-000000000001', 'c2a11111-0000-0000-0000-000000000002', 'email_read', 'success');
 INSERT INTO public.activity_log (id, workspace_id, api_key_id, user_id, tool_name, status) VALUES
   ('c2a33333-0000-0000-0000-000000000004', 'c2aaaaaa-0000-0000-0000-00000000000a',
-   'c2a22222-0000-0000-0000-000000000002', 'c2a00000-0000-0000-0000-0000000000a2', 'email_read', 'success');
+   'c2a22222-0000-0000-0000-000000000002', 'c2a00000-0000-0000-0000-0000000000a2', 'email_read', 'success'),
+  -- M's own cross-inbox call (no inbox named).
+  ('c2a33333-0000-0000-0000-000000000006', 'c2aaaaaa-0000-0000-0000-00000000000a',
+   'c2a22222-0000-0000-0000-000000000001', 'c2a00000-0000-0000-0000-0000000000a3', 'email_search', 'success');
 
 SELECT is((SELECT user_id FROM public.activity_log WHERE id = 'c2a33333-0000-0000-0000-000000000001'),
   'c2a00000-0000-0000-0000-0000000000a3'::uuid, 'a key''s call is filled with its creator');
@@ -192,15 +195,21 @@ SELECT is((SELECT count(*)::int FROM public.workspace_audit_events), 2, '[owner]
 
 SET LOCAL "request.jwt.claims" TO '{"sub":"c2a00000-0000-0000-0000-0000000000a2","role":"authenticated"}';
 SELECT is((SELECT count(*)::int FROM public.workspace_audit_events), 2, '[admin] reads them too');
+SELECT is((SELECT count(*)::int FROM public.activity_log
+            WHERE workspace_id = 'c2aaaaaa-0000-0000-0000-00000000000a' AND inbox_id IS NULL),
+  3, '[admin] sees every no-inbox call in the workspace');
 
 SET LOCAL "request.jwt.claims" TO '{"sub":"c2a00000-0000-0000-0000-0000000000a3","role":"authenticated"}';
 SELECT is((SELECT count(*)::int FROM public.workspace_audit_events), 0, '[member] reads none');
 SELECT is(
   (SELECT array_agg(user_id::text ORDER BY id) FROM public.activity_log WHERE workspace_id = 'c2aaaaaa-0000-0000-0000-00000000000a'),
   ARRAY['c2a00000-0000-0000-0000-0000000000a3', 'c2a00000-0000-0000-0000-0000000000a1',
-        'c2a00000-0000-0000-0000-0000000000a1', 'c2a00000-0000-0000-0000-0000000000a2',
-        'c2a00000-0000-0000-0000-0000000000a3'],
-  '[member] reads user_id on the calls RLS shows them (company inbox, no-inbox rows, their own private inbox)');
+        'c2a00000-0000-0000-0000-0000000000a3', 'c2a00000-0000-0000-0000-0000000000a3'],
+  '[member] reads the company inbox''s calls, their own private inbox''s, and only THEIR OWN no-inbox calls');
+SELECT is((SELECT count(*)::int FROM public.activity_log
+            WHERE workspace_id = 'c2aaaaaa-0000-0000-0000-00000000000a' AND inbox_id IS NULL
+              AND user_id IS DISTINCT FROM 'c2a00000-0000-0000-0000-0000000000a3'),
+  0, '[member] never sees someone else''s call that named no inbox');
 SELECT throws_ok(
   $$INSERT INTO public.workspace_audit_events (workspace_id, kind) VALUES ('c2aaaaaa-0000-0000-0000-00000000000a', 'member_left')$$,
   '42501', NULL, '[member] cannot write a team change');

@@ -669,3 +669,19 @@ Deno.test("dispatcher: a follow-up whose key can no longer reach its inbox is ca
   assertEquals(world.checks.includes("company"), true);
   assert(asked.some(([k, ws, i]) => k === "key-b" && ws === "ws-1" && i === "private-of-someone-else"));
 });
+
+Deno.test("dispatcher: a reminder set from the web mail client is checked as the person who set it, not the shared key", async () => {
+  // The web client's key has no creator (it would act as the workspace
+  // owner); the row's created_by is the member whose private inbox it is.
+  const rows = [row({ inbox_id: "member-private", api_key_id: "key-web", created_by: "member-1" })];
+  const world = fakeWorld(rows);
+  const asked: Array<[string, string, string, string | null]> = [];
+  world.deps.keyCanReach = (keyId, ws, inboxId, createdBy) => {
+    asked.push([keyId, ws, inboxId, createdBy]);
+    return Promise.resolve(createdBy === "member-1");
+  };
+  await runRemindersDispatch(world.deps);
+  assertEquals(asked, [["key-web", "ws-1", "member-private", "member-1"]]);
+  assert(rows[0].status !== "cancelled", "the member's own reminder keeps running");
+  assertEquals(world.checks.includes("member-private"), true);
+});

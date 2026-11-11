@@ -2,8 +2,9 @@
 // Business billed per person: who is billable, and the seat quantity sync.
 //
 // The properties that cost a customer money if they break:
-//   1. Viewers never count; an admin or member counts only once they own a
-//      mailbox in one of the owner's workspaces; one person counts once.
+//   1. A member counts once they own a mailbox in one of the owner's
+//      workspaces, whatever their role (viewer included); anyone without a
+//      mailbox (admins included) is free; one person counts once.
 //   2. The quantity never drops below 2.
 //   3. Adding a person bills now (always_invoice); removing one credits the
 //      unused rest (create_prorations); nothing changed calls no update.
@@ -172,7 +173,7 @@ const i = (workspace_id: string, owner_user_id: string | null): InboxOwner => ({
 
 // ── Pure ────────────────────────────────────────────────────────────────────
 
-test('billable people: owner always, members and admins with a mailbox, never viewers', () => {
+test('billable people: owner always, anyone who owns a mailbox whatever their role, nobody without one', () => {
   assert.equal(billablePeopleFrom({ ownerId: OWNER, members: [], inboxes: [] }), 1);
   assert.equal(
     billablePeopleFrom({
@@ -194,7 +195,17 @@ test('billable people: owner always, members and admins with a mailbox, never vi
         i(WS1, null),
       ],
     }),
-    3,
+    4,
+    'owner, member-with, admin-with and viewer-with; member-without and admin-without are free',
+  );
+  assert.equal(
+    billablePeopleFrom({
+      ownerId: OWNER,
+      members: [m(WS1, 'viewer-without', 'viewer'), m(WS1, 'admin-without', 'admin')],
+      inboxes: [i(WS1, OWNER)],
+    }),
+    1,
+    'viewers and admins without a mailbox of their own are free',
   );
 });
 
@@ -296,7 +307,7 @@ test('nothing changed: no update call at all', async () => {
 test('a third person with a mailbox: quantity 3, invoiced now', async () => {
   const { db } = fakeDb({
     members: [m(WS1, 'p', 'member'), m(WS2, 'q', 'admin'), m(WS1, 'v', 'viewer')],
-    inboxOwners: [i(WS1, 'p'), i(WS2, 'q'), i(WS1, 'v')],
+    inboxOwners: [i(WS1, 'p'), i(WS2, 'q')],
   });
   const { stripe, updates } = fakeStripe({ quantity: 2 });
   const result = await quiet(() => syncBusinessSeats(OWNER, { db, stripe, switchOn: true }));
@@ -304,6 +315,17 @@ test('a third person with a mailbox: quantity 3, invoiced now', async () => {
   assert.equal(updates.length, 1);
   assert.deepEqual(updates[0].items, [{ id: 'si_base', quantity: 3 }]);
   assert.equal(updates[0].proration_behavior, 'always_invoice');
+});
+
+test('a viewer who still owns a mailbox is billed; one without a mailbox is not', async () => {
+  const { db } = fakeDb({
+    members: [m(WS1, 'p', 'member'), m(WS1, 'q', 'member'), m(WS1, 'v', 'viewer'), m(WS1, 'w', 'viewer')],
+    inboxOwners: [i(WS1, 'p'), i(WS1, 'q'), i(WS1, 'v')],
+  });
+  const { stripe, updates } = fakeStripe({ quantity: 2 });
+  const result = await quiet(() => syncBusinessSeats(OWNER, { db, stripe, switchOn: true }));
+  assert.deepEqual(result, { status: 'updated', from: 2, to: 4 });
+  assert.deepEqual(updates[0].items, [{ id: 'si_base', quantity: 4 }]);
 });
 
 test('people leave: quantity falls to the live count, credited, never below two', async () => {

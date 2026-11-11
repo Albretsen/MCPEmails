@@ -90,8 +90,9 @@ export function allVisible(ids: readonly string[], visible: Set<string>): boolea
  * Before a connect route writes (workspace_id, email_address): is there a
  * LIVE inbox with that address that this user may not see? The upsert would
  * otherwise overwrite another person's credentials on their private inbox.
- * A soft-deleted row is a fresh connection (the DB trigger hands it to the new
- * owner and makes it private again), so it never blocks.
+ * A soft-deleted row never blocks: the DB trigger gives a different person a
+ * fresh row (the old one keeps its owner and history) and lets the same
+ * person revive their own.
  *
  * `exists` says whether a live row is there at all, read with the service
  * role so a hidden row still counts (the plan cap and reconnect logic need the

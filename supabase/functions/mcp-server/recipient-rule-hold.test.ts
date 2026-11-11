@@ -35,8 +35,17 @@ const RULE = { workspaces: [{ allowed_recipient_domains: ["corp.example"] }] };
 const DRAFT_ID = "r-77";
 const MESSAGE_ID = "m-77";
 
+type Original = {
+  from: string;
+  to?: string;
+  cc?: string;
+  replyTo?: string;
+  /** The RAW To header (format=raw), when it differs from Gmail's decoded metadata value. */
+  rawTo?: string;
+};
+
 /** A Gmail that answers sends, one draft and one original message. */
-function gmail(original: { from: string; to?: string; cc?: string; replyTo?: string }, draftTo = "in@corp.example") {
+function gmail(original: Original, draftTo = "in@corp.example") {
   const sends: string[] = [];
   const handler: harness.ProviderHandler = (call) => {
     const url = new URL(call.url);
@@ -63,6 +72,19 @@ function gmail(original: { from: string; to?: string; cc?: string; replyTo?: str
         },
       });
     }
+    if (url.pathname.endsWith(`/messages/${MESSAGE_ID}`) && call.method === "GET" && url.searchParams.get("format") === "raw") {
+      // The raw header block, as the send's gmailReplyAddressHeaders reads it.
+      const block = [
+        `From: ${original.from}`,
+        `To: ${original.rawTo ?? original.to ?? "owner@gmail-harness.example"}`,
+        ...(original.cc ? [`Cc: ${original.cc}`] : []),
+        ...(original.replyTo ? [`Reply-To: ${original.replyTo}`] : []),
+        "Subject: Question",
+        "Message-ID: <orig-77@corp.example>",
+        "", "Body", "",
+      ].join("\r\n");
+      return harness.json({ id: MESSAGE_ID, raw: harness.b64url(block) });
+    }
     if (url.pathname.endsWith(`/messages/${MESSAGE_ID}`) && call.method === "GET") {
       const headers = [
         { name: "From", value: original.from },
@@ -87,7 +109,7 @@ function gmail(original: { from: string; to?: string; cc?: string; replyTo?: str
   return { handler, sends };
 }
 
-async function run(tool: string, args: Row, opts: { rule?: boolean; key?: Row; original?: { from: string; to?: string; cc?: string; replyTo?: string }; draftTo?: string } = {}) {
+async function run(tool: string, args: Row, opts: { rule?: boolean; key?: Row; original?: Original; draftTo?: string } = {}) {
   const { handler, sends } = gmail(opts.original ?? { from: "asker@corp.example" }, opts.draftTo);
   const inbox = await harness.inboxRow("gmail");
   const { value, world } = await harness.runToolWithInboxes(
@@ -210,6 +232,36 @@ Deno.test("email_reply: Reply-To decides, and reply_all brings in the thread", a
     await run("email_reply", { message_id: MESSAGE_ID, body: "Thanks", bcc: ["spy@elsewhere.example"] }, { original: { from: "colleague@corp.example" } }),
     "email_reply",
   );
+});
+
+Deno.test("email_reply on Gmail: reply-all is checked with the send's own raw-header parser, not Gmail's decoded values", async () => {
+  // The raw To carries an RFC 2047 display name that DECODES to an allowed
+  // address and a comma, in front of the real, disallowed mailbox. Gmail's
+  // metadata hands the decoded value over, which a list split would read as
+  // two mailboxes, the first one allowed. The send parses the raw header
+  // (one mailbox: out@elsewhere.example), so the rule must too.
+  const r = await run("email_reply", { message_id: MESSAGE_ID, body: "Thanks", reply_all: true }, {
+    original: {
+      from: "colleague@corp.example",
+      // What a decoded-value parse can come away with: only the allowed
+      // address. The old gate (summary read + list split) let this through.
+      to: "in@corp.example",
+      rawTo: "=?UTF-8?B?aW5AY29ycC5leGFtcGxlLA==?= <out@elsewhere.example>",
+    },
+  });
+  assertRuleHold(r, "email_reply");
+  assert(
+    r.world.calls.some((c) => c.url.includes(`/messages/${MESSAGE_ID}`) && c.url.includes("format=raw")),
+    "the rule read the raw headers, as the send does",
+  );
+});
+
+Deno.test("email_reply on Gmail: a reply-all whose raw recipients are all inside goes out", async () => {
+  const r = await run("email_reply", { message_id: MESSAGE_ID, body: "Thanks", reply_all: true }, {
+    original: { from: "colleague@corp.example", to: "owner@gmail-harness.example", cc: "In Two <in2@corp.example>" },
+  });
+  assertEquals(r.approval, undefined);
+  assertEquals(r.sends.length, 1);
 });
 
 Deno.test("email_reply: an original that cannot be read is held, never sent", async () => {

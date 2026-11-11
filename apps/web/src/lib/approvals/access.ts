@@ -10,7 +10,11 @@ import { isInboxVisibleTo, type VisibilityRow } from '@/lib/inboxes/visibility';
  *                                  role: the mailbox is theirs alone)
  *   not visible, owner/admin       metadata only (no recipients, subject or
  *                                  body), and they may still decide: approving
- *                                  sends is a workspace policy right
+ *                                  sends is a workspace policy right. A send
+ *                                  the RECIPIENT RULE held also shows them the
+ *                                  To/Cc/Bcc addresses (`showRecipients`): the
+ *                                  recipients are the whole question they are
+ *                                  asked. Subject and body stay redacted.
  *   not visible, anyone else       hidden: the same 404 as a missing id
  *
  * A held send with no inbox (inbox_id null) follows the role rule alone.
@@ -23,6 +27,8 @@ export interface ApprovalAccess {
   hidden: boolean;
   redacted: boolean;
   canDecide: boolean;
+  /** Redacted, but the recipient addresses may be shown (recipient-rule holds). */
+  showRecipients?: boolean;
 }
 
 /** send_approvals.hold_reason of a send the workspace recipient rule held. */
@@ -38,9 +44,10 @@ export function approvalAccess(
   if (!inbox) return { hidden: false, redacted: false, canDecide: roleDecides };
   const visible = isInboxVisibleTo(inbox, userId);
   if (!visible) {
-    return roleDecides
-      ? { hidden: false, redacted: true, canDecide: true }
-      : { hidden: true, redacted: false, canDecide: false };
+    if (!roleDecides) return { hidden: true, redacted: false, canDecide: false };
+    return holdReason === RECIPIENT_RULE_HOLD_REASON
+      ? { hidden: false, redacted: true, canDecide: true, showRecipients: true }
+      : { hidden: false, redacted: true, canDecide: true };
   }
   const ownsPrivate =
     holdReason !== RECIPIENT_RULE_HOLD_REASON &&
@@ -48,9 +55,24 @@ export function approvalAccess(
   return { hidden: false, redacted: false, canDecide: roleDecides || ownsPrivate };
 }
 
-/** The columns a redacted list row keeps. Everything else is content. */
-export function redactApprovalRow(row: Record<string, unknown>): Record<string, unknown> {
+/**
+ * The columns a redacted list row keeps. Everything else is content. With
+ * `recipients` (a recipient-rule hold seen by an owner/admin) the summary
+ * keeps To, Cc and the Bcc count; the subject never.
+ */
+export function redactApprovalRow(
+  row: Record<string, unknown>,
+  opts: { recipients?: boolean; summary?: Record<string, unknown> } = {},
+): Record<string, unknown> {
   const inbox = (row.inboxes ?? null) as { email_address?: string | null } | null;
+  const s = opts.summary ?? {};
+  const summary = opts.recipients
+    ? {
+        to: Array.isArray(s.to) ? s.to : [],
+        cc: Array.isArray(s.cc) ? s.cc : [],
+        ...(typeof s.bcc_count === 'number' ? { bcc_count: s.bcc_count } : {}),
+      }
+    : {};
   return {
     id: row.id,
     inbox_id: row.inbox_id ?? null,
@@ -61,7 +83,7 @@ export function redactApprovalRow(row: Record<string, unknown>): Record<string, 
     decided_at: row.decided_at ?? null,
     decided_via: row.decided_via ?? null,
     inboxes: inbox ? { email_address: inbox.email_address ?? null, display_name: null } : null,
-    summary: {},
+    summary,
     redacted: true,
   };
 }

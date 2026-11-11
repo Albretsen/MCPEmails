@@ -6,7 +6,8 @@
 -- WHAT THIS ADDS
 -- --------------
 --   inboxes.owner_user_id  the person who connected the mailbox
---   inboxes.visibility     'private' (default) or 'company'
+--   inboxes.visibility     'private' or 'company'; new mailboxes default to
+--                          'private' only while business_seat_pricing is on
 --
 -- The access rule, used everywhere a person or a credential reaches an inbox:
 --
@@ -72,7 +73,32 @@ UPDATE public.inboxes i
 -- Anything the join above could not place (no workspace row) stays private.
 UPDATE public.inboxes SET visibility = 'private' WHERE visibility IS NULL;
 
-ALTER TABLE public.inboxes ALTER COLUMN visibility SET DEFAULT 'private';
+-- The default for NEW mailboxes follows the business_seat_pricing switch, in
+-- this one place so every connect route (IMAP, app password, Fastmail, Gmail
+-- and Outlook callbacks) gets the same answer without passing the column:
+--   switch off -> 'company' (today's behaviour: every member sees every inbox)
+--   switch on  -> 'private' (only the person who connected it)
+-- A missing switch row reads as off. SECURITY DEFINER because a column
+-- default runs as the inserting role, which may not read pricing_switches.
+CREATE OR REPLACE FUNCTION public.default_inbox_visibility()
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+           WHEN COALESCE(
+             (SELECT s.enabled FROM public.pricing_switches s WHERE s.key = 'business_seat_pricing'),
+             false
+           ) THEN 'private'
+           ELSE 'company'
+         END;
+$$;
+REVOKE EXECUTE ON FUNCTION public.default_inbox_visibility() FROM PUBLIC, anon;
+GRANT  EXECUTE ON FUNCTION public.default_inbox_visibility() TO authenticated, service_role;
+
+ALTER TABLE public.inboxes ALTER COLUMN visibility SET DEFAULT public.default_inbox_visibility();
 ALTER TABLE public.inboxes ALTER COLUMN visibility SET NOT NULL;
 
 DO $$
@@ -103,12 +129,24 @@ COMMENT ON COLUMN public.inboxes.visibility IS
 -- owner_user_id itself. This trigger is the backstop:
 --   * INSERT without an owner: the signed-in user, else the workspace owner,
 --     so a forgotten column can never produce an inbox nobody can see.
+--   * INSERT over a soft-deleted row of the same address owned by somebody
+--     else (or by nobody): the connect routes upsert on (workspace_id,
+--     email_address), so without this the upsert would REVIVE the old row and
+--     hand the new person its id, and with it the previous owner's signature,
+--     AI instructions, folder overrides, Send As aliases and every history row
+--     keyed by inbox_id (activity_log, send_approvals, bulk_runs, reminders,
+--     triage_rules, ...). Instead the old row's address is retired
+--     ('<address>#retired-<id>') BEFORE the conflict check, so the upsert
+--     inserts a fresh row with a new id. The old row stays soft-deleted with
+--     its own owner and visibility, so its history stays exactly as reachable
+--     as it was (its previous owner, or every member if it was company-wide)
+--     and never becomes the new owner's. A revival by the SAME person keeps
+--     today's behaviour (the row and its history come back).
 --   * UPDATE on a live row: the owner never changes to another person (it may
---     only be cleared, by the owner's account being deleted). The connect routes
---     upsert on (workspace_id, email_address), and a reconnect by somebody
---     else must not take the mailbox over. A row that was soft-deleted and is
---     being revived is a new connection: the new owner is kept, and when it
---     is a different person the mailbox starts private again.
+--     only be cleared, by the owner's account being deleted). A reconnect by
+--     somebody else must not take the mailbox over. A revival with a different
+--     owner cannot come from the connect routes any more (see INSERT); as a
+--     backstop it keeps the new owner and starts private.
 CREATE OR REPLACE FUNCTION public.inboxes_owner_guard()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -122,6 +160,16 @@ BEGIN
         auth.uid(),
         (SELECT w.owner_id FROM public.workspaces w WHERE w.id = NEW.workspace_id)
       );
+    END IF;
+    -- BEFORE INSERT triggers run before ON CONFLICT's check, so a retired row
+    -- no longer conflicts and the upsert takes the INSERT path.
+    IF NEW.deleted_at IS NULL AND NEW.email_address IS NOT NULL THEN
+      UPDATE public.inboxes o
+         SET email_address = o.email_address || '#retired-' || o.id::text
+       WHERE o.workspace_id = NEW.workspace_id
+         AND o.email_address = NEW.email_address
+         AND o.deleted_at IS NOT NULL
+         AND o.owner_user_id IS DISTINCT FROM NEW.owner_user_id;
     END IF;
     RETURN NEW;
   END IF;
@@ -454,6 +502,9 @@ BEGIN
 END $$;
 
 -- activity_log: the parent and every partition carry their own policy.
+-- Policy DDL takes an ACCESS EXCLUSIVE lock on each partition of the hottest
+-- table: fail fast rather than queue every tool call behind a long lock.
+SET lock_timeout = '3s';
 DO $$
 DECLARE
   pname text;
@@ -477,6 +528,8 @@ BEGIN
     );
   END LOOP;
 END $$;
+
+RESET lock_timeout;
 
 -- Future activity_log partitions get the same policy.
 CREATE OR REPLACE FUNCTION public.ensure_activity_log_partitions(months_ahead int DEFAULT 3)
@@ -523,12 +576,20 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.ensure_activity_log_partitions(int) FROM PUBLIC, anon, authenticated;
 
 -- ------------------------------------------------------------
--- 8. scheduled_sends.created_by: who a scheduled send acts as. The dispatcher
+-- 8. scheduled_sends.created_by / reminders.created_by: who it acts as. The dispatcher
 --    refuses a row whose creator can no longer see its inbox. Null (rows from
 --    before this migration, or a key with no creator) acts as the workspace
 --    owner, the same rule as credential_inbox_scope.
 -- ------------------------------------------------------------
 ALTER TABLE public.scheduled_sends
+  ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
+
+-- The same for reminders (follow-ups and snoozes): who set it up. A web mail
+-- client request runs on the workspace's shared web client key, whose own
+-- created_by is null (it acts as the workspace owner), so without this a
+-- follow-up a member set on their private mailbox would be checked against the
+-- owner, who cannot see that mailbox, and cancelled. Null = the key's creator.
+ALTER TABLE public.reminders
   ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 
 -- ------------------------------------------------------------

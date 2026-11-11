@@ -469,7 +469,7 @@ test('per person on: the Business card quotes the seat price, per person, and th
   assert.match(card.textContent, new RegExp(`Billed \\$${dollars(BUSINESS_SEAT_YEARLY_CENTS).replace('.', '\\.')}/year per person`));
   assert.equal(
     card.querySelector('[data-business-seat-minimum]').textContent,
-    `${BUSINESS_MIN_SEATS} people minimum. You pay for each person who connects a mailbox; admins and viewers without one are free.`,
+    `${BUSINESS_MIN_SEATS} people minimum. You pay for each person who connects a mailbox; anyone without one of their own is free, whatever their role.`,
   );
   const features = [...card.querySelectorAll('li')].map((li) => li.textContent);
   assert.ok(features.includes(`Private mailboxes for each person, up to ${BUSINESS_PRIVATE_INBOXES_PER_PERSON} each`));

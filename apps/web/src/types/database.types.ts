@@ -4238,6 +4238,7 @@ export type Database = {
           condition: string
           consecutive_failures: number
           created_at: string
+          created_by: string | null
           due_at: string
           folder: string | null
           id: string
@@ -4264,6 +4265,7 @@ export type Database = {
           condition?: string
           consecutive_failures?: number
           created_at?: string
+          created_by?: string | null
           due_at: string
           folder?: string | null
           id?: string
@@ -4289,6 +4291,7 @@ export type Database = {
           condition?: string
           consecutive_failures?: number
           created_at?: string
+          created_by?: string | null
           due_at?: string
           folder?: string | null
           id?: string
@@ -4313,6 +4316,13 @@ export type Database = {
             columns: ["api_key_id"]
             isOneToOne: false
             referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -6652,6 +6662,10 @@ export type Database = {
         Args: { p_key_hash: string }
         Returns: Json
       }
+      default_inbox_visibility: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       dispatch_activation_help: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -8061,8 +8075,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -8086,8 +8099,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -8111,8 +8123,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

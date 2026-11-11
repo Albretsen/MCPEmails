@@ -6,8 +6,9 @@
 //   - An owner/admin sees other people's private inboxes as metadata rows
 //     (address, owner, "Private") whose only action is Disconnect.
 //   - The Private / Company-wide control appears in the inbox detail only for
-//     an inbox the viewer connected, on Business, and only when the seat
-//     switch is on or the workspace has more than one member.
+//     an inbox the viewer connected. Switch on: on Business, or on any plan
+//     when the workspace has more than one member. Switch off: only for a
+//     private inbox in a workspace with more than one member.
 //
 // Renders the REAL dashboard with the real English messages; `fetch` is the
 // only thing replaced. Only reserved example domains appear below.
@@ -147,7 +148,7 @@ async function openDetail(view, label) {
 const visibilitySelect = view => view.container.querySelector(`select[aria-label="${V.label}"]`);
 
 test('the Private / Company-wide control shows for my own inbox on Business with more than one member', async (t) => {
-  const view = await render(t, { inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
+  const view = await render(t, { seatSwitch: true, inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
   await openDetail(view, 'ada');
   const select = visibilitySelect(view);
   assert.ok(select, 'control shown');
@@ -155,15 +156,32 @@ test('the Private / Company-wide control shows for my own inbox on Business with
   assert.ok(text(view).includes(V.privateHint));
 });
 
-test('the control is hidden for an inbox someone else owns, off Business, and on a one-member Business without the switch', async (t) => {
-  const others = await render(t, { inboxes: [inbox('ib-1', 'bob@example.com', 'u-0002', 'company')] });
+test('switch on: a downgraded workspace with members still gets the control', async (t) => {
+  const view = await render(t, { plan: 'solo', seatSwitch: true, inboxes: [inbox('ib-1', 'ada@example.com', ME, 'company')] });
+  await openDetail(view, 'ada');
+  assert.ok(visibilitySelect(view), 'more than one member, switch on, not Business');
+});
+
+test('switch off: only a private inbox in a shared workspace gets the control', async (t) => {
+  const company = await render(t, { inboxes: [inbox('ib-1', 'ada@example.com', ME, 'company')] });
+  await openDetail(company, 'ada');
+  assert.equal(visibilitySelect(company), null, 'company-wide, switch off: as today');
+  await company.unmount();
+
+  const priv = await render(t, { plan: 'solo', inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
+  await openDetail(priv, 'ada');
+  assert.ok(visibilitySelect(priv), 'private, two members, switch off: can be opened up');
+});
+
+test('the control is hidden for an inbox someone else owns, single-member off Business, and on a one-member Business without the switch', async (t) => {
+  const others = await render(t, { seatSwitch: true, inboxes: [inbox('ib-1', 'bob@example.com', 'u-0002', 'company')] });
   await openDetail(others, 'bob');
   assert.equal(visibilitySelect(others), null, 'not the owner');
   await others.unmount();
 
-  const solo = await render(t, { plan: 'solo', inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
+  const solo = await render(t, { plan: 'solo', seatSwitch: true, members: [MEMBERS[0]], inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
   await openDetail(solo, 'ada');
-  assert.equal(visibilitySelect(solo), null, 'not Business');
+  assert.equal(visibilitySelect(solo), null, 'not Business, one member');
   await solo.unmount();
 
   const single = await render(t, { members: [MEMBERS[0]], inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')] });
@@ -180,6 +198,7 @@ test('changing it PATCHes the visibility route; a refusal is one line and the va
   const calls = [];
   let answer = { ok: true, status: 200, json: async () => ({ visibility: 'company' }) };
   const view = await render(t, {
+    seatSwitch: true,
     inboxes: [inbox('ib-1', 'ada@example.com', ME, 'private')],
     fetchImpl: async (url, init) => {
       calls.push({ url, method: init?.method, body: init?.body });

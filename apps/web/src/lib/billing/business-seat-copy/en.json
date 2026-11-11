@@ -3,7 +3,7 @@
     "desc": "For a team: each person connects their own mailboxes privately, and the company's shared addresses are company-wide.",
     "per": "/person/month",
     "billedYearly": "Billed ${yearly}/year per person",
-    "minimum": "{min} people minimum. You pay for each person who connects a mailbox; admins and viewers without one are free.",
+    "minimum": "{min} people minimum. You pay for each person who connects a mailbox; anyone without one of their own is free, whatever their role.",
     "features": [
       "Everything in Pro",
       "Private mailboxes for each person, up to {private} each",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "For a team",
       "title": "Everyone works their own mail, and the shared addresses together",
-      "sub": "Business is ${price} a month for each person who connects a mailbox, {min} people minimum. Admins and viewers without a mailbox of their own are free.",
+      "sub": "Business is ${price} a month for each person who connects a mailbox, {min} people minimum. Anyone without a mailbox of their own is free, whatever their role.",
       "items": {
         "private": {
           "h": "Private by default",
@@ -83,11 +83,11 @@
         "h": "Business, ${price} per person a month: a team",
         "p": "{min} people minimum, billed for each person who connects a mailbox. Up to {private} private mailboxes per person, plus {included} company-wide, then ${addon} a month each."
       },
-      "note": "Admins and viewers without a mailbox of their own are free, and you can run a separate workspace per company or client."
+      "note": "Anyone without a mailbox of their own is free, and you can run a separate workspace per company or client."
     },
     "faq": {
       "0": "Yes, if one person operates the mailboxes. Pro is one login with up to 10 connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Once colleagues need their own login, Business is ${price} per person a month: each person's own mailbox stays private, and the shared addresses are company-wide.",
-      "5": "Free, Personal and Pro are single-login plans. On Business each colleague signs in with their own account and connects their own mailbox, which stays private to them, while company-wide mailboxes such as info@ are shared. You pay ${price} a month for each person who connects a mailbox, {min} people minimum. Admins and viewers who connect no mailbox cost nothing.",
+      "5": "Free, Personal and Pro are single-login plans. On Business each colleague signs in with their own account and connects their own mailbox, which stays private to them, while company-wide mailboxes such as info@ are shared. You pay ${price} a month for each person who connects a mailbox, {min} people minimum. Anyone who connects no mailbox costs nothing, whatever their role.",
       "extra": [
         {
           "q": "Can an admin read my mailbox?",

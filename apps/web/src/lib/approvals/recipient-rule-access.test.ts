@@ -31,6 +31,17 @@ test('owners and admins decide a recipient-rule hold on any inbox', () => {
   }
 });
 
+test('a recipient-rule hold on a hidden inbox shows owner/admin the recipients; an ordinary hold does not', () => {
+  const hidden = { visibility: 'private', owner_user_id: 'other' };
+  for (const role of ['owner', 'admin']) {
+    const rule = approvalAccess(role, ME, hidden, RECIPIENT_RULE_HOLD_REASON);
+    assert.equal(rule.redacted, true, role);
+    assert.equal(rule.showRecipients, true, role);
+    assert.equal(approvalAccess(role, ME, hidden, null).showRecipients, undefined, role);
+  }
+  assert.equal(approvalAccess('member', ME, hidden, RECIPIENT_RULE_HOLD_REASON).hidden, true);
+});
+
 test('viewers and members never decide a recipient-rule hold on a company inbox', () => {
   assert.equal(approvalAccess('viewer', ME, company, RECIPIENT_RULE_HOLD_REASON).canDecide, false);
   assert.equal(approvalAccess('member', ME, company, RECIPIENT_RULE_HOLD_REASON).canDecide, false);

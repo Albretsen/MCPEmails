@@ -135,6 +135,10 @@ nodeMock.module('@/lib/plans/check-member-limit', {
 nodeMock.module('@/lib/stripe/business-seats', {
   namedExports: { syncBusinessSeatsForWorkspace: async () => ({ status: 'unchanged' }) },
 });
+// The visibility route's per-person private cap: none here.
+nodeMock.module('@/lib/plans/check-private-inbox-limit', {
+  namedExports: { checkPrivateInboxLimit: async () => ({ atLimit: false, currentCount: 0, maxPrivateInboxes: null }) },
+});
 nodeMock.module('@/lib/stripe/mailbox-addon', {
   namedExports: { syncMailboxAddonForWorkspace: async () => ({ status: 'unchanged' }) },
 });

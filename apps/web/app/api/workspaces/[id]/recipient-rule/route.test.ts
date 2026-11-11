@@ -158,8 +158,24 @@ test('PUT: owner on Business sets a list, parsed and stored, and an audit row re
     actorUserId: USER,
     kind: 'recipient_rule_changed',
     target: null,
-    details: { from: null, to: ['example.com', 'partner.no'] },
+    details: { to: ['example.com', 'partner.no'], to_count: 2, added: ['example.com', 'partner.no'], removed: [] },
   });
+});
+
+test('PUT: a 100-domain change is logged as a truncated diff that fits the row', async () => {
+  const long = (i: number) => `d${i}.example`;
+  reset({ stored: Array.from({ length: 100 }, (_, i) => long(i)) });
+  const next = Array.from({ length: 100 }, (_, i) => long(i + 100));
+  assert.equal((await put({ domains: next })).status, 200);
+  const d = auditEvents[0].details as Record<string, unknown>;
+  assert.equal((d.to as string[]).length, 15);
+  assert.equal(d.to_count, 100);
+  assert.equal(d.to_more, 85);
+  assert.equal((d.added as string[]).length, 15);
+  assert.equal(d.added_more, 85);
+  assert.equal((d.removed as string[]).length, 15);
+  assert.equal(d.removed_more, 85);
+  assert.ok(Buffer.byteLength(JSON.stringify(d)) < 16384, 'fits the 16 KB cap');
 });
 
 test('PUT: an admin may set it too', async () => {
@@ -173,7 +189,7 @@ test('PUT: empty clears the rule, on any plan', async () => {
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { domains: null });
   assert.deepEqual(writes, [{ allowed_recipient_domains: null }]);
-  assert.deepEqual(auditEvents[0].details, { from: ['a.com'], to: null });
+  assert.deepEqual(auditEvents[0].details, { to: null, to_count: 0, added: [], removed: ['a.com'] });
 });
 
 test('PUT: the same list again writes no audit row', async () => {

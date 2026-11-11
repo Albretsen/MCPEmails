@@ -62,7 +62,12 @@ function shapeRows(rows: Record<string, unknown>[], role: string, userId: string
     const access = approvalAccess(role, userId, embeddedInbox(row), holdReasonOf(row));
     if (access.hidden) continue;
     if (access.redacted) {
-      out.push({ ...redactApprovalRow(row), can_decide: access.canDecide });
+      out.push({
+        ...redactApprovalRow(row, access.showRecipients
+          ? { recipients: true, summary: readSummary(row.summary) as Record<string, unknown> }
+          : {}),
+        can_decide: access.canDecide,
+      });
       continue;
     }
     const inbox = row.inboxes as { email_address?: string; display_name?: string | null } | null;

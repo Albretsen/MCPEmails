@@ -40,6 +40,22 @@ let reads: Read[] = [];
 /** A table whose every read answers an error. */
 let failingTable: string | null = null;
 
+/**
+ * The two PostgREST `or` filters the audit log sends: the member scope
+ * (`inbox_id.not.is.null,user_id.eq.U`) and the export keyset
+ * (`created_at.lt."T",and(created_at.eq."T",id.lt.I)`).
+ */
+function orMatches(r: Row, expr: string): boolean {
+  const member = /^inbox_id\.not\.is\.null,user_id\.eq\.(.+)$/.exec(expr);
+  if (member) return (r.inbox_id ?? null) !== null || r.user_id === member[1];
+  const keyset = /^created_at\.lt\."([^"]+)",and\(created_at\.eq\."([^"]+)",id\.lt\.(.+)\)$/.exec(expr);
+  if (keyset) {
+    const t = String(r.created_at);
+    return t < keyset[1] || (t === keyset[2] && String(r.id) < keyset[3]);
+  }
+  throw new Error(`unexpected or filter: ${expr}`);
+}
+
 function fakeClient(kind: 'user' | 'service') {
   return {
     auth: { getUser: async () => ({ data: { user: me }, error: me ? null : { message: 'no' } }) },
@@ -60,6 +76,7 @@ function fakeClient(kind: 'user' | 'service') {
             if (op === 'in') return (v as unknown[]).includes(x);
             if (op === 'gte') return String(x) >= String(v);
             if (op === 'lt') return String(x) < String(v);
+            if (op === 'or') return orMatches(r, String(v));
             return true;
           });
         }
@@ -86,6 +103,8 @@ function fakeClient(kind: 'user' | 'service') {
         lt: (c: string, v: unknown) => { filters.push(['lt', c, v]); return b; },
         order: (c: string, o: { ascending: boolean }) => { orders.push([c, o.ascending]); return b; },
         range: (from: number, to: number) => { range = [from, to]; return b; },
+        limit: (n: number) => { range = [0, n - 1]; return b; },
+        or: (expr: string) => { filters.push(['or', 'or', expr]); return b; },
         then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) => Promise.resolve(run()).then(resolve, reject),
       });
       return b;
@@ -112,6 +131,7 @@ function call(i: number, extra: Row = {}): Row {
   return {
     id: `call-${String(i).padStart(5, '0')}`,
     workspace_id: WS,
+    inbox_id: 'inbox-team',
     tool_name: 'email_send',
     status: 'success',
     error_code: null,
@@ -206,6 +226,47 @@ test('member: calls through the user client, so RLS decides which inboxes show',
   assert.deepEqual(body.entries.map((e: Row) => e.id), ['call-00003', 'call-00001']);
   assert.equal(body.total, 2);
   assert.ok(reads.filter((r) => r.table === 'activity_log').every((r) => r.client === 'user'));
+});
+
+test('member: a call that named no inbox shows only when the member made it', async () => {
+  reset({ role: 'member' });
+  tables.activity_log.push(
+    call(6, { inbox_id: null, inbox_email: null, user_id: MEMBER }),
+    call(7, { inbox_id: null, inbox_email: null, user_id: OWNER }),
+  );
+  const body = await (await get()).json();
+  const ids = body.entries.map((e: Row) => e.id);
+  assert.ok(ids.includes('call-00006'), 'their own cross-inbox call');
+  assert.ok(!ids.includes('call-00007'), "never someone else's");
+  assert.ok(reads.filter((r) => r.table === 'activity_log').every((r) =>
+    r.filters.some(([op, , v]) => op === 'or' && v === `inbox_id.not.is.null,user_id.eq.${MEMBER}`)));
+  // Owner and admin see every row, metadata only.
+  reset();
+  tables.activity_log.push(call(7, { inbox_id: null, inbox_email: null, user_id: MEMBER }));
+  assert.ok((await (await get()).json()).entries.some((e: Row) => e.id === 'call-00007'));
+});
+
+test('CSV: until is pinned to the start of the export, and pages follow a keyset, so rows written meanwhile never shift it', async () => {
+  reset();
+  tables.activity_log = Array.from({ length: 5 }, (_, i) => call(i));
+  const start = new Date(Date.UTC(2026, 10, 1, 0, 0, 3)); // after call 0..2, before 3 and 4
+  const stream = lib.auditCsvStream(fakeClient('service'), WS, 'calls', { since: null, until: null }, 1000, start);
+  const reader = stream.getReader();
+  const chunks: string[] = [];
+  const dec = new TextDecoder();
+  // Header, then the first page; a row is written newest-first meanwhile.
+  chunks.push(dec.decode((await reader.read()).value));
+  tables.activity_log.push(call(-1, { id: 'call-late', created_at: '2026-11-01T00:00:02.500Z' }));
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(dec.decode(value));
+  }
+  const lines = chunks.join('').split('\r\n').filter(Boolean).slice(1);
+  const ids = lines.map((l) => l.split(',')[0]);
+  assert.equal(new Set(ids).size, ids.length, 'no row twice');
+  assert.ok(reads.some((r) => r.filters.some(([op, c, v]) => op === 'lt' && c === 'created_at' && v === start.toISOString())));
+  assert.equal(lines.some((l) => l.startsWith('2026-11-01T00:00:03')), false, 'nothing from after the start');
 });
 
 test('member: team changes and the CSV export are owner/admin only', async () => {
@@ -325,4 +386,13 @@ test('a failed read is a 500, never a partial page', async () => {
   reset({ role: 'admin' });
   failingTable = 'workspace_audit_events';
   assert.equal((await quiet(() => get('?source=events'))).status, 500);
+});
+
+test('a retired mailbox row shows its plain address', () => {
+  assert.equal(
+    lib.displayInboxAddress('a@b.example#retired-00000000-0000-4000-8000-000000000001'),
+    'a@b.example',
+  );
+  assert.equal(lib.displayInboxAddress('a@b.example'), 'a@b.example');
+  assert.equal(lib.displayInboxAddress(null), null);
 });

@@ -2358,6 +2358,9 @@ CREATE TABLE IF NOT EXISTS public.reminders (
   created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at           timestamptz NOT NULL DEFAULT now()
 );
+-- Who set the reminder up (20261111120000). NULL = the key's creator.
+ALTER TABLE public.reminders
+  ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
   WHERE status IN ('pending', 'due') AND claimed_at IS NULL AND next_check_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS reminders_inbox_open_idx ON public.reminders (inbox_id, next_check_at)

@@ -114,7 +114,7 @@ test('with the switch on, the English Business copy quotes the plan data', () =>
   const addon = usd(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS);
   assert.equal(copy.card.billedYearly, `Billed $${yearly}/year per person`);
   assert.match(copy.card.minimum, new RegExp(`^${BUSINESS_MIN_SEATS} people minimum\\.`));
-  assert.match(copy.card.minimum, /admins and viewers without one are free/);
+  assert.match(copy.card.minimum, /anyone without one of their own is free, whatever their role/);
   assert.ok(copy.card.features.includes(`Private mailboxes for each person, up to ${BUSINESS_PRIVATE_INBOXES_PER_PERSON} each`));
   assert.ok(copy.card.features.includes(`${BUSINESS_INCLUDED_INBOXES} company-wide mailboxes included, then $${addon} a month each`));
   assert.match(copy.pricing.heroLead, new RegExp(`\\$${price} per person a month`));

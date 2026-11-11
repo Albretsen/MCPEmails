@@ -40,7 +40,7 @@ const KEY_HEX = "0123456789abcdef".repeat(4);
 Deno.env.set("ENCRYPTION_KEY", KEY_HEX);
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { handleScheduledDispatch, DEFAULT_SCHEDULED_DISPATCH_DEPS } = await import("./index.ts");
+const { handleScheduledDispatch, DEFAULT_SCHEDULED_DISPATCH_DEPS, holdScheduledSendForRecipientRule } = await import("./index.ts");
 
 const WS_VICTIM = "11111111-1111-4111-8111-111111111111";
 const WS_ATTACKER = "22222222-2222-4222-8222-222222222222";
@@ -82,6 +82,9 @@ function visibilityRpc(name: string, args: Record<string, unknown>) {
   );
 }
 
+/** When set, an UPDATE it matches answers an error (and changes nothing). */
+let failUpdatesOn: ((table: string, patch: Row | null) => boolean) | null = null;
+
 function recordingClient(tables: Record<string, Row[]>) {
   const queries: RecordedQuery[] = [];
   const from = (table: string) => {
@@ -105,6 +108,11 @@ function recordingClient(tables: Record<string, Row[]>) {
     let settled: { data: Row[]; error: null } | null = null;
     const settle = () => {
       if (settled) return settled;
+      if (q.op === "update" && failUpdatesOn?.(table, q.patch)) {
+        // deno-lint-ignore no-explicit-any
+        settled = { data: [], error: { message: "update failed" } } as any;
+        return settled!;
+      }
       const rows = matched();
       if (q.op === "update" && q.patch) for (const row of rows) Object.assign(row, q.patch);
       settled = { data: rows.map(project), error: null };
@@ -264,6 +272,8 @@ function harness(
     narrow?: (key: Row) => Row;
     /** The workspace recipient rule (recipient-domain-rule.ts). Left out, deps has none. */
     rule?: { ok: true; domains: string[] | null } | { ok: false };
+    /** Does the approver stand for the rule (owner/admin)? Left out, deps has none. */
+    approverAdmin?: boolean;
   } = {},
 ) {
   const rec = recordingClient(tables);
@@ -304,15 +314,20 @@ function harness(
     ...(behaviour.narrow ? { narrowKey: (_db: unknown, key: Row) => Promise.resolve(behaviour.narrow!(key)) } : {}),
   };
   const ruleHolds: Array<{ row: Row; payload: Row }> = [];
-  const ruleDeps = behaviour.rule
-    ? {
-      recipientRule: () => Promise.resolve(behaviour.rule!),
-      holdForRecipientRule(_db: unknown, row: Row, payload: Row) {
-        ruleHolds.push({ row, payload });
-        return Promise.resolve("held-approval-id");
-      },
-    }
-    : {};
+  const ruleDeps = {
+    ...(behaviour.rule
+      ? {
+        recipientRule: () => Promise.resolve(behaviour.rule!),
+        holdForRecipientRule(_db: unknown, row: Row, payload: Row) {
+          ruleHolds.push({ row, payload });
+          return Promise.resolve("held-approval-id");
+        },
+      }
+      : {}),
+    ...(behaviour.approverAdmin !== undefined
+      ? { approverOverridesRule: () => Promise.resolve(behaviour.approverAdmin!) }
+      : {}),
+  };
   const run = async () => {
     // deno-lint-ignore no-explicit-any
     const res = await handleScheduledDispatch(rec.client as any, { ...deps, ...visibilityDeps, ...ruleDeps } as any);
@@ -935,4 +950,105 @@ Deno.test("recipient rule: only a schedule_create rule hold may be keyless", asy
 Deno.test("recipient rule: production deps read the rule and write the hold", () => {
   assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.recipientRule === "function");
   assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.holdForRecipientRule === "function");
+});
+
+// ── Approvals the recipient rule must ask again ─────────────────────────────
+
+Deno.test("recipient rule: an approval by someone who is not owner/admin is re-run with the rule asked again", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: false, approved: () => ({ logStatus: "error", logErrorCode: "recipient_rule_rehold" }) });
+  const summary = await h.run();
+  assertEquals(h.calls.approved.length, 1);
+  assertEquals(h.calls.approved[0].key.approvalRuleRecheck, true);
+  assertEquals(h.calls.approved[0].key.internalApprovalDispatch, true);
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.held, 1);
+  // Back on the hold as a recipient-rule hold (owner/admin decide), unbound.
+  const approval = h.tables.send_approvals[0];
+  assertEquals(approval.status, "pending");
+  assertEquals(approval.hold_reason, "recipient_rule");
+  assertEquals(approval.decided_by, null);
+  assertEquals(approval.dispatch_scheduled_send_id, null);
+  assertEquals(h.calls.completed, [], "the idempotency record stays pending");
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "cancelled");
+  assertStringIncludes(String(row.error_detail), "owner or admin");
+});
+
+Deno.test("recipient rule: an owner's or admin's approval stands for the rule (no re-check)", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.approved[0].key.approvalRuleRecheck, undefined);
+});
+
+Deno.test("recipient rule: an approved schedule by a non-admin with recipients outside goes back on the SAME hold", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ operation: "schedule_create", decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: false, rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.ruleHolds.length, 0, "no second approval");
+  assertEquals(h.tables.send_approvals[0].status, "pending");
+  assertEquals(h.tables.send_approvals[0].hold_reason, "recipient_rule");
+});
+
+Deno.test("recipient rule: a hold whose row cannot be closed is retried, and the hold is idempotent on the row", async () => {
+  // Only the close (status 'cancelled') fails: the claim and the hold work.
+  failUpdatesOn = (table, patch) => table === "scheduled_sends" && patch?.status === "cancelled";
+  try {
+    const h = harness({
+      scheduled_sends: [await encryptedSend(SEND_A)],
+      inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    }, { rule: { ok: true, domains: ["corp.example"] } });
+    const summary = await h.run();
+    assertEquals(h.calls.sent.length, 0);
+    assertEquals(summary.dispatched, 0);
+    assertEquals(h.ruleHolds.length, 1, "the hold was written");
+    assertEquals(summary.held + summary.deferred >= 1, true);
+    assert(sendRow(h.tables, SEND_A).status !== "cancelled" && sendRow(h.tables, SEND_A).status !== "sent", "left for the next tick, never sent");
+  } finally {
+    failUpdatesOn = null;
+  }
+  // The production hold writes one approval per scheduled row: a second call
+  // finds the first instead of inserting again.
+  const rows: Row[] = [];
+  const db = {
+    from(_t: string) {
+      let id: unknown = null;
+      let insert: Row | null = null;
+      const b = {
+        select() { return b; },
+        eq(c: string, v: unknown) { if (c === "id") id = v; return b; },
+        insert(r: Row) { insert = r; return b; },
+        maybeSingle() {
+          if (insert) { rows.push(insert); return Promise.resolve({ data: { id: insert.id }, error: null }); }
+          const hit = rows.find((r) => r.id === id);
+          return Promise.resolve({ data: hit ? { id: hit.id } : null, error: null });
+        },
+      };
+      return b;
+    },
+  };
+  const row = { id: SEND_A, workspace_id: WS_VICTIM, inbox_id: INBOX_VICTIM, send_at: DUE(), created_by: MEMBER };
+  // deno-lint-ignore no-explicit-any
+  const first = await holdScheduledSendForRecipientRule(db as any, row, { ...MESSAGE });
+  // deno-lint-ignore no-explicit-any
+  const second = await holdScheduledSendForRecipientRule(db as any, row, { ...MESSAGE });
+  assertEquals(first, second);
+  assertEquals(rows.length, 1);
+  assertEquals(DEFAULT_SCHEDULED_DISPATCH_DEPS.approverOverridesRule !== undefined, true);
 });

@@ -33,7 +33,9 @@ export function eventTargetLabel(event, t) {
   const d = event?.details ?? {};
   if (event?.kind === 'inbox_visibility_changed') return typeof d.inbox === 'string' ? d.inbox : '';
   if (event?.kind === 'recipient_rule_changed') {
-    return Array.isArray(d.to) && d.to.length > 0 ? d.to.join(', ') : t('security.events.anyRecipient');
+    if (!Array.isArray(d.to) || d.to.length === 0) return t('security.events.anyRecipient');
+    const more = typeof d.to_more === 'number' && d.to_more > 0 ? ` +${d.to_more}` : '';
+    return d.to.join(', ') + more;
   }
   if (event?.targetPerson) return personLabel(event.targetPerson, t);
   return typeof event?.target === 'string' ? event.target : '';

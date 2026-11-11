@@ -228,6 +228,19 @@ nodeMock.module('@/lib/stripe/mailbox-addon', {
     },
   },
 });
+// The Business per-person private cap: no cap unless a test sets one.
+let privateLimit: { atLimit: boolean; currentCount: number; maxPrivateInboxes: number | null } = {
+  atLimit: false, currentCount: 0, maxPrivateInboxes: null,
+};
+const privateLimitCalls: Array<{ workspaceId: string; userId: string }> = [];
+nodeMock.module('@/lib/plans/check-private-inbox-limit', {
+  namedExports: {
+    checkPrivateInboxLimit: async (args: { workspaceId: string; userId: string }) => {
+      privateLimitCalls.push({ workspaceId: args.workspaceId, userId: args.userId });
+      return privateLimit;
+    },
+  },
+});
 nodeMock.module('@/lib/crypto', {
   namedExports: { decryptToken: (v: string) => `plain(${v})`, encryptToken: (v: string) => `enc:${v}` },
 });
@@ -800,6 +813,37 @@ test('visibility: cross-site, non-JSON and bad bodies are refused before any rea
   assert.equal((await setVisibility({ visibility: 'everyone' })).status, 400);
   assert.equal((await setVisibility('not json')).status, 400);
   assert.equal(world.calls.length, 0);
+});
+
+test('visibility: making a mailbox private respects the per-person private cap; company-wide never checks it', async () => {
+  try {
+    privateLimit = { atLimit: true, currentCount: 10, maxPrivateInboxes: 10 };
+    privateLimitCalls.length = 0;
+    syncCalls.length = 0;
+    reset({ role: 'member', row: ownedRow(USER.id, 'company') });
+    const res = await setVisibility({ visibility: 'private' });
+    assert.equal(res.status, 402);
+    const body = await res.json();
+    assert.equal(body.error_code, 'private_inbox_limit_reached');
+    assert.equal(body.max_private_inboxes, 10);
+    assert.equal(updates().length, 0, 'nothing written');
+    assert.deepEqual(privateLimitCalls, [{ workspaceId: WS, userId: USER.id }]);
+    for (const fn of world.afters) await fn();
+    assert.deepEqual(syncCalls, [], 'no sync on a refusal');
+
+    privateLimitCalls.length = 0;
+    reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+    assert.equal((await setVisibility({ visibility: 'company' })).status, 200);
+    assert.deepEqual(privateLimitCalls, [], 'company-wide is never capped here');
+
+    privateLimit = { atLimit: false, currentCount: 9, maxPrivateInboxes: 10 };
+    reset({ role: 'member', row: ownedRow(USER.id, 'company') });
+    assert.equal((await setVisibility({ visibility: 'private' })).status, 200, 'under the cap');
+    for (const fn of world.afters) await fn();
+    assert.ok((syncCalls as string[]).includes(WS), 'the add-on and seats re-sync after the change');
+  } finally {
+    privateLimit = { atLimit: false, currentCount: 0, maxPrivateInboxes: null };
+  }
 });
 
 const runAfters = async () => {

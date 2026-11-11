@@ -3,7 +3,7 @@
     "desc": "Para un equipo: cada persona conecta sus propios buzones en privado, y las direcciones compartidas de la empresa son para toda la empresa.",
     "per": "/persona/mes",
     "billedYearly": "Facturado ${yearly}/año por persona",
-    "minimum": "Mínimo {min} personas. Pagas por cada persona que conecta un buzón; los administradores y lectores sin buzón propio son gratis.",
+    "minimum": "Mínimo {min} personas. Pagas por cada persona que conecta un buzón; quien no tiene buzón propio es gratis, sea cual sea su rol.",
     "features": [
       "Todo lo de Pro",
       "Buzones privados para cada persona, hasta {private} cada una",
@@ -49,7 +49,7 @@
     "team": {
       "eyebrow": "Para un equipo",
       "title": "Cada uno lleva su propio correo, y las direcciones compartidas entre todos",
-      "sub": "Business cuesta ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Los administradores y lectores sin buzón propio son gratis.",
+      "sub": "Business cuesta ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Quien no tiene buzón propio es gratis, sea cual sea su rol.",
       "items": {
         "private": {
           "h": "Privado por defecto",
@@ -83,11 +83,11 @@
         "h": "Business, ${price} por persona al mes: un equipo",
         "p": "Mínimo {min} personas, facturado por cada persona que conecta un buzón. Hasta {private} buzones privados por persona, más {included} compartidos, después ${addon} al mes cada uno."
       },
-      "note": "Los administradores y lectores sin buzón propio son gratis, y puedes tener un espacio de trabajo aparte para cada empresa o cliente."
+      "note": "Quien no tiene buzón propio es gratis, y puedes tener un espacio de trabajo aparte para cada empresa o cliente."
     },
     "faq": {
       "0": "Sí, si una sola persona lleva los buzones. Pro es un inicio de sesión con hasta 10 buzones conectados, así que una persona puede llevar info@, ventas@, facturas@ y soporte@ desde un agente. Cuando tus compañeros necesitan su propio inicio de sesión, Business cuesta ${price} por persona al mes: el buzón de cada uno sigue siendo privado y las direcciones compartidas son para toda la empresa.",
-      "5": "Free, Personal y Pro son planes de un solo inicio de sesión. En Business cada compañero entra con su propia cuenta y conecta su propio buzón, que sigue siendo privado, mientras que los buzones compartidos como info@ son de todos. Pagas ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Los administradores y lectores que no conectan ningún buzón no cuestan nada.",
+      "5": "Free, Personal y Pro son planes de un solo inicio de sesión. En Business cada compañero entra con su propia cuenta y conecta su propio buzón, que sigue siendo privado, mientras que los buzones compartidos como info@ son de todos. Pagas ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Quien no conecta ningún buzón no cuesta nada, sea cual sea su rol.",
       "extra": [
         {
           "q": "¿Puede un administrador leer mi buzón?",

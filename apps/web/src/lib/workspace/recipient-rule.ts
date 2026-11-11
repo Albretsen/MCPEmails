@@ -56,3 +56,37 @@ export function storedRecipientDomains(raw: unknown): string[] | null {
   const list = raw.filter((x): x is string => typeof x === 'string' && x.length > 0);
   return list.length > 0 ? list : null;
 }
+
+/** How many domains each list in an audit row keeps (the rest is a count). */
+export const AUDIT_DOMAINS_PER_LIST = 15;
+
+/**
+ * The `details` of a recipient_rule_changed audit row: the change as a diff,
+ * so a 100-domain list can never outgrow the row's size cap
+ * (workspace_audit_events.details, 16 KB) and lose the audit row.
+ *
+ *   to         the new list, first AUDIT_DOMAINS_PER_LIST (null = any recipient)
+ *   to_count   how many domains the new list has
+ *   added      domains now allowed that were not, truncated the same way
+ *   removed    domains no longer allowed, truncated the same way
+ *   *_more     how many each list left out
+ */
+export function recipientRuleAuditDetails(
+  previous: string[] | null,
+  next: string[] | null,
+): Record<string, unknown> {
+  const before = new Set(previous ?? []);
+  const after = new Set(next ?? []);
+  const added = [...after].filter((d) => !before.has(d));
+  const removed = [...before].filter((d) => !after.has(d));
+  const cut = (list: string[]) => list.slice(0, AUDIT_DOMAINS_PER_LIST);
+  return {
+    to: next === null ? null : cut(next),
+    to_count: next === null ? 0 : next.length,
+    added: cut(added),
+    removed: cut(removed),
+    ...(next !== null && next.length > AUDIT_DOMAINS_PER_LIST ? { to_more: next.length - AUDIT_DOMAINS_PER_LIST } : {}),
+    ...(added.length > AUDIT_DOMAINS_PER_LIST ? { added_more: added.length - AUDIT_DOMAINS_PER_LIST } : {}),
+    ...(removed.length > AUDIT_DOMAINS_PER_LIST ? { removed_more: removed.length - AUDIT_DOMAINS_PER_LIST } : {}),
+  };
+}

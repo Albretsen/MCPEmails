@@ -5,7 +5,7 @@ import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { resolveEffectiveWorkspacePlan } from '@/lib/plans/effective-plan';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
 import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
-import { parseRecipientDomains, storedRecipientDomains } from '@/lib/workspace/recipient-rule';
+import { parseRecipientDomains, recipientRuleAuditDetails, storedRecipientDomains } from '@/lib/workspace/recipient-rule';
 
 /**
  * The Business recipient rule (workspaces.allowed_recipient_domains,
@@ -128,13 +128,22 @@ export async function PUT(request: NextRequest, { params }: Params): Promise<Nex
   const domains = storedRecipientDomains((saved as { allowed_recipient_domains?: unknown }).allowed_recipient_domains);
 
   if (JSON.stringify(previous) !== JSON.stringify(domains)) {
-    await recordWorkspaceAuditEvent(service, {
+    // A diff, truncated with counts, so the row always fits its size cap.
+    const logged = await recordWorkspaceAuditEvent(service, {
       workspaceId: c.workspaceId,
       actorUserId: c.user.id,
       kind: 'recipient_rule_changed',
       target: null,
-      details: { from: previous, to: domains },
+      details: recipientRuleAuditDetails(previous, domains),
     });
+    if (!logged) {
+      // The rule is saved; the audit row is not. Loud, so it is noticed.
+      console.error('[recipient-rule] AUDIT ROW LOST for a saved recipient rule change', {
+        workspace_id: c.workspaceId,
+        actor_user_id: c.user.id,
+        to_count: domains?.length ?? 0,
+      });
+    }
   }
 
   return NextResponse.json({ domains });

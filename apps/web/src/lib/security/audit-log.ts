@@ -128,13 +128,20 @@ function personFor(people: Map<string, AuditPerson>, id: unknown): AuditPerson |
   return people.get(id) ?? { id, email: null, name: null };
 }
 
+// A disconnected mailbox whose address someone else reconnected keeps its old
+// row under '<address>#retired-<id>' (migration 20261111120000); show the address.
+export function displayInboxAddress(address: string | null | undefined): string | null {
+  if (!address) return null;
+  return address.replace(/#retired-[0-9a-f-]+$/i, '');
+}
+
 function shapeCall(row: any, people: Map<string, AuditPerson>): AuditCallEntry {
   const inbox = row.inboxes as { email_address?: string | null; display_name?: string | null } | null;
   const key = row.api_keys as { name?: string | null; key_prefix?: string | null } | null;
   return {
     id: row.id,
     tool: row.tool_name,
-    inbox: inbox?.display_name ?? inbox?.email_address ?? null,
+    inbox: inbox?.display_name ?? displayInboxAddress(inbox?.email_address),
     apiKeyName: key?.name ?? null,
     apiKeyPrefix: key?.key_prefix ?? null,
     person: personFor(people, row.user_id),
@@ -167,12 +174,25 @@ export async function fetchAuditCallsPage(
   reader: any,
   service: any,
   workspaceId: string,
-  opts: { page: number; pageSize: number; filters: AuditFilters },
+  opts: {
+    page: number;
+    pageSize: number;
+    filters: AuditFilters;
+    /**
+     * Set for a member: calls that named no inbox (a cross-inbox "all" call)
+     * show only when this person made them. RLS says the same; this keeps
+     * the API honest on its own.
+     */
+    memberUserId?: string | null;
+  },
 ): Promise<{ ok: true; entries: AuditCallEntry[]; total: number } | { ok: false; error: string }> {
   const from = opts.page * opts.pageSize;
+  const scope = (q: any) => (opts.memberUserId && UUID_RE.test(opts.memberUserId)
+    ? q.or(`inbox_id.not.is.null,user_id.eq.${opts.memberUserId}`)
+    : q);
   const [countResult, rowsResult] = await Promise.all([
-    applyFilters(reader.from('activity_log').select('id', { count: 'exact', head: true }).eq('workspace_id', workspaceId), opts.filters),
-    applyFilters(reader.from('activity_log').select(CALL_COLUMNS).eq('workspace_id', workspaceId), opts.filters)
+    applyFilters(scope(reader.from('activity_log').select('id', { count: 'exact', head: true }).eq('workspace_id', workspaceId)), opts.filters),
+    applyFilters(scope(reader.from('activity_log').select(CALL_COLUMNS).eq('workspace_id', workspaceId)), opts.filters)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .range(from, from + opts.pageSize - 1),
@@ -244,6 +264,11 @@ export function eventCsvRow(e: AuditEventEntry): string {
  * one at a time (so memory holds one page), up to AUDIT_EXPORT_MAX_ROWS. A
  * read error mid-stream ends the file with a final `# export incomplete` line
  * rather than a silently short file.
+ *
+ * Consistent under writes: `until` is pinned to the moment the export started
+ * (rows written while it streams are left out), and pages follow a keyset on
+ * (created_at, id) descending rather than an offset, so a row inserted or
+ * purged mid-export can neither repeat a row nor skip one.
  */
 export function auditCsvStream(
   service: any,
@@ -251,10 +276,17 @@ export function auditCsvStream(
   source: AuditSource,
   filters: AuditFilters,
   maxRows: number = AUDIT_EXPORT_MAX_ROWS,
+  now: Date = new Date(),
 ): ReadableStream<Uint8Array> {
   const enc = new TextEncoder();
   let sent = 0;
   let headerDone = false;
+  const startedAt = now.toISOString();
+  const pinned: AuditFilters = {
+    since: filters.since,
+    until: filters.until && filters.until < startedAt ? filters.until : startedAt,
+  };
+  let cursor: AuditCursor | null = null;
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       if (!headerDone) {
@@ -268,10 +300,9 @@ export function auditCsvStream(
         return;
       }
       const size = Math.min(AUDIT_EXPORT_PAGE, maxRows - sent);
-      // Offset paging on a total order (created_at desc, id desc).
       const result = source === 'calls'
-        ? await fetchCallsAt(service, workspaceId, sent, size, filters)
-        : await fetchEventsAt(service, workspaceId, sent, size, filters);
+        ? await fetchCallsAfter(service, workspaceId, cursor, size, pinned)
+        : await fetchEventsAfter(service, workspaceId, cursor, size, pinned);
       if (!result.ok) {
         console.error('[audit-log] export page failed:', result.error);
         controller.enqueue(enc.encode('# export incomplete: a page could not be read\r\n'));
@@ -281,29 +312,57 @@ export function auditCsvStream(
       const lines = result.lines;
       if (lines.length > 0) controller.enqueue(enc.encode(lines.join('')));
       sent += lines.length;
-      if (lines.length < size) controller.close();
+      cursor = result.last;
+      if (lines.length < size || !cursor) controller.close();
     },
   });
 }
 
-async function fetchCallsAt(service: any, workspaceId: string, offset: number, size: number, filters: AuditFilters) {
-  const { data, error } = await applyFilters(service.from('activity_log').select(CALL_COLUMNS).eq('workspace_id', workspaceId), filters)
+/** The last row of a page: the next page starts strictly after it. */
+interface AuditCursor {
+  createdAt: string;
+  id: string;
+}
+
+/** Rows strictly after `cursor` in (created_at desc, id desc) order. */
+function afterCursor(query: any, cursor: AuditCursor | null): any {
+  if (!cursor) return query;
+  // Values come from our own rows (timestamps and uuids); quoted for PostgREST.
+  const at = `"${cursor.createdAt}"`;
+  return query.or(`created_at.lt.${at},and(created_at.eq.${at},id.lt.${cursor.id})`);
+}
+
+function lastCursor(rows: any[]): AuditCursor | null {
+  const last = rows[rows.length - 1];
+  return last && typeof last.created_at === 'string' && typeof last.id === 'string'
+    ? { createdAt: last.created_at, id: last.id }
+    : null;
+}
+
+async function fetchCallsAfter(service: any, workspaceId: string, cursor: AuditCursor | null, size: number, filters: AuditFilters) {
+  const { data, error } = await afterCursor(
+    applyFilters(service.from('activity_log').select(CALL_COLUMNS).eq('workspace_id', workspaceId), filters),
+    cursor,
+  )
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
-    .range(offset, offset + size - 1);
+    .limit(size);
   if (error) return { ok: false as const, error: error.message as string };
   const rows = (data ?? []) as any[];
   const people = await resolvePeople(service, rows.map((r) => r.user_id));
-  return { ok: true as const, lines: rows.map((r) => callCsvRow(shapeCall(r, people))) };
+  return { ok: true as const, lines: rows.map((r) => callCsvRow(shapeCall(r, people))), last: lastCursor(rows) };
 }
 
-async function fetchEventsAt(service: any, workspaceId: string, offset: number, size: number, filters: AuditFilters) {
-  const { data, error } = await applyFilters(service.from('workspace_audit_events').select(EVENT_COLUMNS).eq('workspace_id', workspaceId), filters)
+async function fetchEventsAfter(service: any, workspaceId: string, cursor: AuditCursor | null, size: number, filters: AuditFilters) {
+  const { data, error } = await afterCursor(
+    applyFilters(service.from('workspace_audit_events').select(EVENT_COLUMNS).eq('workspace_id', workspaceId), filters),
+    cursor,
+  )
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
-    .range(offset, offset + size - 1);
+    .limit(size);
   if (error) return { ok: false as const, error: error.message as string };
   const rows = (data ?? []) as any[];
   const people = await resolvePeople(service, rows.flatMap((r) => [r.actor_user_id, r.target]));
-  return { ok: true as const, lines: rows.map((r) => eventCsvRow(shapeEvent(r, people))) };
+  return { ok: true as const, lines: rows.map((r) => eventCsvRow(shapeEvent(r, people))), last: lastCursor(rows) };
 }

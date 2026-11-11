@@ -1706,7 +1706,7 @@ export function reconnectSupportHref(erroredInboxes) {
   return supportContactHref(providers.length === 1 ? providers[0] : null, null);
 }
 
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null, hiddenInboxes = [], currentUserId = null, showVisibilityControl = false, onVisibilityChanged = null }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onSwapParked, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, onConnectionChanged, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, chatConfirmRolledOut = false, proFeatures = null, userRole, onGoToKeys, onContactSupport = null, hiddenInboxes = [], currentUserId = null, showVisibilityControl = false, multiMember = false, onVisibilityChanged = null }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -2344,7 +2344,14 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
           // The review gate is owner/admin-only (lib/workspace/roles.ts).
           canManageReview={userRole !== 'viewer' && userRole !== 'member'}
           historyDays={historyDays}
-          visibilityEditable={showVisibilityControl && userRole !== 'viewer' && Boolean(currentUserId) && detailInboxLive.ownerUserId === currentUserId}
+          visibilityEditable={
+            // Switch on: Business, or any workspace with more than one member
+            // (a downgraded team can still change it). Switch off: only to
+            // open up a private mailbox once someone else has joined, so a
+            // backfilled private inbox is never stuck out of a new member's reach.
+            (showVisibilityControl || (multiMember && detailInboxLive.visibility === 'private'))
+            && userRole !== 'viewer' && Boolean(currentUserId) && detailInboxLive.ownerUserId === currentUserId
+          }
           onVisibilityChanged={onVisibilityChanged}
         />
       )}

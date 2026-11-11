@@ -57,3 +57,21 @@ test('storedRecipientDomains: null or a non-empty list', () => {
   assert.equal(storedRecipientDomains([]), null);
   assert.deepEqual(storedRecipientDomains(['a.com']), ['a.com']);
 });
+
+test('recipientRuleAuditDetails: a diff of at most 15 per list, with counts, that fits the 16 KB row at the longest domains', async () => {
+  const { recipientRuleAuditDetails, AUDIT_DOMAINS_PER_LIST } = await import('./recipient-rule.ts');
+  // 100 domains of 251 characters each, all replaced: the worst case.
+  const long = (i: number) => `${'a'.repeat(57)}.${'b'.repeat(63)}.${'c'.repeat(63)}.${String(i).padStart(3, '0')}${'d'.repeat(54)}.example`;
+  const before = Array.from({ length: 100 }, (_, i) => long(i));
+  const after = Array.from({ length: 100 }, (_, i) => long(i + 100));
+  const d = recipientRuleAuditDetails(before, after);
+  assert.equal((d.to as string[]).length, AUDIT_DOMAINS_PER_LIST);
+  assert.equal(d.to_count, 100);
+  assert.equal(d.added_more, 85);
+  assert.equal(d.removed_more, 85);
+  assert.ok(Buffer.byteLength(JSON.stringify(d)) < 16384, `${Buffer.byteLength(JSON.stringify(d))} bytes`);
+  assert.deepEqual(recipientRuleAuditDetails(null, ['a.com']), { to: ['a.com'], to_count: 1, added: ['a.com'], removed: [] });
+  assert.deepEqual(recipientRuleAuditDetails(['a.com', 'b.com'], ['b.com', 'c.com']), {
+    to: ['b.com', 'c.com'], to_count: 2, added: ['c.com'], removed: ['a.com'],
+  });
+});

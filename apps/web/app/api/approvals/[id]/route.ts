@@ -61,6 +61,21 @@ export async function GET(
   if (access.redacted) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inbox = (approval as any).inboxes as { email_address?: string | null } | null;
+    // A recipient-rule hold: the owner/admin is asked about the recipients,
+    // so they see To, Cc and the Bcc addresses. Never the subject or body.
+    const recipients = access.showRecipients
+      ? (() => {
+          const s = readSummary(approval.summary);
+          const bcc = reviewerBccFor(approval, membership.role);
+          const count = typeof s.bcc_count === 'number' ? s.bcc_count : 0;
+          return {
+            to: neutralizeList(s.to).filter(Boolean),
+            cc: neutralizeList(s.cc).filter(Boolean),
+            bcc,
+            bcc_count: Math.max(count, bcc.length),
+          };
+        })()
+      : { to: [], cc: [], bcc: [], bcc_count: 0 };
     return NextResponse.json(
       {
         id: approval.id,
@@ -70,11 +85,8 @@ export async function GET(
         created_at: approval.created_at ?? null,
         expires_at: approval.expires_at ?? null,
         inbox_address: inbox?.email_address ?? null,
-        to: [],
-        cc: [],
+        ...recipients,
         subject: '',
-        bcc: [],
-        bcc_count: 0,
         redacted: true,
         can_decide: access.canDecide,
         approvable: !isUnsendableLegacyDraft(approval, readPayload(approval)),

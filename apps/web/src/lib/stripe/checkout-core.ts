@@ -1212,11 +1212,21 @@ async function checkoutFor(
       // A Business subscription that is NOT per person (flat $39, founder,
       // retired Team) keeps its kind of price across an interval switch, even
       // with per-person pricing on: legacy subscriptions are never moved.
+      // And the reverse: a subscription already on a SEAT price stays on seat
+      // prices across an interval switch whatever the switch says now. The
+      // subscription's current price decides, never the switch, so turning
+      // the switch off can never move a seat subscription to the flat price.
+      const fromSeatPrice = isBusinessSeatPriceId(currentItem.price.id);
       const legacyBusiness =
         planId === 'pro' &&
         fromPrice?.planId === 'pro' &&
-        !isBusinessSeatPriceId(currentItem.price.id);
-      const normalPriceId = legacyBusiness ? flatPriceId : priceId;
+        !fromSeatPrice;
+      const keepSeatPrice = planId === 'pro' && fromSeatPrice;
+      const normalPriceId = legacyBusiness
+        ? flatPriceId
+        : keepSeatPrice
+          ? businessSeatPriceId(interval)
+          : priceId;
       if (!normalPriceId) {
         await recordPlanChange({
           workspaceId: workspace.id,
@@ -1825,8 +1835,9 @@ async function checkoutFor(
       // Switch off, this spreads nothing.
       ...(taxOn ? checkoutTaxParams(switchEnv) : {}),
       // Company name and VAT / org number, on every session whatever the tax
-      // switch says, so a company's invoices carry them (tax-switch.ts).
-      ...checkoutPaperworkParams(),
+      // switch says, so a company's invoices carry them (tax-switch.ts). The
+      // address is written back only when this session calculates tax.
+      ...checkoutPaperworkParams(taxOn),
     });
 
     if (!session.url) {
@@ -2173,7 +2184,8 @@ export async function runPassCheckout(input: {
       // from Stripe invoices.
       invoice_creation: { enabled: true, invoice_data: { metadata } },
       // Company name and VAT / org number, as on every session (tax-switch.ts).
-      ...checkoutPaperworkParams(),
+      // The pass is never taxed by Stripe Tax, so the name only.
+      ...checkoutPaperworkParams(false),
       // On the PaymentIntent too, so `charge.refunded` can be traced back to a
       // pass without another lookup.
       payment_intent_data: { metadata },
