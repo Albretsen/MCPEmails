@@ -34,6 +34,8 @@ let caller: { id: string; email: string; email_confirmed_at: string | null } | n
 let tables: Record<string, Row[]>;
 let customers: Record<string, Customer>;
 let portalSessions: string[];
+/** The `configuration` each portal session was created with. */
+let portalConfigurations: Array<string | undefined>;
 let customerLookups: string[];
 let upserts: Row[];
 let updates: Row[];
@@ -53,6 +55,7 @@ function reset() {
     cus_caller: { id: 'cus_caller', email: 'caller@example.test', metadata: { user_id: CALLER } },
   };
   portalSessions = [];
+  portalConfigurations = [];
   customerLookups = [];
   upserts = [];
   updates = [];
@@ -117,8 +120,9 @@ nodeMock.module('@/lib/stripe/client', {
       },
       billingPortal: {
         sessions: {
-          create: async ({ customer }: { customer: string }) => {
+          create: async ({ customer, configuration }: { customer: string; configuration?: string }) => {
             portalSessions.push(customer);
+            portalConfigurations.push(configuration);
             return { url: `https://billing.stripe.test/session/${customer}` };
           },
         },
@@ -135,11 +139,12 @@ nodeMock.module('next/server', {
 
 const { POST } = await import('./route.ts');
 
-async function openPortal() {
+async function openPortal(country?: string) {
   const originalError = console.error;
   console.error = () => {};
   try {
-    const res = await POST(new Request('https://mcpemails.test/api/stripe/portal', { method: 'POST' }) as never);
+    const headers = country ? { 'x-vercel-ip-country': country } : undefined;
+    const res = await POST(new Request('https://mcpemails.test/api/stripe/portal', { method: 'POST', headers }) as never);
     return { status: res.status, body: (await res.json()) as { url?: string; error?: string } };
   } finally {
     console.error = originalError;
@@ -390,4 +395,55 @@ test('[verify] a failing heal write never blocks the response', async () => {
   const { status } = await openPortal();
   assert.equal(status, 200);
   assert.deepEqual(portalSessions, ['cus_caller']);
+});
+
+// ── Portal configuration by country ──────────────────────────────────────────
+// Outside Europe the portal also asks why the customer cancels; inside Europe,
+// or when we cannot tell, it never does. See src/lib/stripe/portal-configuration.ts.
+
+async function withPortalEnv<T>(fn: () => Promise<T>): Promise<T> {
+  const saved = {
+    base: process.env.STRIPE_PORTAL_CONFIGURATION_ID,
+    reason: process.env.STRIPE_PORTAL_CONFIGURATION_ID_CANCEL_REASON,
+  };
+  process.env.STRIPE_PORTAL_CONFIGURATION_ID = 'bpc_base';
+  process.env.STRIPE_PORTAL_CONFIGURATION_ID_CANCEL_REASON = 'bpc_reason';
+  try {
+    return await fn();
+  } finally {
+    if (saved.base === undefined) delete process.env.STRIPE_PORTAL_CONFIGURATION_ID;
+    else process.env.STRIPE_PORTAL_CONFIGURATION_ID = saved.base;
+    if (saved.reason === undefined) delete process.env.STRIPE_PORTAL_CONFIGURATION_ID_CANCEL_REASON;
+    else process.env.STRIPE_PORTAL_CONFIGURATION_ID_CANCEL_REASON = saved.reason;
+  }
+}
+
+function payingCaller(signupCountry: string | null) {
+  reset();
+  tables.user_billing.push({ user_id: CALLER, stripe_customer_id: 'cus_caller', plan: 'personal' });
+  ownWorkspace(null, { acquisition_country: signupCountry });
+}
+
+test('a customer in the US with a US signup gets the configuration that asks for a reason', async () => {
+  payingCaller('US');
+  await withPortalEnv(() => openPortal('US'));
+  assert.deepEqual(portalConfigurations, ['bpc_reason']);
+});
+
+test('a customer in Germany gets the base configuration', async () => {
+  payingCaller('US');
+  await withPortalEnv(() => openPortal('DE'));
+  assert.deepEqual(portalConfigurations, ['bpc_base']);
+});
+
+test('a customer who signed up in Norway keeps the base configuration while travelling', async () => {
+  payingCaller('NO');
+  await withPortalEnv(() => openPortal('US'));
+  assert.deepEqual(portalConfigurations, ['bpc_base']);
+});
+
+test('an unknown request country falls back to the base configuration', async () => {
+  payingCaller('US');
+  await withPortalEnv(() => openPortal());
+  assert.deepEqual(portalConfigurations, ['bpc_base']);
 });
