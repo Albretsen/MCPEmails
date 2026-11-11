@@ -37,7 +37,7 @@ Both assistants ship their own mail connectors, and they have moved quickly, so 
 - **ChatGPT.** Since late August 2026 its own Gmail, Google Calendar and Google Contacts plugins can hold more than one account on Plus, Pro, Business and Enterprise, so a personal and a work Gmail can sit in the same conversation. In September OpenAI extended multiple accounts to other plugins. If every mailbox you have is a Google account, ChatGPT's own plugin may be all you need.
 - **Claude.** Anthropic's help centre describes the Gmail connector as reaching "the Google account you've connected". One Google account per connection.
 
-What neither is built for is the mailbox a company actually runs on its own domain when that domain is not on Google or Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, a cPanel host or your own server. Those speak IMAP and SMTP, and reaching them takes something that speaks IMAP.
+What neither is built for is the mailbox a company actually runs on its own domain when that domain is not on Google or Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, a cPanel host or your own server. Those speak IMAP and SMTP, and reaching them takes something that speaks IMAP. [How to connect any email account to Claude or ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) lists every route, including the other hosted services and the self-hosted ones.
 
 ## One connector for every mailbox
 

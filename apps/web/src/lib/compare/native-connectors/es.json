@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers: configurar el servidor MCP de Gmail"
     }
   },
+  "guide": {
+    "h": "¿Quieres el mapa completo de opciones?",
+    "p": "Conectores integrados, servicios MCP alojados, apps de escritorio, autoalojamiento y herramientas de automatización, para Yahoo, IMAP, dominios propios y varios buzones, con fecha y fuentes.",
+    "link": "Leer: cómo conectar cualquier cuenta de correo a Claude o ChatGPT"
+  },
   "ctaBand": {
     "title": "Dale a tu IA todos tus buzones",
     "sub": "Conecta un buzón en minutos. Un buzón gratis, sin tarjeta.",

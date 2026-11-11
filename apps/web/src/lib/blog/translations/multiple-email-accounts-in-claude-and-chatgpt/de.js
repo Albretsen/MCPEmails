@@ -15,7 +15,7 @@ Beide Assistenten bringen eigene E-Mail-Konnektoren mit, und die haben sich schn
 - **ChatGPT.** Seit Ende August 2026 können die eigenen Plugins für Gmail, Google Calendar und Google Contacts bei Plus, Pro, Business und Enterprise mehr als ein Konto halten, sodass ein privates und ein berufliches Gmail in derselben Unterhaltung sein können. Im September hat OpenAI mehrere Konten auf weitere Plugins ausgeweitet. Wenn alle Ihre Postfächer Google-Konten sind, reicht Ihnen vielleicht das eigene Plugin von ChatGPT.
 - **Claude.** Das Hilfecenter von Anthropic beschreibt den Gmail-Konnektor so, dass er „das Google-Konto, das Sie verbunden haben“ erreicht. Ein Google-Konto pro Verbindung.
 
-Wofür keiner von beiden gebaut ist: das Postfach, das eine Firma tatsächlich auf ihrer eigenen Domain betreibt, wenn diese Domain nicht bei Google oder Microsoft liegt. IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, ein cPanel-Hoster oder Ihr eigener Server. Diese sprechen IMAP und SMTP, und um sie zu erreichen, braucht es etwas, das IMAP spricht.
+Wofür keiner von beiden gebaut ist: das Postfach, das eine Firma tatsächlich auf ihrer eigenen Domain betreibt, wenn diese Domain nicht bei Google oder Microsoft liegt. IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, ein cPanel-Hoster oder Ihr eigener Server. Diese sprechen IMAP und SMTP, und um sie zu erreichen, braucht es etwas, das IMAP spricht. [So verbinden Sie jedes E-Mail-Konto mit Claude oder ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) zeigt jeden Weg, auch die anderen gehosteten Dienste und die selbst betriebenen.
 
 ## Ein Konnektor für alle Postfächer
 

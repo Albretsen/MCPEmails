@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers: Gmail-MCP-Server konfigurieren"
     }
   },
+  "guide": {
+    "h": "Sie möchten alle Optionen im Überblick?",
+    "p": "Integrierte Konnektoren, gehostete MCP-Dienste, Desktop-Apps, Self-Hosting und Automatisierungstools, für Yahoo, IMAP, eigene Domains und mehrere Postfächer, datiert und mit Quellen.",
+    "link": "Lesen: So verbinden Sie jedes E-Mail-Konto mit Claude oder ChatGPT"
+  },
   "ctaBand": {
     "title": "Geben Sie Ihrer KI alle Ihre Postfächer",
     "sub": "Verbinden Sie ein Postfach in wenigen Minuten. Ein Postfach kostenlos, ohne Kreditkarte.",

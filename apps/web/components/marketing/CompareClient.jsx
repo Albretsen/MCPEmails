@@ -33,7 +33,10 @@ function Cell({ value, c }) {
   return <td className="tbl-val">{text}</td>;
 }
 
-export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
+/** The roundup guide linked near the foot of the page; see the callout below. */
+const GUIDE_PATH = '/blog/connect-any-email-to-claude-and-chatgpt';
+
+export default function CompareClient({ c, checkedOn, isEnglish, locale, guideInLocale = false }) {
   const fill = (s) => s.replace('{date}', checkedOn);
 
   return (
@@ -227,6 +230,39 @@ export default function CompareClient({ c, checkedOn, isEnglish, locale }) {
           </div>
         </section>
       )}
+
+      {/*
+        The roundup guide: every route to a mailbox the built-in connectors
+        skip (Yahoo, IMAP, custom domains, several mailboxes). The post exists
+        in en, nb, es, fr and de; the other locales link the English post so
+        nobody lands on a redirect.
+      */}
+      <section className="section" style={{ paddingTop: 0, background: 'var(--bg-page)' }}>
+        <div className="container">
+          <div className="connect-callout">
+            <MIcon name="mail" size={20} color="var(--cobalt-600)" />
+            <div>
+              <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>{c.guide.h}</h2>
+              <p style={{ margin: '0 0 10px', color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>{c.guide.p}</p>
+              <Link
+                href={GUIDE_PATH}
+                locale={guideInLocale ? locale : 'en'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: 'var(--cobalt-600)',
+                }}
+              >
+                {c.guide.link}
+                <MIcon name="arrow" size={13} color="var(--cobalt-600)" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* CTA band */}
       <section className="pricing-cta-band">
