@@ -313,8 +313,8 @@ test('plan_ending_5d: transactional, plan name, end date, Free, nothing deleted,
   assert.match(email.body, /Nothing is deleted either way\./);
   assert.ok(email.body.includes(`Keep my plan: ${KEEP}`));
   assert.ok(email.body.includes(`Pause instead: ${PAUSE}`));
-  assert.ok(email.htmlBody.includes(`href="${KEEP.replace('&', '&amp;')}"`));
-  assert.ok(email.htmlBody.includes(`href="${PAUSE.replace('&', '&amp;')}"`));
+  assert.ok(email.htmlBody.includes(`href="${KEEP.replaceAll('&', '&amp;')}"`));
+  assert.ok(email.htmlBody.includes(`href="${PAUSE.replaceAll('&', '&amp;')}"`));
   assert.match(email.body, /If ending it is what you want, there is nothing to do\./);
 });
 
@@ -387,7 +387,7 @@ test('cancel confirmation with the flag on: keep link under the facts, pause dee
       assert.ok(keepAt < lines.findIndex((l) => /withdraw/.test(l)), 'above the withdrawal line');
       assert.match(lines[keepAt - 1], /^If you change your mind before 31 October 2026, you can keep your plan with one click from your billing page:$/);
       assert.ok(email.body.includes(CANCEL_PAUSE));
-      assert.ok(email.htmlBody.includes(`href="${CANCEL_KEEP.replace('&', '&amp;')}"`));
+      assert.ok(email.htmlBody.includes(`href="${CANCEL_KEEP.replaceAll('&', '&amp;')}"`));
       assert.equal((email.body.match(/\?(?!plan_action|t=|src=)/g) ?? []).length, (before.body.match(/\?(?!plan_action|t=|src=)/g) ?? []).length, 'still exactly the one question');
       // Every line of the original survives, in order, apart from the pause link itself.
       const kept = before.body.split('\n').filter((l) => !l.includes('src=cancel_email'));

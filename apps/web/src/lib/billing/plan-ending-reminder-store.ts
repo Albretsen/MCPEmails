@@ -188,7 +188,7 @@ export class SupabasePlanEndingStore implements PlanEndingStore {
             template: PLAN_ENDING_TEMPLATE,
             scope_key: row.scopeKey,
             send_after: nowIso,
-            payload: row.payload as Json,
+            payload: (row.payload ?? {}) as NonNullable<Json>,
             ...(holdout ? { cancelled_at: nowIso, cancel_reason: HOLDOUT_CANCEL_REASON } : {}),
           },
         ],
