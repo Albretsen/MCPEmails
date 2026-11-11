@@ -30,6 +30,7 @@
 import { requireAdmin } from '@/lib/admin/require-admin';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { lifecycleMode } from '@/lib/billing/lifecycle-mode';
+import { STRIPE_RETRY_WINDOW_DAYS, finalNoticeDayOffset } from '@/lib/billing/retry-window';
 import {
   MIN_SEQUENCES_FOR_RATE,
   fetchDunningRows,
@@ -70,12 +71,13 @@ const TEMPLATE_WORDS: Record<string, string> = {
   dunning_1: 'Day 0, within an hour of the decline',
   dunning_3: 'Day 3',
   dunning_7: 'Day 7',
-  dunning_14: 'Day 14, the last note',
+  dunning_14: `Day ${finalNoticeDayOffset()}, the last reminder (last week of the ${STRIPE_RETRY_WINDOW_DAYS}-day retry window); sent at once, saying the plan closed, if Stripe closes it first`,
   card_expiry_30: 'Card expires next month',
   card_expiry_7: 'Card expires next week',
   cancel_ask: 'Cancellation confirmed',
   winback_14: 'Win-back, 14 days after the period ended',
   winback_30: 'Win-back, the last email',
+  payment_failed_restart: 'Plan ended on a failed card, owner still active: one link to restart the same plan',
 };
 
 function when(iso: string | null): string {
@@ -361,7 +363,7 @@ function RecoveryRate({ outcomes }: { outcomes: OutcomeSummary }) {
     <ChartFrame
       title="Recovery rate"
       subtitle="Of the sequences that have finished, how many got paid."
-      footnote="Time to recover runs from the queued sequence to the payment_recovered cancel. Customer = paid with a different payment method than the one that failed, or the paying charge ran 3-D Secure. Retry = same method, no 3-D Secure (a customer who topped up the account also reads as retry). Not recorded = recovered before this was measured."
+      footnote="Time to recover runs from the queued sequence to the payment_recovered cancel. Customer = paid with a different payment method than the one that failed, or the paying charge ran 3-D Secure. Retry = same method, no 3-D Secure (a customer who topped up the account also reads as retry). Not recorded = recovered before this was measured. Recovered after day 14 = recovered in the part of the retry window that exists only since it went from 2 weeks to 1 month on 2026-11-11."
     >
       <div className="xp-sum" style={{ margin: 0, fontSize: 13 }}>
         <span>
@@ -378,6 +380,7 @@ function RecoveryRate({ outcomes }: { outcomes: OutcomeSummary }) {
             <span style={{ marginLeft: 6 }}>{`(n=${formatCount(outcomes.recoveredWithTiming)})`}</span>
           ) : null}
         </span>
+        <span>Recovered after day 14 <b>{formatCount(outcomes.recoveredAfterDay14)}</b></span>
       </div>
       {outcomes.recoveryRate == null ? (
         <p className="xp-note">
