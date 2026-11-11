@@ -636,6 +636,16 @@
     "switchBusy": "Preparando...",
     "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
   },
+  "annualSwitch": {
+    "title": "Cambia a facturación anual",
+    "body": "Paga {plan} una vez al año y ahorra un {percent} % frente al pago mensual.",
+    "current": "Los días no usados de tu mes actual se descuentan, así que el cargo de hoy es algo menor que un año completo. Verás el importe exacto antes de que se cobre nada.",
+    "cta": "Cambiar a anual",
+    "busy": "Preparando...",
+    "noticeBody": "Pagas {plan} cada mes. La facturación anual cuesta un {percent} % menos.",
+    "noticeCta": "Ver facturación anual",
+    "close": "Cerrar"
+  },
   "founder": {
     "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",
     "places": "Plazas disponibles: {left} de {total}",

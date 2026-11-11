@@ -349,6 +349,55 @@ export async function recordPricingViewed(
   await record({ workspaceId, stage: 'pricing_viewed', outcome: 'success', category: surface });
 }
 
+/** Where the monthly-to-annual switch was shown or clicked. */
+export type AnnualSwitchSurface = 'dashboard_billing' | 'surface_overview';
+
+/**
+ * The monthly-to-annual card (billing page) or notice (Overview) was shown or
+ * clicked (src/lib/billing/annual-switch.ts). `shown` is deduped to one row per
+ * workspace, surface and UTC day, like `pricing_viewed`; every click counts.
+ */
+export async function recordAnnualSwitchSeen(
+  workspaceId: string | null,
+  event: 'shown' | 'clicked',
+  surface: AnnualSwitchSurface,
+): Promise<void> {
+  if (!workspaceId) return;
+  const stage = event === 'shown' ? 'annual_switch_shown' : 'annual_switch_clicked';
+  if (event === 'shown') {
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const { data: existing } = await createServiceRoleClient()
+      .from('product_funnel_events')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .eq('stage', stage)
+      .eq('category', surface)
+      .gte('occurred_at', dayStart.toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (existing) return;
+  }
+  await record({ workspaceId, stage, outcome: 'success', category: surface });
+}
+
+/**
+ * A monthly subscriber confirmed the switch from the annual card and Stripe
+ * collected it (checkout-core's `changed` result). Category is the target.
+ */
+export async function recordAnnualSwitchCompleted(
+  workspaceId: string | null,
+  planId: 'personal' | 'solo' | 'pro',
+): Promise<void> {
+  if (!workspaceId) return;
+  await record({
+    workspaceId,
+    stage: 'annual_switch_completed',
+    outcome: 'success',
+    category: billingTarget(planId, 'year'),
+  });
+}
+
 /**
  * A subscriber said why they cancelled (/billing/feedback, from the post-cancel
  * email or the billing card). Category is the reason, a fixed vocabulary; the

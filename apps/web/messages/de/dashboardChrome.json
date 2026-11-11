@@ -636,6 +636,16 @@
     "switchBusy": "Wird vorbereitet...",
     "ended": "Das Black-Week-Angebot ist vorbei, daher wurde nichts abgebucht. Die Beträge oben sind der reguläre Preis."
   },
+  "annualSwitch": {
+    "title": "Zur jährlichen Abrechnung wechseln",
+    "body": "Zahlen Sie {plan} einmal im Jahr und sparen Sie {percent} % gegenüber monatlicher Zahlung.",
+    "current": "Die ungenutzten Tage Ihres laufenden Monats werden gutgeschrieben, daher ist die heutige Abbuchung etwas niedriger als ein ganzes Jahr. Sie sehen den genauen Betrag, bevor etwas abgebucht wird.",
+    "cta": "Zu jährlich wechseln",
+    "busy": "Wird vorbereitet...",
+    "noticeBody": "Sie zahlen {plan} monatlich. Die jährliche Abrechnung kostet {percent} % weniger.",
+    "noticeCta": "Jährliche Abrechnung ansehen",
+    "close": "Schließen"
+  },
   "founder": {
     "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",
     "places": "Noch {left} von {total} Plätzen frei",

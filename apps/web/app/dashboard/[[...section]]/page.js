@@ -24,6 +24,7 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import { loadAnnualSwitch } from '@/lib/billing/annual-switch-server';
 import {
   attachFounder,
   founderDisplayFor,
@@ -1168,6 +1169,23 @@ export default async function DashboardPage({ params, searchParams }) {
     workspace?.owner_id === user.id,
   );
 
+  // The monthly-to-annual card (billing page) and notice (Overview), or null.
+  // Behind ANNUAL_SWITCH_CARD_ENABLED; reads Stripe only for an owner on a
+  // monthly-shaped live plan that passed every cheap check, and never during
+  // the Black Week window (the seasonal card owns it then). See
+  // src/lib/billing/annual-switch.ts.
+  const annualSwitch = seasonalSwitch
+    ? null
+    : await loadAnnualSwitch({
+        userId: user.id,
+        workspaceId: workspace?.id ?? null,
+        plan,
+        isOwner: workspace?.owner_id === user.id,
+        compedScale,
+        onPass: Boolean(passState),
+        subscriptionStatus: ownBilling?.subscription_status ?? null,
+      });
+
   return (
     <DashboardApp
       initialRoute={initialRoute}
@@ -1220,6 +1238,9 @@ export default async function DashboardPage({ params, searchParams }) {
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,
+        // The monthly-to-annual switch: { planId, currency, noticeVisible }
+        // or null (src/lib/billing/annual-switch-server.ts).
+        annualSwitch,
         // Failed-payment banner (components/dashboard/PaymentIssueBanner.jsx).
         // The owner's own subscription only: a member never sees who pays.
         subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,

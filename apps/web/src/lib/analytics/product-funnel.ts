@@ -175,7 +175,11 @@ export type ProductFunnelEvent = {
     // Broken-inbox alert (20261111140000, src/lib/retention/inbox-alert.ts).
     // sent/holdout carry the phase (alert_1 | alert_2); reconnected the arm
     // (alert | holdout), written for both arms.
-    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected';
+    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected'
+    // Monthly-to-annual switch (20261111140200, src/lib/billing/annual-switch.ts).
+    // shown/clicked carry the surface (dashboard_billing | surface_overview);
+    // completed carries the target (personal_year | solo_year | pro_year).
+    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
