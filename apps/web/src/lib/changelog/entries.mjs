@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-11',
+    kind: 'fixed',
+    title: 'Accepting a workspace invite opens that workspace',
+    body:
+      "After accepting an invite you now land in the workspace you were invited to, so the mailboxes you connect go there. Before, someone new to MCPEmails could land in their own new workspace instead and connect their mailbox there.",
+  },
+  {
     date: '2026-11-10',
     kind: 'added',
     title: 'Setup guides for Italian, Czech and Polish mail providers',

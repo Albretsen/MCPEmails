@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { mapInviteAcceptError } from '@/lib/workspace/invite-accept-error';
+import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
@@ -80,9 +81,21 @@ export async function POST(
     return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     workspaceId:   result.workspace_id,
     workspaceSlug: result.workspace_slug,
     role:          result.role,
   });
+  // Open the joined workspace next. Without this the dashboard falls back to
+  // the earliest-joined workspace, which for someone who signed up through the
+  // invite is the personal Free workspace created seconds earlier: they then
+  // connected their inbox there and met that workspace's inbox paywall.
+  res.cookies.set(ACTIVE_WORKSPACE_COOKIE, result.workspace_id, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  return res;
 }
