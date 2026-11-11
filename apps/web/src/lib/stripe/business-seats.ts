@@ -44,7 +44,7 @@ import {
  *
  * REMOVING a person credits the unused rest of the period:
  * `create_prorations`, so the credit lands on the next invoice. This differs
- * from the add-on on purpose. A person is $19 a month or $182.40 a year, and
+ * from the add-on on purpose. A person is $29 a month or $278.40 a year, and
  * an annual customer who removes someone in month two would otherwise pay for
  * ten months of a person who is gone. Prorating both ways also makes a remove
  * followed by a re-add cost nothing extra: the credit and the new charge cover

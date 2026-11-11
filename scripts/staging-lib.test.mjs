@@ -116,14 +116,14 @@ test('EUR options: prod today without --with-eur, launch rule with it', () => {
   assert.deepEqual(eurOptionFor(byEnv('STRIPE_PRICE_BUSINESS_FOUNDER_MONTHLY'), false), { unit_amount: 2900, tax_behavior: 'exclusive' });
 });
 
-test('the two per-person Business prices: $19 and $182.40 on the Business product, with lookup keys', () => {
+test('the two per-person Business prices: $29 and $278.40 on the Business product, with lookup keys', () => {
   const byEnv = (env) => PRICES.find((p) => p.env === env);
   const month = byEnv('STRIPE_PRICE_BUSINESS_SEAT_MONTHLY');
   const year = byEnv('STRIPE_PRICE_BUSINESS_SEAT_YEARLY');
   assert.equal(month.product, 'business');
   assert.equal(year.product, 'business');
-  assert.equal(month.amount, 1900);
-  assert.equal(year.amount, 18240);
+  assert.equal(month.amount, 2900);
+  assert.equal(year.amount, 27840);
   assert.equal(year.amount, Math.round(month.amount * 12 * 0.8), 'the same 20% annual discount as every plan');
   const params = priceCreateParams(month, 'prod_b', false);
   assert.equal(params.lookup_key, 'business_seat_month');
@@ -132,7 +132,7 @@ test('the two per-person Business prices: $19 and $182.40 on the Business produc
   assert.equal(params.tax_behavior, 'exclusive');
   assert.equal('currency_options' in params, false, 'no EUR option until --with-eur');
   assert.deepEqual(priceCreateParams(year, 'prod_b', true).currency_options, {
-    eur: { unit_amount: 18240, tax_behavior: 'inclusive' },
+    eur: { unit_amount: 27840, tax_behavior: 'inclusive' },
   });
   assert.equal(DEFAULT_PRICING_SWITCHES.business_seat_pricing, true, 'staging runs per person');
   const business = PRODUCTS.find((p) => p.key === 'business');
