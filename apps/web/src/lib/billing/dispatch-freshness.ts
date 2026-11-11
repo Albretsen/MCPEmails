@@ -51,6 +51,13 @@ export interface FreshnessStripe {
       cancel_at_period_end?: boolean | null;
       cancel_at?: number | null;
       pause_collection?: { resumes_at?: number | null } | null;
+      /** Read by annual_renewal_30 only. */
+      items?: {
+        data: Array<{
+          current_period_end?: number | null;
+          price?: { id?: string | null; recurring?: { interval?: string | null } | null } | null;
+        }>;
+      } | null;
     }>;
   };
   paymentMethods: {
@@ -129,6 +136,34 @@ export async function checkFreshness(
       if (resumesAt == null || resumesAt + 3600 !== billsAt) return { send: false, reason: 'no_longer_due' };
       // A cancel that lands on or before that renewal means nothing resumes.
       if (subscription.cancel_at != null && subscription.cancel_at <= billsAt) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      return { send: true };
+    }
+
+    // ── Annual renewal: does it still renew, yearly, on that date? ─────────
+    // scope_key is "sub_xxx:<period end unix seconds>". Anything that makes
+    // the email untrue since it was queued (a cancel, a pause, a switch to
+    // monthly, an earlier renewal) drops it.
+    if (row.template === 'annual_renewal_30') {
+      const [subscriptionId, secondsPart] = row.scope_key.split(':');
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (scheduledToStop({
+        cancel_at_period_end: subscription.cancel_at_period_end ?? null,
+        cancel_at: subscription.cancel_at ?? null,
+      })) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (subscription.pause_collection) return { send: false, reason: 'no_longer_due' };
+      const items = subscription.items?.data ?? [];
+      const yearly = items.find((item) => item.price?.recurring?.interval === 'year');
+      if (!yearly || items.some((item) => item.price?.recurring?.interval === 'month')) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (yearly.current_period_end !== Number(secondsPart)) {
         return { send: false, reason: 'no_longer_due' };
       }
       return { send: true };

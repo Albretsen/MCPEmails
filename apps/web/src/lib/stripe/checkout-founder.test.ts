@@ -60,6 +60,7 @@ nodeMock.module('@/lib/stripe/founder-offer-server', {
 
 nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
+    recordAnnualSwitchCompleted: async () => {},
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
     planCategory: (plan: string | null | undefined) =>
       plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'free',

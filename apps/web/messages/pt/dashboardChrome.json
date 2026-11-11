@@ -632,6 +632,16 @@
     "switchBusy": "Preparando...",
     "ended": "A oferta da Black Week terminou, então nada foi cobrado. Os valores acima são o preço normal."
   },
+  "annualSwitch": {
+    "title": "Mude para cobrança anual",
+    "body": "Pague o {plan} uma vez por ano e economize {percent}% em comparação com o pagamento mensal.",
+    "current": "Os dias não usados do seu mês atual são creditados, então a cobrança de hoje fica um pouco abaixo de um ano inteiro. Você vê o valor exato antes de qualquer cobrança.",
+    "cta": "Mudar para anual",
+    "busy": "Preparando...",
+    "noticeBody": "Você paga o {plan} todo mês. A cobrança anual custa {percent}% menos.",
+    "noticeCta": "Ver cobrança anual",
+    "close": "Fechar"
+  },
   "founder": {
     "line": "Preço de fundador: ${price} por mês, mantido enquanto você continuar assinante. Disponível para as primeiras {total} empresas ou até 31 de dezembro de 2026, o que acontecer primeiro. Caixas de correio extras custam ${addon} por mês cada.",
     "places": "{left} de {total} vagas restantes",

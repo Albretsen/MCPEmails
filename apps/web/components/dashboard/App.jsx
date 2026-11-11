@@ -17,6 +17,7 @@ import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
 import { FinishSetupLink, ResetOnboardingCard } from './OnboardingEntry';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
+import { AnnualSwitchNotice } from './AnnualSwitch';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -1436,6 +1437,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
         {route !== "settings" && (
           <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
+        )}
+        {/* Owner on monthly, decided on the server (annual-switch.ts). */}
+        {route === "overview" && (
+          <AnnualSwitchNotice
+            annualSwitch={serverWorkspace?.annualSwitch ?? null}
+            stripePrices={stripePrices}
+            workspaceId={workspace?.id ?? null}
+            onOpenBilling={() => setRoute("settings")}
+          />
         )}
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (

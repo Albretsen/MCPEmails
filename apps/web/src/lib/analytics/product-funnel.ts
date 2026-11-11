@@ -156,7 +156,11 @@ export type ProductFunnelEvent = {
     | 'usage_meter_shown' | 'grace_end_note_shown'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
-    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
+    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped'
+    // Monthly-to-annual switch (20261111140200, src/lib/billing/annual-switch.ts).
+    // shown/clicked carry the surface (dashboard_billing | surface_overview);
+    // completed carries the target (personal_year | solo_year | pro_year).
+    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
