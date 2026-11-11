@@ -53,6 +53,7 @@ import type {
   GrowthUpgradePressureRow,
   GrowthInboxBandRow,
   GrowthChannelRow,
+  GrowthHeardAboutRow,
   GrowthPeopleCountsRow,
   GrowthSignupPaceRow,
   GrowthUserSignupDayRow,
@@ -501,6 +502,19 @@ export async function fetchInboxDistribution(): Promise<GrowthResult<GrowthInbox
 export async function fetchAcquisitionChannels(days: number): Promise<GrowthResult<GrowthChannelRow[]>> {
   return rpcRows<GrowthChannelRow>('growth_acquisition_channels', GROWTH_TAGS.funnel, {
     p_days: clampDays(days),
+  });
+}
+
+/**
+ * Self-reported "How did you hear about MCPEmails?" answers, all time: one row
+ * per answer (and 'dismissed') with workspaces and paid. Internal owners are
+ * excluded in SQL, like the people counts below.
+ */
+export async function fetchHeardAbout(): Promise<GrowthResult<GrowthHeardAboutRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthHeardAboutRow>('growth_heard_about', GROWTH_TAGS.funnel, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
   });
 }
 

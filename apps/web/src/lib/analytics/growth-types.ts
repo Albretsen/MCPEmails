@@ -360,6 +360,18 @@ export type GrowthInboxBandRow = {
  * row rather than being dropped: the rows must sum to the signup count or they
  * will eventually be read as if they did.
  */
+/**
+ * One row of growth_heard_about (20261111150000_heard_about.sql): a
+ * self-reported "how did you hear about MCPEmails" answer, or 'dismissed', with
+ * the workspaces that gave it and how many of those have paid
+ * (billing_funnel_by_workspace.paid_at). Internal owners excluded.
+ */
+export type GrowthHeardAboutRow = {
+  answer: string;
+  workspaces: number;
+  paid: number;
+};
+
 export type GrowthChannelRow = {
   source: string;
   signups: number;

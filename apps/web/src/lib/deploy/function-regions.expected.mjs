@@ -258,6 +258,7 @@ export const ROUTES = [
   // The onboarding proof card logs in to the mail host like inboxes/[id]/check.
   ['app/api/onboarding/inbox-proof/route.ts', 'iad1', '4', 'IMAP login + STATUS/SEARCH/FETCH to the mail host'],
   ['app/api/onboarding/first-week/route.ts', 'arn1', '4-7 (GET; most owners stop at 4)', '-'],
+  ['app/api/onboarding/heard-about/route.ts', 'arn1', '5 (auth, active workspace, membership, conditional update, funnel insert)', '-'],
   ['app/api/onboarding/route.ts', 'arn1', '4', '-'],
   ['app/api/onboarding/status/route.ts', 'arn1', '2 (auth, then 5 parallel reads)', '-'],
   ['app/api/seasonal-offer/route.ts', 'arn1', '0', 'Stripe API x0-4 in the Black Week window (cached 60 s), none outside it'],

@@ -124,6 +124,25 @@
     "waitingLive": "最初の呼び出しが届くと、このページは自動で更新されます。",
     "waitingStopped": "まだ呼び出しがありません。プロンプトを試してから、このページを再読み込みしてください。"
   },
+  "heardAbout": {
+    "title": "MCPEmails をどこで知りましたか？",
+    "sub": "ワンクリックで、どこで知っていただいたかを教えてください。任意です。",
+    "dismiss": "閉じる",
+    "send": "送信",
+    "otherLabel": "MCPEmails をどこで知りましたか",
+    "otherPlaceholder": "知ったきっかけ（任意）",
+    "options": {
+      "chatgpt": "ChatGPT の回答",
+      "claude": "Claude の回答",
+      "gemini": "Gemini または Google AI の回答",
+      "google_search": "Google 検索",
+      "colleague": "同僚や友人",
+      "directory": "アプリディレクトリや MCP 一覧",
+      "video": "YouTube や動画",
+      "forum": "Reddit やフォーラム",
+      "other": "その他"
+    }
+  },
   "firstWeek": {
     "title": "最初の1週間",
     "sub": "MCPEmailsを毎日の仕事に取り入れるためのステップです。",
