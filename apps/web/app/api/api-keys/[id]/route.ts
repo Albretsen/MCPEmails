@@ -244,7 +244,7 @@ export async function PATCH(
       );
     }
 
-    // 4b. Business privacy model (20261111120000): every listed inbox must be
+    // 4b. Business privacy model (20261111190000): every listed inbox must be
     //     visible to the caller, owners and admins included, so nobody lists
     //     someone else's private inbox on a key. The key itself acts as its
     //     creator, and the MCP server intersects the list with what the

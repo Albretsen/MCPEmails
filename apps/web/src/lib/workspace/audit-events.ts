@@ -1,6 +1,6 @@
 /**
  * Team changes for the Security audit view: public.workspace_audit_events
- * (migration 20261111130000_business_admin_audit).
+ * (migration 20261111190100_business_admin_audit).
  *
  * Written only from server routes, AFTER they have authorised the change and
  * the change has landed, with the service-role client (the table has no write

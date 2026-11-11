@@ -240,7 +240,7 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
   ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
--- Inbox ownership and visibility (20261111120000). Single-tenant self-host
+-- Inbox ownership and visibility (20261111190000). Single-tenant self-host
 -- defaults to 'company' so every key in the workspace keeps every inbox.
 ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS owner_user_id          uuid REFERENCES public.users(id) ON DELETE SET NULL,
@@ -383,7 +383,7 @@ CREATE TABLE IF NOT EXISTS public.activity_log (
 );
 ALTER TABLE public.activity_log
   ADD COLUMN IF NOT EXISTS error_details jsonb;
--- The person the call acted as (hosted migration 20261111130000). The hosted
+-- The person the call acted as (hosted migration 20261111190100). The hosted
 -- trigger that fills it for a key with no creator is not needed here: the
 -- server writes the key's creator, and a NULL means the workspace owner.
 ALTER TABLE public.activity_log
@@ -409,7 +409,7 @@ CREATE TABLE IF NOT EXISTS public.scheduled_sends (
   created_at        timestamptz NOT NULL DEFAULT now(),
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
--- Who the send acts as at dispatch time (20261111120000). NULL = the workspace owner.
+-- Who the send acts as at dispatch time (20261111190000). NULL = the workspace owner.
 ALTER TABLE public.scheduled_sends ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS scheduled_sends_pending_idx   ON public.scheduled_sends (send_at ASC) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS scheduled_sends_workspace_idx ON public.scheduled_sends (workspace_id, send_at ASC) WHERE status IN ('pending', 'sending');
@@ -1141,12 +1141,12 @@ CREATE TABLE IF NOT EXISTS public.send_approvals (
 CREATE INDEX IF NOT EXISTS send_approvals_pending_expiry_idx ON public.send_approvals (expires_at) WHERE (status = 'pending'::text);
 CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_approvals (workspace_id, created_at DESC) WHERE (status = 'pending'::text);
 
--- Business recipient rule (hosted migration 20261111130000). NULL = any
+-- Business recipient rule (hosted migration 20261111190100). NULL = any
 -- recipient; otherwise a send outside these exact domains is held for approval.
 ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS allowed_recipient_domains text[];
 
--- Why a send was held and whose it is (hosted migration 20261111130000).
+-- Why a send was held and whose it is (hosted migration 20261111190100).
 ALTER TABLE public.send_approvals
   ADD COLUMN IF NOT EXISTS hold_reason  text CHECK (hold_reason IS NULL OR hold_reason IN ('recipient_rule')),
   ADD COLUMN IF NOT EXISTS requested_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
@@ -2358,7 +2358,7 @@ CREATE TABLE IF NOT EXISTS public.reminders (
   created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at           timestamptz NOT NULL DEFAULT now()
 );
--- Who set the reminder up (20261111120000). NULL = the key's creator.
+-- Who set the reminder up (20261111190000). NULL = the key's creator.
 ALTER TABLE public.reminders
   ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
@@ -2593,7 +2593,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO service_role;
 
 -- ============================================================
--- Inbox visibility (hosted migration 20261111120000). What a credential acting
+-- Inbox visibility (hosted migration 20261111190000). What a credential acting
 -- as p_user_id may reach; see the hosted migration for the contract. NULL user
 -- acts as the workspace owner.
 -- ============================================================

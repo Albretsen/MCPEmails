@@ -3957,7 +3957,7 @@ interface ActivityLogParams {
   apiKeyId: string;
   /**
    * The person the call acted as: the key's or grant's `created_by`
-   * (activity_log.user_id, migration 20261111130000). Null when unknown here;
+   * (activity_log.user_id, migration 20261111190100). Null when unknown here;
    * the activity_log_fill_user_id trigger then fills the key's creator or,
    * for a key with no creator, the workspace owner.
    */
@@ -20359,7 +20359,7 @@ async function queueSendApproval(
       summary: await sealApprovalSummary(summary, encryptForStorage),
       expires_at: expiresAt,
       ...(sendAt ? { send_at: sendAt } : {}),
-      // The person whose send this is (migration 20261111130000).
+      // The person whose send this is (migration 20261111190100).
       requested_by: apiKey.created_by ?? null,
       // Only an owner or admin may decide a send the recipient rule held. Not
       // in PENDING_APPROVAL_COLUMNS on purpose: if the column were missing the

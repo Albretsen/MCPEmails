@@ -163,7 +163,7 @@ export interface ReminderRow {
   workspace_id: string;
   inbox_id: string;
   api_key_id: string | null;
-  /** Who set it up (20261111120000); null = the key's creator. */
+  /** Who set it up (20261111190000); null = the key's creator. */
   created_by?: string | null;
   kind: ReminderKind;
   status: ReminderStatus;

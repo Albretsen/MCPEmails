@@ -1,7 +1,7 @@
 -- ============================================================
 -- Inbox ownership and visibility (the Business privacy model)
 -- ============================================================
--- Covers 20261111120000_inbox_owner_visibility.sql:
+-- Covers 20261111190000_inbox_owner_visibility.sql:
 --   * a member sees company-wide inboxes and their own private ones, never
 --     another member's private inbox, on inboxes and on every table that
 --     exposes an inbox's content or settings;
@@ -239,7 +239,7 @@ SELECT is((SELECT count(*)::int FROM public.inboxes WHERE id = 'b1501111-0000-00
 SELECT is((SELECT count(*)::int FROM public.reminders), 1, '[N] sees reminders of the company inbox only');
 SELECT is((SELECT count(*)::int FROM public.scheduled_sends), 1, '[N] sees scheduled sends of the company inbox only');
 SELECT is((SELECT count(*)::int FROM public.activity_log WHERE workspace_id = 'b150aaaa-0000-0000-0000-00000000000a'),
-  1, '[N] sees activity of the company inbox only (the inbox-less row is the owner''s, 20261111130000)');
+  1, '[N] sees activity of the company inbox only (the inbox-less row is the owner''s, 20261111190100)');
 SELECT is((SELECT count(*)::int FROM public.workspace_inbox_directory('b150aaaa-0000-0000-0000-00000000000a')),
   1, '[N] the directory lists only what N can see');
 UPDATE public.scheduled_sends SET status = 'cancelled' WHERE inbox_id = 'b1501111-0000-0000-0000-000000000001';

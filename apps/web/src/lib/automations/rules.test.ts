@@ -281,7 +281,7 @@ test('the hidden web-client key cannot be bound to an automation', async () => {
 });
 
 test("privacy: an automation cannot be pointed at someone else's private inbox (owner/admin included)", async () => {
-  // Migration 20261111120000: inbox_visible_to() decides; the dashboard API is
+  // Migration 20261111190000: inbox_visible_to() decides; the dashboard API is
   // the service role, so RLS does not do it for us. An RPC error fails closed.
   const rows: Record<string, Record<string, unknown>[]> = {
     inboxes: [{ id: 'inbox-1', workspace_id: 'ws-1', deleted_at: null }],

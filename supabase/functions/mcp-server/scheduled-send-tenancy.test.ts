@@ -70,7 +70,7 @@ interface RecordedQuery {
  * `select("*")` returns the whole row while a column list projects it.
  */
 /**
- * credential_inbox_scope (inbox visibility, migration 20261111120000): nothing
+ * credential_inbox_scope (inbox visibility, migration 20261111190000): nothing
  * in these fixtures is anyone's hidden private inbox, so every key is
  * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
  */
@@ -741,7 +741,7 @@ Deno.test("a row deferred by the brake itself is still counted when it finally s
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Inbox visibility (migration 20261111120000)
+// Inbox visibility (migration 20261111190000)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MEMBER = "88888888-8888-4888-8888-888888888888";
@@ -812,7 +812,7 @@ Deno.test("visibility: an approved operation re-runs with the narrowed key", asy
 
 // ═══════════════════════════════════════════════════════════════════════════
 // The workspace recipient rule at send time (recipient-domain-rule.ts,
-// migration 20261111130000)
+// migration 20261111190100)
 // ═══════════════════════════════════════════════════════════════════════════
 
 Deno.test("recipient rule: a due send to someone outside the allowed domains is held, never sent", async () => {

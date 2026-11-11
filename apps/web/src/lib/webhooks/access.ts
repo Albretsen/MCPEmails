@@ -127,7 +127,7 @@ export async function validateInboxIds(
   workspaceId: string,
   raw: unknown,
   // The caller. Every listed inbox must also be visible to them (the Business
-  // privacy model, 20261111120000): an owner or admin cannot point a webhook
+  // privacy model, 20261111190000): an owner or admin cannot point a webhook
   // at someone else's private inbox by its id.
   userId?: string,
 ): Promise<{ ok: true; value: string[] | null } | { ok: false; error: string; code: 'inbox_invalid' | 'inbox_cap' }> {

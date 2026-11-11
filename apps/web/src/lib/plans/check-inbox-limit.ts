@@ -77,7 +77,7 @@ export async function checkInboxLimit(
   supabase: SupabaseClient<Database>,
   workspaceId: string,
   // The client that COUNTS inboxes. Since the Business privacy model
-  // (20261111120000) the user-session client no longer sees other people's
+  // (20261111190000) the user-session client no longer sees other people's
   // private inboxes, which still hold a slot, so the connect routes pass the
   // service role here. The plan is still resolved through `supabase`:
   // effective_workspace_plan() answers only the caller's own workspaces.

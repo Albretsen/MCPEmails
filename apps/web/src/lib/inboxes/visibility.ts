@@ -1,6 +1,6 @@
 /**
  * Who may see and use an inbox (the Business privacy model, migration
- * 20261111120000_inbox_owner_visibility).
+ * 20261111190000_inbox_owner_visibility).
  *
  *   user U may use inbox I  <=>  U is a member of I's live workspace
  *                                AND (I.visibility = 'company' OR I.owner_user_id = U)

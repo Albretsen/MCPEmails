@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// The Business privacy model on the Inboxes page (migration 20261111120000).
+// The Business privacy model on the Inboxes page (migration 20261111190000).
 //
 // Run with: npm run test:inbox-visibility-ui
 //

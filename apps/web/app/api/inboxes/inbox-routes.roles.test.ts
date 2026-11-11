@@ -706,7 +706,7 @@ for (const role of ['owner', 'admin']) {
   });
 }
 
-// ── Business privacy model (migration 20261111120000) ─────────────────────
+// ── Business privacy model (migration 20261111190000) ─────────────────────
 // `visible: false` is what the inboxes RLS policy now does for someone else's
 // private inbox: the user-session read finds no row.
 

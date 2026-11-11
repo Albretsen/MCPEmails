@@ -201,7 +201,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'draft_editor_hidden', 'signature_embed_images', 'parked_at', 'owner_user_id', 'visibility'],
       // `parked_at` (20261024173000) degrades like the two preferences above:
       // without it every inbox reads as active, which is the pre-parking truth.
-      // `owner_user_id` and `visibility` (20261111120000) degrade too: without
+      // `owner_user_id` and `visibility` (20261111190000) degrade too: without
       // them no inbox offers the Private / Company-wide control.
       [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at', 'owner_user_id', 'visibility'],
       (columns) => supabase
@@ -329,7 +329,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     // End of an active fan-out hold on this inbox (ISO), or null.
     fanoutHoldUntil: fanoutHoldByInbox[row.id] ?? null,
     // Who connected it and who may use it (the Business privacy model,
-    // 20261111120000). Null on a database without the columns.
+    // 20261111190000). Null on a database without the columns.
     ownerUserId: row.owner_user_id ?? null,
     visibility: row.visibility ?? null,
   }));
@@ -337,7 +337,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
 
 /**
  * Other people's private inboxes, as metadata, for a workspace owner or admin
- * (workspace_inbox_directory, 20261111120000): address, owner and status, so
+ * (workspace_inbox_directory, 20261111190000): address, owner and status, so
  * they can manage seats and disconnect. Never the row itself. Empty for
  * everyone else and on any error.
  */
@@ -1175,7 +1175,7 @@ export default async function DashboardPage({ params, searchParams }) {
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
         // Inboxes the viewer cannot open (owner/admin only) and the switch
-        // behind the Private / Company-wide control (20261111120000).
+        // behind the Private / Company-wide control (20261111190000).
         hiddenInboxes,
         businessSeatPricing,
         // The /onboarding flow for this workspace (components/dashboard/

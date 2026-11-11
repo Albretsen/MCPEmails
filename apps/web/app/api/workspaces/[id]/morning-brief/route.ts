@@ -160,7 +160,7 @@ export async function PUT(request: NextRequest, { params }: Params): Promise<Nex
       .maybeSingle();
     if (error || !inbox) return NextResponse.json({ error: 'invalid_inbox' }, { status: 400 });
     // The brief goes to this inbox, so it must be one the caller may use (the
-    // Business privacy model, 20261111120000). A save that keeps the stored
+    // Business privacy model, 20261111190000). A save that keeps the stored
     // inbox is not a new choice and is let through.
     if (!(await canAccessInbox(service, input.value.inbox_id, scope.userId))) {
       const { data: stored } = await service

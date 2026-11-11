@@ -1,5 +1,5 @@
 // A send the workspace recipient rule held (send_approvals.hold_reason =
-// 'recipient_rule', migration 20261111130000) is decided by an owner or admin
+// 'recipient_rule', migration 20261111190100) is decided by an owner or admin
 // only: the inbox owner's own right to decide a held send on their private
 // inbox does not reach it. Plus the never-throwing audit writer.
 //

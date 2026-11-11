@@ -115,7 +115,7 @@ function fakeClient(kind: 'user' | 'service') {
   return {
     auth: { getUser: async () => ({ data: { user: world.user }, error: null }) },
     rpc: async (name: string, args: Record<string, string>) => {
-      // visible_inbox_ids() (20261111120000): member of the workspace AND
+      // visible_inbox_ids() (20261111190000): member of the workspace AND
       // (company OR owned by the user).
       if (name === 'visible_inbox_ids') {
         const member = world.db.workspace_members.some((m) => m.workspace_id === args.p_workspace_id && m.user_id === args.p_user_id);
@@ -613,7 +613,7 @@ test('verify: an admin cannot launder a send scope onto a creatorless legacy key
 });
 
 // ===========================================================================
-// Business privacy model (migration 20261111120000)
+// Business privacy model (migration 20261111190000)
 // ===========================================================================
 
 test('privacy: a member cannot list another member\'s private inbox on their key', async () => {

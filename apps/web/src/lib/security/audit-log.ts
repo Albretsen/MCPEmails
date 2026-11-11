@@ -1,10 +1,10 @@
 /**
  * The Security page's audit log: MCP tool calls (public.activity_log) and team
- * changes (public.workspace_audit_events, migration 20261111130000).
+ * changes (public.workspace_audit_events, migration 20261111190100).
  *
  * WHO SEES WHAT
  *   member        tool calls on inboxes they can see (RLS on activity_log,
- *                 20261111120000: company-wide inboxes and their own private
+ *                 20261111190000: company-wide inboxes and their own private
  *                 ones, plus calls that named no inbox). No team changes, no
  *                 export.
  *   owner, admin  every tool call in the workspace, read with the service
@@ -129,7 +129,7 @@ function personFor(people: Map<string, AuditPerson>, id: unknown): AuditPerson |
 }
 
 // A disconnected mailbox whose address someone else reconnected keeps its old
-// row under '<address>#retired-<id>' (migration 20261111120000); show the address.
+// row under '<address>#retired-<id>' (migration 20261111190000); show the address.
 export function displayInboxAddress(address: string | null | undefined): string | null {
   if (!address) return null;
   return address.replace(/#retired-[0-9a-f-]+$/i, '');

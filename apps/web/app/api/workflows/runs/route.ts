@@ -42,7 +42,7 @@ export async function GET() {
 
   // Owners and admins see every run in the workspace (operational metadata,
   // never mail content). Everyone else reads through RLS, which since the
-  // Business privacy model (20261111120000) hides runs on other people's
+  // Business privacy model (20261111190000) hides runs on other people's
   // private inboxes.
   const role = await fetchWorkspaceRole(context.supabase, context.workspaceId, context.userId);
   const db = canManageWorkspace(role) ? createServiceRoleClient() : context.supabase;
@@ -79,7 +79,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   // A member may stop only a run they can see: the RLS read hides runs on
-  // other people's private inboxes (20261111120000). Owners and admins may
+  // other people's private inboxes (20261111190000). Owners and admins may
   // stop any run, as before.
   if (!canManageWorkspace(role)) {
     const { data: visibleRun } = await context.supabase

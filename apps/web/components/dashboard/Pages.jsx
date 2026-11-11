@@ -3610,7 +3610,7 @@ function DraftEditorInboxPreference({
 
 /**
  * Private / Company-wide for an inbox the viewer connected (the Business
- * privacy model, migration 20261111120000). Only the inbox's owner sees it;
+ * privacy model, migration 20261111190000). Only the inbox's owner sees it;
  * PATCH /api/inboxes/[id]/visibility refuses everyone else as well.
  */
 export function InboxVisibilityControl({ inbox, onChanged, t }) {

@@ -93,7 +93,7 @@ function fakeClient(kind: 'user' | 'service') {
   const mine = () => world.db.workspace_members.filter((m) => m.user_id === world.user?.id).map((m) => m.workspace_id);
   return {
     auth: { getUser: async () => ({ data: { user: world.user }, error: null }) },
-    // visible_inbox_ids() (20261111120000): member AND (company OR own).
+    // visible_inbox_ids() (20261111190000): member AND (company OR own).
     rpc: async (name: string, args: Record<string, string>) => {
       if (name !== 'visible_inbox_ids') return { data: null, error: { message: `unexpected rpc ${name}` } };
       const member = world.db.workspace_members.some((m) => m.workspace_id === args.p_workspace_id && m.user_id === args.p_user_id);
@@ -501,7 +501,7 @@ test('deliveries: any member reads their endpoint\'s log, without message ids; n
   assert.equal((await deliveries(EP_MINE)).status, 404);
 });
 
-// ── Business privacy model (migration 20261111120000) ─────────────────────
+// ── Business privacy model (migration 20261111190000) ─────────────────────
 
 const PRIVATE_INBOX = '1b000000-0000-4000-8000-0000000000aa';
 

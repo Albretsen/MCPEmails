@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// The shared inbox-visibility helpers (migration 20261111120000). Every
+// The shared inbox-visibility helpers (migration 20261111190000). Every
 // service-role route leans on these, so the one property that matters most is
 // pinned first: on any doubt (an RPC error, a throw, a row without the
 // columns) the answer is "not visible".

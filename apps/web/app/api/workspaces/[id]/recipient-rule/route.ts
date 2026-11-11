@@ -9,7 +9,7 @@ import { parseRecipientDomains, recipientRuleAuditDetails, storedRecipientDomain
 
 /**
  * The Business recipient rule (workspaces.allowed_recipient_domains,
- * migration 20261111130000). Settings > Advanced.
+ * migration 20261111190100). Settings > Advanced.
  *
  *   GET  any member: { domains, canEdit, available }
  *        domains    null = any recipient

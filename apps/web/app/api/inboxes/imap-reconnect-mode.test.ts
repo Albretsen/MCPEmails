@@ -268,7 +268,7 @@ test('a brand-new address at the cap is still refused (control)', async () => {
   assert.equal(world.upserts.length, 0);
 });
 
-// ── Business privacy model (migration 20261111120000) ─────────────────────
+// ── Business privacy model (migration 20261111190000) ─────────────────────
 
 test('a new connection is owned by the person connecting it', async () => {
   world.rows.clear();

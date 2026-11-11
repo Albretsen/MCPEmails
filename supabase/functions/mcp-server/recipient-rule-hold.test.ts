@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // The Business recipient rule on every tool-initiated outbound path
 // (recipient-domain-rule.ts, workspaces.allowed_recipient_domains, migration
-// 20261111130000): a send with any To/Cc/Bcc outside the allowed domains is
+// 20261111190100): a send with any To/Cc/Bcc outside the allowed domains is
 // written to send_approvals with hold_reason 'recipient_rule' and NOT sent;
 // inside the list, or with no rule, it goes as before. The web mail client's
 // person is refused instead (that client has no held-send flow), and the

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Team changes land in workspace_audit_events (migration 20261111130000),
+// Team changes land in workspace_audit_events (migration 20261111190100),
 // written server-side by the route that made the change, only once the change
 // has landed, with who did it:
 //

@@ -4,7 +4,7 @@
 //   a user U may see and use inbox I  <=>  U is a member of I's (live)
 //   workspace AND (I.visibility = 'company' OR I.owner_user_id = U)
 //
-// Migration 20261111120000_inbox_owner_visibility defines the rule and puts it
+// Migration 20261111190000_inbox_owner_visibility defines the rule and puts it
 // in RLS. client-api runs as the service role, so RLS does not protect it: the
 // rule is applied here, per (user, workspace), as an `InboxScope`:
 //

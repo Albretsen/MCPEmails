@@ -70,7 +70,7 @@ INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status) V
   ('b5100000-0000-0000-0000-000000000001', 'b5b00000-0000-0000-0000-000000000001',
    'imap', 'b1@ss-writers.invalid', 'active')
 ON CONFLICT DO NOTHING;
--- Shared workspace: the inbox is company-wide, as 20261111120000 backfills every
+-- Shared workspace: the inbox is company-wide, as 20261111190000 backfills every
 -- inbox of a workspace with more than one member (inbox_visibility.sql covers
 -- private inboxes).
 UPDATE public.inboxes SET visibility = 'company' WHERE workspace_id IN ('a5a00000-0000-0000-0000-000000000001', 'b5b00000-0000-0000-0000-000000000001');

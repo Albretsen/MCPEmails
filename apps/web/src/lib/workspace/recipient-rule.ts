@@ -1,6 +1,6 @@
 /**
  * The Business recipient rule: `workspaces.allowed_recipient_domains`
- * (migration 20261111130000). null = any recipient. Otherwise mcp-server holds
+ * (migration 20261111190100). null = any recipient. Otherwise mcp-server holds
  * every send with a To, Cc or Bcc address outside these domains for an owner
  * or admin to approve (supabase/functions/mcp-server/recipient-domain-rule.ts).
  *

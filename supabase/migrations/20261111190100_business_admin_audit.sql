@@ -1,6 +1,6 @@
 -- ============================================================
 -- MCPEmails - Business admin and audit (phase 2)
--- 20261111130000_business_admin_audit
+-- 20261111190100_business_admin_audit
 -- ============================================================
 --
 -- WHAT THIS ADDS
@@ -14,7 +14,7 @@
 --                                        not the inbox's own review setting
 --   send_approvals.requested_by          the person whose send it is
 --
--- Apply after 20261111120000_inbox_owner_visibility.sql. Idempotent:
+-- Apply after 20261111190000_inbox_owner_visibility.sql. Idempotent:
 -- IF NOT EXISTS / OR REPLACE / DROP ... IF EXISTS throughout.
 -- ============================================================
 
@@ -39,7 +39,7 @@ ALTER TABLE public.activity_log ADD COLUMN IF NOT EXISTS user_id uuid;
 COMMENT ON COLUMN public.activity_log.user_id IS
   'The person the call acted as: the API key''s or OAuth grant''s created_by, or the '
   'workspace owner for a key with no creator. Filled by mcp-server, backstopped by '
-  'the activity_log_fill_user_id trigger. No FK (see 20261111130000).';
+  'the activity_log_fill_user_id trigger. No FK (see 20261111190100).';
 
 -- The backstop. mcp-server passes the key's creator when it has one; this
 -- fills what it could not know without a query (a key with no creator acts as
@@ -77,7 +77,7 @@ CREATE TRIGGER activity_log_fill_user_id
   FOR EACH ROW EXECUTE FUNCTION public.activity_log_fill_user_id();
 
 -- Members read the new column through the per-partition SELECT policies from
--- 20261111120000 (rows of inboxes they can see). activity_log has table-level
+-- 20261111190000 (rows of inboxes they can see). activity_log has table-level
 -- SELECT, so nothing else is needed; stated for the catalog tests.
 GRANT SELECT (user_id) ON public.activity_log TO authenticated;
 
@@ -85,7 +85,7 @@ GRANT SELECT (user_id) ON public.activity_log TO authenticated;
 -- listing) can still reveal what someone else's agent did. Members see such
 -- a row only when they made it; owners and admins see every row (they already
 -- see every call's metadata in the audit view). Rows with an inbox keep the
--- visibility rule from 20261111120000. Replaces the policy on the parent and
+-- visibility rule from 20261111190000. Replaces the policy on the parent and
 -- on every partition, and the one future partitions get.
 DO $$
 DECLARE

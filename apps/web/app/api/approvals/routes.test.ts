@@ -176,7 +176,7 @@ test('details: a summary that does not decrypt reads as empty, not a 500', async
   assert.equal((await res.json()).subject, '');
 });
 
-// ── Business privacy model (migration 20261111120000) ─────────────────────
+// ── Business privacy model (migration 20261111190000) ─────────────────────
 // inbox-1 below is a PRIVATE inbox owned by 'owner-of-inbox'; the caller is
 // user-1 with the role under test.
 

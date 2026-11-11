@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // recipient-domain-rule.ts - the Business recipient rule
-// (workspaces.allowed_recipient_domains, migration 20261111130000).
+// (workspaces.allowed_recipient_domains, migration 20261111190100).
 //
 // When a workspace sets a list of domains, a send whose To, Cc or Bcc holds
 // any address outside that list is HELD for an owner or admin to approve. It

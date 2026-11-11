@@ -3,7 +3,7 @@ import { isInboxVisibleTo, type VisibilityRow } from '@/lib/inboxes/visibility';
 
 /**
  * What one person may do with one held send, under the Business privacy model
- * (migration 20261111120000_inbox_owner_visibility).
+ * (migration 20261111190000_inbox_owner_visibility).
  *
  *   inbox visible to them          full view; decide if owner/admin, or if the
  *                                  inbox is THEIR private inbox (any operator
@@ -20,7 +20,7 @@ import { isInboxVisibleTo, type VisibilityRow } from '@/lib/inboxes/visibility';
  * A held send with no inbox (inbox_id null) follows the role rule alone.
  *
  * A send the workspace recipient rule held (`hold_reason = 'recipient_rule'`,
- * migration 20261111130000) is decided by an owner or admin only: the rule is
+ * migration 20261111190100) is decided by an owner or admin only: the rule is
  * the company's, so the inbox owner's own right to decide does not apply.
  */
 export interface ApprovalAccess {

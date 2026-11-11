@@ -1,4 +1,4 @@
-// Inbox visibility for credentials (inbox-visibility.ts, migration 20261111120000).
+// Inbox visibility for credentials (inbox-visibility.ts, migration 20261111190000).
 //
 // Run: HOST_GUARD_SKIP_NETWORK_TESTS=1 deno test --node-modules-dir=none \
 //        --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/inbox-visibility.test.ts

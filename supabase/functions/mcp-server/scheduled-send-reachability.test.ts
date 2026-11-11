@@ -96,7 +96,7 @@ type Row = Record<string, unknown>;
  * make that defect invisible.
  */
 /**
- * credential_inbox_scope (inbox visibility, migration 20261111120000): nothing
+ * credential_inbox_scope (inbox visibility, migration 20261111190000): nothing
  * in these fixtures is anyone's hidden private inbox, so every key is
  * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
  */

@@ -72,7 +72,7 @@ export async function GET() {
   if (error) return NextResponse.json({ error: 'Failed to load automations.' }, { status: 500 });
 
   // Rules on someone else's private inbox are left out, for every role: the
-  // filter and action describe that person's mail (migration 20261111120000).
+  // filter and action describe that person's mail (migration 20261111190000).
   const visible = await visibleInboxIds(c.db, c.workspaceId, c.user.id);
   const rows = ((rules ?? []) as Array<Record<string, unknown>>).filter(
     (row) => typeof row.inbox_id === 'string' && visible.has(row.inbox_id.toLowerCase()),

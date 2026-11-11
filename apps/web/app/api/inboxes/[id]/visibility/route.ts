@@ -12,7 +12,7 @@ import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
  * PATCH /api/inboxes/[id]/visibility  { visibility: 'private' | 'company' }
  *
  * Who in the workspace may use this mailbox (migration
- * 20261111120000_inbox_owner_visibility):
+ * 20261111190000_inbox_owner_visibility):
  *   private  only the person who connected it (inboxes.owner_user_id)
  *   company  every member of the workspace
  *

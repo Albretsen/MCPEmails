@@ -1,7 +1,7 @@
 -- ============================================================
 -- Business admin and audit (phase 2)
 -- ============================================================
--- Covers 20261111130000_business_admin_audit.sql:
+-- Covers 20261111190100_business_admin_audit.sql:
 --   * activity_log.user_id: the column, the fill-in trigger on the parent and
 --     on every partition (present and future), and what it fills;
 --   * workspace_audit_events: owner/admin read, members and outsiders do not,

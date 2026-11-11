@@ -410,7 +410,7 @@ export async function assertWorkspaceResources(
   inboxId: string,
   apiKeyId: string,
   // The signed-in caller. When given, the inbox must also be visible to them
-  // (the Business privacy model, migration 20261111120000): nobody points an
+  // (the Business privacy model, migration 20261111190000): nobody points an
   // automation at someone else's private inbox, owners and admins included.
   userId?: string,
 ): Promise<{ error: string; status: number } | null> {

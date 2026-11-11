@@ -267,7 +267,7 @@ function answer(w: World, call: Call, wantsObject: boolean): Response {
   if (target === "workspaces" && method === "GET") return one(w.workspaceMissing ? null : w.workspace);
   if (target === "user_usage_entitlements" && method === "GET") return one(w.entitlement);
   if (target === "rpc/credential_inbox_scope_for_key") {
-    // Migration 20261111120000 (inbox visibility): nothing in this world is a
+    // Migration 20261111190000 (inbox visibility): nothing in this world is a
     // hidden private inbox, so the key is unrestricted.
     return json(w.key ? { restricted: false, inbox_ids: w.key.inbox_ids ?? null, key_id: w.key.id } : null);
   }
@@ -593,7 +593,7 @@ const FIRST_USE_ROUND_TRIPS = ["GET oauth_refresh_tokens", "PATCH workspaces", "
  */
 const PREFLIGHT = "RPC mcp_tools_call_gate";
 /**
- * Migration 20261111120000 (inbox visibility): the key's inbox scope, asked by
+ * Migration 20261111190000 (inbox visibility): the key's inbox scope, asked by
  * the key's hash IN THE SAME WAVE as the gate, so it adds no serial round trip.
  * tools/call only.
  */
@@ -1343,7 +1343,7 @@ Deno.test("without EdgeRuntime the writes are awaited: the row exists when the r
     workspace_id: WORKSPACE,
     api_key_id: KEY_ID,
     // The person the call acted as: the key's creator (activity_log.user_id,
-    // migration 20261111130000).
+    // migration 20261111190100).
     user_id: OWNER,
     inbox_id: INBOX,
     tool_name: "signature_get",
@@ -1771,7 +1771,7 @@ Deno.test("the tools/call log line carries pre_ms, total_ms and the round-trip c
   // preflight (preflight + last_used_at + reservation), and 10 and 11 before
   // that (auth + last_used_at + 3 key windows + workspace window + plan row +
   // entitlement + allowance + reservation).
-  // The inbox-scope read (20261111120000) is counted, in the gate's wave.
+  // The inbox-scope read (20261111190000) is counted, in the gate's wave.
   assertEquals(line.pre_db_calls, 2);
   assertEquals(line.db_calls, 3);
   // activity_log.duration_ms is still the handler's clock and nothing else.

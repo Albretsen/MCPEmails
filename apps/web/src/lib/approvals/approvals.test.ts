@@ -397,7 +397,7 @@ test('Reply-To is on the review model (from the draft snapshot or the send argum
 });
 
 // ---------------------------------------------------------------------------
-// Business privacy model (migration 20261111120000) on the review page
+// Business privacy model (migration 20261111190000) on the review page
 // ---------------------------------------------------------------------------
 
 const privateInbox = (owner: string) => ({

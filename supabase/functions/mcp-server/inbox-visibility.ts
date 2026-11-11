@@ -2,7 +2,7 @@
  * Inbox visibility for credentials (the Business privacy model).
  *
  * A user may use an inbox iff they are a member of its workspace AND the inbox
- * is company-wide or they own it (migration 20261111120000). The MCP server
+ * is company-wide or they own it (migration 20261111190000). The MCP server
  * runs as the service role, so RLS does not apply here: the rule is enforced by
  * narrowing the credential's `inbox_ids` allow-list once per request, right
  * after authentication. Every resolver already honours `inbox_ids`, so every

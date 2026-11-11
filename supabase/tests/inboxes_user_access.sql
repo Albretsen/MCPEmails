@@ -69,7 +69,7 @@ INSERT INTO public.inboxes (
   'imap.company.invalid', 993, 'smtp.company.invalid', 465, 'ciphertext-imap',
   'ciphertext-access', 'ciphertext-refresh', 'dashboard', true
 );
--- Shared workspace: the inbox is company-wide, as 20261111120000 backfills every
+-- Shared workspace: the inbox is company-wide, as 20261111190000 backfills every
 -- inbox of a workspace with more than one member (inbox_visibility.sql covers
 -- private inboxes).
 UPDATE public.inboxes SET visibility = 'company' WHERE workspace_id IN ('a0e0aaaa-0000-0000-0000-00000000000a');
