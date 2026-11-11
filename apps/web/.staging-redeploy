@@ -1,0 +1,2 @@
+Staging-only marker. Changing this file makes Vercel build staging again after an env change
+(the ignoreCommand in vercel.json skips a same-SHA redeploy). Last bump: 2026-11-11 billing retention flags.
