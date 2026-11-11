@@ -68,6 +68,7 @@ function ctx(overrides: Partial<Ctx> = {}, owner: Partial<NonNullable<Ctx['owner
     unlimitedInboxes: false,
     internal: false,
     inboxCount: 1,
+    ownerCountries: [],
     ledger: [],
     ...overrides,
   };
@@ -188,7 +189,7 @@ test('trigger: action-cap paywall rows (NULL connection_type) are labelled actio
 
 test('trigger: step 1 waits until an hour after the paywall, then sends', () => {
   assert.deepEqual(decide(ctx(), at(30 * 60_000)), { kind: 'wait', step: 1, dueAt: at(HOUR).toISOString() });
-  assert.deepEqual(decide(ctx(), at(HOUR + 1)), { kind: 'send', step: 1 });
+  assert.deepEqual(decide(ctx(), at(HOUR + 1)), { kind: 'send', step: 1, arm: 'consented' });
 });
 
 test('trigger: a paywall BEFORE consent never starts the sequence, and nothing is recorded', () => {
@@ -232,7 +233,7 @@ const step2Time = at(3 * DAY + HOUR);
 
 test('step 2 waits for 3 days, then sends if step 1 was sent', () => {
   assert.equal(decide(ctx(midSequence), at(2 * DAY)).kind, 'wait');
-  assert.deepEqual(decide(ctx(midSequence), step2Time), { kind: 'send', step: 2 });
+  assert.deepEqual(decide(ctx(midSequence), step2Time), { kind: 'send', step: 2, arm: 'consented' });
 });
 
 const stops: Array<[string, Partial<Ctx>, Partial<NonNullable<Ctx['owner']>>, string]> = [
@@ -260,7 +261,7 @@ for (const [name, overrides, owner, reason] of stops) {
 }
 
 test('an unrelated category opt-out does not stop this sequence', () => {
-  assert.deepEqual(decide(ctx({}, { unsubscribedCategories: ['research'] }), at(2 * HOUR)), { kind: 'send', step: 1 });
+  assert.deepEqual(decide(ctx({}, { unsubscribedCategories: ['research'] }), at(2 * HOUR)), { kind: 'send', step: 1, arm: 'consented' });
 });
 
 test('a failed step ends the sequence: failed rows are never retried', () => {
@@ -281,7 +282,7 @@ test('a recorded stop stays stopped even after the condition flips back', () => 
 
 test('step 3 after step 2, and the sequence completes', () => {
   const ledger = [sentRow(1, HOUR), sentRow(2, 3 * DAY + HOUR)];
-  assert.deepEqual(decide(ctx({ ledger }), at(7 * DAY + HOUR)), { kind: 'send', step: 3 });
+  assert.deepEqual(decide(ctx({ ledger }), at(7 * DAY + HOUR)), { kind: 'send', step: 3, arm: 'consented' });
   assert.deepEqual(decide(ctx({ ledger: [...ledger, sentRow(3, 7 * DAY + HOUR)] }), at(8 * DAY)), { kind: 'done', reason: 'completed' });
 });
 
@@ -489,4 +490,148 @@ test('step 3: monthly first, annual as the option, saving computed not written',
   if (personal.savingPercent === pro.savingPercent) assert.ok(text.includes(`saves ${personal.savingPercent}%`));
   assert.ok(text.indexOf('a month') < text.indexOf('a year'), 'monthly is presented before annual');
   assert.ok(text.includes('interval=month'), 'the link preselects monthly');
+});
+
+// ---------------------------------------------------------------------------
+// Arms, the service notice and the holdout (owner decision 2026-11-11)
+// ---------------------------------------------------------------------------
+
+const START = at(-DAY);
+const LIVE = { startAt: START, live: true };
+const DRY = { startAt: START, live: false };
+
+/** A workspace id outside the 20% holdout, or inside it. */
+function wsInArm(holdout: boolean): string {
+  for (let i = 0; i < 1000; i += 1) {
+    const id = `ws-arm-${i}`;
+    if (followup.isHoldout(id) === holdout) return id;
+  }
+  throw new Error('no id found');
+}
+const WS_SEND = wsInArm(false);
+const WS_HOLD = wsInArm(true);
+
+function noConsent(countries: Array<string | null>, workspaceId = WS_SEND, ownerId = USER): Ctx {
+  const base = ctx({ workspaceId, ownerCountries: countries }, { marketingConsentAt: null, id: ownerId });
+  return { ...base, workspace: { ownerId, plan: 'free', deletedAt: null } };
+}
+
+test('arms: without a start date nobody new is reached (today exactly)', () => {
+  const d = decide(noConsent(['US']), at(2 * HOUR), {});
+  assert.deepEqual(d, { kind: 'stop', step: 1, reason: 'no_consent', persist: false });
+  const unset = decide(noConsent(['US']), at(2 * HOUR), { expansion: { startAt: null, live: true } });
+  assert.equal(unset.kind, 'stop');
+});
+
+test('arms: a paywall before the start date never enters a new arm (no backlog)', () => {
+  const later = { startAt: at(HOUR / 2), live: true };
+  const d = decide(noConsent(['US']), at(2 * HOUR), { expansion: later });
+  assert.deepEqual(d, { kind: 'stop', step: 1, reason: 'no_consent', persist: false });
+});
+
+test('arms: non-European owner without consent gets the sequence (soft opt-in)', () => {
+  assert.deepEqual(decide(noConsent(['US']), at(2 * HOUR), { expansion: LIVE }), { kind: 'send', step: 1, arm: 'soft_opt_in' });
+});
+
+test('arms: European or unknown owner without consent gets the service notice', () => {
+  const notice = { kind: 'send', step: 1, arm: 'service_notice' };
+  assert.deepEqual(decide(noConsent(['NO']), at(2 * HOUR), { expansion: LIVE }), notice);
+  assert.deepEqual(decide(noConsent([null]), at(2 * HOUR), { expansion: LIVE }), notice);
+  assert.deepEqual(decide(noConsent([]), at(2 * HOUR), { expansion: LIVE }), notice);
+  // One European workspace is enough to be treated as European.
+  assert.deepEqual(decide(noConsent(['US', 'DE']), at(2 * HOUR), { expansion: LIVE }), notice);
+});
+
+test('arms: a consented owner keeps the full sequence wherever they live', () => {
+  const c = ctx({ workspaceId: WS_SEND, ownerCountries: ['DE'] });
+  assert.deepEqual(decide(c, at(2 * HOUR), { expansion: LIVE }), { kind: 'send', step: 1, arm: 'consented' });
+});
+
+test('arms: the service notice is one email, never followed by steps 2 and 3', () => {
+  const ledger: LedgerRow[] = [{ ...sentRow(1, 2 * HOUR, WS_SEND), detail: 'service_notice' }];
+  const d = decide({ ...noConsent(['NO']), ledger }, at(3 * DAY + HOUR), { expansion: LIVE });
+  assert.deepEqual(d, { kind: 'done', reason: 'completed' });
+});
+
+test('holdout: 20% of workspaces, stable, in every arm once live', () => {
+  let held = 0;
+  for (let i = 0; i < 2000; i += 1) if (followup.isHoldout(`ws-${i}`)) held += 1;
+  assert.ok(held > 300 && held < 500, `held ${held}`);
+  for (const c of [noConsent(['US'], WS_HOLD), noConsent(['FR'], WS_HOLD), ctx({ workspaceId: WS_HOLD })]) {
+    assert.equal(decide(c, at(2 * HOUR), { expansion: LIVE }).kind, 'holdout');
+  }
+});
+
+test('holdout: a consented owner is never held out before the expansion is live', () => {
+  assert.equal(decide(ctx({ workspaceId: WS_HOLD }), at(2 * HOUR), { expansion: DRY }).kind, 'send');
+  assert.equal(decide(ctx({ workspaceId: WS_HOLD }), at(2 * HOUR), {}).kind, 'send');
+});
+
+test('run: holdout writes a holdout row with the arm, sends nothing, and ends the sequence', async () => {
+  const store = new MemoryStore([noConsent(['US'], WS_HOLD)]);
+  const { sent, send } = recordingSender();
+  const report = await runPaywallFollowup({ store, mode: 'send', send, now: at(2 * HOUR), expansion: LIVE });
+  assert.equal(report.heldOut, 1);
+  assert.equal(sent.length, 0);
+  assert.equal(store.rows[0].status, 'holdout');
+  assert.equal(store.rows[0].detail, 'soft_opt_in');
+  const later = await runPaywallFollowup({ store, mode: 'send', send, now: at(3 * DAY + HOUR), expansion: LIVE });
+  assert.equal(later.sent, 0);
+  assert.equal(sent.length, 0);
+});
+
+test('run: expansion dry run reports new arms but writes and sends nothing for them', async () => {
+  const store = new MemoryStore([
+    noConsent(['US']),
+    noConsent(['NO'], 'ws-other', 'u2'),
+    noConsent(['US'], WS_HOLD, 'u3'),
+  ]);
+  store.readOnly = true;
+  const { sent, send } = recordingSender();
+  const report = await runPaywallFollowup({ store, mode: 'send', send, now: at(2 * HOUR), expansion: DRY });
+  assert.equal(sent.length, 0);
+  assert.equal(store.claims, 0);
+  assert.equal(report.byArm.soft_opt_in, 1);
+  assert.equal(report.byArm.service_notice, 1);
+  assert.equal(report.wouldHoldOut, 1);
+});
+
+test('run: live soft opt-in sends step 1 with the arm on the row and its own footer', async () => {
+  const store = new MemoryStore([noConsent(['US'])]);
+  const { sent, send } = recordingSender();
+  const report = await runPaywallFollowup({ store, mode: 'send', send, now: at(2 * HOUR), expansion: LIVE });
+  assert.equal(report.sent, 1);
+  assert.equal(store.rows[0].detail, 'soft_opt_in');
+  assert.equal(store.rows[0].status, 'sent');
+  assert.match(sent[0].text, /reached a Free plan limit\. Unsubscribe/);
+  assert.doesNotMatch(sent[0].text, /asked for product tips/);
+  assert.ok(sent[0].headers['List-Unsubscribe']);
+});
+
+test('run: live service notice sends the notice once, no follow-ups', async () => {
+  const store = new MemoryStore([{ ...noConsent(['SE']), paywallKind: 'action_cap' }]);
+  const { sent, send } = recordingSender();
+  await runPaywallFollowup({ store, mode: 'send', send, now: at(2 * HOUR), expansion: LIVE });
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].subject, 'Your MCPEmails workspace reached a Free plan limit');
+  assert.equal(store.rows[0].detail, 'service_notice');
+  for (const later of [3 * DAY + HOUR, 7 * DAY + HOUR]) {
+    store.clock = at(later);
+    await runPaywallFollowup({ store, mode: 'send', send, now: at(later), expansion: LIVE });
+  }
+  assert.equal(sent.length, 1);
+});
+
+test('service notice copy: informative, no price, no offer, no em dash', () => {
+  for (const kind of ['inbox_cap', 'action_cap', 'unknown'] as const) {
+    const n = templates.composePaywallNotice({ paywallKind: kind, unsubscribeToken: TOKEN });
+    assert.ok(n);
+    assert.doesNotMatch(n.text, /\$|€|upgrade|discount|offer|Personal|Pro\b|—/i);
+    assert.match(n.text, new RegExp(`${FREE_ACTION_ALLOWANCE} email actions a month`));
+    assert.match(n.text, /\/dashboard\/usage/);
+    assert.match(n.text, /\/pricing/);
+    assert.match(n.text, /Unsubscribe: /);
+    assert.doesNotMatch(n.text, /asked for product tips/);
+  }
+  assert.equal(templates.composePaywallNotice({ paywallKind: 'inbox_cap', unsubscribeToken: null }), null);
 });

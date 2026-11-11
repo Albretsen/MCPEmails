@@ -72,7 +72,7 @@ export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
  */
 export type PassFunnelCategory =
   | 'personal_pass_3m'
-  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
+  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder' | 'free_reset_email'
   | 'pass';
 
 /** pause_resumed: who ended it. retention_option_clicked: which option. */
