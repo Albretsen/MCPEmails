@@ -465,5 +465,7 @@ test('the send uses a referral link it is handed', async () => {
     async () => json(200, { id: 'stubbed-message-id' }),
     () => sendPurchaseConfirmationEmail({ ...SEND_INPUT, referralLink: 'https://mcpemails.com/r/ABCD2345' }),
   );
-  assert.ok(String(calls[0].payload.text).includes('https://mcpemails.com/r/ABCD2345'));
+  // Match the link as a whole token, not as a substring (CodeQL js/incomplete-url-substring-sanitization).
+  const links = String(calls[0].payload.text).match(/https:\/\/\S+/g) ?? [];
+  assert.ok(links.includes('https://mcpemails.com/r/ABCD2345'), links.join(' '));
 });
