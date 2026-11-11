@@ -6,6 +6,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   approvalActingKey,
+  countTeammatePrivateInboxes,
   credentialCanReachInbox,
   effectiveInboxIds,
   inboxAllowed,
@@ -15,6 +16,7 @@ import {
   readCredentialScope,
   readCredentialScopeForKey,
   scopeForKey,
+  teammatePrivateInboxesMessage,
   userCanReachInbox,
 } from "./inbox-visibility.ts";
 
@@ -229,4 +231,57 @@ Deno.test("by-hash scope: an unknown key, an error or a malformed answer is null
   assertEquals(await readCredentialScopeForKey(rpcAnswer(null, { message: "x" }), "h"), null);
   assertEquals(await readCredentialScopeForKey(rpcAnswer({ restricted: true, inbox_ids: [] }), "h"), null, "no key_id");
   assertEquals(await readCredentialScopeForKey({ rpc: () => Promise.reject(new Error("net")) }, "h"), null);
+});
+
+// ── teammates' private mailboxes (the "no mailbox connected" fix) ───────────
+
+/** A query-builder fake that records filters and answers with a count. */
+function countDb(answer: { count: number | null; error?: { message: string } | null } | "throw") {
+  const calls: Array<[string, unknown[]]> = [];
+  const builder: Record<string, unknown> = {};
+  for (const m of ["select", "eq", "is", "in", "not", "neq"]) {
+    builder[m] = (...args: unknown[]) => {
+      calls.push([m, args]);
+      return builder;
+    };
+  }
+  builder.then = (resolve: (v: unknown) => void, reject: (e: unknown) => void) => {
+    if (answer === "throw") return reject(new Error("db down"));
+    return resolve({ count: answer.count, error: answer.error ?? null });
+  };
+  return {
+    calls,
+    db: { from: (t: string) => { calls.push(["from", [t]]); return builder; } },
+  };
+}
+
+Deno.test("teammate private count: private, not the caller's, not parked or deleted", async () => {
+  const { db, calls } = countDb({ count: 2 });
+  assertEquals(await countTeammatePrivateInboxes(db, WS, A), 2);
+  const seen = JSON.stringify(calls);
+  assert(seen.includes('["from",["inboxes"]]'));
+  assert(seen.includes('["eq",["workspace_id","' + WS + '"]]'));
+  assert(seen.includes('["eq",["visibility","private"]]'));
+  assert(seen.includes('["is",["deleted_at",null]]'));
+  assert(seen.includes('["is",["parked_at",null]]'));
+  assert(seen.includes('["neq",["owner_user_id","' + A + '"]]'));
+});
+
+Deno.test("teammate private count: 0 on error, on a throw, and on no rows", async () => {
+  assertEquals(await countTeammatePrivateInboxes(countDb({ count: null, error: { message: "x" } }).db, WS, A), 0);
+  assertEquals(await countTeammatePrivateInboxes(countDb("throw").db, WS, A), 0);
+  assertEquals(await countTeammatePrivateInboxes(countDb({ count: 0 }).db, WS, A), 0);
+});
+
+Deno.test("teammate private message: says private, owned by teammates, both ways forward", () => {
+  const one = teammatePrivateInboxesMessage(1, "https://mcpemails.com/dashboard/inboxes");
+  assert(one.includes("1 private mailbox, owned by a teammate"));
+  const many = teammatePrivateInboxesMessage(3, "https://mcpemails.com/dashboard/inboxes");
+  assert(many.includes("3 private mailboxes, owned by teammates"));
+  for (const text of [one, many]) {
+    assert(text.includes("connect their own mailbox"));
+    assert(text.includes("company-wide"));
+    assert(!/no mailbox is connected/i.test(text), "never the first-run sentence");
+    assert(!text.includes("\u2014"), "no em dash");
+  }
 });

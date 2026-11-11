@@ -99,11 +99,11 @@ export const SOLD_PRICE_ENV: readonly SoldPriceSpec[] = [
   { env: 'STRIPE_PRICE_BUSINESS_YEARLY', usdCents: 37440, interval: 'year' },
   { env: 'STRIPE_PRICE_BUSINESS_MAILBOX_MONTHLY', usdCents: 300, interval: 'month' },
   { env: 'STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY', usdCents: 2880, interval: 'year' },
-  // Business per person ($19 / $182.40 a person, business-seats.ts). Optional:
+  // Business per person ($29 / $278.40 a person, business-seats.ts). Optional:
   // they exist only where `business_seat_pricing` is being built or tested,
   // and the same EUR rule applies once they do (same digits, inclusive).
-  { env: 'STRIPE_PRICE_BUSINESS_SEAT_MONTHLY', usdCents: 1900, interval: 'month', optional: true },
-  { env: 'STRIPE_PRICE_BUSINESS_SEAT_YEARLY', usdCents: 18240, interval: 'year', optional: true },
+  { env: 'STRIPE_PRICE_BUSINESS_SEAT_MONTHLY', usdCents: 2900, interval: 'month', optional: true },
+  { env: 'STRIPE_PRICE_BUSINESS_SEAT_YEARLY', usdCents: 27840, interval: 'year', optional: true },
   // The Japan sending route is sold from the Dashboard, not from code, so this
   // variable exists only for these scripts. EUR 108, not 120 (owner decision).
   { env: 'STRIPE_PRICE_JAPAN_ROUTE_YEARLY', usdCents: 12000, eurCents: 10800, interval: 'year', optional: true },

@@ -270,14 +270,14 @@ export const PRICES = Object.freeze([
     nickname: 'Business founder yearly', lookup_key: 'business_founder_year', metadata: { offer: 'founder2026' },
     eurAlways: { unit_amount: 27840, tax_behavior: 'exclusive' },
   },
-  // Business per person (pricing_switches.business_seat_pricing): $19 and
-  // $182.40 a person, on the Business product. Not in prod yet.
+  // Business per person (pricing_switches.business_seat_pricing): $29 and
+  // $278.40 a person, on the Business product. Not in prod yet.
   {
-    env: 'STRIPE_PRICE_BUSINESS_SEAT_MONTHLY', product: 'business', amount: 1900, interval: 'month', tax: 'exclusive',
+    env: 'STRIPE_PRICE_BUSINESS_SEAT_MONTHLY', product: 'business', amount: 2900, interval: 'month', tax: 'exclusive',
     nickname: 'Business per person monthly', lookup_key: 'business_seat_month',
   },
   {
-    env: 'STRIPE_PRICE_BUSINESS_SEAT_YEARLY', product: 'business', amount: 18240, interval: 'year', tax: 'exclusive',
+    env: 'STRIPE_PRICE_BUSINESS_SEAT_YEARLY', product: 'business', amount: 27840, interval: 'year', tax: 'exclusive',
     nickname: 'Business per person yearly', lookup_key: 'business_seat_year',
   },
   { env: 'STRIPE_PRICE_PERSONAL_PASS_3M', product: 'pass', amount: 2900, interval: null, tax: 'exclusive', noEur: true },

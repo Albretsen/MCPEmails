@@ -12,7 +12,7 @@
  * a placeholder filled here from the price map (the seat amounts that
  * `withBusinessSeatPrices` put on `stripePrices.pro`) and from the constants
  * in plans.ts, so a reprice cannot leave a sentence quoting the old figure.
- * business-seat-copy.test.ts pins that. Amounts are bare ("19", "182,40"):
+ * business-seat-copy.test.ts pins that. Amounts are bare ("29", "278,40"):
  * each message writes its own currency sign the way its locale does, and the
  * pages swap it for the euro for an EU visitor, like every other price.
  *

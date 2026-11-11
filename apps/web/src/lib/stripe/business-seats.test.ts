@@ -432,11 +432,11 @@ test('the dashboard price map: per person while on, untouched while off', async 
   assert.equal(await withBusinessSeatPrices(prices, { seatOn: false }), prices);
   const on = await withBusinessSeatPrices(prices, {
     seatOn: true,
-    amounts: { monthlyCents: 1900, yearlyCents: 18240 },
+    amounts: { monthlyCents: 2900, yearlyCents: 27840 },
   });
-  assert.equal(on.pro.monthlyCents, 1900);
-  assert.equal(on.pro.yearlyCents, 18240);
-  assert.equal(on.pro.eurMonthlyCents, 1900);
+  assert.equal(on.pro.monthlyCents, 2900);
+  assert.equal(on.pro.yearlyCents, 27840);
+  assert.equal(on.pro.eurMonthlyCents, 2900);
   assert.deepEqual(on.pro.perPerson, { minPeople: 2 });
   assert.equal('founder' in on.pro, false, 'no founder line while per person is on');
   assert.equal(on.solo, prices.solo);

@@ -36,7 +36,7 @@ IMPORTANT: a push to `main` is a production deploy of the web app. Vercel promot
 A full copy of the stack for end-to-end checks: `staging.mcpemails.com` (web) and `app-staging.mcpemails.com` (client) on the Vercel projects `mcp-emails-web-staging` and `mcp-emails-client-staging`, a separate Supabase project and a Stripe sandbox. Both Vercel projects build the long-lived `staging` branch as their production branch.
 
 - A change that needs an end-to-end check (billing, auth, OAuth, mail, cron, the web client) goes to `staging` first, then to `main`. Everything else goes straight to `main` as before.
-- `sync-staging.yml` fast-forwards `staging` to `main` every Monday and fails if staging has commits main lacks. Get those into `main` or drop them before the sync.
+- `sync-staging.yml` brings `staging` up to `main` every Monday: a fast-forward when staging has nothing main lacks, otherwise a merge of main into staging (never a reset, so migrations already applied to the staging database keep their files). A merge conflict fails the run and pushes nothing; resolve it with a "Merge main into staging" PR into staging.
 - Name the staging Supabase project only through `vars.SUPABASE_REF_STAGING`; never hardcode its ref.
 - Migrations reach staging through `migrate-staging.yml` (push to `staging`), the only place `db push` is allowed. It refuses the prod ref. Production keeps the manual apply under Database.
 - Edge functions: `gh workflow run deploy-edge-function.yml --ref staging -f function=<fn>` (staging is the default target). If it fails 403, the repo token lacks staging access: deploy with the CLI from a clean worktree at `origin/staging`, passing the staging ref.

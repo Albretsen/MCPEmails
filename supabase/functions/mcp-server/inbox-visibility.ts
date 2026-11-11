@@ -209,3 +209,55 @@ export function approvalActingKey<K extends { created_by?: string | null }>(key:
   if (typeof requestedBy !== "string" || !requestedBy) return key;
   return { ...key, created_by: requestedBy };
 }
+
+/**
+ * How many mailboxes in the workspace are private to someone other than
+ * `userId`. Read only when a credential reaches no mailbox at all, so the
+ * answer can say "your teammates have private mailboxes" instead of the
+ * first-run "no mailbox is connected", which is false for a Business owner
+ * whose colleagues connected theirs privately. Counts active and errored rows,
+ * not parked or deleted ones. Never throws; 0 on any failure, which keeps the
+ * first-run answer.
+ */
+export async function countTeammatePrivateInboxes(
+  db: Db,
+  workspaceId: string,
+  userId: string | null | undefined,
+): Promise<number> {
+  try {
+    let q = db
+      .from("inboxes")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .eq("visibility", "private")
+      .is("deleted_at", null)
+      .is("parked_at", null)
+      .in("status", ["active", "error"])
+      .not("owner_user_id", "is", null);
+    if (userId) q = q.neq("owner_user_id", userId);
+    const { count, error } = await q;
+    if (error) return 0;
+    return typeof count === "number" && count > 0 ? count : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * The answer when the caller reaches no mailbox but teammates own private
+ * ones. Says what is there, that only their owners can use them, and the two
+ * ways forward: connect your own, or ask the owner or an admin to make one
+ * company-wide.
+ */
+export function teammatePrivateInboxesMessage(count: number, setupUrl: string): string {
+  const what = count === 1
+    ? "This workspace has 1 private mailbox, owned by a teammate. Only its owner can use it"
+    : `This workspace has ${count} private mailboxes, owned by teammates. Only their owners can use them`;
+  return (
+    `${what}, so there is no mailbox you can read or send from yet. Tell the user this ` +
+    "and give them two options: connect their own mailbox at the setup_url (render it " +
+    "as a clickable link), or ask the teammate who owns a mailbox, or a workspace admin, " +
+    "to make it company-wide in the dashboard under Inboxes. Once either is done, call " +
+    "inbox_list again."
+  );
+}

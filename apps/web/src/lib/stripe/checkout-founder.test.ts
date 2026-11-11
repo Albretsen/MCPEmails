@@ -72,7 +72,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
 });
 
 nodeMock.module('@/lib/stripe/customer', {
-  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_test' }) },
+  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_test' }), discardNewStripeCustomer: async () => {} },
 });
 
 nodeMock.module('@/lib/stripe/client', {
