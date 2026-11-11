@@ -97,6 +97,7 @@ function steadyState(ctx: Ctx, ignoreConsent: boolean): Decision {
 
 function label(d: Decision): string {
   if (d.kind === 'send') return `step ${d.step} due now`;
+  if (d.kind === 'holdout') return `held out (${d.arm})`;
   if (d.kind === 'wait') return `waiting for step ${d.step}`;
   if (d.kind === 'done') return d.reason === 'completed' ? 'sequence finished (past step 3)' : `ended (${d.reason})`;
   return `not eligible: ${d.reason}`;

@@ -32,6 +32,12 @@ export class SupabaseReminderStore implements ReminderStore {
 
     const workspaceId = await primaryWorkspaceId(this.db, userId);
 
+    const { data: owned, error: ownedError } = await this.db
+      .from('workspaces')
+      .select('acquisition_country')
+      .eq('owner_id', userId);
+    if (ownedError) throw new Error(`country read failed: ${ownedError.message}`);
+
     const { data: billing, error: billingError } = await this.db
       .from('user_billing')
       .select('subscription_status')
@@ -70,6 +76,7 @@ export class SupabaseReminderStore implements ReminderStore {
           }
         : null,
       workspaceId,
+      ownerCountries: (owned ?? []).map((w) => w.acquisition_country),
       internal: matchesInternal(owner?.email ?? null, listed),
       subscriptionStatus: billing?.subscription_status ?? null,
       completedSince,

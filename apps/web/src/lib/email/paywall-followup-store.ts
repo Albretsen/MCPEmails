@@ -23,6 +23,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
+import { isProduction } from '@/lib/env/app-env';
 import type {
   CandidateContext,
   ClaimRow,
@@ -53,9 +54,25 @@ function isMissingColumn(error: { code?: string; message?: string } | null, colu
   );
 }
 
+/**
+ * LIFECYCLE_TEST_RECIPIENTS: exact addresses that count as external customers
+ * for the lifecycle emails, so staging personas (on our own domain) can be
+ * selected end to end. Ignored in production (APP_ENV unset or production).
+ */
+export function lifecycleTestRecipients(env: Record<string, string | undefined> = process.env): ReadonlySet<string> {
+  if (isProduction(env)) return new Set();
+  return new Set(
+    (env.LIFECYCLE_TEST_RECIPIENTS ?? '')
+      .split(/[\s,]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
 /** Same matching as growth_is_internal_email(text): exact, plus-tag-insensitive, or our domains. */
 export function matchesInternal(email: string | null, listed: ReadonlySet<string>): boolean {
   if (!email) return false;
+  if (lifecycleTestRecipients().has(email.trim().toLowerCase())) return false;
   if (isInternalAccount(email)) return true;
   const e = email.trim().toLowerCase();
   const untagged = e.replace(/\+[^@]*@/, '@');
@@ -174,6 +191,21 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
       for (const i of data ?? []) inboxCounts.set(i.workspace_id, (inboxCounts.get(i.workspace_id) ?? 0) + 1);
     }
 
+    // Where the owner is, from every workspace they own (lifecycle-region.ts).
+    const countries = new Map<string, Array<string | null>>();
+    for (const ids of chunks(ownerIds)) {
+      const { data, error } = await this.db
+        .from('workspaces')
+        .select('owner_id, acquisition_country')
+        .in('owner_id', ids);
+      if (error) throw new Error(`country read failed: ${error.message}`);
+      for (const w of data ?? []) {
+        const list = countries.get(w.owner_id) ?? [];
+        list.push(w.acquisition_country);
+        countries.set(w.owner_id, list);
+      }
+    }
+
     const ledger = new Map<string, LedgerRow[]>();
     for (const ids of chunks(ownerIds)) {
       for (const row of await this.readLedger(ids)) {
@@ -203,6 +235,7 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
         unlimitedInboxes: w ? unlimited.has(w.owner_id) : false,
         internal: matchesInternal(o?.email ?? null, listed),
         inboxCount: inboxCounts.get(f.workspaceId) ?? 0,
+        ownerCountries: w ? countries.get(w.owner_id) ?? [] : [],
         ledger: w ? ledger.get(w.owner_id) ?? [] : [],
       };
     });
@@ -287,10 +320,11 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
     key: { userId: string; workspaceId: string; step: 1 | 2 | 3 },
     outcome: { status: 'sent'; providerId: string | null } | { status: 'failed'; detail: string },
   ): Promise<void> {
+    // A send keeps the detail the claim wrote (the arm); a failure replaces it.
     const patch = {
       status: outcome.status,
       provider_message_id: outcome.status === 'sent' ? outcome.providerId : null,
-      detail: outcome.status === 'failed' ? outcome.detail.slice(0, 500) : null,
+      ...(outcome.status === 'failed' ? { detail: outcome.detail.slice(0, 500) } : {}),
       finished_at: new Date().toISOString(),
     } as LedgerUpdate;
     const { error } = await this.db

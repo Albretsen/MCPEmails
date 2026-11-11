@@ -27,9 +27,13 @@
  *     an outage does not send a reminder for a checkout days old)
  *   - the user exists, is not one of ours, has a usable address and a working
  *     unsubscribe token
- *   - users.marketing_consent_at is set: this is marketing, so only people who
- *     ticked the signup opt-in, and nobody globally unsubscribed or
- *     unsubscribed from 'lifecycle'
+ *   - users.marketing_consent_at is set (arm `consented`), OR, for sessions
+ *     created at or after LIFECYCLE_EXPANSION_START_AT, the owner is
+ *     positively known to be outside Europe (arm `soft_opt_in`, see
+ *     lifecycle-region.ts; unknown counts as Europe and gets nothing), and
+ *     nobody globally unsubscribed or unsubscribed from 'lifecycle'. Until
+ *     LIFECYCLE_EXPANSION_DRY_RUN=false the soft opt-in arm is only logged
+ *     (would_send / would_holdout), never written or sent.
  *   - the user has not paid since: no entitled subscription now, and no
  *     completed checkout after this session was created
  *   - no reminder row (sent OR holdout) for this user in the last 30 days, for
@@ -74,6 +78,16 @@ import {
   type ReminderPlanId,
 } from '@/lib/email/abandoned-checkout-templates';
 import { appUrl } from '@/lib/email/lifecycle';
+import {
+  expansionConfig,
+  expansionCovers,
+  lifecycleArm,
+  ownerRegion,
+  type ExpansionConfig,
+} from '@/lib/email/lifecycle-region';
+
+/** The two arms that may get this reminder. European no-consent owners get nothing. */
+export type ReminderArm = 'consented' | 'soft_opt_in';
 
 export const TEMPLATE_PREFIX = 'abandoned_checkout';
 export const HOLDOUT_PERCENT = 20;
@@ -159,6 +173,8 @@ export interface ReminderContext {
     unsubscribeToken: string | null;
   } | null;
   workspaceId: string | null;
+  /** acquisition_country of every workspace the user owns (lifecycle-region.ts). */
+  ownerCountries: Array<string | null>;
   internal: boolean;
   subscriptionStatus: string | null;
   /** A checkout_completed funnel row for the workspace after this session was created. */
@@ -188,6 +204,7 @@ export interface Target {
   planId: ReminderPlanId;
   interval: ReminderInterval;
   locale: ReminderLocale;
+  arm: ReminderArm;
 }
 
 export type Decision =
@@ -212,24 +229,38 @@ export function sessionTarget(session: ExpiredSession): Target | null {
   // `lang` is stamped by runCheckout from the buyer's app language. Sessions
   // created before it existed fall back to the hosted page's own locale.
   const locale = reminderLocale(m.lang ?? (session.locale === 'de' ? 'de' : 'en'));
-  return { userId, planId: planId as ReminderPlanId, interval, locale };
+  return { userId, planId: planId as ReminderPlanId, interval, locale, arm: 'consented' };
 }
 
 /** Pure. Everything that decides whether this expired session gets an email. */
-export function decide(session: ExpiredSession, ctx: ReminderContext, now: Date): Decision {
+export function decide(
+  session: ExpiredSession,
+  ctx: ReminderContext,
+  now: Date,
+  expansion: ExpansionConfig = { startAt: null, live: false },
+): Decision {
   if (session.mode !== 'subscription') return { kind: 'skip', reason: 'not_subscription' };
   if (session.metadata?.[CHECKOUT_LINK_SUPERSEDED_KEY]) return { kind: 'skip', reason: 'superseded' };
-  const target = sessionTarget(session);
-  if (!target) return { kind: 'skip', reason: 'bad_metadata' };
+  const parsed = sessionTarget(session);
+  if (!parsed) return { kind: 'skip', reason: 'bad_metadata' };
 
   const expiredMs = (session.expiresAt ?? session.created) * 1000;
   if (now.getTime() - expiredMs > MAX_EVENT_AGE_MS) return { kind: 'skip', reason: 'stale_event' };
 
   const owner = ctx.owner;
-  if (!owner || owner.id !== target.userId) return { kind: 'skip', reason: 'owner_missing' };
+  if (!owner || owner.id !== parsed.userId) return { kind: 'skip', reason: 'owner_missing' };
   if (!ctx.workspaceId) return { kind: 'skip', reason: 'workspace_missing' };
   if (ctx.internal) return { kind: 'skip', reason: 'internal' };
-  if (!Number.isFinite(ms(owner.marketingConsentAt))) return { kind: 'skip', reason: 'no_consent' };
+  let arm: ReminderArm = 'consented';
+  if (!Number.isFinite(ms(owner.marketingConsentAt))) {
+    const covered = expansionCovers(expansion, session.created * 1000);
+    const region = ownerRegion(ctx.ownerCountries ?? []);
+    if (!covered || lifecycleArm({ consented: false, region }) !== 'soft_opt_in') {
+      return { kind: 'skip', reason: 'no_consent' };
+    }
+    arm = 'soft_opt_in';
+  }
+  const target: Target = { ...parsed, arm };
   if (owner.unsubscribedAt) return { kind: 'skip', reason: 'unsubscribed' };
   if ((owner.unsubscribedCategories ?? []).includes(ABANDONED_CHECKOUT_CATEGORY)) {
     return { kind: 'skip', reason: 'unsubscribed_lifecycle' };
@@ -345,9 +376,11 @@ export async function handleExpiredSession(options: {
   send: Sender;
   mode?: ReminderMode;
   now?: Date;
+  expansion?: ExpansionConfig;
 }): Promise<Outcome> {
   const { session, store } = options;
   const mode = options.mode ?? reminderMode();
+  const expansion = options.expansion ?? expansionConfig();
   const now = options.now ?? new Date();
   if (mode === 'off') return 'off';
 
@@ -358,14 +391,16 @@ export async function handleExpiredSession(options: {
   if (!early) return 'skipped:bad_metadata';
 
   const ctx = await store.loadContext(early.userId, new Date(session.created * 1000));
-  const decision = decide(session, ctx, now);
+  const decision = decide(session, ctx, now, expansion);
   if (decision.kind === 'skip') return `skipped:${decision.reason}`;
 
   const { target } = decision;
   const template = templateFor(target.planId, target.interval);
   const email = ctx.owner!.email!.trim();
 
-  if (mode === 'dry_run') return decision.kind === 'holdout' ? 'would_holdout' : 'would_send';
+  // The soft opt-in arm is new: logged only until the expansion is live.
+  const dry = mode === 'dry_run' || (target.arm === 'soft_opt_in' && !expansion.live);
+  if (dry) return decision.kind === 'holdout' ? 'would_holdout' : 'would_send';
 
   const composed = decision.kind === 'send'
     ? composeAbandonedCheckout({
@@ -374,6 +409,7 @@ export async function handleExpiredSession(options: {
       locale: target.locale,
       resumeUrl: resumeUrl(target.planId, target.interval, target.locale, session.id),
       unsubscribeToken: ctx.owner!.unsubscribeToken,
+      arm: target.arm,
     })
     : null;
   if (decision.kind === 'send' && !composed) return 'not_composable';
