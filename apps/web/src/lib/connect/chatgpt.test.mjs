@@ -40,13 +40,16 @@ const hostsIn = (text) =>
 const here = path.dirname(fileURLToPath(import.meta.url));
 const copy = (locale) => JSON.parse(readFileSync(path.join(here, 'chatgpt', `${locale}.json`), 'utf8'));
 const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
-// OpenAI's help pages, checked 2026-10-26: custom MCP servers are added on
-// ChatGPT Go and paid plans, under Plugins, Personal, Add, with no developer
-// mode. Menu labels stay in English in every locale.
-const GO_PLAN = /ChatGPT Go\b/;
+// OpenAI's help page (help.openai.com/en/articles/12584461), checked
+// 2026-11-11: custom MCP servers are for Business and Enterprise/Edu on ChatGPT
+// web, Pro gets read/fetch only, and Go and Plus are not mentioned. They are
+// added under Plugins, Personal, Add, with no developer mode. Menu labels stay
+// in English in every locale.
+const PAID_PLAN = /paid plan|betalt abonnement|plan de pago|formule payante|kostenpflichtig|plano pago|有料プラン|付费/;
+const PLAN_SOURCE = /Business.{1,8}Enterprise\/Edu/;
 // ja quotes OpenAI's Japanese label (プラグイン) in 「」.
 const MENU_PATH = /(?:Plugins|プラグイン)」?[,、]\s*「?(?:Personal|Persönlich)/; // de: "Persönlich" is the label help.openai.com/de-de shows
-const STALE = /developer mode|Developer mode|Entwicklermodus|mode développeur|modo desarrollador|utviklermodus|开发者模式|Plus.{1,3}Pro.{1,3}Business/;
+const STALE = /developer mode|Developer mode|Entwicklermodus|mode développeur|modo desarrollador|utviklermodus|开发者模式|Plus.{1,3}Pro.{1,3}Business|ChatGPT Go|\bGo\b(?! to\b)/;
 const MCP_URL = 'https://mcpemails.com/api/mcp';
 
 test('the copy covers every routed locale', () => {
@@ -99,9 +102,10 @@ test('the claims match how ChatGPT adds a custom MCP server today, in every loca
   for (const locale of CHATGPT_LOCALES) {
     const c = copy(locale);
     for (const key of ['sub', 'faqA']) {
-      assert.ok(GO_PLAN.test(c[key]), `${locale} ${key} must say ChatGPT Go and paid plans`);
+      assert.ok(PAID_PLAN.test(c[key]), `${locale} ${key} must say a paid plan is needed`);
       assert.ok(hostsIn(c[key]).some((h) => h === 'chatgpt.com'), `${locale} ${key} must say it is on chatgpt.com`);
     }
+    assert.ok(PLAN_SOURCE.test(c.faqA), `${locale} faqA must name Business and Enterprise/Edu as OpenAI's page does`);
     for (const v of [c.sub, c.faqA, ...c.steps]) assert.ok(!STALE.test(v), `${locale}: stale developer-mode or plan-list claim`);
     assert.deepEqual(c.steps.flatMap(codeUrlsIn), [MCP_URL], `${locale}: connector URL`);
     assert.deepEqual(urlsIn(c.faqA), [MCP_URL], `${locale}: FAQ connector URL`);

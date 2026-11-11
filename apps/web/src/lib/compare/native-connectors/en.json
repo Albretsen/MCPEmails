@@ -17,7 +17,7 @@
     "sub": "They are often lumped together, and they differ on the two things that matter: which mailboxes they reach and which apps they work in.",
     "apps": {
       "h": "Connectors built into an AI app",
-      "p": "Claude's Gmail and Microsoft 365 connectors and ChatGPT's Gmail and Outlook apps. Nothing to install, and they now send mail. They only work inside that one app, and Claude's Microsoft 365 connector cannot connect personal Outlook.com or Hotmail accounts."
+      "p": "Claude's Gmail and Microsoft 365 connectors and ChatGPT's Gmail and Outlook apps. Nothing to install, and they now send mail. They only work inside that one app, and Claude's Microsoft 365 connector takes a personal Outlook.com or Hotmail account only on the Free, Pro, Max and Ultra plans, not on Team or Enterprise."
     },
     "provider": {
       "h": "A mail provider's own MCP server",
@@ -62,7 +62,7 @@
       "portable": "Works in other AI apps"
     },
     "values": {
-      "reachApps": "Gmail. Microsoft 365 work accounts in Claude, Outlook in ChatGPT.",
+      "reachApps": "Gmail. Microsoft 365 work accounts in Claude, plus a personal Microsoft account on Claude's individual plans. Outlook in ChatGPT.",
       "reachProvider": "That provider only: Fastmail, Zoho, or Gmail in Google's preview.",
       "reachUs": "Gmail, Outlook and Outlook.com, iCloud, Yahoo, Fastmail, Zoho, Yandex, any IMAP.",
       "sendProvider": "Fastmail and Zoho send. Google's preview server drafts only.",
@@ -83,7 +83,7 @@
       },
       {
         "q": "My mail provider has its own MCP server. Do I need anything else?",
-        "a": "Possibly not. Fastmail and Zoho Mail run official MCP servers that work in any MCP client, and Google's Gmail MCP server is in developer preview. Each reaches only its own provider. MCPEmails is for several mailboxes behind one connection, for iCloud, Yahoo, Yandex and other IMAP hosts, and for personal Outlook.com accounts, which Claude's Microsoft 365 connector cannot connect."
+        "a": "Possibly not. Fastmail and Zoho Mail run official MCP servers that work in any MCP client, and Google's Gmail MCP server is in developer preview. Each reaches only its own provider. MCPEmails is for several mailboxes behind one connection, for iCloud, Yahoo, Yandex and other IMAP hosts, and for a personal Outlook.com account on a Claude Team or Enterprise plan, where Claude's Microsoft 365 connector does not offer personal accounts."
       },
       {
         "q": "What can MCPEmails do that the built-in connectors cannot?",
@@ -112,6 +112,11 @@
       "zohoMcp": "Zoho Mail MCP: getting started",
       "googleGmailMcp": "Google for Developers: configure the Gmail MCP server"
     }
+  },
+  "guide": {
+    "h": "Need the full map of options?",
+    "p": "Built-in connectors, hosted MCP services, desktop apps, self-hosting and automation tools, for Yahoo, IMAP, custom domains and several mailboxes, dated and sourced.",
+    "link": "Read: how to connect any email account to Claude or ChatGPT"
   },
   "more": {
     "h": "Decided you want an MCP server?",

@@ -1,0 +1,112 @@
+{
+  "_sources": [
+    "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "https://www.websupport.sk/podpora/kb/nastavenie-posty-v-microsoft-365-outlook/",
+    "https://www.websupport.sk/podpora/kb/prihlasovanie-do-emailovej-schranky-zo-zahranicia-geo-ip/",
+    "https://www.websupport.cz/podpora/kb/nastaveni-posty-v-telefonu-s-ios/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "usernameForm": "Tu dirección completa, por ejemplo info@vasafirma.sk. Las guías de Websupport dan tu dirección de correo como usuario en ambos servidores.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de Websupport: conecta el correo de Websupport a Claude",
+    "description": "Servidor MCP para el correo de Websupport. Conecta los buzones de tu dominio (info@, fakturacia@) a Claude, ChatGPT y Cursor por IMAP en imap.m1.websupport.sk:993, tras permitir el país de inicio de sesión en GEO ochrana."
+  },
+  "hero": {
+    "eyebrow": "Correo Websupport + IA",
+    "titleLine1": "Servidor MCP para el correo de Websupport:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, fakturacia@ y tu propio nombre en un dominio alojado en Websupport? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón, en cuanto la lista de países del buzón deje entrar una conexión desde fuera de Europa Central.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de Websupport. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.m1.websupport.sk, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La ayuda de Websupport indica imap.m1.websupport.sk en 993 con SSL y smtp.m1.websupport.sk en 465 con SSL, o 587 con TLS, y remite a WebAdmin bajo Emaily, Prihlasovacie údaje para los nombres exactos de tu buzón. El paso que hace tropezar a la gente es GEO ochrana: por defecto un buzón de Websupport solo acepta inicios de sesión desde Eslovaquia, Chequia, Hungría y Austria, y MCPEmails se conecta desde fuera de esos países, así que primero hay que ampliar la lista o desactivar la protección para ese buzón. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, GEO ochrana ampliada",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, buzón de Websupport.cz", "host": "imap.websupport.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, buzón de Websupport.cz", "host": "smtp.websupport.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son para un buzón en la plataforma eslovaca, las dos de abajo para uno en Websupport.cz. Ambos pares se verificaron con una conexión TLS real; WebAdmin muestra tus nombres exactos bajo Prihlasovacie údaje. Para cualquier otra dirección, usa la",
+      "label": "búsqueda de configuración de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de Websupport?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta Websupport: IMAP en 993, SMTP en 465, y una lista de países",
+    "body": "La página de resolución de problemas de Websupport da el servidor entrante como <code>imap.m1.websupport.sk</code> en el puerto 993 con SSL y el saliente como <code>smtp.m1.websupport.sk</code> en el puerto 465 con SSL/TLS, o 587 con TLS, con tu dirección de correo como usuario y la contraseña del buzón. Su guía de Outlook añade que los nombres de tu propio buzón aparecen en WebAdmin, en admin.websupport.sk, bajo <b>Emaily</b>, <b>Prihlasovacie údaje</b>, que es donde mirar si los tuyos difieren. Ambos hosts respondieron a una conexión TLS real bajo un certificado para <code>*.m1.websupport.sk</code>, con un banner Dovecot en IMAP y un límite de mensaje de 32 MB en SMTP. La plataforma checa usa <code>imap.websupport.cz</code> y <code>smtp.websupport.cz</code> en los mismos puertos, según la guía de iOS de la propia Websupport.cz. Lo que hace distinto a Websupport es GEO ochrana, una lista de países por buzón que decide desde dónde puede venir un inicio de sesión. La página de Websupport afirma que por defecto se puede iniciar sesión desde Eslovaquia, Chequia, Hungría y Austria. MCPEmails se conecta desde servidores en Estados Unidos, con un reintento a través de Alemania cuando un proveedor bloquea la primera dirección, así que hasta que la lista se amplíe el servidor rechaza el inicio de sesión como si la contraseña fuera incorrecta."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Amplía GEO ochrana para el buzón en WebAdmin",
+      "p": "En WebAdmin, abre el dominio bajo <b>Služby</b>, ve a <b>E-maily</b>, pulsa los tres puntos al final de la fila del buzón y elige <b>Upraviť</b>. Bajo <b>Pokročilé nastavenia</b>, <b>GEO ochrana</b>, añade Estados Unidos y Alemania a los países permitidos y pulsa <b>Uložiť</b>. Websupport dice que el cambio se aplica en 15 minutos. La alternativa, desde el webmail vía <b>Ísť do adminu</b> y <b>Mailbox settings</b>, es desactivar la protección GEO para ese buzón, lo que Websupport señala que reduce su protección."
+    },
+    {
+      "h": "Lee los nombres de servidor y la contraseña del buzón",
+      "p": "Bajo <b>Emaily</b>, <b>Prihlasovacie údaje</b> en WebAdmin encuentras los nombres IMAP y SMTP del buzón y la opción de cambiar su contraseña. La contraseña es la propia del buzón, no tu acceso a WebAdmin. Websupport sugiere probarla primero en el webmail, lo que además confirma que la lista de países es correcta."
+    },
+    {
+      "h": "Introdúcelos en MCPEmails y pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, por ejemplo info@vasafirma.sk, y la contraseña del buzón. Los hosts <code>imap.m1.websupport.sk</code> y <code>smtp.m1.websupport.sk</code> vienen rellenados con 993 y 465 y se verificaron con una conexión TLS real; cámbialos si Prihlasovacie údaje muestra otros nombres. Después pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GEO ochrana rechaza el inicio de sesión antes de comprobar siquiera la contraseña",
+      "p": "Es el fallo de Websupport que más se parece a una contraseña incorrecta sin serlo. La lista de países por defecto es Eslovaquia, Chequia, Hungría y Austria, y un inicio de sesión desde cualquier otro lugar se rechaza. MCPEmails no está en ninguno de esos países: sus servidores que llaman a tu proveedor de correo funcionan en Estados Unidos, y su reintento por relé sale desde Alemania. Añade ambos países bajo <b>GEO ochrana</b> para el buzón, o desactiva la protección para él, y espera los 15 minutos que menciona Websupport antes de probar de nuevo. La misma lista se aplica al envío, así que un buzón que lee bien pero no puede enviar suele ser uno en el que se probó SMTP desde un país aún no incluido."
+    },
+    {
+      "h": "Websupport.sk y Websupport.cz usan nombres de host distintos",
+      "p": "La plataforma eslovaca documenta <code>imap.m1.websupport.sk</code> y <code>smtp.m1.websupport.sk</code>; la checa documenta <code>imap.websupport.cz</code> y <code>smtp.websupport.cz</code>, en los mismos puertos con SSL. Ambas ejecutan el mismo Dovecot y los mismos servidores de entrada, pero cada certificado cubre solo su propio nombre, así que usa el par que corresponde a la plataforma donde está alojado tu dominio. Prihlasovacie údaje en WebAdmin muestra siempre el correcto para tu buzón."
+    },
+    {
+      "h": "El envío está limitado por buzón y por dominio",
+      "p": "La página de Websupport fija los límites en 300 mensajes por hora para un buzón y 2.000 por hora para un dominio. Superar cualquiera bloquea el envío durante 60 minutos, y los mensajes enviados durante el bloqueo no se entregan y hay que enviarlos de nuevo. Un agente que recorra una lista larga de respuestas debería ir con calma; el propio ritmo de envío de MCPEmails se mantiene muy por debajo de esas cifras en un uso normal."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 32 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El envío está limitado a 300 mensajes por hora por buzón y 2.000 por hora por dominio; superar un límite bloquea el envío durante 60 minutos."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Websupport?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Websupport. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de Websupport?",
+      "a": "Para la plataforma eslovaca, IMAP es imap.m1.websupport.sk en el puerto 993 con SSL y SMTP es smtp.m1.websupport.sk en el puerto 465 con SSL, o 587 con TLS, con autenticación obligatoria. Para Websupport.cz los hosts son imap.websupport.cz y smtp.websupport.cz en los mismos puertos. El usuario es tu dirección completa y la contraseña es la del buzón. Los cuatro hosts se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Websupport en un cliente de correo?",
+      "a": "Casi siempre por GEO ochrana: el buzón solo acepta por defecto inicios de sesión desde Eslovaquia, Chequia, Hungría y Austria, y una conexión desde cualquier otro lugar se rechaza igual que una contraseña incorrecta. Añade Estados Unidos y Alemania a la lista en WebAdmin, o desactiva la protección para el buzón, espera 15 minutos y vuelve a probar. Si sigue fallando, comprueba la contraseña bajo Prihlasovacie údaje."
+    },
+    {
+      "q": "¿Necesita Websupport una contraseña de aplicación?",
+      "a": "No. Websupport no tiene un sistema de contraseñas específicas de aplicación. La contraseña del buzón autentica tanto IMAP como SMTP, siempre que el país de inicio de sesión esté permitido."
+    },
+    {
+      "q": "¿Se almacena mi correo de Websupport en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en Websupport por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de Websupport",
+    "sub": "Amplía GEO ochrana una vez y conecta en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

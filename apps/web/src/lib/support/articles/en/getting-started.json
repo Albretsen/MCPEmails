@@ -198,7 +198,7 @@
         "In a chat, type @ and pick MCPEmails. Pick it again when a follow-up needs your mail."
       ],
       "body": [
-        "This works in a browser on chatgpt.com with ChatGPT Go or a paid plan; the mobile app cannot add one. On Business and Enterprise, an admin or owner may need to add it."
+        "This works in a browser on chatgpt.com on a paid plan; the mobile app cannot add one. OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu, where an admin or owner adds it for the workspace, and read-only access on Pro."
       ],
       "links": [
         {

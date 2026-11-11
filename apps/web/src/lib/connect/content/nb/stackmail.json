@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "https://docs.20i.com/email-hosting-pop3-imap/stackmail-on-macos",
+    "https://docs.20i.com/email-hosting/email-sending-limits"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "usernameForm": "Hele adressen din, for eksempel hello@yourbusiness.co.uk. 20is veiledninger bruker e-postadressen som brukernavn med mindre postkassen fikk et annet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StackMail MCP-server: koble 20i-e-post til Claude",
+    "description": "MCP-server for 20i StackMail. Koble postkassene på domenet ditt (hello@, accounts@) til Claude, ChatGPT og Cursor via IMAP på imap.stackmail.com:993 med postkassepassordet, uansett hvilken 20i-forhandler som hoster deg."
+  },
+  "hero": {
+    "eyebrow": "StackMail-e-post + AI",
+    "titleLine1": "MCP-server for StackMail-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du hello@, accounts@ og ditt eget navn på et domene hos 20i, eller hos en av de mange leverandørene som bygger på plattformen deres? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med postkassepassordet fra hostingkontrollpanelet.",
+    "answer": "Claude når ikke en StackMail-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.stackmail.com port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. 20i dokumenterer nøyaktig disse vertene: imap.stackmail.com på 993 med SSL og smtp.stackmail.com på 465 med SSL/TLS, med krav om autentisering på utgående server. Samme verter betjener kundene til 20is forhandlere, der webmailen kan ha et annet merkenavn og en annen adresse. Det finnes ikke noe app-passord og ingenting å aktivere. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, enhver 20i-forhandler",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på StackMail-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler StackMail seg til: imap.stackmail.com på 993, smtp.stackmail.com på 465",
+    "body": "StackMail er e-postplattformen til den britiske leverandøren 20i, og 20is dokumentasjon gir ett par verter for alle postkasser på den: <code>imap.stackmail.com</code> på port 993 med SSL for innkommende e-post og <code>smtp.stackmail.com</code> på port 465 med SSL/TLS for utgående, med valget om at utgående server krever autentisering slått på. 20i publiserer også autodiscover-oppføringer, som er grunnen til at Outlook vanligvis bare trenger adressen og passordet. Begge vertene svarte på en direkte TLS-tilkobling under et sertifikat for <code>*.stackmail.com</code>: et Dovecot-banner på IMAP som tilbyr PLAIN, LOGIN, CRAM-MD5 og DIGEST-MD5, og en Exim-hilsen på SMTP med en meldingsgrense på 50 MB; port 587 med STARTTLS fungerer også for sending. 20i selger plattformen white-label til forhandlere, så postkassen du kobler til kan være solgt av en leverandør du aldri har hørt om under 20i-navnet, med webmail på den leverandørens egen adresse. Servernavnene er fortsatt stackmail.com under panseret, og passordet er det som er satt på postkassen i hostingkontrollpanelet."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet i kontrollpanelet",
+      "p": "Hos 20i selv logger du inn i My20i, åpner <b>Manage Hosting</b>, velger <b>Options</b> og <b>Manage</b> på pakken postkassen hører til, og åpner <b>Email Accounts</b> i Email-delen. Hver adresse har et passordfelt der; skriv inn et nytt og <b>Save</b>. Hos en forhandler bærer panelet forhandlerens merke og har vanligvis samme oppsett. Passordet du setter er postkassepassordet, ikke innloggingen til hostingkontoen din."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel hello@yourbusiness.co.uk, med postkassepassordet. Vertene <code>imap.stackmail.com</code> og <code>smtp.stackmail.com</code> er forhåndsutfylt med 993 og 465 og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Leverandøren din heter kanskje ikke 20i, og webmailen sier kanskje ikke StackMail",
+      "p": "20i driver et white-label forhandlerprogram: en forhandlers kunder ser forhandlerens merke i kontrollpanelet og kan nå webmailen på en adresse på forhandlerens eget domene. IMAP- og SMTP-serverne er fortsatt <code>imap.stackmail.com</code> og <code>smtp.stackmail.com</code>. Navngir leverandørens instruksjoner disse serverne, gjelder denne siden for deg selv om ordet StackMail ikke står noe annet sted. Navngir de en annen server, ligger postkassen din på en annen plattform."
+    },
+    {
+      "h": "En ny postkasse kan sende bare 50 meldinger om dagen den første uken",
+      "p": "20is side om sendegrenser sier at en nyopprettet postkasse er begrenset til 50 meldinger om dagen i 7 dager, og deretter gjelder den faste grensen på 8 000 meldinger per adresse per 24 timer, med høyst 100 mottakere på én melding og 2 000 unike mottakere om dagen. En agent som skriver svar i en helt ny postkasse kan nå 50 raskt; koble til en etablert postkasse, eller vent ut uken før du gir agenten en sendejobb."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE før innlogging",
+      "p": "Dovecot bak <code>imap.stackmail.com</code> annonserer <code>IDLE</code> men hverken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code> i kapabilitetslisten før innlogging. Arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én kommando, og mappene for sendt, utkast og papirkurv gjenkjennes på navn i stedet for på en rolle serveren oppgir. Finner agenten ikke en mappe du har gitt nytt navn, nevn den i instruksjonen."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 50 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Sending er begrenset til 8 000 meldinger per adresse per 24 timer, 100 mottakere per melding og 2 000 unike mottakere om dagen, og til 50 meldinger om dagen i postkassens første uke."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med StackMail- eller 20i-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd 20i-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for StackMail?",
+      "a": "IMAP er imap.stackmail.com på port 993 med SSL. SMTP er smtp.stackmail.com på port 465 med SSL/TLS, eller 587 med STARTTLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Leverandøren min er ikke 20i. Gjelder denne siden likevel?",
+      "a": "Hvis leverandørens e-postinstruksjoner navngir imap.stackmail.com og smtp.stackmail.com, ja: leverandøren videreselger 20is plattform under eget merke, og serverne er de samme. Kontrollpanelet og webmailen bærer leverandørens navn, men tilkoblingen i MCPEmails er identisk."
+    },
+    {
+      "q": "Trenger StackMail et app-passord?",
+      "a": "Nei. 20i har ingen ordning med app-spesifikke passord for StackMail. Postkassepassordet autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres StackMail-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra StackMail via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din StackMail-postkassene dine",
+    "sub": "Koble til en 20i- eller forhandlerpostkasse på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

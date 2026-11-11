@@ -1213,6 +1213,121 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     smtpPort: 465,
     smtpSecurity: 'tls',
   },
+  // ── Web hosts our users connect (research 2026-11-11). Settings from each
+  // vendor's own help page; every host below completed a TLS handshake with a
+  // verified chain and answered CAPABILITY and EHLO.
+  {
+    // cyber_Folks (Poland): no shared host. Each account lives on an
+    // sNN.cyber-folks.pl server named in cyber_Admin under Dane
+    // konfiguracyjne, all under one *.cyber-folks.pl certificate. The typed
+    // host is the customer's own server and must be kept (settings-lookup
+    // lists this id in CLUSTER_PRESETS); s1 is only a generic fallback.
+    id: 'cyber-folks',
+    label: 'cyber_Folks',
+    hostSuffixes: ['.cyber-folks.pl'],
+    imapHost: 's1.cyber-folks.pl',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 's1.cyber-folks.pl',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // TransIP email hosting (transip.eu knowledgebase 309). Its cPanel and
+    // DirectAdmin packages have their own server names and are not this.
+    id: 'transip',
+    label: 'TransIP',
+    hostSuffixes: ['.transip.email'],
+    imapHost: 'imap.transip.email',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.transip.email',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Combell Basic mailboxes (combell.com help): the mailprotect.be platform,
+    // with autodiscover SRV records pointing at the same names. Exchange and
+    // Microsoft 365 mailboxes at Combell do not use these hosts.
+    id: 'combell',
+    label: 'Combell',
+    hostSuffixes: ['.mailprotect.be'],
+    imapHost: 'imap.mailprotect.be',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp-auth.mailprotect.be',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Websupport (Slovakia): the KB names imap/smtp.m1.websupport.sk; WebAdmin
+    // shows each mailbox's own names under Prihlasovacie udaje, which sit
+    // under the same suffix. GEO ochrana allows SK/CZ/HU/AT logins by default,
+    // so a refused password here is usually the country list, not the password.
+    id: 'websupport',
+    label: 'Websupport',
+    hostSuffixes: ['.websupport.sk'],
+    imapHost: 'imap.m1.websupport.sk',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.m1.websupport.sk',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Websupport.cz documents imap/smtp.websupport.cz (iOS guide); same
+    // Dovecot and ingress as the Slovak platform, own certificate.
+    id: 'websupport-cz',
+    label: 'Websupport',
+    hostSuffixes: ['.websupport.cz'],
+    imapHost: 'imap.websupport.cz',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.websupport.cz',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // REG.RU shared hosting (help.reg.ru): mail.hosting.reg.ru both ways on
+    // an encrypted connection. The Yandex 360 and Mail.ru products REG.RU
+    // resells use those providers' hosts and are matched by them.
+    id: 'reg-ru',
+    label: 'REG.RU',
+    hostSuffixes: ['.hosting.reg.ru'],
+    imapHost: 'mail.hosting.reg.ru',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'mail.hosting.reg.ru',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // 20i's StackMail platform (docs.20i.com), also behind every 20i
+    // reseller's white-labelled mail. Autodiscover points at the same names.
+    id: 'stackmail',
+    label: '20i StackMail',
+    domains: ['stackmail.com'],
+    hostSuffixes: ['.stackmail.com'],
+    imapHost: 'imap.stackmail.com',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.stackmail.com',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
+  {
+    // Arsys (Spain) runs mailboxes on serviciodecorreo.es, the names its
+    // support centre lists; mail.arsys.es from an old blog post refused 993.
+    id: 'arsys',
+    label: 'Arsys',
+    hostSuffixes: ['.serviciodecorreo.es'],
+    imapHost: 'imap.serviciodecorreo.es',
+    imapPort: 993,
+    imapSecurity: 'tls',
+    smtpHost: 'smtp.serviciodecorreo.es',
+    smtpPort: 465,
+    smtpSecurity: 'tls',
+  },
 ];
 
 /** Lower-cased, trimmed, and with a trailing dot (a valid FQDN) removed. */

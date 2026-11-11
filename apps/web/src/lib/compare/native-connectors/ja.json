@@ -17,7 +17,7 @@
     "sub": "よく一緒くたにされますが、重要な2つの点で異なります。どのメールボックスに届くか、そしてどのアプリで使えるかです。",
     "apps": {
       "h": "AIアプリに組み込まれたコネクタ",
-      "p": "ClaudeのGmailコネクタとMicrosoft 365コネクタ、ChatGPTのGmailアプリとOutlookアプリです。インストール不要で、現在はメールの送信もできます。ただし使えるのはそのアプリの中だけで、ClaudeのMicrosoft 365コネクタは個人のOutlook.comやHotmailのアカウントを接続できません。"
+      "p": "ClaudeのGmailコネクタとMicrosoft 365コネクタ、ChatGPTのGmailアプリとOutlookアプリです。インストール不要で、現在はメールの送信もできます。ただし使えるのはそのアプリの中だけで、ClaudeのMicrosoft 365コネクタが個人のOutlook.comやHotmailのアカウントを受け付けるのはFree、Pro、Max、Ultraの各プランに限られ、TeamやEnterpriseでは使えません。"
     },
     "provider": {
       "h": "メールプロバイダー独自のMCPサーバー",
@@ -62,7 +62,7 @@
       "portable": "他のAIアプリでの利用"
     },
     "values": {
-      "reachApps": "Gmail。ClaudeではMicrosoft 365の職場アカウント、ChatGPTではOutlook。",
+      "reachApps": "Gmail。ClaudeではMicrosoft 365の職場アカウントに加え、個人向けプランでは個人のMicrosoftアカウントも。ChatGPTではOutlook。",
       "reachProvider": "そのプロバイダーのみ：Fastmail、Zoho、またはGoogleのプレビュー版でのGmail。",
       "reachUs": "Gmail、OutlookとOutlook.com、iCloud、Yahoo、Fastmail、Zoho、Yandex、あらゆるIMAP。",
       "sendProvider": "FastmailとZohoは送信可能。Googleのプレビュー版サーバーは下書きの作成のみ。",
@@ -83,7 +83,7 @@
       },
       {
         "q": "使っているメールプロバイダーに独自のMCPサーバーがあります。ほかに何か必要ですか？",
-        "a": "必要ないかもしれません。FastmailとZoho Mailは、どのMCPクライアントでも使える公式のMCPサーバーを提供しており、GoogleのGmail MCPサーバーは開発者向けプレビュー中です。ただし、それぞれ自社のメールボックスにしか届きません。MCPEmailsは、複数のメールボックスを1つの接続にまとめたい場合、iCloud、Yahoo、YandexなどのIMAPホストを使う場合、そしてClaudeのMicrosoft 365コネクタでは接続できない個人のOutlook.comアカウントを使う場合のためのものです。"
+        "a": "必要ないかもしれません。FastmailとZoho Mailは、どのMCPクライアントでも使える公式のMCPサーバーを提供しており、GoogleのGmail MCPサーバーは開発者向けプレビュー中です。ただし、それぞれ自社のメールボックスにしか届きません。MCPEmailsは、複数のメールボックスを1つの接続にまとめたい場合、iCloud、Yahoo、YandexなどのIMAPホストを使う場合、そしてClaudeのTeamまたはEnterpriseプランで個人のOutlook.comアカウントを使う場合（これらのプランではClaudeのMicrosoft 365コネクタに個人アカウントの選択肢がありません）のためのものです。"
       },
       {
         "q": "組み込みコネクタにはできなくて、MCPEmailsにできることは何ですか？",
@@ -112,6 +112,11 @@
       "zohoMcp": "Zoho Mail MCP: はじめに",
       "googleGmailMcp": "Google for Developers: Gmail MCPサーバーの設定"
     }
+  },
+  "guide": {
+    "h": "選択肢の全体像を知りたいですか？",
+    "p": "内蔵コネクタ、ホスト型MCPサービス、デスクトップアプリ、セルフホスト、自動化ツールを、Yahoo、IMAP、独自ドメイン、複数メールボックス別に、日付と出典つきで整理しました。",
+    "link": "読む：あらゆるメールアカウントをClaudeやChatGPTに接続する方法"
   },
   "ctaBand": {
     "title": "お持ちのすべての受信トレイをAIに",

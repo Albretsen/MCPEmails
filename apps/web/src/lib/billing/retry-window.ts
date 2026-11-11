@@ -12,17 +12,15 @@
  *
  * History:
  *   until 2026-11-11  "within 2 weeks"  -> 14
- *   from  2026-11-11  "within 1 month"  -> 30
+ *   from  2026-11-11  "within 1 month"  -> 28
  *
- * Stripe does not document "1 month" as a day count (checked 2026-11-11,
- * docs.stripe.com/billing/revenue-recovery/smart-retries: the subscription is
- * cancelled "after the maximum number of days defined in the retry schedule").
- * 30 is the working assumption, and the copy built on it says "about", never
- * an exact date. Smart Retries may also make its last attempt before the
+ * The Dashboard's "1 month" option is 28 days: its select carries value="28"
+ * (read from the live Dashboard on 2026-11-11; the other options are 7, 14, 21
+ * and 63). The copy still says "about", never an exact date. Smart Retries may also make its last attempt before the
  * window ends and cancel then, which the webhook handles: the deletion is the
  * real end, whatever the calendar says.
  */
-export const STRIPE_RETRY_WINDOW_DAYS = 30;
+export const STRIPE_RETRY_WINDOW_DAYS = 28;
 
 /**
  * The final dunning notice (template id `dunning_14`, kept for the ledger and

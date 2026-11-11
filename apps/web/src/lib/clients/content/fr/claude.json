@@ -26,7 +26,7 @@
   },
   "answerSection": {
     "title": "Quels serveurs MCP fonctionnent avec Claude Desktop pour les e-mails ?",
-    "body": "Claude Desktop accepte tout serveur MCP distant ajouté comme connecteur personnalisé : un serveur e-mail hébergé comme MCPEmails y fonctionne donc comme dans claude.ai. Ouvrez <b>Customize</b>, <b>Connectors</b>, ajoutez <code>https://mcpemails.com/api/mcp</code> et connectez-vous. Cette URL couvre Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo et toute boîte IMAP. Les connecteurs Gmail et Microsoft 365 de Claude apparaissent aussi dans Claude Desktop, mais chacun ne couvre qu'un fournisseur, et celui de Microsoft 365 n'accepte que les comptes professionnels ou scolaires. Les serveurs locaux lancés depuis <code>claude_desktop_config.json</code> fonctionnent aussi ; ils tournent sur votre ordinateur et y gardent vos identifiants de messagerie dans un fichier."
+    "body": "Claude Desktop accepte tout serveur MCP distant ajouté comme connecteur personnalisé : un serveur e-mail hébergé comme MCPEmails y fonctionne donc comme dans claude.ai. Ouvrez <b>Customize</b>, <b>Connectors</b>, ajoutez <code>https://mcpemails.com/api/mcp</code> et connectez-vous. Cette URL couvre Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo et toute boîte IMAP. Les connecteurs Gmail et Microsoft 365 de Claude apparaissent aussi dans Claude Desktop, mais chacun ne couvre qu'un fournisseur, et celui de Microsoft 365 n'accepte un compte Outlook.com personnel que sur les formules Free, Pro, Max et Ultra, sans pièces jointes. Les serveurs locaux lancés depuis <code>claude_desktop_config.json</code> fonctionnent aussi ; ils tournent sur votre ordinateur et y gardent vos identifiants de messagerie dans un fichier."
   },
   "setup": [
     {

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "https://support.hostpoint.ch/de/technisches/e-mail/haeufig-gestellte-fragen/e-mail-einstellungen-auf-einen-blick"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postfach-Passwort",
+    "helpUrl": "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "usernameForm": "Ihre vollständige Adresse, zum Beispiel info@ihre-firma.ch. Hostpoint nennt als Benutzername die E-Mail-Adresse und als Passwort das von Ihnen im Control Panel definierte Passwort.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Hostpoint MCP-Server: Hostpoint-Mail mit Claude verbinden",
+    "description": "MCP-Server für Hostpoint-E-Mail. Verbinden Sie die Postfächer Ihrer Schweizer Domain (info@, buchhaltung@) über IMAP auf imap.mail.hostpoint.ch:993 mit Claude, ChatGPT und Cursor, mit dem Postfach-Passwort."
+  },
+  "hero": {
+    "eyebrow": "Hostpoint-E-Mail + KI",
+    "titleLine1": "MCP-Server für Hostpoint-Mail:",
+    "titleLine2": "jedes Postfach Ihrer Domain, in Claude und ChatGPT",
+    "lead": "Sie haben info@, buchhaltung@ und Ihren eigenen Namen auf einer Domain bei Hostpoint? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet in allen. Lesen, suchen, senden, antworten, planen und ordnen über IMAP, mit dem Passwort, das Sie im Hostpoint Control Panel für das Postfach definiert haben.",
+    "answer": "Claude erreicht ein Hostpoint-Postfach nicht von selbst. MCPEmails ist ein gehosteter MCP-Server, der es über IMAP auf imap.mail.hostpoint.ch, Port 993, verbindet und sich mit der vollständigen Adresse und dem Postfach-Passwort anmeldet, damit Claude, Cursor oder jeder andere MCP-Client die Mails lesen, durchsuchen, senden und ordnen kann. Hostpoints Einstellungsseite nennt genau diese Hosts: imap.mail.hostpoint.ch auf 993 mit SSL und asmtp.mail.hostpoint.ch auf 465 mit SSL (587 mit STARTTLS als Alternative), mit aktivierter SMTP-Authentifizierung und dem im Control Panel definierten Passwort. Es gibt kein App-Passwort und nichts freizuschalten. Ein Postfach ist kostenlos, für immer.",
+    "meta0": "Erstes Postfach kostenlos, Pläne für die weiteren",
+    "meta1": "Postfach-Passwort aus dem Control Panel",
+    "meta2": "E-Mail wird live abgerufen, nie gespeichert"
+  },
+  "persona": {
+    "intro": "Mehrere Postfächer auf Ihrer Hostpoint-Domain?",
+    "label": "Sehen, was jeder Plan verbindet",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "So verbindet sich Hostpoint: imap.mail.hostpoint.ch auf 993, asmtp auf 465",
+    "body": "Hostpoint veröffentlicht ein einziges Host-Paar für alle gehosteten Postfächer. Der Posteingangsserver ist <code>imap.mail.hostpoint.ch</code> auf Port 993 mit SSL, oder 143 mit STARTTLS, der Postausgangsserver <code>asmtp.mail.hostpoint.ch</code> auf Port 465 mit SSL, oder 587 mit STARTTLS, mit SMTP-Authentifizierung, die laut Hostpoint aktiviert sein muss. Der Benutzername ist Ihre E-Mail-Adresse, das Passwort das von Ihnen im Control Panel definierte; Hostpoint nennt als Anmeldeverfahren CLEAR TEXT für IMAP und PLAIN für SMTP, also denselben PLAIN-Mechanismus, den der Server ankündigt. Beide Hosts antworteten auf eine echte TLS-Verbindung mit einem Zertifikat für <code>*.mail.hostpoint.ch</code>: ein Dovecot-Banner bei IMAP und eine Exim-Begrüssung bei SMTP mit einer Nachrichtengrenze von 50 MB. Ein historischer Hinweis von Hostpoints Seite: Postfächer, die vor dem 1. Juni 2014 erstellt wurden, brauchen in manchen Mailprogrammen das IMAP-Pfad-Präfix INBOX; neuere brauchen nichts."
+  },
+  "setup": [
+    {
+      "h": "Erstellen Sie Ihr kostenloses MCPEmails-Konto",
+      "p": "Registrieren Sie sich auf mcpemails.com. Der kostenlose Plan verbindet ein Postfach, für immer, und fragt nicht nach einer Karte."
+    },
+    {
+      "h": "Postfach-Passwort im Hostpoint Control Panel finden oder setzen",
+      "p": "Melden Sie sich im Hostpoint Control Panel an und öffnen Sie den E-Mail-Bereich der Domain. Jede Adresse hat dort ihr eigenes Passwort, das Hostpoints Einstellungsseite als das von Ihnen im Control Panel definierte Passwort bezeichnet. Kennen Sie es nicht, setzen Sie für dieses Postfach ein neues; Ihr Hostpoint-Kundenlogin ist ein anderes Zugangsdatum und wird von IMAP abgewiesen."
+    },
+    {
+      "h": "Adresse und Passwort in MCPEmails eingeben",
+      "p": "Wählen Sie IMAP / SMTP und geben Sie die vollständige Adresse ein, etwa info@ihre-firma.ch, mit dem Postfach-Passwort. Die Hosts <code>imap.mail.hostpoint.ch</code> und <code>asmtp.mail.hostpoint.ch</code> sind mit 993 und 465, beide SSL, vorausgefüllt und wurden über eine echte TLS-Verbindung verifiziert."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie, und Ihr Agent hat das Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Der Ausgangshost heisst asmtp, nicht smtp",
+      "p": "Hostpoints Versandhost ist <code>asmtp.mail.hostpoint.ch</code>, das a steht für authentifiziert. Ein Client, der aus Gewohnheit smtp.mail.hostpoint.ch eingetragen hat, zeigt auf einen Namen, den Hostpoint für den Versand nicht dokumentiert. MCPEmails füllt den asmtp-Namen vor, und die SMTP-Authentifizierung ist immer eingeschaltet, genau die Einstellung, die laut Hostpoint aktiviert sein muss."
+    },
+    {
+      "h": "Nur PLAIN bei IMAP, und kein MOVE",
+      "p": "Der Dovecot hinter <code>imap.mail.hostpoint.ch</code> kündigt bei IMAP ausschliesslich <code>AUTH=PLAIN</code> an, während SMTP PLAIN und LOGIN akzeptiert. Werkzeuge, die fest auf den LOGIN-Mechanismus eingestellt sind, werden bei IMAP im Anmeldeschritt abgewiesen; MCPEmails verwendet PLAIN. Die Capability-Liste vor der Anmeldung enthält weder <code>MOVE</code>, <code>UIDPLUS</code> noch <code>SPECIAL-USE</code>, sodass das Ablegen einer Nachricht als Kopie, Flag-Aktualisierung und Expunge läuft und die Ordner für Gesendet, Entwürfe und Papierkorb über ihre Namen erkannt werden. In einem deutschsprachigen Postfach heissen sie meist Gesendet, Entwürfe und Papierkorb; nennen Sie den Ordner in Ihrer Anweisung, wenn der Agent ihn nicht findet."
+    },
+    {
+      "h": "Postfächer von vor Juni 2014 verstecken ihre Ordner womöglich unter INBOX",
+      "p": "Hostpoints Seite sagt, dass vor dem 1. Juni 2014 erstellte Konten spezielle IMAP-Einstellungen brauchen: das IMAP-Pfad-Präfix auf INBOX gesetzt, je nach Programm mit oder ohne Punkt am Ende. In einem solchen Postfach erscheinen die Ordner unter INBOX statt daneben. MCPEmails listet Ordner mit den Namen, die der Server zurückgibt, ein Agent findet sie also trotzdem; scheint ein Ordner zu fehlen, fragen Sie nach seinem vollständigen Pfad."
+    }
+  ],
+  "limits": [
+    "Der SMTP-Server kündigt eine maximale Nachrichtengrösse von 50 MB an. Eine Weiterleitung mit grösseren Anhängen wird beim Senden abgewiesen.",
+    "Weil der Server MOVE nicht ankündigt, ist ein Verschieben nicht atomar. Bricht die Verbindung mitten im Vorgang ab, kann eine Nachricht kurz in beiden Ordnern liegen."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Hostpoint-E-Mail?",
+      "a": "Nicht von selbst. Claude hat keinen eingebauten Hostpoint-Connector. Richtet man einen MCP-Server wie MCPEmails über IMAP auf das Postfach, kann Claude darin lesen, suchen, senden, antworten, planen und ordnen, und dieselbe Verbindung funktioniert dann auch aus Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Was sind die IMAP- und SMTP-Einstellungen von Hostpoint?",
+      "a": "IMAP ist imap.mail.hostpoint.ch auf Port 993 mit SSL. SMTP ist asmtp.mail.hostpoint.ch auf Port 465 mit SSL, oder 587 mit STARTTLS, mit erforderlicher Authentifizierung. Der Benutzername ist Ihre vollständige Adresse, das Passwort das von Ihnen im Control Panel definierte. Beide Hosts wurden am auf dieser Seite angegebenen Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Warum wird mein Hostpoint-Passwort im Mailprogramm abgewiesen?",
+      "a": "Meist, weil es das Hostpoint-Kundenlogin ist und nicht das Postfach-Passwort. IMAP prüft das im Control Panel für die einzelne Adresse definierte Passwort. Setzen Sie dort ein neues und verwenden Sie genau diesen Wert."
+    },
+    {
+      "q": "Braucht Hostpoint ein App-Passwort?",
+      "a": "Nein. Hostpoint hat kein Verfahren mit appspezifischen Passwörtern. Das Postfach-Passwort authentifiziert IMAP und SMTP."
+    },
+    {
+      "q": "Werden meine Hostpoint-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live über IMAP von Hostpoint abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI Ihre Hostpoint-Postfächer",
+    "sub": "Hostpoint-Mail in wenigen Minuten verbinden. Ein Postfach kostenlos für immer, ohne Karte."
+  }
+}

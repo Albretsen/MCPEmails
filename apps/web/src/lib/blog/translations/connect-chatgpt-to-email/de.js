@@ -12,7 +12,7 @@ Zwei Oberflächen von OpenAI sind beteiligt, und sie authentifizieren sich unter
 
 ## Was Sie brauchen
 
-- **ChatGPT Go oder ein kostenpflichtiger Tarif, im Web.** OpenAI erlaubt Go und den kostenpflichtigen Tarifen, auf chatgpt.com benutzerdefinierte MCP-Server hinzuzufügen. In der Mobil-App lässt sich keiner hinzufügen. Bei Business und Enterprise muss ihn unter Umständen ein Admin oder Owner für den Workspace hinzufügen.
+- **Ein kostenpflichtiger ChatGPT-Tarif, im Web.** Die [Hilfeseite von OpenAI zu benutzerdefinierten MCP-Servern](https://help.openai.com/en/articles/12584461) führt sie für Business- und Enterprise/Edu-Workspaces auf chatgpt.com auf, mit Lese- und Abruf-Tools nur in Pro; Go und Plus erwähnt sie nicht. In der Mobil-App lässt sich keiner hinzufügen. Bei Business und Enterprise fügt ihn ein Admin oder Owner für den Workspace hinzu und veröffentlicht ihn.
 - **Ein kostenloses MCPEmails-Konto.** [Hier erstellen](/signup). Der kostenlose Tarif umfasst ein verbundenes Postfach und braucht keine Karte.
 - **Ein Postfach.** Gmail, Outlook oder Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex oder alles, was IMAP und SMTP spricht.
 
@@ -102,7 +102,7 @@ Schränken Sie den Schlüssel eng ein. Für einen Coding-Agenten ist Nur-Lese-Zu
 
 ## Fehlerbehebung
 
-- **Keine Option, einen benutzerdefinierten MCP-Server hinzuzufügen.** Benutzerdefinierte MCP-Server werden auf chatgpt.com im Browser hinzugefügt, nicht in der Mobil-App, und brauchen Go oder einen kostenpflichtigen Tarif. In einem Business- oder Enterprise-Workspace muss ihn unter Umständen ein Admin oder Owner hinzufügen.
+- **Keine Option, einen benutzerdefinierten MCP-Server hinzuzufügen.** Benutzerdefinierte MCP-Server werden auf chatgpt.com im Browser hinzugefügt, nicht in der Mobil-App. OpenAI führt sie für Business und Enterprise/Edu auf, mit Lese- und Abruf-Tools nur in Pro, sodass in einem Business- oder Enterprise-Workspace unter Umständen ein Admin oder Owner ihn hinzufügen muss.
 - **Der Konnektor scheitert beim ersten Tool-Aufruf.** Er wurde vermutlich ohne Authentifizierung erstellt. Löschen Sie ihn und erstellen Sie ihn mit OAuth neu.
 - **Der Konnektor ist erstellt, aber ChatGPT antwortet, ohne Ihre E-Mails anzufassen.** MCPEmails wurde für diese Nachricht nicht ausgewählt. Tippen Sie **@**, wählen Sie MCPEmails und fragen Sie erneut.
 - **Der Anbieter lehnt Ihr Passwort ab.** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht Ihr Passwort für die Anmeldung im Web. Manche Anbieter stellen eines erst aus, wenn die Zwei-Faktor-Authentifizierung aktiv ist.

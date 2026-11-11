@@ -9,7 +9,7 @@
     "method": "account-password",
     "label": "Optimum ID 密码",
     "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
-    "usernameForm": "你的完整地址，无论使用哪个 Optimum 域名：name@optimum.net、name@optonline.net 或 Suddenlink 地址。",
+    "usernameForm": "你的完整地址（name@optimum.net、name@optonline.net 或 Suddenlink 地址），这是 Optimum 故障排除页面给出的用户名。其服务器设置页面则说只填 Optimum ID，即 @ 前面的部分。若一种形式被拒绝，请试另一种。",
     "status": "active"
   },
   "meta": {
@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Optimum 如何连接：IMAP 加普通的 Optimum ID",
-    "body": "Optimum 为旗下所有品牌运行同一台邮件服务器。<code>mail.optimum.net</code> 在 993 端口以自己的证书通过 TLS 响应 IMAP，Optimum 的文档给出同一主机名的 465 端口用于提交。<code>optimum.net</code>、<code>optonline.net</code> 以及 Optimum 收购的 Suddenlink 各域名上的地址都落在这台服务器上。认证方式简单得令人舒心：你的 <b>Optimum ID</b> 及其密码，用户名填完整邮箱地址。Optimum 不签发应用专用密码，也没有需要寻找的第三方访问开关，因此这里的登录失败就是真正的凭据问题，而不是某个隐藏设置。在把代理指向该邮箱之前，唯一需要了解的是：Optimum 自 2021 年 5 月 4 日起停止创建邮箱账户，并建议想要新地址的人改用 Gmail、Outlook.com 或 Yahoo。"
+    "body": "Optimum 为旗下所有品牌运行同一台邮件服务器。<code>mail.optimum.net</code> 在 993 端口以自己的证书通过 TLS 响应 IMAP，Optimum 的文档给出同一主机名的 465 端口用于提交。<code>optimum.net</code>、<code>optonline.net</code> 以及 Optimum 收购的 Suddenlink 各域名上的地址都落在这台服务器上。认证使用你的 <b>Optimum ID</b> 及其密码，但有一处需要留意：Optimum 的故障排除页面说用户名是完整邮箱地址，而其服务器设置页面说只填 Optimum ID，即 @ 前面的部分。先试完整地址，被拒绝再试 ID。Optimum 不签发应用专用密码，也没有需要寻找的第三方访问开关，因此这里的登录失败就是真正的凭据问题，而不是某个隐藏设置。在把代理指向该邮箱之前，唯一需要了解的是：Optimum 自 2021 年 5 月 4 日起停止创建邮箱账户，并建议想要新地址的人改用 Gmail、Outlook.com 或 Yahoo。"
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "输入地址和 Optimum ID 密码",
-      "p": "在 MCPEmails 中选择 IMAP / SMTP，在用户名栏填写完整地址，例如 <code>name@optonline.net</code>，并使用该 Optimum ID 的密码。服务器已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 MCPEmails 中选择 IMAP / SMTP，在用户名栏填写完整地址，例如 <code>name@optonline.net</code>，并使用该 Optimum ID 的密码。如果完整地址被拒绝，请在\"高级\"中只填 Optimum ID，即 @ 前面的部分，这是 Optimum 服务器设置页面给出的形式。服务器已为收发两个方向自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -69,7 +69,7 @@
   "limits": [
     "邮箱上限为 5 GB，没有付费升级，存满后会停止收发邮件。",
     "Optimum 自 2021 年 5 月 4 日起未再发放新邮箱账户，因此只能连接已有地址。",
-    "Optimum 的提交服务器在 465 端口未响应我们的探测，因此我们不公布该服务商外发邮件的已验证能力列表。"
+    "Optimum 的提交服务器在 465 端口会发出问候，但未及时回应我们的 EHLO；587 端口的 STARTTLS 则以 LOGIN 和 PLAIN 作答。Optimum 的文档将 465 列为推荐端口、587 列为旧端口，因此表格保留 465。"
   ],
   "faq": [
     {
@@ -78,7 +78,7 @@
     },
     {
       "q": "Optimum 的 IMAP 设置是什么？",
-      "a": "IMAP 为 mail.optimum.net，端口 993，隐式 TLS，已在本页所示日期通过实时 TLS 连接验证。对于提交，Optimum 的文档给出同一主机名的 465 端口；我们自己对该端口的探测没有得到响应，因此发信部分未在此验证。用户名是你的完整邮箱地址，密码是你的 Optimum ID 密码。"
+      "a": "IMAP 为 mail.optimum.net，端口 993，隐式 TLS，已在本页所示日期通过实时 TLS 连接验证。SMTP 为 mail.optimum.net，端口 465，SSL，这是 Optimum 推荐的端口；该主机在此回应了我们的探测，587 端口的 STARTTLS 则以 LOGIN 和 PLAIN 机制作答。用户名是你的完整邮箱地址，被拒绝时改填 Optimum ID，密码是你的 Optimum ID 密码。"
     },
     {
       "q": "Optimum 邮箱需要应用密码吗？",

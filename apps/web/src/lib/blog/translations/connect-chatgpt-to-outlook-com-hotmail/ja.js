@@ -18,7 +18,7 @@ ChatGPTにはOutlook EmailとOutlook Calendarのプラグインがあります�
 ## 必要なもの
 
 - Outlookのメールボックスがある個人用Microsoftアカウント：outlook.com、hotmail.com、live.com、msn.com。hotmail.co.ukやoutlook.deのような国別版も含みます。
-- **ChatGPT Goまたは有料プランで、ブラウザーのchatgpt.comから操作すること。** OpenAIがカスタムMCPサーバーの追加を認めているのはこれらのプランです。Freeでは追加できず、モバイルアプリからも追加できません。
+- **ChatGPTの有料プランで、ブラウザーのchatgpt.comから操作すること。** OpenAIのヘルプページでは、カスタムMCPサーバーの対象としてBusinessとEnterprise/Eduが挙げられ、Proでは読み取りと取得のツールに限られます。GoとPlusへの言及はありません。Freeでは追加できず、モバイルアプリからも追加できません。
 - MCPEmailsのアカウント。[無料で始める](/signup)から登録します。無料プランは受信トレイを1つ接続できます。
 
 MCPEmailsは、一方ではModel Context ProtocolでChatGPTと、もう一方ではMicrosoft Graphを通じてメールボックスとやり取りします。
@@ -87,7 +87,7 @@ MCPEmailsは新着メールをChatGPTに自動で送りません。依頼され�
 ## よくある質問
 
 **ChatGPTをHotmailやOutlook.comに接続できますか？**
-はい、カスタムMCPサーバーを使えばできます。MCPEmailsで「Microsoftで接続」からアドレスを接続し、ChatGPTのプラグインで\`https://mcpemails.com/api/mcp\`を追加すれば、ChatGPTがOutlook.com、Hotmail、Live、MSNのメールを閲覧、検索、送信、整理できるようになります。カスタムMCPサーバーの追加にはChatGPT Goまたは有料プランが必要です。
+はい、カスタムMCPサーバーを使えばできます。MCPEmailsで「Microsoftで接続」からアドレスを接続し、ChatGPTのプラグインで\`https://mcpemails.com/api/mcp\`を追加すれば、ChatGPTがOutlook.com、Hotmail、Live、MSNのメールを閲覧、検索、送信、整理できるようになります。カスタムMCPサーバーの追加にはchatgpt.comの有料プランが必要です。OpenAIはフルサポートの対象としてBusinessとEnterprise/Edu、読み取りと取得のツールに限った対象としてProを挙げています。
 
 **ChatGPTのOutlookプラグインは個人用アカウントで使えますか？**
 OpenAIのヘルプページには書かれておらず、ユーザーからは、サインイン時に法人または教育機関のアカウントしか接続できないと表示されたという報告があります。文書化されている設定手順は組織のMicrosoft Entra管理者を前提にしており、個人用アカウントにはそれがありません。

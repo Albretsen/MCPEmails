@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "https://docs.20i.com/email-hosting-pop3-imap/stackmail-on-macos",
+    "https://docs.20i.com/email-hosting/email-sending-limits"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "usernameForm": "Tu dirección completa, por ejemplo hello@yourbusiness.co.uk. Las guías de 20i usan la dirección de correo como usuario salvo que al buzón se le diera otro.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de StackMail: conecta el correo de 20i a Claude",
+    "description": "Servidor MCP para StackMail de 20i. Conecta los buzones de tu dominio (hello@, accounts@) a Claude, ChatGPT y Cursor por IMAP en imap.stackmail.com:993 con la contraseña del buzón, sea cual sea el revendedor de 20i que te aloja."
+  },
+  "hero": {
+    "eyebrow": "Correo StackMail + IA",
+    "titleLine1": "Servidor MCP para el correo de StackMail:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes hello@, accounts@ y tu propio nombre en un dominio alojado en 20i, o en uno de los muchos proveedores construidos sobre su plataforma? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón del panel de control del hosting.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de StackMail. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.stackmail.com, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. 20i documenta exactamente estos hosts: imap.stackmail.com en 993 con SSL y smtp.stackmail.com en 465 con SSL/TLS, con el servidor saliente exigiendo autenticación. Los mismos hosts sirven a los clientes de los revendedores de 20i, cuyo webmail puede llevar otra marca y otra dirección. No hay contraseña de aplicación ni nada que activar. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, cualquier revendedor de 20i",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de StackMail?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta StackMail: imap.stackmail.com en 993, smtp.stackmail.com en 465",
+    "body": "StackMail es la plataforma de correo del proveedor británico 20i, y la documentación de 20i da un solo par de hosts para todos los buzones que hay en ella: <code>imap.stackmail.com</code> en el puerto 993 con SSL para el correo entrante y <code>smtp.stackmail.com</code> en el puerto 465 con SSL/TLS para el saliente, con la opción de que el servidor saliente exija autenticación activada. 20i publica también registros autodiscover, por eso Outlook suele necesitar solo la dirección y la contraseña. Ambos hosts respondieron a una conexión TLS real bajo un certificado para <code>*.stackmail.com</code>: un banner Dovecot en IMAP que ofrece PLAIN, LOGIN, CRAM-MD5 y DIGEST-MD5, y un saludo Exim en SMTP con un límite de mensaje de 50 MB; el puerto 587 con STARTTLS también funciona para enviar. 20i vende su plataforma en marca blanca a revendedores, así que el buzón que conectas puede haberlo vendido un proveedor del que nunca has oído hablar bajo el nombre de 20i, con webmail en la dirección propia de ese proveedor. Los nombres de servidor siguen siendo stackmail.com por debajo, y la contraseña es la fijada en el buzón en el panel de control del hosting."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Localiza o fija la contraseña del buzón en el panel de control",
+      "p": "En 20i, entra en My20i, abre <b>Manage Hosting</b>, elige <b>Options</b> y <b>Manage</b> en el paquete al que pertenece el buzón, y abre <b>Email Accounts</b> en la sección Email. Cada dirección tiene ahí un campo de contraseña; introduce una nueva y <b>Save</b>. En un revendedor el panel lleva la marca del revendedor y normalmente la misma disposición. La contraseña que fijas es la del buzón, no tu acceso a la cuenta de hosting."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, por ejemplo hello@yourbusiness.co.uk, con la contraseña del buzón. Los hosts <code>imap.stackmail.com</code> y <code>smtp.stackmail.com</code> vienen rellenados con 993 y 465 y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tu proveedor quizá no se llame 20i, y el webmail quizá no diga StackMail",
+      "p": "20i tiene un programa de revendedores en marca blanca: los clientes de un revendedor ven la marca del revendedor en el panel de control y pueden llegar al webmail en una dirección del dominio propio del revendedor. Los servidores IMAP y SMTP siguen siendo <code>imap.stackmail.com</code> y <code>smtp.stackmail.com</code>. Si las instrucciones de tu proveedor nombran esos servidores, esta página te sirve aunque la palabra StackMail no aparezca en ningún otro sitio. Si nombran otro servidor, tu buzón está en otra plataforma."
+    },
+    {
+      "h": "Un buzón nuevo puede enviar solo 50 mensajes al día durante su primera semana",
+      "p": "La página de límites de envío de 20i indica que un buzón recién creado queda limitado a 50 mensajes al día durante 7 días, tras los cuales se aplica el límite habitual de 8.000 mensajes por dirección cada 24 horas, con no más de 100 destinatarios en un mensaje y 2.000 destinatarios únicos al día. Un agente que redacte respuestas en un buzón recién estrenado puede llegar a los 50 enseguida; conecta un buzón ya establecido, o espera a que pase la semana antes de darle al agente una tarea de envío."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE antes del inicio de sesión",
+      "p": "El Dovecot detrás de <code>imap.stackmail.com</code> anuncia <code>IDLE</code> pero ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code> en su lista de capacidades previa al inicio de sesión. Archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge en lugar de un solo comando, y las carpetas de enviados, borradores y papelera se reconocen por su nombre en vez de por un rol que declare el servidor. Si el agente no encuentra una carpeta que has renombrado, nómbrala en la instrucción."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 50 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El envío está limitado a 8.000 mensajes por dirección cada 24 horas, 100 destinatarios por mensaje y 2.000 destinatarios únicos al día, y a 50 mensajes al día durante la primera semana de un buzón."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de StackMail o de 20i?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para 20i. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de StackMail?",
+      "a": "IMAP es imap.stackmail.com en el puerto 993 con SSL. SMTP es smtp.stackmail.com en el puerto 465 con SSL/TLS, o 587 con STARTTLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. Ambos hosts se confirmaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "Mi proveedor no es 20i. ¿Me sirve igual esta página?",
+      "a": "Si las instrucciones de correo de tu proveedor nombran imap.stackmail.com y smtp.stackmail.com, sí: tu proveedor revende la plataforma de 20i bajo su propia marca, y los servidores son los mismos. Tu panel de control y tu webmail llevarán el nombre de tu proveedor, pero la conexión en MCPEmails es idéntica."
+    },
+    {
+      "q": "¿Necesita StackMail una contraseña de aplicación?",
+      "a": "No. 20i no tiene un sistema de contraseñas específicas de aplicación para StackMail. La contraseña del buzón autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de StackMail en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en StackMail por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de StackMail",
+    "sub": "Conecta un buzón de 20i o de un revendedor en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

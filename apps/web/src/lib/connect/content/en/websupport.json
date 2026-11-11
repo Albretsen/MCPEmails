@@ -1,0 +1,112 @@
+{
+  "_sources": [
+    "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "https://www.websupport.sk/podpora/kb/nastavenie-posty-v-microsoft-365-outlook/",
+    "https://www.websupport.sk/podpora/kb/prihlasovanie-do-emailovej-schranky-zo-zahranicia-geo-ip/",
+    "https://www.websupport.cz/podpora/kb/nastaveni-posty-v-telefonu-s-ios/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "usernameForm": "Your full address, such as info@vasafirma.sk. Websupport's guides give your e-mail address as the username for both servers.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Websupport MCP Server: Connect Websupport Mail to Claude",
+    "description": "MCP server for Websupport email. Connect the mailboxes on your domain (info@, fakturacia@) to Claude, ChatGPT and Cursor over IMAP at imap.m1.websupport.sk:993, after allowing the login country in GEO ochrana."
+  },
+  "hero": {
+    "eyebrow": "Websupport email + AI",
+    "titleLine1": "MCP server for Websupport mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running info@, fakturacia@ and your own name on a domain hosted at Websupport? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, with the mailbox password, once the mailbox's country list lets a connection from outside Central Europe in.",
+    "answer": "Claude cannot reach a Websupport mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.m1.websupport.sk on port 993, signing in with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Websupport's help lists imap.m1.websupport.sk on 993 with SSL and smtp.m1.websupport.sk on 465 with SSL, or 587 with TLS, and points to WebAdmin under Emaily, Prihlasovacie údaje for the exact names of your mailbox. The one step that trips people up is GEO ochrana: by default a Websupport mailbox accepts logins from Slovakia, Czechia, Hungary and Austria only, and MCPEmails connects from outside those countries, so the list has to be widened or the protection turned off for that mailbox first. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, GEO ochrana widened",
+    "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Websupport.cz mailbox", "host": "imap.websupport.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, Websupport.cz mailbox", "host": "smtp.websupport.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "The first two rows are for a mailbox on the Slovak platform, the two below for one at Websupport.cz. Both pairs were verified from a live TLS connection; WebAdmin shows your exact names under Prihlasovacie údaje. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Several mailboxes on your Websupport domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How Websupport connects: IMAP on 993, SMTP on 465, and a country list",
+    "body": "Websupport's troubleshooting page gives the incoming server as <code>imap.m1.websupport.sk</code> on port 993 with SSL and the outgoing server as <code>smtp.m1.websupport.sk</code> on port 465 with SSL/TLS, or 587 with TLS, with your e-mail address as the username and the mailbox password. Its Outlook guide adds that the names for your own mailbox are listed in WebAdmin at admin.websupport.sk under <b>Emaily</b>, <b>Prihlasovacie údaje</b>, which is where to look if yours differ. Both hosts answered a live TLS connection under a certificate for <code>*.m1.websupport.sk</code>, with a Dovecot banner on IMAP and a 32 MB message limit on SMTP. The Czech platform uses <code>imap.websupport.cz</code> and <code>smtp.websupport.cz</code> on the same ports, from Websupport.cz's own iOS guide. What makes Websupport different is GEO ochrana, a per-mailbox country list that decides where a login may come from. Websupport's page states that by default logins are possible from Slovakia, Czechia, Hungary and Austria. MCPEmails connects from servers in the United States, with a retry through Germany when a provider blocks the first address, so until the list is widened the server refuses the login as if the password were wrong."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Widen GEO ochrana for the mailbox in WebAdmin",
+      "p": "In WebAdmin, open the domain under <b>Služby</b>, go to <b>E-maily</b>, click the three dots at the end of the mailbox row and choose <b>Upraviť</b>. Under <b>Pokročilé nastavenia</b>, <b>GEO ochrana</b>, add the United States and Germany to the allowed countries and click <b>Uložiť</b>. Websupport says the change takes effect within 15 minutes. The alternative, from the webmail via <b>Ísť do adminu</b> and <b>Mailbox settings</b>, is to turn GEO protection off for that mailbox, which Websupport notes lowers its protection."
+    },
+    {
+      "h": "Read the server names and the mailbox password",
+      "p": "Under <b>Emaily</b>, <b>Prihlasovacie údaje</b> in WebAdmin you find the IMAP and SMTP names for the mailbox and the option to change its password. The password is the mailbox's own, not your WebAdmin login. Websupport suggests testing it in the webmail first, which also confirms the country list is right."
+    },
+    {
+      "h": "Enter them in MCPEmails and paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as info@vasafirma.sk and the mailbox password. The hosts <code>imap.m1.websupport.sk</code> and <code>smtp.m1.websupport.sk</code> are prefilled with 993 and 465 and were verified from a live TLS connection; change them if Prihlasovacie údaje shows different names. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GEO ochrana refuses the login before the password is ever checked",
+      "p": "This is the Websupport failure that looks most like a wrong password and is not one. The default country list is Slovakia, Czechia, Hungary and Austria, and a login from anywhere else is refused. MCPEmails is not in any of those countries: its servers that call your mail provider run in the United States, and its relay retry runs from Germany. Add both countries under <b>GEO ochrana</b> for the mailbox, or turn the protection off for it, and wait the 15 minutes Websupport mentions before testing again. The same list applies to sending, so a mailbox that reads fine but cannot send is usually one where SMTP was tried from a country not yet on the list."
+    },
+    {
+      "h": "Websupport.sk and Websupport.cz use different host names",
+      "p": "The Slovak platform documents <code>imap.m1.websupport.sk</code> and <code>smtp.m1.websupport.sk</code>; the Czech one documents <code>imap.websupport.cz</code> and <code>smtp.websupport.cz</code>, on the same ports with SSL. Both run the same Dovecot and the same ingress servers, but each certificate covers its own name only, so use the pair that belongs to the platform your domain is hosted on. WebAdmin's Prihlasovacie údaje always shows the right one for your mailbox."
+    },
+    {
+      "h": "Sending is rate-limited per mailbox and per domain",
+      "p": "Websupport's page sets the limits at 300 messages per hour for a mailbox and 2,000 per hour for a domain. Going over either blocks sending for 60 minutes, and messages sent during the block are not delivered and have to be sent again. An agent working through a long list of replies should pace itself; MCPEmails' own send pacing stays well under these numbers for normal use."
+    }
+  ],
+  "limits": [
+    "The SMTP server announces a maximum message size of 32 MB. A forward carrying larger attachments is refused at send time.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Sending is capped at 300 messages per hour per mailbox and 2,000 per hour per domain; exceeding a cap blocks sending for 60 minutes."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Websupport email?",
+      "a": "Not on its own. Claude has no built-in Websupport connector. Pointing an MCP server such as MCPEmails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Websupport IMAP and SMTP settings?",
+      "a": "For the Slovak platform, IMAP is imap.m1.websupport.sk on port 993 with SSL and SMTP is smtp.m1.websupport.sk on port 465 with SSL, or 587 with TLS, with authentication required. For Websupport.cz the hosts are imap.websupport.cz and smtp.websupport.cz on the same ports. The username is your full address and the password is the mailbox password. All four hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Websupport password rejected in a mail client?",
+      "a": "Most often because of GEO ochrana: the mailbox only accepts logins from Slovakia, Czechia, Hungary and Austria by default, and a connection from anywhere else is refused in the same way as a wrong password. Add the United States and Germany to the list in WebAdmin, or turn the protection off for the mailbox, wait 15 minutes and try again. If it still fails, check the password under Prihlasovacie údaje."
+    },
+    {
+      "q": "Does Websupport need an app password?",
+      "a": "No. Websupport has no app-specific password scheme. The mailbox password authenticates both IMAP and SMTP, provided the login country is allowed."
+    },
+    {
+      "q": "Is my Websupport mail stored on your servers?",
+      "a": "No. Messages are fetched live from Websupport over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your Websupport mailboxes",
+    "sub": "Widen GEO ochrana once, then connect in minutes. One mailbox free forever, no card required."
+  }
+}

@@ -16,7 +16,7 @@
     "meta0": "1 caixa de entrada grátis, para sempre",
     "meta1": "OAuth, sem precisar de chave de API",
     "meta2": "E-mails buscados ao vivo, nunca armazenados",
-    "answer": "Em chatgpt.com, abra Plugins, Personal (Pessoais), Add (Adicionar) e depois Adicionar servidor MCP personalizado. Dê o nome MCPEmails, cole https://mcpemails.com/api/mcp em Conexão, escolha OAuth, marque a caixa de confirmação, clique em Criar como plugin e faça login no MCPEmails. Servidores MCP personalizados podem ser adicionados nos planos Go e pagos. Em um chat, digite @ e escolha MCPEmails."
+    "answer": "Em chatgpt.com, abra Plugins, Personal (Pessoais), Add (Adicionar) e depois Adicionar servidor MCP personalizado. Dê o nome MCPEmails, cole https://mcpemails.com/api/mcp em Conexão, escolha OAuth, marque a caixa de confirmação, clique em Criar como plugin e faça login no MCPEmails. A OpenAI lista servidores MCP personalizados para Business e Enterprise/Edu, com acesso somente leitura no Pro, na web. Em um chat, digite @ e escolha MCPEmails."
   },
   "method": {
     "title": "Como o ChatGPT se conecta: OAuth, sem chave de API",
@@ -47,7 +47,7 @@
   "gotchas": [
     {
       "h": "Adicionado na web, escolhido por mensagem",
-      "p": "Servidores MCP personalizados podem ser adicionados em chatgpt.com nos planos Go e pagos; o app para celular não consegue adicionar um. No Business e no Enterprise, um administrador ou proprietário pode precisar adicioná-lo para o espaço de trabalho. A etapa que as pessoas esquecem é a última: o ChatGPT usa o MCPEmails em uma mensagem só quando você digita <b>@</b> e o escolhe, então mencione com @ de novo quando uma mensagem seguinte precisar do seu e-mail."
+      "p": "Servidores MCP personalizados são adicionados em chatgpt.com; o app para celular não consegue adicionar um. A página de ajuda da OpenAI os lista para espaços de trabalho Business e Enterprise/Edu, onde um administrador ou proprietário os adiciona e publica, e diz que o Pro pode conectar um só com ferramentas de leitura e busca; ela não menciona o Go nem o Plus. A etapa que as pessoas esquecem é a última: o ChatGPT usa o MCPEmails em uma mensagem só quando você digita <b>@</b> e o escolhe, então mencione com @ de novo quando uma mensagem seguinte precisar do seu e-mail."
     },
     {
       "h": "Escolha OAuth, não sem autenticação, ao criar o conector",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Por que não consigo adicionar um servidor MCP personalizado no ChatGPT?",
-      "a": "Servidores MCP personalizados podem ser adicionados nos planos Go e pagos, em chatgpt.com: o app para celular não oferece isso. Em um espaço de trabalho Business ou Enterprise, um administrador ou proprietário pode precisar adicioná-lo. Se o MCPEmails foi adicionado, mas o ChatGPT não o usa, digite <b>@</b> no chat e escolha MCPEmails; a escolha vale para uma mensagem de cada vez."
+      "a": "Servidores MCP personalizados são adicionados em chatgpt.com: o app para celular não oferece isso. A página de ajuda da OpenAI cita Business e Enterprise/Edu para suporte completo, onde só um administrador ou proprietário pode adicionar e publicar um, e o Pro só com ferramentas de leitura e busca; Go e Plus não são mencionados. Se o MCPEmails foi adicionado, mas o ChatGPT não o usa, digite <b>@</b> no chat e escolha MCPEmails; a escolha vale para uma mensagem de cada vez."
     },
     {
       "q": "Preciso de uma chave de API para o ChatGPT?",

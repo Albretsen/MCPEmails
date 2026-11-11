@@ -75,7 +75,7 @@
     },
     {
       "q": "ChatGPTはYahoo Mailに接続できますか？",
-      "a": "できます。MCPEmailsをカスタムMCPサーバーとして追加します。chatgpt.comでChatGPT Goまたは有料プランを使い、「プラグイン」、「Personal」（個人）、「Add」（追加）、「カスタム MCP サーバーを追加」の順に開き、MCPEmailsのURLを貼り付けてOAuthを選び、ログインします。あとはチャットで@と入力してMCPEmailsを選べば、ここで接続したYahooの受信トレイに届きます。同じアプリ パスワードがClaudeにも使えます。"
+      "a": "できます。MCPEmailsをカスタムMCPサーバーとして追加します。chatgpt.comで有料プラン（OpenAIが挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用）を使い、「プラグイン」、「Personal」（個人）、「Add」（追加）、「カスタム MCP サーバーを追加」の順に開き、MCPEmailsのURLを貼り付けてOAuthを選び、ログインします。あとはチャットで@と入力してMCPEmailsを選べば、ここで接続したYahooの受信トレイに届きます。同じアプリ パスワードがClaudeにも使えます。"
     },
     {
       "q": "Yahoo MailのIMAPとSMTPの設定は何ですか？",

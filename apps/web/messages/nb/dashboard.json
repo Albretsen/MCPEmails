@@ -30,7 +30,7 @@
       "step3": "Velg OAuth, huk av for «I understand and want to continue», og klikk «Create as a plugin».",
       "step4": "Logg inn med MCPEmails for å autorisere. Ingen API-nøkkel nødvendig.",
       "step5": "I en samtale skriver du @ og velger MCPEmails. Valget gjelder bare den meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
-      "note": "Egendefinerte MCP-servere kan legges til med ChatGPT Go og betalte abonnementer. På Business og Enterprise må kanskje en administrator eller eier legge den til."
+      "note": "OpenAI lister egendefinerte MCP-servere for Business- og Enterprise/Edu-arbeidsområder, med bare lesetilgang på Pro, på chatgpt.com. På Business og Enterprise må kanskje en administrator eller eier legge den til."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",
@@ -123,6 +123,25 @@
     "itWorksDesc": "AI-appen din gjorde nettopp sitt første kall til MCPEmails. Fortsett i samme samtale.",
     "waitingLive": "Siden oppdateres av seg selv når det første kallet kommer.",
     "waitingStopped": "Fortsatt ingen kall. Last inn siden på nytt etter at du har prøvd en forespørsel."
+  },
+  "heardAbout": {
+    "title": "Hvordan hørte du om MCPEmails?",
+    "sub": "Ett klikk hjelper oss å forstå hvor folk finner oss. Valgfritt.",
+    "dismiss": "Lukk",
+    "send": "Send",
+    "otherLabel": "Hvor hørte du om MCPEmails?",
+    "otherPlaceholder": "Fortell oss hvor (valgfritt)",
+    "options": {
+      "chatgpt": "Svar fra ChatGPT",
+      "claude": "Svar fra Claude",
+      "gemini": "Svar fra Gemini eller Google AI",
+      "google_search": "Google-søk",
+      "colleague": "En kollega eller venn",
+      "directory": "Appkatalog eller MCP-oversikt",
+      "video": "YouTube eller video",
+      "forum": "Reddit eller forum",
+      "other": "Annet"
+    }
   },
   "firstWeek": {
     "title": "Din første uke",

@@ -60,14 +60,14 @@
       "p": "Sparks oppsettside oppgir utgående server som <code>send.xtra.co.nz</code> på port <b>587</b> med StartTLS. Tilkoblingen vi verifiserte på samme vert, er port <b>465</b> med implisitt TLS, som fullførte et håndtrykk og tilbød PLAIN og LOGIN. Begge er ekte. Tabellen på denne siden viser det vi testet; insisterer en klient på den dokumenterte kombinasjonen, er 587 med STARTTLS Sparks publiserte svar og bør også virke."
     },
     {
-      "h": "Ingen SASL-IR, ingen IDLE, ingen MOVE og ingen SPECIAL-USE",
-      "p": "Xtra-serveren annonserer en kort liste: IMAP4rev1, UIDPLUS, NAMESPACE, ID, og mekanismene PLAIN og LOGIN. Uten SASL-IR avviser den autentiseringen i ett steg som de fleste klienter prøver først, og det kommer tilbake som en naken avvisning som ser ut som et feil passord. Uten IDLE finnes det ingen push, så ny e-post oppdages ved polling. Uten MOVE kjøres arkivering som COPY, så STORE, så EXPUNGE. Uten SPECIAL-USE matches Sent og Trash etter navn. UIDPLUS finnes, så en kopiert melding rapporterer sin nye ID."
+      "h": "SASL-IR og IDLE annonseres nå; MOVE og SPECIAL-USE fortsatt ikke",
+      "p": "Da denne verten først ble testet i august, annonserte den en minimal liste: IMAP4rev1, UIDPLUS, NAMESPACE, ID og mekanismene PLAIN og LOGIN, uten SASL-IR og uten IDLE. På datoen som vises på denne siden svarte samme vert i stedet med en kapabilitetsliste i Dovecot-stil: SASL-IR og IDLE til stede, PLAIN og LOGIN som mekanismer, og UIDPLUS ikke lenger annonsert før innlogging. Dermed godtas autentisering i ett steg, og ny e-post kan oppdages på en åpen tilkobling. Det som ikke har endret seg: ingen MOVE, så arkivering kjøres som COPY, så STORE, så EXPUNGE, og ingen SPECIAL-USE, så Sendt og Papirkurv matches etter navn. Spark kunngjorde ikke endringen; det er det serveren sier i dag, og tabellen over følger serveren."
     }
   ],
   "limits": [
     "Sparks SMTP-vert annonserer en maksimal meldingsstørrelse på omtrent 100 MB, som er rundhåndet, men en større sending avvises likevel før den går ut.",
-    "Ingen IDLE, så ny e-post oppdages ved polling i stedet for å bli pushet.",
-    "Flyttinger er ikke atomiske, og mapperoller matches etter navn, fordi MOVE og SPECIAL-USE ikke er implementert på denne serveren."
+    "MOVE er ikke implementert, så en flytting er ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Mapperoller matches etter navn fordi SPECIAL-USE ikke annonseres. Har du gitt Sendt eller Papirkurv nytt navn, nevn mappen når du ber om en flytting."
   ],
   "faq": [
     {

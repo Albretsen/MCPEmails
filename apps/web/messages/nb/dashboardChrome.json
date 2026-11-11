@@ -141,7 +141,8 @@
     "openSearch": "Åpne søk (Command K)",
     "navWorkflows": "Arbeidsflyter",
     "navAutomations": "Automatiseringer",
-    "navInvite": "Inviter en venn"
+    "navInvite": "Inviter en venn",
+    "invitePromo": "Gi en måned, få en måned"
   },
   "topbar": {
     "mcpLabel": "MCP-endepunkt",

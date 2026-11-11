@@ -645,11 +645,11 @@ test('a workspace-keyed row with an unusable payload is refused as not_composabl
 // Schedules
 // ---------------------------------------------------------------------------
 
-test('the dunning schedule is 0, 3, 7 and the last week of the 30-day retry window', () => {
-  assert.equal(STRIPE_RETRY_WINDOW_DAYS, 30, 'must match the Stripe Dashboard: Smart Retries within 1 month');
+test('the dunning schedule is 0, 3, 7 and the last week of the 28-day retry window', () => {
+  assert.equal(STRIPE_RETRY_WINDOW_DAYS, 28, 'must match the Stripe Dashboard: Smart Retries within 1 month');
   assert.deepEqual(
     DUNNING_SCHEDULE.map((s) => s.dayOffset),
-    [0, 3, 7, 23],
+    [0, 3, 7, 21],
   );
   assert.equal(DUNNING_SCHEDULE[3].template, 'dunning_14', 'the final notice keeps its template id');
   assert.equal(DUNNING_SCHEDULE[0].template, 'dunning_1');
@@ -1131,7 +1131,7 @@ test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branc
     // Recomputed 2026-11-11 on purpose: the retry window went from 2 weeks
     // to 1 month (retry-window.ts), so dunning_1/3/7 quote the new window and
     // dunning_14 became the last-week reminder.
-    '7cea2513bc22061f62f9f6ec37869eb31d45f868966fcd9b9527cd8dbdbdd1fe',
+    '72c1ae092e8257a0199d7f13a4778d4d0283106562a4280c0022bac7eaf790e8',
   );
 });
 
@@ -1153,9 +1153,9 @@ test('the days of retries left are read from the window, per email', () => {
   const d1 = composeBillingEmail('dunning_1', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
   assert.match(d1.body, /retried automatically over the next month/);
   const d3 = composeBillingEmail('dunning_3', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
-  assert.match(d3.body, /about 27 days of retries left/);
+  assert.match(d3.body, /about 25 days of retries left/);
   const d7 = composeBillingEmail('dunning_7', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
-  assert.match(d7.body, /about 23 days of retries left/);
+  assert.match(d7.body, /about 21 days of retries left/);
   const d14 = composeBillingEmail('dunning_14', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
   assert.match(d14.body, /The retries end in about a week/);
   assert.match(d14.body, /still running today/);

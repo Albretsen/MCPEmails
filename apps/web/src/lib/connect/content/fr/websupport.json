@@ -1,0 +1,112 @@
+{
+  "_sources": [
+    "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "https://www.websupport.sk/podpora/kb/nastavenie-posty-v-microsoft-365-outlook/",
+    "https://www.websupport.sk/podpora/kb/prihlasovanie-do-emailovej-schranky-zo-zahranicia-geo-ip/",
+    "https://www.websupport.cz/podpora/kb/nastaveni-posty-v-telefonu-s-ios/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.websupport.sk/podpora/kb/nefunkcny-email/",
+    "usernameForm": "Votre adresse complète, par exemple info@vasafirma.sk. Les guides Websupport donnent votre adresse e-mail comme identifiant pour les deux serveurs.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP Websupport : connectez le mail Websupport à Claude",
+    "description": "Serveur MCP pour le mail Websupport. Connectez les boîtes de votre domaine (info@, fakturacia@) à Claude, ChatGPT et Cursor en IMAP sur imap.m1.websupport.sk:993, après avoir autorisé le pays de connexion dans GEO ochrana."
+  },
+  "hero": {
+    "eyebrow": "Mail Websupport + IA",
+    "titleLine1": "Serveur MCP pour le mail Websupport :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez info@, fakturacia@ et votre propre nom sur un domaine hébergé chez Websupport ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte, dès que la liste de pays de la boîte laisse entrer une connexion venue d'ailleurs qu'Europe centrale.",
+    "answer": "Claude ne peut pas atteindre seul une boîte Websupport. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.m1.websupport.sk, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. L'aide de Websupport indique imap.m1.websupport.sk sur 993 avec SSL et smtp.m1.websupport.sk sur 465 avec SSL, ou 587 avec TLS, et renvoie à WebAdmin sous Emaily, Prihlasovacie údaje pour les noms exacts de votre boîte. L'étape qui fait trébucher, c'est GEO ochrana : par défaut une boîte Websupport n'accepte les connexions que depuis la Slovaquie, la Tchéquie, la Hongrie et l'Autriche, et MCPEmails se connecte depuis l'extérieur de ces pays ; il faut donc d'abord élargir la liste ou désactiver la protection pour cette boîte. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, GEO ochrana élargie",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, boîte Websupport.cz", "host": "imap.websupport.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, boîte Websupport.cz", "host": "smtp.websupport.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Les deux premières lignes concernent une boîte sur la plateforme slovaque, les deux suivantes une boîte chez Websupport.cz. Les deux paires ont été vérifiées par une connexion TLS réelle ; WebAdmin affiche vos noms exacts sous Prihlasovacie údaje. Pour toute autre adresse, utilisez la",
+      "label": "recherche de paramètres de messagerie",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine Websupport ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment Websupport se connecte : IMAP sur 993, SMTP sur 465, et une liste de pays",
+    "body": "La page de dépannage de Websupport donne le serveur entrant <code>imap.m1.websupport.sk</code> sur le port 993 avec SSL et le serveur sortant <code>smtp.m1.websupport.sk</code> sur le port 465 avec SSL/TLS, ou 587 avec TLS, avec votre adresse e-mail comme identifiant et le mot de passe de la boîte. Son guide Outlook ajoute que les noms de votre propre boîte figurent dans WebAdmin, sur admin.websupport.sk, sous <b>Emaily</b>, <b>Prihlasovacie údaje</b>, l'endroit où regarder si les vôtres diffèrent. Les deux hôtes ont répondu à une connexion TLS réelle sous un certificat pour <code>*.m1.websupport.sk</code>, avec une bannière Dovecot en IMAP et une limite de message de 32 Mo en SMTP. La plateforme tchèque utilise <code>imap.websupport.cz</code> et <code>smtp.websupport.cz</code> sur les mêmes ports, d'après le guide iOS de Websupport.cz. Ce qui distingue Websupport, c'est GEO ochrana, une liste de pays par boîte qui décide d'où une connexion peut venir. La page de Websupport précise que par défaut la connexion est possible depuis la Slovaquie, la Tchéquie, la Hongrie et l'Autriche. MCPEmails se connecte depuis des serveurs aux États-Unis, avec une nouvelle tentative via l'Allemagne lorsqu'un fournisseur bloque la première adresse ; tant que la liste n'est pas élargie, le serveur refuse donc la connexion comme si le mot de passe était faux."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Élargissez GEO ochrana pour la boîte dans WebAdmin",
+      "p": "Dans WebAdmin, ouvrez le domaine sous <b>Služby</b>, allez dans <b>E-maily</b>, cliquez sur les trois points en bout de ligne de la boîte et choisissez <b>Upraviť</b>. Sous <b>Pokročilé nastavenia</b>, <b>GEO ochrana</b>, ajoutez les États-Unis et l'Allemagne aux pays autorisés et cliquez sur <b>Uložiť</b>. Websupport indique que le changement prend effet sous 15 minutes. L'alternative, depuis le webmail via <b>Ísť do adminu</b> et <b>Mailbox settings</b>, consiste à désactiver la protection GEO pour cette boîte, ce qui, note Websupport, réduit sa protection."
+    },
+    {
+      "h": "Lisez les noms de serveur et le mot de passe de la boîte",
+      "p": "Sous <b>Emaily</b>, <b>Prihlasovacie údaje</b> dans WebAdmin se trouvent les noms IMAP et SMTP de la boîte et l'option pour changer son mot de passe. Le mot de passe est celui de la boîte, pas votre identifiant WebAdmin. Websupport suggère de le tester d'abord dans le webmail, ce qui confirme aussi que la liste de pays est correcte."
+    },
+    {
+      "h": "Saisissez-les dans MCPEmails et collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple info@vasafirma.sk, et le mot de passe de la boîte. Les hôtes <code>imap.m1.websupport.sk</code> et <code>smtp.m1.websupport.sk</code> sont préremplis avec 993 et 465 et ont été vérifiés par une connexion TLS réelle ; changez-les si Prihlasovacie údaje affiche d'autres noms. Puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GEO ochrana refuse la connexion avant même de vérifier le mot de passe",
+      "p": "C'est la panne Websupport qui ressemble le plus à un mauvais mot de passe sans en être un. La liste de pays par défaut est Slovaquie, Tchéquie, Hongrie et Autriche, et une connexion venue d'ailleurs est refusée. MCPEmails n'est dans aucun de ces pays : ses serveurs qui appellent votre fournisseur de messagerie tournent aux États-Unis, et sa nouvelle tentative par relais part d'Allemagne. Ajoutez les deux pays sous <b>GEO ochrana</b> pour la boîte, ou désactivez la protection pour elle, et attendez les 15 minutes mentionnées par Websupport avant de réessayer. La même liste s'applique à l'envoi : une boîte qui lit bien mais n'envoie pas est généralement une boîte où SMTP a été tenté depuis un pays pas encore listé."
+    },
+    {
+      "h": "Websupport.sk et Websupport.cz utilisent des noms d'hôte différents",
+      "p": "La plateforme slovaque documente <code>imap.m1.websupport.sk</code> et <code>smtp.m1.websupport.sk</code> ; la tchèque documente <code>imap.websupport.cz</code> et <code>smtp.websupport.cz</code>, sur les mêmes ports avec SSL. Les deux tournent sous le même Dovecot et les mêmes serveurs d'entrée, mais chaque certificat ne couvre que son propre nom ; utilisez donc la paire qui correspond à la plateforme hébergeant votre domaine. Prihlasovacie údaje dans WebAdmin affiche toujours la bonne pour votre boîte."
+    },
+    {
+      "h": "L'envoi est limité par boîte et par domaine",
+      "p": "La page de Websupport fixe les limites à 300 messages par heure pour une boîte et 2 000 par heure pour un domaine. Dépasser l'une ou l'autre bloque l'envoi pendant 60 minutes, et les messages envoyés pendant le blocage ne sont pas livrés et doivent être renvoyés. Un agent qui traite une longue liste de réponses devrait se ménager ; le rythme d'envoi propre à MCPEmails reste bien en dessous de ces chiffres en usage normal."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message de 32 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "L'envoi est plafonné à 300 messages par heure et par boîte et 2 000 par heure et par domaine ; dépasser un plafond bloque l'envoi pendant 60 minutes."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail Websupport ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Websupport intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Websupport ?",
+      "a": "Pour la plateforme slovaque, IMAP est imap.m1.websupport.sk sur le port 993 avec SSL et SMTP est smtp.m1.websupport.sk sur le port 465 avec SSL, ou 587 avec TLS, authentification requise. Pour Websupport.cz, les hôtes sont imap.websupport.cz et smtp.websupport.cz sur les mêmes ports. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. Les quatre hôtes ont été confirmés par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Websupport est-il refusé dans un logiciel de messagerie ?",
+      "a": "Le plus souvent à cause de GEO ochrana : la boîte n'accepte par défaut que les connexions depuis la Slovaquie, la Tchéquie, la Hongrie et l'Autriche, et une connexion venue d'ailleurs est refusée exactement comme un mauvais mot de passe. Ajoutez les États-Unis et l'Allemagne à la liste dans WebAdmin, ou désactivez la protection pour la boîte, attendez 15 minutes et réessayez. Si cela échoue encore, vérifiez le mot de passe sous Prihlasovacie údaje."
+    },
+    {
+      "q": "Websupport exige-t-il un mot de passe d'application ?",
+      "a": "Non. Websupport n'a pas de dispositif de mots de passe spécifiques aux applications. Le mot de passe de la boîte authentifie IMAP comme SMTP, pour autant que le pays de connexion soit autorisé."
+    },
+    {
+      "q": "Mon courrier Websupport est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez Websupport en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes Websupport",
+    "sub": "Élargissez GEO ochrana une fois, puis connectez en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

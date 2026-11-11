@@ -165,17 +165,21 @@ export type ProductFunnelEvent = {
     | 'second_inbox_prompt_shown' | 'second_inbox_prompt_clicked'
     | 'plan_summary_shown' | 'plan_summary_dismissed' | 'plan_summary_clicked'
     | 'usage_meter_shown' | 'grace_end_note_shown'
+    // "How did you hear about MCPEmails?" (20261111150000,
+    // src/lib/onboarding/heard-about.mjs). Once per workspace, category
+    // surface_overview; the answer itself is on workspaces.heard_about.
+    | 'heard_about_answered' | 'heard_about_dismissed'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
     | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped'
-    // Monthly-to-annual switch (20261111140200, src/lib/billing/annual-switch.ts).
-    // shown/clicked carry the surface (dashboard_billing | surface_overview);
-    // completed carries the target (personal_year | solo_year | pro_year).
-    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed'
     // Broken-inbox alert (20261111140000, src/lib/retention/inbox-alert.ts).
     // sent/holdout carry the phase (alert_1 | alert_2); reconnected the arm
     // (alert | holdout), written for both arms.
-    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected';
+    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected'
+    // Monthly-to-annual switch (20261111140200, src/lib/billing/annual-switch.ts).
+    // shown/clicked carry the surface (dashboard_billing | surface_overview);
+    // completed carries the target (personal_year | solo_year | pro_year).
+    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

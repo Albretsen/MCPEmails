@@ -53,6 +53,7 @@ import {
   fetchMailRelayHosts,
   fetchSignupTrend,
   fetchDraftCardReach,
+  fetchHeardAbout,
   fetchDraftCardStats,
   fetchOnboardingArms,
   fetchOnboardingDaily,
@@ -122,6 +123,7 @@ import { RelayHostTable, RelayHostsTile, RelayStatusTile, RelayWorkingTile } fro
 import { relayHealth } from '@/lib/analytics/mail-relay-health';
 import { FETCH_WEEKS, signupTrend } from '@/lib/analytics/signup-trend';
 import { SignupTrendTile } from './board/signup-trend';
+import { HeardAboutTile } from './board/heard-about';
 import { DraftCardTile } from './board/draft-card';
 import { DRAFT_CARD_RELEASE_AT, releaseChecks, releaseVerdict } from '@/lib/analytics/draft-card';
 import { OnboardingStepsTile, OnboardingTestTile } from './board/onboarding';
@@ -848,7 +850,7 @@ export async function MilestoneSection() {
 /* ============================================================ growth band */
 
 export async function GrowthSection({ days }: { days: number }) {
-  const [signups, funnel, checkout, channels, providers, providerFunnel, bands, revenue, lifecycle, trend] =
+  const [signups, funnel, checkout, channels, providers, providerFunnel, bands, revenue, lifecycle, trend, heardAbout] =
     await Promise.all([
       fetchUserSignupDays(DURABLE_DAYS),
       fetchActivationFunnel(DURABLE_DAYS),
@@ -860,6 +862,7 @@ export async function GrowthSection({ days }: { days: number }) {
       fetchRecurringRevenue(days),
       fetchLifecycleCounts(),
       fetchSignupTrend(FETCH_WEEKS),
+      fetchHeardAbout(),
     ]);
 
   const signupRows = signups.ok ? signups.data : [];
@@ -928,6 +931,17 @@ export async function GrowthSection({ days }: { days: number }) {
           </Tile>
         ) : (
           <TileError label="Which channels produce customers" message={channels.error} />
+        )}
+      </Cell>
+
+      {/* What the 'direct' channel above cannot say: the one-time dashboard
+          question, self-reported. Full width so the 8 + 4 row below keeps
+          its shape. */}
+      <Cell span={12} tall={2}>
+        {heardAbout.ok ? (
+          <HeardAboutTile rows={heardAbout.data} />
+        ) : (
+          <TileError label="Where they heard about us" message={heardAbout.error} />
         )}
       </Cell>
 

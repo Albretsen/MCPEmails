@@ -18,12 +18,15 @@
  * namespace: that namespace is serialised into every marketing page (see
  * MARKETING_NAMESPACES in src/i18n/request.ts), and this is page-only copy.
  *
- * WHAT IT CLAIMS (OpenAI's help pages, checked 2026-10-26; /docs/chatgpt and
- * the connect-chatgpt-to-email post say the same):
+ * WHAT IT CLAIMS (OpenAI's help pages, checked 2026-10-26, plan list re-read
+ * 2026-11-11 at help.openai.com/en/articles/12584461; /docs/chatgpt and the
+ * connect-chatgpt-to-email post say the same):
  *   - a custom MCP server added on chatgpt.com (not the mobile app) under
  *     Plugins, Personal, Add, Add custom MCP server; no developer mode needed
  *   - server URL https://mcpemails.com/api/mcp, OAuth authentication
- *   - available on ChatGPT Go and paid plans (never claim Free)
+ *   - needs a paid plan: OpenAI names Business and Enterprise/Edu for full
+ *     support and Pro for read/fetch only; Go and Plus are not mentioned
+ *     (never claim Free, Go or Plus)
  *   - used by typing @ in a chat and picking MCPEmails, once per message
  *   - mail fetched live, never stored
  *

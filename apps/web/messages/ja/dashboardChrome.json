@@ -141,7 +141,8 @@
     "openSearch": "検索を開く (Command K)",
     "navWorkflows": "ワークフロー",
     "navAutomations": "自動化",
-    "navInvite": "友だちを招待"
+    "navInvite": "友だちを招待",
+    "invitePromo": "1か月贈って、1か月もらう"
   },
   "topbar": {
     "mcpLabel": "MCPエンドポイント",

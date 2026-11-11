@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "https://www.arsys.es/blog/configurar-correo-arsys-en-gmail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "usernameForm": "Hele adressen din, nombre@tudominio.es. Arsys oppgir selve e-postadressen som bruker, og passordet er det som ble satt da postkassen ble opprettet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Arsys MCP-server: koble Arsys-e-post til Claude",
+    "description": "MCP-server for Arsys-e-post. Koble postkassene på domenet ditt (info@, facturacion@) til Claude, ChatGPT og Cursor via IMAP på imap.serviciodecorreo.es:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "Arsys-e-post + AI",
+    "titleLine1": "MCP-server for Arsys-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, facturacion@ og ditt eget navn på et domene hos Arsys? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med postkassens passord i stedet for kundeinnloggingen hos Arsys.",
+    "answer": "Claude når ikke en Arsys-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.serviciodecorreo.es port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Arsys' supportsenter oppgir nøyaktig disse innstillingene for manuell konfigurasjon: imap.serviciodecorreo.es på 993 og smtp.serviciodecorreo.es på 465, begge med SSL/TLS påkrevd, adressen som bruker og passordet som ble satt da postkassen ble opprettet. Det finnes ikke noe app-passord og ingenting å slå på. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, ingenting å aktivere",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på Arsys-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler Arsys seg til: serviciodecorreo.es-vertene, IMAP på 993 og SMTP på 465",
+    "body": "Arsys kjører postkassene sine på en plattform med eget domene, serviciodecorreo.es, og det er derfor navnet på serveren ikke sier Arsys. Supportsenteret gir de manuelle innstillingene: innkommende server <code>imap.serviciodecorreo.es</code> på port 993 og utgående server <code>smtp.serviciodecorreo.es</code> på port 465, begge med SSL/TLS-tilkobling påkrevd, med e-postadressen din som bruker og passordet som ble satt da postkassen ble opprettet. Begge vertene svarte på en direkte TLS-tilkobling under et sertifikat for <code>*.serviciodecorreo.es</code>: et kort <code>IMAP4 ready</code>-banner som annonserer UIDPLUS, IDLE, CONDSTORE og SORT, og en SMTP-hilsen med PLAIN og LOGIN og en meldingsgrense på 51 MB; port 587 med STARTTLS fungerer også for sending. Arsys' Gmail-veiledning nevner i tillegg mail.arsys.es og smtp.arsys.es, men mail.arsys.es avviste en tilkobling på port 993 da vi testet, så serviciodecorreo.es-navnene fra supportsenteret er dem MCPEmails bruker. Glemmer du passordet, sier Arsys at du oppdaterer det under <b>Cambio de contraseña</b> i delen <b>Buzones</b> i Panel de Control."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet i Panel de Control",
+      "p": "Logg inn i Arsys' Panel de Control og åpne <b>Buzones</b>. Hver adresse har et valg <b>Cambio de contraseña</b> der; det passordet, satt da postkassen ble opprettet eller endret siden, er det IMAP sjekker. Arsys-kundeinnloggingen din er en annen pålogging og blir avvist av e-postserveren."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel info@tudominio.es, med postkassepassordet. Vertene <code>imap.serviciodecorreo.es</code> og <code>smtp.serviciodecorreo.es</code> er forhåndsutfylt med 993 og 465, begge SSL/TLS, og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Serveren heter serviciodecorreo.es, ikke arsys.es",
+      "p": "Folk leter etter en Arsys-vert og finner to sett navn. Supportsenterets gjeldende innstillingsside oppgir bare <code>imap.serviciodecorreo.es</code> og <code>smtp.serviciodecorreo.es</code>; et eldre Arsys-blogginnlegg om Gmail nevner også mail.arsys.es og smtp.arsys.es. Da vi testet, avviste mail.arsys.es IMAP på 993, mens serviciodecorreo.es-vertene svarte med et sertifikat som stemte. Bruk serviciodecorreo.es-navnene, og har et e-postprogram konfigurert seg selv over på arsys.es-navnene og sluttet å virke, er det derfor."
+    },
+    {
+      "h": "Endre passordet i Buzones, ikke i kundeområdet",
+      "p": "Arsys' innstillingsside er tydelig: passordet er det som ble satt da postkassen ble registrert, og glemmer du det, oppdaterer du det under Cambio de contraseña i delen Buzones i Panel de Control. Passordet til Arsys-kundekontoen din bor et annet sted og autentiserer aldri IMAP. Etter en endring minner Arsys om å oppdatere det på alle enheter og i alle programmer, og det inkluderer MCPEmails."
+    },
+    {
+      "h": "Bare AUTH=PLAIN på IMAP, ingen MOVE og ingen SPECIAL-USE",
+      "p": "IMAP-serveren annonserer bare <code>AUTH=PLAIN</code>, som MCPEmails bruker, mens SMTP godtar PLAIN og LOGIN. Den tilbyr <code>UIDPLUS</code>, så en kopiert melding rapporterer sin nye id, men ikke <code>MOVE</code> eller <code>SPECIAL-USE</code>: arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og mappene for sendt, utkast og papirkurv gjenkjennes på navn. På en spansk postkasse heter de ofte Enviados, Borradores og Papelera; nevn mappen i instruksjonen hvis agenten ikke finner den."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på omtrent 51 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Arsys-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Arsys-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Arsys?",
+      "a": "IMAP er imap.serviciodecorreo.es på port 993 med SSL/TLS. SMTP er smtp.serviciodecorreo.es på port 465 med SSL/TLS, eller 587 med STARTTLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Arsys-passordet mitt avvist i et e-postprogram?",
+      "a": "Som regel fordi det er passordet til Arsys-kundeområdet og ikke postkassepassordet. IMAP sjekker passordet som er satt på den enkelte adressen, som du kan nullstille under Cambio de contraseña i delen Buzones i Panel de Control. Den andre vanlige årsaken er en klient som har konfigurert seg over på mail.arsys.es; bruk imap.serviciodecorreo.es."
+    },
+    {
+      "q": "Trenger Arsys et app-passord?",
+      "a": "Nei. Arsys har ingen ordning med app-spesifikke passord. Postkassepassordet autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres Arsys-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra Arsys via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din Arsys-postkassene dine",
+    "sub": "Koble til Arsys-e-post på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

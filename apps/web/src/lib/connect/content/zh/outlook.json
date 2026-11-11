@@ -18,7 +18,7 @@
     "eyebrow": "Outlook.com + AI",
     "titleLine1": "将 Outlook.com 连接到 Claude，",
     "titleLine2": "以及 ChatGPT、Cursor 和任意 MCP 客户端",
-    "lead": "Claude 自带的 Microsoft 365 连接器只接受工作或学校账户。MCPEmails 可以连接个人 Outlook.com、Hotmail、Live 和 MSN 邮箱：使用 Microsoft 登录，授权一次，即可在任何 MCP 客户端中用同一个 URL 阅读、搜索、发送、回复、定时发送和整理邮件。",
+    "lead": "Claude 自带的 Microsoft 365 连接器现在在个人版计划上也接受个人账户，但只能在 Claude 内使用，且不支持附件。MCPEmails 只需连接一次个人 Outlook.com、Hotmail、Live 或 MSN 邮箱，即可在所有 MCP 客户端中使用：使用 Microsoft 登录并授权，然后用同一个 URL 阅读、搜索、发送、回复、定时发送和整理邮件，附件也不例外。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "使用 Microsoft 登录，无需应用专用密码",
     "meta2": "邮件实时获取，绝不存储",
@@ -76,8 +76,8 @@
       "a": "可以。使用 Microsoft 登录，将你的 Outlook.com 邮箱连接到 MCPEmails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。同一个 URL 也适用于 ChatGPT、Cursor 和其他 MCP 客户端。"
     },
     {
-      "q": "为什么 Claude 的 Microsoft 365 连接器拒绝我的 Outlook.com 账户？",
-      "a": "Claude 内置的 Microsoft 365 连接器要求使用 Microsoft Entra 租户中的工作或学校账户，Anthropic 也说明不支持个人 Microsoft 账户，因此 Outlook.com、Hotmail、Live 和 MSN 地址会被拒绝。MCPEmails 可以连接这些个人账户：你在 Microsoft 自己的页面上用 Microsoft 登录，然后用一个 URL 把 MCPEmails 作为自定义连接器添加到 Claude。"
+      "q": "Claude 的 Microsoft 365 连接器能用我的 Outlook.com 账户吗？",
+      "a": "在 Claude 的 Free、Pro、Max 和 Ultra 计划上可以：Anthropic 说明个人 Microsoft 账户无需管理员即可连接，包含写入工具，但不支持附件。Team 和 Enterprise 计划看不到这个选项；工作或学校账户则需要其 Microsoft Entra 租户的全局管理员先行同意。MCPEmails 在任何 Claude 计划上都能连接个人账户，支持附件，并可与你的其他邮箱并用：你在 Microsoft 自己的页面上用 Microsoft 登录，然后用一个 URL 把 MCPEmails 作为自定义连接器添加到 Claude。"
     },
     {
       "q": "Hotmail、Live 和 MSN 地址也可以吗？",

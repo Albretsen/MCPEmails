@@ -1,0 +1,110 @@
+{
+  "_sources": [
+    "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "https://cyberfolks.pl/pomoc/jak-utworzyc-konto-pocztowe/",
+    "https://cyberfolks.pl/pomoc/zmiana-konfiguracji-skrzynki-mailowej-w-mozilla-thunderbird/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "usernameForm": "Hele adressen din, for eksempel biuro@twojadomena.pl. cyber_Folks nevner ett unntak: hovedpostkassen på hostingkontoen logger inn med selve hostinginnloggingen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "cyber_Folks MCP-server: koble postkassene dine til Claude",
+    "description": "MCP-server for e-post hos cyber_Folks. Koble postkassene på domenet ditt (biuro@, kontakt@) til Claude, ChatGPT og Cursor via IMAP på din sNN.cyber-folks.pl-server, port 993, med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "cyber_Folks-e-post + AI",
+    "titleLine1": "MCP-server for cyber_Folks-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du biuro@, kontakt@ og ditt eget navn på et domene hos cyber_Folks? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med postkassens passord i stedet for kundeinnloggingen hos cyber_Folks.",
+    "answer": "Claude når ikke en cyber_Folks-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på port 993 mot serveren kontoen din ligger på, et navn på formen s1.cyber-folks.pl, og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. cyber_Folks oppgir portene (993 for IMAP, 465 eller 587 for SMTP) og ber deg lese servernavnet i ditt eget panel, under Dane konfiguracyjne i cyber_Admin. Sending går gjennom samme server, alltid med autentisering. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, din egen sNN-server",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "SMTP, STARTTLS-alternativ", "host": "s1.cyber-folks.pl", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "1-tallet i s1 står for ditt eget servernummer: cyber_Folks viser det faktiske navnet under Dane konfiguracyjne i cyber_Admin, eller i Panel Klienta under Twoje usługi, Hosting, i kolonnen Host. Tre servere i den serien ble bekreftet via en direkte TLS-tilkobling. For andre adresser, bruk",
+      "label": "oppslaget for e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Flere postkasser på cyber_Folks-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler cyber_Folks seg til: navnet på din server, IMAP på 993 og SMTP på 465",
+    "body": "cyber_Folks oppgir ikke én felles e-postvert. Hjelpesiden sier at innkommende og utgående server er den hostingkontoen din kjører på, og at navnet står i cyber_Admin under <b>Dane konfiguracyjne</b>, bak tannhjulikonet øverst til høyre, eller i Panel Klienta under <b>Twoje usługi</b>, <b>Hosting</b>, i kolonnen <b>Host</b>. Navnene følger mønsteret <code>s1.cyber-folks.pl</code>, med ditt eget nummer i stedet for 1, og de bærer et sertifikat for <code>*.cyber-folks.pl</code>: vi åpnet TLS-tilkoblinger til tre servere i serien, og hver av dem svarte med IMAP på 993 og et Dovecot-banner, og SMTP på 465 og 587 med Exim. Portene cyber_Folks lister opp er 993 for IMAP, 465 for SMTP med SSL og 587 som alternativ, og de ber deg la være å bruke port 25. Brukernavnet er hele adressen, passordet er det som ble satt på postkassen da den ble opprettet, og den utgående serveren krever autentisering: uten den svarer serveren <code>550 relay not permitted, authentication required</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Les servernavnet ditt i cyber_Admin",
+      "p": "Logg inn i cyber_Admin, klikk på tannhjulikonet øverst til høyre og åpne <b>Dane konfiguracyjne</b>. IMAP- og SMTP-serveren som vises der, et navn som s1.cyber-folks.pl med ditt eget nummer, er den du skal oppgi. Det samme navnet står i Panel Klienta under <b>Twoje usługi</b>, <b>Hosting</b>, i kolonnen <b>Host</b>."
+    },
+    {
+      "h": "Ha postkassepassordet klart",
+      "p": "Passordet hører til den enkelte postkassen og ble satt da den ble opprettet under <b>MAIL</b>, <b>LISTA KONT</b> i cyber_Admin (eller under <b>Konta e-mail</b> i DirectAdmin). Det er ikke passordet til Panel Klienta. Kjenner du det ikke, setter du et nytt på den postkassen; ingenting annet påvirkes."
+    },
+    {
+      "h": "Skriv dem inn i MCPEmails og lim MCP-URL-en inn i AI-en din",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel biuro@twojadomena.pl, postkassepassordet og servernavnet ditt, med 993 og SSL for IMAP og 465 og SSL for SMTP. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bruk cyber-folks.pl-navnet, ikke mail.dittdomene.pl",
+      "p": "cyber_Folks' side forklarer at serveren også svarer under ditt eget domene, som mail.twojadomena.pl, men at sertifikatet på serveren er utstedt for cyber_Folks-navnet, så en klient som bruker domenet får en sertifikatadvarsel eller en avvist TLS-tilkobling. MCPEmails validerer sertifikater og kobler ikke til gjennom et navn sertifikatet ikke dekker. Bruk sNN.cyber-folks.pl-navnet fra panelet ditt, som også er det cyber_Folks selv anbefaler."
+    },
+    {
+      "h": "Hovedpostkassen på kontoen logger inn med hostinginnloggingen",
+      "p": "Hver postkasse du oppretter logger inn med hele adressen. Det ene unntaket cyber_Folks dokumenterer er kontoens primære postkasse, der brukernavnet er hostinginnloggingen (eksempelet deres er en kort innlogging som lnxpl) i stedet for en adresse. Blir adresseformen avvist på akkurat den postkassen, prøv innloggingen fra velkomst-e-posten for hostingen i stedet."
+    },
+    {
+      "h": "Bare AUTH=PLAIN på IMAP, og ingen MOVE",
+      "p": "Dovecot bak hver server annonserer bare <code>AUTH=PLAIN</code> på IMAP, som MCPEmails bruker, mens SMTP godtar både PLAIN og LOGIN. Kapabilitetslisten før innlogging har hverken <code>MOVE</code>, <code>UIDPLUS</code> eller <code>SPECIAL-USE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og mappene for sendt, utkast og papirkurv gjenkjennes på navn. På en polsk postkasse heter de ofte Wysłane, Kopie robocze og Kosz; nevn mappen i instruksjonen hvis agenten ikke finner den."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på 100 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Servernavnet er per kunde. Et navn kopiert fra noen andres veiledning, eller s1 som vises på denne siden, kobler bare til hvis kontoen din tilfeldigvis ligger på den serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med e-post hos cyber_Folks?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd cyber_Folks-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for cyber_Folks?",
+      "a": "IMAP er serveren din, et navn på formen s1.cyber-folks.pl med ditt eget nummer, på port 993 med SSL. SMTP er samme server på port 465 med SSL, eller 587 med STARTTLS, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. cyber_Folks viser servernavnet under Dane konfiguracyjne i cyber_Admin."
+    },
+    {
+      "q": "Hvor finner jeg servernavnet for e-post hos cyber_Folks?",
+      "a": "I cyber_Admin, bak tannhjulikonet øverst til høyre, under Dane konfiguracyjne, som lister opp IMAP-, POP3- og SMTP-adressene og portene. Eller i Panel Klienta under Twoje usługi, Hosting, i kolonnen Host ved siden av hostingtjenesten din."
+    },
+    {
+      "q": "Trenger cyber_Folks et app-passord?",
+      "a": "Nei. cyber_Folks har ingen ordning med app-spesifikke passord. Passordet som er satt på postkassen autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres cyber_Folks-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra cyber_Folks-serveren din via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din cyber_Folks-postkassene dine",
+    "sub": "Koble til en cyber_Folks-postkasse på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

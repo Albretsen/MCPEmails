@@ -215,8 +215,8 @@ export function categoryOf(template: BillingTemplate): BillingCategory {
  *
  * The last row keeps its template id `dunning_14` (the ledger, the unique index
  * and the admin board key on it) but is timed from the Stripe retry window:
- * the last week of it (src/lib/billing/retry-window.ts). With the 30-day
- * window that is day 23. Its copy reads its own day off this table, so moving
+ * the last week of it (src/lib/billing/retry-window.ts). With the 28-day
+ * window that is day 21. Its copy reads its own day off this table, so moving
  * the window moves the sentence with it.
  */
 export const DUNNING_SCHEDULE: ReadonlyArray<{ template: BillingTemplate; dayOffset: number }> = [

@@ -362,7 +362,10 @@ test('copy: names the inbox, provider, links, and no banned wording in any local
       const all = `${email.subject}\n${email.text}\n${email.html}`;
       assert.ok(email.subject.includes('me@example.com'), `${locale}: subject names the inbox`);
       assert.ok(email.text.includes('Fastmail'), `${locale}: names the provider`);
-      assert.ok(email.text.includes('https://mcpemails.com/dashboard/inboxes'), `${locale}: reconnect link`);
+      assert.ok(
+        (email.text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? []).some((u) => u === 'https://mcpemails.com/dashboard/inboxes'),
+        `${locale}: reconnect link`,
+      );
       assert.ok(email.text.includes('/connect/fastmail'), `${locale}: guide link`);
       assert.ok(email.text.includes('MCPEmails'), `${locale}: product name`);
       assert.equal(/—/.test(all), false, `${locale}: no em dash`);
