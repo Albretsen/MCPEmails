@@ -113,6 +113,9 @@ function approval(overrides: Row = {}): Row {
       })),
     },
     payload_encrypted: true,
+    // The embedded inbox (PostgREST `inboxes(...)`): company-wide, so every
+    // role below sees it as before the privacy model.
+    inboxes: { id: 'inbox-1', email_address: 'box@example.com', owner_user_id: 'owner-1', visibility: 'company' },
     ...overrides,
   };
 }
@@ -391,4 +394,49 @@ test('Reply-To is on the review model (from the draft snapshot or the send argum
   const viewer = await loadApprovalForReview(db(draft, 'viewer'), ID, USER);
   if (viewer === 'not_found') throw new Error('not found');
   assert.deepEqual(viewer.reply_to, []);
+});
+
+// ---------------------------------------------------------------------------
+// Business privacy model (migration 20261111120000) on the review page
+// ---------------------------------------------------------------------------
+
+const privateInbox = (owner: string) => ({
+  inboxes: { id: 'inbox-1', email_address: 'box@example.com', owner_user_id: owner, visibility: 'private' },
+});
+
+test("privacy review: someone else's private inbox is not_found for a member or viewer", async () => {
+  for (const role of ['member', 'viewer']) {
+    assert.equal(await loadApprovalForReview(db(approval(privateInbox('someone-else')), role), ID, USER), 'not_found', role);
+  }
+});
+
+test("privacy review: owner/admin may decide someone else's private send but see no content", async () => {
+  for (const role of ['owner', 'admin']) {
+    const review = await loadApprovalForReview(db(approval(privateInbox('someone-else')), role), ID, USER);
+    assert.notEqual(review, 'not_found');
+    if (review === 'not_found') return;
+    assert.equal(review.canDecide, true, role);
+    assert.equal(review.subject, '');
+    assert.deepEqual(review.recipients.to, []);
+    assert.deepEqual(review.recipients.bcc, []);
+    assert.equal(review.recipients.bcc_count, 0);
+    assert.equal(review.body.text, null);
+    assert.equal(review.body.unavailable, 'withheld_private');
+    assert.equal(review.attachment_count, 0);
+    assert.equal(review.identity.email_address, 'box@example.com');
+    assert.equal(JSON.stringify(review).includes('Harmless words'), false);
+    assert.equal(JSON.stringify(review).includes('drop@evil.example'), false);
+  }
+});
+
+test('privacy review: the owner of a private inbox decides its sends with role member', async () => {
+  const review = await loadApprovalForReview(db(approval(privateInbox(USER)), 'member'), ID, USER);
+  assert.notEqual(review, 'not_found');
+  if (review === 'not_found') return;
+  assert.equal(review.canDecide, true);
+  assert.equal(review.body.text, 'Harmless words');
+  // A member on a company inbox still cannot decide (unchanged).
+  const company = await loadApprovalForReview(db(approval(), 'member'), ID, USER);
+  assert.notEqual(company, 'not_found');
+  if (company !== 'not_found') assert.equal(company.canDecide, false);
 });

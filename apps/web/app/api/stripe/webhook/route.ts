@@ -155,6 +155,7 @@ import {
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { syncBusinessSeats } from '@/lib/stripe/business-seats';
 import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
 import { hasPaidInvoice, neverPaidSepa } from '@/lib/stripe/sepa-entitlement';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
@@ -1417,6 +1418,10 @@ async function handleSubscriptionUpserted(
     after(async () => {
       const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
       if (owner) await syncMailboxAddon(owner);
+      // Business billed per person: the seat quantity follows the people
+      // who are billable now (business-seats.ts). No-op with the switch off
+      // and on any base price that is not a seat price; never throws.
+      if (owner) await syncBusinessSeats(owner);
       // A paid subscription on the founder price takes its place in the
       // counter and gets the cohort tag. No-op for any other price.
       await recordFounderPlace({

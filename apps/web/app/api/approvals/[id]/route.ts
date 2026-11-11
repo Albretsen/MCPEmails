@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isUnsendableLegacyDraft, readPayload, readSummary, reviewerBccFor } from '@/lib/approvals/payload';
 import { neutralizeList, neutralizeText } from '@/lib/textSafety';
+import { approvalAccess, embeddedInbox } from '@/lib/approvals/access';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -37,7 +38,7 @@ export async function GET(
   const db = createServiceRoleClient();
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id, operation, summary, status, revision, payload, payload_encrypted')
+    .select('id, workspace_id, inbox_id, operation, summary, status, revision, created_at, expires_at, payload, payload_encrypted, inboxes(email_address, owner_user_id, visibility)')
     .eq('id', id)
     .maybeSingle();
 
@@ -50,6 +51,37 @@ export async function GET(
         .maybeSingle()
     : { data: null };
   if (!approval || !membership) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+
+  // Privacy model (src/lib/approvals/access.ts): someone else's private inbox
+  // is a 404 for a member, and metadata only for an owner or admin, who may
+  // still decide but never sees the recipients, subject or Bcc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const access = approvalAccess(membership.role, user.id, embeddedInbox(approval as any));
+  if (access.hidden) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+  if (access.redacted) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inbox = (approval as any).inboxes as { email_address?: string | null } | null;
+    return NextResponse.json(
+      {
+        id: approval.id,
+        status: approval.status,
+        operation: approval.operation,
+        revision: approval.revision,
+        created_at: approval.created_at ?? null,
+        expires_at: approval.expires_at ?? null,
+        inbox_address: inbox?.email_address ?? null,
+        to: [],
+        cc: [],
+        subject: '',
+        bcc: [],
+        bcc_count: 0,
+        redacted: true,
+        can_decide: access.canDecide,
+        approvable: !isUnsendableLegacyDraft(approval, readPayload(approval)),
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
 
   const summary = readSummary(approval.summary);
   const payload = readPayload(approval);
@@ -67,6 +99,7 @@ export async function GET(
       bcc,
       bcc_count: Math.max(summaryBccCount, bcc.length),
       approvable: !isUnsendableLegacyDraft(approval, payload),
+      can_decide: access.canDecide,
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );

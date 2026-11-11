@@ -29,6 +29,7 @@ import {
   type NormalizedSearch,
 } from '../../../../../supabase/functions/mcp-server/search-translate.ts';
 import { isForbiddenMoveDestination } from '../../../../../supabase/functions/mcp-server/triage-forbidden-destinations.ts';
+import { canAccessInbox } from '../inboxes/visibility.ts';
 
 /** Cadences the dispatcher understands. Mirrors the interval_minutes CHECK. */
 export const ALLOWED_INTERVALS = [15, 30, 60, 180, 360, 720, 1440] as const;
@@ -408,6 +409,10 @@ export async function assertWorkspaceResources(
   workspaceId: string,
   inboxId: string,
   apiKeyId: string,
+  // The signed-in caller. When given, the inbox must also be visible to them
+  // (the Business privacy model, migration 20261111120000): nobody points an
+  // automation at someone else's private inbox, owners and admins included.
+  userId?: string,
 ): Promise<{ error: string; status: number } | null> {
   const { data: inbox } = await db.from('inboxes')
     .select('id, deleted_at')
@@ -415,6 +420,9 @@ export async function assertWorkspaceResources(
     .eq('workspace_id', workspaceId)
     .maybeSingle();
   if (!inbox || inbox.deleted_at) return { error: 'That inbox is not available in this workspace.', status: 400 };
+  if (userId !== undefined && !(await canAccessInbox(db, inboxId, userId))) {
+    return { error: 'That inbox is not available in this workspace.', status: 400 };
+  }
 
   const { data: key } = await db.from('api_keys')
     .select('id, scopes, inbox_ids, deleted_at')

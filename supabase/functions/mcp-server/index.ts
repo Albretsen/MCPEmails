@@ -846,6 +846,15 @@ import {
   insufficientScopeToolResult,
   isInsufficientScopeError,
 } from "./scope-challenge.ts";
+import {
+  credentialCanReachInbox,
+  effectiveInboxIds,
+  inboxesVisibleToAudienceOf,
+  readCredentialScope,
+  readCredentialScopeForKey,
+  scopeForKey,
+  userCanReachInbox,
+} from "./inbox-visibility.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -2573,6 +2582,20 @@ async function authenticateRequest(
   const incomingHash = await bearerKeyHash(req, requestId);
   if (incomingHash instanceof Response) return incomingHash;
   return await lookupApiKey(incomingHash, requestId);
+}
+
+/**
+ * A key row narrowed to the inboxes its creator can see (inbox-visibility.ts),
+ * for paths that load a key themselves rather than through authenticateRequest:
+ * approved-send dispatch, automation runs, the automation preview. Fails
+ * closed.
+ */
+async function narrowKeyToVisibleInboxes<K extends { workspace_id: string; created_by?: string | null; inbox_ids: string[] | null }>(
+  key: K,
+  db: unknown = supabase,
+): Promise<K> {
+  const scope = await readCredentialScope(db, key.workspace_id, key.created_by ?? null, key.inbox_ids);
+  return { ...key, inbox_ids: effectiveInboxIds(key.inbox_ids, scope) };
 }
 
 /**
@@ -33242,6 +33265,8 @@ async function executeScheduleSend(
     .insert({
       workspace_id: apiKey.workspace_id,
       inbox_id: inbox.id,
+      // Who the send acts as at dispatch time (inbox visibility).
+      created_by: apiKey.created_by ?? null,
       payload: { v: 1, data: ciphertext },
       payload_encrypted: true,
       send_at: sendAt,
@@ -36041,9 +36066,20 @@ interface ScheduledDispatchDeps {
   ): Promise<BrakeDecision>;
   /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
   noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
+  /**
+   * Inbox visibility (inbox-visibility.ts): may the person who scheduled the
+   * row still use its inbox? Optional so a test's deps can leave it out;
+   * production always has it, and it fails closed.
+   */
+  scheduledByCanReach?(db: InboxQueryClient, workspaceId: string, userId: string | null, inboxId: string): Promise<boolean>;
+  /** Narrow an approval's originating key to the inboxes its creator can see. Optional, as above. */
+  narrowKey?(db: InboxQueryClient, key: ApiKeyRow): Promise<ApiKeyRow>;
 }
 
 const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
+  // Both ask the dispatcher's own client (credential_inbox_scope).
+  scheduledByCanReach: (db, workspaceId, userId, inboxId) => userCanReachInbox(db, workspaceId, userId, inboxId),
+  narrowKey: (db, key) => narrowKeyToVisibleInboxes(key, db),
   runApprovedOperation(operation, original, internalKey) {
     if (operation === "email_reply") return executeReplyToEmail(original, internalKey);
     if (operation === "email_forward") return executeForwardEmail(original, internalKey);
@@ -36142,7 +36178,7 @@ async function handleScheduledDispatch(
     // created_at: dates a plaintext payload (PLAINTEXT_SCHEDULED_PAYLOAD_CUTOFF_MS).
     // error_detail: says whether an earlier attempt was already counted by the
     // outbound brake (SCHEDULED_SEND_COUNTED_DEFER_PREFIX).
-    .select("id, workspace_id, inbox_id, payload, payload_encrypted, send_at, created_at, error_detail")
+    .select("id, workspace_id, inbox_id, created_by, payload, payload_encrypted, send_at, created_at, error_detail")
     .eq("status", "pending")
     .lte("send_at", now)
     .order("send_at", { ascending: true })
@@ -36286,6 +36322,26 @@ async function handleScheduledDispatch(
         throw new Error(SCHEDULED_SEND_PARKED_DETAIL);
       }
       const inbox = inboxData as unknown as InboxRow;
+      // INBOX VISIBILITY. A send goes out only while the person who scheduled
+      // it can still use the mailbox: it is someone else's private inbox now,
+      // or they left the workspace, so it fails terminally and says why.
+      if (
+        deps.scheduledByCanReach &&
+        !(await deps.scheduledByCanReach(
+          db,
+          String(row.workspace_id),
+          typeof row.created_by === "string" ? row.created_by : null,
+          String(row.inbox_id),
+        ))
+      ) {
+        console.error("[dispatch] scheduled_send_inbox_not_visible", {
+          scheduled_send_id: row.id,
+          inbox_id: row.inbox_id,
+        });
+        throw new Error(
+          "The person who scheduled this message can no longer use this mailbox. Nothing was sent.",
+        );
+      }
       // A receive-only inbox has no SMTP server. One that was switched to
       // receive only after this message was queued (the dashboard's Reconnect
       // can change the connection type in place) used to reach the SMTP send
@@ -36413,13 +36469,17 @@ async function handleScheduledDispatch(
           }
         }
 
-        const { data: key, error: keyErr } = await db.from("api_keys")
+        const { data: keyData, error: keyErr } = await db.from("api_keys")
           .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified, card_listed")
           .eq("id", approval.api_key_id)
           .eq("workspace_id", row.workspace_id)
           .is("deleted_at", null)
           .single();
-        if (keyErr || !key) throw new Error("originating API key is unavailable");
+        if (keyErr || !keyData) throw new Error("originating API key is unavailable");
+        let key = keyData as ApiKeyRow;
+        // The key acts as its creator: narrowed to the inboxes they can see
+        // NOW, so both branches below refuse a mailbox that went private.
+        if (deps.narrowKey) key = await deps.narrowKey(db, key);
         const original = await resolveScheduledPayload(approval);
         if (String(approval.operation) === "schedule_create") {
           // An approved SCHEDULED send is not re-run. Re-running
@@ -36668,7 +36728,7 @@ async function handleScheduledDispatch(
 
 /** Columns the runner needs off `api_keys`. Never the hash beyond what auth needs. */
 const TRIAGE_API_KEY_COLUMNS =
-  "id, workspace_id, name, scopes, inbox_ids, expires_at, deleted_at";
+  "id, workspace_id, created_by, name, scopes, inbox_ids, expires_at, deleted_at";
 
 const TRIAGE_RULE_COLUMNS =
   "id, workspace_id, inbox_id, api_key_id, name, enabled, filter, action, " +
@@ -36965,7 +37025,9 @@ const triageStore: TriageStore = {
       .eq("id", apiKeyId)
       .maybeSingle();
     if (error || !data) return null;
-    return data as unknown as TriageApiKey;
+    // The rule acts as the key's creator: a mailbox that became someone else's
+    // private inbox fails the run with inbox_not_permitted (triage-engine.ts).
+    return await narrowKeyToVisibleInboxes(data as unknown as TriageApiKey & { created_by?: string | null });
   },
 
   async loadKeyGrant(apiKeyId) {
@@ -37478,7 +37540,7 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     .is("kind", null)
     .maybeSingle();
   if (!keyRow) return json({ error: "api_key_not_found" }, 404);
-  const key = keyRow as unknown as TriageApiKey;
+  const key = await narrowKeyToVisibleInboxes(keyRow as unknown as TriageApiKey & { created_by?: string | null });
 
   if (key.expires_at && Date.parse(key.expires_at) <= Date.now()) {
     return json({ error: "api_key_expired" }, 403);
@@ -39036,6 +39098,7 @@ const remindersStore: RemindersStore = {
 function remindersDeps(): RemindersDeps {
   return {
     store: remindersStore,
+    keyCanReach: (apiKeyId, workspaceId, inboxId) => credentialCanReachInbox(supabase, apiKeyId, workspaceId, inboxId),
     async access(workspaceId) {
       // No ApiKeyRow here: the gate's RPC directly, failing closed.
       const { data, error } = await supabase.rpc("workspace_pro_features", { p_workspace_id: workspaceId });
@@ -39203,15 +39266,23 @@ async function briefInboxData(inboxId: string, address: string, w: CollectWindow
 }
 
 async function briefCollect(row: MorningBriefRow, w: CollectWindow): Promise<BriefData> {
+  // INBOX VISIBILITY. The brief lands in the target inbox, so it may only
+  // describe inboxes everyone who reads the target can already see
+  // (inbox-visibility.ts inboxesVisibleToAudienceOf).
+  if (!row.inbox_id) throw new BriefSkip("target_inbox_missing");
   const { data: inboxRows, error } = await supabase
     .from("inboxes")
-    .select("id, email_address")
+    .select("id, email_address, visibility, owner_user_id")
     .eq("workspace_id", row.workspace_id)
     .is("deleted_at", null)
     .order("created_at", { ascending: true })
     .limit(BRIEF_MAX_INBOXES);
   if (error) throw new Error("db_error");
-  const list = (inboxRows ?? []) as { id: string; email_address: string }[];
+  const all = (inboxRows ?? []) as { id: string; email_address: string; visibility: string; owner_user_id: string | null }[];
+  const target = all.find((i) => i.id === row.inbox_id);
+  if (!target) throw new BriefSkip("target_inbox_unavailable");
+  const list = inboxesVisibleToAudienceOf(target, all);
+  const allowedInbox = new Set(list.map((i) => i.id));
   const addressOf = new Map(list.map((i) => [i.id, i.email_address]));
 
   // One inbox at a time: at most one provider connection per brief.
@@ -39256,6 +39327,7 @@ async function briefCollect(row: MorningBriefRow, w: CollectWindow): Promise<Bri
   ): Promise<BriefReminderItem[]> => {
     const out: BriefReminderItem[] = [];
     for (const r of rows as { inbox_id: string; due_at: string; summary: unknown }[]) {
+      if (!allowedInbox.has(r.inbox_id)) continue;
       let summary: ReminderSummary = { subject: "", to: [], from: null };
       try {
         if (r.summary) summary = await decryptReminderJson<ReminderSummary>(r.summary);
@@ -39276,6 +39348,7 @@ async function briefCollect(row: MorningBriefRow, w: CollectWindow): Promise<Bri
       send_at: string;
     }[]
   ) {
+    if (!allowedInbox.has(r.inbox_id)) continue;
     let payload: Record<string, unknown> = {};
     try {
       payload = await resolveScheduledPayload(r);
@@ -39772,11 +39845,22 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // path ran instead.
   let apiKey: ApiKeyRow;
   let preloaded: PreloadedGateReads | null = null;
+  let credentialScopePending: ReturnType<typeof readCredentialScopeForKey> | null = null;
   const callMayMeter = rpcRequest.method === "tools/call" &&
     mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"]);
   if (INTROSPECTION_ONLY) {
     apiKey = INTROSPECTION_API_KEY;
   } else {
+    // Inbox visibility (inbox-visibility.ts): asked by the key's hash in the
+    // same wave as authentication, so it costs no serial round trip, and
+    // applied just before routing. A malformed token is refused by auth below.
+    const scopeToken = bearerToken(req, requestId);
+    // Only a tools/call reaches a mailbox; initialize, tools/list and ping
+    // keep their single authentication read.
+    credentialScopePending = rpcRequest.method !== "tools/call" || scopeToken instanceof Response
+      ? null
+      : hashApiKey(scopeToken).then((hash) => readCredentialScopeForKey(supabase, hash));
+    credentialScopePending?.catch(() => {});
     const authResult: { apiKey: ApiKeyRow; preloaded?: PreloadedGateReads | null } | Response =
       rpcRequest.method === "tools/call"
         ? await authenticateToolsCall(
@@ -40051,6 +40135,15 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
   // Every method result leaves through here, so the `_meta` guard sits here too
   // rather than in each handler that builds a content block — see
   // content-meta.ts for why a single null `_meta` costs the entire result.
+  // ── Inbox visibility ──────────────────────────────────────────────────────
+  // The key acts as its creator: inboxes that are someone else's private
+  // mailbox, or every inbox once the creator left the workspace, drop out of
+  // `inbox_ids`, which every resolver below honours. Fails closed.
+  if (!INTROSPECTION_ONLY && rpcRequest.method === "tools/call") {
+    const answer = credentialScopePending === null ? null : await credentialScopePending;
+    apiKey = { ...apiKey, inbox_ids: effectiveInboxIds(apiKey.inbox_ids, scopeForKey(answer, apiKey.id)) };
+  }
+
   const response = normalizeResponseContentMeta(
     await routeMethod(rpcRequest, apiKey, ctx),
   );

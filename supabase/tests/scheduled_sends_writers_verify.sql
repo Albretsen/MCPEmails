@@ -66,6 +66,10 @@ INSERT INTO public.inboxes (id, workspace_id, provider, email_address, status) V
   ('d6100000-0000-0000-0000-000000000001', 'd6a00000-0000-0000-0000-000000000001',
    'imap', 'd1@ss-verify.invalid', 'active')
 ON CONFLICT DO NOTHING;
+-- Shared workspace: the inbox is company-wide, as 20261111120000 backfills every
+-- inbox of a workspace with more than one member (inbox_visibility.sql covers
+-- private inboxes).
+UPDATE public.inboxes SET visibility = 'company' WHERE workspace_id IN ('c6a00000-0000-0000-0000-000000000001', 'd6a00000-0000-0000-0000-000000000001');
 
 -- Approvals as production holds them before the migration.
 --   E1: approved, decided 10:00:00; its decide.ts marker M1 at 10:00:01.

@@ -14,6 +14,7 @@ import { countryFromHeaders } from '@/lib/acquisition-country.mjs';
 import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import { stampArabicGuideBrowserLanguage } from '@/lib/acquisition-browser-language';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
+import { hiddenInboxDirectory } from '@/lib/inboxes/visibility';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
@@ -30,6 +31,7 @@ import {
   ownerIsOnFounderPrice,
   withFounderSubscriberPrices,
 } from '../../../src/lib/stripe/founder-display';
+import { withBusinessSeatPrices } from '../../../src/lib/stripe/business-seat-display';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
 import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
@@ -195,10 +197,12 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
         'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
-        'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+        'draft_editor_hidden', 'signature_embed_images', 'parked_at', 'owner_user_id', 'visibility'],
       // `parked_at` (20261024173000) degrades like the two preferences above:
       // without it every inbox reads as active, which is the pre-parking truth.
-      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at'],
+      // `owner_user_id` and `visibility` (20261111120000) degrade too: without
+      // them no inbox offers the Private / Company-wide control.
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden', 'signature_embed_images', 'parked_at', 'owner_user_id', 'visibility'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -323,6 +327,30 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     draftEditorHidden: row.draft_editor_hidden === true,
     // End of an active fan-out hold on this inbox (ISO), or null.
     fanoutHoldUntil: fanoutHoldByInbox[row.id] ?? null,
+    // Who connected it and who may use it (the Business privacy model,
+    // 20261111120000). Null on a database without the columns.
+    ownerUserId: row.owner_user_id ?? null,
+    visibility: row.visibility ?? null,
+  }));
+}
+
+/**
+ * Other people's private inboxes, as metadata, for a workspace owner or admin
+ * (workspace_inbox_directory, 20261111120000): address, owner and status, so
+ * they can manage seats and disconnect. Never the row itself. Empty for
+ * everyone else and on any error.
+ */
+async function fetchHiddenInboxes(supabase, workspaceId) {
+  const rows = await hiddenInboxDirectory(supabase, workspaceId);
+  return rows.map((row) => ({
+    id: row.id,
+    address: row.email_address,
+    label: row.display_name ?? row.email_address.split('@')[0],
+    provider:
+      row.provider === 'imap' && row.service && row.service !== 'generic' ? row.service : row.provider,
+    status: row.status,
+    parked: !!row.parked_at,
+    ownerName: row.owner_display_name || row.owner_email || null,
   }));
 }
 
@@ -990,7 +1018,9 @@ export default async function DashboardPage({ params, searchParams }) {
         fetchInboxes(supabase, workspace.id, historyDays),
         fetchApiKeys(supabase, workspace.id),
         fetchUsageData(supabase, workspace.id, billingWindow, historyDays),
-        fetchAuditLog(supabase, workspace.id),
+        // Owners and admins keep the rows of other people's private inboxes
+        // (metadata only), exactly as GET /api/security/audit-log pages them.
+        fetchAuditLog(userRole === 'owner' || userRole === 'admin' ? createServiceRoleClient() : supabase, workspace.id),
         fetchMembers(supabase, workspace.id),
         fetchPendingInvites(supabase, workspace.id),
       ])
@@ -1004,6 +1034,18 @@ export default async function DashboardPage({ params, searchParams }) {
         [],
         [],
       ];
+
+  // Business privacy model: other people's private inboxes (metadata only, for
+  // owners and admins) and the seat-pricing switch that, with the member
+  // count, decides whether the Private / Company-wide control is offered.
+  const [hiddenInboxes, seatPricingSwitch] = workspace
+    ? await Promise.all([
+        userRole === 'owner' || userRole === 'admin' ? fetchHiddenInboxes(supabase, workspace.id) : [],
+        // Server-owned switch (no grant to authenticated), so the service role.
+        createServiceRoleClient().from('pricing_switches').select('enabled').eq('key', 'business_seat_pricing').maybeSingle(),
+      ])
+    : [[], null];
+  const businessSeatPricing = !seatPricingSwitch?.error && seatPricingSwitch?.data?.enabled === true;
 
   // The action allowance travels beside planLimits as `actionAllowance`, not
   // inside it: planLimits is the plan's static shape, the allowance is a live
@@ -1096,11 +1138,17 @@ export default async function DashboardPage({ params, searchParams }) {
   const offeredPrices = attachFounder(withSeasonalOffers(livePrices, surfaceOffers), founder);
   // An owner who already pays the founder price sees Business at that price
   // ($29 / $278.40), not the $39 list price, on every surface that prices it.
+  //
+  // Business billed per person (pricing_switches.business_seat_pricing): an
+  // account not on Business yet sees $19 a person and picks how many people
+  // to buy for. A Business subscriber keeps seeing the price they are on.
   const stripePrices =
     workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&
     (await ownerIsOnFounderPrice(user.id))
       ? await withFounderSubscriberPrices(offeredPrices)
-      : offeredPrices;
+      : plan !== 'pro' && !compedScale
+        ? await withBusinessSeatPrices(offeredPrices)
+        : offeredPrices;
 
   // Onboarding Flow B (src/lib/onboarding/flow-b-server.ts): the plan
   // summary, grace-end note and usage meter on the Overview. Null, with no
@@ -1156,6 +1204,10 @@ export default async function DashboardPage({ params, searchParams }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // Inboxes the viewer cannot open (owner/admin only) and the switch
+        // behind the Private / Company-wide control (20261111120000).
+        hiddenInboxes,
+        businessSeatPricing,
         // The /onboarding flow for this workspace (components/dashboard/
         // OnboardingEntry.jsx): `flow`/`convert` are the arms; `finishSetup`
         // shows the "Finish setup" link (new flow, not completed, no first

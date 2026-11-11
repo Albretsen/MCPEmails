@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkMemberLimit } from '@/lib/plans/check-member-limit';
+import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
 import {
   demotionRevocationNotice,
@@ -108,6 +109,10 @@ export async function DELETE(
     console.error('[members/remove] Delete failed:', removeError.message);
     return NextResponse.json({ error: 'Failed to remove member.' }, { status: 500 });
   }
+
+  // Business billed per person: a removed member with a mailbox stops being
+  // billed (business-seats.ts). After the response; never throws.
+  after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
 
   return NextResponse.json({ removed: true, userId: targetUserId });
 }
@@ -237,6 +242,11 @@ export async function PATCH(
     console.error('[members/patch] Update failed:', updateError.message);
     return NextResponse.json({ error: 'Failed to update member role.' }, { status: 500 });
   }
+
+  // Business billed per person: a viewer is never billed and a member or
+  // admin with a mailbox is, so a role change can move the seat count
+  // (business-seats.ts). After the response; never throws.
+  after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
 
   // 6. A role change has to reach the credentials the member is already
   //    holding, or it is only a label. Demoting someone to `viewer` used to

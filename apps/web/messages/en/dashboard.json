@@ -424,7 +424,18 @@
     "capBodyProCap": "Pro connects 10 mailboxes. Business includes 10 for $39 a month and adds each extra mailbox for $3 a month, with unlimited members at no extra cost.",
     "capCtaBusiness": "Upgrade to Business, $39/mo",
     "capBodyProCapFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
-    "capCtaBusinessFounder": "Upgrade to Business, ${price}/mo"
+    "capCtaBusinessFounder": "Upgrade to Business, ${price}/mo",
+    "visibility": {
+      "label": "Who can use it",
+      "private": "Private",
+      "company": "Company-wide",
+      "privateHint": "Only you can use this mailbox.",
+      "companyHint": "Everyone in the workspace can use this mailbox.",
+      "ownedBy": "Owned by {name}",
+      "saveError": "Could not change who can use this mailbox. Try again.",
+      "othersTitle": "Other people's private mailboxes",
+      "othersNote": "You can disconnect these, but only their owners can open them."
+    }
   },
   "apiKeys": {
     "title": "API keys",
@@ -785,6 +796,8 @@
     "custom": "Custom",
     "perMonth": "/month",
     "billedYearly": "Billed ${total}/year",
+    "perPersonPerMonth": "/person/month",
+    "businessPerPersonNote": "${price} per person per month, {min} people minimum. You pay for each person who connects a mailbox.",
     "talkToSales": "Talk to sales",
     "redirecting": "One moment…",
     "currentPlan": "Current plan",
@@ -1086,6 +1099,7 @@
       "bodyTitle": "Message",
       "bodyTruncated": "This message is longer than 64 KB and has been clipped here. Open it in the dashboard to read all of it.",
       "bodyWithheldRole": "The message text is shown to workspace owners, admins and members. Your role can review the delivery details only.",
+      "bodyWithheldPrivate": "This send is from someone else's private mailbox, so its content is hidden. You can still approve or reject it.",
       "bodyStoredWithProvider": "This request was prepared before MCPEmails recorded a copy of the draft, so its text cannot be shown here, and an approved send of it will not go out. Reject it and ask your assistant to send the draft again.",
       "bodyDecryptFailed": "The stored message could not be decrypted, so it cannot be shown. Reject this request and ask your assistant to prepare it again.",
       "bodyAbsent": "This request has no message text.",
@@ -1182,7 +1196,8 @@
       "loadingDetails": "Loading…",
       "approveAndSend": "Approve & send",
       "approveSub": "This sends the prepared email now.",
-      "approvedToast": "Email approved. Sending now."
+      "approvedToast": "Email approved. Sending now.",
+      "privateHidden": "Hidden (private mailbox)"
     }
   },
   "automations": {

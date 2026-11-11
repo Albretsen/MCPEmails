@@ -266,6 +266,11 @@ function answer(w: World, call: Call, wantsObject: boolean): Response {
   }
   if (target === "workspaces" && method === "GET") return one(w.workspaceMissing ? null : w.workspace);
   if (target === "user_usage_entitlements" && method === "GET") return one(w.entitlement);
+  if (target === "rpc/credential_inbox_scope_for_key") {
+    // Migration 20261111120000 (inbox visibility): nothing in this world is a
+    // hidden private inbox, so the key is unrestricted.
+    return json(w.key ? { restricted: false, inbox_ids: w.key.inbox_ids ?? null, key_id: w.key.id } : null);
+  }
   if (target === "rpc/mcp_tools_call_gate") {
     // Migration 20261020214737: the same rows and counts the per-query path
     // reads, from the same World, so the two paths answer identically; plus
@@ -587,6 +592,12 @@ const FIRST_USE_ROUND_TRIPS = ["GET oauth_refresh_tokens", "PATCH workspaces", "
  * (20261020100000), which answered the reads only.
  */
 const PREFLIGHT = "RPC mcp_tools_call_gate";
+/**
+ * Migration 20261111120000 (inbox visibility): the key's inbox scope, asked by
+ * the key's hash IN THE SAME WAVE as the gate, so it adds no serial round trip.
+ * tools/call only.
+ */
+const SCOPE = "RPC credential_inbox_scope_for_key";
 
 /** Nothing is left reserved once a call is over, by either path. */
 function assertNothingHeld(w: World): void {
@@ -632,15 +643,16 @@ Deno.test("an unknown or revoked key is refused after ONE lookup and nothing els
   );
   assertEquals(status, 401);
   assertEquals(body.error.code, -32001);
-  // No limiter read, no allowance read, no reservation, no tool work, no log row.
-  assertEquals(labels, [PREFLIGHT]);
+  // No limiter read, no allowance read, no reservation, no tool work, no log
+  // row. The inbox-scope read rides in the same wave and answers null.
+  assertEquals(labels.slice().sort(), [SCOPE, PREFLIGHT].sort());
   assertEquals(w.inserted, {});
 });
 
 Deno.test("the preflight refuses a dead key with the per-query path's exact 401", async () => {
   const viaPreflight = await run(world({ key: null }), rpcRequest("tools/call", SIGNATURE_GET));
   const viaQuery = await run(perQuery(world({ key: null })), rpcRequest("tools/call", SIGNATURE_GET));
-  assertEquals(viaQuery.labels, [PREFLIGHT, "GET api_keys"]);
+  assertEquals(viaQuery.labels.slice().sort(), [PREFLIGHT, SCOPE, "GET api_keys"].sort());
   assertEquals(viaPreflight.status, viaQuery.status);
   assertEquals(viaPreflight.body, viaQuery.body);
 });
@@ -653,9 +665,11 @@ Deno.test("a malformed key is refused without touching the database at all", asy
 
 Deno.test("nothing is issued alongside the key lookup: authentication is its own wave", async () => {
   const { waves } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
-  assertEquals(waves[0], [PREFLIGHT], "the checks must not start before the key is known good");
+  // The inbox-scope read is the one exception: a read keyed by the same hash,
+  // used only once the key is known good (scopeForKey matches the key id).
+  assertEquals(waves[0], [SCOPE, PREFLIGHT].sort(), "the checks must not start before the key is known good");
   const fallback = await runInWaves(perQuery(world()), rpcRequest("tools/call", SIGNATURE_GET));
-  assertEquals(fallback.waves[0], [PREFLIGHT]);
+  assertEquals(fallback.waves[0], [SCOPE, PREFLIGHT].sort());
   assertEquals(fallback.waves[1], ["GET api_keys"], "the fallback still authenticates alone");
 });
 
@@ -667,7 +681,7 @@ Deno.test("the key, the limiter counts, the plan row, the entitlement and the al
   const { waves, status, body, calls, labels } = await runInWaves(world(), rpcRequest("tools/call", SIGNATURE_GET));
   assertEquals(status, 200);
   assert(!body.result.isError, JSON.stringify(body));
-  assertEquals(waves[0], [PREFLIGHT]);
+  assertEquals(waves[0], [SCOPE, PREFLIGHT].sort());
   for (const label of [KEY_COUNT, WORKSPACE_COUNT, "GET workspaces", "GET user_usage_entitlements", ALLOWANCE, "GET api_keys"]) {
     assertEquals(count(labels, label), 0, `${label} is answered by the preflight`);
   }
@@ -767,9 +781,10 @@ Deno.test("round trips for one successful call on an activated workspace", async
   assertEquals(metered.labels.slice().sort(), [
     "GET inboxes",
     "POST activity_log",
+    SCOPE,
     FINALIZE,
     PREFLIGHT,
-  ]);
+  ].sort());
   const unmetered = await run(
     world({ allowance: exemptAllowance() }),
     rpcRequest("tools/call", SIGNATURE_GET),
@@ -777,7 +792,7 @@ Deno.test("round trips for one successful call on an activated workspace", async
   assertEquals(count(unmetered.labels, RESERVE), 0);
   assertEquals(count(unmetered.labels, FINALIZE), 0);
   assertEquals(count(unmetered.labels, "POST action_usage"), 1);
-  assertEquals(unmetered.labels.length, 4);
+  assertEquals(unmetered.labels.length, 5);
   assertEquals(unmetered.w.ledger, []);
 
   // The fallback pays exactly what it always did, plus the failed attempt.
@@ -793,11 +808,12 @@ Deno.test("round trips for one successful call on an activated workspace", async
     WORKSPACE_COUNT,
     "PATCH api_keys",
     "POST activity_log",
+    SCOPE,
     FINALIZE,
     PREFLIGHT,
     RESERVE,
     ALLOWANCE,
-  ]);
+  ].sort());
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1752,8 +1768,9 @@ Deno.test("the tools/call log line carries pre_ms, total_ms and the round-trip c
   // preflight (preflight + last_used_at + reservation), and 10 and 11 before
   // that (auth + last_used_at + 3 key windows + workspace window + plan row +
   // entitlement + allowance + reservation).
-  assertEquals(line.pre_db_calls, 1);
-  assertEquals(line.db_calls, 2);
+  // The inbox-scope read (20261111120000) is counted, in the gate's wave.
+  assertEquals(line.pre_db_calls, 2);
+  assertEquals(line.db_calls, 3);
   // activity_log.duration_ms is still the handler's clock and nothing else.
   assertEquals(w.inserted.activity_log[0].duration_ms, line.duration_ms);
   // Value-free: ids, names, numbers. No argument, address or token.
@@ -1776,7 +1793,7 @@ Deno.test("round trips are counted per request, not per isolate", async () => {
   } finally {
     logs.restore();
   }
-  assertEquals(logged(logs, "[mcp-server] tools/call").map((line) => line.db_calls), [2, 2, 2]);
+  assertEquals(logged(logs, "[mcp-server] tools/call").map((line) => line.db_calls), [3, 3, 3]);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

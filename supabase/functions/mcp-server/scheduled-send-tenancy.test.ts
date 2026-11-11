@@ -69,6 +69,19 @@ interface RecordedQuery {
  * updates really mutate (so a conditional claim really is conditional), and
  * `select("*")` returns the whole row while a column list projects it.
  */
+/**
+ * credential_inbox_scope (inbox visibility, migration 20261111120000): nothing
+ * in these fixtures is anyone's hidden private inbox, so every key is
+ * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
+ */
+function visibilityRpc(name: string, args: Record<string, unknown>) {
+  return Promise.resolve(
+    name === "credential_inbox_scope"
+      ? { data: { restricted: false, inbox_ids: args.p_inbox_ids ?? null }, error: null }
+      : { data: null, error: { message: `unexpected rpc ${name}` } },
+  );
+}
+
 function recordingClient(tables: Record<string, Row[]>) {
   const queries: RecordedQuery[] = [];
   const from = (table: string) => {
@@ -126,7 +139,7 @@ function recordingClient(tables: Record<string, Row[]>) {
     };
     return builder;
   };
-  return { client: { from }, queries, tables };
+  return { client: { from, rpc: visibilityRpc }, queries, tables };
 }
 
 /** AES-256-GCM, IV(12) || ciphertext || tag, base64url — the stored-token layout. */
@@ -245,6 +258,10 @@ function harness(
     send?: () => void;
     /** Stand in the outbound brake (always "allow"); left out, deps has none. */
     brake?: boolean;
+    /** Inbox visibility: may the scheduling user still reach the inbox? Left out, deps has none. */
+    reach?: (workspaceId: string, userId: string | null, inboxId: string) => boolean;
+    /** Inbox visibility: the approval key narrowed to its creator's inboxes. Left out, deps has none. */
+    narrow?: (key: Row) => Row;
   } = {},
 ) {
   const rec = recordingClient(tables);
@@ -272,12 +289,24 @@ function harness(
       }
       : {}),
   };
+  const reachCalls: Array<[string, string | null, string]> = [];
+  const visibilityDeps = {
+    ...(behaviour.reach
+      ? {
+        scheduledByCanReach(_db: unknown, ws: string, user: string | null, inboxId: string) {
+          reachCalls.push([ws, user, inboxId]);
+          return Promise.resolve(behaviour.reach!(ws, user, inboxId));
+        },
+      }
+      : {}),
+    ...(behaviour.narrow ? { narrowKey: (_db: unknown, key: Row) => Promise.resolve(behaviour.narrow!(key)) } : {}),
+  };
   const run = async () => {
     // deno-lint-ignore no-explicit-any
-    const res = await handleScheduledDispatch(rec.client as any, deps as any);
+    const res = await handleScheduledDispatch(rec.client as any, { ...deps, ...visibilityDeps } as any);
     return await res.json();
   };
-  return { run, calls, ...rec };
+  return { run, calls, reachCalls, ...rec };
 }
 
 function sendRow(tables: Record<string, Row[]>, id: string): Row {
@@ -682,4 +711,74 @@ Deno.test("a row deferred by the brake itself is still counted when it finally s
   const h = harness(tables, { brake: true });
   assertEquals((await h.run()).dispatched, 1);
   assertEquals(h.calls.brake.map((b) => b.alreadyCounted), [false]);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inbox visibility (migration 20261111120000)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MEMBER = "88888888-8888-4888-8888-888888888888";
+
+Deno.test("visibility: a send whose creator can no longer see the inbox fails, never sent", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A, { created_by: MEMBER })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => false });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.errored, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.reachCalls, [[WS_VICTIM, MEMBER, INBOX_VICTIM]]);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "error");
+  assertStringIncludes(String(row.error_detail), "can no longer use this mailbox");
+});
+
+Deno.test("visibility: a send whose creator still sees the inbox goes out; a legacy row asks as null", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.reachCalls, [[WS_VICTIM, null, INBOX_VICTIM]]);
+});
+
+Deno.test("visibility: the dispatcher selects created_by off scheduled_sends", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => true });
+  await h.run();
+  const q = h.queries.find((x) => x.table === "scheduled_sends" && x.op === "select");
+  assert(q, "scheduled_sends select missing");
+  assertStringIncludes(String(q.projection), "created_by");
+});
+
+Deno.test("visibility: an approved schedule whose key was narrowed away from the inbox is refused", async () => {
+  const approval = await approvalRow({ operation: "schedule_create" });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { narrow: (key) => ({ ...key, inbox_ids: ["00000000-0000-0000-0000-000000000000"] }) });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(h.calls.sent.length, 0);
+  assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "no longer has access");
+});
+
+Deno.test("visibility: an approved operation re-runs with the narrowed key", async () => {
+  const approval = await approvalRow();
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { narrow: (key) => ({ ...key, inbox_ids: [INBOX_VICTIM_2] }) });
+  await h.run();
+  assertEquals(h.calls.approved.length, 1);
+  assertEquals(h.calls.approved[0].key.inbox_ids, [INBOX_VICTIM_2]);
 });

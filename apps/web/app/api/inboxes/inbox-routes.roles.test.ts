@@ -59,6 +59,8 @@ interface World {
   uploads: Array<{ key: string; contentType: string }>;
   /** workspaces.chat_send_confirm_enabled: the internal rollout gate for 'chat'. */
   chatRollout: boolean;
+  /** Callbacks scheduled with next/server after(). */
+  afters: Array<() => unknown>;
 }
 
 let world: World;
@@ -108,6 +110,7 @@ function reset(overrides: Partial<World> = {}): void {
     gmailOk: true,
     uploads: [],
     chatRollout: false,
+    afters: [],
     ...overrides,
   };
 }
@@ -208,7 +211,21 @@ nodeMock.module('next/server', {
     NextResponse: { json: (body: unknown, init?: ResponseInit) => Response.json(body, init) },
     // The DELETE route schedules the Business mailbox add-on sync after the
     // response; outside a request there is no "after", so run nothing.
-    after: () => {},
+    after: (fn: () => unknown) => {
+      world.afters.push(fn);
+    },
+  },
+});
+// The Business mailbox add-on (and seat) sync, recorded rather than run.
+const syncCalls: string[] = [];
+let syncFails = false;
+nodeMock.module('@/lib/stripe/mailbox-addon', {
+  namedExports: {
+    syncMailboxAddonForWorkspace: async (workspaceId: string) => {
+      syncCalls.push(workspaceId);
+      if (syncFails) throw new Error('stripe down');
+      return { ok: true };
+    },
   },
 });
 nodeMock.module('@/lib/crypto', {
@@ -675,3 +692,147 @@ for (const role of ['owner', 'admin']) {
     assert.equal(payload.send_approval_required, true);
   });
 }
+
+// ── Business privacy model (migration 20261111120000) ─────────────────────
+// `visible: false` is what the inboxes RLS policy now does for someone else's
+// private inbox: the user-session read finds no row.
+
+const OTHER = '00000000-0000-4000-8000-0000000000b2';
+const updates = () => world.calls.filter((c) => c.table === 'inboxes' && c.op === 'update');
+
+test("privacy: someone else's private inbox is 404 for check, settings PATCH and image upload, with nothing read or written", async () => {
+  for (const role of ['member', 'admin', 'owner']) {
+    reset({ role, visible: false });
+    assert.equal((await post()).status, 404, `check as ${role}`);
+    assert.equal((await patch(SIGNATURE)).status, 404, `PATCH as ${role}`);
+    assert.equal((await upload(PNG, 'image/png')).status, 404, `image as ${role}`);
+    assert.equal(inboxCalls('service').length, 0, 'no service-role read of the row');
+    assert.equal(world.imapLogins.length, 0);
+    assert.equal(world.uploads.length, 0);
+    assert.equal(updates().length, 0);
+  }
+});
+
+test("privacy: a member cannot disconnect someone else's private inbox (404, nothing revoked)", async () => {
+  reset({ role: 'member', visible: false });
+  const res = await del();
+  assert.equal(res.status, 404);
+  assert.equal(updates().length, 0);
+  assert.deepEqual(world.fetches, []);
+});
+
+test("privacy: owner and admin can still disconnect someone else's private inbox", async () => {
+  for (const role of ['owner', 'admin']) {
+    reset({ role, visible: false, row: gmailRow() });
+    const res = await del();
+    assert.equal(res.status, 200, role);
+    const [update] = updates();
+    assert.ok(update, 'the soft delete ran');
+    assert.equal(update.client, 'service');
+    assertScopedToAuthorizedInbox(update);
+    assert.equal((update.payload as Record<string, unknown>).status, 'revoked');
+  }
+});
+
+// ── PATCH /api/inboxes/[id]/visibility ────────────────────────────────────
+
+const visibilityRoute = await import('./[id]/visibility/route.ts');
+
+const setVisibility = (body: unknown, headers: Record<string, string> = {}) =>
+  visibilityRoute.PATCH(
+    new Request(`https://mcpemails.test/api/inboxes/${INBOX}/visibility`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', origin: 'https://mcpemails.test', host: 'mcpemails.test', ...headers },
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    }) as never,
+    params,
+  );
+
+function ownedRow(owner: string, visibility: 'private' | 'company'): Record<string, unknown> {
+  return { ...appPasswordRow(), owner_user_id: owner, visibility };
+}
+
+test('visibility: PATCH is the only exported method (any other is 405 from Next.js)', () => {
+  assert.deepEqual(Object.keys(visibilityRoute).filter((k) => /^[A-Z]+$/.test(k)).sort(), ['PATCH']);
+});
+
+test('visibility: the inbox owner switches private to company-wide and back, as a member', async () => {
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  const res = await setVisibility({ visibility: 'company' });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { visibility: 'company' });
+  const [update] = updates();
+  assert.equal(update.client, 'service');
+  assert.equal((update.payload as Record<string, unknown>).visibility, 'company');
+  assertScopedToAuthorizedInbox(update);
+  assert.ok(update.filters.some(([f, col, v]) => f === 'eq' && col === 'owner_user_id' && v === USER.id), 'pinned to the owner');
+
+  reset({ role: 'member', row: ownedRow(USER.id, 'company') });
+  assert.deepEqual(await (await setVisibility({ visibility: 'private' })).json(), { visibility: 'private' });
+});
+
+test('visibility: owner and admin who did not connect the inbox cannot change it', async () => {
+  for (const role of ['owner', 'admin']) {
+    // A company inbox they can see: 403.
+    reset({ role, row: ownedRow(OTHER, 'company') });
+    const res = await setVisibility({ visibility: 'private' });
+    assert.equal(res.status, 403, role);
+    assert.equal((await res.json()).error_code, 'not_inbox_owner');
+    // A private inbox they cannot see: 404, no oracle.
+    reset({ role, row: ownedRow(OTHER, 'private'), visible: false });
+    assert.equal((await setVisibility({ visibility: 'company' })).status, 404, role);
+    assert.equal(updates().length, 0);
+  }
+});
+
+test('visibility: a viewer is refused, an unchanged value writes nothing', async () => {
+  reset({ role: 'viewer', row: ownedRow(USER.id, 'private') });
+  assert.equal((await setVisibility({ visibility: 'company' })).status, 403);
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  assert.deepEqual(await (await setVisibility({ visibility: 'private' })).json(), { visibility: 'private' });
+  assert.equal(updates().length, 0);
+});
+
+test('visibility: cross-site, non-JSON and bad bodies are refused before any read', async () => {
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  assert.equal((await setVisibility({ visibility: 'company' }, { origin: 'https://evil.example' })).status, 403);
+  assert.equal((await setVisibility({ visibility: 'company' }, { 'content-type': 'text/plain' })).status, 403);
+  assert.equal((await setVisibility({ visibility: 'everyone' })).status, 400);
+  assert.equal((await setVisibility('not json')).status, 400);
+  assert.equal(world.calls.length, 0);
+});
+
+const runAfters = async () => {
+  for (const fn of world.afters) await fn();
+};
+
+test('visibility: a successful change re-syncs the mailbox add-on after the response; a refusal does not', async () => {
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  syncCalls.length = 0;
+  assert.equal((await setVisibility({ visibility: 'company' })).status, 200);
+  await runAfters();
+  assert.deepEqual(syncCalls, [WS]);
+
+  syncCalls.length = 0;
+  reset({ role: 'admin', row: ownedRow(OTHER, 'company') });
+  assert.equal((await setVisibility({ visibility: 'private' })).status, 403);
+  reset({ role: 'member', row: ownedRow(OTHER, 'private'), visible: false });
+  assert.equal((await setVisibility({ visibility: 'company' })).status, 404);
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  assert.equal((await setVisibility({ visibility: 'private' })).status, 200, 'unchanged');
+  await runAfters();
+  assert.deepEqual(syncCalls, []);
+});
+
+test('visibility: a failed sync never fails the change', async () => {
+  reset({ role: 'member', row: ownedRow(USER.id, 'private') });
+  syncFails = true;
+  try {
+    const res = await setVisibility({ visibility: 'company' });
+    assert.equal(res.status, 200);
+    await runAfters();
+    assert.deepEqual(await res.json(), { visibility: 'company' });
+  } finally {
+    syncFails = false;
+  }
+});

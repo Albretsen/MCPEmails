@@ -647,3 +647,25 @@ Deno.test("a follow-up on an existing message counts days from its own sent date
   // an explicit due_at is still checked against now
   assertEquals(followUpDueAt({ due_at: iso(NOW - DAY) }, NOW, sent).ok, false);
 });
+
+Deno.test("dispatcher: a follow-up whose key can no longer reach its inbox is cancelled without reading; a snooze still returns", async () => {
+  const rows = [
+    row({ inbox_id: "private-of-someone-else", api_key_id: "key-b" }),
+    row({ inbox_id: "private-of-someone-else", kind: "snooze", condition: "always", due_at: iso(NOW - MIN), api_key_id: "key-b" }),
+    row({ inbox_id: "company", api_key_id: "key-b" }),
+  ];
+  const world = fakeWorld(rows);
+  const asked: Array<[string, string, string]> = [];
+  world.deps.keyCanReach = (keyId, ws, inboxId) => {
+    asked.push([keyId, ws, inboxId]);
+    return Promise.resolve(inboxId === "company");
+  };
+  await runRemindersDispatch(world.deps);
+  assertEquals(rows[0].status, "cancelled");
+  assertEquals(rows[0].last_error_code, "inbox_not_permitted");
+  assertEquals(world.checks.filter((i) => i === "private-of-someone-else").length, 0, "no reply check on the hidden inbox");
+  assertEquals(world.returns.length, 1, "the snooze still returns mail");
+  assertEquals(rows[2].status, "pending");
+  assertEquals(world.checks.includes("company"), true);
+  assert(asked.some(([k, ws, i]) => k === "key-b" && ws === "ws-1" && i === "private-of-someone-else"));
+});

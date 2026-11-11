@@ -77,6 +77,8 @@ function seed() {
     inboxes: [
       { id: 'ib-1', workspace_id: WS, deleted_at: null },
       { id: 'ib-2', workspace_id: WS, deleted_at: null },
+      // MEMBER2's private mailbox (the Business privacy model).
+      { id: 'ib-private-m2', workspace_id: WS, deleted_at: null, visibility: 'private', owner_user_id: MEMBER2 },
       { id: 'ib-foreign', workspace_id: OTHER_WS, deleted_at: null },
     ],
     oauth_refresh_tokens: [
@@ -112,7 +114,21 @@ let nextId = 1;
 function fakeClient(kind: 'user' | 'service') {
   return {
     auth: { getUser: async () => ({ data: { user: world.user }, error: null }) },
-    rpc: async () => ({ data: [{ plan: 'free', comped_scale: false, unlimited_inboxes: false }], error: null }),
+    rpc: async (name: string, args: Record<string, string>) => {
+      // visible_inbox_ids() (20261111120000): member of the workspace AND
+      // (company OR owned by the user).
+      if (name === 'visible_inbox_ids') {
+        const member = world.db.workspace_members.some((m) => m.workspace_id === args.p_workspace_id && m.user_id === args.p_user_id);
+        const ids = member
+          ? world.db.inboxes
+              .filter((i) => i.workspace_id === args.p_workspace_id)
+              .filter((i) => (i.visibility ?? 'company') === 'company' || i.owner_user_id === args.p_user_id)
+              .map((i) => i.id)
+          : [];
+        return { data: ids, error: null };
+      }
+      return { data: [{ plan: 'free', comped_scale: false, unlimited_inboxes: false }], error: null };
+    },
     from(table: string) {
       const filters: Array<(r: Row) => boolean> = [];
       let op: 'select' | 'insert' | 'update' | 'delete' = 'select';
@@ -594,4 +610,40 @@ test('verify: an admin cannot launder a send scope onto a creatorless legacy key
   const res = await edit('k-legacy', { scopes: ['read:email', 'send:email'], inboxIds: null });
   assert.equal(res.status, 403);
   assert.deepEqual(keyRow('k-legacy').scopes, ['read:email']);
+});
+
+// ===========================================================================
+// Business privacy model (migration 20261111120000)
+// ===========================================================================
+
+test('privacy: a member cannot list another member\'s private inbox on their key', async () => {
+  as(MEMBER);
+  const res = await edit('k-member', { scopes: ['read:email'], inboxIds: ['ib-1', 'ib-private-m2'] });
+  assert.equal(res.status, 400);
+  // The same answer as a foreign id: no oracle.
+  assert.match((await res.json()).error, /do not belong to this workspace/);
+  assert.equal(keyRow('k-member').inbox_ids, null);
+});
+
+test('privacy: owner and admin cannot list someone else\'s private inbox either', async () => {
+  for (const who of [OWNER, ADMIN]) {
+    as(who);
+    const res = await edit('k-member2', { scopes: ['read:email'], inboxIds: ['ib-private-m2'] });
+    assert.equal(res.status, 400, who);
+    assert.equal(keyRow('k-member2').inbox_ids, null);
+  }
+});
+
+test('privacy: the inbox owner can list their own private inbox', async () => {
+  as(MEMBER2);
+  const res = await edit('k-member2', { scopes: ['read:email'], inboxIds: ['ib-private-m2', 'ib-1'] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(keyRow('k-member2').inbox_ids, ['ib-private-m2', 'ib-1']);
+});
+
+test('privacy: inboxIds null (every inbox the creator can see) is still accepted', async () => {
+  as(MEMBER);
+  const res = await edit('k-member', { scopes: ['read:email'], inboxIds: null });
+  assert.equal(res.status, 200);
+  assert.equal(keyRow('k-member').inbox_ids, null);
 });

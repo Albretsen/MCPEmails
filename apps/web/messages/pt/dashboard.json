@@ -424,7 +424,18 @@
     "capBodyProCap": "O Pro conecta 10 caixas de correio. O Business inclui 10 por $39 por mês e acrescenta cada caixa de correio extra por $3 por mês, com membros ilimitados sem custo adicional.",
     "capCtaBusiness": "Mudar para o Business, $39/mês",
     "capBodyProCapFounder": "O Pro conecta 10 caixas de correio. O Business inclui 10, com membros ilimitados sem custo adicional.",
-    "capCtaBusinessFounder": "Mudar para o Business, ${price}/mês"
+    "capCtaBusinessFounder": "Mudar para o Business, ${price}/mês",
+    "visibility": {
+      "label": "Quem pode usar",
+      "private": "Privada",
+      "company": "Toda a empresa",
+      "privateHint": "Só você pode usar esta caixa de entrada.",
+      "companyHint": "Todos no espaço de trabalho podem usar esta caixa de entrada.",
+      "ownedBy": "De {name}",
+      "saveError": "Não foi possível alterar quem pode usar esta caixa de entrada. Tente de novo.",
+      "othersTitle": "Caixas de entrada privadas de outras pessoas",
+      "othersNote": "Você pode desconectá-las, mas só os donos podem abri-las."
+    }
   },
   "apiKeys": {
     "title": "Chaves de API",
@@ -785,6 +796,8 @@
     "custom": "Personalizado",
     "perMonth": "/mês",
     "billedYearly": "Cobrado ${total}/ano",
+    "perPersonPerMonth": "/pessoa/mês",
+    "businessPerPersonNote": "${price} por pessoa por mês, mínimo de {min} pessoas. Você paga por cada pessoa que conecta uma caixa de entrada.",
     "talkToSales": "Fale com vendas",
     "redirecting": "Um momento…",
     "currentPlan": "Plano atual",
@@ -1086,6 +1099,7 @@
       "bodyTitle": "Mensagem",
       "bodyTruncated": "Esta mensagem tem mais de 64 KB e foi cortada aqui. Abra-a no painel para ler tudo.",
       "bodyWithheldRole": "O texto da mensagem é mostrado a proprietários, admins e membros do espaço de trabalho. Com a sua função, você só pode revisar os detalhes de entrega.",
+      "bodyWithheldPrivate": "Este envio vem da caixa de entrada privada de outra pessoa, por isso o conteúdo está oculto. Você ainda pode aprovar ou rejeitar.",
       "bodyStoredWithProvider": "Esta solicitação foi preparada antes de o MCPEmails guardar uma cópia do rascunho, então o texto não pode ser mostrado aqui, e um envio aprovado dela não vai sair. Rejeite e peça ao seu assistente para enviar o rascunho de novo.",
       "bodyDecryptFailed": "Não foi possível descriptografar a mensagem armazenada, então ela não pode ser mostrada. Rejeite esta solicitação e peça ao seu assistente para prepará-la de novo.",
       "bodyAbsent": "Esta solicitação não tem texto de mensagem.",
@@ -1182,7 +1196,8 @@
       "loadingDetails": "Carregando…",
       "approveAndSend": "Aprovar e enviar",
       "approveSub": "Isto envia agora o e-mail preparado.",
-      "approvedToast": "E-mail aprovado. Enviando agora."
+      "approvedToast": "E-mail aprovado. Enviando agora.",
+      "privateHidden": "Oculto (caixa de entrada privada)"
     }
   },
   "automations": {

@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
     update.url = verdict.url.href;
   }
   if (Object.hasOwn(input, 'inboxIds')) {
-    const inboxes = await validateInboxIds(service, access.workspaceId, input.inboxIds);
+    const inboxes = await validateInboxIds(service, access.workspaceId, input.inboxIds, access.userId);
     if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: inboxes.code }, { status: 400 });
     update.inbox_ids = inboxes.value;
   }

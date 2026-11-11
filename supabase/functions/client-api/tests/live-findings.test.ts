@@ -136,18 +136,28 @@ Deno.test("memberships: with the tool layer's inbox projection, the key row and 
         // A row for another workspace can never arrive through this embed;
         // if it did, it is dropped rather than cached under this membership.
         inboxes: [inboxRow(), inboxRow({ id: "x", workspace_id: "other" } as Partial<InboxRow>)],
+        // The visibility ACL rides in the same query (visibility.ts).
+        inbox_acl: [{
+          id: "22222222-2222-4222-8222-222222222222",
+          workspace_id: WORKSPACE_ID,
+          visibility: "private",
+          owner_user_id: USER_ID,
+        }],
       },
     }],
     error: null,
   }]);
   const rows = await supabaseStore(db, { inboxColumns: INBOX_COLUMNS }).memberships(USER_ID);
   assertEquals(db.recorded.length, 1, "one round trip");
+  assertEquals(rows[0].inbox_scope, { restricted: false });
   assertEquals(rows.length, 1);
   assertEquals(rows[0].web_client_key?.id, keyRow().id);
   assertEquals(rows[0].inbox_rows?.map((r) => r.id), ["22222222-2222-4222-8222-222222222222"]);
   const ops = db.recorded[0].ops;
   const select = String(ops.find(([op]) => op === "select")![1][0]);
   assert(select.includes(`inboxes(${INBOX_COLUMNS})`), "the tool layer's own projection, not a narrower one");
+  assert(select.includes("inbox_acl:inboxes(id, workspace_id, visibility, owner_user_id)"), "the ACL in the same request");
+  assert(ops.some(([op, a]) => op === "is" && a[0] === "workspaces.inbox_acl.deleted_at" && a[1] === null));
   assert(ops.some(([op, a]) => op === "eq" && a[0] === "workspaces.api_keys.kind" && a[1] === WEB_CLIENT_KEY_KIND));
   assert(ops.some(([op, a]) => op === "is" && a[0] === "workspaces.api_keys.deleted_at" && a[1] === null));
   assert(ops.some(([op, a]) => op === "is" && a[0] === "workspaces.inboxes.deleted_at" && a[1] === null));

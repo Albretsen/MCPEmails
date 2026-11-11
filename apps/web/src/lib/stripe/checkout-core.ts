@@ -15,6 +15,7 @@ import {
 } from '@/lib/stripe/currency';
 import {
   automaticTaxEnabled,
+  checkoutPaperworkParams,
   checkoutTaxParams,
   paymentMethodConfigurationId,
 } from '@/lib/stripe/tax-switch';
@@ -33,6 +34,9 @@ import {
   PERSONAL_PASS_3M,
   PLANS,
   basePlanItem,
+  businessSeatPriceId,
+  businessSeatQuantity,
+  isBusinessSeatPriceId,
   personalPassPriceId,
   extraMailboxQuantity,
   mailboxAddonPriceId,
@@ -50,6 +54,11 @@ import {
   readMailboxAddonState,
   type MailboxAddonItemChange,
 } from '@/lib/stripe/mailbox-addon';
+import {
+  businessSeatPricingOn,
+  countBillablePeople,
+  countCompanyInboxes,
+} from '@/lib/stripe/business-seats';
 import { getActiveSeasonalOffers } from '@/lib/stripe/seasonal-offer-server';
 import {
   BLACK_WEEK_2026,
@@ -239,6 +248,11 @@ export interface PlanChangePreview {
    * figure is above the list price instead of leaving the buyer to wonder.
    */
   extraMailboxes: number;
+  /**
+   * Business billed per person only: the people `recurringCents` prices
+   * (the seat quantity, at least two). Absent for every other price.
+   */
+  people?: number;
   /** Unix seconds. Null when Stripe reports no period on the subscription. */
   nextRenewalAt: number | null;
   /**
@@ -372,6 +386,8 @@ async function previewPlanChange(args: {
   subscription: Stripe.Subscription;
   itemId: string;
   priceId: string;
+  /** The plan item's quantity change, exactly as the swap sends it. */
+  quantity?: number;
   /** The add-on half of the change, exactly as the swap below will send it. */
   addonChanges: MailboxAddonItemChange[];
   extraMailboxes: number;
@@ -379,7 +395,7 @@ async function previewPlanChange(args: {
   /** The seasonal offer the confirmed swap will apply, so the quote matches. */
   offer: SeasonalOffer | null;
 }): Promise<PlanChangePreview | null> {
-  const { subscription, itemId, priceId, addonChanges, extraMailboxes, addonPriceId, offer } = args;
+  const { subscription, itemId, priceId, quantity, addonChanges, extraMailboxes, addonPriceId, offer } = args;
 
   try {
     const customerId =
@@ -394,7 +410,10 @@ async function previewPlanChange(args: {
         subscription_details: {
           // The same items the swap below sends, add-on included, or the
           // quote prices a different event from the one the button performs.
-          items: [{ id: itemId, price: priceId }, ...addonChanges],
+          items: [
+            { id: itemId, price: priceId, ...(quantity !== undefined ? { quantity } : {}) },
+            ...addonChanges,
+          ],
           proration_behavior: 'always_invoice',
         },
         // The same discounts the confirmed swap sends. Top-level `discounts`
@@ -422,8 +441,9 @@ async function previewPlanChange(args: {
       amountDueNowCents: preview.amount_due,
       creditCents,
       recurringCents:
-        (price.unit_amount ?? 0) + (addonPrice?.unit_amount ?? 0) * extraMailboxes,
+        (price.unit_amount ?? 0) * (quantity ?? 1) + (addonPrice?.unit_amount ?? 0) * extraMailboxes,
       extraMailboxes,
+      ...(isBusinessSeatPriceId(priceId) && quantity !== undefined ? { people: quantity } : {}),
       nextRenewalAt: basePlanItem(subscription.items.data)?.current_period_end ?? null,
       discountCents: (preview.total_discount_amounts ?? []).reduce(
         (sum, d) => sum + (d.amount ?? 0),
@@ -445,6 +465,18 @@ async function previewPlanChange(args: {
 // so the chat link module and tests that stub this file can share it). They
 // are re-exported here because every caller historically imported them from
 // the core.
+/**
+ * The seat quantity a per-person checkout or upgrade is priced for:
+ * max(BUSINESS_MIN_SEATS, people billable now) (business-seats.ts), the same
+ * rule the sync keeps afterwards, so the first invoice is followed by neither
+ * a credit nor a top-up. A failed count prices the minimum; the next sync
+ * corrects it.
+ */
+async function checkoutSeatQuantity(userId: string): Promise<number> {
+  const billable = (await countBillablePeople(createServiceRoleClient(), userId)) ?? 0;
+  return businessSeatQuantity(billable);
+}
+
 export { checkoutLocale, type CheckoutLocale } from '@/lib/stripe/checkout-locale';
 
 /**
@@ -825,7 +857,12 @@ export async function runCheckoutForIdentity(
       workspace: { id: identity.workspaceId, display_name: identity.displayName },
       wsError: null,
     },
-    { planId: input.planId, interval: input.interval, locale: input.locale, confirmChange: false },
+    {
+      planId: input.planId,
+      interval: input.interval,
+      locale: input.locale,
+      confirmChange: false,
+    },
     { ...options, allowPlanChange: false },
   );
 }
@@ -965,8 +1002,13 @@ async function checkoutFor(
 
   // ── 4. Resolve the target Stripe price ID ─────────────────────────────────
   const plan = PLANS[planId];
-  const priceId =
+  // Business billed per person (business-seats.ts), behind its switch. Read
+  // fresh: a checkout is never priced on a cached switch. Off, or a read that
+  // fails, sells the flat Business price exactly as before.
+  const seatPricing = planId === 'pro' && (await businessSeatPricingOn({ fresh: true }));
+  const flatPriceId =
     interval === 'year' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly;
+  const priceId = seatPricing ? businessSeatPriceId(interval) : flatPriceId;
 
   if (!priceId) {
     // An unset STRIPE_PRICE_* env var makes a plan silently unbuyable, which is
@@ -1167,14 +1209,38 @@ async function checkoutFor(
       // founder switching monthly <-> yearly keeps the founder pair, offer or
       // no offer; an existing $39 Business subscriber is not moved. Every
       // other plan resolves to `priceId` unchanged.
+      // A Business subscription that is NOT per person (flat $39, founder,
+      // retired Team) keeps its kind of price across an interval switch, even
+      // with per-person pricing on: legacy subscriptions are never moved.
+      const legacyBusiness =
+        planId === 'pro' &&
+        fromPrice?.planId === 'pro' &&
+        !isBusinessSeatPriceId(currentItem.price.id);
+      const normalPriceId = legacyBusiness ? flatPriceId : priceId;
+      if (!normalPriceId) {
+        await recordPlanChange({
+          workspaceId: workspace.id,
+          direction: changeDirection(),
+          target,
+          outcome: 'failure',
+          failure: 'price_not_configured',
+        });
+        return fail(
+          'price_not_configured',
+          503,
+          `Stripe price ID for ${planId}/${interval} is not configured. ` +
+            'Please try again later or contact support.',
+        );
+      }
+
       const founderOffer =
-        planId === 'pro' && fromPrice?.planId !== 'pro'
+        planId === 'pro' && fromPrice?.planId !== 'pro' && !seatPricing
           ? await currentFounderOffer({ ownerId: user.id, fresh: true })
           : null;
       const targetPriceId = businessPriceFor({
         planId,
         interval,
-        normalPriceId: priceId,
+        normalPriceId,
         offer: founderOffer,
         currentPriceId: currentItem.price.id,
         currentPlanId: fromPrice?.planId ?? null,
@@ -1223,10 +1289,23 @@ async function checkoutFor(
       // count; moving AWAY removes it. Computed once and sent identically to
       // the quote and to the swap, so what the buyer confirms is what Stripe
       // bills: no silent re-pricing on the second call.
+      // Per person: the seat quantity, max(2, people billable now), the same
+      // rule the sync applies, and only company-wide mailboxes toward the
+      // ten. Any other target keeps quantity 1 (set back to 1 when leaving a
+      // per-person price, or a Pro subscription would bill three Pros).
+      const seatTarget = isBusinessSeatPriceId(swapPriceId);
+      const seatQuantity = seatTarget
+        ? await checkoutSeatQuantity(user.id)
+        : undefined;
+      const itemQuantity =
+        seatQuantity ?? ((currentItem.quantity ?? 1) !== 1 ? 1 : undefined);
       const extraMailboxes =
         planId === 'pro'
           ? extraMailboxQuantity(
-              (await countOwnedInboxes(createServiceRoleClient(), user.id)) ?? 0,
+              (await (seatTarget ? countCompanyInboxes : countOwnedInboxes)(
+                createServiceRoleClient(),
+                user.id,
+              )) ?? 0,
             )
           : 0;
       let addonChanges: MailboxAddonItemChange[];
@@ -1323,6 +1402,7 @@ async function checkoutFor(
             subscription,
             itemId: currentItem.id,
             priceId: swapPriceId,
+            ...(itemQuantity !== undefined ? { quantity: itemQuantity } : {}),
             addonChanges,
             extraMailboxes,
             addonPriceId: mailboxAddonPriceId(interval),
@@ -1375,7 +1455,14 @@ async function checkoutFor(
       // reference), so an unpaid switch neither consumes the coupon on the
       // monthly plan nor tags a subscription that did not move.
       const updated = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: currentItem.id, price: swapPriceId }, ...addonChanges],
+        items: [
+          {
+            id: currentItem.id,
+            price: swapPriceId,
+            ...(itemQuantity !== undefined ? { quantity: itemQuantity } : {}),
+          },
+          ...addonChanges,
+        ],
         proration_behavior: 'always_invoice',
         payment_behavior: 'pending_if_incomplete',
         expand: ['latest_invoice'],
@@ -1473,14 +1560,25 @@ async function checkoutFor(
   //
   // A new Business subscription takes the founder price while the offer is
   // open to this owner (founder-offer.ts); otherwise `priceId` as resolved.
+  //
+  // Billed per person (the switch on): one seat-price line, quantity =
+  // max(2, people billable now), the rule the sync keeps afterwards, so no
+  // credit follows the purchase. No founder price: the offer is closed while
+  // per-person pricing is on.
   const sold = businessPriceFor({
     planId,
     interval,
     normalPriceId: priceId,
-    offer: planId === 'pro' ? await currentFounderOffer({ ownerId: user.id, fresh: true }) : null,
+    offer:
+      planId === 'pro' && !seatPricing
+        ? await currentFounderOffer({ ownerId: user.id, fresh: true })
+        : null,
   });
+  const seatQuantity = seatPricing
+    ? await checkoutSeatQuantity(user.id)
+    : null;
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-    { price: sold.priceId, quantity: 1 },
+    { price: sold.priceId, quantity: seatQuantity ?? 1 },
   ];
   if (planId === 'pro') {
     const addonPriceId = mailboxAddonPriceId(interval);
@@ -1494,7 +1592,10 @@ async function checkoutFor(
       );
     }
     const extra = extraMailboxQuantity(
-      (await countOwnedInboxes(createServiceRoleClient(), user.id)) ?? 0,
+      (await (seatPricing ? countCompanyInboxes : countOwnedInboxes)(
+        createServiceRoleClient(),
+        user.id,
+      )) ?? 0,
     );
     if (extra > 0) lineItems.push({ price: addonPriceId, quantity: extra });
   }
@@ -1701,6 +1802,8 @@ async function checkoutFor(
         ...(reminderLang ? { lang: reminderLang } : {}),
         ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
         ...(sold.founder ? { [FOUNDER_METADATA_KEY]: FOUNDER_OFFER_TAG } : {}),
+        // The people a per-person Business checkout was priced for.
+        ...(seatQuantity !== null ? { business_people: String(seatQuantity) } : {}),
         // Second piece of location evidence for EU VAT, beside the billing
         // address Stripe Tax collects. Only while Stripe Tax is on: that is
         // when a sale is taxed and the evidence has a use.
@@ -1719,8 +1822,11 @@ async function checkoutFor(
       // VAT from it. The USD prices stay tax_behavior=exclusive, so tax is
       // added on top of a USD amount where a registration applies.
       //
-      // Switch off, this spreads nothing and the session is unchanged.
+      // Switch off, this spreads nothing.
       ...(taxOn ? checkoutTaxParams(switchEnv) : {}),
+      // Company name and VAT / org number, on every session whatever the tax
+      // switch says, so a company's invoices carry them (tax-switch.ts).
+      ...checkoutPaperworkParams(),
     });
 
     if (!session.url) {
@@ -2066,6 +2172,8 @@ export async function runPassCheckout(input: {
       // A real invoice for the buyer and for bookkeeping, which books sales
       // from Stripe invoices.
       invoice_creation: { enabled: true, invoice_data: { metadata } },
+      // Company name and VAT / org number, as on every session (tax-switch.ts).
+      ...checkoutPaperworkParams(),
       // On the PaymentIntent too, so `charge.refunded` can be traced back to a
       // pass without another lookup.
       payment_intent_data: { metadata },

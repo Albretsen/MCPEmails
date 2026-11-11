@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api-keys/scopes';
 import { insufficientRoleBody } from '@/lib/workspace/roles';
+import { allVisible, visibleInboxIds } from '@/lib/inboxes/visibility';
 import { canChangeApiKey, keyScopeCap, scopeBeyondCap } from '@/lib/api-keys/key-authority';
 
 /**
@@ -237,6 +238,21 @@ export async function PATCH(
     const ownedIds = new Set((ownedRows ?? []).map((r) => r.id));
     const foreign = sanitizedInboxIds.find((id) => !ownedIds.has(id));
     if (foreign) {
+      return NextResponse.json(
+        { error: 'One or more selected inboxes do not belong to this workspace.' },
+        { status: 400 },
+      );
+    }
+
+    // 4b. Business privacy model (20261111120000): every listed inbox must be
+    //     visible to the caller, owners and admins included, so nobody lists
+    //     someone else's private inbox on a key. The key itself acts as its
+    //     creator, and the MCP server intersects the list with what the
+    //     creator may see at request time (credential_inbox_scope), so a list
+    //     an admin writes onto a member's key never widens that member's
+    //     reach. Answered exactly like a foreign id: no oracle for private
+    //     inbox ids.
+    if (!allVisible(sanitizedInboxIds, await visibleInboxIds(service, workspaceId, user.id))) {
       return NextResponse.json(
         { error: 'One or more selected inboxes do not belong to this workspace.' },
         { status: 400 },

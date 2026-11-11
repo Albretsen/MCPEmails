@@ -125,6 +125,19 @@ async function decryptStored(ciphertext: string): Promise<Row> {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+/**
+ * credential_inbox_scope (inbox visibility, migration 20261111120000): nothing
+ * in these fixtures is anyone's hidden private inbox, so every key is
+ * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
+ */
+function visibilityRpc(name: string, args: Record<string, unknown>) {
+  return Promise.resolve(
+    name === "credential_inbox_scope"
+      ? { data: { restricted: false, inbox_ids: args.p_inbox_ids ?? null }, error: null }
+      : { data: null, error: { message: `unexpected rpc ${name}` } },
+  );
+}
+
 function recordingClient(tables: Record<string, Row[]>) {
   const from = (table: string) => {
     const eq: Array<[string, unknown]> = [];
@@ -162,7 +175,7 @@ function recordingClient(tables: Record<string, Row[]>) {
     };
     return builder;
   };
-  return { from };
+  return { from, rpc: visibilityRpc };
 }
 
 interface GraphDraft {

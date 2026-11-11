@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
 
 /** Shape of a single activity_log row returned by the Supabase select. */
 interface ActivityLogRow {
@@ -94,8 +96,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
+  // 3b. Which client reads. Since the Business privacy model (20261111120000)
+  //     RLS hides rows of other people's private inboxes. That is right for a
+  //     member. An owner or admin keeps every row: an audit row is metadata
+  //     (tool, status, timing, the inbox address they already see in the
+  //     inbox directory), never message content, and an audit log with holes
+  //     in it is no audit log. So they read through the service role, scoped
+  //     to the membership-checked workspace. Nothing else changes.
+  const role = await fetchWorkspaceRole(supabase, workspaceId, user.id);
+  const reader = canManageWorkspace(role) ? createServiceRoleClient() : supabase;
+
   // 4. Fetch total count (no data, just the count header).
-  const { count: totalCount, error: countError } = await supabase
+  const { count: totalCount, error: countError } = await reader
     .from('activity_log')
     .select('id', { count: 'exact', head: true })
     .eq('workspace_id', workspaceId);
@@ -106,7 +118,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // 5. Fetch the requested page of rows with joined display fields.
-  const { data: rows, error: rowsError } = await supabase
+  const { data: rows, error: rowsError } = await reader
     .from('activity_log')
     .select(
       'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',

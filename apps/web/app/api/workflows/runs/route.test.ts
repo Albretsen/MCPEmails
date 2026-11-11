@@ -32,6 +32,8 @@ interface World {
   roleError: { message: string } | null;
   /** The running row the service-role update would match; null = none. */
   running: boolean;
+  /** Whether the USER client's RLS read finds the run (privacy model). */
+  runVisible: boolean;
   /** Every query, tagged by which client ran it. */
   log: string[];
   /** Filters the user client applied to its workspace_members read. */
@@ -47,6 +49,7 @@ function reset(overrides: Partial<World> = {}): void {
     role: 'member',
     roleError: null,
     running: true,
+    runVisible: true,
     log: [],
     roleFilters: {},
     updates: [],
@@ -69,6 +72,7 @@ function userClient() {
       };
       builder.maybeSingle = async () => {
         world.log.push(`user:${table}.select`);
+        if (table === 'bulk_runs') return { data: world.runVisible ? { id: RUN_ID } : null, error: null };
         if (world.roleError) return { data: null, error: world.roleError };
         return { data: world.role === null ? null : { role: world.role }, error: null };
       };
@@ -197,7 +201,12 @@ for (const role of ['owner', 'admin', 'member']) {
     const res = await PATCH(patch());
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { run: { id: RUN_ID, status: 'cancelling' } });
-    assert.deepEqual(world.log, ['user:workspace_members.select', 'service:bulk_runs.update']);
+    assert.deepEqual(
+      world.log,
+      role === 'member'
+        ? ['user:workspace_members.select', 'user:bulk_runs.select', 'service:bulk_runs.update']
+        : ['user:workspace_members.select', 'service:bulk_runs.update'],
+    );
     assert.equal(world.updates.length, 1);
     const [{ values, filters }] = world.updates;
     assert.equal(values.status, 'cancelling');
@@ -205,6 +214,19 @@ for (const role of ['owner', 'admin', 'member']) {
     assert.deepEqual(filters, { id: RUN_ID, workspace_id: WORKSPACE_ID, status: 'running' });
   });
 }
+
+test("privacy: a member cannot stop a run on someone else's private inbox (RLS hides it): 409, nothing written", async () => {
+  reset({ role: 'member', runVisible: false });
+  const res = await PATCH(patch());
+  assert.equal(res.status, 409);
+  assert.deepEqual(serviceWrites(), []);
+});
+
+test('privacy: an owner may still stop any run without the RLS read', async () => {
+  reset({ role: 'owner', runVisible: false });
+  assert.equal((await PATCH(patch())).status, 200);
+  assert.equal(world.log.includes('user:bulk_runs.select'), false);
+});
 
 test('a member stopping a run that already finished still gets 409', async () => {
   reset({ role: 'member', running: false });

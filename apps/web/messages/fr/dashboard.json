@@ -424,7 +424,18 @@
     "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
     "capCtaBusiness": "Passer à Business, 39 $/mois",
     "capBodyProCapFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
-    "capCtaBusinessFounder": "Passer à Business, {price} $/mois"
+    "capCtaBusinessFounder": "Passer à Business, {price} $/mois",
+    "visibility": {
+      "label": "Qui peut l'utiliser",
+      "private": "Privée",
+      "company": "Toute l'entreprise",
+      "privateHint": "Vous seul pouvez utiliser cette boîte.",
+      "companyHint": "Tous les membres de l'espace de travail peuvent utiliser cette boîte.",
+      "ownedBy": "Appartient à {name}",
+      "saveError": "Impossible de modifier qui peut utiliser cette boîte. Réessayez.",
+      "othersTitle": "Boîtes privées des autres membres",
+      "othersNote": "Vous pouvez les déconnecter, mais seuls leurs propriétaires peuvent les ouvrir."
+    }
   },
   "apiKeys": {
     "title": "Clés API",
@@ -785,6 +796,8 @@
     "custom": "Sur mesure",
     "perMonth": "/mois",
     "billedYearly": "Facturé {total} $/an",
+    "perPersonPerMonth": "/personne/mois",
+    "businessPerPersonNote": "{price} $ par personne et par mois, {min} personnes minimum. Vous payez pour chaque personne qui connecte une boîte mail.",
     "talkToSales": "Parler aux ventes",
     "redirecting": "Un instant…",
     "currentPlan": "Formule actuelle",
@@ -1086,6 +1099,7 @@
       "bodyTitle": "Message",
       "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
       "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
+      "bodyWithheldPrivate": "Cet envoi provient de la boîte privée d'une autre personne, son contenu est donc masqué. Vous pouvez quand même l'approuver ou le refuser.",
       "bodyStoredWithProvider": "Cette demande a été préparée avant que MCPEmails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
       "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
       "bodyAbsent": "Cette demande ne contient aucun texte de message.",
@@ -1182,7 +1196,8 @@
       "loadingDetails": "Chargement…",
       "approveAndSend": "Approuver et envoyer",
       "approveSub": "Cela envoie l'e-mail préparé maintenant.",
-      "approvedToast": "E-mail approuvé. Envoi en cours."
+      "approvedToast": "E-mail approuvé. Envoi en cours.",
+      "privateHidden": "Masqué (boîte privée)"
     }
   },
   "automations": {

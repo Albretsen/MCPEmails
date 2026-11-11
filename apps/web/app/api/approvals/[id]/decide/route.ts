@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
-import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
+import { decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
+import { approvalAccess, embeddedInbox } from '@/lib/approvals/access';
 
 /**
  * Decision endpoint for the authenticated review page (/approvals/[id]).
@@ -60,7 +61,7 @@ export async function POST(
 
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id')
+    .select('id, workspace_id, inbox_id, inboxes(owner_user_id, visibility)')
     .eq('id', id)
     .maybeSingle();
 
@@ -79,7 +80,15 @@ export async function POST(
     return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
   }
 
-  if (!canDecide(membership.role)) {
+  // Privacy model (src/lib/approvals/access.ts): owner/admin decide any send;
+  // the owner of a private inbox decides that inbox's sends; a send from
+  // someone else's private inbox is the same 404 for everyone else.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const access = approvalAccess(membership.role, user.id, embeddedInbox(approval as any));
+  if (access.hidden) {
+    return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
+  }
+  if (!access.canDecide) {
     return NextResponse.json(
       {
         error: 'Only workspace owners and admins can decide sends.',

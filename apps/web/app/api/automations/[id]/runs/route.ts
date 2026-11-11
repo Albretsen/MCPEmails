@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { RUN_COLUMNS, RUN_ITEM_COLUMNS, isUuid } from '@/lib/automations/rules';
+import { canAccessInbox } from '@/lib/inboxes/visibility';
 
 /**
  * GET /api/automations/[id]/runs
@@ -75,6 +76,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .eq('workspace_id', c.workspaceId)
     .maybeSingle();
   if (!rule) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
+  // The run log lists subjects and senders of the inbox's mail: someone else's
+  // private inbox answers like a missing rule.
+  if (!rule.inbox_id || !(await canAccessInbox(c.db, rule.inbox_id, c.user.id))) {
+    return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
+  }
 
   const runId = request.nextUrl.searchParams.get('run_id');
 

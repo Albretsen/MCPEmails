@@ -532,6 +532,12 @@ export interface RemindersDeps {
   store: RemindersStore;
   /** Pro access of a workspace. Errors count as not allowed. */
   access(workspaceId: string): Promise<ReminderAccess>;
+  /**
+   * Inbox visibility: may the key that set up a follow-up still reach its
+   * inbox (it acts as its creator)? Optional so test deps can leave it out;
+   * production always has it, and it fails closed.
+   */
+  keyCanReach?(apiKeyId: string, workspaceId: string, inboxId: string): Promise<boolean>;
   decryptRef(wrapper: unknown): Promise<MessageRef>;
   encryptRef(ref: MessageRef): Promise<EncryptedWrapper>;
   /** One provider session per inbox per run; IMAP connects lazily on first use. */
@@ -683,6 +689,22 @@ async function processInbox(
           update: {
             status: "cancelled",
             last_error_code: "api_key_revoked",
+            next_check_at: null,
+            completed_at: iso(nowMs),
+          },
+        });
+        continue;
+      }
+      if (deps.keyCanReach && !(await deps.keyCanReach(row.api_key_id, row.workspace_id, row.inbox_id))) {
+        // The mailbox is someone else's private inbox now, or the creator
+        // left the workspace: nobody who asked may read it any more.
+        plans.push({
+          row,
+          kind: "update",
+          counter: "cancelled",
+          update: {
+            status: "cancelled",
+            last_error_code: "inbox_not_permitted",
             next_check_at: null,
             completed_at: iso(nowMs),
           },

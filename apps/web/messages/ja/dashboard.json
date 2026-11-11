@@ -424,7 +424,18 @@
     "capBodyProCap": "Proで接続できるメールボックスは10個です。Businessは月$39で10個を含み、追加のメールボックスは1つにつき月$3です。メンバーは追加料金なしで無制限です。",
     "capCtaBusiness": "Businessにアップグレード（月$39）",
     "capBodyProCapFounder": "Proで接続できるメールボックスは10個です。Businessは10個を含み、メンバーは追加料金なしで無制限です。",
-    "capCtaBusinessFounder": "Businessにアップグレード（月${price}）"
+    "capCtaBusinessFounder": "Businessにアップグレード（月${price}）",
+    "visibility": {
+      "label": "利用できる人",
+      "private": "非公開",
+      "company": "会社全体",
+      "privateHint": "この受信トレイを使えるのはあなただけです。",
+      "companyHint": "ワークスペースの全員がこの受信トレイを使えます。",
+      "ownedBy": "所有者: {name}",
+      "saveError": "この受信トレイを使える人を変更できませんでした。もう一度お試しください。",
+      "othersTitle": "他のメンバーの非公開受信トレイ",
+      "othersNote": "接続を解除することはできますが、開けるのは所有者だけです。"
+    }
   },
   "apiKeys": {
     "title": "APIキー",
@@ -785,6 +796,8 @@
     "custom": "カスタム",
     "perMonth": "/月",
     "billedYearly": "年${total}の請求",
+    "perPersonPerMonth": "/人/月",
+    "businessPerPersonNote": "1人あたり月額${price}、最低{min}人から。メールボックスを接続した人ごとに課金されます。",
     "talkToSales": "営業担当に相談",
     "redirecting": "お待ちください…",
     "currentPlan": "現在のプラン",
@@ -1086,6 +1099,7 @@
       "bodyTitle": "メッセージ",
       "bodyTruncated": "このメッセージは64 KBを超えるため、ここでは途中までしか表示されません。全文はダッシュボードで開いて確認してください。",
       "bodyWithheldRole": "メッセージ本文は、ワークスペースのオーナー、管理者、メンバーに表示されます。あなたの役割で確認できるのは配信の詳細だけです。",
+      "bodyWithheldPrivate": "この送信は他の人の非公開受信トレイからのものなので、内容は表示されません。承認または却下は引き続き行えます。",
       "bodyStoredWithProvider": "このリクエストはMCPEmailsが下書きのコピーを記録する前に用意されたため、本文をここに表示できません。また、承認しても送信されません。却下して、アシスタントに下書きをもう一度送信するよう依頼してください。",
       "bodyDecryptFailed": "保存されたメッセージを復号できなかったため、表示できません。このリクエストを却下して、アシスタントにもう一度用意するよう依頼してください。",
       "bodyAbsent": "このリクエストにはメッセージ本文がありません。",
@@ -1182,7 +1196,8 @@
       "loadingDetails": "読み込み中…",
       "approveAndSend": "承認して送信",
       "approveSub": "用意されたメールを今すぐ送信します。",
-      "approvedToast": "メールを承認しました。送信しています。"
+      "approvedToast": "メールを承認しました。送信しています。",
+      "privateHidden": "非表示（非公開の受信トレイ）"
     }
   },
   "automations": {

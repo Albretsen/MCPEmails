@@ -76,10 +76,16 @@ export interface InboxLimitCheckResult {
 export async function checkInboxLimit(
   supabase: SupabaseClient<Database>,
   workspaceId: string,
+  // The client that COUNTS inboxes. Since the Business privacy model
+  // (20261111120000) the user-session client no longer sees other people's
+  // private inboxes, which still hold a slot, so the connect routes pass the
+  // service role here. The plan is still resolved through `supabase`:
+  // effective_workspace_plan() answers only the caller's own workspaces.
+  countClient: SupabaseClient<Database> = supabase,
 ): Promise<InboxLimitCheckResult> {
   // Run both queries in parallel to minimise latency.
   const countActive = (excludeParked: boolean) => {
-    const query = supabase
+    const query = countClient
       .from('inboxes')
       .select('id', { count: 'exact', head: true })
       .eq('workspace_id', workspaceId)

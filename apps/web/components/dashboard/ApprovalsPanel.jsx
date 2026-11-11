@@ -35,7 +35,10 @@ export function ApprovalsPanel({ userRole }) {
   const [error, setError] = useState('');
   const [decisionItem, setDecisionItem] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  // The role rule; each row also carries `can_decide` from the API, which adds
+  // the owner of a private inbox deciding their own sends (lib/approvals/access.ts).
   const canDecide = userRole === 'owner' || userRole === 'admin';
+  const rowCanDecide = (item) => (typeof item.can_decide === 'boolean' ? item.can_decide : canDecide);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -128,7 +131,7 @@ export function ApprovalsPanel({ userRole }) {
         </div>
       </div>
 
-      {!canDecide && !loading && !error ? (
+      {!canDecide && !items.some(rowCanDecide) && !loading && !error ? (
         <div className="alert" role="status" style={{ marginBottom: 16 }}>
           You can review pending sends, but only a workspace owner or admin can approve or reject them.
         </div>
@@ -171,11 +174,11 @@ export function ApprovalsPanel({ userRole }) {
             <tbody>{items.map((item) => (
               <tr key={item.id}>
                 <td>{approvalLabel(item)}</td>
-                <td>{recipientLabel(item)}</td>
-                <td>{item.summary?.subject || '(no subject)'}</td>
+                <td>{item.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : recipientLabel(item)}</td>
+                <td>{item.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : item.summary?.subject || '(no subject)'}</td>
                 <td>{item.created_at ? new Date(item.created_at).toLocaleString() : 'Unknown time'}</td>
                 <td className="right">
-                  {canDecide ? (
+                  {rowCanDecide(item) ? (
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       <Btn size="sm" variant="secondary" onClick={() => setDecisionItem({ item, decision: 'reject' })}>Reject</Btn>
                       <Btn size="sm" variant="primary" onClick={() => setDecisionItem({ item, decision: 'approve' })}>Review & approve</Btn>
@@ -235,7 +238,7 @@ function DecidedTable({ rows, t }) {
               return (
                 <tr key={row.id}>
                   <td>{approvalLabel(row)}</td>
-                  <td>{row.summary?.subject || '(no subject)'}</td>
+                  <td>{row.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : row.summary?.subject || '(no subject)'}</td>
                   <td>{statusKey[row.status] ? t(statusKey[row.status]) : row.status}</td>
                   <td>
                     {viaKey && t.has(viaKey) ? (

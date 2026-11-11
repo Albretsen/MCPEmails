@@ -40,8 +40,7 @@ export function automaticTaxEnabled(env: Env = process.env): boolean {
 
 /**
  * The extra `stripe.checkout.sessions.create` parameters Stripe Tax needs, or an
- * empty object when the switch is off, so a session created with the switch off
- * carries exactly the keys it carried before this file existed.
+ * empty object when the switch is off.
  *
  *   automatic_tax       Stripe works out the tax from the buyer's location and
  *                       the price's tax_behavior. EUR amounts come from
@@ -50,24 +49,44 @@ export function automaticTaxEnabled(env: Env = process.env): boolean {
  *                       extracts the VAT from it. The USD prices stay
  *                       exclusive: a buyer charged in USD sees tax added on top
  *                       where we are registered.
- *   tax_id_collection   Lets a business enter its VAT ID, which turns the sale
- *                       into a reverse-charge B2B sale with no VAT charged.
- *   customer_update     REQUIRED, not cosmetic. Every session we create passes
- *                       an existing `customer` (getOrCreateStripeCustomer), and
- *                       Stripe refuses automatic_tax and tax_id_collection on
- *                       an existing customer unless Checkout may write the
- *                       address and name it collects back onto that customer.
+ *
+ * Tax ID collection and the `customer_update` it needs used to ride on this
+ * switch. Since 2026-11-11 they are on every session, switch or not:
+ * `checkoutPaperworkParams` below.
  */
 export function checkoutTaxParams(env: Env = process.env):
-  | {
-    automatic_tax: { enabled: true };
-    tax_id_collection: { enabled: true };
-    customer_update: { name: 'auto'; address: 'auto' };
-  }
+  | { automatic_tax: { enabled: true } }
   | Record<string, never> {
   if (!automaticTaxEnabled(env)) return {};
+  return { automatic_tax: { enabled: true } };
+}
+
+/**
+ * The paperwork every Checkout session collects, whatever STRIPE_AUTOMATIC_TAX
+ * says (2026-11-11): a company buyer can enter its company name and VAT or
+ * org number, and both land on the Stripe customer, so every invoice from
+ * then on carries them.
+ *
+ *   tax_id_collection   Adds "I'm purchasing as a business" to the hosted
+ *                       page. Ticking it asks for the business name and the
+ *                       tax ID; the business name is what Stripe prints on
+ *                       the invoice. Optional for the buyer (`required` left
+ *                       at Stripe's default, never), so a consumer is not
+ *                       held up. This is also the company-name field: a
+ *                       separate `name_collection.business` would ask twice.
+ *   customer_update     REQUIRED, not cosmetic. Every session we create passes
+ *                       an existing `customer` (getOrCreateStripeCustomer), and
+ *                       Stripe refuses tax_id_collection on an existing
+ *                       customer unless Checkout may write the name and the
+ *                       address it collects back onto that customer.
+ *
+ * Tax calculation is still decided by `checkoutTaxParams` alone.
+ */
+export function checkoutPaperworkParams(): {
+  tax_id_collection: { enabled: true };
+  customer_update: { name: 'auto'; address: 'auto' };
+} {
   return {
-    automatic_tax: { enabled: true },
     tax_id_collection: { enabled: true },
     customer_update: { name: 'auto', address: 'auto' },
   };

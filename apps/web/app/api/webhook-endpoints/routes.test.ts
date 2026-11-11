@@ -93,6 +93,18 @@ function fakeClient(kind: 'user' | 'service') {
   const mine = () => world.db.workspace_members.filter((m) => m.user_id === world.user?.id).map((m) => m.workspace_id);
   return {
     auth: { getUser: async () => ({ data: { user: world.user }, error: null }) },
+    // visible_inbox_ids() (20261111120000): member AND (company OR own).
+    rpc: async (name: string, args: Record<string, string>) => {
+      if (name !== 'visible_inbox_ids') return { data: null, error: { message: `unexpected rpc ${name}` } };
+      const member = world.db.workspace_members.some((m) => m.workspace_id === args.p_workspace_id && m.user_id === args.p_user_id);
+      const ids = member
+        ? world.db.inboxes
+            .filter((i) => i.workspace_id === args.p_workspace_id)
+            .filter((i) => (i.visibility ?? 'company') === 'company' || i.owner_user_id === args.p_user_id)
+            .map((i) => i.id)
+        : [];
+      return { data: ids, error: null };
+    },
     from(table: string) {
       const filters: Array<(r: Row) => boolean> = [];
       let op: 'select' | 'insert' | 'update' | 'delete' = 'select';
@@ -487,4 +499,26 @@ test('deliveries: any member reads their endpoint\'s log, without message ids; n
   assert.equal((await deliveries(EP_FOREIGN)).status, 404);
   as(OUTSIDER);
   assert.equal((await deliveries(EP_MINE)).status, 404);
+});
+
+// ── Business privacy model (migration 20261111120000) ─────────────────────
+
+const PRIVATE_INBOX = '1b000000-0000-4000-8000-0000000000aa';
+
+test("privacy: nobody, owner included, points a webhook at someone else's private inbox", async () => {
+  world.db.inboxes.push({ id: PRIVATE_INBOX, workspace_id: WS, deleted_at: null, status: 'active', visibility: 'private', owner_user_id: MEMBER });
+  as(OWNER);
+  const created = await create({ url: 'https://93.184.216.34/hook', inboxIds: [INBOX_1, PRIVATE_INBOX] });
+  assert.equal(created.status, 400);
+  assert.equal((await created.json()).error_code, 'inbox_invalid');
+  const edited = await patch(EP_MINE, { inboxIds: [PRIVATE_INBOX] });
+  assert.equal(edited.status, 400);
+  assert.notDeepEqual(endpoint(EP_MINE).inbox_ids, [PRIVATE_INBOX]);
+});
+
+test('privacy: an owner may still choose a private inbox they own', async () => {
+  world.db.inboxes.push({ id: PRIVATE_INBOX, workspace_id: WS, deleted_at: null, status: 'active', visibility: 'private', owner_user_id: OWNER });
+  as(OWNER);
+  assert.equal((await patch(EP_MINE, { inboxIds: [PRIVATE_INBOX] })).status, 200);
+  assert.deepEqual(endpoint(EP_MINE).inbox_ids, [PRIVATE_INBOX]);
 });

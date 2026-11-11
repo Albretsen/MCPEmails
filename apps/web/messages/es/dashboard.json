@@ -424,7 +424,18 @@
     "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
     "capCtaBusiness": "Mejorar a Business, 39 $/mes",
     "capBodyProCapFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
-    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes"
+    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes",
+    "visibility": {
+      "label": "Quién puede usarlo",
+      "private": "Privado",
+      "company": "Toda la empresa",
+      "privateHint": "Solo tú puedes usar este buzón.",
+      "companyHint": "Todos en el espacio de trabajo pueden usar este buzón.",
+      "ownedBy": "De {name}",
+      "saveError": "No se pudo cambiar quién puede usar este buzón. Inténtalo de nuevo.",
+      "othersTitle": "Buzones privados de otras personas",
+      "othersNote": "Puedes desconectarlos, pero solo sus propietarios pueden abrirlos."
+    }
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -785,6 +796,8 @@
     "custom": "A medida",
     "perMonth": "/mes",
     "billedYearly": "Facturado ${total}/año",
+    "perPersonPerMonth": "/persona/mes",
+    "businessPerPersonNote": "${price} por persona al mes, mínimo {min} personas. Pagas por cada persona que conecta un buzón.",
     "talkToSales": "Hablar con ventas",
     "redirecting": "Un momento…",
     "currentPlan": "Plan actual",
@@ -1086,6 +1099,7 @@
       "bodyTitle": "Mensaje",
       "bodyTruncated": "Este mensaje supera los 64 KB y se ha recortado aquí. Ábrelo en el panel para leerlo completo.",
       "bodyWithheldRole": "El texto del mensaje se muestra a propietarios, administradores y miembros del espacio. Tu rol solo puede revisar los datos de entrega.",
+      "bodyWithheldPrivate": "Este envío sale del buzón privado de otra persona, así que su contenido está oculto. Aun así puedes aprobarlo o rechazarlo.",
       "bodyStoredWithProvider": "Esta solicitud se preparó antes de que MCPEmails guardara una copia del borrador, así que su texto no se puede mostrar aquí y, si se aprueba, no se enviará. Recházala y pide a tu asistente que vuelva a enviar el borrador.",
       "bodyDecryptFailed": "No se ha podido descifrar el mensaje guardado, así que no puede mostrarse. Rechaza esta solicitud y pide al asistente que la prepare de nuevo.",
       "bodyAbsent": "Esta solicitud no tiene texto de mensaje.",
@@ -1182,7 +1196,8 @@
       "loadingDetails": "Cargando…",
       "approveAndSend": "Aprobar y enviar",
       "approveSub": "Esto envía ahora el correo preparado.",
-      "approvedToast": "Correo aprobado. Enviando ahora."
+      "approvedToast": "Correo aprobado. Enviando ahora.",
+      "privateHidden": "Oculto (buzón privado)"
     }
   },
   "automations": {
