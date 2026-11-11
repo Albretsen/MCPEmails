@@ -109,7 +109,7 @@ Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas e
 - **Gratis.** Sin coste para siempre y sin tarjeta. Una bandeja conectada, analíticas de uso, centro de ayuda y soporte por correo.
 - **Personal.** Más bandejas para una sola persona, un límite de ráfaga más alto, un historial de analíticas más largo y soporte prioritario por correo.
 - **Pro.** Para una persona que lleva un negocio: más bandejas todavía, un límite de ráfaga aún mayor, años de historial de analíticas y webhooks de correo nuevo.
-- **Business.** Todo lo de Pro, además de un bloque de buzones incluidos con un precio por buzón a partir de ahí, miembros ilimitados con roles, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.
+- **Business.** Todo lo de Pro, para un equipo con precio por persona: los buzones propios de cada persona siguen siendo privados, los buzones compartidos son de toda la empresa (un bloque incluido, con un precio por buzón a partir de ahí), roles, administradores que aprueban los envíos retenidos, un registro de auditoría exportable a CSV y un espacio de trabajo separado por cliente o negocio.
 
 Los precios y el número de bandejas actuales están en la [página de precios](/pricing).
 

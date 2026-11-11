@@ -109,7 +109,7 @@ Planene prises etter antall tilkoblede innbokser. API-nøkler er ubegrenset på 
 - **Gratis.** Koster ingenting, for alltid, og uten kort. Én tilkoblet innboks, bruksanalyse, hjelpesenter og e-poststøtte.
 - **Personal.** Flere innbokser for én person, høyere burst-grense, lengre analysehistorikk, prioritert e-poststøtte.
 - **Pro.** For én person som driver en virksomhet: flere innbokser igjen, enda høyere burst-grense, flere års analysehistorikk og webhooks for ny post.
-- **Business.** Alt i Pro, pluss et antall postkasser inkludert, med en pris per postkasse utover det, ubegrenset antall medlemmer med roller, administratorer som godkjenner tilbakeholdte sendinger, og et eget arbeidsområde per kunde eller virksomhet.
+- **Business.** Alt i Pro, for et team med pris per person: hver persons egne postkasser forblir private, felles postkasser deles i hele firmaet (et antall inkludert, med en pris per postkasse utover det), roller, administratorer som godkjenner tilbakeholdte sendinger, en revisjonslogg med CSV-eksport, og et eget arbeidsområde per kunde eller virksomhet.
 
 Gjeldende priser og antall innbokser finner du på [prissiden](/pricing).
 

@@ -93,7 +93,7 @@ Os planos são precificados por caixas conectadas:
 - **Free.** Uma caixa conectada.
 - **Personal.** Algumas caixas para uma pessoa, limite de pico maior, suporte prioritário por e-mail.
 - **Pro.** Mais caixas para uma pessoa que toca um negócio, limite de pico maior ainda, histórico de análises mais longo, webhooks de e-mail novo.
-- **Business.** Um conjunto de caixas incluídas e um valor por caixa extra, membros ilimitados com papéis sem custo adicional, administradores que aprovam envios retidos, um espaço de trabalho separado por cliente ou empresa.
+- **Business.** Para uma equipe, cobrado por pessoa: cada pessoa conecta as próprias caixas de forma privada, os endereços compartilhados valem para a empresa toda (um conjunto incluído e um valor por caixa extra), papéis, administradores que aprovam envios retidos, um espaço de trabalho separado por cliente ou empresa.
 
 Uma rotina entre caixas é uma chamada por caixa, então o número de caixas pesa no volume tanto quanto os seus hábitos. Os preços e o número de caixas atuais estão em [preços](/pricing).
 
