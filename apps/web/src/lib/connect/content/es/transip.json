@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "https://www.transip.eu/knowledgebase/306-creating-a-new-email-address/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "usernameForm": "Tu dirección completa, por ejemplo info@jouwdomein.nl. TransIP indica la dirección de correo completa como usuario tanto para IMAP como para SMTP.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de TransIP: conecta el correo de TransIP a Claude",
+    "description": "Servidor MCP para el alojamiento de correo de TransIP. Conecta los buzones de tu dominio (info@, facturen@) a Claude, ChatGPT y Cursor por IMAP en imap.transip.email:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo TransIP + IA",
+    "titleLine1": "Servidor MCP para el correo de TransIP:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, facturen@ y tu propio nombre en un dominio de TransIP? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña que fijaste al buzón en el panel de control de TransIP.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de TransIP. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.transip.email, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La base de conocimiento de TransIP indica exactamente estos datos para su alojamiento de correo: imap.transip.email en 993 con SSL, smtp.transip.email en 465 con SSL, y la dirección completa como usuario en ambos. No hay contraseña de aplicación ni nada que activar. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, nada que activar",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de TransIP?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta TransIP: IMAP en 993 y SMTP en 465, un solo par de hosts",
+    "body": "TransIP opera una única plataforma de correo para todos los buzones de su alojamiento de correo, así que no hay ningún número de servidor que buscar. El servidor entrante es <code>imap.transip.email</code> en el puerto 993 con SSL y el saliente es <code>smtp.transip.email</code> en el puerto 465 con SSL, ambos con la dirección completa como usuario y la contraseña fijada para esa dirección. Ambos hosts respondieron a una conexión TLS real bajo un certificado para <code>*.transip.email</code>; el puerto 587 con STARTTLS también funciona para enviar, aunque TransIP documenta el 465. El servidor IMAP se presenta con un breve banner <code>IMAP4 ready</code> y anuncia UIDPLUS, IDLE y QUOTA, y el servidor SMTP acepta PLAIN y LOGIN con un límite de mensaje de 37 MB. Los buzones se crean en el panel de control de TransIP bajo <b>Email Hosting</b>, donde cada uno recibe 2 GB de espacio y su propia contraseña, y esa contraseña es la que IMAP comprueba."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Localiza o fija la contraseña del buzón en el panel de control de TransIP",
+      "p": "Entra en el panel de control de TransIP, abre <b>Email Hosting</b> en el menú izquierdo y selecciona tu dominio bajo <b>Products</b>. Cada dirección aparece junto a <b>Email boxes</b>; pulsa en una para cambiar su contraseña o tamaño, o usa <b>+ Add mailbox</b> para crear una nueva. La contraseña que fijas ahí es la del buzón, distinta del acceso a tu cuenta de TransIP."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, por ejemplo info@jouwdomein.nl, con la contraseña del buzón. Los hosts <code>imap.transip.email</code> y <code>smtp.transip.email</code> vienen rellenados con 993 y 465, ambos SSL, y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Estos hosts son del alojamiento de correo de TransIP, no de un paquete cPanel o DirectAdmin",
+      "p": "TransIP también vende alojamiento web con cPanel y DirectAdmin, y los buzones creados dentro de esos paneles viven en ese servidor, con el nombre de host del propio servidor. El par <code>imap.transip.email</code> y <code>smtp.transip.email</code> pertenece al alojamiento de correo propio de TransIP, los buzones que se gestionan bajo Email Hosting en el panel de control. Si tu dirección se creó en cPanel o DirectAdmin, usa el host que muestre ese panel."
+    },
+    {
+      "h": "La contraseña del buzón no es la de tu cuenta de TransIP",
+      "p": "Los clientes de TransIP entran en el panel de control con un acceso de cuenta, y un buzón tiene su propia contraseña, fijada al crearlo o cambiada después pulsando la dirección bajo Email boxes. IMAP comprueba la contraseña del buzón. Un inicio de sesión rechazado en una dirección de TransIP es casi siempre la contraseña de la cuenta pegada en un formulario que quería la del buzón."
+    },
+    {
+      "h": "2 GB por buzón, y sin MOVE en el servidor",
+      "p": "Cada buzón de TransIP empieza con 2 GB, con capacidad extra disponible bajo pedido, y el servidor anuncia QUOTA, así que el uso se puede leer. La lista de capacidades previa al inicio de sesión no tiene <code>MOVE</code> ni <code>SPECIAL-USE</code>: archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge, y las carpetas de enviados, borradores y papelera se reconocen por su nombre. Si has renombrado una carpeta, nómbrala al pedir un movimiento. <code>UIDPLUS</code> sí está presente, así que un mensaje copiado informa de su nuevo id."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de unos 37 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "Los reenvíos y los grupos de correo se configuran en el panel de control de TransIP, no por IMAP, así que un agente no puede crearlos ni cambiarlos."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de TransIP?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para TransIP. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de TransIP?",
+      "a": "IMAP es imap.transip.email en el puerto 993 con SSL. SMTP es smtp.transip.email en el puerto 465 con SSL, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. Ambos hosts se confirmaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Dónde cambio la contraseña de un buzón de TransIP?",
+      "a": "En el panel de control de TransIP, bajo Email Hosting: selecciona el dominio bajo Products y pulsa la dirección junto a Email boxes. Ahí puedes cambiar su contraseña y su tamaño. Cambiarla desconecta todos los programas de correo y MCPEmails hasta que se introduzca la nueva."
+    },
+    {
+      "q": "¿Necesita TransIP una contraseña de aplicación?",
+      "a": "No. TransIP no tiene un sistema de contraseñas específicas de aplicación para su alojamiento de correo. La contraseña del buzón autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de TransIP en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en TransIP por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de TransIP",
+    "sub": "Conecta el correo de TransIP en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

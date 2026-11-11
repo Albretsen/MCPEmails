@@ -198,12 +198,20 @@ const SUBSCRIPTION_ID = 'sub_test_existing';
  */
 const previewsRequested: Array<Record<string, unknown>> = [];
 
+/** annual_switch_completed rows (the annual card's own completion). */
+const annualSwitchRows: string[] = [];
+
 /** Every pass funnel row, kept apart from the subscription checkout rows. */
 const passRows: Array<{ stage: string; failure: string | undefined }> = [];
 
 nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
     primaryWorkspaceId: async () => WORKSPACE_ID,
+    recordAnnualSwitchCompleted: async (workspaceId: string | null, planId: string) => {
+      if (!workspaceId) return;
+      assert.equal(workspaceId, WORKSPACE_ID);
+      annualSwitchRows.push(planId);
+    },
     recordPassEvent: async (args: { workspaceId: string | null; stage: string; failure?: string }) => {
       if (!args.workspaceId) return;
       assert.equal(args.workspaceId, WORKSPACE_ID);
@@ -434,6 +442,8 @@ async function checkout(opts: {
   country?: unknown;
   /** The seasonal offer id the confirmed quote carried. */
   quotedOffer?: unknown;
+  /** 'annual_switch' from the annual card. */
+  source?: unknown;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -445,6 +455,7 @@ async function checkout(opts: {
   funnelRows.length = 0;
   funnelEntryPoints.length = 0;
   planChangeRows.length = 0;
+  annualSwitchRows.length = 0;
   sessionsCreated.length = 0;
   subscriptionsUpdated.length = 0;
   previewsRequested.length = 0;
@@ -463,9 +474,11 @@ async function checkout(opts: {
     ...('recoveredFrom' in opts ? { recoveredFrom: opts.recoveredFrom } : {}),
     ...('country' in opts ? { country: opts.country } : {}),
     ...('quotedOffer' in opts ? { quotedOffer: opts.quotedOffer } : {}),
+    ...('source' in opts ? { source: opts.source } : {}),
   });
   return {
     outcome,
+    annualSwitchRows: [...annualSwitchRows],
     funnelRows: [...funnelRows],
     // The failure-reason-only view the older tests are written against.
     funnelCalls: funnelRows.map((row) => row.failure),
@@ -1124,6 +1137,29 @@ test('an interval move is recorded with a direction, not as a checkout', async (
     { direction: 'downgrade', target: 'personal_month', outcome: 'success', failure: undefined },
   ]);
   assert.deepEqual(down.funnelRows, []);
+});
+
+test('the annual card labels its completed switch, and only a confirmed monthly-to-annual one', async () => {
+  const base = {
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    currentPrice: 'price_personal_month',
+  } as const;
+  assert.deepEqual((await checkout({ ...base, confirmChange: true, source: 'annual_switch' })).annualSwitchRows, ['personal']);
+  // The quote alone, another source, or annual to monthly: no row.
+  assert.deepEqual((await checkout({ ...base, source: 'annual_switch' })).annualSwitchRows, []);
+  assert.deepEqual((await checkout({ ...base, confirmChange: true })).annualSwitchRows, []);
+  assert.deepEqual(
+    (await checkout({ ...base, interval: 'month', currentPrice: 'price_personal_year', confirmChange: true, source: 'annual_switch' })).annualSwitchRows,
+    [],
+  );
+  // Held for 3DS: Stripe has not collected it, so not completed.
+  assert.deepEqual(
+    (await checkout({ ...base, confirmChange: true, source: 'annual_switch', swap: 'pending' })).annualSwitchRows,
+    [],
+  );
 });
 
 test('the quote prices the same swap the confirmation performs', async () => {

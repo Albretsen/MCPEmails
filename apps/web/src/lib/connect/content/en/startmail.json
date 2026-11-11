@@ -1,14 +1,13 @@
 {
   "_sources": [
-    "https://www.startmail.com/features/",
-    "https://support.startmail.com/",
-    "https://www.getmailbird.com/best-startmail-app-macos/",
-    "https://discussions.apple.com/thread/256239542"
+    "https://support.startmail.com/hc/en-us/articles/360006536217",
+    "https://support.startmail.com/hc/en-us/articles/360007448378",
+    "https://www.startmail.com/features/"
   ],
   "auth": {
     "method": "app-password",
     "label": "Trusted device password",
-    "helpUrl": "https://support.startmail.com/",
+    "helpUrl": "https://support.startmail.com/hc/en-us/articles/360006536217",
     "usernameForm": "Your full StartMail address, including a custom domain. The username is never the bare local part.",
     "status": "active"
   },
@@ -37,7 +36,7 @@
     },
     {
       "h": "Add a device in StartMail and copy the generated password",
-      "p": "Sign in to StartMail in a browser, open <b>Settings</b>, and go to the <b>trusted devices</b> section, which is where IMAP access is managed. Choose <b>Add device</b> and name it for this connection. StartMail generates a random password and shows it once, so copy it before you close the dialog. That section also controls IMAP access for the account, so if a login is refused before you have even used the password, check IMAP is switched on there."
+      "p": "Sign in to StartMail in a browser, open <b>Settings</b> and go to <b>Trusted devices/IMAP</b>. If this is your first device, enable IMAP access there first. Choose <b>ADD DEVICE</b>, give the device a name, enter your account password and confirm. StartMail then shows the connection values and the device password, and says it shows them only once, so copy the password before you close the dialog."
     },
     {
       "h": "Add the mailbox in MCPEmails",
@@ -86,7 +85,7 @@
     },
     {
       "q": "Where do I generate a StartMail IMAP password?",
-      "a": "In StartMail's web interface, open Settings and go to the trusted devices section, which is where IMAP access is managed. Choose to add a device, give it a name, and StartMail generates a random password of about sixteen characters and displays it once. Copy it immediately; there is no way to read it again, only to delete the device and add another."
+      "a": "In StartMail's web interface, open Settings and go to Trusted devices/IMAP. Enable IMAP access if this is your first device, choose ADD DEVICE, name it and enter your account password. StartMail generates a 16-digit device password and shows it once; copy it immediately, because the only way back is to remove the device and add another. An account can hold up to five IMAP configurations."
     },
     {
       "q": "Can my AI read my PGP-encrypted StartMail messages?",

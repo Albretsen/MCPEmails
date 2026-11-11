@@ -16,7 +16,7 @@
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth, kein API-Schlüssel nötig",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Öffnen Sie auf chatgpt.com Plugins, Persönlich, Hinzufügen und dann Benutzerdefinierten MCP-Server hinzufügen. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp unter Verbindung ein, wählen Sie OAuth, setzen Sie das Bestätigungshäkchen, klicken Sie auf Als Plugin erstellen und melden Sie sich bei MCPEmails an. Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen. Im Chat tippen Sie @ und wählen MCPEmails."
+    "answer": "Öffnen Sie auf chatgpt.com Plugins, Persönlich, Hinzufügen und dann Benutzerdefinierten MCP-Server hinzufügen. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp unter Verbindung ein, wählen Sie OAuth, setzen Sie das Bestätigungshäkchen, klicken Sie auf Als Plugin erstellen und melden Sie sich bei MCPEmails an. OpenAI führt benutzerdefinierte MCP-Server für Business und Enterprise/Edu auf, mit reinem Lesezugriff in Pro, im Browser. Im Chat tippen Sie @ und wählen MCPEmails."
   },
   "method": {
     "title": "So verbindet sich ChatGPT: OAuth, kein API-Schlüssel",
@@ -47,7 +47,7 @@
   "gotchas": [
     {
       "h": "Hinzufügen im Web, Auswahl pro Nachricht",
-      "p": "Benutzerdefinierte MCP-Server lassen sich auf chatgpt.com mit Go und den kostenpflichtigen Tarifen hinzufügen; in der Mobil-App geht das nicht. Bei Business und Enterprise muss eventuell ein Admin oder Owner den Server für den Workspace hinzufügen. Der Schritt, den viele übersehen, ist der letzte: ChatGPT nutzt MCPEmails für eine Nachricht nur, wenn Sie <b>@</b> tippen und es auswählen. Erwähnen Sie es also erneut, wenn eine Folgefrage Ihre E-Mails braucht."
+      "p": "Benutzerdefinierte MCP-Server werden auf chatgpt.com hinzugefügt; in der Mobil-App geht das nicht. Die Hilfeseite von OpenAI führt sie für Business- und Enterprise/Edu-Workspaces auf, wo ein Admin oder Owner sie hinzufügt und veröffentlicht, und nennt für Pro nur Lese- und Abruf-Tools; Go und Plus werden nicht erwähnt. Der Schritt, den viele übersehen, ist der letzte: ChatGPT nutzt MCPEmails für eine Nachricht nur, wenn Sie <b>@</b> tippen und es auswählen. Erwähnen Sie es also erneut, wenn eine Folgefrage Ihre E-Mails braucht."
     },
     {
       "h": "Wählen Sie beim Erstellen des Konnektors OAuth, nicht „keine Authentifizierung“",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Warum kann ich in ChatGPT keinen benutzerdefinierten MCP-Server hinzufügen?",
-      "a": "Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen, und zwar auf chatgpt.com: Die Mobil-App bietet das nicht an. In einem Business- oder Enterprise-Workspace muss eventuell ein Admin oder Owner den Server hinzufügen. Ist MCPEmails hinzugefügt, wird aber nicht genutzt, tippen Sie im Chat <b>@</b> und wählen Sie MCPEmails; die Auswahl gilt jeweils für eine Nachricht."
+      "a": "Benutzerdefinierte MCP-Server werden auf chatgpt.com hinzugefügt: Die Mobil-App bietet das nicht an. Die Hilfeseite von OpenAI nennt Business und Enterprise/Edu für die volle Unterstützung, wo nur ein Admin oder Owner einen Server hinzufügen und veröffentlichen kann, und Pro nur für Lese- und Abruf-Tools; Go und Plus werden nicht erwähnt. Ist MCPEmails hinzugefügt, wird aber nicht genutzt, tippen Sie im Chat <b>@</b> und wählen Sie MCPEmails; die Auswahl gilt jeweils für eine Nachricht."
     },
     {
       "q": "Brauche ich für ChatGPT einen API-Schlüssel?",

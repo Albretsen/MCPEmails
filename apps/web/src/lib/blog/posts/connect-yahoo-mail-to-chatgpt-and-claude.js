@@ -18,7 +18,7 @@ const post = {
   coverAlt: 'Yahoo Mail connected to ChatGPT and Claude through MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-10-29T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['ChatGPT', 'Claude', 'Yahoo', 'Tutorial'],
   featured: false,
   content: `ChatGPT cannot read Yahoo Mail on its own, and neither can Claude. ChatGPT's email plugins cover Gmail, Outlook and iCloud Mail. Claude's cover Gmail and work Microsoft 365 accounts. To connect Yahoo Mail to either one, you put an MCP server in front of the mailbox. With MCPEmails that takes a Yahoo app password and one URL, and the same Yahoo inbox then works in ChatGPT, Claude and other AI apps.
@@ -35,12 +35,12 @@ What turns up instead when you search:
 - **Automation platforms** that pass single messages from Yahoo to an AI model when a trigger fires. Useful for one fixed workflow, not for asking questions about your mail in a chat.
 - **Copying and pasting** messages into the chat, which works for one email at a time.
 
-An MCP server is the route that gives the AI your actual mailbox. ChatGPT and Claude both accept one as a custom connector, and the server does the Yahoo sign-in.
+An MCP server is the route that gives the AI your actual mailbox. ChatGPT and Claude both accept one as a custom connector, and the server does the Yahoo sign-in. [How to connect any email account to Claude or ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) compares every route, hosted and self-hosted.
 
 ## What you need
 
 - A Yahoo Mail address: yahoo.com, a country version such as yahoo.co.uk, or the ymail.com or rocketmail.com form you signed up with.
-- **For ChatGPT:** Go or a paid plan, on chatgpt.com in a browser. OpenAI does not let Free plans add a custom MCP server, and you cannot add one in the mobile app.
+- **For ChatGPT:** a paid plan, on chatgpt.com in a browser. OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu, with read and fetch tools only on Pro, and does not mention Go or Plus. Free cannot add one, and neither can the mobile app.
 - **For Claude:** any plan, including Free, which allows one custom connector.
 - A free MCPEmails account. [Create one here](/signup); the free plan connects one inbox.
 
@@ -123,7 +123,7 @@ You choose what each AI app may do when you approve the connection: reading only
 
 - **Yahoo rejects the password.** Use an app password, not your Yahoo password, and paste it without spaces.
 - **No option to create an app password.** Turn on two-step verification on the Account Security page first.
-- **ChatGPT has no option to add a custom MCP server.** You need Go or a paid plan, on chatgpt.com in a browser.
+- **ChatGPT has no option to add a custom MCP server.** You need a paid plan, on chatgpt.com in a browser: OpenAI lists Business and Enterprise/Edu, with read-only access on Pro.
 - **The AI answers without reading your mail.** In ChatGPT, @mention MCPEmails in that message. In Claude, check MCPEmails is switched on under Connectors.
 - **You have Yahoo and another mailbox.** Connect both to MCPEmails. [Multiple email accounts in Claude and ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) explains how the AI tells them apart.
 

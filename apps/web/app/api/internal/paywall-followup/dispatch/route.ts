@@ -16,6 +16,11 @@
  *                              is enabled. A query string can only make the
  *                              route quieter, never louder.
  *
+ * NEW ARMS (2026-11-11). LIFECYCLE_EXPANSION_START_AT and
+ * LIFECYCLE_EXPANSION_DRY_RUN (src/lib/email/lifecycle-region.ts) add the
+ * soft opt-in arm, the service notice and the 20% holdout for first paywalls
+ * at or after the start. Unset start = today's behaviour exactly.
+ *
  * AUTH. `X-Dispatch-Secret`, constant-time compared against DISPATCH_SECRET,
  * exactly as the billing lifecycle dispatcher. No body is read: the route
  * selects its own work, so even a caller holding the secret cannot choose who
@@ -39,6 +44,7 @@ import {
   type Sender,
 } from '@/lib/email/paywall-followup';
 import { SupabasePaywallFollowupStore } from '@/lib/email/paywall-followup-store';
+import { expansionConfig } from '@/lib/email/lifecycle-region';
 import { paywallEmailPassLine, recordPassOfferShownOnce } from '@/lib/billing/pass-offer';
 
 export const maxDuration = 60;
@@ -105,6 +111,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const started = Date.now();
   const store = new SupabasePaywallFollowupStore(createServiceRoleClient());
+  const expansion = expansionConfig();
 
   try {
     const report = await runPaywallFollowup({
@@ -112,6 +119,7 @@ export async function POST(request: Request): Promise<Response> {
       mode,
       send: mode === 'send' ? resendSender : undefined,
       maxSends: paywallFollowupMaxPerRun(),
+      expansion,
       outOfTime: () => budgetExhausted(started, Date.now()),
       // The 3-month pass line on step 3, for the pass arm only (pass-offer.ts).
       passOffer: (workspaceId, now) => paywallEmailPassLine(workspaceId, now),
@@ -123,6 +131,7 @@ export async function POST(request: Request): Promise<Response> {
       ok: true,
       ...report,
       consentColumnMissing: store.consentColumnMissing,
+      expansion: { startAt: expansion.startAt?.toISOString() ?? null, live: expansion.live },
       // Per-candidate lines only in a dry run, where reviewing them is the point.
       entries: mode === 'dry_run' ? report.entries.slice(0, 200) : undefined,
     };

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "https://www.transip.eu/knowledgebase/306-creating-a-new-email-address/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "usernameForm": "Your full address, such as info@jouwdomein.nl. TransIP lists the full email address as the username for IMAP and SMTP alike.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "TransIP MCP Server: Connect TransIP Mail to Claude",
+    "description": "MCP server for TransIP email hosting. Connect the mailboxes on your domain (info@, facturen@) to Claude, ChatGPT and Cursor over IMAP at imap.transip.email:993 with the mailbox password."
+  },
+  "hero": {
+    "eyebrow": "TransIP email + AI",
+    "titleLine1": "MCP server for TransIP mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running info@, facturen@ and your own name on a domain at TransIP? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, with the password you set on the mailbox in the TransIP control panel.",
+    "answer": "Claude cannot reach a TransIP mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.transip.email on port 993, signing in with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. TransIP's knowledge base lists exactly these settings for its email hosting: imap.transip.email on 993 with SSL, smtp.transip.email on 465 with SSL, and the full address as the username on both. There is no app password and nothing to switch on. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, nothing to enable",
+    "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several mailboxes on your TransIP domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How TransIP connects: IMAP on 993 and SMTP on 465, one pair of hosts",
+    "body": "TransIP runs one mail platform for every mailbox in its email hosting, so there is no server number to look up. The incoming server is <code>imap.transip.email</code> on port 993 with SSL and the outgoing server is <code>smtp.transip.email</code> on port 465 with SSL, both with the full address as the username and the password set for that address. Both hosts answered a live TLS connection under a certificate for <code>*.transip.email</code>; port 587 with STARTTLS also works for sending, although TransIP documents 465. The IMAP server identifies itself with a short <code>IMAP4 ready</code> banner and advertises UIDPLUS, IDLE and QUOTA, and the SMTP server accepts PLAIN and LOGIN with a 37 MB message limit. The mailboxes themselves are created in the TransIP control panel under <b>Email Hosting</b>, where each gets 2 GB of storage and its own password, and that password is the one IMAP checks."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Find or set the mailbox password in the TransIP control panel",
+      "p": "Sign in to the TransIP control panel, open <b>Email Hosting</b> in the left menu and select your domain under <b>Products</b>. Each address is listed next to <b>Email boxes</b>; click one to change its password or size, or use <b>+ Add mailbox</b> to create a new one. The password you set there is the mailbox password, separate from your TransIP account login."
+    },
+    {
+      "h": "Enter the address and the password in MCPEmails",
+      "p": "Choose IMAP / SMTP and enter the full address, such as info@jouwdomein.nl, with the mailbox password. The hosts <code>imap.transip.email</code> and <code>smtp.transip.email</code> are prefilled with 993 and 465, both SSL, and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "These hosts are for TransIP email hosting, not for a cPanel or DirectAdmin package",
+      "p": "TransIP also sells web hosting with cPanel and DirectAdmin, and mailboxes created inside those panels live on that server, with the server's own host name. The <code>imap.transip.email</code> and <code>smtp.transip.email</code> pair belongs to TransIP's own email hosting, the mailboxes managed under Email Hosting in the control panel. If your address was created in cPanel or DirectAdmin, use the host that panel shows instead."
+    },
+    {
+      "h": "The mailbox password is not your TransIP account password",
+      "p": "TransIP customers sign in to the control panel with an account login, and a mailbox has a password of its own, set when it was created or changed afterwards by clicking the address under Email boxes. IMAP checks the mailbox password. A refused login on a TransIP address is almost always the account password pasted into a form that wanted the mailbox one."
+    },
+    {
+      "h": "2 GB per mailbox, and no MOVE on the server",
+      "p": "Every TransIP mailbox starts at 2 GB, with extra capacity available to order, and the server advertises QUOTA so the usage is readable. The pre-login capability list has no <code>MOVE</code> and no <code>SPECIAL-USE</code>: filing a message runs as a copy, a flag update and an expunge, and the sent, drafts and trash folders are matched by their names. If you have renamed a folder, name it when you ask for a move. <code>UIDPLUS</code> is present, so a copied message reports its new id."
+    }
+  ],
+  "limits": [
+    "The SMTP server announces a maximum message size of about 37 MB. A forward carrying larger attachments is refused at send time.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Forwards and email groups are configured in the TransIP control panel, not through IMAP, so an agent cannot create or change them."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with TransIP email?",
+      "a": "Not on its own. Claude has no built-in TransIP connector. Pointing an MCP server such as MCPEmails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the TransIP IMAP and SMTP settings?",
+      "a": "IMAP is imap.transip.email on port 993 with SSL. SMTP is smtp.transip.email on port 465 with SSL, with authentication required. The username is your full address and the password is the mailbox password. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Where do I change a TransIP mailbox password?",
+      "a": "In the TransIP control panel under Email Hosting: select the domain under Products and click the address next to Email boxes. You can change its password and size there. Changing it disconnects every mail program and MCPEmails until the new password is entered."
+    },
+    {
+      "q": "Does TransIP need an app password?",
+      "a": "No. TransIP has no app-specific password scheme for its email hosting. The mailbox password authenticates both IMAP and SMTP."
+    },
+    {
+      "q": "Is my TransIP mail stored on your servers?",
+      "a": "No. Messages are fetched live from TransIP over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your TransIP mailboxes",
+    "sub": "Connect TransIP mail in minutes. One mailbox free forever, no card required."
+  }
+}

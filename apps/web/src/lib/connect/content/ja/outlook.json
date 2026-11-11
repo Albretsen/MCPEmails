@@ -18,7 +18,7 @@
     "eyebrow": "Outlook.com + AI",
     "titleLine1": "Outlook.comをClaudeに接続、",
     "titleLine2": "そしてChatGPT、Cursor、あらゆるMCPクライアントにも",
-    "lead": "Claude純正のMicrosoft 365コネクタは職場または学校のアカウントしか受け付けません。MCPEmailsは個人のOutlook.com、Hotmail、Live、MSNの受信トレイを接続します。Microsoftでサインインして一度アクセスを承認すれば、1つのURLですべてのMCPクライアントからメールの閲覧、検索、送信、返信、予約送信、整理ができます。",
+    "lead": "Claude純正のMicrosoft 365コネクタは、個人向けプランなら個人アカウントも受け付けるようになりましたが、使えるのはClaudeの中だけで、添付ファイルは扱えません。MCPEmailsは個人のOutlook.com、Hotmail、Live、MSNの受信トレイを一度接続すれば、すべてのMCPクライアントで使えます。Microsoftでサインインしてアクセスを承認すれば、1つのURLでメールの閲覧、検索、送信、返信、予約送信、整理が、添付ファイルも含めてできます。",
     "meta0": "受信トレイ1つはずっと無料",
     "meta1": "Microsoftでサインイン、アプリ パスワード不要",
     "meta2": "メールはその場で取得、保存はしません",
@@ -76,8 +76,8 @@
       "a": "使えます。Microsoftでサインインしてoutlook.comのメールボックスをMCPEmailsに接続し、MCP URLを1つClaudeに貼り付ければ、Claudeがメールの閲覧、検索、送信、返信、転送、予約送信、振り分けをできるようになります。同じURLがChatGPT、Cursor、その他のMCPクライアントでも使えます。"
     },
     {
-      "q": "ClaudeのMicrosoft 365コネクタが私のOutlook.comアカウントを拒否するのはなぜですか？",
-      "a": "Claude内蔵のMicrosoft 365コネクタにはMicrosoft Entraテナント内の職場または学校のアカウントが必要で、Anthropicは個人のMicrosoftアカウントをサポートしないと明言しているため、Outlook.com、Hotmail、Live、MSNのアドレスは弾かれます。MCPEmailsはそうした個人アカウントを接続します。Microsoft自身のページでMicrosoftにサインインし、MCPEmailsをURL1つでカスタムコネクタとしてClaudeに追加してください。"
+      "q": "ClaudeのMicrosoft 365コネクタで私のOutlook.comアカウントは使えますか？",
+      "a": "ClaudeのFree、Pro、Max、Ultraの各プランなら使えます。Anthropicによると、個人のMicrosoftアカウントは管理者なしで接続でき、書き込みツールも含まれますが、添付ファイルは扱えません。TeamとEnterpriseのプランにはその選択肢が表示されず、職場または学校のアカウントは、Microsoft Entraテナントのグローバル管理者が先に同意する必要があります。MCPEmailsはClaudeのどのプランでも個人アカウントを接続でき、添付ファイルにも対応し、ほかのメールボックスと並べて使えます。Microsoft自身のページでMicrosoftにサインインし、MCPEmailsをURL1つでカスタムコネクタとしてClaudeに追加してください。"
     },
     {
       "q": "Hotmail、Live、MSNのアドレスでも使えますか？",

@@ -60,6 +60,7 @@ import {
   countCompanyInboxes,
 } from '@/lib/stripe/business-seats';
 import { getActiveSeasonalOffers } from '@/lib/stripe/seasonal-offer-server';
+import { keptRestartPrice, restartSubscriptionIdOrNull } from '@/lib/billing/payment-restart';
 import {
   BLACK_WEEK_2026,
   SEASONAL_OFFER_METADATA_KEY,
@@ -70,6 +71,7 @@ import {
   billingTarget,
   planCategory,
   recordCheckoutStarted,
+  recordAnnualSwitchCompleted,
   recordPassEvent,
   recordPlanChange,
   type PlanChangeDirection,
@@ -733,6 +735,18 @@ export async function runCheckout(input: {
   country?: unknown;
   quotedOffer?: unknown;
   quotedPriceId?: unknown;
+  /**
+   * The ended subscription a restart email links from (payment-restart.ts).
+   * Lets a new Personal or Pro checkout keep that subscription's price when
+   * every check there passes; otherwise ignored.
+   */
+  restartFrom?: unknown;
+  /**
+   * 'annual_switch' when the confirmed change came from the monthly-to-annual
+   * card (src/lib/billing/annual-switch.ts). Only labels the funnel row
+   * `annual_switch_completed`; it never changes what is charged.
+   */
+  source?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -893,6 +907,9 @@ async function checkoutFor(
     quotedPriceId?: unknown;
     /** Visitor country from x-vercel-ip-country; see runCheckout. */
     country?: unknown;
+    /** See runCheckout. */
+    restartFrom?: unknown;
+    source?: unknown;
   },
   options: CheckoutOptions & { allowPlanChange: boolean },
 ): Promise<CheckoutOutcome> {
@@ -1528,6 +1545,16 @@ async function checkoutFor(
         target,
         outcome: 'success',
       });
+      // The annual card's own completion row: a monthly subscription that
+      // moved to the same plan's yearly price from that card.
+      if (
+        input.source === 'annual_switch' &&
+        interval === 'year' &&
+        fromPrice?.interval === 'month' &&
+        fromPrice.planId === planId
+      ) {
+        await recordAnnualSwitchCompleted(workspace.id, planId);
+      }
 
       return {
         kind: 'changed',
@@ -1676,10 +1703,32 @@ async function checkoutFor(
   // post-decline surface of the 3-month pass) from any other.
   const cancelUrl = options.cancelUrl ?? `${appUrl}/dashboard?checkout=cancelled&plan=${planId}`;
 
+  // ── 6a. Restart after a card-failure cancel ───────────────────────────────
+  // The restart email's link names the subscription that ended. Its price is
+  // kept only when keptRestartPrice says it safely may (same customer, ended
+  // for payment_failed within the window, same plan and interval, Personal or
+  // Pro, still active in Stripe, and no dearer than today's price). Anything
+  // else sells today's price, which the email did not promise to avoid.
+  const restartFrom = restartSubscriptionIdOrNull(input.restartFrom);
+  const keptPriceId = restartFrom
+    ? await keptRestartPrice({
+        stripe,
+        stripeCustomerId: customerId,
+        subscriptionId: restartFrom,
+        planId,
+        interval,
+      })
+    : null;
+  if (keptPriceId) lineItems[0] = { price: keptPriceId, quantity: 1 };
+  const restartMetadata: Record<string, string> = restartFrom
+    ? { restart_from: restartFrom, restart_kept_price: keptPriceId ? 'yes' : 'no' }
+    : {};
+
   // ── 6b. Seasonal offer (Black Week 2026) ──────────────────────────────────
   // Annual Personal or Pro inside the window, coupon live, price unchanged,
   // and this customer has never had a subscription tagged with the offer.
-  let offer = await liveOfferFor(planId, interval);
+  // Not on a kept restart price: the restart is the old price, no discount.
+  let offer = keptPriceId ? null : await liveOfferFor(planId, interval);
   if (offer && (await hasRedeemedSeasonalOffer(customerId))) offer = null;
   const offerMetadata: Record<string, string> = offer
     ? { [SEASONAL_OFFER_METADATA_KEY]: offer.offerId }
@@ -1811,6 +1860,7 @@ async function checkoutFor(
         // session can be written in it. Allow-listed; English adds nothing.
         ...(reminderLang ? { lang: reminderLang } : {}),
         ...(recoveredFrom ? { recovered_from: recoveredFrom } : {}),
+        ...restartMetadata,
         ...(sold.founder ? { [FOUNDER_METADATA_KEY]: FOUNDER_OFFER_TAG } : {}),
         // The people a per-person Business checkout was priced for.
         ...(seatQuantity !== null ? { business_people: String(seatQuantity) } : {}),

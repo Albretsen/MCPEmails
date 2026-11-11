@@ -17,6 +17,8 @@ import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
 import { FinishSetupLink, ResetOnboardingCard } from './OnboardingEntry';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
+import { BrokenInboxBanner } from './BrokenInboxBanner';
+import { AnnualSwitchNotice } from './AnnualSwitch';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -1437,6 +1439,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
           lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
         />
+        {/* Broken-inbox alert arm only (src/lib/retention/inbox-alert.ts): every page but Inboxes. */}
+        <BrokenInboxBanner
+          enabled={serverWorkspace?.inboxAlertBanner === true}
+          route={route}
+          userRole={userRole}
+          inboxes={inboxes}
+          onReconnect={onReconnectInbox}
+          onOpenInboxes={() => setRoute("inboxes")}
+        />
         {/* The /onboarding flow, not finished yet: a way back (OnboardingEntry.jsx). */}
         <FinishSetupLink onboarding={serverWorkspace?.onboarding} />
         {cancelledPlan === 'personal' && (
@@ -1449,12 +1460,21 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         {route !== "settings" && (
           <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
         )}
+        {/* Owner on monthly, decided on the server (annual-switch.ts). */}
+        {route === "overview" && (
+          <AnnualSwitchNotice
+            annualSwitch={serverWorkspace?.annualSwitch ?? null}
+            stripePrices={stripePrices}
+            workspaceId={workspace?.id ?? null}
+            onOpenBilling={() => setRoute("settings")}
+          />
+        )}
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
           <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} heardAboutPending={serverWorkspace?.heardAboutPending === true} isOwner={serverWorkspace?.isOwner === true} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} onContactSupport={openHelpFromConnect} hiddenInboxes={serverWorkspace?.hiddenInboxes ?? []} currentUserId={user?.id ?? null} showVisibilityControl={serverWorkspace?.businessSeatPricing === true && (workspace?.plan === 'pro' || members.length > 1)} multiMember={members.length > 1} onVisibilityChanged={(id, visibility) => setInboxes(xs => xs.map(x => (x.id === id ? { ...x, visibility } : x)))} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}

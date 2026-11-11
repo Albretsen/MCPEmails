@@ -1,10 +1,10 @@
 const translation = {
   title: 'Varias cuentas de correo en Claude Cowork, incluido Outlook personal',
   description:
-    'Claude Cowork llega a una sola cuenta de Google con su conector de Gmail, y su conector de Microsoft 365 rechaza las direcciones personales de Outlook. Cómo dar a una tarea de Cowork varias bandejas de entrada, del trabajo y personales.',
+    'Claude Cowork llega a una sola cuenta de Google con su conector de Gmail y a la única cuenta de Microsoft con la que inicias sesión con su conector de Microsoft 365. Cómo dar a una tarea de Cowork varias bandejas de entrada, del trabajo y personales.',
   coverAlt:
     'Cuentas de correo del trabajo y personales, como Gmail y Outlook.com, conectadas a una misma tarea de Claude Cowork',
-  content: `**Claude Cowork usa los mismos conectores que el chat de Claude, así que tiene los mismos límites de correo: una cuenta de Google con el conector de Gmail, y solo cuentas de trabajo de Microsoft 365 con el conector de Microsoft 365.** Una dirección personal de Outlook.com o Hotmail, un segundo Gmail o un buzón de empresa en un servidor IMAP necesitan un conector personalizado. Con un servidor MCP como MCPEmails, un solo conector personalizado da a una tarea de Cowork todos los buzones que conectes, cada uno por su nombre.
+  content: `**Claude Cowork usa los mismos conectores que el chat de Claude, así que tiene los mismos límites de correo: una cuenta de Google con el conector de Gmail, y una cuenta de Microsoft con el conector de Microsoft 365, que acepta una cuenta personal de Outlook.com solo en los planes Free, Pro, Max y Ultra.** Un segundo Gmail, una dirección personal de Outlook.com o Hotmail en un plan Team o Enterprise, un buzón de empresa en un servidor IMAP o el envío con adjuntos necesitan un conector personalizado. Con un servidor MCP como MCPEmails, un solo conector personalizado da a una tarea de Cowork todos los buzones que conectes, cada uno por su nombre.
 
 **Ir a:** [Conectores integrados](#hasta-dónde-llegan-los-conectores-de-correo-integrados-de-cowork) · [Varias bandejas](#varias-bandejas-de-entrada-en-una-misma-tarea-de-cowork) · [Configuración](#configúralo) · [Permisos](#mantén-el-envío-bajo-tu-control) · [Preguntas frecuentes](#preguntas-frecuentes)
 
@@ -13,7 +13,7 @@ const translation = {
 La [guía de Cowork](https://support.claude.com/en/articles/13345190-get-started-with-cowork) de Anthropic gestiona los conectores desde la misma página **Customize → Connectors** que el chat, y el chat y Cowork comparten ahora un mismo espacio en la app de Claude. Lo que tenga conectado tu cuenta de Claude es lo que puede usar una tarea de Cowork.
 
 - **Gmail.** El conector de Gmail de Claude lee, busca, redacta borradores y envía. El [artículo de Anthropic](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) habla del acceso a "la cuenta de Google que has conectado" y no dice nada sobre añadir una segunda. Con él, un Gmail personal y uno del trabajo no conviven.
-- **Microsoft 365.** El [conector de Microsoft 365](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) es para cuentas del inquilino (tenant) de Microsoft 365 de una empresa. Primero tiene que dar su consentimiento un administrador global, empieza en solo lectura, y las cuentas personales de Microsoft, como @outlook.com y @hotmail.com, quedan excluidas.
+- **Microsoft 365.** El [conector de Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) acepta una cuenta de trabajo o educativa, en la que primero tiene que dar su consentimiento un administrador global y empieza en solo lectura, o bien, en los planes Free, Pro, Max y Ultra, una cuenta personal de Microsoft como @outlook.com o @hotmail.com sin ningún administrador. A los planes Team y Enterprise no se les muestra la opción personal, y las herramientas de escritura rechazan los adjuntos.
 - **Todo lo demás.** Yahoo, iCloud, Fastmail, Zoho, IONOS o tu propio servidor de correo no tienen un conector integrado en Claude.
 
 Así que la combinación habitual, un buzón del trabajo más un Outlook.com personal o un segundo Gmail, no cabe en Cowork solo con los conectores integrados.
@@ -72,7 +72,7 @@ Para recibir el mismo resumen cada mañana sin pedirlo, programa el primer promp
 No con el conector de Gmail integrado en Claude, que según Anthropic llega a la única cuenta de Google que conectaste. Conecta las dos cuentas a MCPEmails con contraseñas de aplicación de Google y añade MCPEmails como conector personalizado; así una tarea de Cowork ve las dos.
 
 **¿Puede Cowork leer mi correo personal de Outlook.com o Hotmail?**
-No con el conector de Microsoft 365 de Claude, que rechaza las cuentas personales de Microsoft. Conecta la dirección a MCPEmails con Iniciar sesión con Microsoft y luego añade MCPEmails a Claude. [Cómo conectar Claude con Outlook.com y Hotmail](/blog/connect-claude-to-outlook-com-hotmail) tiene los pasos.
+En Free, Pro, Max o Ultra, sí, con el conector de Microsoft 365 de Claude, sin adjuntos. En un plan Team o Enterprise, o si quieres adjuntos y otros buzones junto a él, conecta la dirección a MCPEmails con Iniciar sesión con Microsoft y luego añade MCPEmails a Claude. [Cómo conectar Claude con Outlook.com y Hotmail](/blog/connect-claude-to-outlook-com-hotmail) tiene los pasos.
 
 **¿Funcionan los conectores personalizados en Cowork?**
 Sí. Anthropic indica que los conectores personalizados están disponibles en Claude, Cowork y Claude Desktop. Tienen que ser servidores remotos accesibles desde internet; un servidor local del archivo de configuración de escritorio no está disponible en Cowork.

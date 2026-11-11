@@ -57,7 +57,7 @@ Todas as caixas que você conectou estão disponíveis agora. O [guia do Claude]
 
 ## Adicionar ao ChatGPT
 
-O ChatGPT Go e os planos pagos podem adicionar um servidor MCP personalizado em chatgpt.com no navegador; o app para celular não consegue. No Business e no Enterprise, um administrador ou proprietário pode precisar adicioná-lo.
+Um plano pago do ChatGPT pode adicionar um servidor MCP personalizado em chatgpt.com no navegador; o app para celular não consegue. A página de ajuda da OpenAI lista Business e Enterprise/Edu, em que um administrador ou proprietário o adiciona para o espaço de trabalho, e ferramentas de leitura e busca apenas no Pro; Go e Plus não são mencionados.
 
 1. Abra **Plugins**, depois **Personal** (Pessoais), clique em **Add** (Adicionar) no canto superior direito e escolha **Adicionar servidor MCP personalizado**.
 2. Dê o nome MCPEmails, cole \`https://mcpemails.com/api/mcp\` em **Conexão**, escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.

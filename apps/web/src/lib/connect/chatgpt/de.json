@@ -1,7 +1,7 @@
 {
   "eyebrow": "ChatGPT",
   "title": "{provider} in ChatGPT nutzen",
-  "sub": "ChatGPT erreicht {provider} über einen benutzerdefinierten MCP-Server, den Sie auf chatgpt.com mit ChatGPT Go oder einem kostenpflichtigen Tarif hinzufügen.",
+  "sub": "ChatGPT erreicht {provider} über einen benutzerdefinierten MCP-Server, den Sie auf chatgpt.com mit einem kostenpflichtigen Tarif hinzufügen.",
   "steps": [
     "Verbinden Sie {provider} mit den Schritten oben mit MCPEmails.",
     "Öffnen Sie auf chatgpt.com Plugins, Persönlich, klicken Sie auf „Hinzufügen“ und dann auf „Benutzerdefinierten MCP-Server hinzufügen“.",
@@ -12,7 +12,7 @@
   "blogLink": "So verbinden Sie ChatGPT mit Ihrem E-Mail-Postfach",
   "faqQ": "Kann ChatGPT meine E-Mails bei {provider} lesen?",
   "faqQMailName": "Kann ChatGPT meine E-Mails bei {provider} lesen?",
-  "faqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Fügen Sie auf chatgpt.com einen benutzerdefinierten MCP-Server mit der URL https://mcpemails.com/api/mcp und OAuth-Anmeldung hinzu. Das geht mit ChatGPT Go und den kostenpflichtigen Tarifen. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert.",
+  "faqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Fügen Sie auf chatgpt.com einen benutzerdefinierten MCP-Server mit der URL https://mcpemails.com/api/mcp und OAuth-Anmeldung hinzu. Dafür brauchen Sie einen kostenpflichtigen Tarif: Die Hilfeseite von OpenAI nennt Business und Enterprise/Edu für die volle Unterstützung und Pro für reine Lese-Tools. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert.",
   "directorySub": "ChatGPT erreicht {provider} über die App Any Mailbox von MCPEmails.",
   "directorySteps": [
     "Verbinden Sie {provider} mit den Schritten oben mit MCPEmails.",

@@ -1,5 +1,6 @@
 -- ============================================================
--- Marketing email consent (20260929100000_marketing_consent.sql)
+-- Marketing email consent (20260929100000_marketing_consent.sql,
+-- 20261111120000_marketing_consent_v2.sql)
 -- ============================================================
 -- Proves the three things the consent record has to be worth anything:
 --   1. It is written only when the signup metadata says the box was ticked,
@@ -13,7 +14,7 @@
 
 BEGIN;
 
-SELECT plan(26);
+SELECT plan(29);
 
 -- ================================================================
 -- 0. Seed through auth.users, exactly like GoTrue does, so the real
@@ -59,7 +60,17 @@ INSERT INTO auth.users (
   ('a7000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'false@consent-test.invalid',
    'x', now(), now(), now(), '{"provider":"email","providers":["email"]}',
-   '{"marketing_consent":false,"marketing_consent_version":"signup_checkbox_v1"}')
+   '{"marketing_consent":false,"marketing_consent_version":"signup_checkbox_v1"}'),
+  -- ticked the v2 wording, password signup
+  ('a7000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'tickedv2@consent-test.invalid',
+   'x', now(), now(), now(), '{"provider":"email","providers":["email"]}',
+   '{"marketing_consent":true,"marketing_consent_version":"signup_checkbox_v2"}'),
+  -- OAuth signup that will carry the v2 cookie
+  ('a7000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'oauthv2@consent-test.invalid',
+   'x', now(), now(), now(), '{"provider":"google","providers":["google"]}',
+   '{}')
 ON CONFLICT DO NOTHING;
 
 -- ================================================================
@@ -76,6 +87,12 @@ SELECT is(
   (SELECT marketing_consent_source FROM public.users WHERE id = 'a7000000-0000-0000-0000-000000000001'),
   'signup_checkbox_v1',
   '[signup] ticked box records the wording version'
+);
+
+SELECT is(
+  (SELECT marketing_consent_source FROM public.users WHERE id = 'a7000000-0000-0000-0000-000000000008'),
+  'signup_checkbox_v2',
+  '[signup] the v2 wording is accepted and recorded'
 );
 
 SELECT is(
@@ -241,6 +258,12 @@ SELECT is(
   '[rpc] an account older than the signup window gets nothing'
 );
 
+SELECT is(
+  public.record_signup_marketing_consent('a7000000-0000-0000-0000-000000000009'::uuid, 'signup_checkbox_v2'),
+  true,
+  '[rpc] the v2 cookie records consent for a new OAuth account'
+);
+
 SELECT lives_ok(
   $$UPDATE public.users SET unsubscribed_categories = ARRAY['lifecycle']
      WHERE id = 'a7000000-0000-0000-0000-000000000005'$$,
@@ -253,6 +276,12 @@ SELECT ok(
   (SELECT marketing_consent_at = now() AND marketing_consent_source = 'signup_checkbox_v1'
      FROM public.users WHERE id = 'a7000000-0000-0000-0000-000000000005'),
   '[rpc] the recorded timestamp is now() and the version is stored'
+);
+
+SELECT is(
+  (SELECT marketing_consent_source FROM public.users WHERE id = 'a7000000-0000-0000-0000-000000000009'),
+  'signup_checkbox_v2',
+  '[rpc] the v2 version is stored'
 );
 
 SELECT ok(

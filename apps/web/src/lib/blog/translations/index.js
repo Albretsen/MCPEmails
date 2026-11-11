@@ -214,6 +214,10 @@ import t201 from './manage-multiple-email-accounts-with-ai/ja';
 import t202 from './inbox-zero-with-ai-claude/ja';
 import t203 from './how-to-give-your-ai-agent-email-access/ja';
 import t204 from './prevent-duplicate-ai-agent-email-sends/ja';
+import t205 from './connect-any-email-to-claude-and-chatgpt/nb';
+import t206 from './connect-any-email-to-claude-and-chatgpt/es';
+import t207 from './connect-any-email-to-claude-and-chatgpt/fr';
+import t208 from './connect-any-email-to-claude-and-chatgpt/de';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -255,6 +259,7 @@ const TRANSLATIONS = {
   'chatgpt-icloud-mail-plugin': { pt: t175, de: t186, ja: t197 },
   'connect-chatgpt-to-outlook-com-hotmail': { pt: t178, de: t189, ja: t200 },
   'prevent-duplicate-ai-agent-email-sends': { pt: t182, de: t193, ja: t204 },
+  'connect-any-email-to-claude-and-chatgpt': { nb: t205, es: t206, fr: t207, de: t208 },
 };
 
 export default TRANSLATIONS;

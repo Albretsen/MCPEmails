@@ -19,6 +19,7 @@
  * already paused must never get the paid plan for free when a flag goes off.
  */
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
+import { planEndingLinksOn } from '@/lib/billing/plan-action-links';
 
 function envOn(name: string): boolean {
   const raw = (process.env[name] ?? '').trim().toLowerCase();
@@ -46,4 +47,13 @@ export function parkOnCancelEnabledFor(email: string | null | undefined): boolea
 /** The flag alone, without the internal-account check (no email needed). */
 export function parkOnCancelFlagOn(): boolean {
   return envOn('BILLING_PARK_ON_CANCEL_ENABLED');
+}
+
+/**
+ * "Keep my plan" (POST /api/billing/keep and the billing card's banner): on
+ * with PLAN_ENDING_REMINDER_ENABLED=on, because that is when emails start
+ * linking to it. Internal accounts always, so dry_run can be walked end to end.
+ */
+export function keepPlanEnabledFor(email: string | null | undefined): boolean {
+  return planEndingLinksOn() || isInternalAccount(email ?? null);
 }

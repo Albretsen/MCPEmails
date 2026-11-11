@@ -105,6 +105,10 @@
     "paymentIssueDeclinedCta": "Zahlung aktualisieren",
     "paymentIssueConfirm": "Ihre Bank möchte, dass Sie die letzte Zahlung bestätigen. Ihr Plan bleibt aktiv.",
     "paymentIssueConfirmCta": "Zahlung bestätigen",
+    "inboxAlertOne": "{address} muss neu verbunden werden. Die Anmeldung funktioniert nicht mehr, daher kann Ihre KI-App dort nichts lesen, entwerfen oder senden.",
+    "inboxAlertMany": "{count} Postfächer müssen neu verbunden werden. Die Anmeldung funktioniert nicht mehr, daher kann Ihre KI-App sie nicht nutzen.",
+    "inboxAlertReconnect": "Neu verbinden",
+    "inboxAlertOpenInboxes": "Postfächer öffnen",
     "inviteSentNotDelivered": "Einladung für {email} erstellt, aber die E-Mail konnte nicht gesendet werden. Nutzen Sie bei der offenen Einladung „Erneut senden“.",
     "inviteResent": "Einladung erneut an {email} gesendet.",
     "inviteResendFailed": "Die Einladung konnte nicht erneut gesendet werden.",
@@ -137,7 +141,8 @@
     "openSearch": "Suche öffnen (Befehlstaste K)",
     "navWorkflows": "Workflows",
     "navAutomations": "Automatisierungen",
-    "navInvite": "Freunde einladen"
+    "navInvite": "Freunde einladen",
+    "invitePromo": "Einen Monat schenken, einen Monat bekommen"
   },
   "topbar": {
     "mcpLabel": "MCP-Endpunkt",
@@ -640,6 +645,16 @@
     "switchCta": "Zur jährlichen Abrechnung wechseln",
     "switchBusy": "Wird vorbereitet...",
     "ended": "Das Black-Week-Angebot ist vorbei, daher wurde nichts abgebucht. Die Beträge oben sind der reguläre Preis."
+  },
+  "annualSwitch": {
+    "title": "Zur jährlichen Abrechnung wechseln",
+    "body": "Zahlen Sie {plan} einmal im Jahr und sparen Sie {percent} % gegenüber monatlicher Zahlung.",
+    "current": "Die ungenutzten Tage Ihres laufenden Monats werden gutgeschrieben, daher ist die heutige Abbuchung etwas niedriger als ein ganzes Jahr. Sie sehen den genauen Betrag, bevor etwas abgebucht wird.",
+    "cta": "Zu jährlich wechseln",
+    "busy": "Wird vorbereitet...",
+    "noticeBody": "Sie zahlen {plan} monatlich. Die jährliche Abrechnung kostet {percent} % weniger.",
+    "noticeCta": "Jährliche Abrechnung ansehen",
+    "close": "Schließen"
   },
   "founder": {
     "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",

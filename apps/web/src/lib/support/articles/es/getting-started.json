@@ -198,7 +198,7 @@
         "En un chat, escribe @ y elige MCPEmails. Vuelve a elegirlo cuando una pregunta de seguimiento necesite tu correo."
       ],
       "body": [
-        "Funciona en el navegador, en chatgpt.com, con ChatGPT Go o un plan de pago; la app móvil no permite añadirlo. En Business y Enterprise puede que un administrador o propietario tenga que añadirlo."
+        "Funciona en el navegador, en chatgpt.com, con un plan de pago; la app móvil no permite añadirlo. La página de ayuda de OpenAI indica Business y Enterprise/Edu, donde lo añade un administrador o propietario para el espacio de trabajo, y acceso de solo lectura en Pro."
       ],
       "links": [
         {

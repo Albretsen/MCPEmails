@@ -30,7 +30,7 @@
       "step3": "Choisissez OAuth, cochez « I understand and want to continue », puis cliquez sur « Create as a plugin ».",
       "step4": "Connectez-vous avec MCPEmails pour autoriser. Aucune clé API nécessaire.",
       "step5": "Dans une conversation, tapez @ et choisissez MCPEmails. Ce choix ne vaut que pour ce message : mentionnez-le à nouveau avec @ quand une question de suivi porte sur vos e-mails.",
-      "note": "Les serveurs MCP personnalisés peuvent être ajoutés avec ChatGPT Go et les offres payantes. Sur Business et Enterprise, il faut parfois qu'un administrateur ou un propriétaire l'ajoute."
+      "note": "OpenAI propose les serveurs MCP personnalisés pour les espaces de travail Business et Enterprise/Edu, avec un accès en lecture seule sur Pro, sur chatgpt.com. Sur Business et Enterprise, il faut parfois qu'un administrateur ou un propriétaire l'ajoute."
     },
     "cursor": {
       "step1": "Modifiez ~/.cursor/mcp.json (global) ou .cursor/mcp.json (projet).",
@@ -123,6 +123,25 @@
     "itWorksDesc": "Votre app d'IA vient de faire son premier appel à MCPEmails. Continuez dans la même conversation.",
     "waitingLive": "Cette page se met à jour toute seule dès que le premier appel arrive.",
     "waitingStopped": "Toujours aucun appel. Rechargez cette page après avoir essayé un prompt."
+  },
+  "heardAbout": {
+    "title": "Comment avez-vous connu MCPEmails ?",
+    "sub": "Un clic nous aide à savoir où l'on nous découvre. Facultatif.",
+    "dismiss": "Fermer",
+    "send": "Envoyer",
+    "otherLabel": "Où avez-vous entendu parler de MCPEmails ?",
+    "otherPlaceholder": "Dites-nous où (facultatif)",
+    "options": {
+      "chatgpt": "Réponse de ChatGPT",
+      "claude": "Réponse de Claude",
+      "gemini": "Réponse de Gemini ou de l'IA de Google",
+      "google_search": "Recherche Google",
+      "colleague": "Un collègue ou un ami",
+      "directory": "Annuaire d'apps ou liste MCP",
+      "video": "YouTube ou vidéo",
+      "forum": "Reddit ou un forum",
+      "other": "Autre"
+    }
   },
   "firstWeek": {
     "title": "Votre première semaine",
@@ -970,7 +989,11 @@
       "freeConfirm": "Passer à Free",
       "freeBody": "Votre abonnement reste actif jusqu'au {date}, déjà payé. Ensuite, le compte passe à Free. Rien n'est supprimé.",
       "freeToast": "C’est fait. Votre abonnement reste actif jusqu'au {date}, puis passe à Free.",
-      "pendingCheckout": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule."
+      "pendingCheckout": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule.",
+      "endsBanner": "Votre forfait {plan} se termine le {date}. Rien n'est supprimé.",
+      "keepMyPlan": "Garder mon forfait",
+      "keepPlanBody": "La fin programmée est retirée. {plan} continue et se renouvelle le {date} pour {amount}, comme avant. Rien n'est facturé aujourd'hui.",
+      "keepPlanToast": "Votre forfait {plan} continue."
     },
     "cancelReason": {
       "prompt": "Vous avez résilié votre abonnement. Si vous voulez nous dire pourquoi, un clic suffit.",

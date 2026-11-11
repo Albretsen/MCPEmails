@@ -15,7 +15,7 @@ Los dos asistentes traen sus propios conectores de correo, y han avanzado rápid
 - **ChatGPT.** Desde finales de agosto de 2026, sus propios plugins de Gmail, Google Calendar y Google Contacts admiten más de una cuenta en Plus, Pro, Business y Enterprise, así que un Gmail personal y uno del trabajo pueden estar en la misma conversación. En septiembre, OpenAI extendió las cuentas múltiples a otros plugins. Si todos tus buzones son cuentas de Google, puede que el plugin propio de ChatGPT sea todo lo que necesitas.
 - **Claude.** El centro de ayuda de Anthropic describe que el conector de Gmail llega a «the Google account you've connected», es decir, a la cuenta de Google que has conectado. Una cuenta de Google por conexión.
 
-Lo que ninguno de los dos está pensado para cubrir es el buzón que una empresa usa de verdad en su propio dominio cuando ese dominio no está en Google ni en Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, un hosting con cPanel o tu propio servidor. Esos hablan IMAP y SMTP, y para llegar a ellos hace falta algo que hable IMAP.
+Lo que ninguno de los dos está pensado para cubrir es el buzón que una empresa usa de verdad en su propio dominio cuando ese dominio no está en Google ni en Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, un hosting con cPanel o tu propio servidor. Esos hablan IMAP y SMTP, y para llegar a ellos hace falta algo que hable IMAP. [Cómo conectar cualquier cuenta de correo a Claude o ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) recorre todas las vías, incluidos los demás servicios alojados y los autoalojados.
 
 ## Un solo conector para todos los buzones
 
@@ -57,7 +57,7 @@ Todos los buzones que conectaste quedan disponibles. La [guía de Claude](/blog/
 
 ## Añádelo a ChatGPT
 
-ChatGPT Go y los planes de pago pueden añadir un servidor MCP personalizado en chatgpt.com desde un navegador; la app móvil no permite añadirlo. En Business y Enterprise, puede que tenga que añadirlo un administrador o propietario.
+Un plan de pago de ChatGPT puede añadir un servidor MCP personalizado en chatgpt.com desde un navegador; la app móvil no permite añadirlo. La página de ayuda de OpenAI nombra Business y Enterprise/Edu, donde un administrador o propietario lo añade para el espacio de trabajo, y herramientas de lectura y obtención solo en Pro; Go y Plus no se mencionan.
 
 1. Abre **Plugins**, luego **Personal**, haz clic en **Add** arriba a la derecha y elige **Add custom MCP server**.
 2. Llámalo MCPEmails, pega \`https://mcpemails.com/api/mcp\` en **Connection**, elige **OAuth**, marca **I understand and want to continue** y haz clic en **Create as a plugin**.

@@ -1,104 +1,103 @@
 {
   "_sources": [
-    "https://webmail.sfr.fr/",
-    "https://actuneuf.com/sfr/internet/imap",
-    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
-    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/problemes-acces-boite-email-sfr.html",
+    "https://webmail.sfr.fr/"
   ],
   "auth": {
-    "method": "mail-password",
-    "label": "Mot de passe SFR Mail",
-    "helpUrl": "https://webmail.sfr.fr/",
-    "usernameForm": "Votre adresse complète, domaine compris : prenom.nom@sfr.fr.",
+    "method": "account-password",
+    "label": "Mot de passe SFR",
+    "helpUrl": "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "usernameForm": "Votre adresse SFR complète, prenom.nom@sfr.fr, ou la même forme en @neuf.fr, @cegetel.net, @club-internet.fr, @9online.fr ou @9business.fr.",
     "status": "active"
   },
   "meta": {
     "title": "Paramètres IMAP SFR Mail et accès MCP pour Claude",
-    "description": "Connectez une boîte SFR Mail à Claude, Cursor et tout client MCP sur imap.sfr.fr:993. Le mot de passe SFR Mail est distinct de celui de votre Espace Client."
+    "description": "Connectez une boîte SFR Mail à Claude, Cursor et tout client MCP sur imap.sfr.fr:993 avec votre adresse et votre mot de passe SFR, tels que SFR les documente. TLS 1.2 ou 1.3 requis."
   },
   "hero": {
     "eyebrow": "SFR Mail + IA",
     "titleLine1": "Connectez votre boîte SFR",
     "titleLine2": "à Claude, Cursor, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte SFR. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe propre à la boîte, et non celui de votre compte client.",
-    "answer": "Claude ne peut pas accéder seul à une boîte SFR. MCPEmails est un serveur MCP hébergé qui la connecte via IMAP sur imap.sfr.fr, port 993, en s'authentifiant avec votre adresse sfr.fr complète et votre mot de passe SFR Mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. L'identifiant est le point de défaillance à connaître d'avance : SFR Mail a son propre mot de passe, distinct de celui de votre Espace Client, et changer l'un ne change pas l'autre. Une boîte est gratuite, pour toujours.",
+    "lead": "Donnez à votre agent IA une vraie boîte SFR. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP avec l'adresse et le mot de passe SFR que vous utilisez déjà pour le Webmail SFR.",
+    "answer": "Claude ne peut pas atteindre seul une boîte SFR. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.sfr.fr, port 993, en s'authentifiant avec votre adresse sfr.fr complète et votre mot de passe SFR, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. La page d'assistance de SFR liste exactement ces serveurs pour toutes les boîtes @sfr.fr, @neuf.fr, @cegetel.net et @9online.fr : imap.sfr.fr sur 993 et smtp.sfr.fr sur 465 en SSL/TLS, TLS 1.2 ou 1.3, l'adresse complète comme nom de compte et votre mot de passe normal. Aucun mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe SFR Mail, pas celui de l'Espace Client",
-    "meta2": "E-mails récupérés en direct, jamais stockés"
+    "meta1": "Votre mot de passe SFR, TLS 1.2 ou 1.3",
+    "meta2": "Courrier lu en direct, jamais stocké"
   },
   "method": {
-    "title": "Comment SFR se connecte : IMAP, et un mot de passe propre à la boîte",
-    "body": "SFR sert IMAP sur <code>imap.sfr.fr</code>, port 993 en TLS implicite, et la soumission SMTP sur <code>smtp.sfr.fr</code>, port 465, avec authentification obligatoire. Les deux serveurs ont été confirmés via une connexion TLS réelle et sont communs à toutes les boîtes SFR ; il n'y a rien de régional ni de propre au client à rechercher. Ce qui est spécifique à SFR, c'est le modèle d'identifiants. L'Espace Client sur sfr.fr et SFR Mail sont deux comptes avec deux mots de passe. Vous pouvez leur donner la même valeur, mais ils restent indépendants : changer le mot de passe de l'Espace Client laisse celui de la boîte intact et un client de messagerie continue de fonctionner, tandis que changer le mot de passe de la boîte déconnecte tous les clients sans toucher à l'Espace Client. Le mot de passe de la boîte se modifie dans SFR Mail lui-même, dans la section des réglages consacrée à la configuration de vos boîtes, et non dans l'espace client."
+    "title": "Comment SFR se connecte : IMAP sur 993, SMTP sur 465, un seul mot de passe SFR",
+    "body": "SFR documente ses serveurs sur la page d'assistance consacrée à la configuration d'un logiciel de messagerie. Pour l'envoi, <code>smtp.sfr.fr</code> sur le port 465 en SSL/TLS ou 587 en STARTTLS, avec TLS 1.2 ou 1.3 ; pour la réception en IMAP, <code>imap.sfr.fr</code> sur le port 993 en TLS 1.2, 1.3 ou SSL/TLS. Les deux hôtes ont été confirmés par une connexion TLS réelle et sont partagés par toutes les boîtes SFR : rien de régional ni de propre à chaque client à chercher. Le nom de compte est l'adresse complète, l'exemple de SFR étant prenom.nom@sfr.fr ; le mot de passe est décrit simplement comme normal, celui que vous utilisez pour le Webmail SFR, dont SFR dit qu'il est déjà configuré avec vos identifiants de l'Espace Client. SFR ajoute une exigence à noter : le Webmail ne supporte plus SSL ni TLS 1.0 et 1.1, et il demande aux utilisateurs de logiciels de messagerie de passer à TLS 1.2 ou 1.3. MCPEmails ne se connecte qu'en TLS 1.2 ou plus récent, la condition est donc remplie. Une bizarrerie de la page SFR : sous le titre IMAP, elle recopie un exemple Numericable avec @numericable.fr comme nom de compte. Pour une adresse SFR, le nom de compte est l'adresse SFR elle-même ; les serveurs Numericable font l'objet d'une section à part pour les boîtes @numericable.fr et @noos.fr."
   },
   "setup": [
     {
-      "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur MCPEmails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte pour toujours et ne demande pas de carte."
     },
     {
-      "h": "Vérifiez ou réinitialisez le mot de passe SFR Mail dans le webmail",
-      "p": "Connectez-vous sur webmail.sfr.fr avec l'adresse à connecter. Ouvrez les réglages (l'icône outils ou le menu <b>Réglages</b> en haut à droite), puis la section de configuration de vos boîtes (<b>Configuration de mes boîtes mails</b>). C'est là que se trouve le changement de mot de passe. C'est cet identifiant que vérifie le serveur IMAP, et ce n'est pas celui que vous saisissez dans l'Espace Client sur sfr.fr."
+      "h": "Vérifiez d'abord l'adresse et le mot de passe dans le Webmail SFR",
+      "p": "Connectez-vous sur webmail.sfr.fr avec l'adresse complète à connecter et votre mot de passe SFR. Le conseil de dépannage de SFR est le même : l'identifiant est votre adresse e-mail SFR, et un logiciel de messagerie refusé doit d'abord être vérifié face au Webmail. Si le Webmail vous refuse aussi, réinitialisez le mot de passe depuis l'Espace Client avant d'aller plus loin."
     },
     {
-      "h": "Envisagez de donner à l'agent une adresse secondaire",
-      "p": "SFR permet à un abonné de créer des adresses et alias supplémentaires depuis le même écran de configuration des boîtes, en plus de l'adresse principale fournie avec la ligne. Si vous préférez ne pas confier à un agent l'adresse à laquelle tous vos contacts écrivent, créez-en une seconde et connectez-la. Les serveurs et ports sont les mêmes."
+      "h": "Attention au domaine et à la version de TLS",
+      "p": "Les mêmes serveurs servent les adresses @sfr.fr, @neuf.fr, @cegetel.net, @club-internet.fr, @9online.fr et @9business.fr. Une boîte @numericable.fr ou @noos.fr utilise à la place imap.numericable.fr et smtps.numericable.fr, de la section Numericable de la page SFR. Ce qui se connecte doit parler TLS 1.2 ou 1.3, ce que fait MCPEmails."
     },
     {
       "h": "Ajoutez la boîte dans MCPEmails",
-      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@sfr.fr, et collez le mot de passe SFR Mail. Les serveurs et ports SFR sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@sfr.fr, et votre mot de passe SFR. Les hôtes et ports SFR sont préremplis et ont été vérifiés par une connexion TLS réelle. Puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],
   "gotchas": [
     {
-      "h": "Le mot de passe de l'Espace Client et celui de SFR Mail sont deux choses différentes",
-      "p": "C'est l'échec SFR qui fait perdre le plus de temps, car les deux identifiants appartiennent à la même personne, tous deux s'appellent couramment <b>mot de passe SFR</b>, et l'un comme l'autre peut être saisi dans un client de messagerie sans erreur explicite. Ce sont des comptes indépendants : changer l'un ne change pas l'autre, même si vous leur avez volontairement donné la même valeur par le passé et les croyez toujours synchronisés. Quand un client est refusé à la connexion, allez dans SFR Mail et réinitialisez-y le mot de passe de la boîte, puis utilisez exactement cette valeur dans MCPEmails."
+      "h": "SFR bloque une boîte après trop d'échecs de connexion, et après six mois sans usage",
+      "p": "La page de SFR sur les problèmes d'accès liste ce qui fait bloquer une boîte SFR : trop de tentatives de connexion infructueuses, trop d'e-mails envoyés en peu de temps, ou des envois depuis plusieurs adresses IP en peu de temps, et elle ajoute qu'une adresse non utilisée au cours des six derniers mois peut être bloquée aussi. Un logiciel de messagerie qui réessaie un mauvais mot de passe correspond exactement au premier cas. Le remède de SFR est de changer le mot de passe et de saisir le nouveau sur chaque appareil, navigateur et logiciel. Assurez-vous donc du mot de passe dans le Webmail avant de laisser un client, MCPEmails compris, l'essayer à répétition."
     },
     {
-      "h": "Pas de SASL-IR, donc un client qui le suppose reçoit un BAD sec",
-      "p": "La bannière IMAP de SFR est on ne peut plus courte (<code>* OK IMAP4 ready</code>) et n'annonce pas <code>SASL-IR</code>. Le serveur rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>, en répondant un <code>BAD</code> sans précision, impossible à distinguer de mauvais identifiants. Avec la confusion de mots de passe décrite plus haut, la combinaison est particulièrement peu utile : les deux causes les plus probables d'un échec de connexion SFR produisent le même message. MCPEmails détecte le <code>BAD</code> et relance l'échange en deux étapes, donc cette moitié-là est déjà gérée pour vous."
+      "h": "Pas de SASL-IR : un client qui le suppose reçoit un BAD nu",
+      "p": "La bannière IMAP de SFR est des plus courtes (<code>* OK IMAP4 ready</code>) et n'annonce pas <code>SASL-IR</code>. Le serveur refuse donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>, en répondant par un <code>BAD</code> sans précision, impossible à distinguer de mauvais identifiants. MCPEmails détecte le <code>BAD</code> et relance l'échange en deux étapes : cette moitié est gérée pour vous, mais c'est pourquoi d'autres outils IMAP échouent face à SFR avec un message sur le mot de passe."
     },
     {
       "h": "L'envoi est plafonné à 20 Mo, ce qui est bas pour un FAI français",
-      "p": "<code>smtp.sfr.fr</code> annonce une taille maximale de message de 20 971 520 octets. C'est la taille encodée du message entier, et le base64 gonfle une pièce jointe d'environ un tiers, donc un fichier de plus d'environ 15 Mo sur disque ne passera pas. Un agent à qui l'on demande de transférer une grosse pièce jointe reçoit un refus SMTP ferme au moment de la soumission, et non un envoi lent ou un rebond plus tard."
+      "p": "<code>smtp.sfr.fr</code> annonce une taille maximale de message de 20 971 520 octets. C'est la taille encodée du message entier, et base64 gonfle une pièce jointe d'environ un tiers : un fichier de plus de 15 Mo environ sur disque ne passera pas. Un agent à qui l'on demande de transférer une grosse pièce jointe reçoit un refus SMTP net à la soumission, plutôt qu'un envoi lent ou un rebond plus tard. SFR suspend aussi l'envoi d'une boîte qui envoie trop et trop vite ; un envoi en masse doit donc être rythmé."
     },
     {
-      "h": "Ni IDLE, ni MOVE, ni SPECIAL-USE, sur une boîte aux dossiers en français",
-      "p": "Le serveur n'en annonce aucun. Sans <code>IDLE</code>, le nouveau courrier est découvert par interrogation périodique plutôt que poussé sur une connexion ouverte. Sans <code>MOVE</code>, le classement passe par une copie, une mise à jour de drapeau et un expunge. Sans <code>SPECIAL-USE</code>, Envoyés, Brouillons et Corbeille sont reconnus par leur nom, et une boîte SFR les nomme généralement <b>Envoyés</b>, <b>Brouillons</b> et <b>Corbeille</b>. Le serveur propose en revanche <code>UIDPLUS</code>, donc au moins un message copié renvoie son nouvel UID et n'a pas à être retrouvé par une recherche."
+      "h": "Ni IDLE, ni MOVE, ni SPECIAL-USE sur une boîte aux dossiers en français",
+      "p": "Le serveur n'en annonce aucun. Sans <code>IDLE</code>, le nouveau courrier est détecté par interrogation plutôt que poussé sur une connexion ouverte. Sans <code>MOVE</code>, le classement s'effectue par une copie, une mise à jour de drapeau et un expunge. Sans <code>SPECIAL-USE</code>, Envoyés, Brouillons et Corbeille sont identifiés par leur nom, et une boîte SFR les appelle généralement <b>Envoyés</b>, <b>Brouillons</b> et <b>Corbeille</b>. Il propose en revanche <code>UIDPLUS</code> : un message copié renvoie au moins son nouvel UID et n'a pas à être retrouvé par recherche."
     }
   ],
   "limits": [
-    "Le plafond de soumission de 20 Mo est la limite pratique de tout ce que votre agent envoie depuis cette boîte.",
-    "Sans IDLE, une consigne comme préviens-moi dès qu'une réponse arrive dépend de la fréquence d'interrogation de la boîte plutôt que de la vitesse de distribution de SFR.",
-    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers."
+    "Le plafond d'envoi de 20 Mo est la limite pratique de tout ce que votre agent envoie depuis cette boîte.",
+    "Sans IDLE, une instruction comme préviens-moi dès qu'une réponse arrive dépend de la fréquence d'interrogation de la boîte, pas de la vitesse de livraison de SFR.",
+    "Comme le serveur ne gère pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec SFR Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur SFR intégré. Pointer un serveur MCP comme MCPEmails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+      "a": "Pas seul. Claude n'a pas de connecteur SFR intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP de SFR ?",
-      "a": "IMAP : imap.sfr.fr sur le port 993 en TLS implicite. SMTP : smtp.sfr.fr sur le port 465, également en TLS implicite, avec authentification obligatoire. Le nom d'utilisateur est votre adresse sfr.fr complète et le mot de passe est votre mot de passe SFR Mail. Les deux serveurs ont été confirmés via une connexion TLS réelle et sont communs à toutes les boîtes SFR."
+      "a": "IMAP est imap.sfr.fr sur le port 993 en SSL/TLS. SMTP est smtp.sfr.fr sur le port 465 en SSL/TLS, ou 587 en STARTTLS, authentification requise et TLS 1.2 ou 1.3. Le nom de compte est votre adresse sfr.fr complète et le mot de passe votre mot de passe SFR. Les deux hôtes ont été confirmés par une connexion TLS réelle et sont ceux que liste la page d'assistance de SFR."
     },
     {
-      "q": "Pourquoi mon mot de passe SFR est-il refusé dans un client de messagerie ?",
-      "a": "Presque toujours parce qu'il s'agit du mot de passe de l'Espace Client et non de celui de SFR Mail. Les deux comptes sont indépendants et changer l'un laisse l'autre intact. Connectez-vous sur webmail.sfr.fr, ouvrez la section de configuration des boîtes dans les réglages, réinitialisez-y le mot de passe de messagerie et utilisez exactement cette valeur dans le client."
+      "q": "Pourquoi mon mot de passe SFR est-il refusé dans un logiciel de messagerie ?",
+      "a": "Vérifiez-le d'abord dans le Webmail SFR, c'est le conseil de SFR : s'il y fonctionne, le logiciel a une faute de frappe, un mauvais serveur ou une vieille version de TLS. Si le Webmail le refuse aussi, la boîte est peut-être bloquée après trop d'échecs ou six mois sans usage ; changez le mot de passe depuis l'Espace Client et saisissez le nouveau partout. Un VPN qui change souvent votre adresse IP peut aussi rendre les tentatives suspectes aux yeux de SFR."
     },
     {
       "q": "SFR délivre-t-il un mot de passe d'application ?",
-      "a": "SFR ne publie aucun mécanisme de mot de passe propre à une application pour les clients de messagerie. Il dispose à la place d'un mot de passe de boîte déjà distinct de celui de votre compte client, qui remplit un rôle similaire : vous pouvez le changer sans toucher à votre connexion à l'Espace Client, et changer le mot de passe de l'Espace Client ne déconnecte pas vos clients."
+      "a": "Non. SFR ne publie aucun mot de passe spécifique aux applications pour les logiciels de messagerie. Sa page décrit le mot de passe comme normal : le même que pour le Webmail SFR, avec votre adresse complète comme nom de compte."
     },
     {
-      "q": "Puis-je donner une seconde adresse SFR à un agent ?",
-      "a": "Oui. Les abonnés SFR peuvent créer des adresses et alias supplémentaires depuis l'écran de configuration des boîtes dans les réglages de SFR Mail. Une adresse secondaire se connecte via les mêmes serveurs imap.sfr.fr et smtp.sfr.fr, et tient l'activité de votre agent à l'écart de l'adresse qu'utilisent réellement vos correspondants."
+      "q": "Quelles adresses SFR utilisent ces serveurs ?",
+      "a": "SFR liste @sfr.fr, @neuf.fr, @cegetel.net et @9online.fr pour imap.sfr.fr et smtp.sfr.fr, et sa page de dépannage ajoute @club-internet.fr et @9business.fr comme adresses SFR. Les boîtes Numericable et Noos (@numericable.fr, @noos.fr et domaines associés) utilisent imap.numericable.fr et smtps.numericable.fr sur les mêmes ports."
     },
     {
       "q": "Mon courrier SFR est-il stocké sur vos serveurs ?",
-      "a": "Non. Les messages sont récupérés en direct depuis SFR via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+      "a": "Non. Les messages sont lus en direct chez SFR en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte SFR à votre IA",
-    "sub": "Connectez SFR Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Donnez à votre IA une boîte SFR",
+    "sub": "Connectez SFR Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte."
   }
 }

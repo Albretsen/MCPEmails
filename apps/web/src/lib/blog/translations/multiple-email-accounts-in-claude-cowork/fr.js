@@ -1,10 +1,10 @@
 const translation = {
   title: 'Plusieurs comptes e-mail dans Claude Cowork, y compris Outlook personnel',
   description:
-    "Claude Cowork n'atteint qu'un seul compte Google avec son connecteur Gmail, et son connecteur Microsoft 365 refuse les adresses Outlook personnelles. Comment donner plusieurs boîtes, professionnelles et personnelles, à une même tâche Cowork.",
+    "Claude Cowork n'atteint qu'un seul compte Google avec son connecteur Gmail et le seul compte Microsoft avec lequel vous vous connectez avec son connecteur Microsoft 365. Comment donner plusieurs boîtes, professionnelles et personnelles, à une même tâche Cowork.",
   coverAlt:
     'Des comptes e-mail professionnels et personnels, dont Gmail et Outlook.com, connectés à une même tâche Claude Cowork',
-  content: `**Claude Cowork utilise les mêmes connecteurs que Claude en conversation, et il a donc les mêmes limites pour les e-mails : un seul compte Google avec le connecteur Gmail, et uniquement des comptes Microsoft 365 professionnels avec le connecteur Microsoft 365.** Une adresse personnelle Outlook.com ou Hotmail, un deuxième Gmail ou une boîte d'entreprise chez un hébergeur IMAP nécessitent un connecteur personnalisé. Avec un serveur MCP comme MCPEmails, un seul connecteur personnalisé donne à une tâche Cowork toutes les boîtes que vous connectez, chacune sous son nom.
+  content: `**Claude Cowork utilise les mêmes connecteurs que Claude en conversation, et il a donc les mêmes limites pour les e-mails : un seul compte Google avec le connecteur Gmail, et un seul compte Microsoft avec le connecteur Microsoft 365, qui n'accepte un compte Outlook.com personnel que sur les formules Free, Pro, Max et Ultra.** Un deuxième Gmail, une adresse personnelle Outlook.com ou Hotmail sur une formule Team ou Enterprise, une boîte d'entreprise chez un hébergeur IMAP ou l'envoi avec pièces jointes nécessitent un connecteur personnalisé. Avec un serveur MCP comme MCPEmails, un seul connecteur personnalisé donne à une tâche Cowork toutes les boîtes que vous connectez, chacune sous son nom.
 
 **Aller à :** [Connecteurs intégrés](#ce-quatteignent-les-connecteurs-e-mail-intégrés-de-cowork) · [Plusieurs boîtes](#plusieurs-boîtes-dans-une-même-tâche-cowork) · [Configuration](#la-configuration) · [Autorisations](#gardez-le-contrôle-des-envois) · [FAQ](#faq)
 
@@ -13,7 +13,7 @@ const translation = {
 Le [guide Cowork d'Anthropic](https://support.claude.com/en/articles/13345190-get-started-with-cowork) gère les connecteurs depuis la même page **Customize → Connectors** que les conversations, et conversations et Cowork partagent désormais le même espace dans l'application Claude. Tout ce que votre compte Claude a connecté est utilisable par une tâche Cowork.
 
 - **Gmail.** Le connecteur Gmail de Claude lit, recherche, rédige des brouillons et envoie. [L'article d'Anthropic](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) parle d'accès au « compte Google que vous avez connecté » et ne dit rien de l'ajout d'un deuxième compte. Un Gmail personnel et un Gmail professionnel ne cohabitent pas par ce biais.
-- **Microsoft 365.** Le [connecteur Microsoft 365](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) est destiné aux comptes du tenant Microsoft 365 d'une entreprise. Un administrateur général doit d'abord donner son consentement, le connecteur démarre en lecture seule, et les comptes Microsoft personnels comme @outlook.com et @hotmail.com ne peuvent pas se connecter.
+- **Microsoft 365.** Le [connecteur Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) accepte un compte professionnel ou scolaire, pour lequel un administrateur général doit d'abord donner son consentement et qui démarre en lecture seule, ou, sur les formules Free, Pro, Max et Ultra, un compte Microsoft personnel comme @outlook.com ou @hotmail.com sans aucun administrateur. Les formules Team et Enterprise ne voient pas l'option personnelle, et les outils d'écriture refusent les pièces jointes.
 - **Tout le reste.** Yahoo, iCloud, Fastmail, Zoho, IONOS ou votre propre serveur de messagerie n'ont aucun connecteur Claude intégré.
 
 La combinaison la plus courante, une boîte professionnelle plus un Outlook.com personnel ou un deuxième Gmail, ne tient donc pas dans Cowork avec les seuls connecteurs intégrés.
@@ -72,7 +72,7 @@ Pour obtenir le même résumé chaque matin sans le demander, programmez le prem
 Pas avec le connecteur Gmail intégré de Claude, qu'Anthropic décrit comme limité au seul compte Google que vous avez connecté. Connectez les deux comptes à MCPEmails avec des mots de passe d'application Google et ajoutez MCPEmails comme connecteur personnalisé ; une tâche Cowork voit alors les deux.
 
 **Cowork peut-il lire mes e-mails Outlook.com ou Hotmail personnels ?**
-Pas avec le connecteur Microsoft 365 de Claude, qui refuse les comptes Microsoft personnels. Connectez l'adresse à MCPEmails avec Se connecter avec Microsoft, puis ajoutez MCPEmails à Claude. [Connecter Claude à Outlook.com et Hotmail](/blog/connect-claude-to-outlook-com-hotmail) donne les étapes.
+Sur Free, Pro, Max ou Ultra, oui, par le connecteur Microsoft 365 de Claude, sans pièces jointes. Sur une formule Team ou Enterprise, ou pour les pièces jointes et d'autres boîtes à côté, connectez l'adresse à MCPEmails avec Se connecter avec Microsoft, puis ajoutez MCPEmails à Claude. [Connecter Claude à Outlook.com et Hotmail](/blog/connect-claude-to-outlook-com-hotmail) donne les étapes.
 
 **Les connecteurs personnalisés fonctionnent-ils dans Cowork ?**
 Oui. Anthropic indique que les connecteurs personnalisés sont disponibles dans Claude, Cowork et Claude Desktop. Il doit s'agir de serveurs distants accessibles sur Internet ; un serveur local déclaré dans le fichier de configuration de l'application de bureau n'est pas disponible dans Cowork.

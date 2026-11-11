@@ -26,7 +26,7 @@
   },
   "answerSection": {
     "title": "¿Qué servidores MCP funcionan con Claude Desktop para el correo?",
-    "body": "Claude Desktop admite cualquier servidor MCP remoto añadido como conector personalizado, así que un servidor de correo alojado como MCPEmails funciona igual que en claude.ai: abre <b>Customize</b>, <b>Connectors</b>, añade <code>https://mcpemails.com/api/mcp</code> e inicia sesión. Esa URL cubre Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo y cualquier buzón IMAP. Los conectores propios de Claude para Gmail y Microsoft 365 también aparecen en Claude Desktop, pero cada uno cubre un solo proveedor, y el de Microsoft 365 solo acepta cuentas del trabajo o de un centro educativo. Los servidores locales que se inician desde <code>claude_desktop_config.json</code> también funcionan; se ejecutan en tu ordenador y guardan el acceso a tu correo en un archivo."
+    "body": "Claude Desktop admite cualquier servidor MCP remoto añadido como conector personalizado, así que un servidor de correo alojado como MCPEmails funciona igual que en claude.ai: abre <b>Customize</b>, <b>Connectors</b>, añade <code>https://mcpemails.com/api/mcp</code> e inicia sesión. Esa URL cubre Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo y cualquier buzón IMAP. Los conectores propios de Claude para Gmail y Microsoft 365 también aparecen en Claude Desktop, pero cada uno cubre un solo proveedor, y el de Microsoft 365 acepta una cuenta personal de Outlook.com solo en los planes Free, Pro, Max y Ultra, sin adjuntos. Los servidores locales que se inician desde <code>claude_desktop_config.json</code> también funcionan; se ejecutan en tu ordenador y guardan el acceso a tu correo en un archivo."
   },
   "setup": [
     {

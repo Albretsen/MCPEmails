@@ -8,7 +8,7 @@ const translation = {
 
 このページでは、あなたがどのケースに当てはまるかを整理します。AnthropicとGoogleの製品に関する情報は、2026年10月に各社のページで確認したものです。これらの製品は頻繁に変わるため、各セクションに根拠となるページへのリンクを載せています。
 
-**目次：** [Gmail](#gmailclaude純正のコネクタ) · [Microsoft 365](#outlookとmicrosoft-365職場アカウントのみ) · [純正コネクタで足りない部分](#純正コネクタが対応していないもの) · [MCPEmails](#mcpemailsで足りない部分を補う方法) · [送信](#claudeでメールを送信できる) · [FAQ](#faq)
+**目次：** [Gmail](#gmailclaude純正のコネクタ) · [Microsoft 365](#outlookとmicrosoft-365職場アカウントと個人向けプランでの個人用アカウント) · [純正コネクタで足りない部分](#純正コネクタが対応していないもの) · [MCPEmails](#mcpemailsで足りない部分を補う方法) · [送信](#claudeでメールを送信できる) · [FAQ](#faq)
 
 ## Gmail：Claude純正のコネクタ
 
@@ -30,16 +30,16 @@ Googleは同じGmail MCPサーバーを、[Workspace Developer Preview Program](
 
 メールボックスがGmailだけで、使うAIアプリもClaudeだけなら、純正コネクタで十分かもしれません。
 
-## OutlookとMicrosoft 365：職場アカウントのみ
+## OutlookとMicrosoft 365：職場アカウントと、個人向けプランでの個人用アカウント
 
-ClaudeのMicrosoft 365コネクタは、企業のMicrosoft 365テナントに属するアカウントのOutlookメールを読み取ります。
+ClaudeのMicrosoft 365コネクタは、企業のMicrosoft 365テナントに属する職場や学校のアカウントのOutlookメールを読み取り、Free、Pro、Max、Ultraの各プランでは個人用MicrosoftアカウントのOutlookメールも読み取ります。
 
 - **読み取りと検索**の対象は、メインのメールボックス、そのアーカイブフォルダー、アクセス権のある共有メールボックスです。
-- **送信は初期状態でオフです。** コネクタは読み取り専用で始まります。書き込みツールを有効にすると、Claudeはメールの送信と転送、下書きの作成、編集、削除ができるようになります。添付ファイル付きのメッセージは書き込みツールで拒否されます。
-- **管理者が承認する必要があります。** 組織内の誰かが接続する前に、Microsoft Entraのグローバル管理者が同意する必要があり、書き込みツールを使う前にもう一度同意が必要です。
-- **個人アカウントは使えません。** [Anthropicの記事](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector)には、@outlook.comや@hotmail.comのようなアドレスでは接続できないと明記されています。
+- **送信。** 職場や学校のアカウントでは、コネクタは読み取り専用で始まります。書き込みツールを有効にすると、Claudeはメールの送信と転送、下書きの作成、編集、削除ができるようになります。個人用アカウントでは書き込みツールが最初から含まれており、Claudeは送信前に確認します。添付ファイル付きのメッセージは、どちらの場合も書き込みツールで拒否されます。
+- **職場アカウントは管理者の承認が必要です。** 組織内の誰かが接続する前に、Microsoft Entraのグローバル管理者が同意する必要があり、書き込みツールを使う前にもう一度同意が必要です。個人用アカウントに管理者は不要です。
+- **個人アカウントは個人向けプランで使えます。** [Anthropicの記事](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365)によると、Outlook.com、Hotmail、Live、MSNのアカウントはFree、Pro、Max、Ultraで接続でき、TeamとEnterpriseのプランにはその選択肢が表示されません。
 
-つまり、個人用のOutlook.com、Hotmail、LiveのアドレスをClaudeにつなぐ純正の方法はありません。使える方法は[ClaudeをOutlook.comとHotmailに接続する](/blog/connect-claude-to-outlook-com-hotmail)で説明しています。
+つまり、個人用のOutlook.com、Hotmail、Liveのアドレスが1つなら、個人向けプランではClaudeにつなぐ純正の方法があります（添付ファイルは不可）。TeamやEnterpriseのプラン、添付ファイル、複数のメールボックスが必要な場合は、[ClaudeをOutlook.comとHotmailに接続する](/blog/connect-claude-to-outlook-com-hotmail)でカスタムコネクタの方法を説明しています。
 
 ## 純正コネクタが対応していないもの
 
@@ -91,7 +91,7 @@ https://mcpemails.com/api/mcp
 
 ### ClaudeのMicrosoft 365コネクタ
 
-最初は読み取り専用です。書き込みツールを有効にすると（より広い権限についてMicrosoft Entraのグローバル管理者の承認が必要です）、Claudeはメールの送信と転送、下書きの作成、編集、削除ができるようになります。書き込みツールは添付ファイル付きのメッセージをすべて拒否し、個人用のOutlook.comやHotmailのアドレスはそもそも接続できません。
+職場や学校のアカウントでは、最初は読み取り専用です。書き込みツールを有効にすると（より広い権限についてMicrosoft Entraのグローバル管理者の承認が必要です）、Claudeはメールの送信と転送、下書きの作成、編集、削除ができるようになります。Free、Pro、Max、Ultraの個人用アカウントでは書き込みツールが最初から含まれており、Claudeは送信前に確認します。どちらの場合も、書き込みツールは添付ファイル付きのメッセージをすべて拒否します。
 
 ### MCPEmailsでの送信のしくみ
 
@@ -127,7 +127,7 @@ MCPEmailsを通すと、ClaudeはGmail、Outlook、iCloud、Yahoo、会社のIMA
 はい。Claude純正のGmailコネクタで、接続したGoogleアカウントのメールを読めます。複数のGoogleアカウントを使いたい場合や、同じチャットでGmailとほかのプロバイダーを一緒に使いたい場合は、Googleのアプリ パスワードを使ってMCPEmails経由で接続してください。
 
 **ClaudeでOutlookやHotmailのメールにアクセスできますか？**
-職場や学校のMicrosoft 365アカウントは、管理者が承認すればClaudeのMicrosoft 365コネクタを使えます。個人用のOutlook.comやHotmailのアドレスは使えません。MCPEmailsはどちらもMicrosoftでログインして接続できますが、職場アカウントの場合は、組織として一度アプリを承認するためにIT管理者が必要になることがあります。
+職場や学校のMicrosoft 365アカウントは、管理者が承認すればClaudeのMicrosoft 365コネクタを使えます。個人用のOutlook.comやHotmailのアドレスも、Free、Pro、Max、Ultraの各プランならこのコネクタに接続できます（添付ファイルは不可）。MCPEmailsはClaudeのどのプランでも、どちらのアカウントも添付ファイル付きで接続できますが、職場アカウントの場合は、組織として一度アプリを承認するためにIT管理者が必要になることがあります。
 
 **ClaudeでYahooやiCloudのメールを読めますか？**
 純正コネクタでは読めません。YahooまたはAppleのアプリ パスワードでメールボックスをMCPEmailsに接続し、MCPEmailsをClaudeに追加してください。手順は[ChatGPTとClaudeでYahoo Mailを使うガイド](/blog/connect-yahoo-mail-to-chatgpt-and-claude)にあり、[ChatGPTのiCloudメールプラグイン解説](/blog/chatgpt-icloud-mail-plugin)ではOpenAIの新しいiCloudの選択肢と比較しています。

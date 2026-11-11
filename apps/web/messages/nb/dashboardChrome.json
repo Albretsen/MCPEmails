@@ -105,6 +105,10 @@
     "paymentIssueDeclinedCta": "Oppdater betaling",
     "paymentIssueConfirm": "Banken din vil at du skal bekrefte den siste betalingen. Planen din er fortsatt aktiv.",
     "paymentIssueConfirmCta": "Bekreft betaling",
+    "inboxAlertOne": "{address} må kobles til på nytt. Innloggingen virker ikke lenger, så AI-appen din kan ikke lese, skrive utkast eller sende fra den.",
+    "inboxAlertMany": "{count} innbokser må kobles til på nytt. Innloggingen virker ikke lenger, så AI-appen din kan ikke bruke dem.",
+    "inboxAlertReconnect": "Koble til på nytt",
+    "inboxAlertOpenInboxes": "Åpne innbokser",
     "inviteSentNotDelivered": "Invitasjonen til {email} ble opprettet, men e-posten kunne ikke sendes. Bruk Send på nytt på den ventende invitasjonen.",
     "inviteResent": "Invitasjonen ble sendt på nytt til {email}.",
     "inviteResendFailed": "Kunne ikke sende invitasjonen på nytt.",
@@ -137,7 +141,8 @@
     "openSearch": "Åpne søk (Command K)",
     "navWorkflows": "Arbeidsflyter",
     "navAutomations": "Automatiseringer",
-    "navInvite": "Inviter en venn"
+    "navInvite": "Inviter en venn",
+    "invitePromo": "Gi en måned, få en måned"
   },
   "topbar": {
     "mcpLabel": "MCP-endepunkt",
@@ -640,6 +645,16 @@
     "switchCta": "Bytt til årlig",
     "switchBusy": "Klargjør...",
     "ended": "Black Week-tilbudet er over, så ingenting ble belastet. Beløpene over er vanlig pris."
+  },
+  "annualSwitch": {
+    "title": "Bytt til årlig fakturering",
+    "body": "Betal for {plan} én gang i året og spar {percent} % sammenlignet med månedlig betaling.",
+    "current": "De ubrukte dagene i inneværende måned blir kreditert, så dagens belastning blir litt lavere enn et helt år. Du ser det nøyaktige beløpet før noe blir belastet.",
+    "cta": "Bytt til årlig",
+    "busy": "Forbereder...",
+    "noticeBody": "Du betaler for {plan} hver måned. Årlig fakturering koster {percent} % mindre.",
+    "noticeCta": "Se årlig fakturering",
+    "close": "Lukk"
   },
   "founder": {
     "line": "Grunnleggerpris: ${price} i måneden, og den beholder du så lenge abonnementet løper. Gjelder de {total} første selskapene eller frem til 31. desember 2026, det som kommer først. Ekstra postkasser koster ${addon} i måneden hver.",

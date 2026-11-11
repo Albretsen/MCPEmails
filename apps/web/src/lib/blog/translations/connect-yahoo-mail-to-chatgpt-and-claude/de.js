@@ -17,12 +17,12 @@ Was man bei der Suche stattdessen findet:
 - **Automatisierungsplattformen**, die einzelne Nachrichten von Yahoo an ein KI-Modell weiterreichen, sobald ein Auslöser greift. Praktisch für einen festen Ablauf, nicht für Fragen zu Ihren E-Mails in einem Chat.
 - **Kopieren und Einfügen** von Nachrichten in den Chat, was für eine E-Mail nach der anderen funktioniert.
 
-Ein MCP-Server ist der Weg, der der KI Ihr tatsächliches Postfach gibt. ChatGPT und Claude akzeptieren ihn beide als benutzerdefinierten Konnektor, und die Anmeldung bei Yahoo übernimmt der Server.
+Ein MCP-Server ist der Weg, der der KI Ihr tatsächliches Postfach gibt. ChatGPT und Claude akzeptieren ihn beide als benutzerdefinierten Konnektor, und die Anmeldung bei Yahoo übernimmt der Server. [So verbinden Sie jedes E-Mail-Konto mit Claude oder ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) vergleicht jeden Weg, gehostet und selbst betrieben.
 
 ## Was Sie brauchen
 
 - Eine Yahoo-Mail-Adresse: yahoo.com, eine Länderversion wie yahoo.de, oder die Form ymail.com oder rocketmail.com, mit der Sie sich registriert haben.
-- **Für ChatGPT:** Go oder ein kostenpflichtiger Tarif, auf chatgpt.com im Browser. OpenAI erlaubt im Free-Tarif keinen benutzerdefinierten MCP-Server, und in der Mobil-App lässt sich keiner hinzufügen.
+- **Für ChatGPT:** ein kostenpflichtiger Tarif, auf chatgpt.com im Browser. Die Hilfeseite von OpenAI führt benutzerdefinierte MCP-Server für Business und Enterprise/Edu auf, mit Lese- und Abruf-Tools nur in Pro, und erwähnt Go und Plus nicht. Free kann keinen hinzufügen, und die Mobil-App auch nicht.
 - **Für Claude:** jeder Tarif, auch Free, der einen benutzerdefinierten Konnektor erlaubt.
 - Ein kostenloses MCPEmails-Konto. [Hier erstellen](/signup); der kostenlose Tarif verbindet ein Postfach.
 
@@ -105,7 +105,7 @@ Beim Genehmigen der Verbindung legen Sie fest, was jede KI-App darf: nur lesen o
 
 - **Yahoo lehnt das Passwort ab.** Verwenden Sie ein App-Passwort, nicht Ihr Yahoo-Passwort, und fügen Sie es ohne Leerzeichen ein.
 - **Keine Option, ein App-Passwort zu erstellen.** Aktivieren Sie zuerst die Bestätigung in zwei Schritten auf der Seite Account-Sicherheit.
-- **ChatGPT hat keine Option für einen benutzerdefinierten MCP-Server.** Sie brauchen Go oder einen kostenpflichtigen Tarif, auf chatgpt.com im Browser.
+- **ChatGPT hat keine Option für einen benutzerdefinierten MCP-Server.** Sie brauchen einen kostenpflichtigen Tarif, auf chatgpt.com im Browser: OpenAI nennt Business und Enterprise/Edu, mit reinem Lesezugriff in Pro.
 - **Die KI antwortet, ohne Ihre E-Mails zu lesen.** Erwähnen Sie MCPEmails in ChatGPT in dieser Nachricht mit @. Prüfen Sie in Claude, ob MCPEmails unter Konnektoren eingeschaltet ist.
 - **Sie haben Yahoo und ein weiteres Postfach.** Verbinden Sie beide mit MCPEmails. [Mehrere E-Mail-Konten in Claude und ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) erklärt, wie die KI sie auseinanderhält.
 

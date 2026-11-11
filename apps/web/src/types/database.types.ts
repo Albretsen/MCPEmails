@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -45,7 +50,6 @@ export type Database = {
           tool_name: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           billable: boolean
           created_at?: string
@@ -92,7 +96,6 @@ export type Database = {
           tool_name: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at: string
@@ -139,7 +142,6 @@ export type Database = {
           old_technical_activated_at: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           corrected_at?: string
           new_first_tool_used_at?: string | null
@@ -197,7 +199,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -275,7 +276,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -324,7 +324,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -373,7 +372,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -422,7 +420,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -471,7 +468,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -520,7 +516,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -569,7 +564,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -618,7 +612,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -667,7 +660,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -716,7 +708,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -765,7 +756,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -814,7 +804,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -863,7 +852,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -912,7 +900,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -961,7 +948,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1010,7 +996,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1059,7 +1044,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1108,7 +1092,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1157,7 +1140,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1206,7 +1188,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -1247,7 +1228,6 @@ export type Database = {
           provider: string
           recorded_at: string
         }
-        ComputedFields: never
         Insert: {
           google_reported_users: number
           id?: never
@@ -1283,7 +1263,6 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           card_build_notified?: string | null
           card_listed?: boolean | null
@@ -1346,7 +1325,7 @@ export type Database = {
       }
       app_errors: {
         Row: {
-          context: NonNullable<Json>
+          context: Json
           created_at: string
           id: string
           message: string
@@ -1354,9 +1333,8 @@ export type Database = {
           severity: string
           stack: string | null
         }
-        ComputedFields: never
         Insert: {
-          context?: NonNullable<Json>
+          context?: Json
           created_at?: string
           id?: string
           message: string
@@ -1365,7 +1343,7 @@ export type Database = {
           stack?: string | null
         }
         Update: {
-          context?: NonNullable<Json>
+          context?: Json
           created_at?: string
           id?: string
           message?: string
@@ -1387,7 +1365,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           cost_micro_usd?: number
           created_at?: string
@@ -1442,7 +1419,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at: string
@@ -1487,7 +1463,6 @@ export type Database = {
           name: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           enabled?: boolean
           name: string
@@ -1512,7 +1487,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           event_type: string
@@ -1569,7 +1543,7 @@ export type Database = {
           created_at: string
           id: number
           last_error: string | null
-          payload: NonNullable<Json>
+          payload: Json
           period_start: string | null
           recipient: string
           recovered_by: string | null
@@ -1583,17 +1557,16 @@ export type Database = {
           user_id: string | null
           workspace_id: string | null
         }
-        ComputedFields: never
         Insert: {
           attempts?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
-          category?: never
+          category?: string | null
           claimed_at?: string | null
           created_at?: string
           id?: never
           last_error?: string | null
-          payload?: NonNullable<Json>
+          payload?: Json
           period_start?: string | null
           recipient: string
           recovered_by?: string | null
@@ -1611,12 +1584,12 @@ export type Database = {
           attempts?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
-          category?: never
+          category?: string | null
           claimed_at?: string | null
           created_at?: string
           id?: never
           last_error?: string | null
-          payload?: NonNullable<Json>
+          payload?: Json
           period_start?: string | null
           recipient?: string
           recovered_by?: string | null
@@ -1671,13 +1644,12 @@ export type Database = {
           match_count: number
           operation: string
           permanent: boolean
-          scope: NonNullable<Json>
+          scope: Json
           scope_encrypted: boolean
           scope_kind: string
           status: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           action: string
           affected_count?: number | null
@@ -1694,7 +1666,7 @@ export type Database = {
           match_count: number
           operation: string
           permanent?: boolean
-          scope: NonNullable<Json>
+          scope: Json
           scope_encrypted?: boolean
           scope_kind: string
           status?: string
@@ -1716,7 +1688,7 @@ export type Database = {
           match_count?: number
           operation?: string
           permanent?: boolean
-          scope?: NonNullable<Json>
+          scope?: Json
           scope_encrypted?: boolean
           scope_kind?: string
           status?: string
@@ -1785,7 +1757,6 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           cancel_requested_at?: string | null
@@ -1858,7 +1829,6 @@ export type Database = {
           owner_id: string
           stripe_subscription_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           interval: string
@@ -1885,7 +1855,6 @@ export type Database = {
           subscription_id: string
           user_id: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           detail?: string | null
@@ -1928,7 +1897,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           detail?: string | null
@@ -1990,7 +1958,6 @@ export type Database = {
           variant: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           billing_interval?: string
           blocked_tool?: string | null
@@ -2054,7 +2021,6 @@ export type Database = {
           signed_up_at: string
           was_internal: boolean
         }
-        ComputedFields: never
         Insert: {
           deleted_at: string
           ever_paid: boolean
@@ -2093,7 +2059,6 @@ export type Database = {
           to_count: number | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           action: string
           api_key_id: string
@@ -2172,7 +2137,6 @@ export type Database = {
           via_card: boolean
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           card_offered?: boolean | null
@@ -2242,7 +2206,6 @@ export type Database = {
           written_at: string
           written_by: string
         }
-        ComputedFields: never
         Insert: {
           closed_at?: string | null
           closed_reason?: string | null
@@ -2300,7 +2263,6 @@ export type Database = {
           subject_id: string
           variant_id: string
         }
-        ComputedFields: never
         Insert: {
           experiment_key: string
           first_assigned_at?: string
@@ -2330,7 +2292,6 @@ export type Database = {
           user_id: string | null
           workspace_id: string | null
         }
-        ComputedFields: never
         Insert: {
           linked_at?: string
           subject_id: string
@@ -2372,10 +2333,9 @@ export type Database = {
           started_at: string | null
           status: string
           updated_at: string
-          variants: NonNullable<Json>
+          variants: Json
           winner_variant_id: string | null
         }
-        ComputedFields: never
         Insert: {
           concluded_at?: string | null
           created_at?: string
@@ -2387,7 +2347,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           updated_at?: string
-          variants: NonNullable<Json>
+          variants: Json
           winner_variant_id?: string | null
         }
         Update: {
@@ -2401,7 +2361,7 @@ export type Database = {
           started_at?: string | null
           status?: string
           updated_at?: string
-          variants?: NonNullable<Json>
+          variants?: Json
           winner_variant_id?: string | null
         }
         Relationships: []
@@ -2422,7 +2382,6 @@ export type Database = {
           template: string | null
           workspace_id: string | null
         }
-        ComputedFields: never
         Insert: {
           decision: string
           detail?: Json | null
@@ -2471,7 +2430,6 @@ export type Database = {
           value_successes: number
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           calls: number
           day: string
@@ -2511,7 +2469,6 @@ export type Database = {
           note: string
           recorded_at: string
         }
-        ComputedFields: never
         Insert: {
           day: string
           id: string
@@ -2534,7 +2491,6 @@ export type Database = {
           status: string
           tool_name: string
         }
-        ComputedFields: never
         Insert: {
           calls: number
           day: string
@@ -2562,7 +2518,6 @@ export type Database = {
           user_id: string | null
           voter_key: string
         }
-        ComputedFields: never
         Insert: {
           article_id: string
           created_at?: string
@@ -2585,6 +2540,92 @@ export type Database = {
         }
         Relationships: []
       }
+      inbox_alert_sends: {
+        Row: {
+          arm: string
+          attempts: number
+          break_started_at: string
+          close_reason: string | null
+          closed_at: string | null
+          created_at: string
+          detail: string | null
+          id: number
+          inbox_id: string
+          phase: number
+          provider: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          arm: string
+          attempts?: number
+          break_started_at: string
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          inbox_id: string
+          phase: number
+          provider: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status: string
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          arm?: string
+          attempts?: number
+          break_started_at?: string
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          inbox_id?: string
+          phase?: number
+          provider?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_alert_sends_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_autofill_lookups: {
         Row: {
           created_at: string
@@ -2597,7 +2638,6 @@ export type Database = {
           surface: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           domain: string
@@ -2631,7 +2671,6 @@ export type Database = {
           revoked_at: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           distinct_addresses_ever: number
           entitlement_kind: string
@@ -2667,7 +2706,6 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           fanout_content_hash?: string | null
           fanout_hold_until?: string | null
@@ -2724,7 +2762,6 @@ export type Database = {
           verified_at: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           code_attempts?: number
           code_expires_at?: string | null
@@ -2791,7 +2828,7 @@ export type Database = {
           backoff_until: string | null
           created_at: string
           failure_count: number
-          folders: NonNullable<Json>
+          folders: Json
           inbox_id: string
           last_changed_at: string | null
           last_checked_at: string | null
@@ -2801,12 +2838,11 @@ export type Database = {
           leased_until: string | null
           next_check_at: string
         }
-        ComputedFields: never
         Insert: {
           backoff_until?: string | null
           created_at?: string
           failure_count?: number
-          folders?: NonNullable<Json>
+          folders?: Json
           inbox_id: string
           last_changed_at?: string | null
           last_checked_at?: string | null
@@ -2820,7 +2856,7 @@ export type Database = {
           backoff_until?: string | null
           created_at?: string
           failure_count?: number
-          folders?: NonNullable<Json>
+          folders?: Json
           inbox_id?: string
           last_changed_at?: string | null
           last_checked_at?: string | null
@@ -2887,7 +2923,6 @@ export type Database = {
           visibility: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           ai_instructions?: string | null
           ai_instructions_updated_at?: string | null
@@ -3010,7 +3045,6 @@ export type Database = {
           email: string
           note: string | null
         }
-        ComputedFields: never
         Insert: {
           added_at?: string
           email: string
@@ -3038,7 +3072,6 @@ export type Database = {
           trigger_key: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           detail?: string | null
           email: string
@@ -3089,7 +3122,6 @@ export type Database = {
           refused: boolean
           rescues: number
         }
-        ComputedFields: never
         Insert: {
           direct_successes?: number
           first_rescue_at?: string
@@ -3125,7 +3157,6 @@ export type Database = {
           source: string
           times_learned: number
         }
-        ComputedFields: never
         Insert: {
           first_learned_at?: string
           host: string
@@ -3161,7 +3192,6 @@ export type Database = {
           runtime: string
           total_ms: number
         }
-        ComputedFields: never
         Insert: {
           count?: number
           host: string
@@ -3196,7 +3226,6 @@ export type Database = {
           relname: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           done_at?: string | null
           job: string
@@ -3216,7 +3245,7 @@ export type Database = {
       mcp_client_capabilities: {
         Row: {
           api_key_id: string
-          capabilities: NonNullable<Json>
+          capabilities: Json
           client_name: string
           client_version: string
           first_seen: string
@@ -3226,10 +3255,9 @@ export type Database = {
           supports_ui: boolean
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id: string
-          capabilities?: NonNullable<Json>
+          capabilities?: Json
           client_name?: string
           client_version?: string
           first_seen?: string
@@ -3241,7 +3269,7 @@ export type Database = {
         }
         Update: {
           api_key_id?: string
-          capabilities?: NonNullable<Json>
+          capabilities?: Json
           client_name?: string
           client_version?: string
           first_seen?: string
@@ -3297,7 +3325,6 @@ export type Database = {
           vip_senders: string[]
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           claimed_at?: string | null
           consecutive_failures?: number
@@ -3381,7 +3408,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           client_id: string
           client_name: string
@@ -3445,7 +3471,6 @@ export type Database = {
           scopes_allowed: string[]
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           client_byline?: string
           client_id: string
@@ -3483,7 +3508,6 @@ export type Database = {
           scopes: string[]
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           client_id: string
           granted_at?: string
@@ -3510,7 +3534,6 @@ export type Database = {
           token_hash: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           consumed_at?: string | null
           expires_at: string
@@ -3543,7 +3566,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           client_id: string
@@ -3606,7 +3628,6 @@ export type Database = {
           session_id: string
           state_hash: string
         }
-        ComputedFields: never
         Insert: {
           consumed_at?: string | null
           expires_at: string
@@ -3634,7 +3655,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at?: string
@@ -3692,7 +3712,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           client?: string | null
           created_at?: string
@@ -3756,7 +3775,6 @@ export type Database = {
           status: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id: string
           approval_id?: string | null
@@ -3813,7 +3831,6 @@ export type Database = {
           recipient_hash: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           content_hash?: string | null
           created_at?: string
@@ -3865,7 +3882,6 @@ export type Database = {
           note: string | null
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           enabled: boolean
           key: string
@@ -3894,7 +3910,6 @@ export type Database = {
           stage: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           auth_reason?: string | null
           category: string
@@ -3950,7 +3965,6 @@ export type Database = {
           updated_at: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           enabled?: boolean
@@ -4005,7 +4019,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           auth: string
           created_at?: string
@@ -4064,7 +4077,6 @@ export type Database = {
           key: string
           window_start: string
         }
-        ComputedFields: never
         Insert: {
           count?: number
           key: string
@@ -4084,7 +4096,6 @@ export type Database = {
           disabled_at: string | null
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           code: string
           created_at?: string
@@ -4112,7 +4123,6 @@ export type Database = {
           stripe_balance_txn_id: string | null
           stripe_customer_id: string | null
         }
-        ComputedFields: never
         Insert: {
           amount_cents?: number | null
           currency?: string | null
@@ -4167,7 +4177,6 @@ export type Database = {
           updated_at: string
           void_reason: string | null
         }
-        ComputedFields: never
         Insert: {
           attached_at?: string
           attached_via: string
@@ -4248,7 +4257,7 @@ export type Database = {
           last_error_code: string | null
           lease_token: string | null
           message_digest: string
-          message_ref: NonNullable<Json>
+          message_ref: Json
           next_check_at: string | null
           replied_at: string | null
           returned_at: string | null
@@ -4257,7 +4266,6 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           claimed_at?: string | null
@@ -4275,7 +4283,7 @@ export type Database = {
           last_error_code?: string | null
           lease_token?: string | null
           message_digest: string
-          message_ref: NonNullable<Json>
+          message_ref: Json
           next_check_at?: string | null
           replied_at?: string | null
           returned_at?: string | null
@@ -4301,7 +4309,7 @@ export type Database = {
           last_error_code?: string | null
           lease_token?: string | null
           message_digest?: string
-          message_ref?: NonNullable<Json>
+          message_ref?: Json
           next_check_at?: string | null
           replied_at?: string | null
           returned_at?: string | null
@@ -4356,7 +4364,6 @@ export type Database = {
           inboxes_per_run: number
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           accounts_per_run?: number
           dry_run?: boolean
@@ -4384,7 +4391,6 @@ export type Database = {
           mode: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           auto_go_live_at?: string | null
           decided_at?: string | null
@@ -4414,7 +4420,7 @@ export type Database = {
           error_detail: string | null
           id: string
           inbox_id: string
-          payload: NonNullable<Json>
+          payload: Json
           payload_encrypted: boolean
           send_at: string
           sent_at: string | null
@@ -4422,14 +4428,13 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           created_by?: string | null
           error_detail?: string | null
           id?: string
           inbox_id: string
-          payload: NonNullable<Json>
+          payload: Json
           payload_encrypted?: boolean
           send_at: string
           sent_at?: string | null
@@ -4443,7 +4448,7 @@ export type Database = {
           error_detail?: string | null
           id?: string
           inbox_id?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           payload_encrypted?: boolean
           send_at?: string
           sent_at?: string | null
@@ -4497,16 +4502,15 @@ export type Database = {
           id: string
           inbox_id: string
           operation: string
-          payload: NonNullable<Json>
+          payload: Json
           payload_encrypted: boolean
           requested_by: string | null
           revision: number
           send_at: string | null
           status: string
-          summary: NonNullable<Json>
+          summary: Json
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           created_at?: string
@@ -4521,13 +4525,13 @@ export type Database = {
           id?: string
           inbox_id: string
           operation: string
-          payload: NonNullable<Json>
+          payload: Json
           payload_encrypted?: boolean
           requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
-          summary?: NonNullable<Json>
+          summary?: Json
           workspace_id: string
         }
         Update: {
@@ -4544,13 +4548,13 @@ export type Database = {
           id?: string
           inbox_id?: string
           operation?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           payload_encrypted?: boolean
           requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
-          summary?: NonNullable<Json>
+          summary?: Json
           workspace_id?: string
         }
         Relationships: [
@@ -4618,19 +4622,18 @@ export type Database = {
           actor_user_id: string | null
           connection_id: string | null
           created_at: string
-          details: NonNullable<Json>
+          details: Json
           id: string
           ip_address: unknown
           user_agent: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           action: string
           actor_user_id?: string | null
           connection_id?: string | null
           created_at?: string
-          details?: NonNullable<Json>
+          details?: Json
           id?: string
           ip_address?: unknown
           user_agent?: string | null
@@ -4641,7 +4644,7 @@ export type Database = {
           actor_user_id?: string | null
           connection_id?: string | null
           created_at?: string
-          details?: NonNullable<Json>
+          details?: Json
           id?: string
           ip_address?: unknown
           user_agent?: string | null
@@ -4691,7 +4694,6 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           created_by?: string | null
@@ -4751,7 +4753,6 @@ export type Database = {
           verified_at: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           connection_id: string
           created_at?: string
@@ -4805,7 +4806,6 @@ export type Database = {
           processed_at: string
           stripe_customer_id: string | null
         }
-        ComputedFields: never
         Insert: {
           cancellation_reason?: string | null
           event_created?: string | null
@@ -4838,16 +4838,15 @@ export type Database = {
           progress: Json | null
           scanned: number
           sender_count: number
-          senders: NonNullable<Json>
+          senders: Json
           senders_encrypted: boolean
-          summary: NonNullable<Json>
+          summary: Json
           truncated: boolean
           used_at: string | null
           used_by_api_key_id: string | null
           window_days: number
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           backlog_action?: string | null
@@ -4861,9 +4860,9 @@ export type Database = {
           progress?: Json | null
           scanned?: number
           sender_count: number
-          senders: NonNullable<Json>
+          senders: Json
           senders_encrypted?: boolean
-          summary?: NonNullable<Json>
+          summary?: Json
           truncated?: boolean
           used_at?: string | null
           used_by_api_key_id?: string | null
@@ -4883,9 +4882,9 @@ export type Database = {
           progress?: Json | null
           scanned?: number
           sender_count?: number
-          senders?: NonNullable<Json>
+          senders?: Json
           senders_encrypted?: boolean
-          summary?: NonNullable<Json>
+          summary?: Json
           truncated?: boolean
           used_at?: string | null
           used_by_api_key_id?: string | null
@@ -4934,7 +4933,7 @@ export type Database = {
         Row: {
           category: string
           confirmation_sent_at: string | null
-          context: NonNullable<Json>
+          context: Json
           created_at: string
           email: string
           id: string
@@ -4948,11 +4947,10 @@ export type Database = {
           user_id: string | null
           workspace_id: string | null
         }
-        ComputedFields: never
         Insert: {
           category: string
           confirmation_sent_at?: string | null
-          context?: NonNullable<Json>
+          context?: Json
           created_at?: string
           email: string
           id?: string
@@ -4969,7 +4967,7 @@ export type Database = {
         Update: {
           category?: string
           confirmation_sent_at?: string | null
-          context?: NonNullable<Json>
+          context?: Json
           created_at?: string
           email?: string
           id?: string
@@ -5017,7 +5015,6 @@ export type Database = {
           status: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           consecutive_failures?: number
           created_at?: string
@@ -5064,7 +5061,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           deployment_id: string | null
-          diagnostics: NonNullable<Json>
+          diagnostics: Json
           duration_ms: number | null
           failed_step: string | null
           failure_class: string | null
@@ -5073,13 +5070,12 @@ export type Database = {
           mode: string
           started_at: string
           status: string
-          steps: NonNullable<Json>
+          steps: Json
         }
-        ComputedFields: never
         Insert: {
           completed_at?: string | null
           deployment_id?: string | null
-          diagnostics?: NonNullable<Json>
+          diagnostics?: Json
           duration_ms?: number | null
           failed_step?: string | null
           failure_class?: string | null
@@ -5088,12 +5084,12 @@ export type Database = {
           mode: string
           started_at?: string
           status?: string
-          steps?: NonNullable<Json>
+          steps?: Json
         }
         Update: {
           completed_at?: string | null
           deployment_id?: string | null
-          diagnostics?: NonNullable<Json>
+          diagnostics?: Json
           duration_ms?: number | null
           failed_step?: string | null
           failure_class?: string | null
@@ -5102,7 +5098,7 @@ export type Database = {
           mode?: string
           started_at?: string
           status?: string
-          steps?: NonNullable<Json>
+          steps?: Json
         }
         Relationships: []
       }
@@ -5112,17 +5108,16 @@ export type Database = {
           error: string | null
           event_type: string
           id: string
-          payload: NonNullable<Json>
+          payload: Json
           processed_at: string | null
           status: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           error?: string | null
           event_type: string
           id?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           processed_at?: string | null
           status?: string
         }
@@ -5131,7 +5126,7 @@ export type Database = {
           error?: string | null
           event_type?: string
           id?: string
-          payload?: NonNullable<Json>
+          payload?: Json
           processed_at?: string | null
           status?: string
         }
@@ -5143,7 +5138,6 @@ export type Database = {
           message_id: string
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           event_type: string
           message_id: string
@@ -5158,7 +5152,7 @@ export type Database = {
       }
       triage_rules: {
         Row: {
-          action: NonNullable<Json>
+          action: Json
           api_key_id: string
           consecutive_failures: number
           created_at: string
@@ -5166,7 +5160,7 @@ export type Database = {
           deleted_at: string | null
           disabled_reason: string | null
           enabled: boolean
-          filter: NonNullable<Json>
+          filter: Json
           id: string
           inbox_id: string
           interval_minutes: number
@@ -5180,9 +5174,8 @@ export type Database = {
           updated_at: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
-          action: NonNullable<Json>
+          action: Json
           api_key_id: string
           consecutive_failures?: number
           created_at?: string
@@ -5190,7 +5183,7 @@ export type Database = {
           deleted_at?: string | null
           disabled_reason?: string | null
           enabled?: boolean
-          filter: NonNullable<Json>
+          filter: Json
           id?: string
           inbox_id: string
           interval_minutes: number
@@ -5205,7 +5198,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
-          action?: NonNullable<Json>
+          action?: Json
           api_key_id?: string
           consecutive_failures?: number
           created_at?: string
@@ -5213,7 +5206,7 @@ export type Database = {
           deleted_at?: string | null
           disabled_reason?: string | null
           enabled?: boolean
-          filter?: NonNullable<Json>
+          filter?: Json
           id?: string
           inbox_id?: string
           interval_minutes?: number
@@ -5261,7 +5254,7 @@ export type Database = {
       triage_run_items: {
         Row: {
           created_at: string
-          detail: NonNullable<Json>
+          detail: Json
           id: string
           message_digest: string
           outcome: string
@@ -5272,10 +5265,9 @@ export type Database = {
           undo_state: Json | null
           undone_at: string | null
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
-          detail?: NonNullable<Json>
+          detail?: Json
           id?: string
           message_digest: string
           outcome: string
@@ -5288,7 +5280,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          detail?: NonNullable<Json>
+          detail?: Json
           id?: string
           message_digest?: string
           outcome?: string
@@ -5334,7 +5326,6 @@ export type Database = {
           trigger: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           completed_at?: string | null
           duration_ms?: number | null
@@ -5399,7 +5390,6 @@ export type Database = {
           message_digest: string
           rule_id: string
         }
-        ComputedFields: never
         Insert: {
           first_seen_at?: string
           message_digest: string
@@ -5447,7 +5437,6 @@ export type Database = {
           url_host: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           api_key_id?: string | null
           check_after?: string | null
@@ -5550,7 +5539,6 @@ export type Database = {
           used_actions: number
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           cap: number
           created_at?: string
@@ -5599,7 +5587,7 @@ export type Database = {
           last_decline_code: string | null
           park_on_end_marked_at: string | null
           park_on_end_subscription_id: string | null
-          pause_history: NonNullable<Json>
+          pause_history: Json
           pause_resumes_at: string | null
           paused_from: string | null
           pending_plan: string | null
@@ -5611,7 +5599,6 @@ export type Database = {
           updated_at: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           current_period_end?: string | null
@@ -5620,7 +5607,7 @@ export type Database = {
           last_decline_code?: string | null
           park_on_end_marked_at?: string | null
           park_on_end_subscription_id?: string | null
-          pause_history?: NonNullable<Json>
+          pause_history?: Json
           pause_resumes_at?: string | null
           paused_from?: string | null
           pending_plan?: string | null
@@ -5640,7 +5627,7 @@ export type Database = {
           last_decline_code?: string | null
           park_on_end_marked_at?: string | null
           park_on_end_subscription_id?: string | null
-          pause_history?: NonNullable<Json>
+          pause_history?: Json
           pause_resumes_at?: string | null
           paused_from?: string | null
           pending_plan?: string | null
@@ -5680,7 +5667,6 @@ export type Database = {
           stripe_payment_intent_id: string | null
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           amount_minor?: number | null
           created_at?: string
@@ -5722,22 +5708,21 @@ export type Database = {
           id: number
           occurred_at: string
           operation: string
-          record: NonNullable<Json>
+          record: Json
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           id?: never
           occurred_at?: string
           operation: string
-          record: NonNullable<Json>
+          record: Json
           user_id: string
         }
         Update: {
           id?: never
           occurred_at?: string
           operation?: string
-          record?: NonNullable<Json>
+          record?: Json
           user_id?: string
         }
         Relationships: []
@@ -5756,7 +5741,6 @@ export type Database = {
           updated_at: string
           user_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at?: string | null
@@ -5816,7 +5800,6 @@ export type Database = {
           unsubscribed_categories: string[]
           updated_at: string
         }
-        ComputedFields: never
         Insert: {
           avatar_url?: string | null
           created_at?: string
@@ -5870,7 +5853,6 @@ export type Database = {
           status: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           attempt?: number
           created_at?: string
@@ -5961,7 +5943,6 @@ export type Database = {
           url: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           consecutive_failures?: number
           created_at?: string
@@ -6026,17 +6007,16 @@ export type Database = {
         Row: {
           actor_user_id: string | null
           created_at: string
-          details: NonNullable<Json>
+          details: Json
           id: string
           kind: string
           target: string | null
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           actor_user_id?: string | null
           created_at?: string
-          details?: NonNullable<Json>
+          details?: Json
           id?: string
           kind: string
           target?: string | null
@@ -6045,7 +6025,7 @@ export type Database = {
         Update: {
           actor_user_id?: string | null
           created_at?: string
-          details?: NonNullable<Json>
+          details?: Json
           id?: string
           kind?: string
           target?: string | null
@@ -6087,7 +6067,6 @@ export type Database = {
           token_hash: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           accepted_at?: string | null
           created_at?: string
@@ -6141,7 +6120,6 @@ export type Database = {
           user_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           joined_at?: string
           role?: string
@@ -6192,7 +6170,6 @@ export type Database = {
           ticket_id: string
           workspace_id: string
         }
-        ComputedFields: never
         Insert: {
           created_at?: string
           expires_at?: string | null
@@ -6274,6 +6251,8 @@ export type Database = {
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
+          annual_switch_dismiss_count: number
+          annual_switch_dismissed_at: string | null
           bulk_undo_hidden: boolean
           card_diagnostics: boolean
           chat_checkout_link_enabled: boolean
@@ -6287,6 +6266,9 @@ export type Database = {
           free_action_cap_exempt: boolean
           grace_end_note_seen_at: string | null
           grandfathered: boolean
+          heard_about: string | null
+          heard_about_at: string | null
+          heard_about_other: string | null
           id: string
           inbox_swapped_at: string | null
           onboarding_client: string | null
@@ -6318,7 +6300,6 @@ export type Database = {
           updated_at: string
           web_client_enabled: boolean
         }
-        ComputedFields: never
         Insert: {
           acquisition_country?: string | null
           acquisition_device?: string | null
@@ -6342,6 +6323,8 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          annual_switch_dismiss_count?: number
+          annual_switch_dismissed_at?: string | null
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6355,6 +6338,9 @@ export type Database = {
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
+          heard_about?: string | null
+          heard_about_at?: string | null
+          heard_about_other?: string | null
           id?: string
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
@@ -6409,6 +6395,8 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          annual_switch_dismiss_count?: number
+          annual_switch_dismissed_at?: string | null
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6422,6 +6410,9 @@ export type Database = {
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
+          heard_about?: string | null
+          heard_about_at?: string | null
+          heard_about_other?: string | null
           id?: string
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
@@ -6477,20 +6468,19 @@ export type Database = {
           first_upgrade_at: string | null
           paid_at: string | null
           paywall_hits: number | null
-          plan: string
+          plan: string | null
           plan_changes_unfinished: number | null
           plan_downgrades: number | null
           plan_upgrades: number | null
           pricing_views: number | null
-          workspace_id: string
+          workspace_id: string | null
         }
-        ComputedFields: never
         Relationships: []
       }
     }
     Functions: {
-      _app_base_url: { Args: Record<PropertyKey, never>; Returns: string }
-      _functions_base_url: { Args: Record<PropertyKey, never>; Returns: string }
+      _app_base_url: { Args: never; Returns: string }
+      _functions_base_url: { Args: never; Returns: string }
       accept_workspace_invite: {
         Args: { p_token_hash: string }
         Returns: {
@@ -6523,7 +6513,7 @@ export type Database = {
         Returns: number
       }
       activity_log_retention_workspace_windows: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           days: number
           plan: string
@@ -6608,7 +6598,7 @@ export type Database = {
           created_at: string
           id: number
           last_error: string | null
-          payload: NonNullable<Json>
+          payload: Json
           period_start: string | null
           recipient: string
           recovered_by: string | null
@@ -6662,75 +6652,31 @@ export type Database = {
         Args: { p_key_hash: string }
         Returns: Json
       }
-      default_inbox_visibility: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      dispatch_activation_help: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      default_inbox_visibility: { Args: never; Returns: string }
+      dispatch_activation_help: { Args: never; Returns: undefined }
+      dispatch_annual_renewal_reminder: { Args: never; Returns: undefined }
       dispatch_billing_lifecycle: {
         Args: { p_mode?: string }
         Returns: undefined
       }
-      dispatch_black_week_email: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_eur_launch: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_first_30_days: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_inbox_watch: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_morning_briefs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_onboarding_morning_brief: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_pass_expiry: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_paywall_followup: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_pro_price_notice: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_referrals: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_scheduled_sends: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      dispatch_black_week_email: { Args: never; Returns: undefined }
+      dispatch_eur_launch: { Args: never; Returns: undefined }
+      dispatch_first_30_days: { Args: never; Returns: undefined }
+      dispatch_free_reset_email: { Args: never; Returns: undefined }
+      dispatch_inbox_alert: { Args: never; Returns: undefined }
+      dispatch_inbox_watch: { Args: never; Returns: undefined }
+      dispatch_morning_briefs: { Args: never; Returns: undefined }
+      dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
+      dispatch_pass_expiry: { Args: never; Returns: undefined }
+      dispatch_paywall_followup: { Args: never; Returns: undefined }
+      dispatch_plan_ending_reminder: { Args: never; Returns: undefined }
+      dispatch_pro_price_notice: { Args: never; Returns: undefined }
+      dispatch_referrals: { Args: never; Returns: undefined }
+      dispatch_reminders: { Args: never; Returns: undefined }
+      dispatch_scheduled_sends: { Args: never; Returns: undefined }
       dispatch_site_feed: { Args: { p_job: string }; Returns: undefined }
-      dispatch_subscription_followup: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      dispatch_triage_rules: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      dispatch_subscription_followup: { Args: never; Returns: undefined }
+      dispatch_triage_rules: { Args: never; Returns: undefined }
       draft_lineage_record: {
         Args: {
           p_adopt?: boolean
@@ -6798,10 +6744,7 @@ export type Database = {
         Args: { p_variants: Json }
         Returns: boolean
       }
-      expire_workspace_invites: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      expire_workspace_invites: { Args: never; Returns: undefined }
       finalize_action_usage_reservation: {
         Args: { p_reservation_id: string; p_succeeded: boolean }
         Returns: boolean
@@ -6821,7 +6764,7 @@ export type Database = {
         Returns: string
       }
       get_current_user_sessions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           id: string
@@ -6851,7 +6794,7 @@ export type Database = {
         }[]
       }
       gmail_oauth_cap_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: number
           distinct_ever: number
@@ -6864,7 +6807,7 @@ export type Database = {
         }[]
       }
       gmail_oauth_grant_series: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cumulative_grants: number
           month: string
@@ -6920,7 +6863,7 @@ export type Database = {
       }
       growth_client_family: { Args: { p_client_name: string }; Returns: string }
       growth_client_mix: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           client: string
           workspaces: number
@@ -7035,8 +6978,16 @@ export type Database = {
           tool_name: string
         }[]
       }
+      growth_heard_about: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          answer: string
+          paid: number
+          workspaces: number
+        }[]
+      }
       growth_inbox_distribution: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           band: string
           band_index: number
@@ -7060,7 +7011,7 @@ export type Database = {
             Returns: boolean
           }
       growth_lifecycle_counts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_28d: number
           active_7d: number
@@ -7102,7 +7053,7 @@ export type Database = {
         }[]
       }
       growth_oauth_abandonment: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           abandoned: number
           connected: number
@@ -7189,7 +7140,7 @@ export type Database = {
         }[]
       }
       growth_provider_mix: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           inboxes: number
           provider: string
@@ -7519,6 +7470,44 @@ export type Database = {
         Args: { p_first_starts: boolean[]; p_starts: number[] }
         Returns: number
       }
+      inbox_alert_candidates: {
+        Args: { p_lookback_days?: number }
+        Returns: {
+          acquisition_locale: string
+          email_address: string
+          error_row_at: string
+          first_auth_failed_at: string
+          imap_host: string
+          inbox_id: string
+          inbox_status: string
+          last_auth_failed_at: string
+          last_closed_at: string
+          last_error: string
+          last_success_at: string
+          owner_email: string
+          owner_id: string
+          plan: string
+          provider: string
+          service: string
+          workspace_id: string
+        }[]
+      }
+      inbox_alert_readout: {
+        Args: never
+        Returns: {
+          arm: string
+          breaks: number
+          first_failed: number
+          first_sent: number
+          mature: number
+          reconnected_7d: number
+          reconnected_7d_mature: number
+          reconnected_any: number
+          second_rows: number
+          still_open: number
+          workspaces: number
+        }[]
+      }
       inbox_autofill_scoreboard: {
         Args: { p_days?: number }
         Returns: {
@@ -7537,18 +7526,9 @@ export type Database = {
         Args: { p_inbox_id: string; p_user_id: string }
         Returns: boolean
       }
-      internal_account_domains: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
-      internal_account_emails: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
-      invoke_outlook_token_refresh: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      internal_account_domains: { Args: never; Returns: string[] }
+      internal_account_emails: { Args: never; Returns: string[] }
+      invoke_outlook_token_refresh: { Args: never; Returns: undefined }
       invoke_synthetic_monitor: {
         Args: { controlled_failure?: boolean; mode: string }
         Returns: undefined
@@ -7629,7 +7609,7 @@ export type Database = {
         Returns: Json
       }
       my_referral_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           attached_at: string
           entitlement_until: string
@@ -7641,15 +7621,9 @@ export type Database = {
           status: string
         }[]
       }
-      my_visible_inbox_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
-      my_workspace_ids: { Args: Record<PropertyKey, never>; Returns: string[] }
-      next_support_ticket_ref: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      my_visible_inbox_ids: { Args: never; Returns: string[] }
+      my_workspace_ids: { Args: never; Returns: string[] }
+      next_support_ticket_ref: { Args: never; Returns: string }
       onboarding_convert_on: {
         Args: { p_workspace_id: string }
         Returns: boolean
@@ -7683,24 +7657,12 @@ export type Database = {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
       }
-      purge_deleted_accounts: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      purge_disconnected_inboxes: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      purge_operational_history: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      purge_outbound_send_events: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      purge_send_history: { Args: Record<PropertyKey, never>; Returns: Json }
-      purge_support_history: { Args: Record<PropertyKey, never>; Returns: Json }
+      purge_deleted_accounts: { Args: never; Returns: Json }
+      purge_disconnected_inboxes: { Args: never; Returns: Json }
+      purge_operational_history: { Args: never; Returns: Json }
+      purge_outbound_send_events: { Args: never; Returns: Json }
+      purge_send_history: { Args: never; Returns: Json }
+      purge_support_history: { Args: never; Returns: Json }
       purge_workspace_audit_events_batch: {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
@@ -7852,17 +7814,14 @@ export type Database = {
           revoked_session_id: string
         }[]
       }
-      scheduled_sends_operator_workspace_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
+      scheduled_sends_operator_workspace_ids: { Args: never; Returns: string[] }
       scrub_legacy_activity_log_client_info: {
         Args: { p_blocks?: number }
         Returns: Json
       }
       signup_method_category: { Args: { p_provider: string }; Returns: string }
       signup_scoreboard: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           internal_excluded: number
           last_24h: number
@@ -7878,10 +7837,7 @@ export type Database = {
         Args: { p_connection_id: string }
         Returns: boolean
       }
-      sso_admin_workspace_ids: {
-        Args: Record<PropertyKey, never>
-        Returns: string[]
-      }
+      sso_admin_workspace_ids: { Args: never; Returns: string[] }
       sso_enforced_connection_for_email: {
         Args: { p_email: string }
         Returns: {
@@ -7894,10 +7850,7 @@ export type Database = {
       sso_is_consumer_domain: { Args: { p_domain: string }; Returns: boolean }
       sso_provider_for_domain: { Args: { p_domain: string }; Returns: string }
       sso_sign_in_required: { Args: { p_email: string }; Returns: boolean }
-      sync_inbox_watch_state: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      sync_inbox_watch_state: { Args: never; Returns: undefined }
       try_timestamptz: { Args: { p_value: string }; Returns: string }
       usage_month_summary: {
         Args: { p_since: string; p_workspace_id: string }
@@ -8075,7 +8028,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -8099,7 +8053,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -8123,7 +8078,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

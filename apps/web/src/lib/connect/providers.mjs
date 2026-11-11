@@ -327,7 +327,8 @@ export const PROVIDERS = [
     source: "vendor+probe",
     imap: {"host": "imap.startmail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.startmail.com", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE XLIST LITERAL+ AUTH=PLAIN] Dovecot (Ubuntu) ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "39321600"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE XLIST LITERAL+ AUTH=PLAIN] Dovecot (Ubuntu) ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "39321600"},
+    contentUpdatedOn: "2026-11-11",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1037,8 +1038,11 @@ export const PROVIDERS = [
     locales: ["en", "nb", "es", "fr", "zh", "de"],
   },
   {
+    // Held (see release.mjs): frontier.com refuses our network with a 403, so
+    // the vendor pages behind this article could not be re-read on 2026-11-11,
+    // and smtp.frontier.com still greets nobody on 465. IMAP re-probed fine.
     slug: "frontier",
-    wave: 12,
+    wave: 14,
     name: "Frontier",
     category: "isp",
     domain: "frontier.com",
@@ -1158,8 +1162,12 @@ export const PROVIDERS = [
     status: "supported",
     source: "vendor+probe",
     imap: {"host": "mail.optimum.net", "port": 993, "security": "tls"},
+    // Re-probed 2026-11-11: 465 now greets (an Openwave ESMTP service) but
+    // answered no EHLO within the probe window; 587 with STARTTLS answered
+    // EHLO with LOGIN and PLAIN. Optimum documents 465 as the recommended port.
     smtp: {"host": "mail.optimum.net", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 server ready", "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": null},
+    contentUpdatedOn: "2026-11-11",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1201,7 +1209,7 @@ export const PROVIDERS = [
     source: "vendor+probe",
     imap: {"host": "imap.broadband.rogers.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.broadband.rogers.com", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1243,7 +1251,8 @@ export const PROVIDERS = [
     source: "ispdb+probe",
     imap: {"host": "imap.sfr.fr", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.sfr.fr", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "20971520"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "20971520"},
+    contentUpdatedOn: "2026-11-11",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1318,7 +1327,12 @@ export const PROVIDERS = [
     source: "ispdb+probe",
     imap: {"host": "imap.xtra.co.nz", "port": 993, "security": "tls"},
     smtp: {"host": "send.xtra.co.nz", "port": 465, "security": "tls"},
-    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UIDPLUS NAMESPACE ID AUTH=PLAIN AUTH=LOGIN] imap.xtra.co.nz IMAP4 server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
+    // The August probe saw a minimal banner (UIDPLUS, no SASL-IR, no IDLE).
+    // On 2026-11-11 the host answered with a Dovecot-style capability list
+    // instead: SASL-IR and IDLE present, UIDPLUS no longer advertised before
+    // login. The page copy follows the new banner.
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN AUTH=LOGIN] imap.xtra.co.nz IMAP4 server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
+    contentUpdatedOn: "2026-11-11",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1841,6 +1855,144 @@ export const PROVIDERS = [
     imap: {"host": "imap.gazeta.pl", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.gazeta.pl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-11-10", "reachable": true, "authMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=XOAUTH2] Onet server ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "90000000"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  // ── Hosting platforms our users connect, researched on the vendors' own
+  // help pages and probed on 2026-11-11 (verified TLS chain, IMAP CAPABILITY,
+  // SMTP EHLO on 465 and 587). Settings cite the vendor page in each content
+  // file. All hold mailboxes on the customer's own domain.
+  {
+    // cyber_Folks (Poland) has no shared host: each account lives on a server
+    // named sNN.cyber-folks.pl, shown in cyber_Admin under Dane konfiguracyjne.
+    // s1, s5 and s20 all answered with the same DirectAdmin Dovecot and Exim
+    // under a *.cyber-folks.pl certificate; s1 stands in for the series here
+    // and the page says the number is the customer's own.
+    slug: "cyber-folks",
+    wave: 13,
+    name: "cyber_Folks",
+    category: "hosting",
+    domain: "cyberfolks.pl",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "s1.cyber-folks.pl", "port": 993, "security": "tls"},
+    smtp: {"host": "s1.cyber-folks.pl", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN] Dovecot DA ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // TransIP email hosting (not its cPanel/DirectAdmin packages): one pair
+    // of hosts for every mailbox, from the knowledge base.
+    slug: "transip",
+    wave: 13,
+    name: "TransIP",
+    category: "hosting",
+    domain: "transip.nl",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.transip.email", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.transip.email", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "37033449"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Combell Basic mailboxes (Belgium) on the mailprotect.be platform.
+    // Exchange and Microsoft 365 mailboxes at Combell are other products.
+    slug: "combell",
+    wave: 13,
+    name: "Combell",
+    category: "hosting",
+    domain: "combell.com",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.mailprotect.be", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp-auth.mailprotect.be", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Hostpoint (Switzerland). The host preset existed since 2026-11-04; the
+    // page is new. German copy because the host is DACH.
+    slug: "hostpoint",
+    wave: 13,
+    name: "Hostpoint",
+    category: "hosting",
+    domain: "hostpoint.ch",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.mail.hostpoint.ch", "port": 993, "security": "tls"},
+    smtp: {"host": "asmtp.mail.hostpoint.ch", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
+    locales: ["en", "nb", "es", "fr", "de"],
+  },
+  {
+    // Websupport (Slovakia; .cz rows on the page). The KB documents the m1
+    // names; WebAdmin shows each mailbox's own under Prihlasovacie udaje.
+    // GEO ochrana allows SK/CZ/HU/AT logins by default, so the page leads
+    // with widening it.
+    slug: "websupport",
+    wave: 13,
+    name: "Websupport",
+    category: "hosting",
+    domain: "websupport.sk",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.m1.websupport.sk", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.m1.websupport.sk", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot (Ubuntu) ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "33554432"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // REG.RU shared hosting mail (ispmanager, cPanel or Plesk mailboxes), not
+    // the Yandex 360 or Mail.ru products REG.RU resells. TLS 1.2 only.
+    slug: "reg-ru",
+    wave: 13,
+    name: "REG.RU",
+    category: "hosting",
+    domain: "reg.ru",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "mail.hosting.reg.ru", "port": 993, "security": "tls"},
+    smtp: {"host": "mail.hosting.reg.ru", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // 20i's StackMail platform, sold white-label through resellers whose
+    // customers may never see the 20i name; the servers stay stackmail.com.
+    slug: "stackmail",
+    wave: 13,
+    name: "20i StackMail",
+    category: "hosting",
+    domain: "stackmail.com",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.stackmail.com", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.stackmail.com", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["CRAM-MD5", "DIGEST-MD5", "LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ STARTTLS AUTH=PLAIN AUTH=LOGIN AUTH=DIGEST-MD5 AUTH=CRAM-MD5] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "CRAM-MD5", "PLAINMVPS"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
+    locales: ["en", "nb", "es", "fr"],
+  },
+  {
+    // Arsys (Spain) runs its mailboxes on serviciodecorreo.es, the names its
+    // support centre lists. mail.arsys.es, named in an old blog post, refused
+    // 993 when probed.
+    slug: "arsys",
+    wave: 13,
+    name: "Arsys",
+    category: "hosting",
+    domain: "arsys.es",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.serviciodecorreo.es", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.serviciodecorreo.es", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-11-11", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "51200000"},
     locales: ["en", "nb", "es", "fr"],
   },
 ];

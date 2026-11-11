@@ -105,6 +105,10 @@
     "paymentIssueDeclinedCta": "支払い方法を更新",
     "paymentIssueConfirm": "前回のお支払いについて、銀行が確認を求めています。プランは引き続き有効です。",
     "paymentIssueConfirmCta": "支払いを確認",
+    "inboxAlertOne": "{address} の再接続が必要です。サインインが機能しなくなったため、AI アプリはこの受信トレイでメールの閲覧、下書き、送信ができません。",
+    "inboxAlertMany": "{count} 件の受信トレイの再接続が必要です。サインインが機能しなくなったため、AI アプリはこれらを使えません。",
+    "inboxAlertReconnect": "再接続",
+    "inboxAlertOpenInboxes": "受信トレイを開く",
     "inviteSentNotDelivered": "{email}への招待を作成しましたが、メールを送信できませんでした。保留中の招待で「再送信」を使ってください。",
     "inviteResent": "{email}に招待を再送信しました。",
     "inviteResendFailed": "招待を再送信できませんでした。",
@@ -137,7 +141,8 @@
     "openSearch": "検索を開く (Command K)",
     "navWorkflows": "ワークフロー",
     "navAutomations": "自動化",
-    "navInvite": "友だちを招待"
+    "navInvite": "友だちを招待",
+    "invitePromo": "1か月贈って、1か月もらう"
   },
   "topbar": {
     "mcpLabel": "MCPエンドポイント",
@@ -640,6 +645,16 @@
     "switchCta": "年払いに切り替える",
     "switchBusy": "準備しています...",
     "ended": "Black Weekのオファーは終了したため、請求は行われていません。上の金額は通常価格です。"
+  },
+  "annualSwitch": {
+    "title": "年払いに切り替える",
+    "body": "{plan}を年に一度のお支払いにすると、月払いより{percent}%お得です。",
+    "current": "今月の未使用日数分はクレジットされるため、本日の請求額は1年分より少し低くなります。請求前に正確な金額が表示されます。",
+    "cta": "年払いに切り替える",
+    "busy": "準備中...",
+    "noticeBody": "{plan}を毎月お支払いいただいています。年払いなら{percent}%安くなります。",
+    "noticeCta": "年払いを見る",
+    "close": "閉じる"
   },
   "founder": {
     "line": "創業者価格：月額${price}。サブスクリプションを継続している限り、この価格が適用されます。先着{total}社、または2026年12月31日までのいずれか早いほうまでの提供です。追加のメールボックスは1個につき月額${addon}です。",

@@ -32,10 +32,12 @@ import {
 } from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import PlanChangeBlock from './PlanChangeBlock';
+import { AnnualSwitchCard } from './AnnualSwitch';
 import { AutomationsPanel } from './AutomationsPanel';
 import { InvitePanel, OverviewReferral, BillingReferralCredit, BillingReferralCode, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
+import { HeardAboutCard } from './HeardAboutCard';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { RecipientRuleSection } from './RecipientRuleSection';
 import { AuditExportLink, AuditTeamChanges, personLabel } from './AuditTeamChanges';
@@ -1129,7 +1131,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage, heardAboutPending = false, isOwner = false }) {
   const t = useTranslations('dashboard');
   // Onboarding Flow B (src/lib/onboarding/flow-b.mjs): `flowB` is null unless
   // this workspace is in the onb_convert arm and on Free. The clock is read
@@ -1251,6 +1253,9 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
         onGoToAutomations={onGoToAutomations}
         onConnect={onConnect}
       />
+      {/* Once per workspace, owner only, after the first inbox: where they
+          heard about us. See lib/onboarding/heard-about.mjs. */}
+      <HeardAboutCard pending={heardAboutPending} inboxCount={inboxCount} isOwner={isOwner} />
       {/* The referral program, while workspaces.referral_enabled is on: the
           tile once it is earned (the code field is in Settings > Billing). The
           Free branch counts active days off the same usage series the chart
@@ -6495,6 +6500,7 @@ function BillingSection({
   passState = null,
   workspaceId = null,
   seasonalSwitch = null,
+  annualSwitch = null,
 }) {
   const t = useTranslations('dashboard');
   const trc = useTranslations('dashboardChrome');
@@ -6567,7 +6573,7 @@ function BillingSection({
    * One click used to be enough to re-price a live subscription with the
    * amount never shown.
    */
-  const handleUpgrade = async (planId, checkoutInterval = interval) => {
+  const handleUpgrade = async (planId, checkoutInterval = interval, source = null) => {
     if (upgrading) return;
     setUpgrading(planId);
     let handingOff = false;
@@ -6611,6 +6617,8 @@ function BillingSection({
           interval: data.interval ?? checkoutInterval,
           preview: data.preview ?? null,
           quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
+          // Which card asked, for the funnel only (annual-switch.ts).
+          source,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6652,6 +6660,7 @@ function BillingSection({
           // The plan price this quote was priced with. If a different price
           // applies by now, the server charges nothing and quotes again.
           ...(pendingChange.quotedPriceId ? { quotedPriceId: pendingChange.quotedPriceId } : {}),
+          ...(pendingChange.source === 'annual_switch' ? { source: 'annual_switch' } : {}),
         }),
       });
 
@@ -6711,6 +6720,7 @@ function BillingSection({
           offerEnded: data.seasonal_offer_ended === true,
           priceChanged: data.price_changed === true,
           quotedPriceId: typeof data.quoted_price_id === 'string' ? data.quoted_price_id : null,
+          source: pendingChange.source ?? null,
         });
       } else {
         toast({ message: t('billing.errCheckoutUnexpected'), variant: 'error' });
@@ -6850,6 +6860,16 @@ function BillingSection({
     statusParamsHandled.current = true;
 
     const params = new URLSearchParams(window.location.search);
+    // From the annual renewal reminder email: "switch to monthly before the
+    // renewal". The plan already paid for, at the other interval, through the
+    // same quote dialog as every change, so nothing is charged from the link.
+    if (params.get('switch_interval') === 'month') {
+      window.history.replaceState(window.history.state, '', '/dashboard/settings');
+      // Applies the one-shot URL intent once, like ?upgrade= above; it only quotes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (intervalSwitchPlanId !== null) handleUpgrade(intervalSwitchPlanId, 'month');
+      return;
+    }
     // Back from a 3-month pass Checkout. A cancelled one needs no word; a paid
     // one is confirmed and the page reloads once the webhook has had a moment
     // to record the pass and project Personal.
@@ -7173,6 +7193,22 @@ function BillingSection({
               {upgrading === switchOffer.planId ? trc('seasonal.switchBusy') : trc('seasonal.switchCta')}
             </Btn>
           </div>
+        )}
+
+        {/* Monthly-to-annual, permanent, for an owner on the current monthly
+            price (src/lib/billing/annual-switch.ts). Hidden while the Black
+            Week card shows: the server never sends both. Same two-step quote
+            as every plan change, so nothing is charged from this card. */}
+        {!switchOffer && !passState && intervalSwitchPlanId !== null &&
+          annualSwitch?.planId === intervalSwitchPlanId && (
+          <AnnualSwitchCard
+            annualSwitch={annualSwitch}
+            stripePrices={stripePrices}
+            workspaceId={workspaceId}
+            onSwitch={(planId) => handleUpgrade(planId, 'year', 'annual_switch')}
+            busy={upgrading === annualSwitch.planId}
+            disabled={upgrading !== null}
+          />
         )}
 
         {upgradablePlans.length > 0 && (
@@ -8340,6 +8376,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         passState={passState}
         workspaceId={workspace?.id ?? null}
         seasonalSwitch={isOwner ? (workspace?.seasonalSwitch ?? null) : null}
+        annualSwitch={isOwner ? (workspace?.annualSwitch ?? null) : null}
       />
       {/* Referral credit waiting for the next invoice, and the code field
           for a new account, while workspaces.referral_enabled is on

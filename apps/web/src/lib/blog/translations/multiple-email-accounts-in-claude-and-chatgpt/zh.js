@@ -55,7 +55,7 @@ Claude 的 Free 方案允许一个自定义连接器，Pro 和 Max 不限数量�
 
 ## 添加到 ChatGPT
 
-ChatGPT Go 和付费方案可以在浏览器中的 chatgpt.com 上添加自定义 MCP 服务器；移动端应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。
+ChatGPT 付费方案可以在浏览器中的 chatgpt.com 上添加自定义 MCP 服务器；移动端应用无法添加。OpenAI 的帮助页面列出的是 Business 和 Enterprise/Edu（由管理员或所有者为工作区添加）以及仅限读取和获取工具的 Pro；未提及 Go 或 Plus。
 
 1. 依次打开 **Plugins** 和 **Personal**，点击右上角的 **Add**，然后选择 **Add custom MCP server**。
 2. 命名为 MCPEmails，在 **Connection** 下粘贴 \`https://mcpemails.com/api/mcp\`，选择 **OAuth**，勾选 **I understand and want to continue**，然后点击 **Create as a plugin**。

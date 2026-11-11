@@ -1,10 +1,10 @@
 const translation = {
   title: 'Flere e-postkontoer i Claude Cowork, også personlig Outlook',
   description:
-    'Claude Cowork når én Google-konto gjennom Gmail-koblingen, og Microsoft 365-koblingen avviser personlige Outlook-adresser. Slik gir du én Cowork-oppgave flere innbokser, både jobb og privat.',
+    'Claude Cowork når én Google-konto gjennom Gmail-koblingen og den ene Microsoft-kontoen du logger på med gjennom Microsoft 365-koblingen. Slik gir du én Cowork-oppgave flere innbokser, både jobb og privat.',
   coverAlt:
     'E-postkontoer for jobb og privat, blant annet Gmail og Outlook.com, koblet til én oppgave i Claude Cowork',
-  content: `**Claude Cowork bruker de samme koblingene som Claude-chatten, så den har de samme begrensningene for e-post: én Google-konto gjennom Gmail-koblingen, og bare Microsoft 365-jobbkontoer gjennom Microsoft 365-koblingen.** En personlig Outlook.com- eller Hotmail-adresse, en Gmail-konto til eller en firmapostkasse hos en IMAP-leverandør krever en egendefinert kobling. Med en MCP-server som MCPEmails gir én egendefinert kobling en Cowork-oppgave tilgang til alle postkassene du kobler til, hver med sitt navn.
+  content: `**Claude Cowork bruker de samme koblingene som Claude-chatten, så den har de samme begrensningene for e-post: én Google-konto gjennom Gmail-koblingen, og én Microsoft-konto gjennom Microsoft 365-koblingen, som bare godtar en personlig Outlook.com-konto på Free, Pro, Max og Ultra.** En Gmail-konto til, en personlig Outlook.com- eller Hotmail-adresse på et Team- eller Enterprise-abonnement, en firmapostkasse hos en IMAP-leverandør eller sending med vedlegg krever en egendefinert kobling. Med en MCP-server som MCPEmails gir én egendefinert kobling en Cowork-oppgave tilgang til alle postkassene du kobler til, hver med sitt navn.
 
 **Hopp til:** [Innebygde koblinger](#hva-coworks-innebygde-e-postkoblinger-når) · [Flere innbokser](#flere-innbokser-i-én-cowork-oppgave) · [Oppsett](#slik-setter-du-det-opp) · [Tillatelser](#behold-kontrollen-over-sendingen) · [Vanlige spørsmål](#vanlige-spørsmål)
 
@@ -13,7 +13,7 @@ const translation = {
 Anthropics [guide til Cowork](https://support.claude.com/en/articles/13345190-get-started-with-cowork) styrer koblinger fra den samme **Customize → Connectors**-siden som chatten, og chat og Cowork deler nå ett felles startsted i Claude-appen. Det Claude-kontoen din har koblet til, er det en Cowork-oppgave kan bruke.
 
 - **Gmail.** Claudes Gmail-kobling leser, søker, lager utkast og sender. [Anthropics artikkel](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) beskriver tilgang til «the Google account you've connected», altså Google-kontoen du har koblet til, og sier ingenting om å legge til en konto til. En privat og en jobb-Gmail kan ikke ligge side om side gjennom den.
-- **Microsoft 365.** [Microsoft 365-koblingen](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) er for kontoer i en bedrifts Microsoft 365-tenant. En global administrator må gi samtykke først, den starter skrivebeskyttet, og personlige Microsoft-kontoer som @outlook.com og @hotmail.com kan ikke brukes til å koble til.
+- **Microsoft 365.** [Microsoft 365-koblingen](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) godtar en jobb- eller skolekonto, der en global administrator må gi samtykke først og den starter skrivebeskyttet, eller, på Free, Pro, Max og Ultra, en personlig Microsoft-konto som @outlook.com eller @hotmail.com uten administrator. Team- og Enterprise-abonnementer får ikke se det personlige valget, og skriveverktøyene avviser vedlegg.
 - **Alt annet.** Yahoo, iCloud, Fastmail, Zoho, IONOS eller din egen e-postserver har ingen innebygd kobling i Claude.
 
 Den vanlige blandingen, en jobbpostkasse pluss en personlig Outlook.com eller en Gmail-konto til, passer altså ikke inn i Cowork med bare de innebygde koblingene.
@@ -72,7 +72,7 @@ Vil du ha den samme oppsummeringen hver morgen uten å spørre, kan du sette den
 Ikke gjennom Claudes innebygde Gmail-kobling, som Anthropic beskriver som tilgang til den ene Google-kontoen du har koblet til. Koble begge kontoene til MCPEmails med Google-apppassord og legg til MCPEmails som en egendefinert kobling; da ser en Cowork-oppgave begge.
 
 **Kan Cowork lese e-post fra min personlige Outlook.com eller Hotmail?**
-Ikke med Claudes Microsoft 365-kobling, som avviser personlige Microsoft-kontoer. Koble adressen til MCPEmails med Logg på med Microsoft, og legg deretter til MCPEmails i Claude. [Koble Claude til Outlook.com og Hotmail](/blog/connect-claude-to-outlook-com-hotmail) har stegene.
+På Free, Pro, Max eller Ultra, ja, gjennom Claudes Microsoft 365-kobling, uten vedlegg. På et Team- eller Enterprise-abonnement, eller for vedlegg og andre postkasser ved siden av, kobler du adressen til MCPEmails med Logg på med Microsoft og legger deretter til MCPEmails i Claude. [Koble Claude til Outlook.com og Hotmail](/blog/connect-claude-to-outlook-com-hotmail) har stegene.
 
 **Fungerer egendefinerte koblinger i Cowork?**
 Ja. Anthropic oppgir at egendefinerte koblinger er tilgjengelige i Claude, Cowork og Claude Desktop. De må være eksterne servere som kan nås fra internett; en lokal server fra konfigurasjonsfilen til skrivebordsappen er ikke tilgjengelig i Cowork.
