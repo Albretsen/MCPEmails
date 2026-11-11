@@ -23,6 +23,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/database.types';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
+import { isProduction } from '@/lib/env/app-env';
 import type {
   CandidateContext,
   ClaimRow,
@@ -53,9 +54,25 @@ function isMissingColumn(error: { code?: string; message?: string } | null, colu
   );
 }
 
+/**
+ * LIFECYCLE_TEST_RECIPIENTS: exact addresses that count as external customers
+ * for the lifecycle emails, so staging personas (on our own domain) can be
+ * selected end to end. Ignored in production (APP_ENV unset or production).
+ */
+export function lifecycleTestRecipients(env: Record<string, string | undefined> = process.env): ReadonlySet<string> {
+  if (isProduction(env)) return new Set();
+  return new Set(
+    (env.LIFECYCLE_TEST_RECIPIENTS ?? '')
+      .split(/[\s,]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
 /** Same matching as growth_is_internal_email(text): exact, plus-tag-insensitive, or our domains. */
 export function matchesInternal(email: string | null, listed: ReadonlySet<string>): boolean {
   if (!email) return false;
+  if (lifecycleTestRecipients().has(email.trim().toLowerCase())) return false;
   if (isInternalAccount(email)) return true;
   const e = email.trim().toLowerCase();
   const untagged = e.replace(/\+[^@]*@/, '@');

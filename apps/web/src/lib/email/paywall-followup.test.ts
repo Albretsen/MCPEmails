@@ -214,6 +214,28 @@ test('trigger: internal matching covers the table list, plus tags and our domain
   assert.equal(matchesInternal('customer@example.test', listed), false);
 });
 
+test('LIFECYCLE_TEST_RECIPIENTS makes a listed address external outside production only', async () => {
+  const { lifecycleTestRecipients } = await import('@/lib/email/paywall-followup-store');
+  const list = 'staging-a+free@mcpemails.com, staging-b@mcpemails.com';
+  assert.equal(lifecycleTestRecipients({ LIFECYCLE_TEST_RECIPIENTS: list }).size, 0, 'APP_ENV unset is production');
+  assert.equal(lifecycleTestRecipients({ APP_ENV: 'production', LIFECYCLE_TEST_RECIPIENTS: list }).size, 0);
+  assert.equal(lifecycleTestRecipients({ APP_ENV: 'staging', LIFECYCLE_TEST_RECIPIENTS: list }).has('staging-b@mcpemails.com'), true);
+  const saved = { APP_ENV: process.env.APP_ENV, L: process.env.LIFECYCLE_TEST_RECIPIENTS };
+  try {
+    process.env.LIFECYCLE_TEST_RECIPIENTS = list;
+    delete process.env.APP_ENV;
+    assert.equal(matchesInternal('staging-b@mcpemails.com', new Set()), true);
+    process.env.APP_ENV = 'staging';
+    assert.equal(matchesInternal('Staging-B@mcpemails.com', new Set()), false);
+    assert.equal(matchesInternal('other@mcpemails.com', new Set()), true);
+  } finally {
+    if (saved.APP_ENV === undefined) delete process.env.APP_ENV;
+    else process.env.APP_ENV = saved.APP_ENV;
+    if (saved.L === undefined) delete process.env.LIFECYCLE_TEST_RECIPIENTS;
+    else process.env.LIFECYCLE_TEST_RECIPIENTS = saved.L;
+  }
+});
+
 test('trigger: an old paywall past the step 1 window is never sent late or recorded', () => {
   const d = decide(ctx(), at(2 * DAY));
   assert.deepEqual(d, { kind: 'stop', step: 1, reason: 'window_missed', persist: false });
