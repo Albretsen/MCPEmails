@@ -8,7 +8,7 @@ const translation = {
 
 Esta página mostra em qual caso você se encaixa. As informações sobre os produtos da Anthropic e do Google foram lidas nas páginas oficiais de cada um em outubro de 2026. Esses produtos mudam com frequência, então cada seção traz o link da página em que se baseia.
 
-**Ir para:** [Gmail](#gmail-o-conector-próprio-do-claude) · [Microsoft 365](#outlook-e-microsoft-365-só-contas-corporativas) · [O que os conectores nativos não cobrem](#o-que-os-conectores-nativos-não-cobrem) · [MCPEmails](#como-o-mcpemails-cobre-essa-lacuna) · [Envio](#o-claude-pode-enviar-e-mails) · [Perguntas frequentes](#perguntas-frequentes)
+**Ir para:** [Gmail](#gmail-o-conector-próprio-do-claude) · [Microsoft 365](#outlook-e-microsoft-365-contas-corporativas-e-contas-pessoais-nos-planos-individuais) · [O que os conectores nativos não cobrem](#o-que-os-conectores-nativos-não-cobrem) · [MCPEmails](#como-o-mcpemails-cobre-essa-lacuna) · [Envio](#o-claude-pode-enviar-e-mails) · [Perguntas frequentes](#perguntas-frequentes)
 
 ## Gmail: o conector próprio do Claude
 
@@ -30,16 +30,16 @@ O Google também documenta o mesmo servidor MCP do Gmail como parte do seu [Work
 
 Se o Gmail é sua única caixa e o Claude é seu único app de IA, o conector nativo pode ser tudo de que você precisa.
 
-## Outlook e Microsoft 365: só contas corporativas
+## Outlook e Microsoft 365: contas corporativas, e contas pessoais nos planos individuais
 
-O conector do Microsoft 365 no Claude lê e-mails do Outlook em contas que pertencem ao tenant Microsoft 365 de uma empresa.
+O conector do Microsoft 365 no Claude lê e-mails do Outlook de contas corporativas e educacionais no tenant Microsoft 365 de uma empresa e, nos planos Free, Pro, Max e Ultra, de uma conta pessoal da Microsoft.
 
 - **Leitura e pesquisa** cobrem sua caixa principal, a pasta Arquivo Morto e as caixas compartilhadas que você pode abrir.
-- **O envio vem desativado.** O conector começa como somente leitura. Depois que as ferramentas de escrita são ativadas, o Claude pode enviar e encaminhar e-mails e criar, editar e excluir rascunhos. As ferramentas de escrita recusam mensagens com anexos.
-- **Um administrador precisa aprovar.** Um Administrador Global do Microsoft Entra da sua organização precisa dar consentimento antes que qualquer pessoa ali possa conectar, e de novo antes que as ferramentas de escrita funcionem.
-- **Contas pessoais são recusadas.** O [artigo da Anthropic](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) é claro: endereços como @outlook.com e @hotmail.com não podem ser usados para conectar.
+- **Envio.** Em uma conta corporativa ou educacional, o conector começa como somente leitura; depois que as ferramentas de escrita são ativadas, o Claude pode enviar e encaminhar e-mails e criar, editar e excluir rascunhos. Em uma conta pessoal, as ferramentas de escrita já vêm incluídas, e o Claude pergunta antes de enviar. Nos dois casos, as ferramentas de escrita recusam mensagens com anexos.
+- **Um administrador precisa aprovar as contas corporativas.** Um Administrador Global do Microsoft Entra da sua organização precisa dar consentimento antes que qualquer pessoa ali possa conectar, e de novo antes que as ferramentas de escrita funcionem. Uma conta pessoal não precisa de administrador.
+- **Contas pessoais funcionam nos planos individuais.** O [artigo da Anthropic](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) diz que uma conta do Outlook.com, Hotmail, Live ou MSN conecta no Free, Pro, Max e Ultra, e que os planos Team e Enterprise não veem essa opção.
 
-Ou seja, um endereço pessoal do Outlook.com, Hotmail ou Live não tem caminho nativo até o Claude. [Conectar o Claude ao Outlook.com e ao Hotmail](/blog/connect-claude-to-outlook-com-hotmail) mostra o caminho que funciona.
+Ou seja, um endereço pessoal do Outlook.com, Hotmail ou Live tem caminho nativo até o Claude em um plano individual, sem anexos. Para um plano Team ou Enterprise, anexos ou várias caixas, [Conectar o Claude ao Outlook.com e ao Hotmail](/blog/connect-claude-to-outlook-com-hotmail) mostra o caminho pelo conector personalizado.
 
 ## O que os conectores nativos não cobrem
 
@@ -91,7 +91,7 @@ Ele envia da única conta Google que você conectou. O Claude vê só os metadad
 
 ### O conector do Microsoft 365 no Claude
 
-Ele começa como somente leitura. Depois que as ferramentas de escrita são ativadas, o que exige que um Administrador Global do Microsoft Entra aprove as permissões ampliadas, o Claude pode enviar e encaminhar e-mails e criar, editar e excluir rascunhos. As ferramentas de escrita recusam qualquer mensagem com anexo, e endereços pessoais do Outlook.com e do Hotmail não conseguem conectar.
+Em uma conta corporativa ou educacional, ele começa como somente leitura; depois que as ferramentas de escrita são ativadas, o que exige que um Administrador Global do Microsoft Entra aprove as permissões ampliadas, o Claude pode enviar e encaminhar e-mails e criar, editar e excluir rascunhos. Em uma conta pessoal no Free, Pro, Max ou Ultra, as ferramentas de escrita já vêm incluídas, e o Claude pergunta antes de enviar. Nos dois casos, as ferramentas de escrita recusam qualquer mensagem com anexo.
 
 ### Como o MCPEmails envia
 
@@ -127,7 +127,7 @@ Sim. A Anthropic lista envio, resposta e encaminhamento para o conector do Gmail
 Sim, com o conector nativo do Gmail no Claude, para a conta Google que você conectar. Para usar mais de uma conta Google, ou o Gmail junto com outros provedores no mesmo chat, conecte-as pelo MCPEmails com uma senha de app do Google.
 
 **O Claude acessa meu e-mail do Outlook ou do Hotmail?**
-Contas corporativas e educacionais do Microsoft 365 podem usar o conector do Microsoft 365 no Claude depois que um administrador o aprova. Endereços pessoais do Outlook.com e do Hotmail não podem. O MCPEmails conecta os dois com Entrar com a Microsoft, embora uma conta corporativa ainda possa precisar que o administrador de TI aprove o app uma vez para a organização.
+Contas corporativas e educacionais do Microsoft 365 podem usar o conector do Microsoft 365 no Claude depois que um administrador o aprova, e um endereço pessoal do Outlook.com ou do Hotmail conecta a ele nos planos Free, Pro, Max e Ultra, sem anexos. O MCPEmails conecta os dois em qualquer plano do Claude, com anexos, embora uma conta corporativa ainda possa precisar que o administrador de TI aprove o app uma vez para a organização.
 
 **O Claude lê e-mails do Yahoo ou do iCloud?**
 Não com um conector nativo. Conecte a caixa ao MCPEmails com uma senha de app do Yahoo ou da Apple e depois adicione o MCPEmails ao Claude. O [guia do Yahoo Mail para ChatGPT e Claude](/blog/connect-yahoo-mail-to-chatgpt-and-claude) traz o passo a passo, e [o plugin do iCloud Mail no ChatGPT explicado](/blog/chatgpt-icloud-mail-plugin) compara a nova opção de iCloud da OpenAI.

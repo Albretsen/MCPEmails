@@ -206,7 +206,7 @@
         "step2": "Wählen Sie Benutzerdefinierten MCP-Server hinzufügen, nennen Sie ihn MCPEmails und fügen Sie die URL unten als Server URL ein.",
         "step3": "Setzen Sie den Haken bei Ich verstehe und möchte fortfahren, klicken Sie auf Als Plugin erstellen, dann auf Verbinden, und erlauben Sie den Zugriff.",
         "step4": "Tippen Sie in einem Chat @MCPEmails, um es zu nutzen.",
-        "note": "Eigene MCP-Server funktionieren mit dem Go-Tarif und allen bezahlten Tarifen, im Browser auf chatgpt.com."
+        "note": "Eigene MCP-Server brauchen einen bezahlten Tarif, im Browser auf chatgpt.com: OpenAI nennt Business und Enterprise/Edu, mit reinem Lesezugriff in Pro."
       },
       "key": {
         "creating": "API-Schlüssel für {client} wird erstellt",

@@ -30,7 +30,7 @@
       "step3": "Choose OAuth, tick \"I understand and want to continue\", then click \"Create as a plugin\".",
       "step4": "Sign in with MCPEmails to authorize. No API key needed.",
       "step5": "In a chat, type @ and pick MCPEmails. The pick applies to that message, so @mention it again when a follow-up needs your email.",
-      "note": "Custom MCP servers can be added on ChatGPT Go and paid plans. On Business and Enterprise, an admin or owner may need to add it."
+      "note": "OpenAI lists custom MCP servers for Business and Enterprise/Edu workspaces, with read-only access on Pro, on chatgpt.com. On Business and Enterprise, an admin or owner may need to add it."
     },
     "cursor": {
       "step1": "Edit ~/.cursor/mcp.json (global) or .cursor/mcp.json (project).",

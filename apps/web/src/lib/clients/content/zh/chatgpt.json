@@ -16,7 +16,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 chatgpt.com 上依次打开 Plugins、Personal、Add，然后选择 Add custom MCP server。将其命名为 MCPEmails，在 Connection 下粘贴 https://mcpemails.com/api/mcp ，选择 OAuth，勾选确认框，点击 Create as a plugin，然后用 MCPEmails 登录。Go 和付费套餐都可以添加自定义 MCP 服务器。在对话中输入 @ 并选择 MCPEmails。"
+    "answer": "在 chatgpt.com 上依次打开 Plugins、Personal、Add，然后选择 Add custom MCP server。将其命名为 MCPEmails，在 Connection 下粘贴 https://mcpemails.com/api/mcp ，选择 OAuth，勾选确认框，点击 Create as a plugin，然后用 MCPEmails 登录。OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu，Pro 仅限只读访问，且都只在网页版。在对话中输入 @ 并选择 MCPEmails。"
   },
   "method": {
     "title": "ChatGPT 如何连接：OAuth，无需 API 密钥",
@@ -47,7 +47,7 @@
   "gotchas": [
     {
       "h": "在网页版添加，每条消息单独选择",
-      "p": "Go 和付费套餐可以在 chatgpt.com 上添加自定义 MCP 服务器；移动应用不支持添加。在 Business 和 Enterprise 中，可能需要由管理员或所有者为工作区添加。最容易漏掉的是最后一步：只有当你输入 <b>@</b> 并选择 MCPEmails 时，ChatGPT 才会在该条消息中使用它，所以后续问题需要邮件时请再次提及。"
+      "p": "自定义 MCP 服务器在 chatgpt.com 上添加；移动应用不支持添加。OpenAI 的帮助页面列出的是 Business 和 Enterprise/Edu 工作区（由管理员或所有者添加并发布），并说明 Pro 只能以读取和获取工具连接；页面未提及 Go 或 Plus。最容易漏掉的是最后一步：只有当你输入 <b>@</b> 并选择 MCPEmails 时，ChatGPT 才会在该条消息中使用它，所以后续问题需要邮件时请再次提及。"
     },
     {
       "h": "创建连接器时选择 OAuth，而不是无认证",
@@ -70,7 +70,7 @@
     },
     {
       "q": "为什么我无法在 ChatGPT 中添加自定义 MCP 服务器？",
-      "a": "Go 和付费套餐可以在 chatgpt.com 上添加自定义 MCP 服务器，移动应用不提供此选项。在 Business 或 Enterprise 工作区中，可能需要由管理员或所有者添加。如果已添加 MCPEmails 但 ChatGPT 没有使用它，请在对话中输入 <b>@</b> 并选择 MCPEmails；每次选择只对一条消息有效。"
+      "a": "自定义 MCP 服务器在 chatgpt.com 上添加，移动应用不提供此选项。OpenAI 的帮助页面将 Business 和 Enterprise/Edu 列为完整支持（只有管理员或所有者能添加并发布），Pro 仅限读取和获取工具；未提及 Go 或 Plus。如果已添加 MCPEmails 但 ChatGPT 没有使用它，请在对话中输入 <b>@</b> 并选择 MCPEmails；每次选择只对一条消息有效。"
     },
     {
       "q": "ChatGPT 需要 API 密钥吗？",

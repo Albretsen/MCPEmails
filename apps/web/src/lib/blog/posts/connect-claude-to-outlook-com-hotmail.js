@@ -2,28 +2,31 @@ const post = {
   slug: 'connect-claude-to-outlook-com-hotmail',
   title: 'Connect Claude to Hotmail and Outlook.com (Personal Accounts)',
   description:
-    "Claude's Microsoft 365 connector does not accept personal Microsoft accounts. Connect a Hotmail, Outlook.com, Live or MSN inbox to Claude with Sign in with Microsoft and one custom connector URL.",
+    "Claude's Microsoft 365 connector now takes a personal Microsoft account on Free, Pro, Max and Ultra. When that is enough, and how to connect Hotmail, Outlook.com, Live or MSN to Claude with attachments, several mailboxes or a Team plan through one custom connector URL.",
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Claude connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-10-20T09:00:00.000Z',
-  updatedAt: '2026-10-20T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['Claude', 'Outlook', 'Tutorial', 'MCP'],
   featured: false,
-  content: `To connect Claude to a personal Outlook.com, Hotmail, Live or MSN address, you add the mailbox to MCPEmails with **Connect with Microsoft**, then add one URL to Claude as a custom connector. Claude's own Microsoft 365 connector requires a business Microsoft tenant, and Anthropic says personal Microsoft accounts can't be used with it. A custom connector has no such requirement, so an old hotmail.com address works the same way as a new outlook.com one.
+  content: `There are two ways to connect Claude to a personal Outlook.com, Hotmail, Live or MSN address. Claude's own Microsoft 365 connector accepts a personal Microsoft account on the Free, Pro, Max and Ultra plans, with no administrator involved. The other route is MCPEmails: add the mailbox with **Connect with Microsoft**, then add one URL to Claude as a custom connector. The second route covers what the built-in connector leaves out: attachments, several mailboxes behind one connection, Team and Enterprise plans, and the same inbox in ChatGPT or any other MCP client. An old hotmail.com address works the same way as a new outlook.com one on both.
 
 This guide is for personal Microsoft accounts in Claude. If your mail is a work or school Microsoft 365 account, read the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) instead.
 
-## Why Claude's Microsoft 365 connector refuses personal accounts
+## What Claude's Microsoft 365 connector does with a personal account
 
-Anthropic's [Microsoft 365 connector help page](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) sets two conditions before anyone can connect:
+Anthropic's [Connect to Microsoft 365 article](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) now covers personal accounts. On the Free, Pro, Max and Ultra plans you can connect an Outlook.com, Hotmail, Live or MSN account yourself; no admin is needed. The connector reaches Outlook and OneDrive, and its write tools are included, so Claude can draft and send mail and manage calendar events after asking you first.
 
-- The account must belong to a Microsoft Entra tenant tied to a Microsoft Business plan.
-- A Global Administrator in that tenant has to authorize the integration first.
+Three limits in the same article matter for mail:
 
-The same page says personal Microsoft accounts, such as @outlook.com or @hotmail.com addresses, can't be used to connect. A personal account has no business tenant and no administrator behind it, so there is nothing to approve and no setting you can change to make it work. The connector is made for organisations: it searches SharePoint, OneDrive, Outlook and Teams, and its permissions are read-only until an administrator turns on write tools.
+- **No attachments in the write tools.** Claude cannot send, forward or draft an email with an attachment through it.
+- **Not on Team and Enterprise.** Those plans are not shown the personal-account option, so a personal Hotmail address next to a work plan has no built-in route.
+- **Inside Claude only, for the account you sign in with.** Gmail has its own connector; iCloud, Yahoo and IMAP mailboxes have none, and nothing carries over to ChatGPT or another MCP client.
 
-Your mailbox itself is fine. Claude simply needs a different route to it.
+Work or school accounts are a different case: a Microsoft Entra Global Administrator still has to consent before anyone in the organisation can connect. The [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) and the [admin consent page](/docs/microsoft-365-admin-consent) cover that.
+
+If one personal Outlook.com inbox in Claude, without attachments, is all you need, the built-in connector does it. The rest of this guide is the route for everything else.
 
 ## What you need
 
@@ -100,10 +103,10 @@ No. Each time Claude asks for a message, MCPEmails fetches it live from Microsof
 ## FAQ
 
 **Can I connect Claude to Outlook.com or Hotmail?**
-Yes. Claude's built-in Microsoft 365 connector does not support personal Microsoft accounts, but a custom connector does. Connect the address to MCPEmails with Connect with Microsoft, add \`https://mcpemails.com/api/mcp\` to Claude under Customize → Connectors, and Claude can read, search, send and organise your Outlook.com, Hotmail, Live or MSN mail.
+Yes, two ways. On Free, Pro, Max or Ultra, Claude's built-in Microsoft 365 connector accepts a personal Microsoft account directly, without attachments. For attachments, several mailboxes, a Team or Enterprise plan, or the same inbox in ChatGPT, connect the address to MCPEmails with Connect with Microsoft, add \`https://mcpemails.com/api/mcp\` to Claude under Customize → Connectors, and Claude can read, search, send and organise your Outlook.com, Hotmail, Live or MSN mail.
 
 **Why does Claude's Microsoft 365 connector reject my Hotmail address?**
-Anthropic's help page says that connector needs a Microsoft Entra tenant tied to a Microsoft Business plan and a Global Administrator to authorize it, and that personal Microsoft accounts can't be used. A personal account has no tenant and no administrator.
+Check the plan. Anthropic says personal Microsoft accounts connect on Free, Pro, Max and Ultra, and that Team and Enterprise plans are not shown that option. A work or school address is different: it needs a Global Administrator in its Microsoft Entra tenant to consent first. On a Team or Enterprise plan, MCPEmails as a custom connector is the route for a personal address.
 
 **Do I need an app password or IMAP settings?**
 No. Personal Microsoft accounts connect through Sign in with Microsoft and Microsoft Graph. Microsoft no longer accepts password sign-in from non-Microsoft mail apps on these accounts, so an app password would not log in anyway.

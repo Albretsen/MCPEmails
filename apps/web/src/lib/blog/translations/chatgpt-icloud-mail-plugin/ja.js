@@ -76,7 +76,7 @@ MCPEmailsを検討する価値があるのは、次のような場合です。
 - **メールボックスが複数ある。** iCloud、Gmail、Yahoo、Outlook.com、会社のIMAPの受信トレイを1つのアカウントに接続すれば、どのクライアントからもURL 1つですべてが見えます。エージェントがそれらをどう区別するかは[ClaudeとChatGPTで複数のメールアカウントを使う方法](/blog/multiple-email-accounts-in-claude-and-chatgpt)で説明しています。
 - **読むだけでなく、メールを仕分けて片付けたい。** フォルダー、移動、アーカイブ、予約送信、常設のルールです。
 
-ChatGPTでは、MCPEmailsをカスタムMCPサーバーとして追加します。OpenAIはこれをchatgpt.comのGoと有料プランで認めており、Freeでは追加できません。手順は[ChatGPTのセットアップページ](/docs/chatgpt)にあります。
+ChatGPTでは、MCPEmailsをカスタムMCPサーバーとして追加します。OpenAIがこれを提供しているのはchatgpt.comのBusinessとEnterprise/Eduで、Proでは読み取りと取得のツールに限られ、Freeでは追加できません。手順は[ChatGPTのセットアップページ](/docs/chatgpt)にあります。
 
 メールがMCPEmailsに保存されることはありません。エージェントが求めたときにAppleからその場で取得し、保持するのは暗号化したアプリ用パスワードだけです。Apple側でそのパスワードを取り消せば、受信トレイはすぐに切断されます。
 

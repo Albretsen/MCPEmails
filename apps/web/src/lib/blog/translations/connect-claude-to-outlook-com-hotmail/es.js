@@ -1,22 +1,25 @@
 const translation = {
   title: 'Cómo conectar Claude con Hotmail y Outlook.com (cuentas personales)',
   description:
-    'El conector de Microsoft 365 de Claude no admite cuentas personales de Microsoft. Conecta un correo de Hotmail, Outlook.com, Live o MSN a Claude con Iniciar sesión con Microsoft y una sola URL de conector personalizado.',
+    'El conector de Microsoft 365 de Claude ya admite una cuenta personal de Microsoft en los planes Free, Pro, Max y Ultra. Cuándo basta con eso, y cómo conectar Hotmail, Outlook.com, Live o MSN a Claude con adjuntos, varios buzones o un plan Team mediante una sola URL de conector personalizado.',
   coverAlt: 'Claude conectado a un buzón personal de Outlook.com o Hotmail a través de MCPEmails',
-  content: `Para conectar Claude a una dirección personal de Outlook.com, Hotmail, Live o MSN, añades el buzón a MCPEmails con **Conectar con Microsoft** y después añades una URL a Claude como conector personalizado. El conector de Microsoft 365 propio de Claude exige un inquilino (tenant) empresarial de Microsoft, y Anthropic indica que las cuentas personales de Microsoft no se pueden usar con él. Un conector personalizado no tiene ese requisito, así que una dirección antigua de hotmail.com funciona igual que una nueva de outlook.com.
+  content: `Hay dos formas de conectar Claude a una dirección personal de Outlook.com, Hotmail, Live o MSN. El conector de Microsoft 365 propio de Claude acepta una cuenta personal de Microsoft en los planes Free, Pro, Max y Ultra, sin que intervenga ningún administrador. La otra vía es MCPEmails: añades el buzón con **Conectar con Microsoft** y después añades una URL a Claude como conector personalizado. Esta segunda vía cubre lo que el conector integrado deja fuera: adjuntos, varios buzones detrás de una sola conexión, los planes Team y Enterprise, y el mismo buzón en ChatGPT o en cualquier otro cliente MCP. Una dirección antigua de hotmail.com funciona igual que una nueva de outlook.com en ambas.
 
 Esta guía trata de las cuentas personales de Microsoft en Claude. Si tu correo es una cuenta de trabajo o educativa de Microsoft 365, consulta en su lugar la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
-## Por qué el conector de Microsoft 365 de Claude rechaza las cuentas personales
+## Qué hace el conector de Microsoft 365 de Claude con una cuenta personal
 
-La [página de ayuda del conector de Microsoft 365](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) de Anthropic pone dos condiciones antes de que nadie pueda conectarse:
+El artículo [Connect to Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) de Anthropic ya cubre las cuentas personales. En los planes Free, Pro, Max y Ultra puedes conectar tú mismo una cuenta de Outlook.com, Hotmail, Live o MSN; no hace falta ningún administrador. El conector llega a Outlook y OneDrive, y sus herramientas de escritura vienen incluidas, así que Claude puede redactar y enviar correo y gestionar eventos del calendario después de pedirte permiso.
 
-- La cuenta tiene que pertenecer a un inquilino de Microsoft Entra vinculado a un plan Microsoft Business.
-- Un administrador global de ese inquilino tiene que autorizar antes la integración.
+Tres límites del mismo artículo importan para el correo:
 
-La misma página dice que las cuentas personales de Microsoft, como las direcciones @outlook.com o @hotmail.com, no se pueden usar para conectarse. Una cuenta personal no tiene detrás ni un inquilino empresarial ni un administrador, así que no hay nada que aprobar ni ningún ajuste que puedas cambiar para que funcione. El conector está pensado para organizaciones: busca en SharePoint, OneDrive, Outlook y Teams, y sus permisos son de solo lectura hasta que un administrador activa las herramientas de escritura.
+- **Sin adjuntos en las herramientas de escritura.** Claude no puede enviar, reenviar ni redactar un correo con adjunto a través de él.
+- **No en Team ni Enterprise.** A esos planes no se les muestra la opción de cuenta personal, así que una dirección personal de Hotmail junto a un plan de trabajo no tiene vía integrada.
+- **Solo dentro de Claude, y para la cuenta con la que inicias sesión.** Gmail tiene su propio conector; iCloud, Yahoo y los buzones IMAP no tienen ninguno, y nada se traslada a ChatGPT ni a otro cliente MCP.
 
-A tu buzón no le pasa nada. Claude solo necesita otro camino para llegar a él.
+Las cuentas de trabajo o educativas son un caso distinto: un administrador global de Microsoft Entra sigue teniendo que dar su consentimiento antes de que nadie de la organización pueda conectarse. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) y la [página de consentimiento del administrador](/docs/microsoft-365-admin-consent) lo explican.
+
+Si lo único que necesitas es un buzón personal de Outlook.com en Claude, sin adjuntos, el conector integrado lo resuelve. El resto de esta guía es la vía para todo lo demás.
 
 ## Lo que necesitas
 
@@ -93,10 +96,10 @@ No. Cada vez que Claude pide un mensaje, MCPEmails lo obtiene en directo de Micr
 ## Preguntas frecuentes
 
 **¿Puedo conectar Claude con Outlook.com o Hotmail?**
-Sí. El conector de Microsoft 365 integrado en Claude no admite cuentas personales de Microsoft, pero un conector personalizado sí. Conecta la dirección a MCPEmails con Conectar con Microsoft, añade \`https://mcpemails.com/api/mcp\` a Claude en Customize → Connectors, y Claude podrá leer, buscar, enviar y organizar tu correo de Outlook.com, Hotmail, Live o MSN.
+Sí, de dos formas. En Free, Pro, Max o Ultra, el conector de Microsoft 365 integrado en Claude acepta directamente una cuenta personal de Microsoft, sin adjuntos. Para adjuntos, varios buzones, un plan Team o Enterprise, o el mismo buzón en ChatGPT, conecta la dirección a MCPEmails con Conectar con Microsoft, añade \`https://mcpemails.com/api/mcp\` a Claude en Customize → Connectors, y Claude podrá leer, buscar, enviar y organizar tu correo de Outlook.com, Hotmail, Live o MSN.
 
 **¿Por qué el conector de Microsoft 365 de Claude rechaza mi dirección de Hotmail?**
-La página de ayuda de Anthropic dice que ese conector necesita un inquilino de Microsoft Entra vinculado a un plan Microsoft Business y un administrador global que lo autorice, y que las cuentas personales de Microsoft no se pueden usar. Una cuenta personal no tiene inquilino ni administrador.
+Comprueba el plan. Anthropic dice que las cuentas personales de Microsoft se conectan en Free, Pro, Max y Ultra, y que a los planes Team y Enterprise no se les muestra esa opción. Una dirección de trabajo o educativa es otro caso: necesita que un administrador global de su inquilino de Microsoft Entra dé antes su consentimiento. En un plan Team o Enterprise, MCPEmails como conector personalizado es la vía para una dirección personal.
 
 **¿Necesito una contraseña de aplicación o los ajustes IMAP?**
 No. Las cuentas personales de Microsoft se conectan con Iniciar sesión con Microsoft y Microsoft Graph. Microsoft ya no acepta el inicio de sesión con contraseña desde aplicaciones de correo que no son de Microsoft en estas cuentas, así que una contraseña de aplicación tampoco serviría para iniciar sesión.

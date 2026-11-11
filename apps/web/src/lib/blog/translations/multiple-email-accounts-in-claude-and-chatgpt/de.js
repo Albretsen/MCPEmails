@@ -57,7 +57,7 @@ Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung
 
 ## In ChatGPT hinzufügen
 
-ChatGPT Go und die kostenpflichtigen Tarife können auf chatgpt.com im Browser einen benutzerdefinierten MCP-Server hinzufügen; in der Mobil-App geht das nicht. Bei Business und Enterprise muss ihn unter Umständen ein Admin oder Owner hinzufügen.
+Ein kostenpflichtiger ChatGPT-Tarif kann auf chatgpt.com im Browser einen benutzerdefinierten MCP-Server hinzufügen; in der Mobil-App geht das nicht. Die Hilfeseite von OpenAI führt Business und Enterprise/Edu auf, wo ein Admin oder Owner ihn für den Workspace hinzufügt, und nur Lese- und Abruf-Tools in Pro; Go und Plus werden nicht erwähnt.
 
 1. Öffnen Sie **Plugins**, dann **Persönlich**, klicken Sie oben rechts auf **Hinzufügen** und wählen Sie **Benutzerdefinierten MCP-Server hinzufügen**.
 2. Nennen Sie ihn MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` unter **Verbindung** ein, wählen Sie **OAuth**, setzen Sie das Häkchen bei **Ich verstehe und möchte fortfahren** und klicken Sie auf **Als Plugin erstellen**.

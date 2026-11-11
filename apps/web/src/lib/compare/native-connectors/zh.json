@@ -17,7 +17,7 @@
     "sub": "它们常被混为一谈，但在最关键的两点上并不相同：能连接哪些邮箱，能在哪些应用中使用。",
     "apps": {
       "h": "AI 应用内置的连接器",
-      "p": "Claude 的 Gmail 和 Microsoft 365 连接器，以及 ChatGPT 的 Gmail 和 Outlook 应用。无需安装，而且现在已经能发邮件。它们只能在各自的应用里使用，Claude 的 Microsoft 365 连接器也无法连接个人 Outlook.com 或 Hotmail 账户。"
+      "p": "Claude 的 Gmail 和 Microsoft 365 连接器，以及 ChatGPT 的 Gmail 和 Outlook 应用。无需安装，而且现在已经能发邮件。它们只能在各自的应用里使用，而 Claude 的 Microsoft 365 连接器只在 Free、Pro、Max 和 Ultra 计划上接受个人 Outlook.com 或 Hotmail 账户，Team 和 Enterprise 计划不支持。"
     },
     "provider": {
       "h": "邮件服务商自家的 MCP 服务器",
@@ -62,7 +62,7 @@
       "portable": "可在其他 AI 应用中使用"
     },
     "values": {
-      "reachApps": "Gmail。Claude 支持 Microsoft 365 工作账户，ChatGPT 支持 Outlook。",
+      "reachApps": "Gmail。Claude 支持 Microsoft 365 工作账户，个人版计划还支持个人 Microsoft 账户；ChatGPT 支持 Outlook。",
       "reachProvider": "仅限该服务商：Fastmail、Zoho，或 Google 预览版中的 Gmail。",
       "reachUs": "Gmail、Outlook 和 Outlook.com、iCloud、Yahoo、Fastmail、Zoho、Yandex、任何 IMAP。",
       "sendProvider": "Fastmail 和 Zoho 可以发送。Google 预览版只能创建草稿。",
@@ -83,7 +83,7 @@
       },
       {
         "q": "我的邮件服务商有自己的 MCP 服务器，我还需要别的吗？",
-        "a": "也许不需要。Fastmail 和 Zoho Mail 都有官方 MCP 服务器，可在任何 MCP 客户端中使用；Google 的 Gmail MCP 服务器处于开发者预览阶段。它们各自只能连接自家服务商。MCPEmails 适合把多个邮箱放在同一个连接后面，适合 iCloud、Yahoo、Yandex 及其他 IMAP 服务，也适合个人 Outlook.com 账户，而这类账户无法通过 Claude 的 Microsoft 365 连接器连接。"
+        "a": "也许不需要。Fastmail 和 Zoho Mail 都有官方 MCP 服务器，可在任何 MCP 客户端中使用；Google 的 Gmail MCP 服务器处于开发者预览阶段。它们各自只能连接自家服务商。MCPEmails 适合把多个邮箱放在同一个连接后面，适合 iCloud、Yahoo、Yandex 及其他 IMAP 服务，也适合在 Claude Team 或 Enterprise 计划上使用个人 Outlook.com 账户，因为这些计划上 Claude 的 Microsoft 365 连接器不提供个人账户选项。"
       },
       {
         "q": "MCPEmails 能做哪些内置连接器做不到的事？",

@@ -18,7 +18,7 @@
     "eyebrow": "Claude para Outlook",
     "titleLine1": "Cómo conectar Outlook con Claude,",
     "titleLine2": "y con ChatGPT, Cursor o cualquier cliente MCP",
-    "lead": "Para conectar Outlook con Claude, añade tu bandeja a MCPEmails iniciando sesión con Microsoft y pega una URL en Claude. El conector de Microsoft 365 que trae Claude solo acepta cuentas del trabajo o de un centro educativo; MCPEmails conecta cuentas personales de Outlook.com, Hotmail, Live y MSN, y desde cualquier cliente MCP puedes leer, buscar, enviar, responder, programar y organizar el correo.",
+    "lead": "El conector de Microsoft 365 que trae Claude ya acepta una cuenta personal en sus planes individuales, solo dentro de Claude y sin adjuntos. MCPEmails conecta cuentas personales de Outlook.com, Hotmail, Live y MSN una sola vez para todos los clientes MCP: inicias sesión con Microsoft, apruebas el acceso y puedes leer, buscar, enviar, responder, programar y organizar el correo, adjuntos incluidos, con una sola URL.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
@@ -76,8 +76,8 @@
       "a": "Sí. Conecta tu buzón de Outlook.com a MCPEmails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. La misma URL funciona en ChatGPT, Cursor y otros clientes MCP."
     },
     {
-      "q": "¿Por qué el conector de Microsoft 365 de Claude rechaza mi cuenta de Outlook.com?",
-      "a": "El conector de Microsoft 365 integrado en Claude exige una cuenta del trabajo o de un centro educativo dentro de un inquilino de Microsoft Entra, y Anthropic indica que las cuentas personales de Microsoft no son compatibles, así que rechaza las direcciones de Outlook.com, Hotmail, Live y MSN. MCPEmails conecta esas cuentas personales: inicias sesión con Microsoft en la propia página de Microsoft y luego añades MCPEmails a Claude como conector personalizado con una URL."
+      "q": "¿Acepta el conector de Microsoft 365 de Claude mi cuenta de Outlook.com?",
+      "a": "En los planes Free, Pro, Max y Ultra de Claude, sí: Anthropic indica que una cuenta personal de Microsoft se conecta sin administrador, con las herramientas de escritura incluidas pero sin adjuntos. A los planes Team y Enterprise no se les muestra esa opción, y una cuenta del trabajo o de un centro educativo necesita que un administrador global de su inquilino de Microsoft Entra dé antes su consentimiento. MCPEmails conecta una cuenta personal en cualquier plan de Claude, con adjuntos y junto a tus demás buzones: inicias sesión con Microsoft en la propia página de Microsoft y luego añades MCPEmails a Claude como conector personalizado con una URL."
     },
     {
       "q": "¿Funciona con direcciones de Hotmail, Live y MSN?",
