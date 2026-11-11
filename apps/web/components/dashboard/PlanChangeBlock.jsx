@@ -14,6 +14,11 @@
  * offer keyed to anything. The cancel itself stays in the Stripe portal and on
  * /cancel, untouched; "Switch to Free" here is a second, plainer route to the
  * same cancel at period end.
+ *
+ * "Keep my plan" (POST /api/billing/keep, behind PLAN_ENDING_REMINDER_ENABLED)
+ * shows when a stop is scheduled. Emails link here with
+ * `?plan_action=keep|pause&src=<email>`: the matching dialog opens, and
+ * nothing changes until its confirm button is pressed.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -34,6 +39,35 @@ export const CANCEL_REASONS = [
 ];
 
 const REASON_DETAIL_MAX = 500;
+
+/** Where a keep or pause click may say it came from (src/lib/billing/plan-action-links.ts). */
+const ACTION_SOURCES = ['plan_ending_email', 'cancel_email', 'billing_page'];
+
+/** `?plan_action=keep|pause&src=...` from an email link, read once. */
+export function readPlanAction(search) {
+  let params;
+  try {
+    params = new URLSearchParams(search || '');
+  } catch {
+    return null;
+  }
+  const action = params.get('plan_action');
+  if (action !== 'keep' && action !== 'pause') return null;
+  const src = params.get('src');
+  return { action, source: ACTION_SOURCES.includes(src) ? src : 'billing_page' };
+}
+
+/** Drop plan_action / src from the address bar so a reload does not reopen the dialog. */
+function clearPlanAction() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('plan_action');
+    url.searchParams.delete('src');
+    window.history.replaceState(window.history.state, '', url.toString());
+  } catch {
+    // Nothing to clean up.
+  }
+}
 
 function formatMoney(cents, currency, locale) {
   const code = (currency || 'usd').toUpperCase();
@@ -275,9 +309,11 @@ function CancelReasonCard({ storageKey }) {
 export default function PlanChangeBlock({ toast }) {
   const t = useTranslations('dashboard');
   const { locale } = useAppLocale();
-  const [pause, setPause] = useState(null);
+  const [pause, setPause] = useState(undefined); // undefined = loading, null = unavailable
   const [downgrade, setDowngrade] = useState(null);
-  const [dialog, setDialog] = useState(null); // pause | extend | resume | downgrade | keep | free
+  const [keepQuote, setKeepQuote] = useState(undefined); // undefined = loading, null = unavailable
+  const [dialog, setDialog] = useState(null); // pause | extend | resume | downgrade | keep | free | keepPlan
+  const [source, setSource] = useState('billing_page');
   const [months, setMonths] = useState(1);
   const [keep, setKeep] = useState(new Set());
   const [busy, setBusy] = useState(false);
@@ -290,10 +326,14 @@ export default function PlanChangeBlock({ toast }) {
     postJson('/api/billing/downgrade', { action: 'quote' })
       .then((res) => live && setDowngrade(res.ok ? res.data : null))
       .catch(() => live && setDowngrade(null));
+    postJson('/api/billing/keep', { action: 'quote' })
+      .then((res) => live && setKeepQuote(res.ok ? res.data : null))
+      .catch(() => live && setKeepQuote(null));
     return () => {
       live = false;
     };
   }, []);
+
 
   const money = (cents, currency) => (typeof cents === 'number' ? formatMoney(cents, currency, locale) : '');
   const date = (iso) => formatDate(iso, locale);
@@ -309,6 +349,24 @@ export default function PlanChangeBlock({ toast }) {
     }
     setDialog(kind);
   };
+
+  // An email link: open the dialog it names once both quotes are in
+  // (undefined = still loading). Only a dialog: the customer still presses
+  // its confirm button. A link that no longer applies (already kept, already
+  // paused) opens nothing, and the page shows the current state.
+  const [linkHandled, setLinkHandled] = useState(false);
+  useEffect(() => {
+    if (linkHandled || keepQuote === undefined || pause === undefined) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLinkHandled(true);
+    const link = readPlanAction(window.location.search);
+    if (!link) return;
+    clearPlanAction();
+    setSource(link.source);
+    if (link.action === 'keep' && keepQuote?.canKeep) setDialog('keepPlan');
+    if (link.action === 'pause' && pause?.canPause) openDialog('pause');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keepQuote, pause, linkHandled]);
 
   const run = async (url, body, successKey, values) => {
     setBusy(true);
@@ -339,7 +397,8 @@ export default function PlanChangeBlock({ toast }) {
   const cancelScheduled = Boolean(downgrade?.cancelScheduled ?? pause?.cancelScheduled);
   const reasonKey = `mcpe_cancel_reason_${downgrade?.periodEnd ?? pause?.periodEnd ?? 'x'}`;
 
-  if (!pause && !downgrade) return null;
+  if (!pause && !downgrade && !keepQuote?.canKeep) return null;
+  const keepPlanName = planDisplayName(keepQuote?.planId ?? pause?.planId ?? 'personal');
 
   const pauseOption = pause?.pauseOptions?.find((o) => o.months === months) ?? null;
   const extendOption = pause?.extendOptions?.find((o) => o.months === months) ?? null;
@@ -361,6 +420,26 @@ export default function PlanChangeBlock({ toast }) {
 
   return (
     <>
+      {keepQuote?.canKeep && !paused && (
+        <div data-keep-banner style={blockStyle}>
+          <div style={{ fontSize: 13.5, color: 'var(--fg-1)', lineHeight: 1.5 }}>
+            {t('billing.planChange.endsBanner', { plan: keepPlanName, date: date(keepQuote.endsAt) })}
+          </div>
+          <div>
+            <Btn
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setSource('billing_page');
+                setDialog('keepPlan');
+              }}
+            >
+              <span data-action="keep-plan">{t('billing.planChange.keepMyPlan')}</span>
+            </Btn>
+          </div>
+        </div>
+      )}
+
       {paused && (
         <div data-pause-banner style={blockStyle}>
           <div style={{ fontSize: 13.5, color: 'var(--fg-1)', lineHeight: 1.5 }}>
@@ -400,7 +479,14 @@ export default function PlanChangeBlock({ toast }) {
           <div style={{ fontSize: 12.5, color: 'var(--fg-3)', lineHeight: 1.5 }}>{t('billing.planChange.sub')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {offerPause && (
-              <Btn size="sm" variant="secondary" onClick={() => openDialog('pause')}>
+              <Btn
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setSource('billing_page');
+                  openDialog('pause');
+                }}
+              >
                 <span data-action="pause">{t('billing.planChange.pause')}</span>
               </Btn>
             )}
@@ -426,7 +512,7 @@ export default function PlanChangeBlock({ toast }) {
           confirmLabel={t('billing.planChange.pauseConfirm')}
           busy={busy}
           onCancel={() => setDialog(null)}
-          onConfirm={() => run('/api/billing/pause', { action: 'pause', months, keepInboxIds: keepIds() }, 'billing.planChange.pausedToast', { date: date(pauseOption?.billsAt) })}
+          onConfirm={() => run('/api/billing/pause', { action: 'pause', months, keepInboxIds: keepIds(), source }, 'billing.planChange.pausedToast', { date: date(pauseOption?.billsAt) })}
         >
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} role="radiogroup">
             {pause.pauseOptions.map((option) => (
@@ -550,6 +636,24 @@ export default function PlanChangeBlock({ toast }) {
           onConfirm={() => run('/api/billing/downgrade', { action: 'undo' }, 'billing.planChange.keptToast', { plan: fromPlanName })}
         >
           <Text>{t('billing.planChange.keepBody', { plan: fromPlanName })}</Text>
+        </Dialog>
+      )}
+
+      {dialog === 'keepPlan' && keepQuote?.canKeep && (
+        <Dialog
+          title={t('billing.planChange.keepPlan', { plan: keepPlanName })}
+          confirmLabel={t('billing.planChange.keepMyPlan')}
+          busy={busy}
+          onCancel={() => setDialog(null)}
+          onConfirm={() => run('/api/billing/keep', { action: 'keep', source }, 'billing.planChange.keepPlanToast', { plan: keepPlanName })}
+        >
+          <Text>
+            {t('billing.planChange.keepPlanBody', {
+              plan: keepPlanName,
+              date: date(keepQuote.endsAt),
+              amount: money(keepQuote.amountCents, keepQuote.currency),
+            })}
+          </Text>
         </Dialog>
       )}
 

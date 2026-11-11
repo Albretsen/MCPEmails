@@ -957,7 +957,11 @@
       "freeConfirm": "Passer à Free",
       "freeBody": "Votre abonnement reste actif jusqu'au {date}, déjà payé. Ensuite, le compte passe à Free. Rien n'est supprimé.",
       "freeToast": "C’est fait. Votre abonnement reste actif jusqu'au {date}, puis passe à Free.",
-      "pendingCheckout": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule."
+      "pendingCheckout": "Une pause ou un changement de formule est déjà programmé sur votre abonnement. Utilisez d'abord Reprendre plus tôt ou Garder sur cette page, puis changez de formule.",
+      "endsBanner": "Votre forfait {plan} se termine le {date}. Rien n'est supprimé.",
+      "keepMyPlan": "Garder mon forfait",
+      "keepPlanBody": "La fin programmée est retirée. {plan} continue et se renouvelle le {date} pour {amount}, comme avant. Rien n'est facturé aujourd'hui.",
+      "keepPlanToast": "Votre forfait {plan} continue."
     },
     "cancelReason": {
       "prompt": "Vous avez résilié votre abonnement. Si vous voulez nous dire pourquoi, un clic suffit.",

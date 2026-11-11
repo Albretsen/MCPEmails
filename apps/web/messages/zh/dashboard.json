@@ -809,7 +809,11 @@
       "freeConfirm": "切换到 Free",
       "freeBody": "您的套餐在 {date} 之前保持有效（已付费）。之后账户将改为 Free。不会删除任何内容。",
       "freeToast": "完成。您的套餐在 {date} 之前保持有效，之后改为 Free。",
-      "pendingCheckout": "您的订阅已安排暂停或套餐切换。请先在此页面使用“提前恢复”或“保留”，然后再更改套餐。"
+      "pendingCheckout": "您的订阅已安排暂停或套餐切换。请先在此页面使用“提前恢复”或“保留”，然后再更改套餐。",
+      "endsBanner": "你的 {plan} 方案将于 {date} 结束。不会删除任何内容。",
+      "keepMyPlan": "保留我的方案",
+      "keepPlanBody": "已取消计划中的结束。{plan} 将照常继续，并于 {date} 以 {amount} 续订。今天不会扣费。",
+      "keepPlanToast": "你的 {plan} 方案将继续。"
     },
     "cancelReason": {
       "prompt": "您已取消套餐。如果愿意告诉我们原因，点一下即可。",

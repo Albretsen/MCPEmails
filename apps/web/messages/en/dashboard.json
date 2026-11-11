@@ -957,7 +957,11 @@
       "freeConfirm": "Switch to Free",
       "freeBody": "Your plan stays active until {date}, which you have already paid for. After that the account moves to Free. Nothing is deleted.",
       "freeToast": "Done. Your plan stays active until {date}, then moves to Free.",
-      "pendingCheckout": "A pause or a plan switch is booked on your subscription. Use Resume early or Keep on this page first, then change plans."
+      "pendingCheckout": "A pause or a plan switch is booked on your subscription. Use Resume early or Keep on this page first, then change plans.",
+      "endsBanner": "Your {plan} plan ends on {date}. Nothing is deleted.",
+      "keepMyPlan": "Keep my plan",
+      "keepPlanBody": "The scheduled end is removed. {plan} continues and renews on {date} at {amount}, as before. Nothing is charged today.",
+      "keepPlanToast": "Your {plan} plan continues."
     },
     "cancelReason": {
       "prompt": "You cancelled your plan. If you want to tell us why, one tap is enough.",
