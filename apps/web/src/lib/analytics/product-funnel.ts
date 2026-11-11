@@ -156,7 +156,11 @@ export type ProductFunnelEvent = {
     | 'usage_meter_shown' | 'grace_end_note_shown'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
-    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
+    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped'
+    // Broken-inbox alert (20261111140000, src/lib/retention/inbox-alert.ts).
+    // sent/holdout carry the phase (alert_1 | alert_2); reconnected the arm
+    // (alert | holdout), written for both arms.
+    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
@@ -167,7 +171,8 @@ export type ProductFunnelEvent = {
     | PlanChangeCategory | CancelReason | RetentionOptionCategory
     | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory
     | 'surface_onboarding' | 'surface_overview'
-    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100';
+    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100'
+    | 'alert_1' | 'alert_2' | 'alert' | 'holdout';
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

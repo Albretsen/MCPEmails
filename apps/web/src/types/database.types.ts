@@ -2444,6 +2444,92 @@ export type Database = {
         }
         Relationships: []
       }
+      inbox_alert_sends: {
+        Row: {
+          arm: string
+          attempts: number
+          break_started_at: string
+          close_reason: string | null
+          closed_at: string | null
+          created_at: string
+          detail: string | null
+          id: number
+          inbox_id: string
+          phase: number
+          provider: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          user_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          arm: string
+          attempts?: number
+          break_started_at: string
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          inbox_id: string
+          phase: number
+          provider: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status: string
+          user_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          arm?: string
+          attempts?: number
+          break_started_at?: string
+          close_reason?: string | null
+          closed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          inbox_id?: string
+          phase?: number
+          provider?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_alert_sends_inbox_id_fkey"
+            columns: ["inbox_id"]
+            isOneToOne: false
+            referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "inbox_alert_sends_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_autofill_lookups: {
         Row: {
           created_at: string
@@ -6344,6 +6430,7 @@ export type Database = {
       dispatch_black_week_email: { Args: never; Returns: undefined }
       dispatch_eur_launch: { Args: never; Returns: undefined }
       dispatch_first_30_days: { Args: never; Returns: undefined }
+      dispatch_inbox_alert: { Args: never; Returns: undefined }
       dispatch_inbox_watch: { Args: never; Returns: undefined }
       dispatch_morning_briefs: { Args: never; Returns: undefined }
       dispatch_onboarding_morning_brief: { Args: never; Returns: undefined }
@@ -7140,6 +7227,44 @@ export type Database = {
       growth_window_sessions: {
         Args: { p_first_starts: boolean[]; p_starts: number[] }
         Returns: number
+      }
+      inbox_alert_candidates: {
+        Args: { p_lookback_days?: number }
+        Returns: {
+          acquisition_locale: string
+          email_address: string
+          error_row_at: string
+          first_auth_failed_at: string
+          imap_host: string
+          inbox_id: string
+          inbox_status: string
+          last_auth_failed_at: string
+          last_closed_at: string
+          last_error: string
+          last_success_at: string
+          owner_email: string
+          owner_id: string
+          plan: string
+          provider: string
+          service: string
+          workspace_id: string
+        }[]
+      }
+      inbox_alert_readout: {
+        Args: never
+        Returns: {
+          arm: string
+          breaks: number
+          first_failed: number
+          first_sent: number
+          mature: number
+          reconnected_7d: number
+          reconnected_7d_mature: number
+          reconnected_any: number
+          second_rows: number
+          still_open: number
+          workspaces: number
+        }[]
       }
       inbox_autofill_scoreboard: {
         Args: { p_days?: number }
