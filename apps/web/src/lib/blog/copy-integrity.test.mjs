@@ -189,11 +189,22 @@ test('the Outlook guide is indexable now that the connector is live', () => {
 // ---------------------------------------------------------------------------
 
 /**
- * House rule is no em dashes, in any language. The rest of the blog corpus is
- * not clean yet (23 English posts and 72 translations still carry them), so
- * this pins the slugs that have been swept. Add a slug here as it is cleaned.
+ * House rule is no em dashes, in any language. Every English post and every
+ * fr, es, nb, de, pt and ja translation is clean (swept 2026-11-10); only the
+ * frozen zh translations of 16 posts still carry them, so this pins every
+ * slug whose files are all clean. Add a slug here as its zh file is cleaned.
  */
 const EM_DASH_CLEAN_SLUGS = [
+  'ai-agent-email-workflows-and-prompts',
+  'ai-email-for-agencies-and-client-work',
+  'approve-ai-agent-email-sends',
+  'automated-email-triage-rules',
+  'claude-imap-connector',
+  'connect-business-email-custom-domain-to-ai-agent',
+  'extract-email-attachments-for-ai',
+  'gmail-labels-vs-imap-folders-ai-agents',
+  'multiple-email-accounts-in-claude-and-chatgpt',
+  'prevent-duplicate-ai-agent-email-sends',
   'can-claude-read-my-email',
   'chatgpt-icloud-mail-plugin',
   'daily-email-briefing-with-claude-and-chatgpt',

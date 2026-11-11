@@ -406,7 +406,19 @@ export type FixProviderId =
   | 'vodafone'
   | 'hostpoint'
   | 'cyon'
-  | 'world4you';
+  | 'world4you'
+  | 'aruba'
+  | 'libero'
+  | 'tim'
+  | 'tiscali'
+  | 'aruba_pec'
+  | 'legalmail'
+  | 'postecert'
+  | 'centrum'
+  | 'wp'
+  | 'o2_pl'
+  | 'onet'
+  | 'interia';
 
 interface FixBlock {
   steps: readonly string[];
@@ -450,6 +462,18 @@ const PLALA_IMAP = 'https://www.plala.or.jp/support/manual/mail/standard/setup_i
 const FREENET_IMAP = 'https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/';
 const VODAFONE_HELP = 'https://forum.vodafone.de/t5/Community-Blog/Vodafone-E-Mail-funktioniert-nicht-IMAP-Login-amp-Arcor-Probleme/ba-p/3339557';
 const HOSTPOINT_HELP = 'https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance';
+const ARUBA_HELP = 'https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta';
+const LIBERO_APP_PASSWORDS = 'https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/';
+const TIM_HELP = 'https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/client-pc';
+const TISCALI_HELP = 'https://assistenza.tiscali.it/servizi/guida/parametri-mail/';
+const ARUBA_PEC_APP_PASSWORDS = 'https://guide.aruba.it/pec/account-e-sicurezza/password/generare-password-programmi-posta';
+const LEGALMAIL_HELP = 'https://help.infocert.it/home/faq/che-cosa-e-l-application-password';
+const POSTE_PEC_FAQ = 'https://www.poste.it/assistenza/faq-posta-elettronica-certificata';
+const CENTRUM_FAQ = 'https://freemail.help.economia.cz/articles/95768-casto-kladene-dotazy';
+const WP_IMAP = 'https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych';
+const O2_IMAP = 'https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych';
+const ONET_PROTOCOLS = 'https://pomoc.poczta.onet.pl/programy-pocztowe/zarzadzanie-protokolami-imappopsmtp/635wtp6';
+const INTERIA_PARAMS = 'https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275';
 
 /** "Use the address's own password, not your account login", then the full address. */
 const MAILBOX_PASSWORD_STEPS = ['connect.fix.mailbox.password', 'connect.fix.fullAddress'] as const;
@@ -849,6 +873,126 @@ export const CONNECT_FIX_PROVIDERS: readonly FixProvider[] = [
     label: 'World4You',
     presetIds: ['world4you'],
     credential: { steps: MAILBOX_PASSWORD_STEPS, links: [] },
+  },
+  // ── Italy (2026-11-10) ───────────────────────────────────────────────────
+  {
+    // guide.aruba.it: the mailbox password, full address, and on Hosting
+    // Basic plans from before June 2017 the IMAP add-on must be active.
+    id: 'aruba',
+    label: 'Aruba',
+    presetIds: ['aruba', 'aruba-free'],
+    credential: { steps: ['connect.fix.aruba.password', 'connect.fix.fullAddress'], links: [{ id: 'aruba_help', labelKey: 'connect.fix.link.providerHelp', url: ARUBA_HELP }] },
+  },
+  {
+    // aiuto.libero.it: with Password Sicura on, a 16-character Password
+    // specifica per applicazioni from Account > Password per App. Virgilio
+    // mirrors it.
+    id: 'libero',
+    label: 'Libero',
+    presetIds: ['libero', 'virgilio'],
+    credential: {
+      steps: ['connect.fix.libero.password', 'connect.fix.fullAddress'],
+      links: [{ id: 'libero_app_passwords', labelKey: 'connect.fix.link.appPasswords', url: LIBERO_APP_PASSWORDS }],
+    },
+  },
+  {
+    // tim.it client-pc: mail apps only on a mailbox tied to an active TIM
+    // line, or from TIM's network; otherwise webmail only.
+    id: 'tim',
+    label: 'TIM',
+    presetIds: ['tim', 'tim-alice', 'tim-tin'],
+    credential: { steps: ['connect.fix.tim.line', 'connect.fix.fullAddress'], links: [{ id: 'tim_help', labelKey: 'connect.fix.link.providerHelp', url: TIM_HELP }] },
+  },
+  {
+    // assistenza.tiscali.it: the mailbox password with the full address.
+    // Two-factor is documented for the account only. Sending is refused from
+    // outside Tiscali's network, which is a transport refusal, not this row.
+    id: 'tiscali',
+    label: 'Tiscali',
+    presetIds: ['tiscali'],
+    credential: { steps: ['connect.fix.tiscali.password', 'connect.fix.fullAddress'], links: [{ id: 'tiscali_help', labelKey: 'connect.fix.link.providerHelp', url: TISCALI_HELP }] },
+  },
+  {
+    // guide.aruba.it/pec: with verifica in 2 passaggi on, the six-month
+    // Password per programmi di posta from Gestione account PEC > Sicurezza.
+    id: 'aruba_pec',
+    label: 'Aruba PEC',
+    presetIds: ['aruba-pec'],
+    credential: {
+      steps: ['connect.fix.arubaPec.password', 'connect.fix.fullAddress'],
+      links: [{ id: 'aruba_pec_app_passwords', labelKey: 'connect.fix.link.appPasswords', url: ARUBA_PEC_APP_PASSWORDS }],
+    },
+  },
+  {
+    // help.infocert.it: User ID and password, or the 16-digit Application
+    // Password; the address is the login only if set up in the webmail.
+    id: 'legalmail',
+    label: 'Legalmail',
+    presetIds: ['legalmail'],
+    credential: {
+      steps: ['connect.fix.legalmail.password'],
+      links: [{ id: 'legalmail_help', labelKey: 'connect.fix.link.providerHelp', url: LEGALMAIL_HELP }],
+      usernameField: true,
+    },
+  },
+  {
+    // poste.it PEC FAQ: the client password is generated in the dashboard
+    // (Genera password) and expires every 90 days; the webmail password never
+    // works in a client.
+    id: 'postecert',
+    label: 'Poste',
+    presetIds: ['postecert', 'postecertifica'],
+    credential: {
+      steps: ['connect.fix.appPassword.normalRejected', 'connect.fix.postecert.password', 'connect.fix.appPassword.paste'],
+      links: [{ id: 'postecert_app_passwords', labelKey: 'connect.fix.link.appPasswords', url: POSTE_PEC_FAQ }],
+    },
+  },
+  // ── Czechia and Poland (2026-11-10) ──────────────────────────────────────
+  {
+    // freemail.help.economia.cz: an aplikační heslo with two-factor on, and
+    // SMTP only on the (free) enlarged mailbox.
+    id: 'centrum',
+    label: 'Centrum',
+    presetIds: ['centrum', 'atlas', 'volny'],
+    credential: {
+      steps: ['connect.fix.centrum.password', 'connect.fix.centrum.smtp', 'connect.fix.fullAddress'],
+      links: [{ id: 'centrum_help', labelKey: 'connect.fix.link.providerHelp', url: CENTRUM_FAQ }],
+    },
+  },
+  {
+    // pomoc.wp.pl: IMAP under Opcje > IMAP/POP; with two-step login a mail
+    // program password under Bezpieczeństwo.
+    id: 'wp',
+    label: 'WP Poczta',
+    presetIds: ['wp'],
+    credential: { steps: ['connect.fix.wp.imap', 'connect.fix.wp.twoStep'], links: [{ id: 'wp_imap', labelKey: 'connect.fix.link.imapSetting', url: WP_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.wp.imap'], links: [{ id: 'wp_imap', labelKey: 'connect.fix.link.imapSetting', url: WP_IMAP }] },
+  },
+  {
+    // pomoc.o2.pl: the same screens as WP, under the o2 name.
+    id: 'o2_pl',
+    label: 'o2.pl',
+    presetIds: ['o2-pl'],
+    credential: { steps: ['connect.fix.wp.imap', 'connect.fix.wp.twoStep'], links: [{ id: 'o2_imap', labelKey: 'connect.fix.link.imapSetting', url: O2_IMAP }] },
+    imapDisabled: { steps: ['connect.fix.wp.imap'], links: [{ id: 'o2_imap', labelKey: 'connect.fix.link.imapSetting', url: O2_IMAP }] },
+  },
+  {
+    // pomoc.poczta.onet.pl: each protocol has a switch under Ustawienia >
+    // Konto > Konto Główne; with two-step verification a hasło do aplikacji.
+    id: 'onet',
+    label: 'Onet',
+    presetIds: ['onet'],
+    credential: { steps: ['connect.fix.onet.protocols', 'connect.fix.onet.appPassword'], links: [{ id: 'onet_protocols', labelKey: 'connect.fix.link.imapSetting', url: ONET_PROTOCOLS }] },
+    imapDisabled: { steps: ['connect.fix.onet.protocols'], links: [{ id: 'onet_protocols', labelKey: 'connect.fix.link.imapSetting', url: ONET_PROTOCOLS }] },
+  },
+  {
+    // pomoc.poczta.interia.pl: korzystam z programu pocztowego must be TAK,
+    // and two-step login blocks mail programs outright (no app passwords).
+    id: 'interia',
+    label: 'Interia',
+    presetIds: ['interia'],
+    credential: { steps: ['connect.fix.interia.program', 'connect.fix.interia.twoStep'], links: [{ id: 'interia_params', labelKey: 'connect.fix.link.imapSetting', url: INTERIA_PARAMS }] },
+    imapDisabled: { steps: ['connect.fix.interia.program'], links: [{ id: 'interia_params', labelKey: 'connect.fix.link.imapSetting', url: INTERIA_PARAMS }] },
   },
 ];
 

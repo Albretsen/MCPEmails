@@ -63,8 +63,8 @@
     "infoRateLimits": "Límites de tasa: <b>ventanas por minuto, por hora y por día por clave</b>, dimensionadas según tu plan, más el límite del espacio de trabajo del plan",
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
-    "pollingHeading": "Sondeo, no push",
-    "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
+    "pollingHeading": "Sondeo, más un webhook en Pro y Business",
+    "pollingBody": "Las herramientas MCP son de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente, y un correo entrante nunca activa por sí solo una llamada. La forma más sencilla de reaccionar al correo nuevo es <b>sondear</b>, p. ej. llamar a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores). Si quieres push, los espacios de trabajo Pro y Business pueden añadir un <b>webhook</b> en Claves de API, dentro del panel: MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo, con los ID de mensaje (y, si lo eliges, remitente y asunto), nunca el cuerpo del mensaje, y tu código los abre con <code>email_read</code>."
   },
   "operations": {
     "eyebrow": "Diseñado para el trabajo real con el correo",

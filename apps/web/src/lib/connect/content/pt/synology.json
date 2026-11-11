@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://kb.synology.com/en-my/DSM/help/MailPlus-Server/mailplus_server_service?version=6",
+    "https://kb.synology.com/en-global/UG/Synology_MailPlus_Server_admin_guide_3/7",
+    "https://www.synology.com/en-us/products/MailPlus_License",
+    "https://kb.synology.com/en-br/DSM/tutorial/How_do_I_set_up_my_MailPlus_account_in_Microsoft_Outlook"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Senha da conta do DSM",
+    "helpUrl": "https://kb.synology.com/en-my/DSM/help/MailPlus-Server/mailplus_server_service?version=6",
+    "usernameForm": "O endereço de e-mail completo de uma conta ativada no MailPlus Server, por exemplo you@yourdomain.com. As contas do MailPlus são usuários do DSM, então a senha é a senha desse usuário no DSM.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Synology MailPlus no Claude: IMAP direto do seu NAS",
+    "description": "Conecte uma caixa de correio do Synology MailPlus ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Redirecionamento de porta, CGNAT e como atribuir o certificado do DSM ao MailPlus."
+  },
+  "hero": {
+    "eyebrow": "Synology MailPlus + IA",
+    "titleLine1": "Conecte o Synology MailPlus",
+    "titleLine2": "ao Claude, ao Cursor e a qualquer cliente MCP",
+    "lead": "Seu e-mail mora em um aparelho dentro da sua própria casa ou empresa. Um agente de IA consegue trabalhar nele pelo mesmo IMAP que qualquer cliente de e-mail usa, desde que o NAS seja alcançável de fora de verdade, que é a parte que a maioria das pessoas nunca precisou resolver.",
+    "answer": "O Claude não consegue acessar um NAS da Synology sozinho. O MCPEmails é um servidor MCP hospedado que se conecta ao MailPlus Server via IMAP na porta 993, no nome público pelo qual o seu NAS responde, com a senha do DSM de uma conta ativada no MailPlus, para que o Claude, o Cursor ou qualquer cliente MCP consiga ler, pesquisar, enviar e organizar esses e-mails. Como o servidor é um NAS e não um serviço hospedado, as duas coisas a resolver primeiro são o alcance e o certificado: a 993 precisa ser redirecionada da internet para o NAS, e o certificado atribuído ao serviço MailPlus Server precisa ser válido para o nome ao qual você se conecta. Uma caixa de entrada é grátis.",
+    "meta0": "1 caixa de entrada grátis, para sempre",
+    "meta1": "Senha do DSM de uma conta do MailPlus",
+    "meta2": "E-mails buscados ao vivo, nunca armazenados"
+  },
+  "method": {
+    "title": "Como o Synology MailPlus se conecta: Service, Protocol, IMAP/POP3",
+    "body": "O MailPlus são dois pacotes. O <b>MailPlus Server</b> é o servidor de e-mail, e o <b>MailPlus</b> é o cliente web em que os usuários leem as mensagens. Só o servidor importa aqui. Abra o MailPlus Server e vá em <b>Service</b> (Serviço), depois na aba <b>Protocol</b> (Protocolo), depois <b>IMAP/POP3</b>, que é onde o IMAP é habilitado para que clientes de e-mail de terceiros consigam alcançar as caixas de correio. A mesma tela traz as opções de SSL/TLS, e o MailPlus ativa por padrão uma opção que proíbe autenticação em texto puro em conexão sem criptografia, o que é um bom padrão e mais um motivo para usar TLS implícito na 993 em vez da 143. As portas são as de sempre: 143 e 993 para IMAP, 25 para transferência, 587 para submissão e 465 para SMTPS. A credencial da conta é a senha de um usuário do DSM, porque as contas do MailPlus são usuários do DSM ativados para e-mail. Não há senha de e-mail separada nem esquema de senha de app."
+  },
+  "setup": [
+    {
+      "h": "Crie sua conta grátis no MCPEmails",
+      "p": "Crie sua conta em mcpemails.com. Uma caixa de entrada é grátis para sempre e não pede cartão."
+    },
+    {
+      "h": "Habilite o IMAP e dê um nome público ao NAS",
+      "p": "No MailPlus Server, abra Service, Protocol, IMAP/POP3 e habilite o IMAP com SSL/TLS. Depois resolva como o mundo externo encontra o NAS: um nome DDNS em Control Panel (Painel de Controle), External Access (Acesso Externo), DDNS, se você não tem IP fixo, e um redirecionamento de porta no roteador mandando TCP 993 para o NAS. Teste de um celular na rede móvel, com o Wi-Fi desligado."
+    },
+    {
+      "h": "Atribua um certificado de verdade ao MailPlus Server",
+      "p": "Em Control Panel, Security (Segurança), Certificate (Certificado), obtenha um certificado Let's Encrypt para esse nome público e, depois, use a atribuição de serviços do certificado para apontar o <b>MailPlus Server</b> para ele. Obter o certificado não o vincula a nada. Então adicione a caixa de entrada no MCPEmails: escolha IMAP / SMTP, informe o nome público, o endereço de e-mail completo e a senha do DSM."
+    },
+    {
+      "h": "Cole a URL do MCP na sua IA",
+      "p": "Cole https://mcpemails.com/api/mcp no Claude, no Cursor ou no ChatGPT, autorize, e seu agente passa a ter a caixa de entrada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Um NAS na sua rede local é invisível para um serviço hospedado, e o QuickConnect não ajuda",
+      "p": "É isso que interrompe a maioria das conexões com a Synology antes mesmo da primeira tentativa. Um servidor MCP hospedado abre uma conexão TCP de entrada na porta 993, e um NAS em <code>192.168.1.20</code>, ou alcançável só em <code>diskstation.local</code>, não tem um endereço que algo fora da sua rede consiga alcançar. Quatro coisas específicas dão errado aqui. Primeira, você precisa de um redirecionamento de porta no roteador mandando TCP 993, e 465 ou 587 para envio, para o endereço interno fixo do NAS. Segunda, se o aparelho da operadora é um roteador e você colocou o seu próprio roteador atrás dele, você está atrás de duas camadas de NAT, e um redirecionamento só no roteador de dentro não faz nada: o aparelho de fora também precisa redirecionar, ou ser colocado em modo bridge. Terceira, cada vez mais operadoras residenciais e móveis, inclusive no Brasil, colocam os clientes atrás de CGNAT, e nesse caso não existe IPv4 público para redirecionar e nenhuma configuração do seu lado consegue criar um. Peça um IP público à operadora, ou aceite que esse caminho está fechado. Quarta, o QuickConnect não resolve nada disso: ele retransmite os aplicativos web do próprio DSM, não TCP arbitrário, então um endereço <code>quickconnect.to</code> não é um hostname de e-mail e nunca vai ser. Configure o DDNS em Control Panel, External Access, e verifique de fora da sua própria rede antes de mudar qualquer outra coisa. Se preferir não expor o NAS de jeito nenhum, o MCPEmails pode ser hospedado por você na sua rede, o que mantém a sessão IMAP na rede local onde o NAS já está."
+    },
+    {
+      "h": "Obter um certificado não é o mesmo que entregá-lo ao MailPlus",
+      "p": "O DSM guarda os certificados em Control Panel, Security, Certificate, e guarda separadamente um mapeamento de qual serviço usa qual certificado. Solicitar um certificado Let's Encrypt preenche o primeiro e não muda nada no segundo, então o MailPlus Server continua apresentando o certificado autoassinado que o DSM gerou quando o NAS foi configurado. Ninguém percebe, porque todo mundo acessa o DSM pelo navegador, onde o aviso foi aceito uma vez anos atrás, e porque o cliente web do MailPlus é servido pelo HTTPS do próprio DSM e não pela 993. Um cliente IMAP rigoroso recusa na hora. Abra o certificado, use a atribuição de serviços e escolha o MailPlus Server explicitamente. O DSM permite só um certificado por serviço, então, se você acessa o NAS por mais de um nome, todos eles precisam ser nomes alternativos nesse único certificado. Note também que a solicitação de Let's Encrypt do DSM exige as portas 80 e 443 redirecionadas para o NAS, que é um segundo redirecionamento além das portas de e-mail."
+    },
+    {
+      "h": "As contas do MailPlus são licenciadas, e uma conta inativa não tem caixa de correio",
+      "p": "O MailPlus Server inclui cinco contas de e-mail gratuitas, e além disso a Synology vende License Packs que cobrem cinco ou vinte contas ativas, adicionados na aba License. Uma licença, depois de ativada, não expira, mas cada chave funciona em um produto Synology por vez. A consequência prática é que ser usuário do DSM não basta: a conta precisa ser ativada no MailPlus Server, e se você está no teto de licenças, ela não pode ser. Uma conta inativa não tem caixa de correio para autenticar, então o IMAP falha de um jeito idêntico a uma senha errada. Confira a lista de contas no MailPlus Server antes de conferir qualquer coisa sobre credenciais."
+    }
+  ],
+  "limits": [
+    "Banda larga residencial costuma bloquear a porta 25 de entrada, então um NAS em uma linha doméstica pode nunca receber e-mail da internet, para começo de conversa. Isso é um problema de entrega, não de conexão, e vale confirmar que o seu e-mail realmente chega antes de se perguntar por que um agente encontra uma caixa vazia.",
+    "Modelos de NAS domésticos têm processadores modestos e discos que entram em repouso. Pesquisas IMAP grandes em uma caixa de correio volumosa são visivelmente mais lentas do que em um provedor hospedado, e a primeira solicitação depois de um período ocioso espera os discos.",
+    "A validação de TLS é rigorosa e não pode ser dispensada, então o certificado autoassinado padrão do DSM é recusado em vez de aceito com um aviso."
+  ],
+  "faq": [
+    {
+      "q": "O Claude funciona com o Synology MailPlus?",
+      "a": "Não sozinho. O Claude não tem conector para a Synology e não consegue abrir uma sessão IMAP com um NAS. Conectar um servidor MCP como o MCPEmails ao seu MailPlus Server dá ao Claude acesso para ler, pesquisar, enviar, responder, agendar e organizar uma caixa de correio dele, e a mesma caixa de entrada passa a funcionar no Cursor ou no ChatGPT, desde que o NAS seja alcançável pela internet."
+    },
+    {
+      "q": "Quais são as configurações de IMAP e SMTP do Synology MailPlus?",
+      "a": "O hostname é o nome público do seu NAS, em geral um nome DDNS configurado no Control Panel, e nunca um endereço QuickConnect. O IMAP é 993 com SSL/TLS, ou 143 sem. O envio é 587 com STARTTLS ou 465 com TLS implícito. Faça login com o endereço de e-mail completo e a senha do DSM dessa conta, depois de habilitar o IMAP em Service, Protocol, IMAP/POP3."
+    },
+    {
+      "q": "Consigo conectar o MailPlus sem expor meu NAS à internet?",
+      "a": "A um serviço hospedado, não. O MCPEmails se conecta de fora na porta 993, então um NAS sem rota a partir da internet não pode ser alcançado, e o QuickConnect não transporta IMAP. A alternativa é hospedar o MCPEmails você mesmo na sua rede, onde ele alcança o NAS pela rede local e nada do servidor de e-mail fica visível publicamente."
+    },
+    {
+      "q": "Por que minha senha do MailPlus é rejeitada?",
+      "a": "Confirme que a conta está ativada no MailPlus Server e não apenas existe como usuário do DSM, já que o MailPlus é licenciado por conta ativa e uma conta inativa não tem caixa de correio. Depois confirme que o IMAP está habilitado em Service, Protocol, IMAP/POP3. Se os dois estiverem certos, a falha provavelmente é o certificado na 993, não a senha."
+    },
+    {
+      "q": "O MailPlus precisa de senha de app?",
+      "a": "Não. As contas do MailPlus são usuários do DSM e autenticam com a senha do DSM. Se essa conta do DSM tem autenticação em dois fatores ativada, saiba que ela vale para as interfaces web do DSM e do MailPlus, não para o IMAP, então a senha da conta continua sendo o que um cliente de e-mail envia."
+    },
+    {
+      "q": "Meu e-mail fica armazenado nos seus servidores?",
+      "a": "Não. As mensagens são buscadas ao vivo no seu NAS via IMAP a cada solicitação e repassadas ao seu cliente de IA. As credenciais são criptografadas em repouso e o conteúdo das mensagens não é retido, o que provavelmente é um dos motivos de o e-mail estar em um NAS seu, e não em um provedor."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dê à sua IA uma caixa de entrada do MailPlus",
+    "sub": "Conecte a caixa de correio do seu próprio NAS. Uma caixa de entrada grátis para sempre, sem cartão."
+  }
+}

@@ -63,7 +63,7 @@ En claude.ai:
 
 1. Ve a **Customize → Connectors**.
 2. Pulsa **Add connector** y pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Pulsa **Connect**, inicia sesión con tu cuenta de MCPEmails y aprueba los permisos que quieras: \`read:email\`, \`send:email\` o ambos.
+3. Pulsa **Connect**, inicia sesión con tu cuenta de MCPEmails y elige cuánto acceso le das a Claude: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 
 Sin clave de API, sin archivo de configuración. claude.ai usa OAuth con PKCE por debajo, y el token que recibe Claude queda acotado exactamente a lo que aprobaste. Si estás en un cliente que no puede hacer OAuth (Cursor, Cline, un script de cURL), generas una clave acotada en su lugar, algo que explico en [acceso al correo para Cursor, Cline y VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
@@ -88,7 +88,7 @@ La búsqueda también se comporta de forma un poco distinta. Gmail dispone de to
 La mecánica es la misma con cualquier proveedor, así que cualquier flujo de trabajo que hayas visto para Gmail funciona en tu bandeja de Fastmail o iCloud. Algunos que de verdad compensan:
 
 - Una clasificación matutina que marque lo que necesita a una persona y redacte borradores de respuesta para el resto. Consulta [clasificar y resumir la bandeja](/blog/ai-agent-triage-summarize-inbox).
-- Un autorespondedor casi en tiempo real. Una advertencia honesta: MCPEmails funciona por sondeo, no por push; no hay webhooks, así que el agente comprueba si hay correo nuevo según una programación. La [creación de un autorespondedor](/blog/build-email-auto-responder-mcp-agent) explica cómo hacerlo bien.
+- Un autorespondedor casi en tiempo real. Una advertencia: dentro de un chat, el agente comprueba si hay correo nuevo según una programación; un aviso push necesita un webhook de correo nuevo, que los espacios de trabajo Pro y Business pueden añadir en Claves de API. La [creación de un autorespondedor](/blog/build-email-auto-responder-mcp-agent) explica las dos vías.
 
 Si todavía estás decidiendo si conectar el correo a un agente, empieza por el artículo pilar: [cómo dar a tu agente de IA acceso al correo](/blog/how-to-give-your-ai-agent-email-access).
 

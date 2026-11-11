@@ -95,9 +95,9 @@ Quatre règles qui évacuent tout le mécanique, plus une conversation matinale 
 
 Ensuite vous interrogez votre agent sur les trente messages restants au lieu des cent quatre-vingts qui sont arrivés. Les règles n'essaient pas d'être malignes. Elles retirent tout ce qui n'a jamais eu besoin d'intelligence.
 
-## Les règles comptent dans les actions de votre forfait
+## Les règles comptent dans l'utilisation de votre forfait
 
-Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Sur le forfait **Free**, cela représente 150 actions e-mail facturables par mois calendaire UTC, les 3 premiers jours n'étant pas comptés. Ce quota mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces créés avant en sont exemptés. Quand un espace de travail atteint son quota, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la période de quota se termine. **Personal**, à $9 par mois, offre des actions e-mail illimitées et autorise 3 boîtes connectées. Voir les [tarifs](/pricing).
+Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Si un espace de travail **Free** atteint sa limite mensuelle, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la limite se réinitialise. Les forfaits payants et leurs limites sont sur la page des [tarifs](/pricing).
 
 ## FAQ
 

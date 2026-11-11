@@ -60,7 +60,7 @@ Endepunktet er:
 https://mcpemails.com/api/mcp
 \`\`\`
 
-Når du klikker Connect, logger du inn på MCPEmails-kontoen din og godkjenner tilganger: \`read:email\`, \`send:email\` eller begge. Ingen API-nøkkel skifter hender.
+Når du klikker Connect, logger du inn på MCPEmails-kontoen din og velger tilgang på samtykkeskjermen vår: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting), eller **Tilpasset** for å slå på tillatelser én og én. Ingen API-nøkkel skifter hender.
 
 For klienter som ikke snakker OAuth (Cline, JetBrains-plugins, egne skript, rå cURL), lager du en avgrenset nøkkel i **Dashboard → API Keys** og sender den som \`Authorization: Bearer <api-key>\`. Hele gjennomgangen for disse klientene finner du i [e-post for AI-agenter i Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Veier du de to tilnærmingene mot hverandre, går [OAuth vs API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access) gjennom avveiningene.
 

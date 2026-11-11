@@ -4,7 +4,7 @@ const post = {
   description:
     'Seven concrete things an AI agent can do with inbox access: triage unread mail, summarize threads, draft replies, find attachments, chase follow-ups, and route mail.',
   cover: '/blog/cover-7-things-ai-agent-can-do-with-inbox-access.svg',
-  coverAlt: 'Seven things your AI agent can do with inbox access over MCP — MCPEmails',
+  coverAlt: 'Seven things your AI agent can do with inbox access over MCP (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: "2026-04-18T09:00:00.000Z",
   updatedAt: "2026-04-18T09:00:00.000Z",
@@ -14,11 +14,11 @@ const post = {
 
 Every example below maps to real MCP tools you can call right now. The tools are the same whether you connect Gmail, Outlook, iCloud, Fastmail, or a generic IMAP box. If you haven't wired an agent to your inbox yet, the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) covers the setup; the [2-minute connect walkthrough](/blog/connect-email-to-ai-agent-under-2-minutes) is the fast path.
 
-One honest caveat up front, because it shapes half of this list: **MCPEmails is poll-based, not push.** There are no webhooks and no server-initiated events. The agent doesn't get pinged when mail arrives. It checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. I'll flag where polling matters.
+One caveat up front, because it shapes half of this list: **the tools are request and response.** The agent is not pinged when mail arrives; it checks on a schedule. That sounds like a limitation, and for a few use cases it is, but it also means nothing fires without a clock you control. If you do want a push, Pro and Business workspaces can add a webhook under **API Keys** in the dashboard, and MCPEmails sends a signed POST to your URL when new mail arrives. I'll flag where the timing matters.
 
 ## The toolset, in one breath
 
-Everything here runs on a handful of core tools: \`inbox_list\`, \`email_read\`, and \`email_compose\`. The first two of those fold listing, reading, and searching (\`email_read\`) and sending, replying, and forwarding (\`email_compose\`) into one tool each, with an \`action\` parameter picking the variation. There are a few more — \`email_organize\` for marking read, flags, and folders, plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\`. The first call your agent should always make is \`inbox_list\` to discover the connected accounts and their \`inbox_id\` values, so you never hardcode a UUID into a prompt.
+Everything here runs on a handful of core tools: \`inbox_list\`, \`email_read\`, and \`email_compose\`. The first two of those fold listing, reading, and searching (\`email_read\`) and sending, replying, and forwarding (\`email_compose\`) into one tool each, with an \`action\` parameter picking the variation. There are a few more: \`email_organize\` for marking read, flags, and folders, plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\`. The first call your agent should always make is \`inbox_list\` to discover the connected accounts and their \`inbox_id\` values, so you never hardcode a UUID into a prompt.
 
 The prompts below are written the way I'd actually type them to Claude or Cursor. The agent figures out which tool to call.
 
@@ -80,7 +80,7 @@ This stitches the others together: \`email_read\` (action search, then list) to 
 
 ## What this costs and where the limits sit
 
-All seven work on the [Free plan](/pricing), which is $0 and connects one inbox at 60 requests per minute. Personal ($9/month) connects up to three inboxes and raises the burst limit to 120 requests per minute; Pro ($15/month) connects up to 10 and raises it to 300; Business ($39/month) includes 10 mailboxes, adds members with roles and a separate workspace per client, and raises it to 1,000 requests per minute. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal at $9/month, and Pro only once you pass three inboxes.
+All seven work on the [Free plan](/pricing), which costs nothing and connects one inbox. Personal adds inboxes for one person and raises the burst limit; Pro adds more inboxes for someone running a business, raises it again, and brings webhooks for new mail; Business includes a block of mailboxes, with a per-mailbox price above it, plus members with roles and a separate workspace per client. One inbox is plenty for a weekly digest; the moment you want work and personal mail on the same agent, that is Personal. Current inbox counts and prices are on the [pricing page](/pricing).
 
 When you do hit a limit, the server returns a retryable error with \`data.retry_after\` in seconds. Honor it. And never blindly auto-retry an \`email_compose\` send, because a retry on a timeout can mean two copies of the same message land in someone's inbox.
 

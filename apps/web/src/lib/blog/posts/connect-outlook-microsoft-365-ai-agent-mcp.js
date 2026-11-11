@@ -67,7 +67,7 @@ The endpoint is:
 https://mcpemails.com/api/mcp
 \`\`\`
 
-When you click Connect, you sign in to your MCPEmails account and approve scopes: \`read:email\`, \`send:email\`, or both. No API key changes hands.
+When you click Connect, you sign in to your MCPEmails account and pick the access on our consent screen: **Read-only**, **Standard** (adds sending and drafts), **Full access** (adds scheduling, folders and deleting), or **Custom** to switch permissions on one by one. No API key changes hands.
 
 For clients that do not speak OAuth (Cline, JetBrains plugins, your own scripts, raw cURL), generate a scoped key in **Dashboard → API Keys** and send it as \`Authorization: Bearer <api-key>\`. The full walk-through for those clients lives in [email for AI agents in Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). If you are weighing the two approaches, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) lays out the trade-offs.
 

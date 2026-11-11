@@ -14,7 +14,7 @@ const translation = {
 
 1. 在 claude.ai 中，进入 **Customize → Connectors → Add connector**。
 2. 粘贴 endpoint：\`https://www.mcpemails.com/api/mcp\`
-3. 点击 **Connect**，登录你的 MCPEmails 账户，并批准你想要的权限范围（\`read:email\`、\`send:email\`，或者两者都要）。
+3. 点击 **Connect**，登录你的 MCPEmails 账户，并选择访问级别：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。
 
 客户端这边就这些了。令牌严格限定在你批准的范围内，而且你可以在控制台一键撤销连接。如果想把利弊讲清楚，请看 [OAuth 与 API 密钥在 AI 邮件访问中的对比](/blog/oauth-vs-api-keys-ai-email-access)。如果想看针对具体客户端的教程，请参阅[把 Claude 连接到你的邮箱](/blog/connect-claude-to-email)或[把 ChatGPT 连接到你的邮箱](/blog/connect-chatgpt-to-email)。
 
@@ -102,7 +102,7 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`inbox_list\`，然后带上 \`action: "list"\` 和 \`unread: true\` 运行 \`email_read\`，再对每一封带上 \`action: "read"\` 运行 \`email_read\`。如果这能跑通，你的连接就已经生效了。
 
-有一个值得先讲明白的实话提醒：MCPEmails 是基于轮询的。没有 webhook，也没有推送事件，所以智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。
+有一个值得先讲明白的提醒：聊天里的智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。如果你自己的代码需要推送，Pro 和 Business 工作区可以在 API 密钥页面添加一个 webhook，新邮件到达时它会向你的 URL 发送 POST。
 
 ## 为什么可以放心地快速完成
 
@@ -110,7 +110,7 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 
 ## 总结
 
-整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；Personal 每月 9 美元，最多可连接三个邮箱；Pro 最多可连接 10 个。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
+整件事就这么简单：一次邮箱连接、一个 endpoint、寥寥数个工具。免费套餐可连接一个邮箱，分文不取、无需绑卡；付费套餐可连接更多。去看看[价格](/pricing)。准备好试一试了吗？[免费开始](/signup)，连接你的邮箱，把 endpoint 粘贴进你的智能体。`,
 };
 
 export default translation;

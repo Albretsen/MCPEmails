@@ -42,15 +42,15 @@ Conecte mais de uma caixa de correio se o seu plano permitir. O ChatGPT as desco
 
 ## Passo 2: adicionar o conector no ChatGPT
 
-1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoal), e clique em **Add** (Adicionar) no canto superior direito.
-2. Escolha **Add custom MCP server** (Adicionar servidor MCP personalizado) e dê o nome MCPEmails.
-3. Em **Connection** (Conexão), cole esta URL:
+1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoais), e clique em **Add** (Adicionar) no canto superior direito.
+2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
+3. Em **Conexão**, cole esta URL:
 
 \`\`\`
 https://mcpemails.com/api/mcp
 \`\`\`
 
-4. Escolha **OAuth**, marque **I understand and want to continue** (Entendo e quero continuar) e clique em **Create as a plugin** (Criar como plugin).
+4. Escolha **OAuth**, marque **Entendo e quero continuar** e clique em **Criar como plugin**.
 5. Faça login com o MCPEmails e aprove.
 6. Em um chat, digite **@** e escolha MCPEmails. A escolha vale para aquela mensagem, então mencione o MCPEmails com @ de novo quando uma pergunta seguinte precisar do seu e-mail.
 
@@ -86,7 +86,7 @@ O MCPEmails entrega ao ChatGPT ferramentas específicas, em vez de uma senha ou 
 - **Rascunhos, pastas e agendamento:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` e \`schedule_list\`.
 - **O restante:** \`contact_search\`, \`signature_get\`, \`signature_set\`, mais \`automation\` e \`automation_read\` para regras recorrentes.
 
-Um limite para levar em conta: o MCPEmails funciona por consulta. Não há webhooks nem eventos iniciados pelo servidor, então o ChatGPT verifica se há e-mails novos quando você pede, e não no momento em que uma mensagem chega.
+Um limite para levar em conta: dentro de um chat, o ChatGPT verifica se há e-mails novos quando você pede, e não no momento em que uma mensagem chega. Nada no conector acorda o ChatGPT sozinho. (O seu próprio código pode ser acordado: os espaços de trabalho Pro e Business podem adicionar em Chaves de API um webhook que faz um POST para a sua URL quando chega e-mail novo.)
 
 ## OpenAI Codex no terminal
 
@@ -124,7 +124,7 @@ Não. O Codex é uma superfície de terminal, então usa uma chave de API de esc
 Não. Cada mensagem é buscada ao vivo no seu provedor para a solicitação que a pediu e depois descartada. Só a credencial criptografada do provedor fica guardada. [Por que nunca armazenar e-mail importa](/blog/why-email-never-stored-matters) explica o raciocínio.
 
 **Quanto custa?**
-O Free cobre uma caixa de entrada conectada e 150 ações de e-mail faturáveis por mês-calendário UTC, com os 3 primeiros dias sem contagem. Essa franquia mensal vale para espaços de trabalho criados em ou após 2026-09-13; espaços de trabalho criados antes estão isentos. Os planos pagos adicionam caixas de entrada e ações de e-mail ilimitadas: veja os [preços](/pricing).
+O Free cobre uma caixa de entrada conectada, com os limites listados na [página de preços](/pricing). Os planos pagos adicionam caixas de entrada.
 
 ## Próximo passo
 

@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/client-pc",
+    "https://www.tim.it/assistenza/assistenza-tecnica/mail/guida/casella-posta"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de TIM Mail, en un buzón vinculado a una línea TIM activa",
+    "helpUrl": "https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/protocolli-posta",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nome@tim.it, nome@alice.it o nome@tin.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta TIM Mail (tim.it, alice.it, tin.it) a Claude y a cualquier cliente MCP",
+    "description": "Conecta TIM Mail, Alice Mail o tin.it a Claude, Cursor y cualquier cliente MCP por IMAP en imap.tim.it:143 con STARTTLS. Funciona en un buzón vinculado a una línea TIM activa; TIM solo permite los demás buzones en programas de correo desde su propia red."
+  },
+  "hero": {
+    "eyebrow": "TIM Mail + IA",
+    "titleLine1": "Conecta TIM Mail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de TIM, Alice o tin.it. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder a TIM Mail por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.tim.it en el puerto 143 con STARTTLS, iniciando sesión con tu dirección completa y tu contraseña de TIM Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Las direcciones de Alice usan in.alice.it y out.alice.it, y las de tin.it, imaps.tin.it y smtps.tin.it, en los mismos puertos. Hay una condición que pone TIM, no nosotros: un buzón vinculado a una línea fija o móvil de TIM activa se puede usar desde cualquier programa de correo en cualquier lugar, mientras que un buzón sin línea solo se admite en programas de correo desde la propia red de TIM, y un servidor alojado no está en ella. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Requiere un buzón vinculado a una línea TIM activa",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @alice.it", "host": "in.alice.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @alice.it", "host": "out.alice.it", "port": 587, "security": "starttls" },
+      { "label": "IMAP, @tin.it", "host": "imaps.tin.it", "port": 143, "security": "starttls" },
+      { "label": "SMTP, @tin.it", "host": "smtps.tin.it", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "Las dos primeras filas son de @tim.it. Las direcciones de Alice y tin.it tienen sus propios nombres debajo, en los mismos puertos. Los seis servidores se verificaron mediante una conexión real con STARTTLS. Para cualquier otra dirección, usa el",
+      "label": "buscador de ajustes de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Cómo se conecta TIM Mail: IMAP con STARTTLS y la regla de la línea de TIM",
+    "body": "TIM documenta un único par de puertos para todos sus dominios: IMAP en el puerto 143 y SMTP en el puerto 587, ambos elevados a TLS con STARTTLS, el estilo de cifrado más antiguo que empieza en texto plano y luego cambia. Los servidores varían según el dominio. Para @tim.it son <code>imap.tim.it</code> y <code>smtp.tim.it</code>; para @alice.it, <code>in.alice.it</code> y <code>out.alice.it</code>; para @tin.it, <code>imaps.tin.it</code> y <code>smtps.tin.it</code>, a pesar de la s de esos nombres. TIM no menciona el 993 ni el 465, y en nuestra prueba ninguno de los dos respondió. El nombre de usuario es la dirección completa con su dominio, la contraseña es tu contraseña de TIM Mail, y el servidor de salida exige autenticación con el mismo par. La ayuda de TIM indica después quién puede usar un programa de correo: un buzón asociado a una línea fija o móvil de TIM activa, desde cualquier lugar, o un buzón sin línea siempre que estés conectado a la red de TIM. Con otro operador, dice TIM, el acceso es solo por el webmail. MCPEmails se conecta desde sus propios servidores, así que encaja en el primer caso y no en el segundo."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba que el buzón está vinculado a una línea TIM activa",
+      "p": "Este es el paso que decide si algún programa de correo fuera de la red de TIM puede iniciar sesión. Si tu dirección @tim.it, @alice.it o @tin.it vino con un contrato de línea fija o móvil de TIM que sigue activo, no hay problema. Si la línea se dio de baja, o el buzón nunca estuvo vinculado a una, TIM solo permite programas de correo desde una conexión de TIM, y un servidor alojado no puede conectarlo. No hay ningún ajuste que lo cambie; depende del contrato."
+    },
+    {
+      "h": "Usa tu contraseña de TIM Mail y la dirección completa",
+      "p": "TIM no emite ninguna contraseña aparte para programas de correo. Inicia sesión con la dirección escrita entera, incluido el dominio, y la contraseña que usas en mail.tim.it. Si la has olvidado, la página <b>Recupera Username e Password</b> de TIM la restablece, siempre que el buzón tenga un número de móvil de recuperación; sin él, TIM pide un formulario firmado y una copia de un documento de identidad."
+    },
+    {
+      "h": "Pega la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa e introduce la contraseña. Los servidores, los puertos STARTTLS y el modo de seguridad vienen rellenados con los valores verificados de esta página para tu dominio. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La regla de la línea, y por qué un servidor alojado falla donde tu teléfono funciona",
+      "p": "La regla de TIM tiene dos mitades. Un buzón vinculado a una línea TIM activa funciona en cualquier programa de correo y en cualquier red. Un buzón sin línea funciona en programas de correo solo mientras el dispositivo está en la red de TIM, y con cualquier otro operador el webmail es la única vía de entrada. Tu teléfono con datos móviles de TIM pasa la segunda prueba; un servidor en un centro de datos no la pasa nunca. Así que si la app de TIM funciona y MCPEmails es rechazado, lo primero que hay que revisar es la línea detrás del buzón, no la contraseña."
+    },
+    {
+      "h": "STARTTLS en el 143 y el 587, y nada en el 993 ni el 465",
+      "p": "La mayoría de los proveedores de este sitio usan TLS implícito en el 993 y el 465. TIM documenta en cambio el 143 y el 587 con STARTTLS, y los puertos de TLS implícito no responden. Un cliente que insiste en el 993 agota el tiempo de espera en lugar de fallar limpiamente, lo que parece un problema de red. MCPEmails rellena los puertos STARTTLS y prueba el otro transporte si el primero no responde, así que esto está resuelto, pero explica un largo silencio en otras herramientas."
+    },
+    {
+      "h": "Sin SASL-IR y solo PLAIN, así que algunos clientes reciben un rechazo sin más",
+      "p": "El servidor IMAP anuncia <code>AUTH=PLAIN</code> y nada más, y no anuncia SASL-IR, así que rechaza la autenticación en un solo paso que envía la credencial junto con el comando AUTHENTICATE. Los clientes configurados con LOGIN o con la forma de un solo paso fallan en la autenticación sin ninguna explicación. MCPEmails usa el intercambio PLAIN en dos pasos, y por eso un buzón de TIM se conecta aquí después de fallar en otras herramientas IMAP."
+    },
+    {
+      "h": "Límites de envío diarios, y carpetas que se movieron en la migración",
+      "p": "TIM limita cada mensaje a 50 destinatarios entre Para, Cc y Cco, y cada cuenta a 200 envíos al día; la carpeta Spam se vacía a los 20 días y Cestino a los 7, y TIM afirma que no guarda copias de seguridad. Cuando TIM trasladó los buzones a su nueva plataforma, las carpetas que la nueva estructura no tiene (Junk, Trash, Sent, Posta in uscita de la antigua) se colocaron bajo Cartelle personali, así que un buzón antiguo puede tener dos carpetas de enviados. Indica cuál quieres cuando pidas al agente que archive algo."
+    }
+  ],
+  "limits": [
+    "TIM solo permite programas de correo en un buzón sin línea TIM activa desde su propia red. MCPEmails se conecta desde sus servidores, así que un buzón de ese tipo no se puede conectar aquí. Es una regla de TIM y ningún ajuste la cambia.",
+    "El servidor anuncia MOVE y UIDPLUS, pero no IDLE ni SPECIAL-USE, así que el correo nuevo se detecta consultando periódicamente y las carpetas se identifican por nombre: en un buzón en italiano, Posta in arrivo, Spam, Cestino y lo que haya bajo Cartelle personali."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con TIM Mail, Alice Mail o tin.it?",
+      "a": "Sí, en un buzón vinculado a una línea TIM activa. Claude no tiene un conector de TIM integrado; conectar un servidor MCP como MCPEmails por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP. Un buzón sin línea TIM activa solo se admite en programas de correo desde la red de TIM, algo que un servidor alojado no puede cumplir."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de TIM Mail?",
+      "a": "IMAP en el puerto 143 con STARTTLS y SMTP en el puerto 587 con STARTTLS, con autenticación obligatoria. Los servidores son imap.tim.it y smtp.tim.it para @tim.it, in.alice.it y out.alice.it para @alice.it, e imaps.tin.it y smtps.tin.it para @tin.it. El nombre de usuario es tu dirección completa. TIM no menciona el 993 ni el 465, y esos puertos no respondieron cuando lo comprobamos."
+    },
+    {
+      "q": "¿Por qué mi contraseña de TIM funciona en el webmail pero no en un cliente de correo?",
+      "a": "Por la regla de la línea de TIM, no por la contraseña. Si el buzón no está vinculado a una línea fija o móvil de TIM activa, TIM solo permite programas de correo desde su propia red, y el webmail desde cualquier otro sitio. Si la línea está activa y el inicio de sesión sigue fallando, revisa el servidor de tu dominio, porque alice.it y tin.it no usan los nombres de tim.it."
+    },
+    {
+      "q": "¿Tiene TIM contraseñas de aplicación?",
+      "a": "No. La ayuda de TIM no documenta ninguna contraseña específica de aplicación ni verificación en dos pasos para TIM Mail. Un programa de correo inicia sesión con la misma contraseña que el webmail, junto con la dirección completa."
+    },
+    {
+      "q": "¿Se almacena mi correo de TIM en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de TIM por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de TIM Mail",
+    "sub": "Conecta TIM Mail, Alice o tin.it en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

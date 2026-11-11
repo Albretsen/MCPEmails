@@ -9,90 +9,90 @@
   ],
   "auth": {
     "method": "mail-password",
-    "label": "E-Mail-Passwort",
+    "label": "Passwort der E-Mail-Adresse",
     "helpUrl": "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
-    "usernameForm": "Die vollständige E-Mail-Adresse, zum Beispiel max.mustermann@example.com. Bei IONOS hat jede Adresse ein eigenes Passwort.",
+    "usernameForm": "Die vollständige E-Mail-Adresse, zum Beispiel mustermann@example.com. Bei IONOS hat jede E-Mail-Adresse ein eigenes Passwort.",
     "status": "active"
   },
   "meta": {
-    "title": "IONOS MCP-Server: IONOS E-Mail mit Claude verbinden",
-    "description": "MCP-Server für IONOS E-Mail. Mehrere Firmenpostfächer Ihrer Domain (info@, vertrieb@) per IMAP über imap.ionos.com:993 mit Claude und ChatGPT verbinden."
+    "title": "IONOS Mail MCP: IONOS E-Mail mit Claude verbinden",
+    "description": "IONOS E-Mail mit Claude und ChatGPT verbinden: imap.ionos.de:993, Passwort der E-Mail-Adresse statt IONOS-Login. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
   },
   "hero": {
     "eyebrow": "IONOS + KI",
-    "titleLine1": "MCP-Server für IONOS E-Mail:",
-    "titleLine2": "jedes Firmenpostfach, in Claude und ChatGPT",
-    "lead": "Sie betreiben info@, vertrieb@, support@ und rechnungen@ auf Ihrer eigenen Domain bei IONOS? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet mit allen. E-Mails lesen, suchen, senden, beantworten, planen und ordnen, per IMAP mit Ihrem Postfach-Passwort, und dieselben Postfächer in jedem MCP-Client nutzen, nicht nur in einem.",
+    "titleLine1": "IONOS E-Mail mit Claude verbinden:",
+    "titleLine2": "der MCP-Server für jedes Firmenpostfach Ihrer Domain",
+    "lead": "Sie betreiben info@, vertrieb@, support@ und rechnung@ auf Ihrer eigenen Domain bei IONOS? Verbinden Sie jedes Postfach mit einem Workspace, und Ihr KI-Agent arbeitet in allen: E-Mails lesen, suchen, beantworten, senden, planen und ablegen, per IMAP mit dem Passwort der jeweiligen E-Mail-Adresse. Dieselben Postfächer nutzen Sie dann in jedem MCP-Client, nicht nur in einem.",
     "meta0": "Erstes Postfach kostenlos, Tarife für weitere",
-    "meta1": "Ihr Postfach-Passwort, keine OAuth-Einrichtung",
+    "meta1": "Passwort der E-Mail-Adresse, kein OAuth",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Claude kann IONOS nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Postfach-Passwort anbindet. Danach können Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und ordnen. Die Einrichtung dauert ein paar Minuten. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
+    "answer": "Claude kann IONOS nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit dem Passwort der E-Mail-Adresse anbindet. Danach lesen, suchen, senden und sortieren Claude, ChatGPT oder Cursor diese E-Mails. Die Einrichtung dauert ein paar Minuten. Jede Firmenadresse, etwa info@ oder vertrieb@, wird als eigenes Postfach verbunden: Ein Postfach ist kostenlos, Personal verbindet drei, Pro bis zu 10 und Business so viele, wie Sie brauchen."
   },
   "persona": {
     "intro": "Mehrere Firmenpostfächer bei IONOS?",
-    "label": "Sehen Sie, wie viele Postfächer jeder Tarif verbindet",
+    "label": "So viele Postfächer verbindet jeder Tarif",
     "href": "/pricing"
   },
   "method": {
-    "title": "So verbindet sich IONOS: IMAP und Ihr Postfach-Passwort",
-    "body": "IONOS verbindet sich über IMAP/SMTP mit dem <b>E-Mail-Passwort</b>, das Sie im IONOS Control-Panel unter E-Mail festlegen. Es ist nicht Ihr IONOS-Login. Die Servernamen hängen davon ab, über welche IONOS-Website Sie das Postfach gekauft haben: IONOS Deutschland dokumentiert <code>imap.ionos.de</code> und <code>smtp.ionos.de</code>, IONOS UK <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. IONOS antwortet auf beiden üblichen Transportwegen, 993 mit TLS und 143 mit STARTTLS, am Port scheitert eine IONOS-Anmeldung also selten. MCPEmails versucht den anderen Weg, wenn der erste nicht antwortet."
+    "title": "So verbindet sich IONOS: IMAP und das Passwort der E-Mail-Adresse",
+    "body": "IONOS verbindet sich über IMAP/SMTP mit dem <b>Passwort zu Ihrer E-Mail-Adresse</b>, das Sie in Ihrem IONOS Konto unter E-Mail festlegen. Es ist nicht das Passwort, mit dem Sie sich bei IONOS anmelden. Die Servernamen hängen davon ab, über welche IONOS-Website Sie das Postfach gekauft haben: IONOS Deutschland dokumentiert <code>imap.ionos.de</code> und <code>smtp.ionos.de</code>, IONOS UK <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. IONOS antwortet auf beiden üblichen Transportwegen, 993 mit SSL/TLS und 143 mit STARTTLS; am Port scheitert eine IONOS-Anmeldung also so gut wie nie. MCPEmails versucht den anderen Weg, falls der erste nicht antwortet."
   },
   "setup": [
     {
-      "h": "Kostenloses Konto erstellen",
-      "p": "Registrieren Sie sich bei MCPEmails, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+      "h": "Kostenloses MCPEmails-Konto anlegen",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
     },
     {
-      "h": "Ihr IONOS-Postfach-Passwort besorgen",
-      "p": "Öffnen Sie im IONOS Control-Panel den Bereich E-Mail, wählen Sie die Adresse und legen Sie ihr Passwort fest oder setzen Sie es zurück. Es ist nicht das Passwort, mit dem Sie sich bei IONOS selbst anmelden."
+      "h": "Passwort der E-Mail-Adresse bei IONOS festlegen",
+      "p": "Melden Sie sich in Ihrem IONOS Konto an und klicken Sie auf die Kachel E-Mail. Klicken Sie in der Zeile der Adresse unter Aktionen auf die drei Punkte, dann auf Passwort ändern, und vergeben Sie ein neues Passwort. Es ist nicht das Passwort, mit dem Sie sich gerade bei IONOS angemeldet haben. Kennen Sie das aktuelle Passwort, können Sie es auch in IONOS Webmail ändern."
     },
     {
       "h": "In MCPEmails einfügen",
-      "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre IONOS-Adresse und das Postfach-Passwort ein. Die oben gezeigten Hosts sind die von ionos.com: Für ein Postfach von ionos.de verwenden Sie stattdessen imap.ionos.de und smtp.ionos.de, für ionos.co.uk die .co.uk-Namen."
+      "p": "Wählen Sie IMAP / SMTP und geben Sie Ihre IONOS-Adresse und das Passwort der Adresse ein. Die oben gezeigten Server sind die von ionos.com: Für ein Postfach von ionos.de tragen Sie stattdessen imap.ionos.de und smtp.ionos.de ein, für ionos.co.uk die .co.uk-Namen. Österreichische und Schweizer Kunden nehmen die Namen der IONOS-Website, über die sie gekauft haben."
     },
     {
       "h": "MCP-URL in Ihre KI einfügen",
-      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT ein, autorisieren Sie den Zugriff, und Ihr Agent hat das Postfach."
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT als Konnektor ein, autorisieren Sie den Zugriff, und Ihr Agent arbeitet im Postfach."
     }
   ],
   "gotchas": [
     {
       "h": "Bei IONOS liegt es fast nie am Port, und Portwechsel kosten Tage",
-      "p": "Nach einer abgelehnten Anmeldung versuchen es viele immer wieder mit <code>imap.ionos.com</code> und wechseln zwischen 993 mit implizitem TLS und 143 mit STARTTLS, in der Annahme, einer der beiden Wege sei falsch. IONOS antwortet auf beiden, ein Wechsel ändert also nichts, wenn das Passwort das Problem ist. IONOS dokumentiert 993 für IMAP und 465 für SMTP und bietet 587 mit STARTTLS als Alternative für Netze an, die 465 sperren. Der Transport ist also tatsächlich flexibel und tatsächlich nicht das, was Ihre Anmeldung ablehnt. Antwortet der Server und weist Sie dann ab, behandeln Sie es als Problem mit den Zugangsdaten und gehen Sie direkt ins Control-Panel."
+      "p": "Nach einer abgelehnten Anmeldung probieren viele es immer wieder gegen <code>imap.ionos.com</code> und wechseln zwischen 993 mit SSL/TLS und 143 mit STARTTLS, in der Annahme, einer der beiden Wege sei falsch. IONOS antwortet auf beiden, ein Wechsel ändert also nichts, wenn das Passwort das Problem ist. IONOS dokumentiert 993 für IMAP und 465 für SMTP und bietet 587 mit STARTTLS als Ausweg für Netze an, die 465 sperren. Der Transport ist also tatsächlich flexibel und tatsächlich nicht das, was Ihre Anmeldung ablehnt. Antwortet der Server und weist Sie dann ab, behandeln Sie es als Passwortproblem und gehen Sie direkt in Ihr IONOS Konto."
     },
     {
       "h": "Jede IONOS-Adresse hat ein eigenes Passwort, und es ist nicht Ihr IONOS-Login",
-      "p": "IONOS sagt klar, dass jede E-Mail-Adresse ein eigenes Passwort hat. Die Zugangsdaten, mit denen Sie sich bei IONOS selbst anmelden, sehr oft ebenfalls eine E-Mail-Adresse, öffnen das Control-Panel und sonst nichts. Legen Sie das Postfach-Passwort im IONOS Control-Panel unter <b>E-Mail</b> fest oder setzen Sie es zurück, indem Sie die Adresse auswählen und dort die Passwort-Option nutzen. Weil beide Zugangsdaten in einem Anmeldeformular gleich aussehen, ist das der häufigste Verbindungsfehler bei IONOS, und genau der Fehler, den viele mit dem Portwechsel oben zu beheben versuchen."
+      "p": "IONOS schreibt es wörtlich: Das Passwort ist das Passwort zu Ihrer E-Mail-Adresse, und jede Adresse hat ihr eigenes. Die Zugangsdaten, mit denen Sie sich bei IONOS selbst anmelden, sehr oft ebenfalls eine E-Mail-Adresse, öffnen Ihr Kundenkonto und sonst nichts. Legen Sie das Passwort der Adresse in Ihrem IONOS Konto unter <b>E-Mail</b> fest oder setzen Sie es zurück: bei der Adresse unter <b>Aktionen</b> auf die drei Punkte und dann auf <b>Passwort ändern</b> klicken. Weil beide Zugangsdaten in einem Anmeldeformular gleich aussehen, ist das der häufigste Verbindungsfehler bei IONOS, und genau der Fehler, den viele mit dem Portwechsel oben zu beheben versuchen."
     },
     {
       "h": "Microsoft 365 von IONOS ist ein Microsoft-Postfach, kein IONOS-Postfach",
-      "p": "IONOS verkauft Microsoft 365 neben den eigenen Produkten Mail Basic und Mail Business, und viele Kunden, die glauben, IONOS-E-Mail zu haben, haben in Wahrheit einen Microsoft-Tenant mit IONOS-Rechnung. Für diese Postfächer gilt nichts zu <code>imap.ionos.com</code>: Sie liegen auf Microsofts Servern und werden im Microsoft 365 Admin Center verwaltet, nicht im IONOS Control-Panel. Verbinden Sie sie über die Outlook-Option (Mit Microsoft anmelden) statt per IMAP. Eventuell muss Ihre IT-Administration MCPEmails einmalig freigeben, das Dashboard gibt Ihnen dafür einen Freigabelink zum Weiterleiten. Erkennbar ist es daran, wohin Ihr Webmailer führt: Outlook im Web bedeutet Microsoft."
+      "p": "IONOS verkauft Microsoft 365 neben den eigenen Produkten Mail Basic und Mail Business, und viele Kunden, die glauben, IONOS-E-Mail zu haben, haben in Wahrheit einen Microsoft-Tenant mit IONOS-Rechnung. Für diese Postfächer gilt nichts zu <code>imap.ionos.com</code>: Sie liegen auf Microsofts Servern und werden im Microsoft 365 Admin Center verwaltet, nicht bei IONOS. Verbinden Sie sie über die Outlook-Option (Mit Microsoft anmelden) statt per IMAP. Eventuell muss Ihre IT-Administration MCPEmails einmalig freigeben; das Dashboard gibt Ihnen dafür einen Freigabelink zum Weiterleiten. Erkennbar ist es daran, wohin Ihr Webmailer führt: Outlook im Web bedeutet Microsoft."
     },
     {
-      "h": "IONOS Deutschland, IONOS UK und ionos.com dokumentieren verschiedene Servernamen",
-      "p": "IONOS betreibt Shops auf ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it und ionos.com, und die Hilfeseiten nennen für jeden eigene Hostnamen. Die deutsche Hilfe nennt <code>imap.ionos.de</code> auf Port 993 und <code>smtp.ionos.de</code> auf Port 465, mit 587 und STARTTLS, falls 465 gesperrt ist. Die britische Hilfe nennt <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com nennt <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. Das sind keine austauschbaren Namen für einen Server. Die .com-Server zeigen ein Zertifikat, das auf IONOS Inc. in den USA ausgestellt ist, die .de- und .co.uk-Server eines auf IONOS SE in Deutschland, das auch die alten 1&1-Namen wie <code>imap.1und1.de</code> abdeckt. Verwenden Sie die Namen der IONOS-Website, über die Sie das Postfach gekauft haben."
+      "h": "Probleme beheben: IONOS Deutschland, IONOS UK und ionos.com dokumentieren verschiedene Server",
+      "p": "IONOS betreibt Shops auf ionos.de, ionos.at, ionos.co.uk, ionos.fr, ionos.es, ionos.it und ionos.com, und die Hilfeseiten nennen jeweils eigene Hostnamen. Die deutsche Hilfe nennt <code>imap.ionos.de</code> auf Port 993 und <code>smtp.ionos.de</code> auf Port 465, mit 587 und STARTTLS, falls 465 gesperrt ist. Die britische Hilfe nennt <code>imap.ionos.co.uk</code> und <code>smtp.ionos.co.uk</code>, ionos.com nennt <code>imap.ionos.com</code> und <code>smtp.ionos.com</code>. Das sind keine austauschbaren Namen für einen Server. Die .com-Server zeigen ein Zertifikat auf IONOS Inc. in den USA, die .de- und .co.uk-Server eines auf IONOS SE in Deutschland, das auch die alten 1&1-Namen wie <code>imap.1und1.de</code> abdeckt. Bleibt eine Anmeldung hängen, prüfen Sie also der Reihe nach: Servernamen der IONOS-Website, über die Sie gekauft haben; Passwort der E-Mail-Adresse statt IONOS-Login, im Zweifel neu vergeben und in IONOS Webmail testen; und ob das Postfach zu Microsoft 365 migriert wurde, dann liegt es gar nicht mehr auf den IONOS-Mailservern."
     }
   ],
   "limits": [
-    "Über IONOS gekaufte Microsoft 365 Postfächer liegen nicht auf imap.ionos.com. Verbinden Sie sie über Outlook (Mit Microsoft anmelden), eventuell muss eine IT-Administration die App einmalig freigeben.",
-    "MCPEmails verbindet ein Postfach. IONOS-Aliase, Weiterleitungen, Catch-all-Regeln und Spam-Einstellungen bleiben im IONOS Control-Panel und sind für Ihren KI-Client nicht sichtbar."
+    "Über IONOS gekaufte Microsoft 365 Postfächer liegen nicht auf imap.ionos.com. Verbinden Sie sie über Outlook (Mit Microsoft anmelden); eventuell muss eine IT-Administration die App einmalig freigeben.",
+    "MCPEmails verbindet ein Postfach. IONOS-Aliase, Weiterleitungen, Catch-all-Regeln und Spam-Einstellungen bleiben in Ihrem IONOS Konto und sind für Ihren KI-Client nicht sichtbar."
   ],
   "faq": [
     {
       "q": "Funktioniert Claude mit IONOS E-Mail?",
-      "a": "Es funktioniert mit einem IONOS-Postfach, also einem, das über imap.ionos.com läuft, sobald ein MCP-Server wie MCPEmails per IMAP damit verbunden ist. Claude hat keinen eingebauten IONOS-Konnektor. Ein über IONOS gekauftes Microsoft 365 Postfach funktioniert ebenfalls, wird aber über Outlook (Mit Microsoft anmelden) verbunden statt per IMAP, und eventuell muss eine IT-Administration MCPEmails einmalig freigeben."
+      "a": "Ja, mit einem IONOS-Postfach, also einem auf den IONOS-Mailservern, sobald ein MCP-Server wie MCPEmails per IMAP damit verbunden ist. Claude selbst hat keinen IONOS-Konnektor. Ein über IONOS gekauftes Microsoft 365 Postfach funktioniert ebenfalls, wird aber über Outlook (Mit Microsoft anmelden) verbunden statt per IMAP, und eventuell muss eine IT-Administration MCPEmails einmalig freigeben."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen von IONOS?",
-      "a": "Das hängt davon ab, wo Sie das Postfach gekauft haben. IONOS Deutschland dokumentiert imap.ionos.de auf Port 993 und smtp.ionos.de auf Port 465, beide mit SSL/TLS, mit 587 und STARTTLS als Alternative für den Postausgang. IONOS UK dokumentiert imap.ionos.co.uk und smtp.ionos.co.uk, ionos.com dokumentiert imap.ionos.com und smtp.ionos.com, auf denselben Ports. Der Benutzername ist Ihre vollständige E-Mail-Adresse."
+      "a": "Das hängt davon ab, wo Sie das Postfach gekauft haben. IONOS Deutschland dokumentiert imap.ionos.de auf Port 993 und smtp.ionos.de auf Port 465, beide mit SSL/TLS, mit 587 und STARTTLS als Alternative für den Postausgang. IONOS UK dokumentiert imap.ionos.co.uk und smtp.ionos.co.uk, ionos.com dokumentiert imap.ionos.com und smtp.ionos.com, auf denselben Ports. Benutzername ist Ihre vollständige E-Mail-Adresse, Passwort das Passwort dieser Adresse."
     },
     {
       "q": "Soll ich bei IONOS Port 993 oder 143 verwenden?",
-      "a": "Verwenden Sie 993 mit implizitem TLS, so wie IONOS es dokumentiert. Die Frage kommt so oft, weil Clients automatisch 143 vorschlagen und IONOS auch dort antwortet. Wird eine Anmeldung abgelehnt, halten viele daher den Port für die Ursache. Das ist er nicht. Antwortet der Server und lehnt die Zugangsdaten ab, ist das Passwort falsch."
+      "a": "993 mit SSL/TLS, so wie IONOS es dokumentiert. Die Frage kommt so oft, weil Mailprogramme automatisch 143 vorschlagen und IONOS auch dort antwortet. Wird eine Anmeldung abgelehnt, halten viele deshalb den Port für die Ursache. Das ist er nicht. Antwortet der Server und lehnt die Zugangsdaten ab, stimmt das Passwort nicht."
     },
     {
       "q": "Warum wird mein IONOS-E-Mail-Passwort abgelehnt?",
-      "a": "Weil IONOS jeder E-Mail-Adresse ein eigenes Passwort gibt und Sie vermutlich Ihren IONOS-Kontologin verwenden. Öffnen Sie das IONOS Control-Panel, gehen Sie zu E-Mail, wählen Sie die Adresse und legen Sie ein neues Passwort dafür fest. Verwenden Sie dann dieses. Wurde die Adresse zu Microsoft 365 migriert, existiert sie auf den IONOS-Mailservern gar nicht mehr. Verbinden Sie sie dann über Outlook."
+      "a": "Weil IONOS jeder E-Mail-Adresse ein eigenes Passwort gibt und Sie vermutlich Ihr IONOS-Login verwenden. Öffnen Sie Ihr IONOS Konto, klicken Sie auf die Kachel E-Mail, dann bei der Adresse unter Aktionen auf Passwort ändern, vergeben Sie ein neues Passwort und verwenden Sie dieses. Testen Sie es zur Sicherheit in IONOS Webmail. Wurde die Adresse zu Microsoft 365 migriert, existiert sie auf den IONOS-Mailservern nicht mehr; verbinden Sie sie dann über Outlook."
     },
     {
       "q": "Nutzen IONOS-Postfächer aus Deutschland, Großbritannien und den USA verschiedene Server?",
@@ -100,7 +100,7 @@
     },
     {
       "q": "Werden meine IONOS-E-Mails auf Ihren Servern gespeichert?",
-      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von IONOS abgerufen und an Ihren KI-Client übergeben. Zugangsdaten sind im Ruhezustand verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von IONOS abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
     }
   ],
   "ctaBand": {

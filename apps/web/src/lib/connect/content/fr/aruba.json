@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "https://guide.aruba.it/hosting-e-domini/email/gestione-email/caratteristiche-acquisto-gestione/caratteristiche-caselle-posta-dominio"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta",
+    "usernameForm": "Votre adresse complète, domaine compris : nome@tuodominio.it, ou nome@aruba.it sur une boîte gratuite.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP Aruba : connectez la messagerie Aruba à Claude",
+    "description": "Serveur MCP pour la messagerie Aruba. Connectez les boîtes de votre domaine Aruba (info@, amministrazione@) à Claude et ChatGPT en IMAP sur imaps.aruba.it:993 avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "E-mail Aruba + IA",
+    "titleLine1": "Serveur MCP pour la messagerie Aruba :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, amministrazione@ et votre propre nom sur un domaine hébergé chez Aruba ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de la boîte, et non votre identifiant client Aruba.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Aruba. MCPEmails est un serveur MCP hébergé qui la connecte via IMAP sur imaps.aruba.it, port 993, en s'authentifiant avec l'adresse complète et le mot de passe défini sur cette boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Le guide d'Aruba indique exactement ces serveurs pour une boîte sur votre domaine, avec smtps.aruba.it sur le port 465 pour l'envoi et une authentification toujours obligatoire. Une boîte gratuite @aruba.it utilise plutôt imap.aruba.it et smtp.aruba.it. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
+    "meta1": "Mot de passe de la boîte, pas l'identifiant client",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, boîte gratuite @aruba.it", "host": "imap.aruba.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, boîte gratuite @aruba.it", "host": "smtp.aruba.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Les deux premières lignes concernent une boîte sur votre propre domaine, les deux suivantes une boîte gratuite @aruba.it. Les deux paires ont été vérifiées via une connexion TLS réelle. Pour toute autre adresse, utilisez la",
+      "label": "recherche de paramètres e-mail",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine Aruba ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment Aruba se connecte : IMAP en TLS et le mot de passe de la boîte",
+    "body": "Aruba sert IMAP pour les boîtes de domaine sur <code>imaps.aruba.it</code>, port 993, et SMTP sur <code>smtps.aruba.it</code>, port 465, tous deux en TLS implicite, et son guide précise que le serveur SMTP exige toujours une authentification avec l'adresse et son mot de passe. Le nom d'utilisateur est l'adresse complète : Aruba demande de saisir l'adresse e-mail entière dans le champ du nom d'utilisateur, jamais la seule partie locale. Le mot de passe est celui défini sur la boîte dans le panneau de contrôle Aruba, et non celui qui vous ouvre l'espace client Aruba. Aruba documente aussi une alternative non chiffrée sur votre propre nom de domaine (<code>imap.tuodominio.it</code> sur le port 143, <code>smtp.tuodominio.it</code> sur 587 ou 25), mais son exigence TLS est explicite : un client doit prendre en charge au moins TLS 1.2, et les noms en aruba.it sont ceux dont le certificat correspond, donc ce sont ceux que MCPEmails utilise."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Trouvez ou définissez le mot de passe de la boîte dans le panneau de contrôle Aruba",
+      "p": "Connectez-vous au panneau de contrôle Aruba, ouvrez le service de messagerie du domaine et allez dans <b>Caselle di posta</b>. Chaque adresse y a son propre mot de passe, dans l'encadré <b>Gestione caselle</b>, avec <b>Modifica</b> à côté. Si vous ne le connaissez pas, définissez-en un nouveau pour cette boîte ; le mot de passe de l'espace client est un identifiant différent et sera refusé par IMAP."
+    },
+    {
+      "h": "Vérifiez qu'IMAP est actif sur le domaine, sur les anciennes offres",
+      "p": "Le guide d'Aruba indique qu'IMAP ne fonctionne que si le service complémentaire IMAP est actif sur le domaine. Il est inclus dans toutes les offres actuelles, donc cela ne concerne qu'une offre Hosting Basic activée avant juin 2017, où IMAP s'achetait à part. Sur une telle offre, une connexion refusée vient de l'option, pas du mot de passe."
+    },
+    {
+      "h": "Collez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple info@tuodominio.it, et entrez le mot de passe de la boîte. Les serveurs et ports sont préremplis à partir des valeurs vérifiées sur cette page. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Deux mots de passe, et seul celui de la boîte fonctionne",
+      "p": "Les clients Aruba se connectent à l'espace client avec un identifiant et un mot de passe, et c'est ce couple que la plupart des gens saisissent d'instinct. IMAP vérifie le mot de passe de la boîte individuelle, défini sous Caselle di posta dans le panneau de contrôle (seule la boîte postmaster démarre avec le mot de passe du compte Aruba). Ce sont deux identifiants distincts : une connexion refusée sur une adresse Aruba, c'est le plus souvent le mot de passe de l'espace client collé dans un formulaire qui attendait celui de la boîte."
+    },
+    {
+      "h": "Les boîtes gratuites @aruba.it utilisent d'autres noms de serveurs",
+      "p": "Une boîte sur votre propre domaine utilise <code>imaps.aruba.it</code> et <code>smtps.aruba.it</code>. Les boîtes gratuites @aruba.it sont sur <code>imap.aruba.it</code> et <code>smtp.aruba.it</code>, mêmes ports et même TLS. Les deux paires répondent aujourd'hui avec la même bannière Dovecot, mais Aruba les documente séparément, et les paramètres préremplis ici suivent l'adresse que vous saisissez."
+    },
+    {
+      "h": "Les anciennes offres Hosting Basic ont besoin de l'option IMAP",
+      "p": "Aruba est explicite : une configuration IMAP n'aboutit que si le service IMAP est actif sur le domaine. Il est inclus dans toutes les offres actuelles ; sur une offre Hosting Basic antérieure à juin 2017, c'est un achat séparé. Si tous les mots de passe que vous essayez sont refusés sur un vieux domaine, vérifiez l'option avant de réinitialiser quoi que ce soit."
+    },
+    {
+      "h": "Un plafond de 100 Mo par message, appliqué à l'envoi",
+      "p": "Aruba plafonne un message à 100 Mo en entrée comme en sortie, pièces jointes encodées comprises. Le serveur SMTP annonce une limite plus élevée, mais c'est la règle de la boîte qui s'applique, donc un gros fichier est refusé à l'envoi plutôt que tronqué."
+    }
+  ],
+  "limits": [
+    "Aruba n'annonce pas SPECIAL-USE, donc les dossiers sont reconnus par leur nom et non par leur rôle. Sur une boîte italienne, cela signifie généralement Posta in arrivo, Posta inviata, Bozze et Cestino. Si vous avez renommé un dossier, nommez-le quand vous demandez un déplacement.",
+    "Une boîte de domaine commence à 1 Go (5 Go avec l'option GigaMail). Une boîte pleine cesse de recevoir, alors demandez à l'agent d'archiver ou de supprimer dès qu'un avertissement de quota apparaît."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie Aruba ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Aruba intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCPEmails à votre boîte Aruba donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP d'Aruba ?",
+      "a": "Pour une boîte sur votre propre domaine, IMAP est imaps.aruba.it sur le port 993 en TLS implicite et SMTP est smtps.aruba.it sur le port 465, également en TLS implicite, avec authentification obligatoire. Pour une boîte gratuite @aruba.it, les serveurs sont imap.aruba.it et smtp.aruba.it sur les mêmes ports. Le nom d'utilisateur est votre adresse complète. Les quatre serveurs ont été confirmés via une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Aruba est-il refusé dans un client de messagerie ?",
+      "a": "Généralement parce qu'il s'agit du mot de passe de l'espace client et non de celui de la boîte. IMAP vérifie le mot de passe défini sur l'adresse individuelle sous Caselle di posta dans le panneau de contrôle. Sur une offre Hosting Basic antérieure à juin 2017, l'autre cause est l'option IMAP, qui doit être active sur le domaine."
+    },
+    {
+      "q": "Puis-je connecter une boîte Aruba PEC de la même façon ?",
+      "a": "Oui, sur d'autres serveurs. Aruba PEC utilise imaps.pec.aruba.it et smtps.pec.aruba.it, et une fois la vérification en deux étapes activée, il exige un mot de passe distinct pour les programmes de messagerie. MCPEmails a une page dédiée à la connexion des boîtes PEC, Aruba PEC comprise, avec ces détails."
+    },
+    {
+      "q": "Mon courrier Aruba est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Aruba en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez vos boîtes Aruba à votre IA",
+    "sub": "Connectez la messagerie Aruba en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

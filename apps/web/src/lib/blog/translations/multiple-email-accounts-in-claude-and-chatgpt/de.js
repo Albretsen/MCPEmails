@@ -59,8 +59,8 @@ Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung
 
 ChatGPT Go und die kostenpflichtigen Tarife können auf chatgpt.com im Browser einen benutzerdefinierten MCP-Server hinzufügen; in der Mobil-App geht das nicht. Bei Business und Enterprise muss ihn unter Umständen ein Admin oder Owner hinzufügen.
 
-1. Öffnen Sie **Plugins**, dann **Personal**, klicken Sie oben rechts auf **Add** und wählen Sie **Add custom MCP server**.
-2. Nennen Sie ihn MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` unter **Connection** ein, wählen Sie **OAuth**, setzen Sie das Häkchen bei **I understand and want to continue** und klicken Sie auf **Create as a plugin**.
+1. Öffnen Sie **Plugins**, dann **Persönlich**, klicken Sie oben rechts auf **Hinzufügen** und wählen Sie **Benutzerdefinierten MCP-Server hinzufügen**.
+2. Nennen Sie ihn MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` unter **Verbindung** ein, wählen Sie **OAuth**, setzen Sie das Häkchen bei **Ich verstehe und möchte fortfahren** und klicken Sie auf **Als Plugin erstellen**.
 3. Melden Sie sich bei MCPEmails an und stimmen Sie zu.
 4. Tippen Sie in einem Chat **@** und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht. Erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.
 
@@ -83,11 +83,11 @@ Schalten Sie für ein Postfach **Vor dem Senden prüfen** ein, und jedes Senden,
 ## Wie viele Postfächer jeder Tarif verbindet
 
 - **Free:** ein Postfach.
-- **Personal:** drei Postfächer.
-- **Pro:** bis zu 10 Postfächer, mit einem Login.
-- **Business:** 10 Postfächer inklusive und $3 pro Monat für jedes weitere, und für den Fall, dass eine zweite Person einen eigenen Login braucht.
+- **Personal:** mehrere Postfächer, für eine Person.
+- **Pro:** noch mehr Postfächer, weiterhin mit einem Login.
+- **Business:** ein Kontingent enthaltener Postfächer mit einem Preis pro weiterem Postfach, und für den Fall, dass eine zweite Person einen eigenen Login braucht.
 
-Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, das ist Pro. Aktuelle Preise stehen auf der [Preisseite](/pricing), und [MCPEmails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
+Eine Firma mit info@, vertrieb@ und rechnungen@ plus Ihrer eigenen Adresse hat vier Postfächer, womit Sie bei Pro landen. Aktuelle Postfachzahlen und Preise stehen auf der [Preisseite](/pricing), und [MCPEmails für Unternehmen](/for/business) zeigt, wie eine Person alle Firmenpostfächer mit einem Agenten betreut.
 
 ## FAQ
 

@@ -63,7 +63,7 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 
 1. 进入 **Customize → Connectors**。
 2. 点击 **Add connector**，粘贴这个端点：\`https://www.mcpemails.com/api/mcp\`
-3. 点击 **Connect**，用你的 MCPEmails 账户登录，并批准你想要的权限——\`read:email\`、\`send:email\` 或两者都要。
+3. 点击 **Connect**，用你的 MCPEmails 账户登录，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。
 
 不用 API key，不用配置文件。claude.ai 在底层使用带 PKCE 的 OAuth，Claude 拿到的令牌恰好被限定在你批准的范围。如果你用的客户端无法做 OAuth——Cursor、Cline、一段 cURL 脚本——那就改为生成一个限定范围的密钥，这一点我在 [Cursor、Cline 和 VS Code 的邮件访问](/blog/email-for-ai-agents-cursor-cline-vscode)里有讲到。
 
@@ -88,7 +88,7 @@ Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread m
 不论用哪个服务商，机制都是一样的，所以你见过的任何 Gmail 工作流，在你的 Fastmail 或 iCloud 邮箱上都行得通。几个特别值回票价的：
 
 - 早间分拣：标记出需要人工处理的，并为其余的起草回复。参见[收件箱分拣与摘要](/blog/ai-agent-triage-summarize-inbox)。
-- 近实时的自动回复器。一个老实话提醒：MCPEmails 是基于轮询的，而非推送——没有 webhook，所以代理是按计划检查新邮件的。[自动回复器搭建](/blog/build-email-auto-responder-mcp-agent)讲了如何把这件事做好。
+- 近实时的自动回复器。一个提醒：在聊天里，代理是按计划检查新邮件的；要推送就需要新邮件 webhook，Pro 和 Business 工作区可以在 API 密钥页面添加它。[自动回复器搭建](/blog/build-email-auto-responder-mcp-agent)讲了这两种做法。
 
 如果你还在犹豫要不要把邮件接入代理，那就从纲领文章开始：[如何让你的 AI 代理访问邮件](/blog/how-to-give-your-ai-agent-email-access)。
 

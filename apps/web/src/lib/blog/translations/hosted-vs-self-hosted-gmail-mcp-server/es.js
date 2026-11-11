@@ -1,11 +1,11 @@
 const translation = {
   title: 'Servidor MCP de Gmail alojado vs. autoalojado: ventajas, inconvenientes y costes',
   description:
-    'Servidor MCP de Gmail alojado vs. autoalojado, comparado con honestidad: los repos DIY gratis te dan control total, pero asumes OAuth, cifrado y disponibilidad. Uno alojado cuesta minutos.',
-  coverAlt: 'Comparativa de servidor MCP de Gmail alojado frente a autoalojado — MCPEmails',
+    'Servidor MCP de Gmail alojado vs. autoalojado, comparados: los repos DIY gratis te dan control total, pero asumes OAuth, cifrado y disponibilidad. Uno alojado cuesta minutos.',
+  coverAlt: 'Comparativa de servidor MCP de Gmail alojado frente a autoalojado (MCPEmails)',
   content: `Si quieres que tu agente de IA lea y envíe correo de Gmail, tienes dos opciones reales: ejecutar un servidor MCP de Gmail autoalojado a partir de un repo de código abierto, o apuntar tu cliente a uno alojado. La vía DIY cuesta cero dólares y te da control total, pero asumes personalmente la configuración de OAuth, el cifrado de tokens, el alojamiento, las actualizaciones y la seguridad. Un servidor alojado como MCPEmails cuesta minutos de configuración y mantiene las credenciales cifradas, a cambio de confiar la conexión a un proveedor.
 
-Este es el análisis honesto. Yo construí un servidor alojado, así que tengo una postura, pero te diré exactamente dónde gana el autoalojamiento y qué tipo de persona debería elegirlo. Si primero quieres el modelo a nivel de verbos, la [guía completa para dar acceso al correo a un agente de IA](/blog/how-to-give-your-ai-agent-email-access) es el pilar que conviene leer junto a este artículo.
+Este es el desglose. Yo construí un servidor alojado, así que tengo una postura, pero te diré exactamente dónde gana el autoalojamiento y qué tipo de persona debería elegirlo. Si primero quieres el modelo a nivel de verbos, la [guía completa para dar acceso al correo a un agente de IA](/blog/how-to-give-your-ai-agent-email-access) es el pilar que conviene leer junto a este artículo.
 
 ## Qué significa de verdad "servidor MCP de Gmail autoalojado"
 
@@ -23,7 +23,7 @@ El código se ejecuta en tu propio hardware. Ningún tercero se interpone jamás
 
 ### Es gratis en dólares
 
-Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con $9/mes (o $15/mes cuando necesites más de tres bandejas), las cuentas favorecen montártelo tú mismo.
+Sin suscripción. La propia API de Gmail es gratuita en cualquier volumen que vaya a alcanzar un agente. Si tu tiempo es barato en relación con una suscripción Personal o Pro, las cuentas favorecen montártelo tú mismo.
 
 ### Puedes adaptarlo a cualquier cosa
 
@@ -55,7 +55,7 @@ MCP es joven. La especificación se mueve, Google rota requisitos y el repo que 
 
 El repo que elegiste hace Gmail. El día que añadas una cuenta de Outlook o una dirección de iCloud, estarás integrando Microsoft Graph o cableando IMAP y SMTP tú mismo, con un segundo modelo de autenticación y un segundo conjunto de casos límite. La mayoría de los servidores DIY se quedan solo en Gmail porque el segundo proveedor es un proyecto en sí mismo.
 
-## El caso del alojado: MCPEmails, con honestidad
+## El caso del alojado: MCPEmails
 
 Un servidor MCP alojado invierte el trato. Renuncias a ejecutar el código; recuperas todo el tiempo que te costaría la lista de arriba.
 
@@ -75,13 +75,13 @@ El mismo endpoint y las mismas herramientas principales (\`inbox_list\`, \`email
 
 MCPEmails nunca retransmite correo desde su propio dominio. \`email_compose\` (con la acción \`send\`) sale a través de tu proveedor (Gmail u otro proveedor por SMTP, o Microsoft Graph para Outlook), así que la reputación de tu dominio y la entregabilidad siguen siendo tuyas. Es la misma propiedad que obtendrías autoalojando, sin tener que construirla.
 
-### El coste honesto: confías en un proveedor
+### El coste real: confías en un proveedor
 
 Este es el verdadero compromiso, y no voy a maquillarlo. Con un servidor alojado, tu token cifrado se aloja en la base de datos de otra persona y las llamadas de tu agente pasan por el código de otra persona. Estás confiando en que el cifrado es real, en que los controles de acceso se mantienen y en que la empresa no hace ninguna tontería. Para la mayoría de la gente esa confianza está bien depositada y ahorra muchísimo tiempo. Si tu modelo de amenazas lo prohíbe de plano, autoaloja: esa es la razón legítima para hacerlo.
 
 ## Cuánto cuesta en dólares
 
-MCPEmails es gratis para empezar: una bandeja conectada, claves de API ilimitadas y sin tarjeta de crédito. El plan Gratis funciona a 60 peticiones por minuto con analíticas de 30 días, el centro de ayuda y soporte por correo. [Personal cuesta $9/mes](/pricing) (hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte prioritario por correo), Pro cuesta $15/mes (hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años) y Business cuesta $39/mes (10 buzones incluidos más $3/mes por cada uno extra, miembros con roles, un espacio de trabajo separado por cliente). El autoalojamiento son $0 de suscripción más lo que cuesten tu VPS y tus horas. Sé honesto sobre las horas.
+MCPEmails es gratis para empezar: una bandeja conectada, claves de API ilimitadas y sin tarjeta de crédito. El plan Gratis incluye analíticas de uso, el centro de ayuda y soporte por correo. [Personal](/pricing) añade bandejas, un límite de ráfaga más alto, un historial de analíticas más largo y soporte prioritario por correo; Pro añade más bandejas todavía, un límite de ráfaga aún mayor, años de historial de analíticas y webhooks de correo nuevo; Business incluye un bloque de buzones con un precio por buzón a partir de ahí, miembros con roles y un espacio de trabajo separado por cliente. Los precios actuales están en la [página de precios](/pricing). El autoalojamiento no tiene suscripción: cuesta lo que cuesten tu VPS y tus horas. Cuenta bien las horas.
 
 ## ¿Cuál deberías elegir?
 

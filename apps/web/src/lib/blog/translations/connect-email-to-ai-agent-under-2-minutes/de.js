@@ -16,7 +16,7 @@ Bevor Sie sich um einen Anbieter kümmern, legen Sie fest, wie Ihr KI-Agent mit 
 
 1. Gehen Sie in claude.ai zu **Anpassen → Konnektoren → Konnektor hinzufügen**.
 2. Fügen Sie den Endpunkt ein: \`https://www.mcpemails.com/api/mcp\`
-3. Klicken Sie auf **Verbinden**, melden Sie sich bei Ihrem MCPEmails-Konto an und genehmigen Sie die gewünschten Berechtigungen (\`read:email\`, \`send:email\` oder beide).
+3. Klicken Sie auf **Verbinden**, melden Sie sich bei Ihrem MCPEmails-Konto an und wählen Sie auf dem Zustimmungsbildschirm, wie viel Zugriff der Agent bekommt: **Nur-Lese-Zugriff**, **Standard** oder **Vollzugriff**, oder unter **Benutzerdefiniert** jede Berechtigung einzeln.
 
 Das ist die gesamte Client-Seite. Tokens sind genau auf das beschränkt, was Sie genehmigt haben, und Sie können die Verbindung mit einem Klick im Dashboard widerrufen. Die Vor- und Nachteile im Detail stehen in [OAuth oder API-Schlüssel für den E-Mail-Zugriff von KI](/blog/oauth-vs-api-keys-ai-email-access). Eine Anleitung für einen bestimmten Client finden Sie unter [Claude mit Ihrer E-Mail verbinden](/blog/connect-claude-to-email) und [ChatGPT mit Ihrer E-Mail verbinden](/blog/connect-chatgpt-to-email).
 
@@ -104,7 +104,7 @@ Egal welchen Anbieter Sie gewählt haben, der erste Schritt des Agenten ist imme
 
 Ein guter Funktionstest: Bitten Sie Ihren Agenten: „Fassen Sie meine drei neuesten ungelesenen E-Mails zusammen.“ Er ruft \`inbox_list\` auf, dann \`email_read\` mit \`action: "list"\` und \`unread: true\`, dann \`email_read\` mit \`action: "read"\` für jede Nachricht. Wenn das funktioniert, steht Ihre Verbindung.
 
-Ein Hinweis, den Sie vorab kennen sollten: MCPEmails arbeitet mit Abfragen. Es gibt keine Webhooks oder Push-Ereignisse, ein Agent reagiert auf neue E-Mails also, indem er in festen Abständen nachsieht, nicht durch eine Benachrichtigung. Für die meisten Workflows ist das das richtige Modell, und so funktionieren auch die Muster für [Triage und Zusammenfassung des Posteingangs](/blog/ai-agent-triage-summarize-inbox).
+Ein Hinweis, den Sie vorab kennen sollten: Ein Agent im Chat reagiert auf neue E-Mails, indem er in festen Abständen nachsieht, nicht durch eine Benachrichtigung. Für die meisten Workflows ist das das richtige Modell, und so funktionieren auch die Muster für [Triage und Zusammenfassung des Posteingangs](/blog/ai-agent-triage-summarize-inbox). Braucht Ihr eigener Code einen Push, können Pro- und Business-Workspaces unter API-Schlüssel einen Webhook anlegen, der bei neuen E-Mails einen POST an Ihre URL schickt.
 
 ## Warum das schnell und trotzdem sicher geht
 
@@ -112,7 +112,7 @@ Die Geschwindigkeit entsteht nicht dadurch, dass bei der Sicherheit gespart wird
 
 ## Fazit
 
-Das ist alles: eine Postfachverbindung, ein Endpunkt, eine Handvoll Tools. Der Tarif Free verbindet ein Postfach und braucht keine Karte; Personal kostet $9/Monat für bis zu drei Postfächer, und Pro verbindet bis zu 10. Siehe [Preise](/pricing). Bereit für einen Versuch? [Kostenlos starten](/signup), Postfach verbinden und den Endpunkt in Ihren Agenten einfügen.`,
+Das ist alles: eine Postfachverbindung, ein Endpunkt, eine Handvoll Tools. Der Tarif Free verbindet ein Postfach und braucht keine Karte; die kostenpflichtigen Tarife verbinden mehr. Siehe [Preise](/pricing). Bereit für einen Versuch? [Kostenlos starten](/signup), Postfach verbinden und den Endpunkt in Ihren Agenten einfügen.`,
 };
 
 export default translation;

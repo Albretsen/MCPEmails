@@ -8,7 +8,7 @@
     "method": "account-password",
     "label": "Mot de passe Seznam",
     "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
-    "usernameForm": "Votre adresse complète, y compris tout ce qui suit l'arobase : name@seznam.cz ou name@email.cz.",
+    "usernameForm": "Votre adresse complète, y compris tout ce qui suit l'arobase : name@seznam.cz, name@email.cz ou name@post.cz.",
     "status": "active"
   },
   "meta": {

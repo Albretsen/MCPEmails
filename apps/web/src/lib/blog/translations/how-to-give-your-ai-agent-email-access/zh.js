@@ -55,7 +55,7 @@ const translation = {
 - \`email_compose\`（动作 \`reply\`）—— 同上，并且会替你设置好线程头（In-Reply-To、References）
 - \`email_organize\` —— 移动、删除、标记或归档（每次调用一个动作）
 
-有一个值得开门见山说清楚的局限：这是**轮询，而非推送**。没有 webhook。要对新邮件做出反应，你的智能体需要按计划轮询，例如带 \`unread: true\` 的 \`email_read\`（动作 \`list\`）。你搭建的任何自动回复器都靠定时器运转，而不是即时触发。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了如何把这件事做好。
+有一件事值得开门见山说清楚：这些工具本身是**请求与响应**式的。服务器只在你的智能体发问时作答，对新邮件做出反应最简单的方式就是按计划轮询，例如带 \`unread: true\` 的 \`email_read\`（动作 \`list\`）。如果你想要推送，Pro 和 Business 工作区可以在仪表盘的 **API 密钥** 页面添加一个 webhook：新邮件到达时 MCPEmails 会向你的 URL 发送一个带签名的 POST，附上消息 ID，你的智能体再用 \`email_read\` 打开它们。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了这两种模式。
 
 一次早间整理流程读起来是这样的：
 
@@ -88,7 +88,7 @@ Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任何通用 IMAP 邮箱
 
 ### 支持 OAuth 的客户端（无需 API key）
 
-claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCPEmails 账户，然后授权。Token 的范围严格限定在你所批准的内容上：\`read:email\`、\`send:email\` 或两者皆有。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
+claude.ai、Claude Desktop、Cursor 等同类客户端，通过 OAuth 2.0 授权码 + PKCE 以及 RFC 7591 动态客户端注册来连接。在 claude.ai 里依次是 **Customize → Connectors → Add connector**，粘贴 MCP 端点 URL，点击 Connect，登录你的 MCPEmails 账户，然后授权。Token 携带的正是你在同意页上选择的访问级别：**只读**、**标准**（增加发送和草稿）、**完全访问**（增加定时发送、文件夹和删除），或逐项开关权限的**自定义**组合。分步教程请看[为 Claude 设置你的收件箱](/blog/connect-claude-to-email)和[把你的邮箱添加到 ChatGPT](/blog/connect-chatgpt-to-email)。
 
 ### 不支持 OAuth 的客户端（API key）
 
@@ -98,20 +98,20 @@ Cline、JetBrains、自定义脚本以及裸 cURL 使用带 scope 的 API key。
 
 ## 这样安全吗？以及速率限制
 
-简短的回答：安全，而 [让 AI 智能体访问邮箱安全吗](/blog/is-it-safe-to-give-ai-agent-email-access) 这篇文章把完整的论证讲透了。模型持有的是受限的能力，而不是你的密码；凭据经过加密；什么都不存储；发送始终留在你自己的服务商；访问权一键即可吊销。
+安全，而 [让 AI 智能体访问邮箱安全吗](/blog/is-it-safe-to-give-ai-agent-email-access) 这篇文章把完整的论证讲透了。模型持有的是受限的能力，而不是你的密码；凭据经过加密；什么都不存储；发送始终留在你自己的服务商；访问权一键即可吊销。
 
 关于速率限制，每个工作区都有一个随套餐递增的每分钟上限（见[定价](/pricing)），每个 API 密钥会得到按该套餐确定大小的每分钟、每小时和每天窗口，所以单个密钥就能用满整个上限，多个密钥则共享它。当你触及上限时，服务器会返回一个可重试的错误，并附带一个以秒为单位的 \`retry_after\` 值。请遵守它。另外，绝不要盲目地自动重试 \`email_compose\` 的发送，那样你会发出重复邮件。
 
 ## 价格
 
-套餐按连接的收件箱数量定价。API key 在所有档位都不限量，各档之间还在突发速率、分析数据保留时长、团队功能和技术支持上有差别。
+套餐按连接的收件箱数量定价。API key 在所有档位都不限量，各档之间还在突发速率、分析历史长度、团队功能和技术支持上有差别。
 
-- **免费版，永久 $0。** 无需信用卡。一个已连接收件箱，60 req/min，30 天分析数据，帮助中心和邮件支持。
-- **Personal，每月 9 美元**（或每年 86.40 美元，合每月 7.20 美元）。最多连接三个收件箱，120 req/min，90 天分析数据，优先邮件支持。
-- **Pro，每月 15 美元**（或每年 144 美元，合每月 12 美元）。最多连接 10 个收件箱，300 req/min，2 年分析数据，优先邮件支持。
-- **Business，每月 39 美元**（或每年 374.40 美元，合每月 31.20 美元）。包含 Pro 的全部内容，另含 10 个邮箱，每多一个每月 3 美元，不限人数的带角色成员，由管理员审批被暂停的发送，每个客户或业务一个独立工作区，1,000 req/min。
+- **免费版。** 永久免费，无需信用卡。一个已连接收件箱，用量分析，帮助中心和邮件支持。
+- **Personal。** 为一个人提供更多收件箱、更高的突发速率、更长的分析历史、优先邮件支持。
+- **Pro。** 面向一个人经营业务：再多一些收件箱、更高一级的突发速率、长达数年的分析历史，以及新邮件 webhook。
+- **Business。** 包含 Pro 的全部内容，另含一组邮箱（超出部分按邮箱计价），不限人数的带角色成员，由管理员审批被暂停的发送，每个客户或业务一个独立工作区。
 
-完整明细见 [价格页面](/pricing)。
+当前价格和收件箱数量见 [价格页面](/pricing)。
 
 ## 开始上手
 

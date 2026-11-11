@@ -49,7 +49,7 @@ El cambio de "aquí tienes una biblioteca, apáñatelas" a "aquí tienes tres ve
 
 La forma ingenua de dar a un agente acceso al correo es soltar la contraseña de tu buzón en un prompt o una configuración y dejar que ejecute un cliente IMAP. No hagas esto. Una contraseña es una llave maestra: lo concede todo, para siempre, sin manera de acotarla a "solo lectura" y sin forma limpia de retirarla sin cambiarla en todas partes.
 
-Los verbos son distintos. Cuando tu agente se conecta a MCPEmails, recibe un token acotado exactamente a lo que aprobaste: \`read:email\`, \`send:email\`, o ambos. El agente tiene una capacidad, no una credencial. Si solo concediste acceso de lectura, no hay verbo de envío en su menú: físicamente no puede enviarle correo a nadie.
+Los verbos son distintos. Cuando tu agente se conecta a MCPEmails, recibe un token acotado exactamente a lo que aprobaste en la pantalla de consentimiento, desde **Solo lectura** hasta **Acceso completo**, pasando por **Estándar** (añade el envío y los borradores) o una selección personalizada de permisos individuales. El agente tiene una capacidad, no una credencial. Si solo concediste acceso de lectura, no hay verbo de envío en su menú: físicamente no puede enviarle correo a nadie.
 
 ¿Y el secreto en sí? Se queda en el servidor, cifrado. MCPEmails almacena una sola cosa por bandeja: una contraseña de aplicación o un token de OAuth, cifrado con AES-256-GCM, descifrado en nuestros servidores solo cuando una petición lo necesita, y nunca enviado a tu agente. Tu correo en sí nunca se almacena. Cada llamada a una herramienta obtiene el mensaje en vivo de tu proveedor y lo descarta en cuanto el agente lo tiene. El cuerpo de tu correo no se queda en alguna base de datos esperando a filtrarse. Si quieres la versión más larga de por qué importa esa decisión de diseño, escribí sobre ello en [por qué importa no almacenar nunca tu correo](/blog/why-email-never-stored-matters).
 
@@ -64,7 +64,7 @@ Una interacción real tiene este aspecto. Pongamos que le pides a Claude que te 
 3. Para cualquier cosa que parezca importante, llama a \`email_read\` con \`action: "read"\` para extraer el cuerpo completo.
 4. Resume, y si has aprobado el acceso de envío, puede redactar una respuesta con \`email_compose\` (\`action: "reply"\`), que fija automáticamente las cabeceras de hilo para que la respuesta caiga en la conversación correcta.
 
-Una limitación honesta que conviene saber de entrada: esto es **sondeo, no notificaciones push**. No hay webhooks. El servidor no avisará a tu agente cuando llegue correo nuevo. Para reaccionar a correo nuevo, el agente tiene que comprobarlo periódicamente. Es una concesión deliberada, y define cómo construirías algo como un [autorrespondedor](/blog/build-email-auto-responder-mcp-agent) o una [rutina de clasificación de la bandeja](/blog/ai-agent-triage-summarize-inbox).
+Una limitación que conviene saber de entrada: MCP en sí es **sondeo, no notificaciones push**. El servidor responde cuando el agente pregunta y nunca le avisa, así que un agente dentro de un chat reacciona al correo nuevo comprobándolo periódicamente. (MCPEmails sí ofrece un webhook de correo nuevo para tu propio código, en Pro y Business.) Eso define cómo construirías algo como un [autorrespondedor](/blog/build-email-auto-responder-mcp-agent) o una [rutina de clasificación de la bandeja](/blog/ai-agent-triage-summarize-inbox).
 
 ## Servidor alojado frente a construir el tuyo
 

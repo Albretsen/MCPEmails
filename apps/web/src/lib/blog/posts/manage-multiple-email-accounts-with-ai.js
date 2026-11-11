@@ -27,7 +27,7 @@ You never paste a mailbox ID into a prompt. The agent calls \`inbox_list\`, whic
 
 Two details worth knowing:
 
-- **Discovery is free.** \`inbox_list\` is the one tool that does not count against the Free monthly action allowance, so an agent can re-orient itself at no cost.
+- **Discovery is free.** \`inbox_list\` is never metered, so an agent can re-orient itself at no cost.
 - **Conflicting selectors are refused, not guessed.** A call carrying an \`inbox_id\` for one mailbox and an \`inbox\` address for a different one is refused, and the error names both. The usual cause is a stale ID carried over from earlier in the conversation. Tell the agent to retry with the address alone.
 
 ## Scope one request to one mailbox
@@ -44,7 +44,7 @@ This is the part people get wrong: **one call reaches one mailbox.** Listing, re
 
 - Let it call \`inbox_list\` first, or say how many accounts you have. If it assumes one, it will confidently report on one.
 - Ask for a merged answer ("one combined list, tagged with the account it came from"), or you get three separate reports.
-- Volume scales with mailbox count. A three-mailbox triage is at least three billable actions, not one.
+- Volume scales with mailbox count. A three-mailbox triage is at least three calls, not one.
 
 ## Names and sender identity
 
@@ -97,12 +97,12 @@ Mixed setups are the normal case, and providers disagree about what a folder is.
 
 Connected inboxes are what plans are priced on:
 
-- **Free, $0.** One connected inbox. 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly allowance applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt.
-- **Personal, $9 a month or $86.40 a year.** Three connected inboxes, unlimited email actions, 2x burst rate limit, priority email support.
-- **Pro, $15 a month or $144 a year.** Up to 10 connected inboxes, 5x burst rate limit, longer analytics history.
-- **Business, $39 a month or $374.40 a year.** 10 mailboxes included and $3 a month for each extra, unlimited members with roles at no extra cost, admins who approve held sends, a separate workspace per client or business.
+- **Free.** One connected inbox.
+- **Personal.** A few inboxes for one person, a higher burst rate limit, priority email support.
+- **Pro.** More inboxes for one person running a business, a higher burst rate limit still, longer analytics history, webhooks for new mail.
+- **Business.** A block of included mailboxes with a per-mailbox price above it, unlimited members with roles at no extra cost, admins who approve held sends, a separate workspace per client or business.
 
-A cross-inbox routine costs one action per mailbox, so your mailbox count drives volume as much as your habits do. Details on [pricing](/pricing).
+A cross-inbox routine is one call per mailbox, so your mailbox count drives volume as much as your habits do. Current prices and inbox counts are on [pricing](/pricing).
 
 ## FAQ
 

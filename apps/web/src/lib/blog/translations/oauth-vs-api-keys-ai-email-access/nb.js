@@ -1,16 +1,16 @@
 const translation = {
   title: 'OAuth vs. API-nøkler for AI-e-posttilgang: Hva bør du bruke?',
   description: 'OAuth vs. API-nøkler for AI-e-posttilgang: bruk OAuth for claude.ai, Claude Desktop og Cursor; bruk en scopet API-nøkkel for Cline, JetBrains og skript.',
-  coverAlt: 'OAuth versus API-nøkler for å koble AI-agenter til e-post — MCPEmails',
-  content: `Når du kobler en AI-agent til e-posten din gjennom MCPEmails, autentiserer du på én av to måter: OAuth eller en API-nøkkel. Det korte svaret er OAuth hvis klienten din støtter det (claude.ai, Claude Desktop, Cursor), og en scopet API-nøkkel hvis den ikke gjør det (Cline, JetBrains, skript, cURL). Begge treffer samme endepunkt og eksponerer de samme verktøyene. Forskjellen er hvem som forvalter hemmeligheten og hvor enkelt du kan trekke ut støpselet.
+  coverAlt: 'OAuth versus API-nøkler for å koble AI-agenter til e-post (MCPEmails)',
+  content: `Når du kobler en AI-agent til e-posten din gjennom MCPEmails, autentiserer du på én av to måter: OAuth eller en API-nøkkel. Bruk OAuth hvis klienten din støtter det (claude.ai, Claude Desktop, Cursor), og en scopet API-nøkkel hvis den ikke gjør det (Cline, JetBrains, skript, cURL). Begge treffer samme endepunkt og eksponerer de samme verktøyene. Forskjellen er hvem som forvalter hemmeligheten og hvor enkelt du kan trekke ut støpselet.
 
-Dette er ikke en avveining mellom sikkerhet og bekvemmelighet der du ofrer det ene for det andre. Begge veiene er scopet til nøyaktig \`read:email\`, \`send:email\`, eller begge, og begge kan tilbakekalles fra dashbordet med ett klikk. Det egentlige spørsmålet er hva som passer klienten du faktisk bruker. For det store bildet av hvordan alt dette henger sammen, start med pilarguiden, [hvordan du gir AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
+Dette er ikke en avveining mellom sikkerhet og bekvemmelighet der du ofrer det ene for det andre. Begge veiene er begrenset til nøyaktig det du gir, fra skrivebeskyttet til alle ni tillatelsene, og begge kan tilbakekalles fra dashbordet med ett klikk. Det egentlige spørsmålet er hva som passer klienten du faktisk bruker. For det store bildet av hvordan alt dette henger sammen, start med pilarguiden, [hvordan du gir AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
 
 ## Anbefalingen på 30 sekunder
 
 Bruk **OAuth** når MCP-klienten din støtter det. Det dekker claude.ai, Claude Desktop og Cursor i dag. Du limer inn én URL, logger inn, godkjenner scopene, og du er ferdig. Ingen hemmelighet å kopiere, ingen hemmelighet å lagre, ingen hemmelighet å lekke.
 
-Bruk en **API-nøkkel** når klienten din ikke har noen OAuth-flyt. Cline, JetBrains AI-assistenten, en Python-cron-jobb, et shell-skript som sender JSON-RPC over cURL — disse trenger en bearer-token. Du lager én i dashbordet, scoper den, kopierer den én gang, og sender den i \`Authorization\`-headeren.
+Bruk en **API-nøkkel** når klienten din ikke har noen OAuth-flyt. Cline, JetBrains AI-assistenten, en Python-cron-jobb, et shell-skript som sender JSON-RPC over cURL: disse trenger en bearer-token. Du lager én i dashbordet, scoper den, kopierer den én gang, og sender den i \`Authorization\`-headeren.
 
 Hvis begge er alternativer for samme klient, velg OAuth. Færre hemmeligheter i konfigurasjonsfilene dine er alltid det beste standardvalget.
 
@@ -25,7 +25,7 @@ Under panseret er det standard, moderne OAuth:
 - **Authorization Code + PKCE** (RFC 7636), slik at ingen klienthemmelighet noen gang overføres. PKCE er den samme mekanismen som beskytter innlogginger på mobil og single-page-apper.
 - **Dynamic Client Registration** (RFC 7591), slik at klienten registrerer seg selv uten manuelt oppsett fra din side.
 - **Token-er fornyes automatisk** inne i støttede klienter. Du passer ikke på et utløp.
-- **Scopene er nøyaktig det du godkjenner** på samtykkeskjermen: \`read:email\`, \`send:email\`, eller begge.
+- **Scopene er nøyaktig det du godkjenner** på samtykkeskjermen: Skrivebeskyttet, Standard, Full tilgang eller et tilpasset utvalg av enkelttillatelser.
 
 Den praktiske fordelen: token-en dukker aldri opp som en ren tekststreng du ved et uhell kunne committe, logge eller lime inn i feil chat. Når du vil kutte tilgangen, tilbakekaller du tilkoblingen i dashbordet og agenten er stengt ute umiddelbart. Grunnen til at den tilbakekallingen faktisk betyr noe: innboksen selv forblir urørt fordi [e-post aldri lagres](/blog/why-email-never-stored-matters) hos oss i utgangspunktet.
 
@@ -36,7 +36,7 @@ Noen klienter snakker ikke OAuth. Det er ikke et stikk mot dem. Cline, JetBrains
 Du lager én i **Dashboard → API Keys**:
 
 1. Gi nøkkelen et navn du kjenner igjen senere (\`cline-laptop\`, \`triage-cron\`).
-2. Velg scopene: \`read:email\`, \`send:email\`, eller begge.
+2. Velg scopene: start med \`read:email\`, legg til \`send:email\` bare hvis den må sende, og scopene for mapper, sletting, utkast, kontakter, planlegging og automatiseringer bare hvis jobben trenger dem.
 3. Kopier den. Den vises **én gang** og aldri igjen. Mister du den, lager du en ny.
 
 Nøkkelen ser slik ut: \`mcpe_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\`, og du sender den med hver forespørsel:
@@ -56,7 +56,7 @@ Et rått JSON-RPC-kall for å liste innboksene dine ser slik ut:
 }
 \`\`\`
 
-POST det til \`https://mcpemails.com/api/mcp\` med bearer-headeren, så får du tilbake de tilkoblede innboksene dine og ID-ene deres. Derfra kaller agenten \`email_read\` (med \`action\` satt til list, read eller search) og \`email_compose\` (\`action\` send, reply eller forward) — kjerneverktøyene, pluss \`email_organize\`, \`folder\`, \`schedule\` og \`contact_search\` for flagg, mapper, planlegging og kontakter.
+POST det til \`https://mcpemails.com/api/mcp\` med bearer-headeren, så får du tilbake de tilkoblede innboksene dine og ID-ene deres. Derfra kaller agenten \`email_read\` (med \`action\` satt til list, read eller search) og \`email_compose\` (\`action\` send, reply eller forward), som er kjerneverktøyene, pluss \`email_organize\`, \`folder\`, \`schedule\` og \`contact_search\` for flagg, mapper, planlegging og kontakter.
 
 Det ene API-nøkler ber deg om som OAuth ikke gjør: behandle nøkkelen som et passord. Det er en langlivet hemmelighet i ren tekst. Legg den i en miljøvariabel, ikke i kildekode du skal pushe til GitHub. Hvis en nøkkel lekker, tilbakekall den fra dashbordet og roter til en ny.
 
@@ -74,7 +74,7 @@ Klienten din er claude.ai, Claude Desktop eller Cursor. Du vil ha null hemmeligh
 
 ### Bruk en API-nøkkel hvis ...
 
-Klienten din har ingen OAuth-støtte — Cline, JetBrains, OpenAI-stil-verktøykjørerne, eller din egen kode. Du skripter mot endepunktet med cURL eller et lite program. Du trenger en stabil legitimasjon som en hodeløs prosess kan bruke uten at et menneske klikker seg gjennom en samtykkeskjerm. En scopet nøkkel er akkurat riktig her, og det finnes en full gjennomgang for [Cursor-, Cline- og VS Code-klientene](/blog/email-for-ai-agents-cursor-cline-vscode).
+Klienten din har ingen OAuth-støtte: Cline, JetBrains, OpenAI-stil-verktøykjørerne, eller din egen kode. Du skripter mot endepunktet med cURL eller et lite program. Du trenger en stabil legitimasjon som en hodeløs prosess kan bruke uten at et menneske klikker seg gjennom en samtykkeskjerm. En scopet nøkkel er akkurat riktig her, og det finnes en full gjennomgang for [Cursor-, Cline- og VS Code-klientene](/blog/email-for-ai-agents-cursor-cline-vscode).
 
 Én ting til som er sant uansett hva du velger: rategrenser. Hvert arbeidsområde har et tak per minutt satt av planen (se [priser](/pricing)), og hver API-nøkkel får minutt-, time- og døgnvinduer dimensjonert etter planen, så én nøkkel kan bruke hele taket, og flere nøkler deler det. Når du treffer en grense gir serveren tilbake en \`retry_after\`-verdi i sekunder. Respekter den, og prøv aldri en \`email_compose\`-sending blindt på nytt, for da kommer du til å sende dobbelt.
 

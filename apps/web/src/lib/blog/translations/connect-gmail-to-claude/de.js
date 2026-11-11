@@ -45,7 +45,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Klicken Sie auf **Weiter**, prüfen Sie die erkannten Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie auf **Hinzufügen**.
-5. Melden Sie sich mit Ihrem MCPEmails-Konto an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+5. Melden Sie sich mit Ihrem MCPEmails-Konto an und wählen Sie auf dem Zustimmungsbildschirm, wie viel Zugriff Claude bekommt: **Nur-Lese-Zugriff**, **Standard** oder **Vollzugriff**, oder unter **Benutzerdefiniert** jede Berechtigung einzeln.
 6. Klicken Sie in einem Chat unten links auf **+**, wählen Sie **Konnektoren** und schalten Sie MCPEmails ein.
 
 In einem Team- oder Enterprise-Tarif fügt ein Owner den Konnektor einmal unter **Organisationseinstellungen → Konnektoren** hinzu. Mitglieder öffnen dann **Anpassen → Konnektoren**, suchen MCPEmails und klicken auf **Verbinden**.
@@ -78,11 +78,11 @@ Nach der Verbindung arbeitet Claude mit einer kleinen Zahl zusammengefasster Too
 
 Claude hat auch einen eigenen Gmail-Konnektor, und der kann ebenfalls senden. [Kann Claude meine E-Mails lesen und senden?](/blog/can-claude-read-my-email) vergleicht ihn Postfach für Postfach mit MCPEmails.
 
-Eines sollten Sie vorab wissen: MCPEmails arbeitet mit Abfragen. Es gibt keine Push-Webhooks, Claude reagiert also auf neue E-Mails, wenn Sie es zum Nachsehen auffordern, nicht in dem Moment, in dem eine Nachricht eintrifft. Für fast jeden Assistenten-Workflow ist das genau das richtige Modell.
+Eines sollten Sie vorab wissen: Claude reagiert auf neue E-Mails, wenn Sie es zum Nachsehen auffordern, nicht in dem Moment, in dem eine Nachricht eintrifft. Für fast jeden Assistenten-Workflow ist das genau das richtige Modell. (Eigener Code ist ein anderer Fall: Pro- und Business-Workspaces können unter API-Schlüssel einen Webhook anlegen, der bei neuen E-Mails einen POST an Ihre URL schickt.)
 
 ## Ist es sicher, Gmail mit Claude zu verbinden?
 
-Kurz gesagt: ja, und das Design ist darauf ausgelegt.
+Ja, und das Design ist darauf ausgelegt.
 
 - **Ihre E-Mails werden nie gespeichert.** Texte, Betreffzeilen und Anhänge werden bei jedem Aufruf live abgerufen, an Claude übergeben und sofort verworfen. Pro Postfach bleibt die verschlüsselte Zugangsberechtigung gespeichert, Ihr App-Passwort, dazu die wenigen Angaben, die eine von Ihnen eingeschaltete Funktion braucht, etwa eine geplante Nachricht, die noch auf den Versand wartet. Hier steht, [warum „E-Mails werden nie gespeichert“ wirklich zählt](/blog/why-email-never-stored-matters).
 - **Sie bestimmen die Berechtigungen.** Genehmigen Sie nur Lesezugriff, kann Claude schlicht nicht senden. Genehmigen Sie beides, können Sie trotzdem jeden Zugriff jederzeit widerrufen.
@@ -109,7 +109,7 @@ Nein. Sie fügen ein App-Passwort ein, eine separate Zugangsberechtigung, die Go
 
 ## Fazit
 
-Das ist alles: ein Google-App-Passwort, eine Endpunkt-URL, und Claude kann Ihre echten E-Mails lesen, durchsuchen und senden, ohne sie je zu speichern. Der Tarif Free kostet nichts, braucht keine Karte und verbindet ein Postfach; Personal kostet $9/Monat für bis zu drei Postfächer, und Pro verbindet bis zu 10 (siehe [Preise](/pricing)).
+Das ist alles: ein Google-App-Passwort, eine Endpunkt-URL, und Claude kann Ihre echten E-Mails lesen, durchsuchen und senden, ohne sie je zu speichern. Der Tarif Free kostet nichts, braucht keine Karte und verbindet ein Postfach; die kostenpflichtigen Tarife verbinden mehr (siehe [Preise](/pricing)).
 
 Bereit? [Verbinden Sie Ihr Gmail kostenlos](/signup), fügen Sie den Endpunkt in Claude ein und bitten Sie Claude, Ihre ungelesenen E-Mails zusammenzufassen.`,
 };

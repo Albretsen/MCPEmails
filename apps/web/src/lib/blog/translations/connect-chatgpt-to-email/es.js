@@ -86,7 +86,7 @@ MCPEmails entrega a ChatGPT herramientas concretas en vez de una contraseña o u
 - **Borradores, carpetas y programación:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` y \`schedule_list\`.
 - **El resto:** \`contact_search\`, \`signature_get\`, \`signature_set\`, además de \`automation\` y \`automation_read\` para reglas recurrentes.
 
-Un límite que conviene tener en cuenta: MCPEmails funciona por sondeo. No hay webhooks ni eventos iniciados por el servidor, así que ChatGPT comprueba el correo nuevo cuando se lo pides, no en el instante en que llega un mensaje.
+Un límite que conviene tener en cuenta: dentro de un chat, ChatGPT comprueba el correo nuevo cuando se lo pides, no en el instante en que llega un mensaje. Nada en el conector despierta a ChatGPT por sí solo. (Tu propio código sí puede despertarse: los espacios de trabajo Pro y Business pueden añadir un webhook en Claves de API que hace un POST a tu URL cuando llega correo nuevo.)
 
 ## OpenAI Codex en la terminal
 
@@ -124,7 +124,7 @@ No. Codex es una superficie de terminal, así que usa una clave de API limitada 
 No. Cada mensaje se obtiene en tiempo real de tu proveedor para la petición que lo pidió y después se descarta. Solo se conserva la credencial cifrada del proveedor. [Por qué importa no almacenar correo](/blog/why-email-never-stored-matters) explica el razonamiento.
 
 **¿Cuánto cuesta?**
-El plan Gratis incluye una bandeja conectada y 150 acciones de correo facturables por mes natural UTC, con los primeros 3 días sin contar. Esa asignación mensual se aplica a los espacios de trabajo creados a partir del 13 de septiembre de 2026; los creados antes están exentos. Los planes de pago añaden bandejas y acciones de correo ilimitadas: consulta [precios](/pricing).
+El plan Gratis incluye una bandeja conectada, con los límites que figuran en la [página de precios](/pricing). Los planes de pago añaden bandejas.
 
 ## Siguiente paso
 

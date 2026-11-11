@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistenza.tiscali.it/servizi/guida/parametri-mail/",
+    "https://assistenza.tiscali.it/servizi/tiscali-mail/guida/tiscali-mail-abilita-autenticazione-due-fattori/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Tiscali Mail, para lectura",
+    "helpUrl": "https://assistenza.tiscali.it/servizi/guida/parametri-mail/",
+    "usernameForm": "Tu dirección completa: userid@tiscali.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Tiscali Mail a Claude y a cualquier cliente MCP",
+    "description": "Conecta Tiscali Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imap.tiscali.it:993 con tu contraseña de Tiscali. Leer, buscar y organizar funciona; el servidor SMTP de Tiscali rechaza las conexiones desde fuera de su red, así que enviar no."
+  },
+  "hero": {
+    "eyebrow": "Tiscali Mail + IA",
+    "titleLine1": "Conecta Tiscali Mail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Tiscali para leer, buscar, resumir y organizar por IMAP con la contraseña que ya usas, en todos los clientes MCP y no solo en uno. Enviar es lo único que Tiscali reserva a su propia red.",
+    "answer": "Claude no puede acceder a Tiscali Mail por sí solo. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.tiscali.it en el puerto 993, iniciando sesión con tu dirección completa y tu contraseña de Tiscali, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar y organizar ese correo. Enviar es otra historia: Tiscali documenta smtp.tiscali.it en el puerto 465, y ese servidor responde a una conexión desde fuera de la red de Tiscali con un rechazo, ESMTP server not available from your IP. MCPEmails se conecta desde sus propios servidores, así que conecta un buzón de Tiscali solo para lectura, y el agente redacta borradores de respuesta que envías tú desde el webmail o la app de Tiscali. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Leer y organizar; enviar se queda en Tiscali",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Tiscali Mail: IMAP para leer, y por qué enviar se detiene",
+    "body": "Tiscali ofrece IMAP en <code>imap.tiscali.it</code> en el puerto 993 con SSL y SMTP en <code>smtp.tiscali.it</code> en el puerto 465 con SSL, y su guía insiste en que enviar desde un cliente requiere autenticación SMTP con las mismas credenciales del buzón. El nombre de usuario es la dirección completa, userid@tiscali.it, y la contraseña es tu contraseña de Tiscali Mail. La mitad IMAP se comporta como está documentado: el servidor responde a una conexión TLS con ese nombre y anuncia <code>AUTH=PLAIN</code>, <code>CRAM-MD5</code> y <code>DIGEST-MD5</code>. La mitad SMTP no, desde fuera. Cuando nos conectamos a smtp.tiscali.it en el 465 desde nuestros servidores, la negociación TLS solo se completó con una clave Diffie-Hellman de 1024 bits que las bibliotecas TLS actuales rechazan por defecto, y el servidor nos saludó después con <code>554 ESMTP server not available from your IP</code>. El puerto 587 no respondió en absoluto. Por eso MCPEmails ofrece Tiscali como conexión de solo lectura: elígela cuando falle la comprobación de envío, y todo lo que lee, busca, resume, archiva y redacta funciona."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Revisa la autenticación de dos factores en el Area Personale",
+      "p": "Tiscali ofrece autenticación de dos factores en el <b>Area Personale</b> de Tiscali Mail, con una app de autenticación como Microsoft o Google Authenticator y códigos de respaldo de un solo uso. Su guía la describe para el inicio de sesión en el webmail y no dice cómo inicia sesión un programa de correo una vez activada, así que si tienes los dos factores activados y tu inicio de sesión es rechazado, eso es lo primero que hay que revisar. Con ellos desactivados, la credencial es tu contraseña de Tiscali Mail."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña, y elige solo lectura cuando se te pregunte",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nome@tiscali.it, e introduce tu contraseña de Tiscali. Los servidores y puertos vienen rellenados con los valores verificados de esta página. La comprobación de inicio de sesión pasa; la de envío es rechazada por Tiscali, y MCPEmails ofrece entonces conectar el buzón solo para lectura. Acepta esa opción."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, resumir y organizar la bandeja, y escribir borradores que envías tú mismo desde Tiscali."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor SMTP de Tiscali rechaza las direcciones de fuera de su red",
+      "p": "Esto es toda la historia del envío. La guía de Tiscali indica enviar desde un cliente con autenticación SMTP por SSL en el puerto 465, y eso funciona desde una conexión de Tiscali. Desde un servidor en otro sitio, smtp.tiscali.it recibe la conexión con <code>554 ESMTP server not available from your IP</code> antes de intentar ningún inicio de sesión, así que ninguna contraseña puede pasar. Es una política de red del lado de Tiscali, no un ajuste del buzón, y ningún servicio alojado puede enviar a través de él. Leer por IMAP no tiene esa restricción."
+    },
+    {
+      "h": "El TLS del servidor SMTP es una clave DH de 1024 bits que las pilas modernas rechazan",
+      "p": "Incluso antes del rechazo, la negociación TLS en smtp.tiscali.it solo ofrece un intercambio Diffie-Hellman con una clave de 1024 bits. OpenSSL en su nivel de seguridad por defecto se detiene con dh key too small, y las bibliotecas TLS que han abandonado por completo el DH de campo finito no pueden negociar nada. Los clientes de escritorio con ajustes antiguos pasan; un servidor actual no. Junto con la regla de IP, significa que enviar desde MCPEmails está descartado por partida doble, y por eso la página lo dice sin rodeos en lugar de ofrecer un apaño."
+    },
+    {
+      "h": "Los dos factores están documentados para la cuenta, no para los programas de correo",
+      "p": "La ayuda de Tiscali explica cómo activar la autenticación de dos factores con una app de autenticación y códigos de respaldo y cómo entrar en el webmail con ella. No dice si un programa de correo sigue funcionando después con la contraseña de la cuenta, y no documenta ninguna contraseña específica de aplicación. Si la activas y el inicio de sesión IMAP empieza a fallar, el soporte de Tiscali es el sitio donde preguntar, y esta página se actualizará cuando su guía responda a la pregunta."
+    },
+    {
+      "h": "Sin SASL-IR, y POP solo permite un dispositivo a la vez",
+      "p": "El saludo IMAP anuncia <code>AUTH=PLAIN</code> sin SASL-IR, así que un cliente que envía la credencial en un solo paso con AUTHENTICATE recibe un rechazo sin más que parece una contraseña incorrecta. MCPEmails usa el intercambio en dos pasos. Tiscali señala también que su servidor POP no permite la misma cuenta desde varios dispositivos a la vez; IMAP, que es lo que usa MCPEmails, no tiene esa regla."
+    }
+  ],
+  "limits": [
+    "El envío a través de smtp.tiscali.it se rechaza desde fuera de la red de Tiscali, así que un buzón de Tiscali se conecta solo para leer, buscar y organizar. El agente puede preparar borradores; los envías tú desde el webmail o la app de Tiscali.",
+    "Tiscali no anuncia SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en italiano eso suele significar Posta in arrivo, Inviati, Bozze y Cestino."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Tiscali Mail?",
+      "a": "Para leer, buscar y organizar, sí. Claude no tiene un conector de Tiscali integrado; conectar un servidor MCP como MCPEmails por IMAP le da a Claude acceso para leer, buscar, resumir y organizar el buzón, y la misma conexión funciona en Cursor y otros clientes MCP. Enviar no es posible, porque el servidor SMTP de Tiscali rechaza las conexiones desde fuera de su propia red."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Tiscali?",
+      "a": "IMAP es imap.tiscali.it en el puerto 993 con SSL. SMTP es smtp.tiscali.it en el puerto 465 con SSL y autenticación obligatoria. El nombre de usuario es tu dirección completa, userid@tiscali.it, y la contraseña es tu contraseña de Tiscali Mail. El servidor IMAP se confirmó mediante una conexión TLS real; el servidor SMTP rechazó nuestra conexión con 554 ESMTP server not available from your IP."
+    },
+    {
+      "q": "¿Por qué MCPEmails puede leer mi correo de Tiscali pero no enviar?",
+      "a": "Porque smtp.tiscali.it solo atiende a clientes de la red de Tiscali. Desde nuestros servidores responde 554 ESMTP server not available from your IP antes de cualquier inicio de sesión, y su negociación TLS usa una clave DH de 1024 bits que las bibliotecas actuales rechazan. El servidor IMAP no tiene ninguna de las dos restricciones, así que leer funciona y la conexión se hace solo para lectura."
+    },
+    {
+      "q": "¿Tiene Tiscali contraseñas de aplicación?",
+      "a": "Tiscali documenta la autenticación de dos factores en el Area Personale, pero ninguna contraseña específica de aplicación, y no dice cómo inician sesión los programas de correo con los dos factores activados. Con los dos factores desactivados, la contraseña de la cuenta es la credencial para IMAP."
+    },
+    {
+      "q": "¿Se almacena mi correo de Tiscali en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Tiscali por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Tiscali para leer",
+    "sub": "Conecta Tiscali Mail para lectura en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

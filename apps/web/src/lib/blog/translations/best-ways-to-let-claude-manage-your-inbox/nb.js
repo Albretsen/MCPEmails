@@ -1,7 +1,7 @@
 const translation = {
   title: 'De beste måtene å la Claude styre innboksen din på i 2026',
-  description: 'En ærlig gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
-  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 — MCPEmails',
+  description: 'En gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
+  coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 (MCPEmails)',
   content: `Hvis du vil at Claude faktisk skal lese, sortere og svare på e-posten din, har du fem reelle alternativer i 2026: en hostet MCP-e-postserver, en egen MCP-server du kjører selv, å kopiere og lime inn tråder i chatten, en nettleserutvidelse, eller en native klientintegrasjon. For de fleste er en hostet MCP-server det riktige valget, fordi den fungerer på sekunder og aldri lagrer e-posten din. Resten har hver sin nisje, og et par av dem er dårligere enn de ser ut.
 
 Dette er en gjennomgang, ikke en reklame. Jeg går gjennom hver tilnærming, hvor den skinner, hvor den faller fra hverandre, og hvilken jeg ville valgt i hvilken situasjon. Vil du ha hele bakgrunnen for hva som skjer under panseret, start med hovedguiden: [hvordan gi AI-agenten din tilgang til e-post](/blog/how-to-give-your-ai-agent-email-access).
@@ -10,26 +10,26 @@ Dette er en gjennomgang, ikke en reklame. Jeg går gjennom hver tilnærming, hvo
 
 Før du sammenligner verktøy, må du være klar på hva jobben krever. «Styr innboksen min» betyr nesten alltid en blanding av:
 
-- **Lesetilgang** — hente nylige meldinger, lese en hel tråd, søke på avsender eller nøkkelord.
-- **Sendetilgang** — utforme og sende svar, med riktig tråding slik at samtalen ikke splittes.
-- **Flere kontoer** — jobb-Gmailen din og din personlige iCloud, ikke bare én.
-- **Tillit** — du gir en AI tilgang til årevis med privat korrespondanse. Hvor lagres legitimasjonen? Er det noen som lagrer selve e-postteksten?
+- **Lesetilgang**: hente nylige meldinger, lese en hel tråd, søke på avsender eller nøkkelord.
+- **Sendetilgang**: utforme og sende svar, med riktig tråding slik at samtalen ikke splittes.
+- **Flere kontoer**: jobb-Gmailen din og din personlige iCloud, ikke bare én.
+- **Tillit**: du gir en AI tilgang til årevis med privat korrespondanse. Hvor lagres legitimasjonen? Er det noen som lagrer selve e-postteksten?
 
 Hold disse fire opp mot hvert alternativ. Forskjellene blir raskt tydelige.
 
 ## Alternativ 1: En hostet MCP-e-postserver
 
-Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`inbox_list\` for å se kontoene dine, \`email_read\` for å liste, lese eller søke i meldinger, \`email_compose\` for å sende, svare eller videresende, pluss \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` for flagg, mapper, utkast, planlegging og kontakter. Dette er kjernen av de 21 verktøyene, og de fleste velger operasjonen med en \`action\`-parameter.
+Dette er [Model Context Protocol](https://modelcontextprotocol.io)-tilnærmingen, driftet for deg. Du kobler til innboksen din én gang i et dashbord, limer inn én endepunkt-URL i Claude, og agenten får et ryddig sett med e-postverktøy. Claude kaller dem som ethvert annet verktøy: \`inbox_list\` for å se kontoene dine, \`email_read\` for å liste, lese eller søke i meldinger, \`email_compose\` for å sende, svare eller videresende, pluss \`email_organize\`, \`folder\`, \`draft\`, \`schedule\` og \`contact_search\` for flagg, mapper, utkast, planlegging og kontakter. Dette er kjernen i verktøysettet, og de fleste velger operasjonen med en \`action\`-parameter.
 
 MCPEmails er den jeg bygger, så ta anbefalingen med det i bakhodet, men det er arkitekturen som gjør at den vinner for de fleste, ikke markedsføringen. Hvert verktøykall treffer leverandøren din live (IMAP/SMTP for Gmail og de fleste leverandører, Microsoft Graph for Outlook), gir meldingen til Claude, og forkaster den. **E-postteksten lagres aldri.** Per innboks lagres et kryptert OAuth-token eller app-passord, AES-256-GCM-kryptert i ro, dekryptert på våre servere bare når en forespørsel trenger det, og aldri sendt til Claude. Utover det beholder vi bare de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt. Vil du ha den lange versjonen av hvorfor det er viktig, les [hvorfor «e-post lagres aldri» er viktig](/blog/why-email-never-stored-matters).
 
-Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors → Add connector**, limer inn \`https://www.mcpemails.com/api/mcp\`, klikker Connect, logger inn på MCPEmails-kontoen din, og godkjenner tilgangene du vil ha (\`read:email\`, \`send:email\`, eller begge). Ingen API-nøkkel, ingen SDK, ingen konfigurasjonsfil. Det finnes en [tominutters tilkoblingsguide](/blog/connect-email-to-ai-agent-under-2-minutes) hvis du vil ha det klikk for klikk. Den [komplette guiden til å koble Claude til e-posten din](/blog/connect-claude-to-email) går deretter gjennom hver leverandør for seg.
+Oppsettet er virkelig kjapt. I claude.ai går du til **Customize → Connectors → Add connector**, limer inn \`https://www.mcpemails.com/api/mcp\`, klikker Connect, logger inn på MCPEmails-kontoen din, og velger hvor mye tilgang Claude skal få: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting). Ingen API-nøkkel, ingen SDK, ingen konfigurasjonsfil. Det finnes en [tominutters tilkoblingsguide](/blog/connect-email-to-ai-agent-under-2-minutes) hvis du vil ha det klikk for klikk. Den [komplette guiden til å koble Claude til e-posten din](/blog/connect-claude-to-email) går deretter gjennom hver leverandør for seg.
 
-**Bra for:** nesten alle — ikke-tekniske brukere, folk med Gmail og Outlook og IMAP på én gang, alle som bryr seg om at teksten ikke lagres.
+**Bra for:** nesten alle: ikke-tekniske brukere, folk med Gmail og Outlook og IMAP på én gang, alle som bryr seg om at teksten ikke lagres.
 
-**De ærlige avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og det finnes ingen webhooks. For å reagere på ny e-post må Claude polle — kalle \`email_read\` med \`action: list\` og \`unread: true\` etter en tidsplan. Push-varsler finnes ikke i MCP. Ethvert verktøy som hevder å reagere på e-post i sanntid, enten poller under panseret eller lagrer e-posten din.
+**Avveiningene:** det er en tredjepartstjeneste i autentiseringsbanen din (du kan trekke tilbake tilgangen fra dashbordet med ett klikk, men du stoler på vertens sikkerhetsmodell). Og MCP i seg selv har ingen push: for å reagere på ny e-post inne i en chat må Claude polle, altså kalle \`email_read\` med \`action: list\` og \`unread: true\` etter en tidsplan. For din egen kode kan Pro- og Business-arbeidsområder legge til en webhook under **API-nøkler** i dashbordet, og MCPEmails sender en signert POST til URL-en din når det kommer ny post. Ethvert verktøy som hevder å reagere i sanntid uten en av de to, enten poller under panseret eller lagrer e-posten din.
 
-Gratisnivået er $0 for alltid med én tilkoblet innboks og tak på 60 forespørsler/minutt. Personal ($9 per måned) kobler til opptil tre innbokser og hever burst-taket; Pro ($15 per måned) kobler til opptil 10; Business legger til medlemmer og roller. Kostnad er sjelden den avgjørende faktoren her.
+Gratisnivået koster ingenting, for alltid, med én tilkoblet innboks. Personal legger til innbokser og et høyere burst-tak, Pro flere igjen, og Business legger til medlemmer og roller. Kostnad er sjelden den avgjørende faktoren her; gjeldende tall finner du på [prissiden](/pricing).
 
 ## Alternativ 2: En egen / selvhostet MCP-server
 
@@ -37,7 +37,7 @@ Samme protokoll, din infrastruktur. Det finnes åpen kildekode Gmail MCP-servere
 
 **Bra for:** ingeniører som vil ha full kontroll, et air-gapped eller etterlevelsesbundet miljø, eller alle som rett og slett ikke vil sende legitimasjon gjennom en tredjepart.
 
-**De ærlige avveiningene:** du eier registreringen av OAuth-appen, fornyelse av tokens, kryptering i ro og oppetid. De fleste offentlige Gmail MCP-repoene er kun for Gmail — å legge til Outlook betyr en egen Microsoft Graph-integrasjon, og IMAP er en tredje kodebane. Den «gratis» serveren koster deg reelle ingeniørtimer, og en halvferdig legitimasjonslagring er mindre trygg enn en hostet løsning gjort riktig. Jeg gikk grundig gjennom dette i [hostet kontra selvhostet Gmail MCP-server](/blog/hosted-vs-self-hosted-gmail-mcp-server) — kortversjonen: selvhost kun hvis kontroll er verdt vedlikeholdet.
+**Avveiningene:** du eier registreringen av OAuth-appen, fornyelse av tokens, kryptering i ro og oppetid. De fleste offentlige Gmail MCP-repoene er kun for Gmail: å legge til Outlook betyr en egen Microsoft Graph-integrasjon, og IMAP er en tredje kodebane. Den «gratis» serveren koster deg reelle ingeniørtimer, og en halvferdig legitimasjonslagring er mindre trygg enn en hostet løsning gjort riktig. Jeg gikk grundig gjennom dette i [hostet kontra selvhostet Gmail MCP-server](/blog/hosted-vs-self-hosted-gmail-mcp-server). Kortversjonen: selvhost kun hvis kontroll er verdt vedlikeholdet.
 
 ## Alternativ 3: Kopier og lim inn i chatten
 
@@ -45,7 +45,7 @@ Alternativet uten oppsett. Du markerer en e-post, limer den inn i Claude, ber om
 
 **Bra for:** en engangsting. Å utforme ett enkelt vrient svar når du ikke vil koble til noe som helst.
 
-**De ærlige avveiningene:** det skalerer ikke forbi én melding, Claude kan ikke se resten av tråden eller søke i arkivet ditt, og du er integrasjonen — hver kopiering, innliming og sending er manuell. Det er ikke «å styre innboksen». Det er å bruke Claude som en skriveassistent med e-postformet inndata.
+**Avveiningene:** det skalerer ikke forbi én melding, Claude kan ikke se resten av tråden eller søke i arkivet ditt, og du er integrasjonen: hver kopiering, innliming og sending er manuell. Det er ikke «å styre innboksen». Det er å bruke Claude som en skriveassistent med e-postformet inndata.
 
 ## Alternativ 4: En nettleserutvidelse
 
@@ -53,7 +53,7 @@ Utvidelser som injiserer en AI-sidepanel i Gmails nettgrensesnitt. De leser det 
 
 **Bra for:** folk som lever i Gmails nettklient hele dagen og vil ha utkast uten å forlate fanen.
 
-**De ærlige avveiningene:** de er bundet til én leverandørs nettgrensesnitt, så de slutter å virke når Gmail stokker om på DOM-en sin, og de gjør ingenting for Outlook, iCloud eller en skrivebordsklient. Mange leser hele siden og ruter den gjennom sin egen backend, som er nettopp det lagringsspørsmålet du burde stille. Og de er bundet til nettleseren — Claude kan ikke handle på e-posten din fra en terminal, et skript eller claude.ai. Bryr du deg om sikkerhetssiden, er [er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) verdt å lese før du installerer noe som leser hele innboksen din.
+**Avveiningene:** de er bundet til én leverandørs nettgrensesnitt, så de slutter å virke når Gmail stokker om på DOM-en sin, og de gjør ingenting for Outlook, iCloud eller en skrivebordsklient. Mange leser hele siden og ruter den gjennom sin egen backend, som er nettopp det lagringsspørsmålet du burde stille. Og de er bundet til nettleseren, så Claude kan ikke handle på e-posten din fra en terminal, et skript eller claude.ai. Bryr du deg om sikkerhetssiden, er [er det trygt å gi en AI-agent tilgang til e-post](/blog/is-it-safe-to-give-ai-agent-email-access) verdt å lese før du installerer noe som leser hele innboksen din.
 
 ## Alternativ 5: Native klientintegrasjoner
 
@@ -61,13 +61,13 @@ Noen e-postklienter begynner å levere innebygde AI-funksjoner, og noen AI-klien
 
 **Bra for:** hvis akkurat din klient allerede har det og du kun bruker den ene klienten.
 
-**De ærlige avveiningene:** du er låst til det leverandøren bestemte seg for å støtte. Bytt klient eller legg til en ekstra e-postkonto hos en annen leverandør, og integrasjonen følger deg ikke. Vilkårene for databehandling er hva leverandøren skrev, og de varierer voldsomt. Dekningen i 2026 er fortsatt ujevn.
+**Avveiningene:** du er låst til det leverandøren bestemte seg for å støtte. Bytt klient eller legg til en ekstra e-postkonto hos en annen leverandør, og integrasjonen følger deg ikke. Vilkårene for databehandling er hva leverandøren skrev, og de varierer voldsomt. Dekningen i 2026 er fortsatt ujevn.
 
 ## Så hvilken bør du egentlig bruke?
 
 Her er min klare mening.
 
-**Velg en hostet MCP-server** hvis du vil at Claude skal styre ekte innbokser — i flertall, på tvers av leverandører — uten å passe på infrastruktur eller lure på hvem som tar vare på e-posten din. Det er det eneste alternativet på denne listen som både er ferdig på sekunder og bygget rundt aldri å lagre teksten. Dette er standarden jeg ville anbefalt nesten hvem som helst.
+**Velg en hostet MCP-server** hvis du vil at Claude skal styre ekte innbokser, i flertall og på tvers av leverandører, uten å passe på infrastruktur eller lure på hvem som tar vare på e-posten din. Det er det eneste alternativet på denne listen som både er ferdig på sekunder og bygget rundt aldri å lagre teksten. Dette er standarden jeg ville anbefalt nesten hvem som helst.
 
 **Selvhost** kun hvis kontroll eller etterlevelse virkelig veier tyngre enn vedlikeholdet, og du har ingeniørtiden til å gjøre legitimasjonslagring ordentlig.
 
@@ -79,7 +79,7 @@ En siste ting som skiller de seriøse alternativene fra lekene: sending. Med MCP
 
 ## Kom i gang
 
-Hvis den hostede ruten høres riktig ut, kan du [koble til en innboks og Claude på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) eller lese [dokumentasjonen](/docs) for den fulle verktøyreferansen. Gratisplanen er nok til å prøve hele flyten — [start gratis](/signup) og la Claude faktisk gjøre noe med innboksen din.`,
+Hvis den hostede ruten høres riktig ut, kan du [koble til en innboks og Claude på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) eller lese [dokumentasjonen](/docs) for den fulle verktøyreferansen. Gratisplanen er nok til å prøve hele flyten: [start gratis](/signup) og la Claude faktisk gjøre noe med innboksen din.`,
 };
 
 export default translation;

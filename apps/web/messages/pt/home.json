@@ -12,7 +12,12 @@
     "signIn": "Entrar",
     "dashboard": "Painel",
     "getStarted": "Começar grátis",
-    "selfHost": "Self-host"
+    "selfHost": "Self-host",
+    "openMenu": "Abrir o menu de navegação",
+    "closeMenu": "Fechar o menu de navegação",
+    "primaryNav": "Navegação principal",
+    "mobileNav": "Navegação móvel",
+    "menuDialog": "Menu de navegação"
   },
   "hero": {
     "eyebrow": "Servidor MCP de e-mail hospedado",

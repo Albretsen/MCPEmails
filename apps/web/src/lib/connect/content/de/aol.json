@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.aol.com/articles/Create-and-manage-app-password",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-Passwort",
+    "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
+    "usernameForm": "Ihre vollständige AOL-Adresse mit Domain: name@aol.com oder name@aol.de. Ältere aim.com-Adressen haben dieselbe Form.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "AOL Mail mit Claude, Cursor und MCP-Clients verbinden",
+    "description": "AOL Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.aol.com:993 mit einem AOL-App-Passwort. Ihr AOL-Passwort allein funktioniert nicht."
+  },
+  "hero": {
+    "eyebrow": "AOL Mail + KI",
+    "titleLine1": "AOL Mail mit Claude verbinden,",
+    "titleLine2": "und mit Cursor, ChatGPT und jedem MCP-Client",
+    "lead": "Ihr KI-Agent bekommt Ihr echtes AOL-Postfach in wenigen Minuten: E-Mails lesen, suchen, beantworten, senden, planen und sortieren, mit einem einzigen App-Passwort. Dasselbe Postfach funktioniert in jedem MCP-Client, nicht nur in einem.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "App-Passwort, keine OAuth-Einrichtung",
+    "meta2": "E-Mails live abgerufen, nie gespeichert",
+    "answer": "Claude kann AOL Mail nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit einem App-Passwort anbindet. Danach lesen, suchen, senden und sortieren Claude, Cursor oder jeder MCP-Client diese E-Mails. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+  },
+  "method": {
+    "title": "So verbindet sich AOL Mail: IMAP und ein App-Passwort",
+    "body": "AOL Mail verbindet sich über IMAP/SMTP mit einem <b>AOL-App-Passwort</b>. Ihr normales AOL-Passwort meldet kein Mailprogramm an; eine abgelehnte Anmeldung ist hier also fast immer ein fehlendes App-Passwort. Schalten Sie die zweistufige Anmeldung (2-Step Verification) ein, erzeugen Sie unter Account Info, Account Security ein App-Passwort und fügen Sie es zusammen mit Ihrer vollständigen AOL-Adresse in MCPEmails ein."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails-Konto anlegen",
+      "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte. Der Free-Tarif verbindet ein Postfach, dauerhaft."
+    },
+    {
+      "h": "AOL-App-Passwort erzeugen",
+      "p": "Öffnen Sie in AOL Mail Account Info, dann Account Security, schalten Sie 2-Step Verification ein, falls sie aus ist, und erzeugen Sie dann ein App-Passwort. Kopieren Sie es sofort, AOL zeigt es nur einmal an."
+    },
+    {
+      "h": "In MCPEmails einfügen",
+      "p": "Wählen Sie IMAP / SMTP, geben Sie Ihre AOL-Adresse, die oben genannten Server und das App-Passwort ein, und das Postfach ist sicher verbunden."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT als Konnektor ein, autorisieren Sie den Zugriff, und Ihr Agent arbeitet im Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "AOL Mail läuft auf Yahoos Plattform, aber das App-Passwort muss von AOL kommen",
+      "p": "<code>imap.aol.com</code> wird über denselben Maildienst unter <code>yahoodns.net</code> aufgelöst, der auch Yahoo Mail bedient, und beide Server begrüßen Sie mit demselben Banner. Nicht geteilt wird das Konto. Eine AOL-Adresse wird auf der Seite <b>Account Security</b> von AOL verwaltet, und ein in einem Yahoo-Konto erzeugtes App-Passwort öffnet kein AOL-Postfach. Das ist wichtig, weil Suchergebnisse zu AOL-Einstellungen regelmäßig einen Yahoo-Hilfeartikel liefern: Die beschriebenen Schritte stimmen, die Website, auf der Sie sein sollten, nicht."
+    },
+    {
+      "h": "Das App-Passwort entsteht in einem Assistenten, wird einmal angezeigt, und eine Passwortänderung widerruft es nicht",
+      "p": "Wählen Sie auf der AOL-Seite Account Security die Option Generate app password (bei manchen Konten Generate and manage app passwords), dann Get Started, benennen Sie die App, dann Generate password. AOL zeigt es ein einziges Mal an. Danach funktioniert es weiter, auch wenn Sie Ihr AOL-Hauptpasswort ändern; eine Passwortänderung trennt ein Mailprogramm also <b>nicht</b>. Nur das Löschen genau dieses App-Passworts auf derselben Seite entzieht den Zugriff."
+    },
+    {
+      "h": "AOLs IMAP bietet kein AUTH=LOGIN an, sein SMTP schon",
+      "p": "Beim Test kündigte AOLs IMAP-Server <code>AUTH=PLAIN</code> neben den beiden OAuth-Verfahren an, aber kein <code>AUTH=LOGIN</code>. Der Versandserver dagegen nimmt PLAIN und LOGIN. Posteingang und Postausgang desselben Kontos können sich im selben Programm also unterschiedlich verhalten: Tools, die fest auf LOGIN verdrahtet sind, wie es in Code für Exchange üblich ist, senden problemlos und scheitern dann beim Lesen, mit einem Authentifizierungsfehler, der exakt wie ein falsches Passwort aussieht."
+    },
+    {
+      "h": "Systemordner werden über ihre Rolle erkannt, Umbenennen ist also unproblematisch",
+      "p": "AOL kündigt <code>SPECIAL-USE</code>, <code>MOVE</code>, <code>UIDPLUS</code> und <code>IDLE</code> an. Konkret: Gesendet, Entwürfe, Spam und Papierkorb werden daran erkannt, was sie sind, nicht daran, wie sie heißen. Ein Agent findet Ihren Gesendet-Ordner also auch nach dem Umbenennen, und Verschieben ist ein einzelner Befehl statt Kopieren plus Löschen. Damit ist AOLs IMAP-Server besser als der mancher kostenpflichtiger Anbieter, und AOL ein ungewöhnlich unkompliziertes Postfach für Automatisierung."
+    }
+  ],
+  "limits": [
+    "AOLs Versandserver meldet eine maximale Nachrichtengröße von rund 41 MB. Anhänge werden über MCPEmails mit bis zu 25 MB pro Anfrage gelesen.",
+    "Ein App-Passwort bleibt gültig, wenn Sie Ihr AOL-Passwort ändern. Nur das Löschen auf der AOL-Seite Account Security entzieht den Zugriff."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit AOL Mail?",
+      "a": "Ja, über einen MCP-Server. Claude selbst hat keinen AOL-Konnektor. MCPEmails verbindet das AOL-Postfach per IMAP mit einem AOL-App-Passwort, danach kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren. Dieselbe Verbindung nutzen Sie in Cursor, ChatGPT und anderen MCP-Clients."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von AOL Mail?",
+      "a": "IMAP ist imap.aol.com auf Port 993 mit implizitem TLS. SMTP ist smtp.aol.com auf Port 465, ebenfalls implizites TLS. Benutzername ist Ihre vollständige AOL-Adresse, Passwort ein AOL-App-Passwort statt Ihres Kontopassworts. Beide Server wurden an dem auf dieser Seite genannten Datum über eine echte TLS-Verbindung bestätigt."
+    },
+    {
+      "q": "Warum wird mein AOL-Passwort abgelehnt?",
+      "a": "AOL akzeptiert Ihr normales Kontopasswort nicht von fremden Mailprogrammen. Sie brauchen ein App-Passwort von der AOL-Seite Account Security. Die zweithäufigste Ursache ist der falsche Ort: Ein in einem Yahoo-Konto erzeugtes App-Passwort funktioniert nicht für eine AOL-Adresse, obwohl beide Dienste dieselbe Mail-Plattform nutzen."
+    },
+    {
+      "q": "Ist AOL Mail dasselbe wie Yahoo Mail?",
+      "a": "Beide laufen auf derselben Infrastruktur und verhalten sich über IMAP fast identisch, sind aber getrennte Konten mit eigenen Hostnamen und eigenen Sicherheitsseiten. Verbinden Sie eine aol.com- oder aol.de-Adresse mit den AOL-Servern und einem AOL-App-Passwort. Verbinden Sie eine yahoo.com-, yahoo.de- oder ymail.com-Adresse als Yahoo. Zugangsdaten gelten nicht für den jeweils anderen Dienst."
+    },
+    {
+      "q": "Funktionieren alte aim.com- und Länder-AOL-Adressen noch?",
+      "a": "Ja, sofern das Postfach noch aktiv ist. Es sind gewöhnliche AOL-Mail-Konten auf denselben Servern, mit demselben App-Passwort-Ablauf und der vollständigen Adresse als Benutzername. Sehr alte Anleitungen nennen AOL-Einstellungen aus der Zeit vor dem Umzug auf diese Plattform; nehmen Sie die Server von dieser Seite, nicht die aus einem zehn Jahre alten Forumsbeitrag."
+    },
+    {
+      "q": "Werden meine AOL-E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von AOL abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Löschen Sie das App-Passwort unter AOL Account Security, endet die Verbindung bei AOL sofort."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein AOL-Postfach",
+    "sub": "AOL Mail in wenigen Minuten verbinden. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

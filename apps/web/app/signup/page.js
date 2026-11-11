@@ -9,11 +9,12 @@ import {
   connectIntentSlugShape,
 } from '@/lib/connect/intent-carry.mjs';
 import { authorizeSignupContext } from '@/lib/onboarding/clients.mjs';
+import { authPageMetadata } from '@/i18n/auth-page-metadata';
 
-export const metadata = {
-  title: 'Create your account',
-  description: 'Create your MCPEmails account and connect your first inbox',
-};
+/** Title and description in the language the visitor was reading (`?lang=`), else English. */
+export async function generateMetadata({ searchParams }) {
+  return authPageMetadata(await searchParams, 'signup');
+}
 
 /**
  * /signup: account creation page.

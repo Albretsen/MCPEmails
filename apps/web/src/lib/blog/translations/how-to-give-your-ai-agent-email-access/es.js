@@ -2,7 +2,7 @@ const translation = {
   title: 'Cómo dar acceso al correo a tu agente de IA (la guía completa de 2026)',
   description:
     'Da a tu agente de IA acceso de lectura y envío a una bandeja real por MCP: Gmail, Outlook, iCloud, Fastmail o IMAP. Cómo funciona, las herramientas, la seguridad y la configuración.',
-  coverAlt: 'Cómo dar a tu agente de IA acceso al correo por MCP — MCPEmails',
+  coverAlt: 'Cómo dar a tu agente de IA acceso al correo por MCP (MCPEmails)',
   content: `Para dar a un agente de IA acceso al correo, conectas tu bandeja a un servidor MCP y apuntas tu agente a una única URL de endpoint. El agente obtiene entonces un pequeño conjunto de herramientas para leer, buscar y enviar correo. Lo difícil no es el agente: es hacer esto sin filtrar tu contraseña a un prompt, a un registro o a un almacén vectorial. Esa última milla es de lo que trata esta guía.
 
 Si solo quieres el camino rápido: conecta una bandeja en el panel, pega el endpoint de MCP en [claude.ai](https://claude.ai), Claude Desktop, Cursor o tu propio agente, y llama a \`inbox_list\` primero. El resto de este artículo explica qué ocurre en realidad, por qué importa el modelo de seguridad y cómo conectar cada proveedor compatible.
@@ -47,15 +47,15 @@ El servidor habla Streamable HTTP según la especificación MCP 2025-06-18. Ning
 
 Un puñado de herramientas consolidadas y basadas en acciones cubren toda la superficie: leer, redactar, organizar, más otras para carpetas, programación y contactos. El agente siempre empieza con \`inbox_list\` para descubrir qué hay conectado y obtener el ID de cada bandeja: nunca incrusta un UUID fijo en el código.
 
-- \`inbox_list\` — descubre las cuentas conectadas y sus capacidades
-- \`email_read\` (acción \`list\`) — paginado, lo más reciente primero, por bandeja
-- \`email_read\` (acción \`read\`) — texto plano parseado, HTML saneado opcional, adjuntos opcionales
-- \`email_read\` (acción \`search\`) — sintaxis nativa del proveedor (operadores de Gmail, KQL de Outlook, búsqueda de texto IMAP)
-- \`email_compose\` (acción \`send\`) — redacta con CC/BCC, HTML y adjuntos de hasta 10 MB en total
-- \`email_compose\` (acción \`reply\`) — lo mismo, y fija por ti las cabeceras de hilo (In-Reply-To, References)
-- \`email_organize\` — mover, eliminar, marcar o archivar (una acción por llamada)
+- \`inbox_list\`: descubre las cuentas conectadas y sus capacidades
+- \`email_read\` (acción \`list\`): paginado, lo más reciente primero, por bandeja
+- \`email_read\` (acción \`read\`): texto plano parseado, HTML saneado opcional, adjuntos opcionales
+- \`email_read\` (acción \`search\`): sintaxis nativa del proveedor (operadores de Gmail, KQL de Outlook, búsqueda de texto IMAP)
+- \`email_compose\` (acción \`send\`): redacta con CC/BCC, HTML y adjuntos de hasta 10 MB en total
+- \`email_compose\` (acción \`reply\`): lo mismo, y fija por ti las cabeceras de hilo (In-Reply-To, References)
+- \`email_organize\`: mover, eliminar, marcar o archivar (una acción por llamada)
 
-Una limitación honesta que conviene dejar clara de entrada: esto es **sondeo, no push**. No hay webhooks. Para reaccionar al correo nuevo, tu agente sondea según una programación, por ejemplo \`email_read\` (acción \`list\`) con \`unread: true\`. Cualquier autorrespondedor que construyas funciona con un temporizador, no con un disparador instantáneo. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra cómo hacerlo bien.
+Algo que conviene saber de entrada: las herramientas en sí funcionan por **petición y respuesta**. El servidor responde cuando tu agente pregunta, y la forma más sencilla de reaccionar al correo nuevo es sondear según una programación, por ejemplo \`email_read\` (acción \`list\`) con \`unread: true\`. Si prefieres un aviso push, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel: MCPEmails envía entonces un POST firmado a tu URL cuando llega correo nuevo, con los IDs de los mensajes, que tu agente abre con \`email_read\`. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra los dos patrones.
 
 Una ronda de triaje matutino se ve así:
 
@@ -88,7 +88,7 @@ Mismo endpoint, mismas herramientas, dos formas de entrar según si tu cliente h
 
 ### Clientes con OAuth (sin clave de API)
 
-claude.ai, Claude Desktop, Cursor y clientes similares se conectan con OAuth 2.0 Authorization Code + PKCE y Dynamic Client Registration de RFC 7591. En claude.ai es **Customize → Connectors → Add connector**, pega la URL del endpoint de MCP, pulsa Connect, inicia sesión en tu cuenta de MCPEmails y aprueba. Los tokens se limitan exactamente a lo que apruebes: \`read:email\`, \`send:email\` o ambos. Para guías paso a paso, consulta [configurar Claude con tu bandeja de entrada](/blog/connect-claude-to-email) y [añadir tu correo a ChatGPT](/blog/connect-chatgpt-to-email).
+claude.ai, Claude Desktop, Cursor y clientes similares se conectan con OAuth 2.0 Authorization Code + PKCE y Dynamic Client Registration de RFC 7591. En claude.ai es **Customize → Connectors → Add connector**, pega la URL del endpoint de MCP, pulsa Connect, inicia sesión en tu cuenta de MCPEmails y aprueba. El token lleva exactamente el acceso que eliges en la pantalla de consentimiento: **Solo lectura**, **Estándar** (añade el envío y los borradores), **Acceso completo** (añade la programación, las carpetas y la eliminación) o un conjunto **Personalizado** con cada permiso activado o desactivado. Para guías paso a paso, consulta [configurar Claude con tu bandeja de entrada](/blog/connect-claude-to-email) y [añadir tu correo a ChatGPT](/blog/connect-chatgpt-to-email).
 
 ### Clientes sin OAuth (clave de API)
 
@@ -98,20 +98,20 @@ Sea como sea, revocas cualquier conexión desde el panel con un solo clic. Copia
 
 ## ¿Esto es seguro? Y los límites de tasa
 
-Respuesta corta: sí, y el artículo [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) expone el caso completo. El modelo tiene capacidades acotadas, no tu contraseña; las credenciales están cifradas; nada se almacena; el envío se queda en tu proveedor; el acceso se revoca con un solo clic.
+Sí, y el artículo [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) expone el caso completo. El modelo tiene capacidades acotadas, no tu contraseña; las credenciales están cifradas; nada se almacena; el envío se queda en tu proveedor; el acceso se revoca con un solo clic.
 
 En cuanto a los límites de tasa, cada workspace tiene un tope por minuto que escala con tu plan (consulta [precios](/pricing)), y cada clave de API recibe ventanas por minuto, por hora y por día dimensionadas según ese plan, así que una sola clave puede usar todo el tope y varias claves lo comparten. Cuando alcanzas un límite, el servidor devuelve un error reintentable con un valor \`retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío con \`email_compose\`: enviarás duplicados.
 
 ## Precios
 
-Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas en todos los planes, y los planes también difieren en límite de ráfaga, retención de analíticas, funciones de equipo y soporte.
+Los planes se cobran por bandejas conectadas. Las claves de API son ilimitadas en todos los planes, y los planes también difieren en límite de ráfaga, historial de analíticas, funciones de equipo y soporte.
 
-- **Gratis, $0 para siempre.** Sin tarjeta. Una bandeja conectada, 60 req/min, analíticas de 30 días, centro de ayuda y soporte por correo.
-- **Personal, $9/mes** (o $86,40/año, $7,20/mes). Hasta tres bandejas conectadas, 120 req/min, analíticas de 90 días, soporte prioritario por correo.
-- **Pro, $15/mes** (o $144/año, $12/mes). Hasta 10 bandejas conectadas, 300 req/min, analíticas de 2 años, soporte prioritario por correo.
-- **Business, $39/mes** (o $374,40/año, $31,20/mes). Todo lo de Pro, además de 10 buzones incluidos y $3/mes por cada uno extra, miembros ilimitados con roles, administradores que aprueban los envíos retenidos, un espacio de trabajo separado por cliente o negocio, 1.000 req/min.
+- **Gratis.** Sin coste para siempre y sin tarjeta. Una bandeja conectada, analíticas de uso, centro de ayuda y soporte por correo.
+- **Personal.** Más bandejas para una sola persona, un límite de ráfaga más alto, un historial de analíticas más largo y soporte prioritario por correo.
+- **Pro.** Para una persona que lleva un negocio: más bandejas todavía, un límite de ráfaga aún mayor, años de historial de analíticas y webhooks de correo nuevo.
+- **Business.** Todo lo de Pro, además de un bloque de buzones incluidos con un precio por buzón a partir de ahí, miembros ilimitados con roles, administradores que aprueban los envíos retenidos y un espacio de trabajo separado por cliente o negocio.
 
-Desglose completo en la [página de precios](/pricing).
+Los precios y el número de bandejas actuales están en la [página de precios](/pricing).
 
 ## Empieza ya
 

@@ -16,7 +16,7 @@
     "meta0": "1 Postfach kostenlos, dauerhaft",
     "meta1": "OAuth, kein API-Schlüssel nötig",
     "meta2": "E-Mails werden live abgerufen, nie gespeichert",
-    "answer": "Öffnen Sie auf chatgpt.com Plugins, Personal, Add und dann Add custom MCP server. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp unter Connection ein, wählen Sie OAuth, setzen Sie das Bestätigungshäkchen, klicken Sie auf Create as a plugin und melden Sie sich bei MCPEmails an. Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen. Im Chat tippen Sie @ und wählen MCPEmails."
+    "answer": "Öffnen Sie auf chatgpt.com Plugins, Persönlich, Hinzufügen und dann Benutzerdefinierten MCP-Server hinzufügen. Nennen Sie ihn MCPEmails, fügen Sie https://mcpemails.com/api/mcp unter Verbindung ein, wählen Sie OAuth, setzen Sie das Bestätigungshäkchen, klicken Sie auf Als Plugin erstellen und melden Sie sich bei MCPEmails an. Benutzerdefinierte MCP-Server lassen sich mit Go und den kostenpflichtigen Tarifen hinzufügen. Im Chat tippen Sie @ und wählen MCPEmails."
   },
   "method": {
     "title": "So verbindet sich ChatGPT: OAuth, kein API-Schlüssel",
@@ -28,16 +28,16 @@
       "p": "Registrieren Sie sich auf mcpemails.com, ohne Kreditkarte, und verbinden Sie Ihr Postfach unter Dashboard, Postfächer. Ein Postfach ist dauerhaft kostenlos."
     },
     {
-      "h": "Add custom MCP server öffnen",
-      "p": "Öffnen Sie auf chatgpt.com <b>Plugins</b> und dann <b>Personal</b>, klicken Sie oben rechts auf <b>Add</b> und wählen Sie <b>Add custom MCP server</b>. Das geht nur im Web: In der Mobil-App lässt sich kein Server hinzufügen."
+      "h": "„Benutzerdefinierten MCP-Server hinzufügen“ öffnen",
+      "p": "Öffnen Sie auf chatgpt.com <b>Plugins</b> und dann <b>Persönlich</b>, klicken Sie oben rechts auf <b>Hinzufügen</b> und wählen Sie <b>Benutzerdefinierten MCP-Server hinzufügen</b>. Das geht nur im Web: In der Mobil-App lässt sich kein Server hinzufügen."
     },
     {
       "h": "Server eintragen",
-      "p": "Nennen Sie ihn MCPEmails und fügen Sie <code>https://mcpemails.com/api/mcp</code> unter <b>Connection</b> ein."
+      "p": "Nennen Sie ihn MCPEmails und fügen Sie <code>https://mcpemails.com/api/mcp</code> unter <b>Verbindung</b> ein."
     },
     {
       "h": "OAuth wählen und anmelden",
-      "p": "Wählen Sie <b>OAuth</b>, setzen Sie das Häkchen bei <b>I understand and want to continue</b>, klicken Sie auf <b>Create as a plugin</b>, melden Sie sich dann bei MCPEmails an und geben Sie die Scopes frei, die ChatGPT erhalten soll."
+      "p": "Wählen Sie <b>OAuth</b>, setzen Sie das Häkchen bei <b>Ich verstehe und möchte fortfahren</b>, klicken Sie auf <b>Als Plugin erstellen</b>, melden Sie sich dann bei MCPEmails an und geben Sie die Scopes frei, die ChatGPT erhalten soll."
     },
     {
       "h": "Im Chat erwähnen",

@@ -41,7 +41,11 @@ export function datasetRows(now = new Date()) {
     .filter((p) => p.evidence?.reachable && p.imap)
     .map((p) => {
       const e = p.evidence;
-      const smtpAuthVisible = !(p.smtp?.security === 'starttls' && e.smtpAuthMechs.length === 0);
+      // A STARTTLS submission port advertises its mechanisms only after the
+      // upgrade, and a server that refused the probe before EHLO (Tiscali
+      // answers 554 to outside addresses) advertised nothing either way: both
+      // are "unknown", published as null, never as an empty list.
+      const smtpAuthVisible = e.smtpAuthMechs.length > 0;
       const size = Number(e.smtpMaxSize);
       return {
         slug: p.slug,
@@ -140,7 +144,7 @@ export const FIELD_DOCS = [
   { key: 'smtpHost', doc: 'SMTP submission hostname.' },
   { key: 'smtpPort', doc: 'SMTP submission port.' },
   { key: 'smtpSecurity', doc: 'tls (implicit TLS) or starttls.' },
-  { key: 'smtpAuth', doc: 'SASL mechanisms in the EHLO reply. Empty when the server only lists them after STARTTLS.' },
+  { key: 'smtpAuth', doc: 'SASL mechanisms in the EHLO reply. null when none were visible: a STARTTLS port lists them only after the upgrade, and a server that refuses the probe before EHLO advertises nothing.' },
   { key: 'smtpMaxSizeMb', doc: 'SMTP SIZE limit in MiB, for the whole encoded message. Attachments grow by about a third in base64.' },
   { key: 'oauthAdvertised', doc: 'Whether IMAP advertises XOAUTH2 or OAUTHBEARER. Advertised is not the same as open to third-party apps.' },
   { key: 'settingsSource', doc: 'Where the hosts and ports came from: ispdb+probe (Thunderbird ISPDB) or vendor+probe (vendor documentation).' },

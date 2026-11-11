@@ -184,7 +184,10 @@ test('footer: the withdrawal link names the function and opens the form with wit
     es: 'Desistir del contrato aquí',
     zh: '在此撤回合同',
     pt: 'Desistir do contrato aqui',
-    ja: '契約の撤回はこちら',
+    // ja frames the 14 days as MCPEmails' own refund policy (Japan has no
+    // statutory cooling-off for online subscriptions), so the link names the
+    // refund, not a withdrawal right. It still opens /cancel?type=withdraw.
+    ja: '14日以内の返金のご依頼はこちら',
   };
   for (const locale of LOCALES) {
     assert.equal(messages(locale, 'home').footer.linkWithdrawal, expected[locale], locale);
