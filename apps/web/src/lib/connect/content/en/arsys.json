@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "https://www.arsys.es/blog/configurar-correo-arsys-en-gmail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "usernameForm": "Your full address, nombre@tudominio.es. Arsys lists the email address itself as the user, and the password is the one set when the mailbox was created.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Arsys MCP Server: Connect Arsys Mail to Claude",
+    "description": "MCP server for Arsys email. Connect the mailboxes on your domain (info@, facturacion@) to Claude, ChatGPT and Cursor over IMAP at imap.serviciodecorreo.es:993 with the mailbox password."
+  },
+  "hero": {
+    "eyebrow": "Arsys email + AI",
+    "titleLine1": "MCP server for Arsys mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running info@, facturacion@ and your own name on a domain hosted at Arsys? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, with the password of the mailbox rather than your Arsys customer login.",
+    "answer": "Claude cannot reach an Arsys mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.serviciodecorreo.es on port 993, signing in with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Arsys' support centre lists exactly these settings for manual configuration: imap.serviciodecorreo.es on 993 and smtp.serviciodecorreo.es on 465, both with SSL/TLS required, the address as the user and the password set when the mailbox was created. There is no app password and nothing to switch on. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, nothing to enable",
+    "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several mailboxes on your Arsys domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How Arsys connects: serviciodecorreo.es hosts, IMAP on 993 and SMTP on 465",
+    "body": "Arsys runs its mailboxes on a platform with its own domain, serviciodecorreo.es, which is why the name on the server does not say Arsys. Its support centre gives the manual settings: the incoming server <code>imap.serviciodecorreo.es</code> on port 993 and the outgoing server <code>smtp.serviciodecorreo.es</code> on port 465, both with an SSL/TLS connection required, the user being your email address and the password the one established when the mailbox was created. Both hosts answered a live TLS connection under a certificate for <code>*.serviciodecorreo.es</code>: a short <code>IMAP4 ready</code> banner that advertises UIDPLUS, IDLE, CONDSTORE and SORT, and an SMTP greeting with PLAIN and LOGIN and a 51 MB message limit; port 587 with STARTTLS also works for sending. Arsys' Gmail guide additionally mentions mail.arsys.es and smtp.arsys.es, but mail.arsys.es refused a connection on port 993 when probed, so the serviciodecorreo.es names from the support centre are the ones MCPEmails uses. If you forget the password, Arsys says to update it under <b>Cambio de contraseña</b> in the <b>Buzones</b> section of the Panel de Control."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Find or set the mailbox password in the Panel de Control",
+      "p": "Sign in to the Arsys Panel de Control and open <b>Buzones</b>. Each address has a <b>Cambio de contraseña</b> option there; that password, set when the mailbox was created or changed since, is the one IMAP checks. Your Arsys customer login is a different credential and is refused by the mail server."
+    },
+    {
+      "h": "Enter the address and the password in MCPEmails",
+      "p": "Choose IMAP / SMTP and enter the full address, such as info@tudominio.es, with the mailbox password. The hosts <code>imap.serviciodecorreo.es</code> and <code>smtp.serviciodecorreo.es</code> are prefilled with 993 and 465, both SSL/TLS, and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The server is called serviciodecorreo.es, not arsys.es",
+      "p": "People look for an Arsys host and find two sets of names. The support centre's current settings page lists only <code>imap.serviciodecorreo.es</code> and <code>smtp.serviciodecorreo.es</code>; an older Arsys blog post on Gmail also names mail.arsys.es and smtp.arsys.es. When we probed, mail.arsys.es refused IMAP on 993 while the serviciodecorreo.es hosts answered with a matching certificate. Use the serviciodecorreo.es names, and if a mail program has autoconfigured itself onto the arsys.es ones and stopped working, this is why."
+    },
+    {
+      "h": "Change the password in Buzones, not in the customer area",
+      "p": "Arsys' settings page is explicit: the password is the one set when the mailbox was registered, and if you forget it you update it under Cambio de contraseña in the Buzones section of the Panel de Control. The password for your Arsys customer account lives elsewhere and never authenticates IMAP. After a change, Arsys reminds you to update it in every device and program, and that includes MCPEmails."
+    },
+    {
+      "h": "AUTH=PLAIN only on IMAP, no MOVE and no SPECIAL-USE",
+      "p": "The IMAP server advertises <code>AUTH=PLAIN</code> alone, which MCPEmails uses, while SMTP accepts PLAIN and LOGIN. It offers <code>UIDPLUS</code>, so a copied message reports its new id, but not <code>MOVE</code> or <code>SPECIAL-USE</code>: filing a message runs as a copy, a flag update and an expunge, and the sent, drafts and trash folders are matched by their names. On a Spanish mailbox that often means Enviados, Borradores and Papelera; name the folder in your instruction if the agent cannot find it."
+    }
+  ],
+  "limits": [
+    "The SMTP server announces a maximum message size of about 51 MB. A forward carrying larger attachments is refused at send time.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Arsys email?",
+      "a": "Not on its own. Claude has no built-in Arsys connector. Pointing an MCP server such as MCPEmails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Arsys IMAP and SMTP settings?",
+      "a": "IMAP is imap.serviciodecorreo.es on port 993 with SSL/TLS. SMTP is smtp.serviciodecorreo.es on port 465 with SSL/TLS, or 587 with STARTTLS, with authentication required. The username is your full address and the password is the mailbox password. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Why is my Arsys password rejected in a mail client?",
+      "a": "Usually because it is the Arsys customer-area password rather than the mailbox password. IMAP checks the password set on the individual address, which you can reset under Cambio de contraseña in the Buzones section of the Panel de Control. The other common cause is a client that autoconfigured onto mail.arsys.es; use imap.serviciodecorreo.es."
+    },
+    {
+      "q": "Does Arsys need an app password?",
+      "a": "No. Arsys has no app-specific password scheme. The mailbox password authenticates both IMAP and SMTP."
+    },
+    {
+      "q": "Is my Arsys mail stored on your servers?",
+      "a": "No. Messages are fetched live from Arsys over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your Arsys mailboxes",
+    "sub": "Connect Arsys mail in minutes. One mailbox free forever, no card required."
+  }
+}

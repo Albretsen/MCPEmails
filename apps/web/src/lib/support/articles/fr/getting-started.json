@@ -198,7 +198,7 @@
         "Dans une conversation, tapez @ et choisissez MCPEmails. Choisissez-le à nouveau quand une question de suivi porte sur vos e-mails."
       ],
       "body": [
-        "Cela fonctionne dans un navigateur sur chatgpt.com, avec ChatGPT Go ou une formule payante ; l’application mobile ne permet pas de l’ajouter. Sur Business et Enterprise, un administrateur ou un propriétaire devra peut-être l’ajouter."
+        "Cela fonctionne dans un navigateur sur chatgpt.com, avec une formule payante ; l’application mobile ne permet pas de l’ajouter. La page d’aide d’OpenAI cite Business et Enterprise/Edu, où un administrateur ou un propriétaire l’ajoute pour l’espace de travail, et un accès en lecture seule sur Pro."
       ],
       "links": [
         {

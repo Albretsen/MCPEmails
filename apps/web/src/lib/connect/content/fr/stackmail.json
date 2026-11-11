@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "https://docs.20i.com/email-hosting-pop3-imap/stackmail-on-macos",
+    "https://docs.20i.com/email-hosting/email-sending-limits"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "usernameForm": "Votre adresse complète, par exemple hello@yourbusiness.co.uk. Les guides 20i utilisent l'adresse e-mail comme identifiant, sauf si la boîte en a reçu un autre.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP StackMail : connectez le mail 20i à Claude",
+    "description": "Serveur MCP pour StackMail de 20i. Connectez les boîtes de votre domaine (hello@, accounts@) à Claude, ChatGPT et Cursor en IMAP sur imap.stackmail.com:993 avec le mot de passe de la boîte, quel que soit le revendeur 20i qui vous héberge."
+  },
+  "hero": {
+    "eyebrow": "Mail StackMail + IA",
+    "titleLine1": "Serveur MCP pour le mail StackMail :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez hello@, accounts@ et votre propre nom sur un domaine hébergé chez 20i, ou chez l'un des nombreux hébergeurs bâtis sur sa plateforme ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte issu du panneau de contrôle d'hébergement.",
+    "answer": "Claude ne peut pas atteindre seul une boîte StackMail. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.stackmail.com, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. 20i documente exactement ces hôtes : imap.stackmail.com sur 993 avec SSL et smtp.stackmail.com sur 465 avec SSL/TLS, le serveur sortant exigeant l'authentification. Les mêmes hôtes servent les clients des revendeurs de 20i, dont le webmail peut porter une autre marque et une autre adresse. Pas de mot de passe d'application, rien à activer. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, tout revendeur 20i",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine StackMail ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment StackMail se connecte : imap.stackmail.com sur 993, smtp.stackmail.com sur 465",
+    "body": "StackMail est la plateforme de messagerie de l'hébergeur britannique 20i, et la documentation de 20i donne une seule paire d'hôtes pour toutes les boîtes qui s'y trouvent : <code>imap.stackmail.com</code> sur le port 993 avec SSL pour le courrier entrant et <code>smtp.stackmail.com</code> sur le port 465 avec SSL/TLS pour le sortant, avec l'option exigeant l'authentification du serveur sortant activée. 20i publie aussi des enregistrements autodiscover, raison pour laquelle Outlook n'a généralement besoin que de l'adresse et du mot de passe. Les deux hôtes ont répondu à une connexion TLS réelle sous un certificat pour <code>*.stackmail.com</code> : une bannière Dovecot en IMAP proposant PLAIN, LOGIN, CRAM-MD5 et DIGEST-MD5, et un salut Exim en SMTP avec une limite de message de 50 Mo ; le port 587 avec STARTTLS fonctionne aussi pour l'envoi. 20i vend sa plateforme en marque blanche à des revendeurs ; la boîte que vous connectez a donc pu être vendue sous le nom de 20i par un hébergeur dont vous n'avez jamais entendu parler, avec un webmail à l'adresse propre de cet hébergeur. Les noms de serveur restent stackmail.com en dessous, et le mot de passe est celui défini sur la boîte dans le panneau de contrôle d'hébergement."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Retrouvez ou définissez le mot de passe de la boîte dans le panneau de contrôle",
+      "p": "Chez 20i même, connectez-vous à My20i, ouvrez <b>Manage Hosting</b>, choisissez <b>Options</b> puis <b>Manage</b> sur l'offre à laquelle la boîte appartient, et ouvrez <b>Email Accounts</b> dans la section Email. Chaque adresse y a un champ de mot de passe ; saisissez-en un nouveau et <b>Save</b>. Chez un revendeur, le panneau porte la marque du revendeur et généralement la même disposition. Le mot de passe que vous définissez est celui de la boîte, pas votre identifiant de compte d'hébergement."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple hello@yourbusiness.co.uk, avec le mot de passe de la boîte. Les hôtes <code>imap.stackmail.com</code> et <code>smtp.stackmail.com</code> sont préremplis avec 993 et 465 et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Votre hébergeur ne s'appelle peut-être pas 20i, et le webmail ne dit peut-être pas StackMail",
+      "p": "20i gère un programme de revendeurs en marque blanche : les clients d'un revendeur voient la marque du revendeur dans le panneau de contrôle et peuvent atteindre le webmail à une adresse sur le domaine du revendeur. Les serveurs IMAP et SMTP restent <code>imap.stackmail.com</code> et <code>smtp.stackmail.com</code>. Si les instructions de votre hébergeur nomment ces serveurs, cette page vous concerne même si le mot StackMail n'apparaît nulle part ailleurs. S'elles nomment un autre serveur, votre boîte est sur une autre plateforme."
+    },
+    {
+      "h": "Une nouvelle boîte ne peut envoyer que 50 messages par jour sa première semaine",
+      "p": "La page de 20i sur les limites d'envoi précise qu'une boîte fraîchement créée est limitée à 50 messages par jour pendant 7 jours, après quoi s'applique la limite courante de 8 000 messages par adresse et par 24 heures, avec au plus 100 destinataires par message et 2 000 destinataires uniques par jour. Un agent qui rédige des réponses dans une boîte toute neuve peut atteindre les 50 rapidement ; connectez une boîte établie, ou laissez passer la semaine avant de confier à l'agent une tâche d'envoi."
+    },
+    {
+      "h": "Pas de MOVE ni de SPECIAL-USE avant connexion",
+      "p": "Le Dovecot derrière <code>imap.stackmail.com</code> annonce <code>IDLE</code> mais ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code> dans sa liste de capacités avant connexion. Classer un message s'exécute comme une copie, une mise à jour de drapeau et un expunge plutôt qu'une seule commande, et les dossiers envoyés, brouillons et corbeille sont reconnus par leur nom plutôt que par un rôle déclaré par le serveur. Si l'agent ne trouve pas un dossier que vous avez renommé, nommez-le dans l'instruction."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message de 50 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "L'envoi est plafonné à 8 000 messages par adresse et par 24 heures, 100 destinataires par message et 2 000 destinataires uniques par jour, et à 50 messages par jour pendant la première semaine d'une boîte."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail StackMail ou 20i ?",
+      "a": "Pas seul. Claude n'a pas de connecteur 20i intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de StackMail ?",
+      "a": "IMAP est imap.stackmail.com sur le port 993 avec SSL. SMTP est smtp.stackmail.com sur le port 465 avec SSL/TLS, ou 587 avec STARTTLS, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. Les deux hôtes ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Mon hébergeur n'est pas 20i. Cette page me concerne-t-elle quand même ?",
+      "a": "Si les instructions de messagerie de votre hébergeur nomment imap.stackmail.com et smtp.stackmail.com, oui : votre hébergeur revend la plateforme de 20i sous sa propre marque, et les serveurs sont les mêmes. Votre panneau de contrôle et votre webmail porteront le nom de votre hébergeur, mais la connexion dans MCPEmails est identique."
+    },
+    {
+      "q": "StackMail exige-t-il un mot de passe d'application ?",
+      "a": "Non. 20i n'a pas de dispositif de mots de passe spécifiques aux applications pour StackMail. Le mot de passe de la boîte authentifie IMAP comme SMTP."
+    },
+    {
+      "q": "Mon courrier StackMail est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez StackMail en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes StackMail",
+    "sub": "Connectez une boîte 20i ou revendeur en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

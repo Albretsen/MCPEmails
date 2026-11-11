@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "https://docs.20i.com/email-hosting-pop3-imap/stackmail-on-macos",
+    "https://docs.20i.com/email-hosting/email-sending-limits"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://docs.20i.com/email-hosting/setup-mailbox-outlook",
+    "usernameForm": "Your full address, such as hello@yourbusiness.co.uk. 20i's guides use the email address as the username unless the mailbox was given a different one.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StackMail MCP Server: Connect 20i Email to Claude",
+    "description": "MCP server for 20i StackMail. Connect the mailboxes on your domain (hello@, accounts@) to Claude, ChatGPT and Cursor over IMAP at imap.stackmail.com:993 with the mailbox password, whichever 20i reseller hosts you."
+  },
+  "hero": {
+    "eyebrow": "StackMail email + AI",
+    "titleLine1": "MCP server for StackMail mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running hello@, accounts@ and your own name on a domain hosted at 20i, or at one of the many hosts built on its platform? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, with the mailbox password from the hosting control panel.",
+    "answer": "Claude cannot reach a StackMail mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.stackmail.com on port 993, signing in with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. 20i documents exactly these hosts: imap.stackmail.com on 993 with SSL and smtp.stackmail.com on 465 with SSL/TLS, with the outgoing server requiring authentication. The same hosts serve customers of 20i's resellers, whose webmail may carry another brand and another address. There is no app password and nothing to enable. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, any 20i reseller",
+    "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several mailboxes on your StackMail domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How StackMail connects: imap.stackmail.com on 993, smtp.stackmail.com on 465",
+    "body": "StackMail is the mail platform of the UK host 20i, and 20i's documentation gives one pair of hosts for every mailbox on it: <code>imap.stackmail.com</code> on port 993 with SSL for incoming mail and <code>smtp.stackmail.com</code> on port 465 with SSL/TLS for outgoing, with the option for the outgoing server requiring authentication switched on. 20i publishes autodiscover records too, which is why Outlook usually needs only the address and password. Both hosts answered a live TLS connection under a certificate for <code>*.stackmail.com</code>: a Dovecot banner on IMAP offering PLAIN, LOGIN, CRAM-MD5 and DIGEST-MD5, and an Exim greeting on SMTP with a 50 MB message limit; port 587 with STARTTLS works for sending as well. 20i sells its platform white-label to resellers, so the mailbox you connect may have been sold by a host you have never heard of under the 20i name, with webmail at that host's own address. The server names stay stackmail.com underneath, and the password is the one set on the mailbox in the hosting control panel."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Find or set the mailbox password in the control panel",
+      "p": "At 20i itself, sign in to My20i, open <b>Manage Hosting</b>, choose <b>Options</b> and <b>Manage</b> on the package the mailbox belongs to, and open <b>Email Accounts</b> in the Email section. Each address has a password field there; enter a new one and <b>Save</b>. At a reseller the panel carries the reseller's brand and usually the same layout. The password you set is the mailbox password, not your hosting account login."
+    },
+    {
+      "h": "Enter the address and the password in MCPEmails",
+      "p": "Choose IMAP / SMTP and enter the full address, such as hello@yourbusiness.co.uk, with the mailbox password. The hosts <code>imap.stackmail.com</code> and <code>smtp.stackmail.com</code> are prefilled with 993 and 465 and were verified from a live TLS connection."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Your host may not be called 20i, and the webmail may not say StackMail",
+      "p": "20i runs a white-label reseller programme: a reseller's customers see the reseller's brand in the control panel and can reach webmail at an address on the reseller's own domain. The IMAP and SMTP servers are still <code>imap.stackmail.com</code> and <code>smtp.stackmail.com</code>. If your host's instructions name those servers, this page applies to you even if the word StackMail appears nowhere else. If they name a different server, your mailbox is on a different platform."
+    },
+    {
+      "h": "A new mailbox may send only 50 messages a day for its first week",
+      "p": "20i's sending limits page states that a newly created mailbox is restricted to 50 messages a day for 7 days, after which the standing limit of 8,000 messages per address per 24 hours applies, with no more than 100 recipients on one message and 2,000 unique recipients a day. An agent that drafts replies in a brand-new mailbox can hit the 50 quickly; connect an established mailbox, or wait out the week before giving the agent a sending job."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE before login",
+      "p": "The Dovecot behind <code>imap.stackmail.com</code> advertises <code>IDLE</code> but neither <code>MOVE</code>, <code>UIDPLUS</code> nor <code>SPECIAL-USE</code> in its pre-login capability list. Filing a message runs as a copy, a flag update and an expunge rather than one command, and the sent, drafts and trash folders are matched by their names rather than by a role the server declares. If an agent cannot find a folder you have renamed, name it in the instruction."
+    }
+  ],
+  "limits": [
+    "The SMTP server announces a maximum message size of 50 MB. A forward carrying larger attachments is refused at send time.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Sending is capped at 8,000 messages per address per 24 hours, 100 recipients per message and 2,000 unique recipients a day, and at 50 messages a day during a mailbox's first week."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with StackMail or 20i email?",
+      "a": "Not on its own. Claude has no built-in 20i connector. Pointing an MCP server such as MCPEmails at the mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the StackMail IMAP and SMTP settings?",
+      "a": "IMAP is imap.stackmail.com on port 993 with SSL. SMTP is smtp.stackmail.com on port 465 with SSL/TLS, or 587 with STARTTLS, with authentication required. The username is your full address and the password is the mailbox password. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "My host is not 20i. Does this page still apply?",
+      "a": "If your host's email instructions name imap.stackmail.com and smtp.stackmail.com, yes: your host resells 20i's platform under its own brand, and the servers are the same. Your control panel and webmail will carry your host's name, but the connection in MCPEmails is identical."
+    },
+    {
+      "q": "Does StackMail need an app password?",
+      "a": "No. 20i has no app-specific password scheme for StackMail. The mailbox password authenticates both IMAP and SMTP."
+    },
+    {
+      "q": "Is my StackMail mail stored on your servers?",
+      "a": "No. Messages are fetched live from StackMail over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your StackMail mailboxes",
+    "sub": "Connect a 20i or reseller mailbox in minutes. One mailbox free forever, no card required."
+  }
+}

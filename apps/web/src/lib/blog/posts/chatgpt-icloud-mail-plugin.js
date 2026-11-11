@@ -27,7 +27,7 @@ const post = {
   coverAlt: 'iCloud Mail connected to ChatGPT and Claude',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-10-29T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['ChatGPT', 'iCloud', 'Claude', 'Tutorial'],
   featured: false,
   content: `On 27 October 2026 OpenAI added an iCloud Mail plugin and an iCloud Calendar plugin to ChatGPT. The Mail plugin lets ChatGPT search, read, draft and send mail in one iCloud mailbox, using an Apple app-specific password. It covers iCloud only: Gmail, Outlook or work accounts you have added to the Mail app on your iPhone or Mac stay out of reach, and Claude has no iCloud option of its own.
@@ -103,7 +103,7 @@ MCPEmails is worth a look when:
 - **You have more than one mailbox.** Connect iCloud, Gmail, Yahoo, Outlook.com and company IMAP inboxes to one account, and every client sees all of them through one URL. [Multiple email accounts in Claude and ChatGPT](/blog/multiple-email-accounts-in-claude-and-chatgpt) shows how the agent keeps them apart.
 - **You want to file and clean up mail**, not only read it: folders, moves, archive, scheduled sends and standing rules.
 
-In ChatGPT, MCPEmails is added as a custom MCP server, which OpenAI allows on Go and paid plans on chatgpt.com, not on Free. The [ChatGPT setup page](/docs/chatgpt) has the steps.
+In ChatGPT, MCPEmails is added as a custom MCP server, which OpenAI lists for Business and Enterprise/Edu on chatgpt.com, with read and fetch tools only on Pro, and not on Free. The [ChatGPT setup page](/docs/chatgpt) has the steps.
 
 Your mail is never stored by MCPEmails. Each message is fetched live from Apple when the agent asks for it, and only the encrypted app-specific password is kept. Revoking that password at Apple disconnects the inbox at once.
 

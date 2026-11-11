@@ -1,10 +1,10 @@
 const translation = {
   title: 'Mehrere E-Mail-Konten in Claude Cowork, auch privates Outlook',
   description:
-    'Claude Cowork erreicht über seinen Gmail-Konnektor ein Google-Konto, und sein Microsoft 365-Konnektor lehnt private Outlook-Adressen ab. So geben Sie einer Cowork-Aufgabe mehrere Postfächer, geschäftlich und privat.',
+    'Claude Cowork erreicht über seinen Gmail-Konnektor ein Google-Konto und über seinen Microsoft 365-Konnektor das eine Microsoft-Konto, mit dem Sie sich anmelden. So geben Sie einer Cowork-Aufgabe mehrere Postfächer, geschäftlich und privat.',
   coverAlt:
     'Geschäftliche und private E-Mail-Konten, darunter Gmail und Outlook.com, verbunden mit einer Aufgabe in Claude Cowork',
-  content: `**Claude Cowork nutzt dieselben Konnektoren wie der Chat in Claude und hat deshalb dieselben Grenzen bei E-Mails: ein Google-Konto über den Gmail-Konnektor und über den Microsoft 365-Konnektor nur geschäftliche Microsoft 365-Konten.** Für eine private Adresse bei Outlook.com oder Hotmail, ein zweites Gmail-Konto oder ein Firmenpostfach bei einem IMAP-Host brauchen Sie einen benutzerdefinierten Konnektor. Mit einem MCP-Server wie MCPEmails gibt ein einziger benutzerdefinierter Konnektor einer Cowork-Aufgabe jedes Postfach, das Sie verbinden, jeweils mit Namen.
+  content: `**Claude Cowork nutzt dieselben Konnektoren wie der Chat in Claude und hat deshalb dieselben Grenzen bei E-Mails: ein Google-Konto über den Gmail-Konnektor und ein Microsoft-Konto über den Microsoft 365-Konnektor, der ein privates Outlook.com-Konto nur in den Tarifen Free, Pro, Max und Ultra annimmt.** Für ein zweites Gmail-Konto, eine private Adresse bei Outlook.com oder Hotmail in einem Team- oder Enterprise-Tarif, ein Firmenpostfach bei einem IMAP-Host oder den Versand mit Anhängen brauchen Sie einen benutzerdefinierten Konnektor. Mit einem MCP-Server wie MCPEmails gibt ein einziger benutzerdefinierter Konnektor einer Cowork-Aufgabe jedes Postfach, das Sie verbinden, jeweils mit Namen.
 
 **Direkt zu:** [Integrierte Konnektoren](#was-die-integrierten-e-mail-konnektoren-von-cowork-erreichen) · [Mehrere Postfächer](#mehrere-postfächer-in-einer-cowork-aufgabe) · [Einrichtung](#einrichtung) · [Berechtigungen](#den-versand-unter-kontrolle-behalten) · [FAQ](#faq)
 
@@ -13,7 +13,7 @@ const translation = {
 Im [Cowork-Leitfaden von Anthropic](https://support.claude.com/en/articles/13345190-get-started-with-cowork) werden Konnektoren auf derselben Seite **Anpassen → Konnektoren** verwaltet wie im Chat, und Chat und Cowork teilen sich in der Claude-App inzwischen ein gemeinsames Zuhause. Was Ihr Claude-Konto verbunden hat, kann auch eine Cowork-Aufgabe nutzen.
 
 - **Gmail.** Der Gmail-Konnektor von Claude liest, durchsucht, entwirft und sendet. Der [Artikel von Anthropic](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) beschreibt den Zugriff auf „the Google account you've connected“, also das verbundene Google-Konto, und sagt nichts darüber, wie man ein zweites hinzufügt. Ein privates und ein geschäftliches Gmail-Konto lassen sich darüber nicht nebeneinander nutzen.
-- **Microsoft 365.** Der [Microsoft 365-Konnektor](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) ist für Konten im Microsoft 365-Mandanten eines Unternehmens gedacht. Ein Globaler Administrator muss zuerst einwilligen, der Konnektor startet schreibgeschützt, und private Microsoft-Konten wie @outlook.com und @hotmail.com können sich nicht verbinden.
+- **Microsoft 365.** Der [Microsoft 365-Konnektor](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) nimmt ein Geschäfts- oder Schulkonto an, bei dem ein Globaler Administrator zuerst einwilligen muss und der Konnektor schreibgeschützt startet, oder in den Tarifen Free, Pro, Max und Ultra ein privates Microsoft-Konto wie @outlook.com oder @hotmail.com ohne Administrator. Die Tarife Team und Enterprise bekommen die private Option nicht angezeigt, und die Schreib-Tools lehnen Anhänge ab.
 - **Alles andere.** Für Yahoo, iCloud, Fastmail, Zoho, IONOS oder Ihren eigenen Mailserver gibt es keinen integrierten Konnektor in Claude.
 
 Die übliche Mischung, ein geschäftliches Postfach plus ein privates Outlook.com oder ein zweites Gmail-Konto, passt mit den integrierten Konnektoren allein also nicht in Cowork.
@@ -72,7 +72,7 @@ Wenn Sie dieselbe Zusammenfassung jeden Morgen ohne Nachfragen möchten, legen S
 Nicht über den integrierten Gmail-Konnektor von Claude, der laut Anthropic das eine verbundene Google-Konto erreicht. Verbinden Sie beide Konten mit App-Passwörtern von Google bei MCPEmails und fügen Sie MCPEmails als benutzerdefinierten Konnektor hinzu; eine Cowork-Aufgabe sieht dann beide.
 
 **Kann Cowork meine privaten E-Mails bei Outlook.com oder Hotmail lesen?**
-Nicht mit dem Microsoft 365-Konnektor von Claude, der private Microsoft-Konten ablehnt. Verbinden Sie die Adresse mit der Anmeldung bei Microsoft mit MCPEmails und fügen Sie MCPEmails dann zu Claude hinzu. [Claude mit Outlook.com und Hotmail verbinden](/blog/connect-claude-to-outlook-com-hotmail) enthält die Schritte.
+In Free, Pro, Max oder Ultra ja, über den Microsoft 365-Konnektor von Claude, ohne Anhänge. In einem Team- oder Enterprise-Tarif, oder für Anhänge und weitere Postfächer daneben, verbinden Sie die Adresse mit der Anmeldung bei Microsoft mit MCPEmails und fügen Sie MCPEmails dann zu Claude hinzu. [Claude mit Outlook.com und Hotmail verbinden](/blog/connect-claude-to-outlook-com-hotmail) enthält die Schritte.
 
 **Funktionieren benutzerdefinierte Konnektoren in Cowork?**
 Ja. Laut Anthropic sind benutzerdefinierte Konnektoren in Claude, Cowork und Claude Desktop verfügbar. Es müssen entfernte Server sein, die im Internet erreichbar sind; ein lokaler Server aus der Konfigurationsdatei der Desktop-App ist in Cowork nicht verfügbar.

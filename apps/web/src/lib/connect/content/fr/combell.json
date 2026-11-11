@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "https://www.combell.com/en/help/kb/change-the-password-of-your-mailbox/",
+    "https://www.combell.com/en/blog/combell-basic-e-mail-configuration-made-easy-thanks-to-autodiscover/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "usernameForm": "Votre adresse complète, par exemple info@uwbedrijf.be. Les guides Combell utilisent l'adresse e-mail complète comme identifiant pour les deux serveurs.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP Combell : connectez le mail Combell à Claude",
+    "description": "Serveur MCP pour les boîtes Basic de Combell. Connectez les boîtes de votre domaine (info@, facturatie@) à Claude, ChatGPT et Cursor en IMAP sur imap.mailprotect.be:993 avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "Mail Combell + IA",
+    "titleLine1": "Serveur MCP pour le mail Combell :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez info@, facturatie@ et votre propre nom sur un domaine chez Combell ? Connectez chaque boîte Basic à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte et non votre identifiant My Combell.",
+    "answer": "Claude ne peut pas atteindre seul une boîte Combell. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.mailprotect.be, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. L'aide de Combell documente exactement ces hôtes pour une boîte Basic : imap.mailprotect.be sur 993 avec SSL/TLS et smtp-auth.mailprotect.be sur 465 avec SSL/TLS, l'adresse complète comme identifiant. Une boîte Exchange ou Microsoft 365 chez Combell est un autre produit et se connecte autrement. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, boîtes Basic",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine Combell ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment Combell se connecte : les hôtes mailprotect.be, IMAP sur 993 et SMTP sur 465",
+    "body": "Les boîtes Basic de Combell vivent sur une plateforme partagée qui a ses propres noms. Le serveur entrant est <code>imap.mailprotect.be</code> sur le port 993 avec SSL/TLS et le serveur sortant <code>smtp-auth.mailprotect.be</code> sur le port 465 avec SSL/TLS, tous deux avec l'adresse complète comme identifiant et le mot de passe de la boîte. Le guide Outlook de Combell indique 465 ; ses guides Apple Mail et Thunderbird donnent 587 avec STARTTLS sur le même hôte, et les deux ont répondu à une connexion TLS réelle, de même qu'IMAP sur 993. Le serveur IMAP tourne sous Dovecot et annonce IDLE mais pas MOVE, et le serveur SMTP accepte PLAIN et LOGIN avec une limite de message de 50 Mo. Combell publie aussi des enregistrements autodiscover pour les boîtes Basic, raison pour laquelle Outlook et Thunderbird trouvent généralement ces paramètres seuls ; MCPEmails les a préremplis. Le mot de passe est celui défini sur la boîte, sous <b>Mailboxes</b> dans le panneau de contrôle ou sous <b>Settings</b>, <b>Password</b> dans le webmail."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Vérifiez que l'adresse est une boîte Basic",
+      "p": "Dans My Combell, ouvrez <b>My products</b> puis <b>E-mail hosting</b>. Une boîte Basic se gère sous <b>Manage e-mail</b>, <b>Mailboxes</b>. Si l'adresse est au contraire une boîte Exchange ou Microsoft 365, elle n'utilise pas les hôtes mailprotect.be ; une boîte Microsoft 365 se connecte via la connexion Microsoft dans MCPEmails."
+    },
+    {
+      "h": "Retrouvez ou définissez le mot de passe de la boîte",
+      "p": "Toujours sous <b>Mailboxes</b>, cliquez sur <b>Manage</b> à côté de l'adresse et utilisez <b>Edit password</b>. Le webmail propose la même chose sous <b>Settings</b>, <b>Password</b>. C'est ce mot de passe de boîte qu'IMAP vérifie, pas votre identifiant My Combell."
+    },
+    {
+      "h": "Saisissez-les dans MCPEmails et collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple info@uwbedrijf.be, et le mot de passe de la boîte. Les hôtes <code>imap.mailprotect.be</code> et <code>smtp-auth.mailprotect.be</code> sont préremplis avec 993 et 465 et ont été vérifiés par une connexion TLS réelle. Puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Basic, Exchange et Microsoft 365 sont trois boîtes différentes chez Combell",
+      "p": "Combell vend une boîte Basic, une boîte Exchange et une boîte Microsoft 365, et seule la Basic vit sur <code>imap.mailprotect.be</code>. Le guide de mot de passe de Combell prévient qu'une boîte Exchange se verrouille après des connexions avec un mauvais mot de passe et qu'un nouveau mot de passe peut y mettre jusqu'à 15 minutes à s'appliquer ; coller des paramètres mailprotect.be sur une adresse Exchange fait donc pire qu'échouer. Vérifiez le produit sous My products avant de commencer ; une boîte Microsoft 365 se connecte via la connexion Microsoft."
+    },
+    {
+      "h": "Le certificat de l'hôte IMAP porte le nom d'une autre marque",
+      "p": "Lorsque nous nous sommes connectés à <code>imap.mailprotect.be</code>, le certificat présenté était délivré à mail.register.be et comptait imap.mailprotect.be parmi ses noms, il se valide donc proprement ; l'hôte SMTP en présente un pour <code>*.mailprotect.be</code>. Bon à savoir, car certains logiciels affichent le premier nom du certificat dans une boîte de dialogue, et un nom Register.be sur une boîte Combell est attendu, pas le signe d'un mauvais serveur."
+    },
+    {
+      "h": "Pas de MOVE ni de SPECIAL-USE sur le serveur",
+      "p": "Le Dovecot derrière <code>imap.mailprotect.be</code> annonce <code>IDLE</code> mais ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Classer un message s'exécute comme une copie, une mise à jour de drapeau et un expunge plutôt qu'une seule commande, et les dossiers envoyés, brouillons et corbeille sont reconnus par leur nom plutôt que par un rôle déclaré par le serveur. Sur une boîte néerlandophone ils s'appellent souvent Verzonden, Concepten et Prullenbak ; nommez le dossier dans votre instruction si l'agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message de 50 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "Ces paramètres ne couvrent que les boîtes Basic. Les boîtes Exchange et Microsoft 365 de Combell sont des produits distincts avec leur propre connexion."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail Combell ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Combell intégré. Pointer un serveur MCP comme MCPEmails vers une boîte Basic en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Combell ?",
+      "a": "Pour une boîte Basic, IMAP est imap.mailprotect.be sur le port 993 avec SSL/TLS et SMTP est smtp-auth.mailprotect.be sur le port 465 avec SSL/TLS, ou 587 avec STARTTLS, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. Les deux hôtes ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Où changer le mot de passe d'une boîte Combell ?",
+      "a": "Dans My Combell sous My products, E-mail hosting, Manage e-mail, puis Mailboxes : cliquez sur Manage à côté de l'adresse et choisissez Edit password. Ou dans le webmail sous Settings, Password. Le changer déconnecte tous les logiciels de messagerie et MCPEmails jusqu'à la saisie du nouveau mot de passe."
+    },
+    {
+      "q": "Puis-je connecter de la même façon une boîte Exchange ou Microsoft 365 de Combell ?",
+      "a": "Pas avec ces hôtes. Ils appartiennent aux boîtes Basic. Une boîte Microsoft 365 chez Combell se connecte via la connexion Microsoft dans MCPEmails ; une boîte Exchange a ses propres paramètres de serveur fournis par Combell."
+    },
+    {
+      "q": "Mon courrier Combell est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez Combell en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes Combell",
+    "sub": "Connectez une boîte Basic Combell en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

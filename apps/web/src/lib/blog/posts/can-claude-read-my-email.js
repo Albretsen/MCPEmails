@@ -9,10 +9,13 @@
 //     owners enable it first and decide whether members may skip the ask;
 //     "the Google account you've connected"; attachment content is metadata
 //     only.
-//   - support.claude.com/en/articles/12542951 (Microsoft 365 connector):
-//     personal Microsoft accounts (@outlook.com, @hotmail.com) cannot connect;
-//     a Microsoft Entra Global Administrator must consent; read-only until
-//     write tools are enabled; write tools reject attachments.
+//   - support.claude.com/en/articles/15183774 (Connect to Microsoft 365), read
+//     2026-11-11: a personal Microsoft account (Outlook.com, Hotmail, Live,
+//     MSN) connects on Free, Pro, Max and Ultra with no admin, write tools
+//     included, no attachments in write tools; Team and Enterprise plans are
+//     not shown the option. Work or school accounts: a Microsoft Entra Global
+//     Administrator must consent; read-only until write tools are enabled;
+//     write tools reject attachments.
 //   - developers.google.com/workspace/gmail/api/guides/configure-mcp-server:
 //     part of the Google Workspace Developer Preview Program (membership is a
 //     prerequisite), same endpoint, documented tools create drafts and labels
@@ -47,14 +50,14 @@ const post = {
     'Claude reading and sending email from Gmail, Microsoft 365, Yahoo, iCloud and IMAP mailboxes',
   authorId: 'asgeir',
   publishedAt: '2026-10-20T09:00:00.000Z',
-  updatedAt: '2026-10-29T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['Claude', 'Gmail', 'Outlook', 'MCP'],
   featured: false,
   content: `**Yes, Claude can read your email and send emails, but only from a mailbox you have connected to it.** Claude has two email connectors of its own, one for Gmail and one for work Microsoft 365 accounts. The Gmail connector reads, searches and sends, and asks for your approval before each send by default. The Microsoft 365 connector reads and searches, and can send only after an administrator turns on its write tools. Yahoo, iCloud, a personal Outlook.com address, a company mailbox on an IMAP host, or several providers behind one connection need an MCP server such as MCPEmails.
 
 This page sorts out which case you are in. The facts about Anthropic's and Google's products were read on their own pages in October 2026. Those products change often, so each section links the page it rests on.
 
-**Jump to:** [Gmail](#gmail-claudes-own-connector) · [Microsoft 365](#outlook-and-microsoft-365-work-accounts-only) · [What the built-in connectors miss](#what-the-built-in-connectors-do-not-cover) · [MCPEmails](#how-mcpemails-fills-the-gap) · [Sending](#can-claude-send-emails) · [FAQ](#faq)
+**Jump to:** [Gmail](#gmail-claudes-own-connector) · [Microsoft 365](#outlook-and-microsoft-365-work-accounts-and-personal-accounts-on-individual-plans) · [What the built-in connectors miss](#what-the-built-in-connectors-do-not-cover) · [MCPEmails](#how-mcpemails-fills-the-gap) · [Sending](#can-claude-send-emails) · [FAQ](#faq)
 
 ## Gmail: Claude's own connector
 
@@ -76,16 +79,16 @@ Google also documents the same Gmail MCP server as part of its [Workspace Develo
 
 If Gmail is your only mailbox and Claude is your only AI app, the built-in connector may be all you need.
 
-## Outlook and Microsoft 365: work accounts only
+## Outlook and Microsoft 365: work accounts, and personal accounts on individual plans
 
-Claude's Microsoft 365 connector reads Outlook mail for accounts that belong to a company's Microsoft 365 tenant.
+Claude's Microsoft 365 connector reads Outlook mail for work and school accounts in a company's Microsoft 365 tenant and, on the Free, Pro, Max and Ultra plans, for a personal Microsoft account.
 
 - **Reading and searching** cover your main mailbox, its Archive folder and shared mailboxes you can open.
-- **Sending is off by default.** The connector starts read-only. Once write tools are enabled, Claude can send and forward mail and create, edit and delete drafts. Messages with attachments are rejected by the write tools.
-- **An administrator has to approve it.** A Microsoft Entra Global Administrator in your organization must consent before anyone there can connect, and again before the write tools work.
-- **Personal accounts are refused.** [Anthropic's article](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) is explicit: addresses such as @outlook.com and @hotmail.com cannot be used to connect.
+- **Sending.** For a work or school account the connector starts read-only; once write tools are enabled, Claude can send and forward mail and create, edit and delete drafts. For a personal account the write tools are included, and Claude asks before it sends. Messages with attachments are rejected by the write tools either way.
+- **An administrator has to approve work accounts.** A Microsoft Entra Global Administrator in your organization must consent before anyone there can connect, and again before the write tools work. A personal account needs no admin.
+- **Personal accounts work on individual plans.** [Anthropic's article](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) says an Outlook.com, Hotmail, Live or MSN account connects on Free, Pro, Max and Ultra, and that Team and Enterprise plans are not shown that option.
 
-So a personal Outlook.com, Hotmail or Live address has no built-in route into Claude. [Connect Claude to Outlook.com and Hotmail](/blog/connect-claude-to-outlook-com-hotmail) covers the route that works.
+So one personal Outlook.com, Hotmail or Live address has a built-in route into Claude on an individual plan, without attachments. For a Team or Enterprise plan, attachments or several mailboxes, [Connect Claude to Outlook.com and Hotmail](/blog/connect-claude-to-outlook-com-hotmail) covers the custom-connector route.
 
 ## What the built-in connectors do not cover
 
@@ -137,7 +140,7 @@ It sends from the one Google account you connected. Claude sees attachment metad
 
 ### Claude's Microsoft 365 connector
 
-It starts read-only. Once write tools are enabled, which needs a Microsoft Entra Global Administrator to approve the wider permissions, Claude can send and forward mail and create, edit and delete drafts. The write tools reject any message with an attachment, and personal Outlook.com and Hotmail addresses cannot connect at all.
+For a work or school account it starts read-only; once write tools are enabled, which needs a Microsoft Entra Global Administrator to approve the wider permissions, Claude can send and forward mail and create, edit and delete drafts. For a personal account on Free, Pro, Max or Ultra the write tools are included and Claude asks before it sends. Either way the write tools reject any message with an attachment.
 
 ### How MCPEmails sends
 
@@ -173,7 +176,7 @@ Yes. Anthropic lists sending, replying and forwarding for the Gmail connector, e
 Yes, with Claude's built-in Gmail connector, for the Google account you connect. To use more than one Google account, or Gmail alongside other providers in the same chat, connect them through MCPEmails with a Google app password.
 
 **Can Claude access my Outlook or Hotmail email?**
-Work and school Microsoft 365 accounts can use Claude's Microsoft 365 connector after an administrator approves it. Personal Outlook.com and Hotmail addresses cannot. MCPEmails connects both with Sign in with Microsoft, though a work account may still need its IT admin to approve the app once for the organization.
+Work and school Microsoft 365 accounts can use Claude's Microsoft 365 connector after an administrator approves it, and a personal Outlook.com or Hotmail address connects to it on the Free, Pro, Max and Ultra plans, without attachments. MCPEmails connects both on any Claude plan, with attachments, though a work account may still need its IT admin to approve the app once for the organization.
 
 **Can Claude read Yahoo or iCloud email?**
 Not with a built-in connector. Connect the mailbox to MCPEmails with an app password from Yahoo or Apple, then add MCPEmails to Claude. The [Yahoo Mail guide for ChatGPT and Claude](/blog/connect-yahoo-mail-to-chatgpt-and-claude) has the steps, and [ChatGPT's iCloud Mail plugin explained](/blog/chatgpt-icloud-mail-plugin) compares OpenAI's new iCloud option.

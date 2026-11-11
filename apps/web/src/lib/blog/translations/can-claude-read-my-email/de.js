@@ -8,7 +8,7 @@ const translation = {
 
 Diese Seite klärt, welcher Fall auf Sie zutrifft. Die Angaben zu den Produkten von Anthropic und Google stammen von deren eigenen Seiten, gelesen im Oktober 2026. Diese Produkte ändern sich oft, deshalb verlinkt jeder Abschnitt die Seite, auf die er sich stützt.
 
-**Direkt zu:** [Gmail](#gmail-der-eigene-konnektor-von-claude) · [Microsoft 365](#outlook-und-microsoft-365-nur-geschäftliche-konten) · [Was die integrierten Konnektoren nicht abdecken](#was-die-integrierten-konnektoren-nicht-abdecken) · [MCPEmails](#wie-mcpemails-die-lücke-schließt) · [Senden](#kann-claude-e-mails-senden) · [FAQ](#faq)
+**Direkt zu:** [Gmail](#gmail-der-eigene-konnektor-von-claude) · [Microsoft 365](#outlook-und-microsoft-365-geschäftliche-konten-und-private-konten-in-den-einzeltarifen) · [Was die integrierten Konnektoren nicht abdecken](#was-die-integrierten-konnektoren-nicht-abdecken) · [MCPEmails](#wie-mcpemails-die-lücke-schließt) · [Senden](#kann-claude-e-mails-senden) · [FAQ](#faq)
 
 ## Gmail: der eigene Konnektor von Claude
 
@@ -30,16 +30,16 @@ Google dokumentiert denselben Gmail-MCP-Server außerdem als Teil seines [Worksp
 
 Wenn Gmail Ihr einziges Postfach und Claude Ihre einzige KI-App ist, reicht der integrierte Konnektor vielleicht schon aus.
 
-## Outlook und Microsoft 365: nur geschäftliche Konten
+## Outlook und Microsoft 365: geschäftliche Konten, und private Konten in den Einzeltarifen
 
-Der Microsoft 365-Konnektor von Claude liest Outlook-E-Mails von Konten, die zum Microsoft 365-Mandanten eines Unternehmens gehören.
+Der Microsoft 365-Konnektor von Claude liest Outlook-E-Mails von Arbeits- und Schulkonten im Microsoft 365-Mandanten eines Unternehmens und, in den Tarifen Free, Pro, Max und Ultra, von einem privaten Microsoft-Konto.
 
 - **Lesen und Suchen** umfassen Ihr Hauptpostfach, dessen Archivordner und freigegebene Postfächer, die Sie öffnen dürfen.
-- **Senden ist standardmäßig deaktiviert.** Der Konnektor startet schreibgeschützt. Sobald die Schreib-Tools aktiviert sind, kann Claude E-Mails senden und weiterleiten sowie Entwürfe erstellen, bearbeiten und löschen. Nachrichten mit Anhängen lehnen die Schreib-Tools ab.
-- **Ein Administrator muss zustimmen.** Ein Globaler Administrator von Microsoft Entra in Ihrer Organisation muss einwilligen, bevor sich dort jemand verbinden kann, und noch einmal, bevor die Schreib-Tools funktionieren.
-- **Private Konten werden abgelehnt.** Der [Artikel von Anthropic](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) ist eindeutig: Adressen wie @outlook.com und @hotmail.com lassen sich für die Verbindung nicht verwenden.
+- **Senden.** Bei einem Arbeits- oder Schulkonto startet der Konnektor schreibgeschützt. Sobald die Schreib-Tools aktiviert sind, kann Claude E-Mails senden und weiterleiten sowie Entwürfe erstellen, bearbeiten und löschen. Bei einem privaten Konto sind die Schreib-Tools enthalten, und Claude fragt vor dem Senden. Nachrichten mit Anhängen lehnen die Schreib-Tools in beiden Fällen ab.
+- **Ein Administrator muss geschäftliche Konten freigeben.** Ein Globaler Administrator von Microsoft Entra in Ihrer Organisation muss einwilligen, bevor sich dort jemand verbinden kann, und noch einmal, bevor die Schreib-Tools funktionieren. Ein privates Konto braucht keinen Administrator.
+- **Private Konten funktionieren in den Einzeltarifen.** Laut dem [Artikel von Anthropic](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) verbindet sich ein Konto bei Outlook.com, Hotmail, Live oder MSN in Free, Pro, Max und Ultra, während die Tarife Team und Enterprise diese Option nicht angezeigt bekommen.
 
-Eine private Adresse bei Outlook.com, Hotmail oder Live hat also keinen integrierten Weg in Claude. [Claude mit Outlook.com und Hotmail verbinden](/blog/connect-claude-to-outlook-com-hotmail) zeigt den Weg, der funktioniert.
+Eine private Adresse bei Outlook.com, Hotmail oder Live hat in einem Einzeltarif also einen integrierten Weg in Claude, ohne Anhänge. Für einen Team- oder Enterprise-Tarif, für Anhänge oder mehrere Postfächer zeigt [Claude mit Outlook.com und Hotmail verbinden](/blog/connect-claude-to-outlook-com-hotmail) den Weg über einen benutzerdefinierten Konnektor.
 
 ## Was die integrierten Konnektoren nicht abdecken
 
@@ -91,7 +91,7 @@ Er sendet von dem einen Google-Konto, das Sie verbunden haben. Claude sieht nur 
 
 ### Der Microsoft 365-Konnektor von Claude
 
-Er startet schreibgeschützt. Sobald die Schreib-Tools aktiviert sind, wofür ein Globaler Administrator von Microsoft Entra die erweiterten Berechtigungen genehmigen muss, kann Claude E-Mails senden und weiterleiten sowie Entwürfe erstellen, bearbeiten und löschen. Die Schreib-Tools lehnen jede Nachricht mit Anhang ab, und private Adressen bei Outlook.com und Hotmail können sich gar nicht verbinden.
+Bei einem Arbeits- oder Schulkonto startet er schreibgeschützt. Sobald die Schreib-Tools aktiviert sind, wofür ein Globaler Administrator von Microsoft Entra die erweiterten Berechtigungen genehmigen muss, kann Claude E-Mails senden und weiterleiten sowie Entwürfe erstellen, bearbeiten und löschen. Bei einem privaten Konto in Free, Pro, Max oder Ultra sind die Schreib-Tools enthalten, und Claude fragt vor dem Senden. In beiden Fällen lehnen die Schreib-Tools jede Nachricht mit Anhang ab.
 
 ### Wie MCPEmails sendet
 
@@ -127,7 +127,7 @@ Ja. Anthropic nennt für den Gmail-Konnektor Senden, Antworten und Weiterleiten,
 Ja, mit dem integrierten Gmail-Konnektor von Claude, für das Google-Konto, das Sie verbinden. Um mehr als ein Google-Konto zu nutzen oder Gmail im selben Chat zusammen mit anderen Anbietern, verbinden Sie die Konten mit einem App-Passwort von Google über MCPEmails.
 
 **Kann Claude auf meine E-Mails bei Outlook oder Hotmail zugreifen?**
-Geschäfts- und Schulkonten bei Microsoft 365 können den Microsoft 365-Konnektor von Claude nutzen, nachdem ein Administrator ihn genehmigt hat. Private Adressen bei Outlook.com und Hotmail können das nicht. MCPEmails verbindet beide mit der Anmeldung bei Microsoft, wobei bei einem geschäftlichen Konto der IT-Administrator die App eventuell einmal für die Organisation freigeben muss.
+Geschäfts- und Schulkonten bei Microsoft 365 können den Microsoft 365-Konnektor von Claude nutzen, nachdem ein Administrator ihn genehmigt hat, und eine private Adresse bei Outlook.com oder Hotmail verbindet sich damit in den Tarifen Free, Pro, Max und Ultra, ohne Anhänge. MCPEmails verbindet beide in jedem Claude-Tarif, mit Anhängen, wobei bei einem geschäftlichen Konto der IT-Administrator die App eventuell einmal für die Organisation freigeben muss.
 
 **Kann Claude E-Mails bei Yahoo oder iCloud lesen?**
 Nicht mit einem integrierten Konnektor. Verbinden Sie das Postfach mit einem App-Passwort von Yahoo oder Apple bei MCPEmails und fügen Sie MCPEmails dann zu Claude hinzu.

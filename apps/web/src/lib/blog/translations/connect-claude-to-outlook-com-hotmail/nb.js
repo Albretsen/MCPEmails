@@ -1,22 +1,25 @@
 const translation = {
   title: 'Koble Claude til Hotmail og Outlook.com (personlige kontoer)',
   description:
-    'Microsoft 365-koblingen i Claude godtar ikke personlige Microsoft-kontoer. Koble en Hotmail-, Outlook.com-, Live- eller MSN-innboks til Claude med Logg på med Microsoft og én URL til en egendefinert kobling.',
+    'Microsoft 365-koblingen i Claude godtar nå en personlig Microsoft-konto på Free, Pro, Max og Ultra. Når det er nok, og hvordan du kobler Hotmail, Outlook.com, Live eller MSN til Claude med vedlegg, flere postkasser eller et Team-abonnement gjennom én URL til en egendefinert kobling.',
   coverAlt: 'Claude koblet til en personlig Outlook.com- eller Hotmail-innboks gjennom MCPEmails',
-  content: `For å koble Claude til en personlig Outlook.com-, Hotmail-, Live- eller MSN-adresse legger du til postkassen i MCPEmails med **Koble til med Microsoft**, og legger deretter til én URL i Claude som en egendefinert kobling (custom connector). Claudes egen Microsoft 365-kobling krever en Microsoft-tenant for bedrifter, og Anthropic skriver at personlige Microsoft-kontoer ikke kan brukes med den. En egendefinert kobling har ikke det kravet, så en gammel hotmail.com-adresse fungerer på samme måte som en ny outlook.com-adresse.
+  content: `Det er to måter å koble Claude til en personlig Outlook.com-, Hotmail-, Live- eller MSN-adresse. Claudes egen Microsoft 365-kobling godtar en personlig Microsoft-konto på Free, Pro, Max og Ultra, uten at noen administrator er involvert. Den andre veien er MCPEmails: legg til postkassen med **Koble til med Microsoft**, og legg deretter til én URL i Claude som en egendefinert kobling (custom connector). Den andre veien dekker det den innebygde koblingen ikke gjør: vedlegg, flere postkasser bak én tilkobling, Team- og Enterprise-abonnementer, og den samme innboksen i ChatGPT eller en annen MCP-klient. En gammel hotmail.com-adresse fungerer på samme måte som en ny outlook.com-adresse på begge.
 
 Denne guiden gjelder personlige Microsoft-kontoer i Claude. Er e-posten din en jobb- eller skolekonto i Microsoft 365, les heller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
-## Hvorfor Microsoft 365-koblingen i Claude avviser personlige kontoer
+## Hva Microsoft 365-koblingen i Claude gjør med en personlig konto
 
-Anthropics [hjelpeside for Microsoft 365-koblingen](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) stiller to krav før noen kan koble til:
+Anthropics artikkel [Connect to Microsoft 365](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) dekker nå personlige kontoer. På Free, Pro, Max og Ultra kan du koble til en Outlook.com-, Hotmail-, Live- eller MSN-konto selv; ingen administrator trengs. Koblingen når Outlook og OneDrive, og skriveverktøyene er med, så Claude kan lage utkast, sende e-post og håndtere kalenderavtaler etter å ha spurt deg først.
 
-- Kontoen må høre til en Microsoft Entra-tenant knyttet til et Microsoft Business-abonnement.
-- En global administrator i den tenanten må godkjenne integrasjonen først.
+Tre begrensninger i samme artikkel betyr noe for e-post:
 
-Den samme siden sier at personlige Microsoft-kontoer, for eksempel @outlook.com- eller @hotmail.com-adresser, ikke kan brukes til å koble til. En personlig konto har ingen bedriftstenant og ingen administrator bak seg, så det finnes ingenting å godkjenne og ingen innstilling du kan endre for å få det til. Koblingen er laget for organisasjoner: den søker i SharePoint, OneDrive, Outlook og Teams, og den har bare lesetilgang til en administrator slår på skriveverktøyene.
+- **Ingen vedlegg i skriveverktøyene.** Claude kan ikke sende, videresende eller lage utkast til en e-post med vedlegg gjennom den.
+- **Ikke på Team og Enterprise.** Disse abonnementene får ikke se valget for personlige kontoer, så en personlig Hotmail-adresse ved siden av et jobbabonnement har ingen innebygd vei.
+- **Bare inne i Claude, for kontoen du logger på med.** Gmail har sin egen kobling; iCloud-, Yahoo- og IMAP-postkasser har ingen, og ingenting følger med til ChatGPT eller en annen MCP-klient.
 
-Det er ikke noe galt med postkassen din. Claude trenger bare en annen vei inn til den.
+Jobb- og skolekontoer er en annen sak: en global administrator i Microsoft Entra må fortsatt gi samtykke før noen i organisasjonen kan koble til. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) og [siden om administratorsamtykke](/docs/microsoft-365-admin-consent) dekker det.
+
+Hvis én personlig Outlook.com-innboks i Claude, uten vedlegg, er alt du trenger, gjør den innebygde koblingen jobben. Resten av denne guiden er veien for alt annet.
 
 ## Dette trenger du
 
@@ -93,10 +96,10 @@ Nei. Hver gang Claude ber om en melding, henter MCPEmails den direkte fra Micros
 ## Vanlige spørsmål
 
 **Kan jeg koble Claude til Outlook.com eller Hotmail?**
-Ja. Den innebygde Microsoft 365-koblingen i Claude støtter ikke personlige Microsoft-kontoer, men en egendefinert kobling gjør det. Koble adressen til MCPEmails med Koble til med Microsoft, legg til \`https://mcpemails.com/api/mcp\` i Claude under Customize → Connectors, så kan Claude lese, søke i, sende og organisere e-posten din på Outlook.com, Hotmail, Live eller MSN.
+Ja, på to måter. På Free, Pro, Max eller Ultra godtar den innebygde Microsoft 365-koblingen i Claude en personlig Microsoft-konto direkte, uten vedlegg. For vedlegg, flere postkasser, et Team- eller Enterprise-abonnement eller den samme innboksen i ChatGPT kobler du adressen til MCPEmails med Koble til med Microsoft, legg til \`https://mcpemails.com/api/mcp\` i Claude under Customize → Connectors, så kan Claude lese, søke i, sende og organisere e-posten din på Outlook.com, Hotmail, Live eller MSN.
 
 **Hvorfor avviser Microsoft 365-koblingen i Claude Hotmail-adressen min?**
-Anthropics hjelpeside sier at koblingen trenger en Microsoft Entra-tenant knyttet til et Microsoft Business-abonnement og en global administrator som godkjenner den, og at personlige Microsoft-kontoer ikke kan brukes. En personlig konto har verken tenant eller administrator.
+Sjekk abonnementet. Anthropic sier at personlige Microsoft-kontoer kobles til på Free, Pro, Max og Ultra, og at Team- og Enterprise-abonnementer ikke får se det valget. En jobb- eller skoleadresse er noe annet: der må en global administrator i Microsoft Entra-tenanten gi samtykke først. På et Team- eller Enterprise-abonnement er MCPEmails som egendefinert kobling veien for en personlig adresse.
 
 **Trenger jeg et app-passord eller IMAP-innstillinger?**
 Nei. Personlige Microsoft-kontoer kobles til med Logg på med Microsoft og Microsoft Graph. Microsoft godtar ikke lenger passordpålogging fra e-postapper som ikke er fra Microsoft på disse kontoene, så et app-passord ville uansett ikke latt deg logge på.

@@ -9,7 +9,7 @@
     "method": "account-password",
     "label": "Passord for Optimum ID",
     "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
-    "usernameForm": "Hele adressen din, uansett hvilket Optimum-domene den bruker: name@optimum.net, name@optonline.net eller en Suddenlink-adresse.",
+    "usernameForm": "Hele adressen din (name@optimum.net, name@optonline.net eller en Suddenlink-adresse), som Optimums feilsøkingsside oppgir som brukernavn. Siden med serverinnstillinger sier bare Optimum ID, delen før @. Blir den ene formen avvist, prøv den andre.",
     "status": "active"
   },
   "meta": {
@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Slik kobler Optimum seg til: IMAP med din vanlige Optimum ID",
-    "body": "Optimum driver én e-postvert for alle merkene sine. <code>mail.optimum.net</code> svarer på IMAP på port 993 over TLS med eget sertifikat, og Optimum dokumenterer samme navn for innsending på port 465. Adresser på <code>optimum.net</code>, <code>optonline.net</code> og Suddenlink-domenene Optimum overtok, havner alle der. Autentiseringen er forfriskende enkel: din <b>Optimum ID</b> og passordet til den, med hele e-postadressen som brukernavn. Optimum utsteder ingen programspesifikke passord og har ingen bryter for tredjepartstilgang å lete etter, så en innlogging som feiler her, er et ekte problem med påloggingsdetaljene og ikke en skjult innstilling. Det ene du bør vite før du peker en agent mot postkassen, er at Optimum sluttet å opprette e-postkontoer 4. mai 2021 og ber alle som vil ha en ny adresse, gå til Gmail, Outlook.com eller Yahoo i stedet."
+    "body": "Optimum driver én e-postvert for alle merkene sine. <code>mail.optimum.net</code> svarer på IMAP på port 993 over TLS med eget sertifikat, og Optimum dokumenterer samme navn for innsending på port 465. Adresser på <code>optimum.net</code>, <code>optonline.net</code> og Suddenlink-domenene Optimum overtok, havner alle der. Autentiseringen er din <b>Optimum ID</b> og passordet til den, med én hake: Optimums feilsøkingsside sier at brukernavnet er hele e-postadressen, mens siden med serverinnstillinger sier bare Optimum ID, delen før @. Prøv hele adressen først, og ID-en hvis den avvises. Optimum utsteder ingen programspesifikke passord og har ingen bryter for tredjepartstilgang å lete etter, så en innlogging som feiler her, er et ekte problem med påloggingsdetaljene og ikke en skjult innstilling. Det ene du bør vite før du peker en agent mot postkassen, er at Optimum sluttet å opprette e-postkontoer 4. mai 2021 og ber alle som vil ha en ny adresse, gå til Gmail, Outlook.com eller Yahoo i stedet."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Skriv inn adressen og passordet for Optimum ID",
-      "p": "I MCPEmails velger du IMAP / SMTP, skriver hele adressen i brukernavnfeltet, for eksempel <code>name@optonline.net</code>, og bruker passordet for den Optimum ID-en. Verten er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I MCPEmails velger du IMAP / SMTP, skriver hele adressen i brukernavnfeltet, for eksempel <code>name@optonline.net</code>, og bruker passordet for den Optimum ID-en. Avvises hele adressen, skriver du inn bare Optimum ID, delen før @, under Avansert, som er formen Optimums side med serverinnstillinger oppgir. Verten er forhåndsutfylt i begge retninger og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -69,7 +69,7 @@
   "limits": [
     "Postkassen er begrenset til 5 GB uten betalt oppgradering, og sending og mottak stopper når den er full.",
     "Optimum har ikke utstedt nye e-postkontoer siden 4. mai 2021, så bare en eksisterende adresse kan kobles til.",
-    "Optimums innsendingsvert svarte ikke på testen vår på port 465, så vi publiserer ingen verifisert funksjonsliste for utgående e-post hos denne leverandøren."
+    "Optimums innsendingsvert hilser på port 465, men svarte ikke på vår EHLO i tide; port 587 med STARTTLS svarte med LOGIN og PLAIN. Optimum dokumenterer 465 som anbefalt port og 587 som eldre, så tabellen beholder 465."
   ],
   "faq": [
     {
@@ -78,7 +78,7 @@
     },
     {
       "q": "Hva er IMAP-innstillingene for Optimum?",
-      "a": "IMAP er mail.optimum.net på port 993 med implisitt TLS, verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden. For innsending dokumenterer Optimum samme vertsnavn på port 465; vår egen test av den porten fikk ikke svar, så den utgående siden er ikke verifisert her. Brukernavnet er hele e-postadressen din, og passordet er det for Optimum ID-en din."
+      "a": "IMAP er mail.optimum.net på port 993 med implisitt TLS, verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden. SMTP er mail.optimum.net på port 465 med SSL, porten Optimum anbefaler; verten hilste på testen vår der, og port 587 med STARTTLS svarte med mekanismene LOGIN og PLAIN. Brukernavnet er hele e-postadressen din, eller bare Optimum ID hvis den avvises, og passordet er det for Optimum ID-en din."
     },
     {
       "q": "Trenger jeg et app-passord for Optimum-e-post?",

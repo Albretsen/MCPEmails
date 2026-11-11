@@ -37,6 +37,7 @@ import { AutomationsPanel } from './AutomationsPanel';
 import { InvitePanel, OverviewReferral, BillingReferralCredit, BillingReferralCode, referralTileEligible } from './InvitePanel';
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
+import { HeardAboutCard } from './HeardAboutCard';
 import { SsoSettingsSection } from './SsoSettingsSection';
 import { RecipientRuleSection } from './RecipientRuleSection';
 import { AuditExportLink, AuditTeamChanges, personLabel } from './AuditTeamChanges';
@@ -1130,7 +1131,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false, userRole, onReconnect, onGoToInboxes, onGoToAutomations, firstToolUsed = false, referralEnabled = false, referralTileFacts = null, onGoToInvite, flowB = null, onGoToUsage, heardAboutPending = false, isOwner = false }) {
   const t = useTranslations('dashboard');
   // Onboarding Flow B (src/lib/onboarding/flow-b.mjs): `flowB` is null unless
   // this workspace is in the onb_convert arm and on Free. The clock is read
@@ -1252,6 +1253,9 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
         onGoToAutomations={onGoToAutomations}
         onConnect={onConnect}
       />
+      {/* Once per workspace, owner only, after the first inbox: where they
+          heard about us. See lib/onboarding/heard-about.mjs. */}
+      <HeardAboutCard pending={heardAboutPending} inboxCount={inboxCount} isOwner={isOwner} />
       {/* The referral program, while workspaces.referral_enabled is on: the
           tile once it is earned (the code field is in Settings > Billing). The
           Free branch counts active days off the same usage series the chart

@@ -60,14 +60,14 @@
       "p": "La page de configuration de Spark indique comme serveur sortant <code>send.xtra.co.nz</code> sur le port <b>587</b> avec StartTLS. La connexion que nous avons vérifiée sur ce même serveur utilise le port <b>465</b> avec TLS implicite : elle a mené la négociation TLS à terme et proposé PLAIN et LOGIN. Les deux sont réels. Le tableau de cette page montre ce que nous avons testé ; si un client exige la combinaison documentée, 587 avec STARTTLS est la réponse publiée par Spark et devrait aussi fonctionner."
     },
     {
-      "h": "Ni SASL-IR, ni IDLE, ni MOVE, ni SPECIAL-USE",
-      "p": "Le serveur Xtra annonce une liste courte : IMAP4rev1, UIDPLUS, NAMESPACE, ID, et les mécanismes PLAIN et LOGIN. Sans SASL-IR, il refuse l'authentification en une étape que la plupart des clients tentent d'abord, ce qui renvoie un simple refus qui ressemble à un mauvais mot de passe. Sans IDLE, il n'y a pas de push : le nouveau courrier est détecté par interrogation périodique. Sans MOVE, le classement s'effectue par COPY, puis STORE, puis EXPUNGE. Sans SPECIAL-USE, les dossiers Envoyés et Corbeille sont identifiés par leur nom. UIDPLUS est présent, donc un message copié indique bien son nouvel identifiant."
+      "h": "SASL-IR et IDLE sont désormais annoncés ; MOVE et SPECIAL-USE toujours pas",
+      "p": "Lors du premier test de cet hôte en août, il annonçait une liste minimale : IMAP4rev1, UIDPLUS, NAMESPACE, ID et les mécanismes PLAIN et LOGIN, sans SASL-IR ni IDLE. À la date indiquée sur cette page, le même hôte a répondu avec une liste de capacités de style Dovecot : SASL-IR et IDLE présents, PLAIN et LOGIN comme mécanismes, et UIDPLUS qui n'est plus annoncé avant connexion. L'authentification en une étape est donc acceptée et le nouveau courrier peut être repéré sur une connexion ouverte. Ce qui n'a pas changé : pas de MOVE, le classement s'effectue donc par COPY, puis STORE, puis EXPUNGE, et pas de SPECIAL-USE, donc Envoyés et Corbeille sont identifiés par leur nom. Spark n'a pas annoncé le changement ; c'est ce que dit le serveur aujourd'hui, et le tableau ci-dessus suit le serveur."
     }
   ],
   "limits": [
     "Le serveur SMTP de Spark annonce une taille maximale de message d'environ 100 Mo, ce qui est généreux, mais un envoi plus volumineux est tout de même refusé avant de partir.",
-    "Pas d'IDLE : le nouveau courrier est détecté par interrogation périodique plutôt que poussé.",
-    "Les déplacements ne sont pas atomiques et les rôles des dossiers sont identifiés par leur nom, car MOVE et SPECIAL-USE ne sont pas implémentés sur ce serveur."
+    "MOVE n'est pas implémenté, un déplacement n'est donc pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "Les rôles des dossiers sont identifiés par leur nom, car SPECIAL-USE n'est pas annoncé. Si vous avez renommé Envoyés ou Corbeille, nommez le dossier quand vous demandez un déplacement."
   ],
   "faq": [
     {

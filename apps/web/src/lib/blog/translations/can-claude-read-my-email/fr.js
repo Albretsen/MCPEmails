@@ -8,7 +8,7 @@ const translation = {
 
 Cette page vous aide à savoir dans quel cas vous êtes. Les informations sur les produits d'Anthropic et de Google ont été relevées sur leurs propres pages en octobre 2026. Ces produits évoluent souvent : chaque section renvoie donc vers la page sur laquelle elle s'appuie.
 
-**Aller à :** [Gmail](#gmail-le-connecteur-intégré-de-claude) · [Microsoft 365](#outlook-et-microsoft-365-comptes-professionnels-uniquement) · [Ce que les connecteurs intégrés ne couvrent pas](#ce-que-les-connecteurs-intégrés-ne-couvrent-pas) · [MCPEmails](#comment-mcpemails-comble-ces-lacunes) · [Envoi](#claude-peut-il-envoyer-des-e-mails) · [FAQ](#faq)
+**Aller à :** [Gmail](#gmail-le-connecteur-intégré-de-claude) · [Microsoft 365](#outlook-et-microsoft-365-comptes-professionnels-et-comptes-personnels-sur-les-formules-individuelles) · [Ce que les connecteurs intégrés ne couvrent pas](#ce-que-les-connecteurs-intégrés-ne-couvrent-pas) · [MCPEmails](#comment-mcpemails-comble-ces-lacunes) · [Envoi](#claude-peut-il-envoyer-des-e-mails) · [FAQ](#faq)
 
 ## Gmail : le connecteur intégré de Claude
 
@@ -30,16 +30,16 @@ Google documente aussi ce même serveur MCP Gmail dans le cadre de son [programm
 
 Si Gmail est votre seule boîte et Claude votre seule application d'IA, le connecteur intégré peut suffire.
 
-## Outlook et Microsoft 365 : comptes professionnels uniquement
+## Outlook et Microsoft 365 : comptes professionnels, et comptes personnels sur les formules individuelles
 
-Le connecteur Microsoft 365 de Claude lit les e-mails Outlook des comptes rattachés au tenant Microsoft 365 d'une entreprise.
+Le connecteur Microsoft 365 de Claude lit les e-mails Outlook des comptes professionnels et scolaires rattachés au tenant Microsoft 365 d'une entreprise et, sur les formules Free, Pro, Max et Ultra, d'un compte Microsoft personnel.
 
 - **La lecture et la recherche** couvrent votre boîte principale, son dossier Archive et les boîtes partagées auxquelles vous avez accès.
-- **L'envoi est désactivé par défaut.** Le connecteur démarre en lecture seule. Une fois les outils d'écriture activés, Claude peut envoyer et transférer des e-mails, et créer, modifier et supprimer des brouillons. Les outils d'écriture refusent les messages avec pièces jointes.
-- **Un administrateur doit donner son accord.** Un administrateur général Microsoft Entra de votre organisation doit donner son consentement avant que quiconque puisse s'y connecter, puis à nouveau pour que les outils d'écriture fonctionnent.
-- **Les comptes personnels sont refusés.** [L'article d'Anthropic](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) est clair : les adresses @outlook.com et @hotmail.com ne peuvent pas être utilisées pour se connecter.
+- **L'envoi.** Pour un compte professionnel ou scolaire, le connecteur démarre en lecture seule ; une fois les outils d'écriture activés, Claude peut envoyer et transférer des e-mails, et créer, modifier et supprimer des brouillons. Pour un compte personnel, les outils d'écriture sont inclus, et Claude demande votre accord avant d'envoyer. Dans les deux cas, les outils d'écriture refusent les messages avec pièces jointes.
+- **Un administrateur doit approuver les comptes professionnels.** Un administrateur général Microsoft Entra de votre organisation doit donner son consentement avant que quiconque puisse s'y connecter, puis à nouveau pour que les outils d'écriture fonctionnent. Un compte personnel n'a besoin d'aucun administrateur.
+- **Les comptes personnels fonctionnent sur les formules individuelles.** [L'article d'Anthropic](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) indique qu'un compte Outlook.com, Hotmail, Live ou MSN se connecte sur Free, Pro, Max et Ultra, et que les formules Team et Enterprise ne voient pas cette option.
 
-Une adresse personnelle Outlook.com, Hotmail ou Live ne dispose donc d'aucun connecteur intégré dans Claude. [Connecter Claude à Outlook.com et Hotmail](/blog/connect-claude-to-outlook-com-hotmail) présente la méthode qui fonctionne.
+Une adresse personnelle Outlook.com, Hotmail ou Live dispose donc d'un connecteur intégré dans Claude sur une formule individuelle, sans pièces jointes. Pour une formule Team ou Enterprise, les pièces jointes ou plusieurs boîtes, [Connecter Claude à Outlook.com et Hotmail](/blog/connect-claude-to-outlook-com-hotmail) présente la voie du connecteur personnalisé.
 
 ## Ce que les connecteurs intégrés ne couvrent pas
 
@@ -91,7 +91,7 @@ Il envoie depuis le seul compte Google que vous avez connecté. Claude ne voit q
 
 ### Le connecteur Microsoft 365 de Claude
 
-Il démarre en lecture seule. Une fois les outils d'écriture activés, ce qui exige qu'un administrateur général Microsoft Entra approuve les autorisations supplémentaires, Claude peut envoyer et transférer des e-mails, et créer, modifier et supprimer des brouillons. Les outils d'écriture refusent tout message avec une pièce jointe, et les adresses personnelles Outlook.com et Hotmail ne peuvent pas se connecter du tout.
+Pour un compte professionnel ou scolaire, il démarre en lecture seule ; une fois les outils d'écriture activés, ce qui exige qu'un administrateur général Microsoft Entra approuve les autorisations supplémentaires, Claude peut envoyer et transférer des e-mails, et créer, modifier et supprimer des brouillons. Pour un compte personnel sur Free, Pro, Max ou Ultra, les outils d'écriture sont inclus et Claude demande votre accord avant d'envoyer. Dans les deux cas, les outils d'écriture refusent tout message avec une pièce jointe.
 
 ### Comment MCPEmails envoie
 
@@ -127,7 +127,7 @@ Oui. Anthropic indique que le connecteur Gmail peut envoyer, répondre et transf
 Oui, avec le connecteur Gmail intégré à Claude, pour le compte Google que vous connectez. Pour utiliser plusieurs comptes Google, ou Gmail avec d'autres fournisseurs dans la même conversation, connectez-les via MCPEmails avec un mot de passe d'application Google.
 
 **Claude peut-il accéder à mes e-mails Outlook ou Hotmail ?**
-Les comptes Microsoft 365 professionnels et scolaires peuvent utiliser le connecteur Microsoft 365 de Claude une fois qu'un administrateur l'a approuvé. Les adresses personnelles Outlook.com et Hotmail, non. MCPEmails connecte les deux avec Se connecter avec Microsoft, même si, pour un compte professionnel, l'administrateur informatique doit parfois approuver l'application une fois pour toute l'organisation.
+Les comptes Microsoft 365 professionnels et scolaires peuvent utiliser le connecteur Microsoft 365 de Claude une fois qu'un administrateur l'a approuvé, et une adresse personnelle Outlook.com ou Hotmail s'y connecte sur les formules Free, Pro, Max et Ultra, sans pièces jointes. MCPEmails connecte les deux sur n'importe quelle formule Claude, avec les pièces jointes, même si, pour un compte professionnel, l'administrateur informatique doit parfois approuver l'application une fois pour toute l'organisation.
 
 **Claude peut-il lire mes e-mails Yahoo ou iCloud ?**
 Pas avec un connecteur intégré. Connectez la boîte à MCPEmails avec un mot de passe d'application Yahoo ou Apple, puis ajoutez MCPEmails à Claude.

@@ -62,12 +62,25 @@ export const RELEASE_WAVES = {
   // (Aruba PEC, Legalmail, Poste), Centrum/Atlas/Volný and Gazeta.pl, plus
   // WP.pl, checked against pomoc.wp.pl and moved out of the held cohort.
   11: '2026-11-10',
-  // HELD, not scheduled. These six need a human spot-check first: SFR and
-  // StartMail are sourced more weakly than the rest of the set, and Rogers has
-  // app-password availability contradicted between two live vendor pages. Set
-  // a date here once someone has read them. (This was wave 11 until the
-  // 2026-11-10 cohort was added: a dated wave may not follow a held one.)
-  12: null,
+  // The review cohort, read against current vendor pages and re-probed on
+  // 2026-11-11: Optimum (username rule and SMTP corrected from faq.optimum.net),
+  // Rogers (both vendor pages still contradict each other on app passwords and
+  // the page says so), SFR (rewritten from assistance.sfr.fr: one SFR password,
+  // not two), StartMail (sourced from support.startmail.com) and Spark Xtra
+  // (server capabilities changed since August). Frontier stays held, below.
+  12: '2026-11-11',
+  // Hosting platforms our users connect that had no page: cyber_Folks,
+  // TransIP, Combell, Hostpoint, Websupport, REG.RU, 20i StackMail and Arsys,
+  // researched on the vendors' own help pages and probed on 2026-11-11.
+  13: '2026-11-11',
+  // HELD, not scheduled. Frontier: frontier.com answers our network with a
+  // 403 "Verizon Information Security Policy" page, so the two vendor sources
+  // the page rests on could not be re-read, and smtp.frontier.com completes a
+  // TLS handshake on 465 but never sends a greeting. Set a date once someone
+  // has read the Frontier pages from a network they admit. (This was wave 12
+  // until the two 2026-11-11 cohorts were added: a dated wave may not follow a
+  // held one.)
+  14: null,
 };
 
 /**

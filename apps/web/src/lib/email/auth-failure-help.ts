@@ -418,7 +418,14 @@ export type FixProviderId =
   | 'wp'
   | 'o2_pl'
   | 'onet'
-  | 'interia';
+  | 'interia'
+  | 'cyber_folks'
+  | 'transip'
+  | 'combell'
+  | 'websupport'
+  | 'reg_ru'
+  | 'stackmail'
+  | 'arsys';
 
 interface FixBlock {
   steps: readonly string[];
@@ -462,6 +469,13 @@ const PLALA_IMAP = 'https://www.plala.or.jp/support/manual/mail/standard/setup_i
 const FREENET_IMAP = 'https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/';
 const VODAFONE_HELP = 'https://forum.vodafone.de/t5/Community-Blog/Vodafone-E-Mail-funktioniert-nicht-IMAP-Login-amp-Arcor-Probleme/ba-p/3339557';
 const HOSTPOINT_HELP = 'https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance';
+const CYBER_FOLKS_HELP = 'https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/';
+const TRANSIP_HELP = 'https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/';
+const COMBELL_HELP = 'https://www.combell.com/en/help/kb/change-the-password-of-your-mailbox/';
+const WEBSUPPORT_GEO = 'https://www.websupport.sk/podpora/kb/prihlasovanie-do-emailovej-schranky-zo-zahranicia-geo-ip/';
+const REG_RU_HELP = 'https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv';
+const STACKMAIL_HELP = 'https://docs.20i.com/email-hosting-pop3-imap/stackmail-on-macos';
+const ARSYS_HELP = 'https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion';
 const ARUBA_HELP = 'https://guide.aruba.it/hosting-e-domini/email/configurazione-posta/parametri-configurazione-posta';
 const LIBERO_APP_PASSWORDS = 'https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/';
 const TIM_HELP = 'https://www.tim.it/assistenza/assistenza-tecnica/mail/configurazione/client-pc';
@@ -993,6 +1007,61 @@ export const CONNECT_FIX_PROVIDERS: readonly FixProvider[] = [
     presetIds: ['interia'],
     credential: { steps: ['connect.fix.interia.program', 'connect.fix.interia.twoStep'], links: [{ id: 'interia_params', labelKey: 'connect.fix.link.imapSetting', url: INTERIA_PARAMS }] },
     imapDisabled: { steps: ['connect.fix.interia.program'], links: [{ id: 'interia_params', labelKey: 'connect.fix.link.imapSetting', url: INTERIA_PARAMS }] },
+  },
+  // ── Web hosts (2026-11-11). Each takes the mailbox's own password with the
+  // full address, so the shared mailbox-password lines apply; the link goes
+  // to the vendor page the connect article cites.
+  {
+    // cyberfolks.pl: the mailbox password; the host is the customer's own
+    // sNN.cyber-folks.pl server from Dane konfiguracyjne.
+    id: 'cyber_folks',
+    label: 'cyber_Folks',
+    presetIds: ['cyber-folks'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'cyber_folks_help', labelKey: 'connect.fix.link.providerHelp', url: CYBER_FOLKS_HELP }] },
+  },
+  {
+    id: 'transip',
+    label: 'TransIP',
+    presetIds: ['transip'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'transip_help', labelKey: 'connect.fix.link.providerHelp', url: TRANSIP_HELP }] },
+  },
+  {
+    // combell.com help: Basic mailbox password under Mailboxes, Manage, Edit
+    // password; Exchange and Microsoft 365 mailboxes are not on these hosts.
+    id: 'combell',
+    label: 'Combell',
+    presetIds: ['combell'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'combell_help', labelKey: 'connect.fix.link.providerHelp', url: COMBELL_HELP }] },
+  },
+  {
+    // websupport.sk: GEO ochrana allows SK/CZ/HU/AT by default and refuses
+    // every other country before the password is checked. The link is the
+    // GeoIP article, which is the fix far more often than the password.
+    id: 'websupport',
+    label: 'Websupport',
+    presetIds: ['websupport', 'websupport-cz'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'websupport_geo', labelKey: 'connect.fix.link.providerHelp', url: WEBSUPPORT_GEO }] },
+  },
+  {
+    id: 'reg_ru',
+    label: 'REG.RU',
+    presetIds: ['reg-ru'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'reg_ru_help', labelKey: 'connect.fix.link.providerHelp', url: REG_RU_HELP }] },
+  },
+  {
+    // docs.20i.com: the password is set under Email Accounts in My20i (or the
+    // reseller's branded panel).
+    id: 'stackmail',
+    label: '20i StackMail',
+    presetIds: ['stackmail'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'stackmail_help', labelKey: 'connect.fix.link.providerHelp', url: STACKMAIL_HELP }] },
+  },
+  {
+    // arsys.es support centre: Cambio de contrasena under Buzones.
+    id: 'arsys',
+    label: 'Arsys',
+    presetIds: ['arsys'],
+    credential: { steps: MAILBOX_PASSWORD_STEPS, links: [{ id: 'arsys_help', labelKey: 'connect.fix.link.providerHelp', url: ARSYS_HELP }] },
   },
 ];
 

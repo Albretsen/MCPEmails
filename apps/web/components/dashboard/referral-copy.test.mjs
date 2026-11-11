@@ -25,6 +25,7 @@ function referralCopy(locale) {
   return {
     dashboard: read(locale, 'dashboard').referral,
     nav: read(locale, 'dashboardChrome').sidebar.navInvite,
+    navPromo: read(locale, 'dashboardChrome').sidebar.invitePromo,
     banner: read(locale, 'home').referralBanner,
     terms: { h511: terms.h511, p511a: terms.p511a, p511b: terms.p511b, p511c: terms.p511c },
   };

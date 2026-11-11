@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "https://www.transip.eu/knowledgebase/306-creating-a-new-email-address/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.transip.eu/knowledgebase/entry/309-the-email-settings-at-transip/",
+    "usernameForm": "Hele adressen din, for eksempel info@jouwdomein.nl. TransIP oppgir hele e-postadressen som brukernavn for både IMAP og SMTP.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "TransIP MCP-server: koble TransIP-e-post til Claude",
+    "description": "MCP-server for TransIP e-posthosting. Koble postkassene på domenet ditt (info@, facturen@) til Claude, ChatGPT og Cursor via IMAP på imap.transip.email:993 med postkassepassordet."
+  },
+  "hero": {
+    "eyebrow": "TransIP-e-post + AI",
+    "titleLine1": "MCP-server for TransIP-e-post:",
+    "titleLine2": "alle postkassene på domenet ditt, i Claude og ChatGPT",
+    "lead": "Har du info@, facturen@ og ditt eget navn på et domene hos TransIP? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med passordet du satte på postkassen i TransIPs kontrollpanel.",
+    "answer": "Claude når ikke en TransIP-postkasse på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.transip.email port 993 og logger inn med hele adressen og postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. TransIPs kunnskapsbase oppgir nøyaktig disse innstillingene for e-posthostingen: imap.transip.email på 993 med SSL, smtp.transip.email på 465 med SSL, og hele adressen som brukernavn på begge. Det finnes ikke noe app-passord og ingenting å slå på. Én innboks er gratis, for alltid.",
+    "meta0": "Første postkasse gratis, planer for resten",
+    "meta1": "Postkassepassord, ingenting å aktivere",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere postkasser på TransIP-domenet ditt?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Slik kobler TransIP seg til: IMAP på 993 og SMTP på 465, ett par verter",
+    "body": "TransIP kjører én e-postplattform for alle postkassene i e-posthostingen, så det er ikke noe servernummer å slå opp. Innkommende server er <code>imap.transip.email</code> på port 993 med SSL og utgående server er <code>smtp.transip.email</code> på port 465 med SSL, begge med hele adressen som brukernavn og passordet som er satt for den adressen. Begge vertene svarte på en direkte TLS-tilkobling under et sertifikat for <code>*.transip.email</code>; port 587 med STARTTLS fungerer også for sending, selv om TransIP dokumenterer 465. IMAP-serveren presenterer seg med et kort <code>IMAP4 ready</code>-banner og annonserer UIDPLUS, IDLE og QUOTA, og SMTP-serveren godtar PLAIN og LOGIN med en meldingsgrense på 37 MB. Selve postkassene opprettes i TransIPs kontrollpanel under <b>Email Hosting</b>, der hver får 2 GB lagring og sitt eget passord, og det passordet er det IMAP sjekker."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én postkasse, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller sett postkassepassordet i TransIPs kontrollpanel",
+      "p": "Logg inn i TransIPs kontrollpanel, åpne <b>Email Hosting</b> i menyen til venstre og velg domenet ditt under <b>Products</b>. Hver adresse står ved siden av <b>Email boxes</b>; klikk på en for å endre passord eller størrelse, eller bruk <b>+ Add mailbox</b> for å opprette en ny. Passordet du setter der er postkassepassordet, atskilt fra innloggingen til TransIP-kontoen din."
+    },
+    {
+      "h": "Skriv inn adressen og passordet i MCPEmails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel info@jouwdomein.nl, med postkassepassordet. Vertene <code>imap.transip.email</code> og <code>smtp.transip.email</code> er forhåndsutfylt med 993 og 465, begge SSL, og ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, godkjenn, og agenten din har postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Disse vertene gjelder TransIPs e-posthosting, ikke en cPanel- eller DirectAdmin-pakke",
+      "p": "TransIP selger også webhotell med cPanel og DirectAdmin, og postkasser opprettet inne i de panelene ligger på den serveren, med serverens eget vertsnavn. Paret <code>imap.transip.email</code> og <code>smtp.transip.email</code> hører til TransIPs egen e-posthosting, postkassene som styres under Email Hosting i kontrollpanelet. Ble adressen din opprettet i cPanel eller DirectAdmin, bruk verten det panelet viser i stedet."
+    },
+    {
+      "h": "Postkassepassordet er ikke passordet til TransIP-kontoen",
+      "p": "TransIP-kunder logger inn i kontrollpanelet med en kontoinnlogging, og en postkasse har sitt eget passord, satt da den ble opprettet eller endret senere ved å klikke på adressen under Email boxes. IMAP sjekker postkassepassordet. En avvist innlogging på en TransIP-adresse er nesten alltid kontopassordet limt inn i et skjema som ville ha postkassepassordet."
+    },
+    {
+      "h": "2 GB per postkasse, og ingen MOVE på serveren",
+      "p": "Hver TransIP-postkasse starter på 2 GB, med mer kapasitet tilgjengelig å bestille, og serveren annonserer QUOTA slik at bruken kan leses. Kapabilitetslisten før innlogging har hverken <code>MOVE</code> eller <code>SPECIAL-USE</code>: arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og mappene for sendt, utkast og papirkurv gjenkjennes på navn. Har du gitt en mappe nytt navn, nevn den når du ber om en flytting. <code>UIDPLUS</code> finnes, så en kopiert melding rapporterer sin nye id."
+    }
+  ],
+  "limits": [
+    "SMTP-serveren annonserer en maksimal meldingsstørrelse på omtrent 37 MB. En videresending med større vedlegg avvises når den sendes.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Faller tilkoblingen midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Videresendinger og e-postgrupper settes opp i TransIPs kontrollpanel, ikke via IMAP, så en agent kan ikke opprette eller endre dem."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med TransIP-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd TransIP-kobling. Peker du en MCP-server som MCPEmails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer så fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for TransIP?",
+      "a": "IMAP er imap.transip.email på port 993 med SSL. SMTP er smtp.transip.email på port 465 med SSL, med autentisering påkrevd. Brukernavnet er hele adressen din og passordet er postkassepassordet. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvor endrer jeg et TransIP-postkassepassord?",
+      "a": "I TransIPs kontrollpanel under Email Hosting: velg domenet under Products og klikk på adressen ved siden av Email boxes. Der kan du endre passord og størrelse. Endrer du det, kobles alle e-postprogrammer og MCPEmails fra til det nye passordet er skrevet inn."
+    },
+    {
+      "q": "Trenger TransIP et app-passord?",
+      "a": "Nei. TransIP har ingen ordning med app-spesifikke passord for e-posthostingen. Postkassepassordet autentiserer både IMAP og SMTP."
+    },
+    {
+      "q": "Lagres TransIP-e-posten min på deres servere?",
+      "a": "Nei. Meldinger hentes direkte fra TransIP via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer er kryptert i hvile, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din TransIP-postkassene dine",
+    "sub": "Koble til TransIP-e-post på minutter. Én postkasse gratis for alltid, uten kort."
+  }
+}

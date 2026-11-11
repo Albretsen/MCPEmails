@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "https://www.combell.com/en/help/kb/change-the-password-of-your-mailbox/",
+    "https://www.combell.com/en/blog/combell-basic-e-mail-configuration-made-easy-thanks-to-autodiscover/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mailbox password",
+    "helpUrl": "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "usernameForm": "Your full address, such as info@uwbedrijf.be. Combell's guides use the full email address as the username for both servers.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Combell MCP Server: Connect Combell Mail to Claude",
+    "description": "MCP server for Combell Basic mailboxes. Connect the mailboxes on your domain (info@, facturatie@) to Claude, ChatGPT and Cursor over IMAP at imap.mailprotect.be:993 with the mailbox password."
+  },
+  "hero": {
+    "eyebrow": "Combell email + AI",
+    "titleLine1": "MCP server for Combell mail:",
+    "titleLine2": "every mailbox on your domain, in Claude and ChatGPT",
+    "lead": "Running info@, facturatie@ and your own name on a domain at Combell? Connect each Basic mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP, with the password of the mailbox rather than your My Combell login.",
+    "answer": "Claude cannot reach a Combell mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.mailprotect.be on port 993, signing in with the full address and the mailbox password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. Combell's help documents exactly these hosts for a Basic mailbox: imap.mailprotect.be on 993 with SSL/TLS and smtp-auth.mailprotect.be on 465 with SSL/TLS, the full address as the username. An Exchange or Microsoft 365 mailbox at Combell is a different product and connects differently. One inbox is free, forever.",
+    "meta0": "First mailbox free, plans for the rest",
+    "meta1": "Mailbox password, Basic mailboxes",
+    "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several mailboxes on your Combell domain?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "How Combell connects: the mailprotect.be hosts, IMAP on 993 and SMTP on 465",
+    "body": "Combell's Basic mailboxes live on a shared platform with its own names. The incoming server is <code>imap.mailprotect.be</code> on port 993 with SSL/TLS and the outgoing server is <code>smtp-auth.mailprotect.be</code> on port 465 with SSL/TLS, both with the full address as the username and the mailbox password. Combell's Outlook guide lists 465; its Apple Mail and Thunderbird guides give 587 with STARTTLS on the same host, and both answered a live TLS connection, as did IMAP on 993. The IMAP server runs Dovecot and advertises IDLE but not MOVE, and the SMTP server accepts PLAIN and LOGIN with a 50 MB message limit. Combell also publishes autodiscover records for Basic mailboxes, which is why Outlook and Thunderbird usually find these settings on their own; MCPEmails has them prefilled. The password is the one set on the mailbox, under <b>Mailboxes</b> in the control panel or under <b>Settings</b>, <b>Password</b> in the webmail."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one mailbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Check that the address is a Basic mailbox",
+      "p": "In My Combell, open <b>My products</b> and <b>E-mail hosting</b>. A Basic mailbox is managed under <b>Manage e-mail</b>, <b>Mailboxes</b>. If the address is an Exchange or Microsoft 365 mailbox instead, it does not use the mailprotect.be hosts; connect a Microsoft 365 mailbox through the Microsoft sign-in in MCPEmails."
+    },
+    {
+      "h": "Find or set the mailbox password",
+      "p": "Still under <b>Mailboxes</b>, click <b>Manage</b> next to the address and use <b>Edit password</b>. The webmail offers the same under <b>Settings</b>, <b>Password</b>. This mailbox password is what IMAP checks, not your My Combell login."
+    },
+    {
+      "h": "Enter them in MCPEmails and paste the MCP URL into your AI",
+      "p": "Choose IMAP / SMTP, enter the full address such as info@uwbedrijf.be and the mailbox password. The hosts <code>imap.mailprotect.be</code> and <code>smtp-auth.mailprotect.be</code> are prefilled with 993 and 465 and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the mailbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Basic, Exchange and Microsoft 365 are three different mailboxes at Combell",
+      "p": "Combell sells a Basic mailbox, an Exchange mailbox and a Microsoft 365 mailbox, and only the Basic one lives on <code>imap.mailprotect.be</code>. Combell's own password guide warns that an Exchange mailbox locks itself after sign-ins with a wrong password and that a new password can take up to 15 minutes to apply there, so pasting mailprotect.be settings into an Exchange address does worse than fail. Check the product under My products before you start; a Microsoft 365 mailbox connects through the Microsoft sign-in instead."
+    },
+    {
+      "h": "The certificate on the IMAP host carries another brand's name",
+      "p": "When we connected to <code>imap.mailprotect.be</code>, the certificate presented was issued to mail.register.be and lists imap.mailprotect.be among its names, so it validates cleanly; the SMTP host presents one for <code>*.mailprotect.be</code>. It is worth knowing because some mail programs show the certificate's first name in a dialog, and a Register.be name on a Combell mailbox is expected, not a sign of a wrong server."
+    },
+    {
+      "h": "No MOVE and no SPECIAL-USE on the server",
+      "p": "The Dovecot behind <code>imap.mailprotect.be</code> advertises <code>IDLE</code> but neither <code>MOVE</code>, <code>UIDPLUS</code> nor <code>SPECIAL-USE</code>. Filing a message runs as a copy, a flag update and an expunge rather than one command, and the sent, drafts and trash folders are matched by their names rather than by a role the server declares. On a Dutch mailbox that often means Verzonden, Concepten and Prullenbak; name the folder in your instruction if the agent cannot find it."
+    }
+  ],
+  "limits": [
+    "The SMTP server announces a maximum message size of 50 MB. A forward carrying larger attachments is refused at send time.",
+    "Because the server does not advertise MOVE, a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "These settings cover Basic mailboxes only. Exchange and Microsoft 365 mailboxes at Combell are separate products with their own connection."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Combell email?",
+      "a": "Not on its own. Claude has no built-in Combell connector. Pointing an MCP server such as MCPEmails at a Basic mailbox over IMAP gives Claude read, search, send, reply, schedule and organize access to it, and the same connection then works from Cursor, ChatGPT and other MCP clients."
+    },
+    {
+      "q": "What are the Combell IMAP and SMTP settings?",
+      "a": "For a Basic mailbox, IMAP is imap.mailprotect.be on port 993 with SSL/TLS and SMTP is smtp-auth.mailprotect.be on port 465 with SSL/TLS, or 587 with STARTTLS, with authentication required. The username is your full address and the password is the mailbox password. Both hosts were confirmed from a live TLS connection on the date shown on this page."
+    },
+    {
+      "q": "Where do I change a Combell mailbox password?",
+      "a": "In My Combell under My products, E-mail hosting, Manage e-mail, then Mailboxes: click Manage next to the address and choose Edit password. Or in the webmail under Settings, Password. Changing it disconnects every mail program and MCPEmails until the new password is entered."
+    },
+    {
+      "q": "Can I connect a Combell Exchange or Microsoft 365 mailbox the same way?",
+      "a": "Not with these hosts. They belong to Basic mailboxes. A Microsoft 365 mailbox at Combell connects through the Microsoft sign-in in MCPEmails; an Exchange mailbox has its own server settings from Combell."
+    },
+    {
+      "q": "Is my Combell mail stored on your servers?",
+      "a": "No. Messages are fetched live from Combell over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your Combell mailboxes",
+    "sub": "Connect a Combell Basic mailbox in minutes. One mailbox free forever, no card required."
+  }
+}

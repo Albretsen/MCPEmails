@@ -6631,6 +6631,9 @@ export type Database = {
           free_action_cap_exempt: boolean
           grace_end_note_seen_at: string | null
           grandfathered: boolean
+          heard_about: string | null
+          heard_about_at: string | null
+          heard_about_other: string | null
           id: string
           inbox_swapped_at: string | null
           onboarding_client: string | null
@@ -6700,6 +6703,9 @@ export type Database = {
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
+          heard_about?: string | null
+          heard_about_at?: string | null
+          heard_about_other?: string | null
           id?: string
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
@@ -6769,6 +6775,9 @@ export type Database = {
           free_action_cap_exempt?: boolean
           grace_end_note_seen_at?: string | null
           grandfathered?: boolean
+          heard_about?: string | null
+          heard_about_at?: string | null
+          heard_about_other?: string | null
           id?: string
           inbox_swapped_at?: string | null
           onboarding_client?: string | null
@@ -7357,6 +7366,14 @@ export type Database = {
           error_code: string
           failures: number
           tool_name: string
+        }[]
+      }
+      growth_heard_about: {
+        Args: { p_internal_domains?: string[]; p_internal_emails?: string[] }
+        Returns: {
+          answer: string
+          paid: number
+          workspaces: number
         }[]
       }
       growth_inbox_distribution: {

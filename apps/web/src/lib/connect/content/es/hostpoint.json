@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "https://support.hostpoint.ch/de/technisches/e-mail/haeufig-gestellte-fragen/e-mail-einstellungen-auf-einen-blick"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://support.hostpoint.ch/en/technical/e-mail/frequently-asked-questions/e-mail-settings-at-a-glance",
+    "usernameForm": "Tu dirección completa, por ejemplo info@ihre-firma.ch. Hostpoint indica la dirección de correo como usuario y la contraseña que definiste en el Control Panel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de Hostpoint: conecta el correo de Hostpoint a Claude",
+    "description": "Servidor MCP para el correo de Hostpoint. Conecta los buzones de tu dominio suizo (info@, buchhaltung@) a Claude, ChatGPT y Cursor por IMAP en imap.mail.hostpoint.ch:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo Hostpoint + IA",
+    "titleLine1": "Servidor MCP para el correo de Hostpoint:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, buchhaltung@ y tu propio nombre en un dominio alojado en Hostpoint? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña que definiste para el buzón en el Control Panel de Hostpoint.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de Hostpoint. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.mail.hostpoint.ch, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La página de configuración de Hostpoint indica exactamente estos hosts: imap.mail.hostpoint.ch en 993 con SSL y asmtp.mail.hostpoint.ch en 465 con SSL (587 con STARTTLS como alternativa), con la autenticación SMTP activada y la contraseña que fijaste en el Control Panel. No hay contraseña de aplicación ni nada que activar. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón del Control Panel",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de Hostpoint?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta Hostpoint: imap.mail.hostpoint.ch en 993, asmtp en 465",
+    "body": "Hostpoint publica un solo par de hosts para todos los buzones que aloja. El servidor entrante es <code>imap.mail.hostpoint.ch</code> en el puerto 993 con SSL, o 143 con STARTTLS, y el saliente es <code>asmtp.mail.hostpoint.ch</code> en el puerto 465 con SSL, o 587 con STARTTLS, con la autenticación SMTP que Hostpoint dice que debe estar activada. El usuario es tu dirección de correo y la contraseña es la que definiste en el Control Panel; Hostpoint llama a los mecanismos de inicio de sesión CLEAR TEXT para IMAP y PLAIN para SMTP, que es el mismo mecanismo PLAIN que anuncia el servidor. Ambos hosts respondieron a una conexión TLS real bajo un certificado para <code>*.mail.hostpoint.ch</code>: un banner Dovecot en IMAP y un saludo Exim en SMTP con un límite de mensaje de 50 MB. Una nota histórica de la página de Hostpoint: los buzones creados antes del 1 de junio de 2014 necesitan el prefijo de ruta IMAP fijado en INBOX en algunos programas de correo; los más nuevos no necesitan nada."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Localiza o fija la contraseña del buzón en el Control Panel de Hostpoint",
+      "p": "Entra en el Control Panel de Hostpoint y abre la sección de correo del dominio. Cada dirección tiene ahí su propia contraseña, la que la página de configuración de Hostpoint llama la contraseña que definiste en el Control Panel. Si no la conoces, fija una nueva para ese buzón; tu acceso de cliente de Hostpoint es otra credencial y IMAP la rechaza."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, por ejemplo info@ihre-firma.ch, con la contraseña del buzón. Los hosts <code>imap.mail.hostpoint.ch</code> y <code>asmtp.mail.hostpoint.ch</code> vienen rellenados con 993 y 465, ambos SSL, y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El host saliente es asmtp, no smtp",
+      "p": "El host de envío de Hostpoint es <code>asmtp.mail.hostpoint.ch</code>, con la a de autenticado. Un cliente configurado por costumbre con smtp.mail.hostpoint.ch apunta a un nombre que Hostpoint no documenta para enviar. MCPEmails rellena el nombre asmtp, y la autenticación SMTP está siempre activa, que es el ajuste que Hostpoint dice que debe estar activado."
+    },
+    {
+      "h": "Solo PLAIN en IMAP, y sin MOVE",
+      "p": "El Dovecot detrás de <code>imap.mail.hostpoint.ch</code> anuncia únicamente <code>AUTH=PLAIN</code> en IMAP, mientras que SMTP acepta PLAIN y LOGIN. Las herramientas atadas al mecanismo LOGIN reciben un rechazo en el paso de autenticación en IMAP; MCPEmails usa PLAIN. La lista de capacidades previa al inicio de sesión no tiene <code>MOVE</code>, <code>UIDPLUS</code> ni <code>SPECIAL-USE</code>, así que archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge, y las carpetas de enviados, borradores y papelera se reconocen por su nombre. En un buzón en alemán suelen llamarse Gesendet, Entwürfe y Papierkorb; nombra la carpeta en tu instrucción si el agente no la encuentra."
+    },
+    {
+      "h": "Los buzones anteriores a junio de 2014 pueden esconder sus carpetas bajo INBOX",
+      "p": "La página de Hostpoint dice que las cuentas creadas antes del 1 de junio de 2014 necesitan ajustes IMAP especiales: el prefijo de ruta IMAP fijado en INBOX, con o sin punto final según el programa. En un buzón así las carpetas aparecen bajo INBOX y no a su lado. MCPEmails lista las carpetas con los nombres que devuelve el servidor, así que un agente las encuentra igualmente; si una carpeta parece faltar, pídela por su ruta completa."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 50 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Hostpoint?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Hostpoint. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de Hostpoint?",
+      "a": "IMAP es imap.mail.hostpoint.ch en el puerto 993 con SSL. SMTP es asmtp.mail.hostpoint.ch en el puerto 465 con SSL, o 587 con STARTTLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la que definiste en el Control Panel. Ambos hosts se confirmaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Hostpoint en un cliente de correo?",
+      "a": "Normalmente porque es el acceso de cliente de Hostpoint y no la contraseña del buzón. IMAP comprueba la contraseña definida para cada dirección en el Control Panel. Fija una nueva ahí y usa exactamente ese valor."
+    },
+    {
+      "q": "¿Necesita Hostpoint una contraseña de aplicación?",
+      "a": "No. Hostpoint no tiene un sistema de contraseñas específicas de aplicación. La contraseña del buzón autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de Hostpoint en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en Hostpoint por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de Hostpoint",
+    "sub": "Conecta el correo de Hostpoint en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

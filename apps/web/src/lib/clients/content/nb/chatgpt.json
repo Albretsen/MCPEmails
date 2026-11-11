@@ -16,7 +16,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "På chatgpt.com åpner du Plugins, Personal, Add og deretter Add custom MCP server. Gi den navnet MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection, velg OAuth, huk av bekreftelsesboksen, klikk Create as a plugin og logg inn med MCPEmails. Egne MCP-servere kan legges til på Go og betalte abonnementer. I en samtale skriver du @ og velger MCPEmails."
+    "answer": "På chatgpt.com åpner du Plugins, Personal, Add og deretter Add custom MCP server. Gi den navnet MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection, velg OAuth, huk av bekreftelsesboksen, klikk Create as a plugin og logg inn med MCPEmails. OpenAI lister egne MCP-servere for Business og Enterprise/Edu, med bare lesetilgang på Pro, på nett. I en samtale skriver du @ og velger MCPEmails."
   },
   "method": {
     "title": "Slik kobler ChatGPT seg til: OAuth, ingen API-nøkkel",
@@ -47,7 +47,7 @@
   "gotchas": [
     {
       "h": "Legges til i nettleseren, velges per melding",
-      "p": "Egne MCP-servere kan legges til på chatgpt.com på Go og betalte abonnementer; mobilappen kan ikke gjøre det. På Business og Enterprise må kanskje en administrator eller eier legge den til for arbeidsområdet. Steget folk glemmer er det siste: ChatGPT bruker MCPEmails i en melding bare når du skriver <b>@</b> og velger den, så nevn den igjen når et oppfølgingsspørsmål trenger e-posten din."
+      "p": "Egne MCP-servere legges til på chatgpt.com; mobilappen kan ikke gjøre det. OpenAIs hjelpeside lister dem for Business- og Enterprise/Edu-arbeidsområder, der en administrator eller eier legger dem til og publiserer dem, og sier at Pro kan koble til en med bare lese- og henteverktøy; den nevner ikke Go eller Plus. Steget folk glemmer er det siste: ChatGPT bruker MCPEmails i en melding bare når du skriver <b>@</b> og velger den, så nevn den igjen når et oppfølgingsspørsmål trenger e-posten din."
     },
     {
       "h": "Velg OAuth, ikke ingen autentisering, når du oppretter koblingen",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Hvorfor kan jeg ikke legge til en egen MCP-server i ChatGPT?",
-      "a": "Egne MCP-servere kan legges til på Go og betalte abonnementer, på chatgpt.com: mobilappen har ikke valget. I et Business- eller Enterprise-arbeidsområde må kanskje en administrator eller eier legge den til. Hvis MCPEmails er lagt til, men ChatGPT ikke bruker den, skriver du <b>@</b> i samtalen og velger MCPEmails; valget gjelder én melding om gangen."
+      "a": "Egne MCP-servere legges til på chatgpt.com: mobilappen har ikke valget. OpenAIs hjelpeside nevner Business og Enterprise/Edu for full støtte, der bare en administrator eller eier kan legge til og publisere en, og Pro for bare lese- og henteverktøy; Go og Plus nevnes ikke. Hvis MCPEmails er lagt til, men ChatGPT ikke bruker den, skriver du <b>@</b> i samtalen og velger MCPEmails; valget gjelder én melding om gangen."
     },
     {
       "q": "Trenger jeg en API-nøkkel for ChatGPT?",

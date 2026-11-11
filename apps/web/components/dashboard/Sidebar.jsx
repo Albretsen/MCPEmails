@@ -119,10 +119,6 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     { id: "workflows", label: tr('sidebar.navWorkflows'), icon: "activity" },
     { id: "approvals", label: tr('sidebar.navApprovals'), icon: "shield", count: counts.approvals },
     { id: "automations", label: tr('sidebar.navAutomations'), icon: "zap" },
-    // The referral program, only while workspaces.referral_enabled is on (the
-    // dashboard page hands that flag down as `referralVisible`, the same way
-    // the confirm-in-chat rollout reaches the Inboxes page).
-    ...(referralVisible ? [{ id: "invite", label: tr('sidebar.navInvite'), icon: "gift" }] : []),
   ];
   const settings = [
     { id: "settings", label: tr('sidebar.navSettings'), icon: "settings" },
@@ -290,6 +286,27 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             <span>{tr('sidebar.navHelp')}</span>
           </a>
         </nav>
+
+        {/* The referral program, while workspaces.referral_enabled is on (the
+            dashboard page hands that flag down as `referralVisible`). Pinned
+            above the account footer rather than ninth in the workspace list,
+            where a paying customer never looked: 676 codes, 0 referrals by
+            2026-11-11. Same Invite page, same route, one entry. Dashboard
+            only: never in tool results, the draft card or directory text. */}
+        {referralVisible ? (
+          <a
+            href={sectionToPath('invite')}
+            className={"nav-item invite-promo" + (route === 'invite' ? " active" : "")}
+            aria-current={route === 'invite' ? "page" : undefined}
+            onClick={e => handleNavClick(e, 'invite')}
+          >
+            <Icon name="gift" size={16} color="var(--brand)" className="invite-promo-icon" />
+            <span className="invite-promo-text">
+              <span className="invite-promo-title">{tr('sidebar.navInvite')}</span>
+              <span className="invite-promo-sub">{tr('sidebar.invitePromo')}</span>
+            </span>
+          </a>
+        ) : null}
 
         <div className="footer-user">
           <Avatar initials={user?.initials ?? '?'} />

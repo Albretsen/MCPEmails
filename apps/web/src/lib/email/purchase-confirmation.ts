@@ -73,6 +73,7 @@ import {
 import { withdrawalLine, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import { euroizeAmounts } from '@/lib/stripe/eur-prices';
+import { QUALIFY_DAYS } from '@/lib/referrals/constants';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -121,6 +122,27 @@ export interface PurchaseConfirmationInput {
    * promises members "at no extra cost". Absent or false: unchanged.
    */
   perPerson?: boolean;
+  /**
+   * The buyer's referral link (src/lib/referrals/link.ts), or null/absent when
+   * the program is off for them. When present the email carries one short
+   * "give a month, get a month" line with it; nothing else changes.
+   */
+  referralLink?: string | null;
+}
+
+/**
+ * The referral line, in the program's own terms (Terms 5.11, the Invite
+ * page): both sides get a free month once the friend's first payment is
+ * QUALIFY_DAYS old. Only an https /r/<CODE> link is used.
+ */
+function referralLine(link: string | null | undefined): { text: string; url: string } | null {
+  if (!link || !/^https:\/\/[^\s"<>]+\/r\/[A-Z0-9]+$/.test(link)) return null;
+  return {
+    text:
+      'Know someone who would use MCPEmails? Share your link. When they pay and their first payment is ' +
+      `${QUALIFY_DAYS} days old, you both get a free month.`,
+    url: link,
+  };
 }
 
 /**
@@ -272,6 +294,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
   const billingUrl = `${base}/dashboard/settings`;
 
   const subject = `Your MCPEmails ${name} subscription is active`;
+  const referral = referralLine(input.referralLink);
 
   // plans.ts writes the per-mailbox price in USD; a EUR buyer reads it in
   // EUR, same digits (src/lib/stripe/eur-prices.ts).
@@ -298,6 +321,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     'what you plug into it. Add the next one here:',
     inboxesUrl,
     '',
+    ...(referral ? ['GIVE A MONTH, GET A MONTH', referral.text, referral.url, ''] : []),
     'MANAGE YOUR SUBSCRIPTION',
     'Change plan, update your card, or cancel at any time. No email to us needed,',
     'and cancelling takes effect at the end of the period you have already paid for:',
@@ -379,6 +403,12 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
                   </td>
                 </tr>
               </table>
+${referral ? `
+              <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Give a month, get a month</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.5;">
+                ${escapeHtml(referral.text)}
+                <a href="${escapeHtml(referral.url)}" style="color:#3b82f6;">${escapeHtml(referral.url)}</a>
+              </p>` : ''}
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Manage your subscription</p>
               <p style="margin:0 0 28px;font-size:15px;color:#64748b;line-height:1.5;">
                 Change plan, update your card, or cancel at any time from
@@ -435,6 +465,29 @@ export interface SendPurchaseConfirmationInput extends PurchaseConfirmationInput
   to: string;
   /** Stripe Checkout session id. Logged so a send can be traced to a purchase. */
   sessionId: string;
+  /**
+   * The buyer's user id (checkout metadata). When set and `referralLink` is
+   * not, the link is looked up here with the service role. A failed lookup
+   * sends the email without the line.
+   */
+  userId?: string | null;
+}
+
+/** The buyer's referral link, or null. Never throws. */
+async function lookUpReferralLink(userId: string): Promise<string | null> {
+  try {
+    // Imported here so composing (and its tests) never needs Supabase env.
+    const [{ createServiceRoleClient }, { referralLinkForUser }] = await Promise.all([
+      import('@/lib/supabase/service'),
+      import('@/lib/referrals/link'),
+    ]);
+    return await referralLinkForUser(createServiceRoleClient(), userId);
+  } catch (err) {
+    console.error('[purchase-email] referral link lookup failed; sending without it', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 /**
@@ -466,7 +519,10 @@ export async function sendPurchaseConfirmationEmail(
     }
 
     const from = process.env.PURCHASE_EMAIL_FROM ?? DEFAULT_FROM;
-    const { subject, body, htmlBody } = buildPurchaseConfirmationEmail(input);
+    const referralLink = input.referralLink !== undefined
+      ? input.referralLink
+      : input.userId ? await lookUpReferralLink(input.userId) : null;
+    const { subject, body, htmlBody } = buildPurchaseConfirmationEmail({ ...input, referralLink });
 
     const { error } = await resend.emails.send(
       {

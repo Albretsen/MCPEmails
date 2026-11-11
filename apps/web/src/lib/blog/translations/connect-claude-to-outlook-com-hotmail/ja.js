@@ -1,22 +1,25 @@
 const translation = {
   title: 'ClaudeをHotmail・Outlook.comに接続する方法（個人用Microsoftアカウント）',
   description:
-    'ClaudeのMicrosoft 365コネクタは個人用Microsoftアカウントに対応していません。Hotmail、Outlook.com、Live、MSNの受信トレイをClaudeに接続するには、Microsoftでログインし、カスタムコネクタのURLを1つ追加します。',
+    'ClaudeのMicrosoft 365コネクタは、Free、Pro、Max、Ultraの各プランで個人用Microsoftアカウントを受け付けるようになりました。それで足りるのはどんな場合か、そして添付ファイル、複数のメールボックス、Teamプランで使うために、Hotmail、Outlook.com、Live、MSNをカスタムコネクタのURL1つでClaudeに接続する方法を説明します。',
   coverAlt: 'MCPEmailsを通じて個人用のOutlook.comまたはHotmailの受信トレイに接続したClaude',
-  content: `個人用のOutlook.com、Hotmail、Live、MSNのアドレスをClaudeに接続するには、**Microsoftで接続**でメールボックスをMCPEmailsに追加し、URLを1つカスタムコネクタとしてClaudeに追加します。Claude独自のMicrosoft 365コネクタは法人向けのMicrosoftテナントが前提で、Anthropicは個人用Microsoftアカウントでは使えないとしています。カスタムコネクタにはこの条件がないため、昔からあるhotmail.comのアドレスも、新しいoutlook.comのアドレスと同じように使えます。
+  content: `個人用のOutlook.com、Hotmail、Live、MSNのアドレスをClaudeに接続する方法は2つあります。Claude独自のMicrosoft 365コネクタは、Free、Pro、Max、Ultraの各プランで個人用Microsoftアカウントを受け付け、管理者の関与は不要です。もう1つの経路がMCPEmailsです。**Microsoftで接続**でメールボックスを追加し、URLを1つカスタムコネクタとしてClaudeに追加します。2つ目の経路は、組み込みコネクタがカバーしない部分を補います。添付ファイル、1つの接続にまとめた複数のメールボックス、TeamプランとEnterpriseプラン、そしてChatGPTやほかのMCPクライアントでの同じ受信トレイの利用です。昔からあるhotmail.comのアドレスも、新しいoutlook.comのアドレスと同じように、どちらの経路でも使えます。
 
 このガイドは、Claudeで個人用Microsoftアカウントを使う場合の手順です。職場や学校のMicrosoft 365アカウントのメールを使う場合は、[OutlookとMicrosoft 365のガイド](/blog/connect-outlook-microsoft-365-ai-agent-mcp)をご覧ください。
 
-## ClaudeのMicrosoft 365コネクタが個人用アカウントを受け付けない理由
+## ClaudeのMicrosoft 365コネクタで個人用アカウントを使うとできること
 
-Anthropicの[Microsoft 365コネクタのヘルプページ](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector)には、接続の前提として2つの条件が書かれています。
+Anthropicの[Microsoft 365に接続する記事](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365)は、個人用アカウントも扱うようになりました。Free、Pro、Max、Ultraの各プランでは、Outlook.com、Hotmail、Live、MSNのアカウントを自分で接続でき、管理者は不要です。コネクタはOutlookとOneDriveにアクセスし、書き込みツールも含まれているため、Claudeは事前に確認したうえでメールの下書きや送信、カレンダーの予定の管理ができます。
 
-- アカウントが、Microsoft Businessプランに紐づくMicrosoft Entraテナントに属していること。
-- そのテナントのグローバル管理者が、先に連携を承認していること。
+同じ記事にある3つの制限が、メールを使う上で重要です。
 
-同じページには、@outlook.comや@hotmail.comのアドレスなど、個人用Microsoftアカウントは接続に使えないとも書かれています。個人用アカウントには法人テナントも管理者もないため、承認する人がおらず、設定を変えて使えるようにする方法もありません。このコネクタは組織向けに作られたもので、SharePoint、OneDrive、Outlook、Teamsを検索し、管理者が書き込みツールを有効にするまでは読み取り専用の権限で動きます。
+- **書き込みツールでは添付ファイルを扱えない。** このコネクタ経由では、Claudeは添付ファイル付きのメールを送信、転送、下書きできません。
+- **TeamとEnterpriseでは使えない。** これらのプランには個人用アカウントの選択肢が表示されないため、職場のプランと並べて個人用のHotmailアドレスを使う組み込みの経路はありません。
+- **Claudeの中だけで、ログインしたアカウントのみ。** Gmailには専用のコネクタがあり、iCloud、Yahoo、IMAPのメールボックスにはコネクタがなく、ChatGPTやほかのMCPクライアントには何も引き継がれません。
 
-メールボックス自体に問題があるわけではありません。Claudeには別の経路が必要なだけです。
+職場や学校のアカウントは事情が異なります。組織内の誰かが接続する前に、Microsoft Entraのグローバル管理者が同意する必要があります。詳しくは[OutlookとMicrosoft 365のガイド](/blog/connect-outlook-microsoft-365-ai-agent-mcp)と[管理者の同意ページ](/docs/microsoft-365-admin-consent)で説明しています。
+
+Claudeで個人用のOutlook.comの受信トレイを1つ、添付ファイルなしで使えれば十分という場合は、組み込みコネクタで足ります。このガイドの残りの部分は、それ以外のすべての場合の経路です。
 
 ## 必要なもの
 
@@ -93,10 +96,10 @@ MCPEmailsは新着メールをClaudeに自動で送りません。Claudeは依�
 ## よくある質問
 
 **ClaudeをOutlook.comやHotmailに接続できますか？**
-はい。Claudeに組み込まれたMicrosoft 365コネクタは個人用Microsoftアカウントに対応していませんが、カスタムコネクタなら対応しています。MCPEmailsで「Microsoftで接続」からアドレスを接続し、Claudeのカスタマイズ → コネクタで\`https://mcpemails.com/api/mcp\`を追加すれば、ClaudeがOutlook.com、Hotmail、Live、MSNのメールを読み、検索し、送信し、整理できるようになります。
+はい、方法は2つあります。Free、Pro、Max、Ultraでは、Claudeに組み込まれたMicrosoft 365コネクタが個人用Microsoftアカウントを直接受け付けます（添付ファイルは不可）。添付ファイル、複数のメールボックス、TeamまたはEnterpriseプラン、あるいはChatGPTでも同じ受信トレイを使いたい場合は、MCPEmailsで「Microsoftで接続」からアドレスを接続し、Claudeのカスタマイズ → コネクタで\`https://mcpemails.com/api/mcp\`を追加すれば、ClaudeがOutlook.com、Hotmail、Live、MSNのメールを読み、検索し、送信し、整理できるようになります。
 
 **ClaudeのMicrosoft 365コネクタがHotmailのアドレスを受け付けないのはなぜですか？**
-Anthropicのヘルプページによると、このコネクタにはMicrosoft Businessプランに紐づくMicrosoft Entraテナントと、それを承認するグローバル管理者が必要で、個人用Microsoftアカウントは使えません。個人用アカウントにはテナントも管理者もありません。
+まずプランを確認してください。Anthropicによると、個人用MicrosoftアカウントはFree、Pro、Max、Ultraで接続でき、TeamとEnterpriseのプランにはその選択肢が表示されません。職場や学校のアドレスは別で、Microsoft Entraテナントのグローバル管理者が先に同意する必要があります。TeamまたはEnterpriseプランで個人用アドレスを使うには、カスタムコネクタとしてのMCPEmailsが経路になります。
 
 **アプリ パスワードやIMAPの設定は必要ですか？**
 いいえ。個人用MicrosoftアカウントはMicrosoftでのログインとMicrosoft Graphを通じて接続します。Microsoftはこれらのアカウントで、Microsoft以外のメールアプリからのパスワードによるログインを受け付けていないため、アプリ パスワードを作ってもログインできません。

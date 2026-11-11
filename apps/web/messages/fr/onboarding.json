@@ -206,7 +206,7 @@
         "step2": "Choisissez Add custom MCP server, nommez-le MCPEmails et collez l'URL ci-dessous comme Server URL.",
         "step3": "Cochez I understand and want to continue, cliquez sur Create as a plugin, puis sur Connect MCPEmails, et autorisez l'accès.",
         "step4": "Dans une conversation, tapez @MCPEmails pour l'utiliser.",
-        "note": "Les serveurs MCP personnalisés fonctionnent avec la formule Go et toutes les formules payantes, dans un navigateur sur chatgpt.com."
+        "note": "Les serveurs MCP personnalisés demandent une formule payante, dans un navigateur sur chatgpt.com : OpenAI nomme Business et Enterprise/Edu, avec un accès en lecture seule sur Pro."
       },
       "key": {
         "creating": "Création d'une clé API pour {client}",
