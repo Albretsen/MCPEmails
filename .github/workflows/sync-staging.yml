@@ -1,16 +1,26 @@
 name: Sync staging with main
 
-# Fast-forwards the long-lived `staging` branch to `main` (decision D10).
-# Weekly, or by hand after a release. It never rewrites staging: if staging
-# has commits main lacks, the run fails and lists them, and a person merges
-# them into main (or drops them) first.
+# Brings the long-lived `staging` branch up to `main` (decision D10, amended
+# 2026-11-11).
+#
+# staging normally carries work that is not on main yet (features under
+# end-to-end test, and their migrations already applied to the staging
+# database). Fast-forward-only syncs failed every week because of that, and
+# resetting staging would orphan those migrations on the staging database.
+# So:
+#   - staging has nothing main lacks: fast-forward, as before.
+#   - staging is ahead: merge main into staging with a merge commit. A
+#     conflict fails the run, lists the files, and pushes nothing; a person
+#     resolves it with a "Merge main into staging" PR into staging.
+# It never rewrites staging history.
 #
 # Inert until the `staging` branch exists.
 #
-# A push made with GITHUB_TOKEN does not start other workflows, so when the
-# sync brings new migrations this run dispatches migrate-staging.yml itself.
-# CI does not need to rerun: after a fast-forward staging's head is a main
-# commit, which already carries its "CI passed" check.
+# A push made with GITHUB_TOKEN does not start other workflows, so this run
+# dispatches what a push would have started: migrate-staging.yml when
+# migrations changed, and ci.yml after a merge commit (its head is not a main
+# commit, so it has no "CI passed" check, and the staging Vercel projects wait
+# for one). After a fast-forward the head is a main commit that already has it.
 
 on:
   schedule:
@@ -27,7 +37,7 @@ permissions:
 
 jobs:
   sync:
-    name: Fast-forward staging to main
+    name: Bring staging up to main
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -35,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fast-forward
+      - name: Fast-forward or merge
         id: ff
         run: |
           set -euo pipefail
@@ -45,27 +55,49 @@ jobs:
             exit 0
           fi
           git fetch origin main staging
-          ahead=$(git rev-list --count origin/main..origin/staging)
-          if [ "$ahead" -gt 0 ]; then
-            echo "::error::staging has $ahead commit(s) that main lacks. Merge them into main or drop them, then rerun."
-            git log --oneline origin/main..origin/staging
-            exit 1
-          fi
-          if [ "$(git rev-parse origin/staging)" = "$(git rev-parse origin/main)" ]; then
-            echo "staging is already at main."
+          old=$(git rev-parse origin/staging)
+          if git merge-base --is-ancestor origin/main origin/staging; then
+            echo "staging already contains main."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          old=$(git rev-parse origin/staging)
-          # A plain push is rejected unless it is a fast-forward.
-          git push origin origin/main:refs/heads/staging
-          echo "Fast-forwarded staging $old -> $(git rev-parse origin/main)"
+          ahead=$(git rev-list --count origin/main..origin/staging)
+          if [ "$ahead" -eq 0 ]; then
+            # A plain push is rejected unless it is a fast-forward.
+            git push origin origin/main:refs/heads/staging
+            new=$(git rev-parse origin/main)
+            echo "Fast-forwarded staging $old -> $new"
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "staging has $ahead commit(s) main lacks; merging main into staging."
+            git log --oneline origin/main..origin/staging | head -100
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git checkout -q -B staging origin/staging
+            if ! git merge --no-ff --no-edit -m "Merge main into staging (weekly sync)" origin/main; then
+              echo "::error::Merging main into staging conflicts. Nothing was pushed. Resolve it with a 'Merge main into staging' PR into staging, then rerun."
+              git diff --name-only --diff-filter=U
+              git merge --abort
+              exit 1
+            fi
+            # Not forced: rejected if staging moved since the fetch.
+            git push origin HEAD:refs/heads/staging
+            new=$(git rev-parse HEAD)
+            echo "Merged main into staging: $old -> $new"
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+          fi
           echo "pushed=true" >> "$GITHUB_OUTPUT"
-          if git diff --quiet "$old" origin/main -- supabase/migrations; then
+          if git diff --quiet "$old" "$new" -- supabase/migrations; then
             echo "migrations=false" >> "$GITHUB_OUTPUT"
           else
             echo "migrations=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Run CI on the merge commit
+        if: steps.ff.outputs.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref staging --repo "${{ github.repository }}"
 
       - name: Apply new migrations to staging
         if: steps.ff.outputs.pushed == 'true' && steps.ff.outputs.migrations == 'true'

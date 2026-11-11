@@ -134,7 +134,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
   },
 });
 nodeMock.module('@/lib/stripe/customer', {
-  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_seats' }) },
+  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_seats' }), discardNewStripeCustomer: async () => {} },
 });
 nodeMock.module('@/lib/stripe/seasonal-offer-server', {
   namedExports: { getActiveSeasonalOffers: async () => ({}) },
@@ -165,17 +165,17 @@ nodeMock.module('@/lib/stripe/client', {
         }),
         update: async (id: string, params: Record<string, unknown>) => {
           updates.push({ id, ...params });
-          return { pending_update: null, latest_invoice: { amount_paid: 1900, currency: 'usd' } };
+          return { pending_update: null, latest_invoice: { amount_paid: 2900, currency: 'usd' } };
         },
       },
       invoices: {
         createPreview: async (params: Record<string, unknown>) => {
           previews.push(params);
-          return { currency: 'usd', amount_due: 1900, lines: { data: [] }, total_discount_amounts: [] };
+          return { currency: 'usd', amount_due: 2900, lines: { data: [] }, total_discount_amounts: [] };
         },
       },
       prices: {
-        retrieve: async (id: string) => ({ unit_amount: id.startsWith('price_seat') ? 1900 : 300 }),
+        retrieve: async (id: string) => ({ unit_amount: id.startsWith('price_seat') ? 2900 : 300 }),
       },
     },
   },
@@ -291,7 +291,7 @@ test('Pro -> Business with the switch on: seat price at the billable count, quot
   assert.equal(quote.kind, 'confirmation_required');
   assert.equal(quote.kind === 'confirmation_required' && quote.quotedPriceId, 'price_seat_month');
   assert.equal(quote.kind === 'confirmation_required' && quote.preview?.people, 4);
-  assert.equal(quote.kind === 'confirmation_required' && quote.preview?.recurringCents, 4 * 1900);
+  assert.equal(quote.kind === 'confirmation_required' && quote.preview?.recurringCents, 4 * 2900);
   const previewItems = (previews[0].subscription_details as { items: unknown[] }).items;
   assert.deepEqual(previewItems[0], { id: 'si_base', price: 'price_seat_month', quantity: 4 });
 

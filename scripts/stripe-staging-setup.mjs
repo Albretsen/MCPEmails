@@ -35,7 +35,7 @@
  *
  * The catalog includes the two Business per-person prices
  * (STRIPE_PRICE_BUSINESS_SEAT_MONTHLY / _YEARLY, lookup keys business_seat_month
- * and business_seat_year, $19 and $182.40 on the Business product) that
+ * and business_seat_year, $29 and $278.40 on the Business product) that
  * pricing_switches.business_seat_pricing sells; prod does not have them yet.
  *
  * The spec is STRIPE_SPEC.md in the staging tracker; the data lives in

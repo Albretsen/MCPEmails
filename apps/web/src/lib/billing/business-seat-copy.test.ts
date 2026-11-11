@@ -147,7 +147,7 @@ test('a reprice moves every sentence with it', () => {
   assert.ok(copy);
   assert.match(copy.pricing.heroLead, /\$25 per person a month/);
   assert.equal(copy.card.billedYearly, 'Billed $240/year per person');
-  assert.doesNotMatch(JSON.stringify(copy), /\$19\b/);
+  assert.doesNotMatch(JSON.stringify(copy), /\$(19|29)\b/);
 });
 
 test('switch off: no per-person price map, no copy', () => {

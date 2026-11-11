@@ -885,12 +885,14 @@ import {
 } from "./scope-challenge.ts";
 import {
   approvalActingKey,
+  countTeammatePrivateInboxes,
   credentialCanReachInbox,
   effectiveInboxIds,
   inboxesVisibleToAudienceOf,
   readCredentialScope,
   readCredentialScopeForKey,
   scopeForKey,
+  teammatePrivateInboxesMessage,
   userCanReachInbox,
 } from "./inbox-visibility.ts";
 
@@ -11941,6 +11943,27 @@ async function executeListInboxes(
   // Reached only when `allRows` is empty too, so this sentence is now only ever
   // said about an account that really does have nothing connected.
   if (inboxes.length === 0) {
+    // Business: a member who reaches nothing may still sit in a workspace
+    // whose other people connected private mailboxes. "No mailbox is
+    // connected" is false there, and hides the fix (make one company-wide).
+    const teammatePrivate = await countTeammatePrivateInboxes(
+      supabase,
+      apiKey.workspace_id,
+      apiKey.created_by ?? null,
+    );
+    if (teammatePrivate > 0) {
+      return {
+        result: jsonOk({
+          inboxes,
+          setup_required: true,
+          setup_url: `${APP_URL}/dashboard/inboxes`,
+          private_mailboxes_owned_by_teammates: teammatePrivate,
+          message: teammatePrivateInboxesMessage(teammatePrivate, `${APP_URL}/dashboard/inboxes`),
+        }),
+        logStatus: "success",
+        logErrorCode: null,
+      };
+    }
     return {
       result: jsonOk({
         inboxes,
@@ -12096,8 +12119,10 @@ type InboxResolution =
   | { ok: true; inbox: InboxRow }
   | {
       ok: false;
-      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
+      reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect" | "teammates_private";
       inboxes?: InboxRow[];
+      /** reason "teammates_private": how many private mailboxes teammates own. */
+      teammatePrivate?: number;
       conflict?: InboxSelectorConflict;
       /** reason "parked": the parked inbox(es) the call named or could have used. */
       parked?: ParkedInboxMatch[];
@@ -12316,7 +12341,10 @@ async function resolveInboxArgInner(
     const parked = await listParkedInboxes(supabase, apiKey);
     if (parked.length > 0) return { ok: false, reason: "parked", parked, wording: await planLimitWording(apiKey) };
     // Same for inboxes that are connected but need reconnecting.
-    return errored.length > 0 ? { ok: false, reason: "needs_reconnect", inboxes: errored } : { ok: false, reason: "none" };
+    if (errored.length > 0) return { ok: false, reason: "needs_reconnect", inboxes: errored };
+    // Same for a Business member whose teammates own every mailbox privately.
+    const teammatePrivate = await countTeammatePrivateInboxes(supabase, apiKey.workspace_id, apiKey.created_by ?? null);
+    return teammatePrivate > 0 ? { ok: false, reason: "teammates_private", teammatePrivate } : { ok: false, reason: "none" };
   }
   // Carry the accessible inboxes back so the error can name them inline, sparing
   // the caller a separate inbox_list round-trip (which some MCP clients fail to
@@ -12333,8 +12361,9 @@ async function resolveInboxArgInner(
  */
 function inboxResolutionError(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect" | "teammates_private";
     inboxes?: InboxRow[];
+    teammatePrivate?: number;
     conflict?: InboxSelectorConflict;
     parked?: ParkedInboxMatch[];
     wording?: PlanLimitWording;
@@ -12418,6 +12447,13 @@ function inboxResolutionError(
       errorCode = PARKED_INBOX_ERROR_CODE;
       break;
     }
+    case "teammates_private":
+      text = teammatePrivateInboxesMessage(failure.teammatePrivate ?? 1, `${APP_URL}/dashboard/inboxes`)
+        .replace("there is no mailbox you can read or send from yet", "this tool has nothing to act on")
+        .replace("the setup_url", `${APP_URL}/dashboard/inboxes`)
+        .replace("call inbox_list again", "retry this tool");
+      errorCode = "no_inbox_visible";
+      break;
     case "none":
       // Same first-run moment as the empty inbox_list above, reached by any
       // other tool. Naming a destination without a link is what Anthropic's own
@@ -38343,14 +38379,20 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  */
 function automationInboxFailureMessage(
   failure: {
-    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect";
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict" | "parked" | "needs_reconnect" | "teammates_private";
     inboxes?: InboxRow[];
     conflict?: InboxSelectorConflict;
     parked?: ParkedInboxMatch[];
     wording?: PlanLimitWording;
+    teammatePrivate?: number;
   },
 ): string {
   switch (failure.reason) {
+    case "teammates_private":
+      return (
+        "every mailbox in this workspace is private to a teammate, so this action has none it may use. " +
+        `Connect your own at ${APP_URL}/dashboard/inboxes , or ask the owner or an admin to make one company-wide.`
+      );
     case "parked": {
       // Lower-case first word: the caller prefixes "automation <action>: ".
       const text = parkedInboxErrorText((failure.parked ?? []).map((ib) => ib.email_address), APP_URL, failure.wording);

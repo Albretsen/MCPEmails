@@ -1134,7 +1134,7 @@ export default async function DashboardPage({ params, searchParams }) {
   // ($29 / $278.40), not the $39 list price, on every surface that prices it.
   //
   // Business billed per person (pricing_switches.business_seat_pricing): an
-  // account not on Business yet sees $19 a person and picks how many people
+  // account not on Business yet sees $29 a person and picks how many people
   // to buy for. A Business subscriber keeps seeing the price they are on.
   const stripePrices =
     workspace?.owner_id === user.id && plan === 'pro' && !compedScale &&

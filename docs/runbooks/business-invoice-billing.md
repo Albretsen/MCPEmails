@@ -33,7 +33,7 @@ Self-service buyers can now enter the company name and tax ID themselves: every 
 
 | What | Price (env var in Vercel) | Quantity |
 | --- | --- | --- |
-| Business per person, yearly, while `pricing_switches.business_seat_pricing` is on | `STRIPE_PRICE_BUSINESS_SEAT_YEARLY` (lookup key `business_seat_year`, $182.40 a person) | people, at least 2 |
+| Business per person, yearly, while `pricing_switches.business_seat_pricing` is on | `STRIPE_PRICE_BUSINESS_SEAT_YEARLY` (lookup key `business_seat_year`, $278.40 a person) | people, at least 2 |
 | Business flat, yearly, while the switch is off | `STRIPE_PRICE_BUSINESS_YEARLY` ($374.40) | 1 |
 | Company-wide mailboxes over the included 10 | `STRIPE_PRICE_BUSINESS_MAILBOX_YEARLY` ($28.80 each) | mailboxes over 10, or leave it out |
 

@@ -248,13 +248,13 @@ export const BUSINESS_EXTRA_INBOX_YEARLY_CENTS = 2880;
 // The flat $39 / founder / Team subscriptions are untouched: nothing syncs a
 // quantity on a base price that is not a seat price.
 //
-//   STRIPE_PRICE_BUSINESS_SEAT_MONTHLY=price_...  ($19 per person, lookup key business_seat_month)
-//   STRIPE_PRICE_BUSINESS_SEAT_YEARLY=price_...   ($182.40 per person, lookup key business_seat_year)
+//   STRIPE_PRICE_BUSINESS_SEAT_MONTHLY=price_...  ($29 per person, lookup key business_seat_month)
+//   STRIPE_PRICE_BUSINESS_SEAT_YEARLY=price_...   ($278.40 per person, lookup key business_seat_year)
 // ---------------------------------------------------------------------------
 /** Business per person, per month, in USD cents. */
-export const BUSINESS_SEAT_MONTHLY_CENTS = 1900;
-/** The same, per year: 12 x $19 less the 20% every annual price carries. */
-export const BUSINESS_SEAT_YEARLY_CENTS = 18240;
+export const BUSINESS_SEAT_MONTHLY_CENTS = 2900;
+/** The same, per year: 12 x $29 less the 20% every annual price carries. */
+export const BUSINESS_SEAT_YEARLY_CENTS = 27840;
 /** The fewest people a per-person Business subscription is billed for. */
 export const BUSINESS_MIN_SEATS = 2;
 /** Private mailboxes one person may own per workspace on per-person Business. */
