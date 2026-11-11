@@ -26,7 +26,7 @@
   },
   "answerSection": {
     "title": "哪些 MCP 服务器可以在 Claude Desktop 中处理邮件？",
-    "body": "Claude Desktop 支持以自定义连接器方式添加的任何远程 MCP 服务器，因此 MCPEmails 这类托管邮件服务器在其中的用法与 claude.ai 完全相同：打开 <b>Customize</b>、<b>Connectors</b>，添加 <code>https://mcpemails.com/api/mcp</code> 并登录。这一个 URL 即可覆盖 Gmail、Outlook.com、Microsoft 365、iCloud、Yahoo 和任意 IMAP 邮箱。Claude 自带的 Gmail 和 Microsoft 365 连接器也会出现在 Claude Desktop 中，但每个只支持一个服务商，而且 Microsoft 365 连接器只接受工作或学校账户。通过 <code>claude_desktop_config.json</code> 启动的本地服务器也可以使用，它们运行在你的电脑上，并把邮箱登录信息保存在本地文件中。"
+    "body": "Claude Desktop 支持以自定义连接器方式添加的任何远程 MCP 服务器，因此 MCPEmails 这类托管邮件服务器在其中的用法与 claude.ai 完全相同：打开 <b>Customize</b>、<b>Connectors</b>，添加 <code>https://mcpemails.com/api/mcp</code> 并登录。这一个 URL 即可覆盖 Gmail、Outlook.com、Microsoft 365、iCloud、Yahoo 和任意 IMAP 邮箱。Claude 自带的 Gmail 和 Microsoft 365 连接器也会出现在 Claude Desktop 中，但每个只支持一个服务商，而且 Microsoft 365 连接器只在 Free、Pro、Max 和 Ultra 计划上接受个人 Outlook.com 账户，且不支持附件。通过 <code>claude_desktop_config.json</code> 启动的本地服务器也可以使用，它们运行在你的电脑上，并把邮箱登录信息保存在本地文件中。"
   },
   "setup": [
     {

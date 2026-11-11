@@ -18,7 +18,7 @@ Lehnt es Sie ab, liegt es am Kontotyp. Hinter einem privaten Microsoft-Konto ste
 ## Was Sie brauchen
 
 - Ein privates Microsoft-Konto mit Outlook-Postfach: outlook.com, hotmail.com, live.com oder msn.com, auch Länderversionen wie hotmail.de oder outlook.de.
-- **ChatGPT Go oder ein kostenpflichtiger Tarif, auf chatgpt.com im Browser.** OpenAI erlaubt diesen Tarifen, einen benutzerdefinierten MCP-Server hinzuzufügen. Free kann das nicht, und in der Mobil-App lässt sich keiner hinzufügen.
+- **Ein kostenpflichtiger ChatGPT-Tarif, auf chatgpt.com im Browser.** Die Hilfeseite von OpenAI führt benutzerdefinierte MCP-Server für Business und Enterprise/Edu auf, mit Lese- und Abruf-Tools nur in Pro, und erwähnt Go und Plus nicht. Free kann keinen hinzufügen, und die Mobil-App auch nicht.
 - Ein MCPEmails-Konto. [Kostenlos starten](/signup); der kostenlose Tarif verbindet ein Postfach.
 
 MCPEmails spricht auf der einen Seite über das Model Context Protocol mit ChatGPT und auf der anderen über Microsoft Graph mit Ihrem Postfach.
@@ -87,7 +87,7 @@ Nein. Jedes Mal, wenn ChatGPT nach einer Nachricht fragt, ruft MCPEmails sie liv
 ## FAQ
 
 **Kann ich ChatGPT mit Hotmail oder Outlook.com verbinden?**
-Ja, mit einem benutzerdefinierten MCP-Server. Verbinden Sie die Adresse über „Mit Microsoft verbinden“ mit MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` in ChatGPT unter Plugins hinzu, und ChatGPT kann Ihre E-Mails bei Outlook.com, Hotmail, Live oder MSN lesen, durchsuchen, senden und ordnen. Für einen benutzerdefinierten MCP-Server braucht es ChatGPT Go oder einen kostenpflichtigen Tarif.
+Ja, mit einem benutzerdefinierten MCP-Server. Verbinden Sie die Adresse über „Mit Microsoft verbinden“ mit MCPEmails, fügen Sie \`https://mcpemails.com/api/mcp\` in ChatGPT unter Plugins hinzu, und ChatGPT kann Ihre E-Mails bei Outlook.com, Hotmail, Live oder MSN lesen, durchsuchen, senden und ordnen. Für einen benutzerdefinierten MCP-Server braucht es einen kostenpflichtigen Tarif auf chatgpt.com: OpenAI nennt Business und Enterprise/Edu für die volle Unterstützung und Pro nur für Lese- und Abruf-Tools.
 
 **Funktioniert das Outlook-Plugin von ChatGPT mit einem privaten Konto?**
 Die Hilfeseite von OpenAI sagt es nicht, und Nutzer berichten, bei der Anmeldung die Meldung zu bekommen, dass sich nur Geschäfts- oder Bildungskonten verbinden lassen. Die dokumentierte Einrichtung setzt auf den Microsoft Entra-Administrator einer Organisation, den ein privates Konto nicht hat.

@@ -8,8 +8,11 @@
 //     accounts extended to other plugins, all plans.
 // Custom connector setup steps (Claude: Customize > Connectors > + Add > Add
 // custom connector; ChatGPT: Plugins > Personal > Add > Add custom MCP server,
-// Go and paid plans, no developer mode) were re-checked on 2026-10-26 against
+// no developer mode) were re-checked on 2026-10-26 against
 // support.claude.com/en/articles/11175166 and help.openai.com/en/articles/12584461.
+// The ChatGPT plan list was re-read on 2026-11-11: OpenAI names Business and
+// Enterprise/Edu (full support) and Pro (read/fetch only); Go and Plus are not
+// mentioned.
 // Re-check both before editing the "What the built-in connectors do" section;
 // these products change monthly. Prices are deliberately not quoted: they are
 // on /pricing, and a repricing must not leave this post wrong.
@@ -23,7 +26,7 @@ const post = {
     'Several work and personal email accounts connected to Claude and ChatGPT through one MCP connector',
   authorId: 'asgeir',
   publishedAt: '2026-09-29T09:00:00.000Z',
-  updatedAt: '2026-10-26T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['Multiple inboxes', 'Claude', 'ChatGPT', 'MCP'],
   featured: false,
   content: `You want to ask one question and have it answered across every mailbox you run: your own address, info@, sales@, the invoices inbox, maybe a personal Gmail. This guide shows how to get several email accounts into Claude and ChatGPT at the same time, what the built-in connectors already cover, and where you need an MCP server instead.
@@ -79,7 +82,7 @@ Every mailbox you connected is now available. The [Claude guide](/blog/connect-c
 
 ## Add it to ChatGPT
 
-ChatGPT Go and paid plans can add a custom MCP server on chatgpt.com in a browser; the mobile app cannot add one. On Business and Enterprise an admin or owner may need to add it.
+A paid ChatGPT plan can add a custom MCP server on chatgpt.com in a browser; the mobile app cannot add one. OpenAI's help page lists Business and Enterprise/Edu, where an admin or owner adds it for the workspace, and read and fetch tools only on Pro; Go and Plus are not mentioned.
 
 1. Open **Plugins**, then **Personal**, click **Add** at the top right and choose **Add custom MCP server**.
 2. Name it MCPEmails, paste \`https://mcpemails.com/api/mcp\` under **Connection**, choose **OAuth**, tick **I understand and want to continue**, and click **Create as a plugin**.

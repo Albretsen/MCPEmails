@@ -10,7 +10,7 @@ const translation = {
 
 ## 你需要准备什么
 
-- **网页版的 ChatGPT Go 或付费方案。** OpenAI 允许 Go 和付费方案在 chatgpt.com 上添加自定义 MCP 服务器。移动端应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者为工作区添加。
+- **网页版的 ChatGPT 付费方案。** OpenAI 的[自定义 MCP 服务器帮助页面](https://help.openai.com/en/articles/12584461)列出的是 chatgpt.com 上的 Business 和 Enterprise/Edu 工作区，Pro 仅限读取和获取工具；页面未提及 Go 或 Plus。移动端应用无法添加。在 Business 和 Enterprise 上，由管理员或所有者为工作区添加并发布。
 - **一个免费的 MCPEmails 账户。** [在此创建](/signup)。免费方案可连接一个收件箱，无需信用卡。
 - **一个邮箱。** Gmail、Outlook 或 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho、Yandex，或任何支持 IMAP 与 SMTP 的邮箱。
 
@@ -100,7 +100,7 @@ Codex 与 ChatGPT 连接器是不同的平台，浏览器 OAuth 流程在这里�
 
 ## 常见问题排查
 
-- **没有添加自定义 MCP 服务器的选项。** 自定义 MCP 服务器需要在浏览器中的 chatgpt.com 上添加，移动端应用不行，并且需要 Go 或付费方案。在 Business 或 Enterprise 工作区中，可能需要管理员或所有者来添加。
+- **没有添加自定义 MCP 服务器的选项。** 自定义 MCP 服务器需要在浏览器中的 chatgpt.com 上添加，移动端应用不行。OpenAI 列出的是 Business 和 Enterprise/Edu，Pro 仅限读取和获取工具，因此在 Business 或 Enterprise 工作区中，可能需要管理员或所有者来添加。
 - **连接器在第一次工具调用时失败。** 它多半是在未配置认证的情况下创建的。删除它，用 OAuth 重新创建。
 - **连接器已创建，但 ChatGPT 回答时没有读取你的邮件。** 这条消息没有选择 MCPEmails。输入 **@**，选择 MCPEmails，然后再问一次。
 - **服务商拒绝你的密码。** 请使用服务商生成的应用专用密码，而不是网页登录密码。部分服务商只有在开启双重验证后才会签发。

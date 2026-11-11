@@ -12,7 +12,7 @@ To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kj
 
 ## Dette trenger du
 
-- **ChatGPT Go eller et betalt abonnement, i nettleseren.** OpenAI lar Go og betalte abonnementer legge til egne MCP-servere på chatgpt.com. Du kan ikke legge til en i mobilappen. På Business og Enterprise må en administrator eller eier kanskje legge den til for arbeidsområdet.
+- **Et betalt ChatGPT-abonnement, i nettleseren.** OpenAIs [hjelpeside om egne MCP-servere](https://help.openai.com/en/articles/12584461) lister dem for Business- og Enterprise/Edu-arbeidsområder på chatgpt.com, med lese- og henteverktøy bare på Pro; den nevner ikke Go eller Plus. Du kan ikke legge til en i mobilappen. På Business og Enterprise legger en administrator eller eier den til og publiserer den for arbeidsområdet.
 - **En gratis MCPEmails-konto.** [Opprett en her](/signup). Gratisplanen rommer én tilkoblet innboks og krever ikke kort.
 - **Én postkasse.** Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, eller hva som helst som snakker IMAP og SMTP.
 
@@ -102,7 +102,7 @@ Avgrens nøkkelen stramt. Bare lesetilgang er som regel riktig for en kodeagent:
 
 ## Feilsøking
 
-- **Ingen mulighet til å legge til en egen MCP-server.** Egne MCP-servere legges til på chatgpt.com i en nettleser, ikke i mobilappen, og krever Go eller et betalt abonnement. I et Business- eller Enterprise-arbeidsområde må en administrator eller eier kanskje legge den til.
+- **Ingen mulighet til å legge til en egen MCP-server.** Egne MCP-servere legges til på chatgpt.com i en nettleser, ikke i mobilappen. OpenAI lister dem for Business og Enterprise/Edu, med lese- og henteverktøy bare på Pro, så i et Business- eller Enterprise-arbeidsområde må en administrator eller eier kanskje legge den til.
 - **Koblingen feiler ved første verktøykall.** Den ble sannsynligvis opprettet uten autentisering. Slett den og opprett den på nytt med OAuth.
 - **Koblingen er opprettet, men ChatGPT svarer uten å røre e-posten din.** MCPEmails ble ikke valgt for den meldingen. Skriv **@**, velg MCPEmails, og spør igjen.
 - **Leverandøren avviser passordet ditt.** Bruk et apppassord generert av leverandøren, ikke passordet du logger inn med på nettet. Noen leverandører utsteder det bare når tofaktorautentisering er slått på.

@@ -24,7 +24,7 @@ MCPサーバーは、AIに本物のメールボックスそのものを渡せる
 ## 必要なもの
 
 - Yahoo Mailのアドレス。yahoo.com、yahoo.co.ukのような国別版、または登録時に使ったymail.comやrocketmail.comの形式です（Yahoo!メールの@yahoo.co.jpは上記の専用ページへ）。
-- **ChatGPTの場合：** Goまたは有料プランで、ブラウザーのchatgpt.comから操作します。OpenAIはFreeプランでのカスタムMCPサーバーの追加を認めておらず、モバイルアプリからも追加できません。
+- **ChatGPTの場合：** 有料プランで、ブラウザーのchatgpt.comから操作します。OpenAIのヘルプページでは、カスタムMCPサーバーの対象としてBusinessとEnterprise/Eduが挙げられ、Proでは読み取りと取得のツールに限られます。GoとPlusへの言及はありません。Freeでは追加できず、モバイルアプリからも追加できません。
 - **Claudeの場合：** どのプランでも使えます。Freeプランでもカスタムコネクタを1つ追加できます。
 - 無料のMCPEmailsアカウント。[こちらから作成できます](/signup)。無料プランは受信トレイを1つ接続できます。
 
@@ -108,7 +108,7 @@ YahooのメールがMCPEmailsに保存されることはありません。ChatGP
 - **Yahooがパスワードを拒否する。** Yahooのパスワードではなくアプリ パスワードを使い、スペースを入れずに貼り付けてください。
 - **アプリ パスワードを作成する項目がない。** 先にAccount Securityページで2段階認証を有効にしてください。
 - **アドレスが@yahoo.co.jpや@ymail.ne.jpである。** それはYahoo! JAPANのYahoo!メールで、このページの手順は当てはまりません。[Yahoo!メールの接続ページ](/connect/yahoo-japan)をご覧ください。
-- **ChatGPTにカスタムMCPサーバーを追加する項目がない。** Goまたは有料プランで、ブラウザーのchatgpt.comから操作する必要があります。
+- **ChatGPTにカスタムMCPサーバーを追加する項目がない。** 有料プランで、ブラウザーのchatgpt.comから操作する必要があります。OpenAIが挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用のアクセスに限られます。
 - **AIがメールを読まずに答える。** ChatGPTでは、そのメッセージで@からMCPEmailsを指定してください。Claudeでは、コネクタの一覧でMCPEmailsがオンになっているか確認してください。
 - **Yahooのほかにもメールボックスがある。** 両方をMCPEmailsに接続してください。AIがそれらをどう区別するかは[ClaudeとChatGPTで複数のメールアカウントを使う方法](/blog/multiple-email-accounts-in-claude-and-chatgpt)で説明しています。
 

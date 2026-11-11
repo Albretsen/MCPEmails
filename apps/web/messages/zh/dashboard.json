@@ -30,7 +30,7 @@
       "step3": "选择 OAuth，勾选 \"I understand and want to continue\"，然后点击 \"Create as a plugin\"。",
       "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。",
       "step5": "在对话中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。",
-      "note": "ChatGPT Go 和付费套餐都可以添加自定义 MCP 服务器。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
+      "note": "OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu 工作区，Pro 仅限只读访问，均在 chatgpt.com 上添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",

@@ -26,7 +26,7 @@
   },
   "answerSection": {
     "title": "Hvilke MCP-servere fungerer med Claude Desktop for e-post?",
-    "body": "Claude Desktop tar imot enhver ekstern MCP-server som legges til som egendefinert kobling, så en driftet e-postserver som MCPEmails fungerer der akkurat som i claude.ai: åpne <b>Customize</b>, <b>Connectors</b>, legg til <code>https://mcpemails.com/api/mcp</code> og logg inn. Den ene URL-en dekker Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo og alle IMAP-postkasser. Claudes egne koblinger for Gmail og Microsoft 365 finnes også i Claude Desktop, men hver dekker én leverandør, og Microsoft 365-koblingen godtar bare jobb- og skolekontoer. Lokale servere som startes fra <code>claude_desktop_config.json</code> fungerer også; de kjører på datamaskinen din og lagrer e-postinnloggingen i en fil der."
+    "body": "Claude Desktop tar imot enhver ekstern MCP-server som legges til som egendefinert kobling, så en driftet e-postserver som MCPEmails fungerer der akkurat som i claude.ai: åpne <b>Customize</b>, <b>Connectors</b>, legg til <code>https://mcpemails.com/api/mcp</code> og logg inn. Den ene URL-en dekker Gmail, Outlook.com, Microsoft 365, iCloud, Yahoo og alle IMAP-postkasser. Claudes egne koblinger for Gmail og Microsoft 365 finnes også i Claude Desktop, men hver dekker én leverandør, og Microsoft 365-koblingen godtar en privat Outlook.com-konto bare på Free, Pro, Max og Ultra, uten vedlegg. Lokale servere som startes fra <code>claude_desktop_config.json</code> fungerer også; de kjører på datamaskinen din og lagrer e-postinnloggingen i en fil der."
   },
   "setup": [
     {

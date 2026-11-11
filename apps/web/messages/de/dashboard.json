@@ -30,7 +30,7 @@
       "step3": "Wählen Sie OAuth, setzen Sie das Häkchen bei „Ich verstehe und möchte fortfahren“ und klicken Sie auf „Als Plugin erstellen“.",
       "step4": "Melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig.",
       "step5": "Tippen Sie im Chat @ und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.",
-      "note": "Benutzerdefinierte MCP-Server lassen sich mit ChatGPT Go und den kostenpflichtigen Tarifen hinzufügen. Bei Business und Enterprise muss das eventuell ein Admin oder Owner übernehmen."
+      "note": "OpenAI führt benutzerdefinierte MCP-Server für Business- und Enterprise/Edu-Workspaces auf, mit reinem Lesezugriff in Pro, auf chatgpt.com. Bei Business und Enterprise muss das eventuell ein Admin oder Owner übernehmen."
     },
     "cursor": {
       "step1": "Bearbeiten Sie ~/.cursor/mcp.json (global) oder .cursor/mcp.json (Projekt).",

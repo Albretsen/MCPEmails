@@ -198,7 +198,7 @@
         "I en chat skriver du @ og velger MCPEmails. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
       ],
       "body": [
-        "Dette virker i nettleseren på chatgpt.com med ChatGPT Go eller et betalt abonnement; mobilappen kan ikke legge den til. På Business og Enterprise kan en administrator eller eier måtte legge den til."
+        "Dette virker i nettleseren på chatgpt.com med et betalt abonnement; mobilappen kan ikke legge den til. OpenAIs hjelpeside nevner Business og Enterprise/Edu, der en administrator eller eier legger den til for arbeidsområdet, og skrivebeskyttet tilgang på Pro."
       ],
       "links": [
         {

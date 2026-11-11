@@ -206,7 +206,7 @@
         "step2": "选择 Add custom MCP server，命名为 MCPEmails，并把下面的 URL 粘贴为 Server URL。",
         "step3": "勾选 I understand and want to continue，点击 Create as a plugin，然后点击 Connect MCPEmails 并允许访问。",
         "step4": "在对话中输入 @MCPEmails 即可使用。",
-        "note": "自定义 MCP 服务器适用于 Go 方案和所有付费方案，需要在浏览器中打开 chatgpt.com。"
+        "note": "自定义 MCP 服务器需要付费方案，并在浏览器中打开 chatgpt.com 添加：OpenAI 列出的是 Business 和 Enterprise/Edu，Pro 仅限只读访问。"
       },
       "key": {
         "creating": "正在为 {client} 创建 API 密钥",

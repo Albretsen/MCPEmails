@@ -198,7 +198,7 @@
         "在对话中输入 @ 并选择 MCPEmails。后续问题需要用到邮件时请再次选择它。"
       ],
       "body": [
-        "需在浏览器中使用 chatgpt.com，适用于 ChatGPT Go 和所有付费套餐；移动应用无法添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
+        "需在浏览器中使用 chatgpt.com，并使用付费套餐；移动应用无法添加。OpenAI 的帮助页面列出了 Business 和 Enterprise/Edu（由管理员或所有者为工作区添加），Pro 仅有只读访问。"
       ],
       "links": [
         {

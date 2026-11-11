@@ -206,7 +206,7 @@
         "step2": "Velg Add custom MCP server, kall den MCPEmails og lim inn URL-en under som Server URL.",
         "step3": "Huk av for I understand and want to continue, klikk Create as a plugin, så Connect MCPEmails, og gi tilgang.",
         "step4": "Skriv @MCPEmails i en chat for å bruke den.",
-        "note": "Egne MCP-servere fungerer på Go-abonnementet og alle betalte abonnementer, i en nettleser på chatgpt.com."
+        "note": "Egne MCP-servere krever et betalt abonnement, i en nettleser på chatgpt.com: OpenAI lister Business og Enterprise/Edu, med bare lesetilgang på Pro."
       },
       "key": {
         "creating": "Lager en API-nøkkel for {client}",

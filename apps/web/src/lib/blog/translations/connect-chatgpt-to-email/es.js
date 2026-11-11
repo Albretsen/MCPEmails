@@ -12,7 +12,7 @@ Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta.
 
 ## Lo que necesitas
 
-- **ChatGPT Go o un plan de pago, en la web.** OpenAI permite añadir servidores MCP personalizados en chatgpt.com con Go y los planes de pago. No se puede añadir uno desde la app móvil. En Business y Enterprise, puede que un administrador o propietario tenga que añadirlo para el espacio de trabajo.
+- **Un plan de pago de ChatGPT, en la web.** La [página de ayuda de OpenAI sobre servidores MCP personalizados](https://help.openai.com/en/articles/12584461) los ofrece para los espacios de trabajo Business y Enterprise/Edu en chatgpt.com, con herramientas de lectura y obtención solo en Pro; no menciona Go ni Plus. No se puede añadir uno desde la app móvil. En Business y Enterprise, un administrador o propietario lo añade y lo publica para el espacio de trabajo.
 - **Una cuenta gratuita de MCPEmails.** [Créala aquí](/signup). El plan Gratis admite una bandeja conectada y no pide tarjeta.
 - **Un buzón.** Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex o cualquier servicio que hable IMAP y SMTP.
 
@@ -102,7 +102,7 @@ Limita bien la clave. Solo lectura suele ser lo correcto para un agente de progr
 
 ## Problemas comunes
 
-- **No aparece la opción de añadir un servidor MCP personalizado.** Los servidores MCP personalizados se añaden en chatgpt.com desde un navegador, no en la app móvil, y requieren Go o un plan de pago. En un espacio de trabajo Business o Enterprise, puede que tenga que añadirlo un administrador o propietario.
+- **No aparece la opción de añadir un servidor MCP personalizado.** Los servidores MCP personalizados se añaden en chatgpt.com desde un navegador, no en la app móvil. OpenAI los ofrece para Business y Enterprise/Edu, con herramientas de lectura y obtención solo en Pro, así que en un espacio de trabajo Business o Enterprise puede que tenga que añadirlo un administrador o propietario.
 - **El conector falla en su primera llamada a una herramienta.** Probablemente se creó sin autenticación. Bórralo y vuelve a crearlo con OAuth.
 - **El conector está creado, pero ChatGPT responde sin tocar tu correo.** No elegiste MCPEmails para ese mensaje. Escribe **@**, elige MCPEmails y vuelve a preguntar.
 - **El proveedor rechaza tu contraseña.** Usa una contraseña de aplicación generada por el proveedor, no la de inicio de sesión web. Algunos proveedores solo la emiten con la autenticación de dos factores activada.

@@ -57,7 +57,7 @@ Alle postkassene du har koblet til, er nå tilgjengelige. [Claude-guiden](/blog/
 
 ## Legg den til i ChatGPT
 
-ChatGPT Go og betalte abonnementer kan legge til en egen MCP-server på chatgpt.com i en nettleser; mobilappen kan ikke legge til en. På Business og Enterprise må en administrator eller eier kanskje legge den til.
+Et betalt ChatGPT-abonnement kan legge til en egen MCP-server på chatgpt.com i en nettleser; mobilappen kan ikke legge til en. OpenAIs hjelpeside lister Business og Enterprise/Edu, der en administrator eller eier legger den til for arbeidsområdet, og lese- og henteverktøy bare på Pro; Go og Plus nevnes ikke.
 
 1. Åpne **Plugins**, deretter **Personal**, klikk **Add** øverst til høyre og velg **Add custom MCP server**.
 2. Kall den MCPEmails, lim inn \`https://mcpemails.com/api/mcp\` under **Connection**, velg **OAuth**, kryss av for **I understand and want to continue**, og klikk **Create as a plugin**.

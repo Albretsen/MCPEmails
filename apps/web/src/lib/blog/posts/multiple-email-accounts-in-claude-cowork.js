@@ -11,9 +11,11 @@
 //     claude_desktop_config.json are not available in Cowork.
 //   - support.claude.com/en/articles/10166901 (Google Workspace connectors):
 //     "the Google account you've connected"; no second account mentioned.
-//   - support.claude.com/en/articles/12542951 (Microsoft 365 connector):
-//     personal accounts cannot connect; a Global Administrator consents;
-//     read-only until write tools are enabled.
+//   - support.claude.com/en/articles/15183774 (Connect to Microsoft 365), read
+//     2026-11-11: a personal Microsoft account connects on Free, Pro, Max and
+//     Ultra with no admin, write tools included, no attachments; Team and
+//     Enterprise are not shown the option. Work or school accounts: a Global
+//     Administrator consents; read-only until write tools are enabled.
 //   - support.claude.com/en/articles/13854387 (scheduled tasks): tasks use the
 //     same connectors.
 // Re-read them before editing the built-in connector sections; Cowork changes
@@ -23,16 +25,16 @@ const post = {
   slug: 'multiple-email-accounts-in-claude-cowork',
   title: 'Multiple Email Accounts in Claude Cowork, Including Personal Outlook',
   description:
-    'Claude Cowork reaches one Google account through its Gmail connector, and its Microsoft 365 connector refuses personal Outlook addresses. How to give one Cowork task several inboxes, work and personal.',
+    'Claude Cowork reaches one Google account through its Gmail connector and the one Microsoft account you sign in with through its Microsoft 365 connector. How to give one Cowork task several inboxes, work and personal.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'Work and personal email accounts, including Gmail and Outlook.com, connected to one Claude Cowork task',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-10-29T09:00:00.000Z',
+  updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['Claude', 'Cowork', 'Multiple inboxes', 'MCP'],
   featured: false,
-  content: `**Claude Cowork uses the same connectors as Claude chat, so it has the same email limits: one Google account through the Gmail connector, and work Microsoft 365 accounts only through the Microsoft 365 connector.** A personal Outlook.com or Hotmail address, a second Gmail, or a company mailbox on an IMAP host needs a custom connector. With an MCP server such as MCPEmails, one custom connector gives a Cowork task every mailbox you connect, each by name.
+  content: `**Claude Cowork uses the same connectors as Claude chat, so it has the same email limits: one Google account through the Gmail connector, and one Microsoft account through the Microsoft 365 connector, which takes a personal Outlook.com account only on the Free, Pro, Max and Ultra plans.** A second Gmail, a personal Outlook.com or Hotmail address on a Team or Enterprise plan, a company mailbox on an IMAP host, or sending with attachments needs a custom connector. With an MCP server such as MCPEmails, one custom connector gives a Cowork task every mailbox you connect, each by name.
 
 **Jump to:** [Built-in connectors](#what-coworks-built-in-email-connectors-reach) · [Several inboxes](#several-inboxes-in-one-cowork-task) · [Setup](#set-it-up) · [Permissions](#keep-sending-under-your-control) · [FAQ](#faq)
 
@@ -41,7 +43,7 @@ const post = {
 Anthropic's [Cowork guide](https://support.claude.com/en/articles/13345190-get-started-with-cowork) manages connectors from the same **Customize → Connectors** page as chat, and chat and Cowork now share one home in the Claude app. Whatever your Claude account has connected is what a Cowork task can use.
 
 - **Gmail.** Claude's Gmail connector reads, searches, drafts and sends. [Anthropic's article](https://support.claude.com/en/articles/10166901-use-google-workspace-connectors) describes access to "the Google account you've connected" and says nothing about adding a second one. A personal and a work Gmail do not sit side by side through it.
-- **Microsoft 365.** The [Microsoft 365 connector](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector) is for accounts in a company's Microsoft 365 tenant. A Global Administrator has to consent first, it starts read-only, and personal Microsoft accounts such as @outlook.com and @hotmail.com cannot connect.
+- **Microsoft 365.** The [Microsoft 365 connector](https://support.claude.com/en/articles/15183774-connect-to-microsoft-365) takes a work or school account, where a Global Administrator has to consent first and it starts read-only, or, on the Free, Pro, Max and Ultra plans, a personal Microsoft account such as @outlook.com or @hotmail.com with no admin. Team and Enterprise plans are not shown the personal option, and the write tools reject attachments.
 - **Everything else.** Yahoo, iCloud, Fastmail, Zoho, IONOS or your own mail server have no built-in Claude connector.
 
 So the common mix, a work mailbox plus a personal Outlook.com or a second Gmail, does not fit in Cowork with the built-in connectors alone.
@@ -100,7 +102,7 @@ For the same summary every morning without asking, put the first prompt on a sch
 Not through Claude's built-in Gmail connector, which Anthropic describes as reaching the one Google account you connected. Connect both accounts to MCPEmails with Google app passwords and add MCPEmails as a custom connector; a Cowork task then sees both.
 
 **Can Cowork read my personal Outlook.com or Hotmail email?**
-Not with Claude's Microsoft 365 connector, which refuses personal Microsoft accounts. Connect the address to MCPEmails with Sign in with Microsoft, then add MCPEmails to Claude. [Connect Claude to Outlook.com and Hotmail](/blog/connect-claude-to-outlook-com-hotmail) has the steps.
+On Free, Pro, Max or Ultra, yes, through Claude's Microsoft 365 connector, without attachments. On a Team or Enterprise plan, or for attachments and other mailboxes alongside it, connect the address to MCPEmails with Sign in with Microsoft, then add MCPEmails to Claude. [Connect Claude to Outlook.com and Hotmail](/blog/connect-claude-to-outlook-com-hotmail) has the steps.
 
 **Do custom connectors work in Cowork?**
 Yes. Anthropic lists custom connectors as available in Claude, Cowork and Claude Desktop. They must be remote servers reachable on the internet; a local server from the desktop config file is not available in Cowork.

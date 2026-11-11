@@ -30,7 +30,7 @@
       "step3": "Velg OAuth, huk av for «I understand and want to continue», og klikk «Create as a plugin».",
       "step4": "Logg inn med MCPEmails for å autorisere. Ingen API-nøkkel nødvendig.",
       "step5": "I en samtale skriver du @ og velger MCPEmails. Valget gjelder bare den meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
-      "note": "Egendefinerte MCP-servere kan legges til med ChatGPT Go og betalte abonnementer. På Business og Enterprise må kanskje en administrator eller eier legge den til."
+      "note": "OpenAI lister egendefinerte MCP-servere for Business- og Enterprise/Edu-arbeidsområder, med bare lesetilgang på Pro, på chatgpt.com. På Business og Enterprise må kanskje en administrator eller eier legge den til."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",

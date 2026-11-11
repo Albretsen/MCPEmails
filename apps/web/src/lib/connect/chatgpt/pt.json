@@ -1,7 +1,7 @@
 {
   "eyebrow": "ChatGPT",
   "title": "Use o {provider} no ChatGPT",
-  "sub": "O ChatGPT acessa o {provider} por meio de um servidor MCP personalizado, que você adiciona no chatgpt.com com o ChatGPT Go ou um plano pago.",
+  "sub": "O ChatGPT acessa o {provider} por meio de um servidor MCP personalizado, que você adiciona no chatgpt.com em um plano pago.",
   "steps": [
     "Conecte o {provider} ao MCPEmails com os passos acima.",
     "No chatgpt.com, abra Plugins, Personal (Pessoais), clique em Add (Adicionar) e depois em Adicionar servidor MCP personalizado.",
@@ -12,7 +12,7 @@
   "blogLink": "Como conectar o ChatGPT ao seu e-mail",
   "faqQ": "O ChatGPT consegue ler meus e-mails do {provider}?",
   "faqQMailName": "O ChatGPT consegue ler meu {provider}?",
-  "faqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. No chatgpt.com, adicione um servidor MCP personalizado com a URL https://mcpemails.com/api/mcp e login via OAuth. Isso funciona com o ChatGPT Go e os planos pagos. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados.",
+  "faqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. No chatgpt.com, adicione um servidor MCP personalizado com a URL https://mcpemails.com/api/mcp e login via OAuth. Isso exige um plano pago: a página de ajuda da OpenAI cita Business e Enterprise/Edu para suporte completo e o Pro para ferramentas somente leitura. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados.",
   "directorySub": "O ChatGPT acessa o {provider} pelo app Any Mailbox, do MCPEmails.",
   "directorySteps": [
     "Conecte o {provider} ao MCPEmails com os passos acima.",
