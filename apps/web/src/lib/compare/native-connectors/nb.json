@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers: sett opp Gmail MCP-serveren"
     }
   },
+  "guide": {
+    "h": "Vil du ha hele kartet over alternativene?",
+    "p": "Innebygde koblinger, driftede MCP-tjenester, skrivebordsapper, selvdrift og automatiseringsverktøy, for Yahoo, IMAP, egne domener og flere postkasser, datert og med kilder.",
+    "link": "Les: slik kobler du enhver e-postkonto til Claude eller ChatGPT"
+  },
   "ctaBand": {
     "title": "Gi AI-en din alle innboksene du har",
     "sub": "Koble til en postkasse på få minutter. Én innboks gratis, uten kort.",

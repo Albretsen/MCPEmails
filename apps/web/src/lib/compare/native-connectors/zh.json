@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers：配置 Gmail MCP 服务器"
     }
   },
+  "guide": {
+    "h": "想看完整的选项地图？",
+    "p": "内置连接器、托管 MCP 服务、桌面应用、自托管和自动化工具，覆盖 Yahoo、IMAP、自有域名和多个邮箱，标注日期并附来源。",
+    "link": "阅读：如何把任何邮箱连接到 Claude 或 ChatGPT"
+  },
   "ctaBand": {
     "title": "让你的 AI 连接你所有的邮箱",
     "sub": "几分钟即可连接邮箱。免费使用一个邮箱，无需信用卡。",

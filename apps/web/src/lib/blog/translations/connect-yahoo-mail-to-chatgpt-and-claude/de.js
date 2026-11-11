@@ -17,7 +17,7 @@ Was man bei der Suche stattdessen findet:
 - **Automatisierungsplattformen**, die einzelne Nachrichten von Yahoo an ein KI-Modell weiterreichen, sobald ein Auslöser greift. Praktisch für einen festen Ablauf, nicht für Fragen zu Ihren E-Mails in einem Chat.
 - **Kopieren und Einfügen** von Nachrichten in den Chat, was für eine E-Mail nach der anderen funktioniert.
 
-Ein MCP-Server ist der Weg, der der KI Ihr tatsächliches Postfach gibt. ChatGPT und Claude akzeptieren ihn beide als benutzerdefinierten Konnektor, und die Anmeldung bei Yahoo übernimmt der Server.
+Ein MCP-Server ist der Weg, der der KI Ihr tatsächliches Postfach gibt. ChatGPT und Claude akzeptieren ihn beide als benutzerdefinierten Konnektor, und die Anmeldung bei Yahoo übernimmt der Server. [So verbinden Sie jedes E-Mail-Konto mit Claude oder ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) vergleicht jeden Weg, gehostet und selbst betrieben.
 
 ## Was Sie brauchen
 

@@ -15,7 +15,7 @@ Begge assistentene har egne e-postkoblinger, og de har endret seg raskt, så her
 - **ChatGPT.** Siden slutten av august 2026 kan ChatGPTs egne programtillegg for Gmail, Google Calendar og Google Contacts ha mer enn én konto på Plus, Pro, Business og Enterprise, så en privat Gmail og en jobb-Gmail kan være med i samme samtale. I september utvidet OpenAI støtten for flere kontoer til andre programtillegg. Hvis alle postkassene dine er Google-kontoer, kan ChatGPTs eget programtillegg være alt du trenger.
 - **Claude.** Anthropics hjelpesenter beskriver Gmail-koblingen som en kobling som når «the Google account you've connected». Én Google-konto per tilkobling.
 
-Det ingen av dem er laget for, er postkassen et firma faktisk bruker på sitt eget domene når domenet ikke ligger hos Google eller Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, et cPanel-webhotell eller din egen server. De snakker IMAP og SMTP, og for å nå dem trenger du noe som snakker IMAP.
+Det ingen av dem er laget for, er postkassen et firma faktisk bruker på sitt eget domene når domenet ikke ligger hos Google eller Microsoft: IONOS, Zoho Mail, Namecheap Private Email, STRATO, Migadu, et cPanel-webhotell eller din egen server. De snakker IMAP og SMTP, og for å nå dem trenger du noe som snakker IMAP. [Slik kobler du enhver e-postkonto til Claude eller ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) går gjennom alle veiene, også de andre driftede tjenestene og de du drifter selv.
 
 ## Én kobling for alle postkassene
 

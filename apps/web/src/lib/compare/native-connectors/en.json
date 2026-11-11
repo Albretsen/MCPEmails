@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers: configure the Gmail MCP server"
     }
   },
+  "guide": {
+    "h": "Need the full map of options?",
+    "p": "Built-in connectors, hosted MCP services, desktop apps, self-hosting and automation tools, for Yahoo, IMAP, custom domains and several mailboxes, dated and sourced.",
+    "link": "Read: how to connect any email account to Claude or ChatGPT"
+  },
   "more": {
     "h": "Decided you want an MCP server?",
     "p": "There are several, and they differ on price, mailbox coverage and what they do with your credentials. We ranked them, listed what each one is bad at, and dated every figure.",
