@@ -78,27 +78,22 @@ export function checkoutTaxParams(env: Env = process.env):
  *                       an existing `customer` (getOrCreateStripeCustomer), and
  *                       Stripe refuses tax_id_collection on an existing
  *                       customer unless Checkout may write the business name
- *                       back onto it: `name: 'auto'`. `address: 'auto'` is
- *                       added only while automatic tax is on, which needs the
- *                       billing address on the customer to calculate tax;
- *                       without it Checkout has no reason to overwrite the
- *                       customer's address.
+ *                       back onto it AND may write the billing address
+ *                       back: `{ name: 'auto', address: 'auto' }`. Stripe
+ *                       rejects `name` alone ("To enable tax ID collection,
+ *                       please set customer_update[address] to auto"; seen
+ *                       on staging 2026-11-11), so both are sent always.
  *
  * Tax calculation is still decided by `checkoutTaxParams` alone. Pass whether
  * THIS session sends `automatic_tax` (STRIPE_FORCE_USD can drop it).
  */
-export function checkoutPaperworkParams(automaticTax: boolean):
-  | { tax_id_collection: { enabled: true }; customer_update: { name: 'auto' } }
-  | { tax_id_collection: { enabled: true }; customer_update: { name: 'auto'; address: 'auto' } } {
-  if (automaticTax) {
-    return {
-      tax_id_collection: { enabled: true },
-      customer_update: { name: 'auto', address: 'auto' },
-    };
-  }
+export function checkoutPaperworkParams(_automaticTax: boolean): {
+  tax_id_collection: { enabled: true };
+  customer_update: { name: 'auto'; address: 'auto' };
+} {
   return {
     tax_id_collection: { enabled: true },
-    customer_update: { name: 'auto' },
+    customer_update: { name: 'auto', address: 'auto' },
   };
 }
 

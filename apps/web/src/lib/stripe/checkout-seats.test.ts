@@ -266,7 +266,7 @@ test('Personal and Pro checkouts are untouched by the switch, paperwork on every
   await runCheckout({ planId: 'solo', interval: 'month', locale: 'en' });
   assert.deepEqual(sessions[0].line_items, [{ price: 'price_solo_month', quantity: 1 }]);
   assert.deepEqual(sessions[0].tax_id_collection, { enabled: true });
-  assert.deepEqual(sessions[0].customer_update, { name: 'auto' }, 'tax off: the name only, never the address');
+  assert.deepEqual(sessions[0].customer_update, { name: 'auto', address: 'auto' }, 'tax off: Stripe still needs the address with tax ID collection');
   assert.equal('automatic_tax' in sessions[0], false, 'tax calculation still follows its own switch');
 });
 

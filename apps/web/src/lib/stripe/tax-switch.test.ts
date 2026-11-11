@@ -42,9 +42,9 @@ test('Stripe Tax on adds automatic tax only; the paperwork no longer rides on it
 test('every session collects the tax ID and company name, with the customer_update an existing customer needs', () => {
   assert.deepEqual(checkoutPaperworkParams(false), {
     tax_id_collection: { enabled: true },
-    customer_update: { name: 'auto' },
+    customer_update: { name: 'auto', address: 'auto' },
   });
-  // The address is written back only when the session calculates tax.
+  // Stripe refuses tax ID collection on an existing customer without address: 'auto', tax on or off.
   assert.deepEqual(checkoutPaperworkParams(true), {
     tax_id_collection: { enabled: true },
     customer_update: { name: 'auto', address: 'auto' },
