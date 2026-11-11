@@ -26,6 +26,12 @@
  *   suppressible and carry no unsubscribe header. The upgrade line in each is
  *   secondary to the numbers, which is what keeps them out of marketing.
  *
+ * TRANSACTIONAL, PLAN ENDING (plan_ending_5d)
+ *   The customer scheduled their subscription to stop; it stops in 4 to 6
+ *   days. The date, what Free means, and two links to the billing page (keep
+ *   the plan, or pause instead). Queued by the daily reminder job behind
+ *   PLAN_ENDING_REMINDER_ENABLED (src/lib/billing/plan-ending-reminder.ts).
+ *
  * TRANSACTIONAL, PASS NOTICES (pass_ending_7d, pass_ended)
  *   The 3-month Personal pass ends in 7 days, or has ended. About the end of a
  *   fixed-term contract the customer bought, so no consent and no unsubscribe;
@@ -110,6 +116,7 @@ import {
   retryDaysLeft,
   retryWindowPhrase,
 } from '@/lib/billing/retry-window';
+import { planActionUrl, planEndingLinksOn } from '@/lib/billing/plan-action-links';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -146,6 +153,7 @@ export const BILLING_TEMPLATES = [
   'pause_started',
   'pause_ending_3',
   'payment_failed_restart',
+  'plan_ending_5d',
 ] as const;
 
 export type BillingTemplate = (typeof BILLING_TEMPLATES)[number];
@@ -463,6 +471,16 @@ export type LifecyclePayload = {
   /** True when the pause replaced a scheduled cancellation. */
   replacedCancel?: boolean;
 
+  // ── Plan-ending reminder (plan_ending_5d) ────────────────────────────────
+  //
+  // `periodEnd` is the scheduled stop. Both flags are decided at queue time
+  // (src/lib/billing/plan-ending-reminder.ts) and default to the quiet side.
+
+  /** Print the Free allowance: false for cap-exempt and grandfathered owners. */
+  freeActionCapApplies?: boolean;
+  /** Offer "Pause instead": pause is on for this account and the plan may pause. */
+  pauseOffered?: boolean;
+
 
   // ── Cancellation confirmation (cancel_ask) ─────────────────────────────
   //
@@ -757,6 +775,8 @@ export interface ShellOptions {
   html: string;
   ctaUrl?: string;
   ctaLabel?: string;
+  /** Already-escaped HTML rendered under the button. */
+  afterCta?: string;
   footerNote: string;
   unsubscribe?: string | null;
 }
@@ -806,7 +826,7 @@ export function shell(options: ShellOptions): string {
                 ${escapeHtml(options.title)}
               </p>
               ${options.html}
-              ${cta}
+              ${cta}${options.afterCta ?? ''}
             </td>
           </tr>
           <tr>
@@ -962,7 +982,11 @@ function cancelRetentionOffer(base: string, payload: LifecyclePayload): { text: 
   if (payload.source === 'billing_switch_free') return null;
   if (payload.planId !== 'personal' && payload.planId !== 'solo') return null;
   if (!cancelIsMonthly(payload)) return null;
-  const url = `${base}/dashboard/settings?src=cancel_email#billing`;
+  // With the plan-ending links on, the link opens the pause dialog directly
+  // and the pause it leads to is attributed to this email.
+  const url = planEndingLinksOn()
+    ? planActionUrl(base, 'pause', 'cancel_email')
+    : `${base}/dashboard/settings?src=cancel_email#billing`;
   const text =
     payload.planId === 'solo'
       ? `If you only need a break or a smaller plan: you can pause for up to 3 months, or switch to ${planDisplayName('personal')}, from your billing page. Either one replaces this cancellation.`
@@ -1279,6 +1303,84 @@ function composePaymentRestart(ctx: {
 // ---------------------------------------------------------------------------
 // Composition
 // ---------------------------------------------------------------------------
+
+/** The plan-ending reminder (plan_ending_5d). Composed by composeBillingEmail. */
+function composePlanEnding(
+  payload: LifecyclePayload,
+  ctx: {
+    category: BillingCategory;
+    base: string;
+    name: string | null;
+    yourPlan: string;
+    endsOn: string;
+    consequence: string | null;
+  },
+): ComposedLifecycleEmail {
+  const { category, base, name, yourPlan, endsOn, consequence } = ctx;
+  const keepUrl = planActionUrl(base, 'keep', 'plan_ending_email');
+  const pauseUrl = payload.pauseOffered ? planActionUrl(base, 'pause', 'plan_ending_email') : null;
+
+  const subject = name
+    ? `Your MCPEmails ${name} plan ends on ${endsOn}`
+    : `Your MCPEmails plan ends on ${endsOn}`;
+  const Plan = yourPlan.charAt(0).toUpperCase() + yourPlan.slice(1);
+  const lead = `${Plan} ends on ${endsOn}, as you scheduled. Until then everything keeps working as it does today.`;
+  const free = consequence ?? 'After that your account goes back to Free.';
+  const allowance = payload.freeActionCapApplies
+    ? `Free includes ${FREE_ACTION_ALLOWANCE} email actions a month.`
+    : null;
+  const keepText = 'To keep your plan, one click on your billing page removes the scheduled end:';
+  const pauseText = 'Or pause it for up to 3 months instead. Billing then resumes on its own after the pause:';
+  const nothingToDo = 'If ending it is what you want, there is nothing to do.';
+
+  const factRows: Array<[string, string]> = [];
+  if (name) factRows.push(['Plan', name]);
+  factRows.push(['Ends on', endsOn]);
+
+  const body = [
+    lead,
+    '',
+    ...factRows.map(([label, value]) => `${label}: ${value}`),
+    '',
+    free,
+    ...(allowance ? [allowance] : []),
+    NOTHING_DELETED,
+    '',
+    keepText,
+    `Keep my plan: ${keepUrl}`,
+    '',
+    ...(pauseUrl ? [pauseText, `Pause instead: ${pauseUrl}`, ''] : []),
+    nothingToDo,
+    '',
+    SUPPORT_FOOTER_TEXT,
+    '',
+    'MCPEmails',
+    base,
+    '',
+    POSTAL_ADDRESS_LINE,
+  ].join('\n');
+
+  return {
+    subject,
+    category,
+    body,
+    htmlBody: shell({
+      title: `Your plan ends on ${endsOn}`,
+      html:
+        p(lead) +
+        facts(factRows) +
+        p(free) +
+        (allowance ? p(allowance) : '') +
+        p(NOTHING_DELETED) +
+        p(keepText),
+      ctaUrl: escapeHtml(keepUrl),
+      ctaLabel: 'Keep my plan',
+      // The pause link and the closing line sit under the button.
+      afterCta: (pauseUrl ? pLink(pauseText, pauseUrl) : '') + p(nothingToDo),
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
 
 /**
  * Build one lifecycle email.
@@ -1663,12 +1765,23 @@ export function composeBillingEmail(
       const replyLine = 'Or just reply to this email.';
 
       const offer = cancelRetentionOffer(base, payload);
+      // "Keep my plan", right under the facts, only with PLAN_ENDING_REMINDER_ENABLED
+      // on. The confirmation, withdrawal line and reasons are unchanged.
+      const keep = planEndingLinksOn()
+        ? {
+            text: endsOn
+              ? `If you change your mind before ${endsOn}, you can keep your plan with one click from your billing page:`
+              : 'If you change your mind, you can keep your plan with one click from your billing page:',
+            url: planActionUrl(base, 'keep', 'cancel_email'),
+          }
+        : null;
 
       const body = [
         lead,
         ...(parking ? [parking] : []),
         NOTHING_DELETED,
         '',
+        ...(keep ? [keep.text, keep.url, ''] : []),
         ...(withdrawalText ? [`${withdrawalText}: ${withdrawalUrl}`, ''] : []),
         reasonLead,
         ...(reasonLinks
@@ -1705,6 +1818,7 @@ export function composeBillingEmail(
             p(lead) +
             (parking ? p(parking) : '') +
             p(NOTHING_DELETED) +
+            (keep ? pLink(keep.text, keep.url) : '') +
             (withdrawalText ? pLink(`${withdrawalText}.`, withdrawalUrl) : '') +
             reasonHtml +
             (offer
@@ -1859,6 +1973,21 @@ export function composeBillingEmail(
           footerNote: SUPPORT_FOOTER,
         }),
       };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Plan ending in 4 to 6 days. Transactional: it is about the end of the
+    // customer's own subscription, on a date they chose. Facts first (plan,
+    // date, what Free means, nothing deleted), then two links to the billing
+    // page. No discount, no price, no "are you sure": the last line says that
+    // doing nothing is a fine answer.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'plan_ending_5d': {
+      if (!endsOn) {
+        console.error(`[billing-email] ${template} not composed: no end date in the payload.`);
+        return null;
+      }
+      return composePlanEnding(payload, { category, base, name, yourPlan, endsOn, consequence });
     }
 
     // ─────────────────────────────────────────────────────────────────────

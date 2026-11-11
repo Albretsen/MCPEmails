@@ -29,7 +29,13 @@ export type ConnectEntryPoint =
  * transcript is only ever recorded by the server; leaving it off the browser's
  * list means no client can forge a chat-link row.
  */
-export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link' | AppPasswordLinkEntryPoint;
+export type FunnelEntryPoint = ConnectEntryPoint | 'chat_link' | AppPasswordLinkEntryPoint | PlanActionEntryPoint;
+
+/**
+ * On `plan_kept` and `pause_started` rows: where the keep or pause click came
+ * from (src/lib/billing/plan-action-links.ts, 20261111140300).
+ */
+export type PlanActionEntryPoint = 'plan_ending_email' | 'cancel_email' | 'billing_page';
 
 /**
  * On `app_password_link_clicked` rows only: which external link in the
@@ -120,6 +126,11 @@ export type ProductFunnelEvent = {
     // A pause or downgrade option was clicked (billing card or post-cancel
     // email). category = 'pause' | 'downgrade'.
     | 'retention_option_clicked'
+    // Plan-ending reminder (20261111140300). Category = the plan. `sent` when
+    // the treatment email went out, `holdout` when the subscription drew the
+    // holdout arm, `plan_kept` when a scheduled stop was removed from the
+    // billing page (entry_point = where the click came from).
+    | 'plan_ending_reminder_sent' | 'plan_ending_reminder_holdout' | 'plan_kept'
     // The failed-payment banner's button (/api/stripe/payment-fix). success =
     // sent on to Stripe, failure = bounced to settings.
     | 'payment_fix_clicked'

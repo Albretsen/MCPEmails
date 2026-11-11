@@ -166,3 +166,91 @@ test('the reason card shows after a cancel and hides itself when its route is mi
   assert.deepEqual(calls.find((c) => c.url === '/api/billing/feedback').body, { reason: 'too_expensive', source: 'billing_card' });
   await waitFor(() => !text(view).includes(dashboard.billing.cancelReason.prompt));
 });
+
+// ── Keep my plan (POST /api/billing/keep) ───────────────────────────────────
+
+const KEEP_QUOTE = {
+  cancelScheduled: true,
+  endsAt: '2026-11-16T12:00:00.000Z',
+  canKeep: true,
+  keepRefusal: null,
+  planId: 'personal',
+  interval: 'month',
+  amountCents: 900,
+  currency: 'usd',
+};
+
+function noReload(t) {
+  const originalSetTimeout = window.setTimeout;
+  window.setTimeout = () => 0;
+  t.after(() => { window.setTimeout = originalSetTimeout; });
+}
+
+function withSearch(t, search) {
+  window.history.replaceState(null, '', `/dashboard/settings${search}`);
+  t.after(() => window.history.replaceState(null, '', '/dashboard/settings'));
+}
+
+const modalOpen = (view) => Boolean(view.container.ownerDocument.querySelector('.modal'));
+const modalButton = (view, label) =>
+  [...view.container.ownerDocument.querySelectorAll('.modal-foot button')].find((b) => b.textContent.includes(label));
+
+test('a scheduled stop shows the end date and Keep my plan, which confirms with source billing_page', async (t) => {
+  const { view, calls } = await render(t, {
+    '/api/billing/keep': (body) => respond(200, body?.confirm ? { ...KEEP_QUOTE, canKeep: false, changed: true } : KEEP_QUOTE),
+  });
+  await waitFor(() => text(view).includes(pc.keepMyPlan));
+  assert.ok(text(view).includes(pc.endsBanner.replace('{plan}', 'Personal').replace('{date}', day(KEEP_QUOTE.endsAt))));
+  buttonWith(view, pc.keepMyPlan).click();
+  await waitFor(() => text(view).includes('$9.00'));
+  noReload(t);
+  modalButton(view, pc.keepMyPlan).click();
+  await waitFor(() => calls.some((c) => c.url === '/api/billing/keep' && c.body?.confirm === true));
+  assert.deepEqual(calls.find((c) => c.body?.confirm === true).body, { action: 'keep', source: 'billing_page', confirm: true });
+});
+
+test('no keep banner while the keep route is off (404)', async (t) => {
+  const { view } = await render(t, {
+    '/api/billing/downgrade': () => respond(200, { ...DOWNGRADE_QUOTE, canDowngrade: false, canSwitchFree: false, cancelScheduled: true }),
+  });
+  await flush();
+  assert.equal(text(view).includes(pc.keepMyPlan), false);
+});
+
+test('an email link with plan_action=keep opens the keep dialog, attributed to the email, and nothing is sent until confirm', async (t) => {
+  withSearch(t, '?plan_action=keep&src=plan_ending_email');
+  const { view, calls } = await render(t, {
+    '/api/billing/keep': (body) => respond(200, body?.confirm ? { ...KEEP_QUOTE, changed: true } : KEEP_QUOTE),
+  });
+  await waitFor(() => modalOpen(view));
+  assert.equal(calls.some((c) => c.body?.confirm === true), false, 'opening the link changes nothing');
+  assert.equal(window.location.search, '', 'the action is cleared from the address bar');
+  noReload(t);
+  modalButton(view, pc.keepMyPlan).click();
+  await waitFor(() => calls.some((c) => c.body?.confirm === true));
+  assert.equal(calls.find((c) => c.body?.confirm === true).body.source, 'plan_ending_email');
+});
+
+test('an email link with plan_action=pause opens the pause dialog and the pause carries the source', async (t) => {
+  withSearch(t, '?plan_action=pause&src=cancel_email');
+  const { view, calls } = await render(t, {
+    '/api/billing/pause': (body) => respond(200, body?.confirm ? { ...PAUSE_QUOTE, changed: true } : { ...PAUSE_QUOTE, cancelScheduled: true }),
+  });
+  await waitFor(() => text(view).includes(pc.pauseTitle));
+  noReload(t);
+  buttonWith(view, pc.pauseConfirm).click();
+  await waitFor(() => calls.some((c) => c.body?.confirm === true));
+  const sent = calls.find((c) => c.body?.confirm === true).body;
+  assert.equal(sent.action, 'pause');
+  assert.equal(sent.source, 'cancel_email');
+});
+
+test('a keep link for a plan that no longer has a scheduled end opens nothing', async (t) => {
+  withSearch(t, '?plan_action=keep&src=plan_ending_email');
+  const { view } = await render(t, {
+    '/api/billing/keep': () => respond(200, { ...KEEP_QUOTE, cancelScheduled: false, canKeep: false, endsAt: null }),
+    '/api/billing/downgrade': () => respond(200, DOWNGRADE_QUOTE),
+  });
+  await waitFor(() => text(view).includes(pc.title));
+  assert.equal(modalOpen(view), false);
+});

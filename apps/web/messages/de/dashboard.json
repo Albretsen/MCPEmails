@@ -938,7 +938,11 @@
       "freeConfirm": "Zu Free wechseln",
       "freeBody": "Ihr Tarif bleibt bis zum {date} aktiv, das Sie bereits bezahlt haben. Danach wechselt das Konto zu Free. Es wird nichts gelöscht.",
       "freeToast": "Erledigt. Ihr Tarif bleibt bis zum {date} aktiv und wechselt dann zu Free.",
-      "pendingCheckout": "Für Ihr Abonnement ist eine Pause oder ein Tarifwechsel gebucht. Nutzen Sie zuerst „Früher fortsetzen“ oder „Behalten“ auf dieser Seite und ändern Sie dann den Tarif."
+      "pendingCheckout": "Für Ihr Abonnement ist eine Pause oder ein Tarifwechsel gebucht. Nutzen Sie zuerst „Früher fortsetzen“ oder „Behalten“ auf dieser Seite und ändern Sie dann den Tarif.",
+      "endsBanner": "Ihr {plan}-Tarif endet am {date}. Es wird nichts gelöscht.",
+      "keepMyPlan": "Tarif behalten",
+      "keepPlanBody": "Das geplante Ende wird entfernt. {plan} läuft weiter und verlängert sich am {date} für {amount}, wie bisher. Heute wird nichts berechnet.",
+      "keepPlanToast": "Ihr {plan}-Tarif läuft weiter."
     },
     "cancelReason": {
       "prompt": "Sie haben Ihren Tarif gekündigt. Wenn Sie uns den Grund nennen möchten, genügt ein Klick.",

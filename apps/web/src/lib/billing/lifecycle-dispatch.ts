@@ -46,6 +46,7 @@ import { resolveUserId } from '@/lib/billing/lifecycle-queue';
 import { ACCOUNT_DELETED_REASON, accountState } from '@/lib/billing/deleted-account';
 import { checkPassNoticeFreshness } from '@/lib/billing/pass-notice-freshness';
 import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-funnel';
+import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { isSuppressed } from '@/lib/email/lifecycle';
 import { lifecycleMode, type LifecycleMode } from '@/lib/billing/lifecycle-mode';
 import {
@@ -339,6 +340,9 @@ async function dispatchOne(
         category: 'pass_reminder',
       });
     }
+    if (row.template === 'plan_ending_5d' && row.user_id) {
+      await recordPlanEndingSent(db, row);
+    }
   } else if (send.reason === 'unusable_recipient' || send.reason === 'not_composable') {
     // Permanent. Retrying cannot help, so stop rather than burn five attempts.
     await finish(db, row.id, { cancelled: 'undeliverable', error: send.reason });
@@ -349,6 +353,27 @@ async function dispatchOne(
       .update({ last_error: send.reason, claimed_at: null })
       .eq('id', row.id);
     result.failed += 1;
+  }
+}
+
+/**
+ * Funnel row for the plan-ending experiment's treatment arm, written when the
+ * email actually went out (the holdout's row is written by the reminder job).
+ * Best-effort and never throws: the email is already gone.
+ */
+async function recordPlanEndingSent(db: Db, row: QueueRow): Promise<void> {
+  try {
+    const workspaceId = row.user_id ? await primaryWorkspaceId(db, row.user_id) : null;
+    if (!workspaceId) return;
+    const plan = row.payload?.planId;
+    await recordProductFunnelEvent(db, {
+      workspaceId,
+      stage: 'plan_ending_reminder_sent',
+      outcome: 'success',
+      category: plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'unknown',
+    });
+  } catch (err) {
+    console.error('[lifecycle-dispatch] plan-ending funnel write failed, swallowed:', err instanceof Error ? err.message : String(err));
   }
 }
 
