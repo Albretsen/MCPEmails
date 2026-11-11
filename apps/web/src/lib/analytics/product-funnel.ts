@@ -171,7 +171,11 @@ export type ProductFunnelEvent = {
     // Monthly-to-annual switch (20261111140200, src/lib/billing/annual-switch.ts).
     // shown/clicked carry the surface (dashboard_billing | surface_overview);
     // completed carries the target (personal_year | solo_year | pro_year).
-    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed';
+    | 'annual_switch_shown' | 'annual_switch_clicked' | 'annual_switch_completed'
+    // Broken-inbox alert (20261111140000, src/lib/retention/inbox-alert.ts).
+    // sent/holdout carry the phase (alert_1 | alert_2); reconnected the arm
+    // (alert | holdout), written for both arms.
+    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
@@ -182,7 +186,8 @@ export type ProductFunnelEvent = {
     | PlanChangeCategory | CancelReason | RetentionOptionCategory
     | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory
     | 'surface_onboarding' | 'surface_overview'
-    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100';
+    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100'
+    | 'alert_1' | 'alert_2' | 'alert' | 'holdout';
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'
