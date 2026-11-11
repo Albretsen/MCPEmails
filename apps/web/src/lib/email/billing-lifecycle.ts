@@ -697,7 +697,7 @@ function usageFacts(payload: LifecyclePayload): UsageFacts | null {
  */
 // USD on purpose: these go to Free workspaces, which have never been charged,
 // so there is no charged currency to follow.
-function personalMonthlyPrice(): string {
+export function personalMonthlyPrice(): string {
   const cents = PLANS.personal.monthlyPriceCents;
   return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
 }
@@ -712,7 +712,7 @@ function personalMonthlyPrice(): string {
  * stays monthly. `offer=usage_cap` names the surface for attribution and is
  * ignored by consumers that do not read it.
  */
-function usageUpgradeUrl(base: string): string {
+export function usageUpgradeUrl(base: string): string {
   return `${base}/dashboard/settings?upgrade=personal&interval=month&offer=usage_cap`;
 }
 

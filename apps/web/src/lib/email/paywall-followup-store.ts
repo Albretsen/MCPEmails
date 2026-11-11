@@ -174,6 +174,21 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
       for (const i of data ?? []) inboxCounts.set(i.workspace_id, (inboxCounts.get(i.workspace_id) ?? 0) + 1);
     }
 
+    // Where the owner is, from every workspace they own (lifecycle-region.ts).
+    const countries = new Map<string, Array<string | null>>();
+    for (const ids of chunks(ownerIds)) {
+      const { data, error } = await this.db
+        .from('workspaces')
+        .select('owner_id, acquisition_country')
+        .in('owner_id', ids);
+      if (error) throw new Error(`country read failed: ${error.message}`);
+      for (const w of data ?? []) {
+        const list = countries.get(w.owner_id) ?? [];
+        list.push(w.acquisition_country);
+        countries.set(w.owner_id, list);
+      }
+    }
+
     const ledger = new Map<string, LedgerRow[]>();
     for (const ids of chunks(ownerIds)) {
       for (const row of await this.readLedger(ids)) {
@@ -203,6 +218,7 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
         unlimitedInboxes: w ? unlimited.has(w.owner_id) : false,
         internal: matchesInternal(o?.email ?? null, listed),
         inboxCount: inboxCounts.get(f.workspaceId) ?? 0,
+        ownerCountries: w ? countries.get(w.owner_id) ?? [] : [],
         ledger: w ? ledger.get(w.owner_id) ?? [] : [],
       };
     });
@@ -287,10 +303,11 @@ export class SupabasePaywallFollowupStore implements PaywallFollowupStore {
     key: { userId: string; workspaceId: string; step: 1 | 2 | 3 },
     outcome: { status: 'sent'; providerId: string | null } | { status: 'failed'; detail: string },
   ): Promise<void> {
+    // A send keeps the detail the claim wrote (the arm); a failure replaces it.
     const patch = {
       status: outcome.status,
       provider_message_id: outcome.status === 'sent' ? outcome.providerId : null,
-      detail: outcome.status === 'failed' ? outcome.detail.slice(0, 500) : null,
+      ...(outcome.status === 'failed' ? { detail: outcome.detail.slice(0, 500) } : {}),
       finished_at: new Date().toISOString(),
     } as LedgerUpdate;
     const { error } = await this.db
