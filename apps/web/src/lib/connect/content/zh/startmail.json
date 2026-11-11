@@ -1,14 +1,13 @@
 {
   "_sources": [
-    "https://www.startmail.com/features/",
-    "https://support.startmail.com/",
-    "https://www.getmailbird.com/best-startmail-app-macos/",
-    "https://discussions.apple.com/thread/256239542"
+    "https://support.startmail.com/hc/en-us/articles/360006536217",
+    "https://support.startmail.com/hc/en-us/articles/360007448378",
+    "https://www.startmail.com/features/"
   ],
   "auth": {
     "method": "app-password",
     "label": "受信任设备密码",
-    "helpUrl": "https://support.startmail.com/",
+    "helpUrl": "https://support.startmail.com/hc/en-us/articles/360006536217",
     "usernameForm": "你完整的 StartMail 地址，包括自定义域名。用户名绝不是单独的本地部分。",
     "status": "active"
   },
@@ -37,7 +36,7 @@
     },
     {
       "h": "在 StartMail 中添加设备并复制生成的密码",
-      "p": "在浏览器中登录 StartMail，打开 <b>Settings</b>，进入管理 IMAP 访问的 <b>trusted devices</b>（受信任设备）部分。选择 <b>Add device</b>，以这个连接为它命名。StartMail 会生成一个随机密码并只显示一次，所以请在关闭对话框前复制。该部分也控制账户的 IMAP 访问，所以如果你还没用上密码登录就被拒绝，请检查那里是否已开启 IMAP。"
+      "p": "在浏览器中登录 StartMail，打开 <b>Settings</b>，进入 <b>Trusted devices/IMAP</b>。如果这是你的第一台设备，请先在那里开启 IMAP 访问。选择 <b>ADD DEVICE</b>，为设备命名，输入你的账户密码并确认。StartMail 随后会显示连接参数和设备密码，并说明只显示一次，所以请在关闭对话框前复制密码。"
     },
     {
       "h": "在 MCPEmails 中添加邮箱",
@@ -86,7 +85,7 @@
     },
     {
       "q": "在哪里生成 StartMail 的 IMAP 密码？",
-      "a": "在 StartMail 网页界面中打开 Settings，进入管理 IMAP 访问的受信任设备部分。选择添加设备并命名，StartMail 会生成一个约十六个字符的随机密码并显示一次。请立即复制；之后无法再次查看，只能删除该设备并添加另一个。"
+      "a": "在 StartMail 网页界面中打开 Settings，进入 Trusted devices/IMAP。如果这是你的第一台设备，先开启 IMAP 访问，然后选择 ADD DEVICE，为其命名并输入账户密码。StartMail 会生成一个 16 位的设备密码并只显示一次；请立即复制，因为唯一的补救办法是移除该设备再添加一台。一个账户最多可保存五个 IMAP 配置。"
     },
     {
       "q": "我的 AI 能读取 StartMail 中 PGP 加密的邮件吗？",

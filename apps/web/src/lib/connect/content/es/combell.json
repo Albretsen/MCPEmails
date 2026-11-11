@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "https://www.combell.com/en/help/kb/change-the-password-of-your-mailbox/",
+    "https://www.combell.com/en/blog/combell-basic-e-mail-configuration-made-easy-thanks-to-autodiscover/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.combell.com/en/help/kb/set-your-basic-mailbox-to-outlook/",
+    "usernameForm": "Tu dirección completa, por ejemplo info@uwbedrijf.be. Las guías de Combell usan la dirección de correo completa como usuario en ambos servidores.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de Combell: conecta el correo de Combell a Claude",
+    "description": "Servidor MCP para buzones Basic de Combell. Conecta los buzones de tu dominio (info@, facturatie@) a Claude, ChatGPT y Cursor por IMAP en imap.mailprotect.be:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo Combell + IA",
+    "titleLine1": "Servidor MCP para el correo de Combell:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, facturatie@ y tu propio nombre en un dominio de Combell? Conecta cada buzón Basic a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón y no con tu acceso a My Combell.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de Combell. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.mailprotect.be, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La ayuda de Combell documenta exactamente estos hosts para un buzón Basic: imap.mailprotect.be en 993 con SSL/TLS y smtp-auth.mailprotect.be en 465 con SSL/TLS, con la dirección completa como usuario. Un buzón Exchange o Microsoft 365 en Combell es otro producto y se conecta de otra forma. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, buzones Basic",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de Combell?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta Combell: los hosts mailprotect.be, IMAP en 993 y SMTP en 465",
+    "body": "Los buzones Basic de Combell viven en una plataforma compartida con sus propios nombres. El servidor entrante es <code>imap.mailprotect.be</code> en el puerto 993 con SSL/TLS y el saliente es <code>smtp-auth.mailprotect.be</code> en el puerto 465 con SSL/TLS, ambos con la dirección completa como usuario y la contraseña del buzón. La guía de Outlook de Combell indica 465; sus guías de Apple Mail y Thunderbird dan 587 con STARTTLS en el mismo host, y ambos respondieron a una conexión TLS real, igual que IMAP en 993. El servidor IMAP ejecuta Dovecot y anuncia IDLE pero no MOVE, y el servidor SMTP acepta PLAIN y LOGIN con un límite de mensaje de 50 MB. Combell también publica registros autodiscover para los buzones Basic, por eso Outlook y Thunderbird suelen encontrar estos datos solos; MCPEmails los trae rellenados. La contraseña es la fijada en el buzón, bajo <b>Mailboxes</b> en el panel de control o bajo <b>Settings</b>, <b>Password</b> en el webmail."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba que la dirección es un buzón Basic",
+      "p": "En My Combell, abre <b>My products</b> y <b>E-mail hosting</b>. Un buzón Basic se gestiona bajo <b>Manage e-mail</b>, <b>Mailboxes</b>. Si la dirección es en cambio un buzón Exchange o Microsoft 365, no usa los hosts mailprotect.be; un buzón de Microsoft 365 se conecta a través del inicio de sesión de Microsoft en MCPEmails."
+    },
+    {
+      "h": "Localiza o fija la contraseña del buzón",
+      "p": "Todavía bajo <b>Mailboxes</b>, pulsa <b>Manage</b> junto a la dirección y usa <b>Edit password</b>. El webmail ofrece lo mismo bajo <b>Settings</b>, <b>Password</b>. Esta contraseña del buzón es la que IMAP comprueba, no tu acceso a My Combell."
+    },
+    {
+      "h": "Introdúcelos en MCPEmails y pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, por ejemplo info@uwbedrijf.be, y la contraseña del buzón. Los hosts <code>imap.mailprotect.be</code> y <code>smtp-auth.mailprotect.be</code> vienen rellenados con 993 y 465 y se verificaron con una conexión TLS real. Después pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Basic, Exchange y Microsoft 365 son tres buzones distintos en Combell",
+      "p": "Combell vende un buzón Basic, un buzón Exchange y un buzón Microsoft 365, y solo el Basic vive en <code>imap.mailprotect.be</code>. La propia guía de contraseñas de Combell avisa de que un buzón Exchange se bloquea solo tras inicios de sesión con contraseña incorrecta y de que una contraseña nueva puede tardar hasta 15 minutos en aplicarse ahí, así que pegar datos de mailprotect.be en una dirección Exchange hace algo peor que fallar. Comprueba el producto bajo My products antes de empezar; un buzón de Microsoft 365 se conecta con el inicio de sesión de Microsoft."
+    },
+    {
+      "h": "El certificado del host IMAP lleva el nombre de otra marca",
+      "p": "Cuando nos conectamos a <code>imap.mailprotect.be</code>, el certificado presentado estaba emitido a mail.register.be e incluía imap.mailprotect.be entre sus nombres, así que valida sin problema; el host SMTP presenta uno para <code>*.mailprotect.be</code>. Conviene saberlo porque algunos programas de correo muestran el primer nombre del certificado en un diálogo, y un nombre de Register.be en un buzón de Combell es lo esperado, no una señal de servidor equivocado."
+    },
+    {
+      "h": "Sin MOVE y sin SPECIAL-USE en el servidor",
+      "p": "El Dovecot detrás de <code>imap.mailprotect.be</code> anuncia <code>IDLE</code> pero ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code>. Archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge en lugar de un solo comando, y las carpetas de enviados, borradores y papelera se reconocen por su nombre en vez de por un rol que declare el servidor. En un buzón neerlandés suelen llamarse Verzonden, Concepten y Prullenbak; nombra la carpeta en tu instrucción si el agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 50 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "Estos datos cubren solo los buzones Basic. Los buzones Exchange y Microsoft 365 de Combell son productos aparte con su propia conexión."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Combell?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Combell. Apuntar un servidor MCP como MCPEmails a un buzón Basic por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de Combell?",
+      "a": "Para un buzón Basic, IMAP es imap.mailprotect.be en el puerto 993 con SSL/TLS y SMTP es smtp-auth.mailprotect.be en el puerto 465 con SSL/TLS, o 587 con STARTTLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. Ambos hosts se confirmaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Dónde cambio la contraseña de un buzón de Combell?",
+      "a": "En My Combell, bajo My products, E-mail hosting, Manage e-mail y luego Mailboxes: pulsa Manage junto a la dirección y elige Edit password. O en el webmail, bajo Settings, Password. Cambiarla desconecta todos los programas de correo y MCPEmails hasta que se introduzca la nueva."
+    },
+    {
+      "q": "¿Puedo conectar igual un buzón Exchange o Microsoft 365 de Combell?",
+      "a": "No con estos hosts. Pertenecen a los buzones Basic. Un buzón de Microsoft 365 en Combell se conecta con el inicio de sesión de Microsoft en MCPEmails; un buzón Exchange tiene sus propios datos de servidor de Combell."
+    },
+    {
+      "q": "¿Se almacena mi correo de Combell en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en Combell por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de Combell",
+    "sub": "Conecta un buzón Basic de Combell en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

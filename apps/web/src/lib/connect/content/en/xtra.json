@@ -60,14 +60,14 @@
       "p": "Spark's setup page lists the outgoing server as <code>send.xtra.co.nz</code> on port <b>587</b> with StartTLS. The connection we verified on that same host is port <b>465</b> with implicit TLS, which completed a handshake and offered PLAIN and LOGIN. Both are real. The table on this page shows what we tested; if a client insists on the documented combination, 587 with STARTTLS is Spark's published answer and should also work."
     },
     {
-      "h": "No SASL-IR, no IDLE, no MOVE and no SPECIAL-USE",
-      "p": "The Xtra server advertises a short list: IMAP4rev1, UIDPLUS, NAMESPACE, ID, and the PLAIN and LOGIN mechanisms. Without SASL-IR it refuses the one-step authentication most clients try first, which comes back as a bare refusal that reads like a wrong password. Without IDLE there is no push, so new mail is found by polling. Without MOVE, filing runs as COPY, then STORE, then EXPUNGE. Without SPECIAL-USE, Sent and Trash are matched by name. UIDPLUS is present, so a copied message does report its new id."
+      "h": "SASL-IR and IDLE are advertised now; MOVE and SPECIAL-USE still are not",
+      "p": "When this host was first probed in August it announced a minimal list: IMAP4rev1, UIDPLUS, NAMESPACE, ID and the PLAIN and LOGIN mechanisms, with no SASL-IR and no IDLE. On the date shown on this page the same host answered with a Dovecot-style capability list instead: SASL-IR and IDLE present, PLAIN and LOGIN as mechanisms, and UIDPLUS no longer advertised before login. So one-step authentication is accepted and new mail can be noticed on an open connection. What has not changed: no MOVE, so filing runs as COPY, then STORE, then EXPUNGE, and no SPECIAL-USE, so Sent and Trash are matched by name. Spark did not announce the change; it is what the server says today, and the table above follows the server."
     }
   ],
   "limits": [
     "Spark's SMTP host announces a maximum message size of about 100 MB, which is generous, but a larger send is still refused before it leaves.",
-    "No IDLE, so new mail is discovered by polling rather than pushed.",
-    "Moves are not atomic and folder roles are matched by name, because MOVE and SPECIAL-USE are not implemented on this server."
+    "MOVE is not implemented, so a move is not atomic. If a connection drops mid-operation a message can briefly exist in both folders.",
+    "Folder roles are matched by name because SPECIAL-USE is not advertised. If you have renamed Sent or Trash, name the folder when you ask for a move."
   ],
   "faq": [
     {

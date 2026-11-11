@@ -9,7 +9,7 @@
     "method": "account-password",
     "label": "Mot de passe de l'Optimum ID",
     "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
-    "usernameForm": "Votre adresse complète, quel que soit le domaine Optimum utilisé : name@optimum.net, name@optonline.net ou une adresse Suddenlink.",
+    "usernameForm": "Votre adresse complète (name@optimum.net, name@optonline.net ou une adresse Suddenlink), que la page de dépannage d'Optimum donne comme identifiant. Sa page de paramètres serveur indique l'Optimum ID seul, la partie avant le @. Si une forme est refusée, essayez l'autre.",
     "status": "active"
   },
   "meta": {
@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Comment Optimum se connecte : IMAP avec votre Optimum ID habituel",
-    "body": "Optimum exploite un seul serveur de messagerie pour toutes ses marques. <code>mail.optimum.net</code> répond en IMAP sur le port 993 en TLS avec son propre certificat, et Optimum documente le même nom pour l'envoi sur le port 465. Les adresses en <code>optimum.net</code>, <code>optonline.net</code> et sur les domaines Suddenlink qu'Optimum a absorbés y aboutissent toutes. L'authentification est d'une simplicité rafraîchissante : votre <b>Optimum ID</b> et son mot de passe, avec l'adresse e-mail complète comme identifiant. Optimum n'émet pas de mots de passe spécifiques aux applications et n'a aucun interrupteur d'accès tiers à chercher : une connexion qui échoue ici révèle donc un vrai problème d'identifiants plutôt qu'un réglage caché. La seule chose à savoir avant de confier la boîte à un agent, c'est qu'Optimum a cessé de créer des comptes e-mail le 4 mai 2021 et renvoie quiconque veut une nouvelle adresse vers Gmail, Outlook.com ou Yahoo."
+    "body": "Optimum exploite un seul serveur de messagerie pour toutes ses marques. <code>mail.optimum.net</code> répond en IMAP sur le port 993 en TLS avec son propre certificat, et Optimum documente le même nom pour l'envoi sur le port 465. Les adresses en <code>optimum.net</code>, <code>optonline.net</code> et sur les domaines Suddenlink qu'Optimum a absorbés y aboutissent toutes. L'authentification, c'est votre <b>Optimum ID</b> et son mot de passe, à une nuance près : la page de dépannage d'Optimum dit que l'identifiant est l'adresse e-mail complète, tandis que sa page de paramètres serveur dit que c'est l'Optimum ID seul, la partie avant le @. Essayez d'abord l'adresse complète, puis l'ID si elle est refusée. Optimum n'émet pas de mots de passe spécifiques aux applications et n'a aucun interrupteur d'accès tiers à chercher : une connexion qui échoue ici révèle donc un vrai problème d'identifiants plutôt qu'un réglage caché. La seule chose à savoir avant de confier la boîte à un agent, c'est qu'Optimum a cessé de créer des comptes e-mail le 4 mai 2021 et renvoie quiconque veut une nouvelle adresse vers Gmail, Outlook.com ou Yahoo."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Saisissez l'adresse et le mot de passe de l'Optimum ID",
-      "p": "Dans MCPEmails, choisissez IMAP / SMTP, mettez l'adresse entière dans le champ identifiant, par exemple <code>name@optonline.net</code>, et utilisez le mot de passe de cet Optimum ID. Le serveur est prérempli et a été vérifié par une connexion TLS réelle."
+      "p": "Dans MCPEmails, choisissez IMAP / SMTP, mettez l'adresse entière dans le champ identifiant, par exemple <code>name@optonline.net</code>, et utilisez le mot de passe de cet Optimum ID. Si l'adresse complète est refusée, saisissez l'Optimum ID seul, la partie avant le @, sous Avancé : c'est la forme que donne la page de paramètres serveur d'Optimum. Le serveur est prérempli dans les deux sens et a été vérifié par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -69,7 +69,7 @@
   "limits": [
     "La boîte est limitée à 5 GB, sans extension payante, et l'envoi comme la réception s'arrêtent quand elle est pleine.",
     "Optimum n'a émis aucun nouveau compte e-mail depuis le 4 mai 2021 : seule une adresse existante peut être connectée.",
-    "Le serveur d'envoi d'Optimum n'a pas répondu à notre test sur le port 465 : nous ne publions donc pas de liste de capacités vérifiée pour le courrier sortant de ce fournisseur."
+    "Le serveur d'envoi d'Optimum salue sur le port 465 mais n'a pas répondu à notre EHLO dans les temps ; le port 587 avec STARTTLS a répondu avec LOGIN et PLAIN. Optimum documente le 465 comme port recommandé et le 587 comme ancien, le tableau garde donc le 465."
   ],
   "faq": [
     {
@@ -78,7 +78,7 @@
     },
     {
       "q": "Quels sont les réglages IMAP d'Optimum ?",
-      "a": "IMAP est mail.optimum.net sur le port 993 en TLS implicite, vérifié par une connexion TLS réelle à la date indiquée sur cette page. Pour l'envoi, Optimum documente le même nom de serveur sur le port 465 ; notre propre test de ce port n'a pas obtenu de réponse, la partie sortante n'est donc pas vérifiée ici. L'identifiant est votre adresse e-mail complète et le mot de passe est celui de votre Optimum ID."
+      "a": "IMAP est mail.optimum.net sur le port 993 en TLS implicite, vérifié par une connexion TLS réelle à la date indiquée sur cette page. SMTP est mail.optimum.net sur le port 465 en SSL, le port recommandé par Optimum ; l'hôte a salué notre test à cet endroit, et le port 587 avec STARTTLS a répondu avec les mécanismes LOGIN et PLAIN. L'identifiant est votre adresse e-mail complète, ou l'Optimum ID seul si elle est refusée, et le mot de passe est celui de votre Optimum ID."
     },
     {
       "q": "Faut-il un mot de passe d'application pour la messagerie Optimum ?",

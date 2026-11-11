@@ -286,6 +286,17 @@ const HOST_TABLE: ReadonlyArray<{ suffixes: readonly string[]; match: HostMatch 
   { suffixes: ['imap.poczta.onet.pl'], match: { provider: 'other', label: 'Onet Poczta', slug: 'onet' } },
   { suffixes: ['poczta.interia.pl'], match: { provider: 'other', label: 'Interia', slug: 'interia' } },
   { suffixes: ['imap.gazeta.pl'], match: { provider: 'other', label: 'Gazeta.pl Poczta', slug: 'gazeta-pl' } },
+  // Web hosts, 2026-11-11. cyber_Folks hosts are the customer's own
+  // sNN.cyber-folks.pl server, so the whole suffix is matched; Websupport.cz
+  // shares the Websupport page.
+  { suffixes: ['.cyber-folks.pl'], match: { provider: 'other', label: 'cyber_Folks', slug: 'cyber-folks' } },
+  { suffixes: ['imap.transip.email'], match: { provider: 'other', label: 'TransIP', slug: 'transip' } },
+  { suffixes: ['imap.mailprotect.be'], match: { provider: 'other', label: 'Combell', slug: 'combell' } },
+  { suffixes: ['imap.mail.hostpoint.ch'], match: { provider: 'other', label: 'Hostpoint', slug: 'hostpoint' } },
+  { suffixes: ['.websupport.sk', '.websupport.cz'], match: { provider: 'other', label: 'Websupport', slug: 'websupport' } },
+  { suffixes: ['mail.hosting.reg.ru'], match: { provider: 'other', label: 'REG.RU', slug: 'reg-ru' } },
+  { suffixes: ['imap.stackmail.com'], match: { provider: 'other', label: '20i StackMail', slug: 'stackmail' } },
+  { suffixes: ['imap.serviciodecorreo.es'], match: { provider: 'other', label: 'Arsys', slug: 'arsys' } },
 ];
 
 export function matchHost(host: string | null | undefined): HostMatch | null {

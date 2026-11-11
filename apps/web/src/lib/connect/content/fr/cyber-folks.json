@@ -1,0 +1,110 @@
+{
+  "_sources": [
+    "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "https://cyberfolks.pl/pomoc/jak-utworzyc-konto-pocztowe/",
+    "https://cyberfolks.pl/pomoc/zmiana-konfiguracji-skrzynki-mailowej-w-mozilla-thunderbird/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "usernameForm": "Votre adresse complète, par exemple biuro@twojadomena.pl. cyber_Folks signale une exception : la boîte principale du compte d'hébergement se connecte avec l'identifiant d'hébergement lui-même.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP cyber_Folks : connectez vos boîtes mail à Claude",
+    "description": "Serveur MCP pour le courrier hébergé chez cyber_Folks. Connectez les boîtes de votre domaine (biuro@, kontakt@) à Claude, ChatGPT et Cursor en IMAP sur votre serveur sNN.cyber-folks.pl, port 993, avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "Mail cyber_Folks + IA",
+    "titleLine1": "Serveur MCP pour le mail cyber_Folks :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez biuro@, kontakt@ et votre propre nom sur un domaine hébergé chez cyber_Folks ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte et non votre identifiant client cyber_Folks.",
+    "answer": "Claude ne peut pas atteindre seul une boîte cyber_Folks. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur le port 993 au serveur où vit votre compte, un nom de la forme s1.cyber-folks.pl, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. cyber_Folks publie les ports (993 pour IMAP, 465 ou 587 pour SMTP) et vous renvoie à votre propre panneau pour lire le nom du serveur, sous Dane konfiguracyjne dans cyber_Admin. L'envoi passe par le même serveur, toujours avec authentification. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, votre propre serveur sNN",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "SMTP, alternative STARTTLS", "host": "s1.cyber-folks.pl", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "Le 1 de s1 représente votre propre numéro de serveur : cyber_Folks affiche le vrai nom sous Dane konfiguracyjne dans cyber_Admin, ou dans le Panel Klienta sous Twoje usługi, Hosting, colonne Host. Trois serveurs de cette série ont été vérifiés par une connexion TLS réelle. Pour toute autre adresse, utilisez la",
+      "label": "recherche de paramètres de messagerie",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine cyber_Folks ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment cyber_Folks se connecte : le nom de votre serveur, IMAP sur 993 et SMTP sur 465",
+    "body": "cyber_Folks ne publie pas d'hôte de messagerie partagé. Sa page d'aide indique que le serveur entrant et sortant est celui sur lequel tourne votre compte d'hébergement, et que son nom figure dans cyber_Admin sous <b>Dane konfiguracyjne</b>, derrière l'icône d'engrenage en haut à droite, ou dans le Panel Klienta sous <b>Twoje usługi</b>, <b>Hosting</b>, dans la colonne <b>Host</b>. Ces noms suivent le modèle <code>s1.cyber-folks.pl</code>, avec votre propre numéro à la place du 1, et portent un certificat pour <code>*.cyber-folks.pl</code> : nous avons ouvert des connexions TLS vers trois serveurs de la série et chacun a répondu en IMAP sur 993 avec une bannière Dovecot et en SMTP sur 465 et 587 avec Exim. Les ports que liste cyber_Folks sont 993 pour IMAP, 465 pour SMTP avec SSL et 587 en alternative, et il demande de ne pas utiliser le port 25. L'identifiant est l'adresse entière, le mot de passe celui défini à la création de la boîte, et le serveur sortant exige l'authentification : sans elle il répond <code>550 relay not permitted, authentication required</code>."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Lisez le nom de votre serveur dans cyber_Admin",
+      "p": "Connectez-vous à cyber_Admin, cliquez sur l'icône d'engrenage en haut à droite et ouvrez <b>Dane konfiguracyjne</b>. Le serveur IMAP et SMTP affiché là, un nom comme s1.cyber-folks.pl avec votre propre numéro, est celui à saisir. Le même nom figure dans le Panel Klienta sous <b>Twoje usługi</b>, <b>Hosting</b>, dans la colonne <b>Host</b>."
+    },
+    {
+      "h": "Ayez le mot de passe de la boîte sous la main",
+      "p": "Le mot de passe appartient à chaque boîte et a été défini à sa création sous <b>MAIL</b>, <b>LISTA KONT</b> dans cyber_Admin (ou sous <b>Konta e-mail</b> dans DirectAdmin). Ce n'est pas le mot de passe du Panel Klienta. Si vous ne le connaissez pas, définissez-en un nouveau pour cette boîte ; rien d'autre n'est touché."
+    },
+    {
+      "h": "Saisissez-les dans MCPEmails et collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple biuro@twojadomena.pl, le mot de passe de la boîte et le nom de votre serveur, avec 993 et SSL pour IMAP et 465 et SSL pour SMTP. Puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Utilisez le nom cyber-folks.pl, pas mail.votredomaine.pl",
+      "p": "La page de cyber_Folks explique que le serveur répond aussi sous votre propre domaine, comme mail.twojadomena.pl, mais que le certificat du serveur est délivré pour le nom cyber_Folks, si bien qu'un client utilisant le domaine reçoit un avertissement de certificat ou une connexion TLS refusée. MCPEmails valide les certificats et ne se connecte pas via un nom que le certificat ne couvre pas. Utilisez le nom sNN.cyber-folks.pl de votre panneau, celui que cyber_Folks recommande lui-même."
+    },
+    {
+      "h": "La boîte principale du compte se connecte avec l'identifiant d'hébergement",
+      "p": "Chaque boîte que vous créez se connecte avec son adresse complète. La seule exception documentée par cyber_Folks est la boîte primaire du compte, dont l'identifiant est le login d'hébergement (son exemple est un login court comme lnxpl) plutôt qu'une adresse. Si la forme adresse est refusée sur cette seule boîte, essayez le login de votre e-mail de bienvenue d'hébergement."
+    },
+    {
+      "h": "AUTH=PLAIN seulement en IMAP, et pas de MOVE",
+      "p": "Le Dovecot derrière chaque serveur n'annonce que <code>AUTH=PLAIN</code> en IMAP, ce qu'utilise MCPEmails, tandis que SMTP accepte PLAIN et LOGIN. La liste de capacités avant connexion n'a ni <code>MOVE</code>, ni <code>UIDPLUS</code>, ni <code>SPECIAL-USE</code> : classer un message s'exécute comme une copie, une mise à jour de drapeau et un expunge, et les dossiers envoyés, brouillons et corbeille sont reconnus par leur nom. Sur une boîte polonaise ils s'appellent souvent Wysłane, Kopie robocze et Kosz ; nommez le dossier dans votre instruction si l'agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message de 100 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "Le nom du serveur est propre à chaque client. Un nom copié dans le guide de quelqu'un d'autre, ou le s1 affiché sur cette page, ne se connecte que si votre compte se trouve par hasard sur ce serveur."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le courrier hébergé chez cyber_Folks ?",
+      "a": "Pas seul. Claude n'a pas de connecteur cyber_Folks intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de cyber_Folks ?",
+      "a": "IMAP est votre serveur, un nom de la forme s1.cyber-folks.pl avec votre propre numéro, sur le port 993 avec SSL. SMTP est le même serveur sur le port 465 avec SSL, ou 587 avec STARTTLS, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. cyber_Folks affiche le nom du serveur sous Dane konfiguracyjne dans cyber_Admin."
+    },
+    {
+      "q": "Où trouver le nom de mon serveur de messagerie cyber_Folks ?",
+      "a": "Dans cyber_Admin, derrière l'icône d'engrenage en haut à droite, sous Dane konfiguracyjne, qui liste les adresses et ports IMAP, POP3 et SMTP. Ou dans le Panel Klienta sous Twoje usługi, Hosting, dans la colonne Host à côté de votre service d'hébergement."
+    },
+    {
+      "q": "cyber_Folks exige-t-il un mot de passe d'application ?",
+      "a": "Non. cyber_Folks n'a pas de dispositif de mots de passe spécifiques aux applications. Le mot de passe défini sur la boîte authentifie IMAP comme SMTP."
+    },
+    {
+      "q": "Mon courrier cyber_Folks est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct sur votre serveur cyber_Folks en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes cyber_Folks",
+    "sub": "Connectez une boîte cyber_Folks en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

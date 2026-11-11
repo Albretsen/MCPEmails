@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochty-na-hostingee",
+    "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/problemyy/ogranicheniye-imap-soyedineniyy"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://help.reg.ru/support/hosting/nastroyka-pochty-regru/nastroyka-pochty-i-pochtovykh-kliyentovv/nastroyka-pochtovykh-kliyentovv",
+    "usernameForm": "Votre adresse complète, name@your.domain, comme l'écrit REG.RU. Un domaine cyrillique se saisit en Punycode, par exemple @xn--d1acufc.xn--p1ai pour @домен.рф.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP REG.RU : connectez le mail de l'hébergement REG.RU à Claude",
+    "description": "Serveur MCP pour le mail sur l'hébergement REG.RU. Connectez les boîtes de votre domaine (info@, zakaz@) à Claude, ChatGPT et Cursor en IMAP sur mail.hosting.reg.ru:993 avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "Mail REG.RU + IA",
+    "titleLine1": "Serveur MCP pour le mail REG.RU :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez info@, zakaz@ et votre propre nom sur un domaine hébergé chez REG.RU ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte que vous avez créée dans le panneau d'hébergement.",
+    "answer": "Claude ne peut pas atteindre seul une boîte REG.RU. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur mail.hosting.reg.ru, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. L'aide de REG.RU nomme mail.hosting.reg.ru comme serveur dans les deux sens pour une connexion chiffrée, avec 993 pour IMAP et 465 pour SMTP, et l'adresse complète comme identifiant. Cette page couvre les boîtes de l'hébergement REG.RU, créées dans ispmanager, cPanel ou Plesk ; les autres produits mail de REG.RU ont leurs propres hôtes. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, mail d'hébergement",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine REG.RU ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment REG.RU se connecte : mail.hosting.reg.ru sur 993 et 465",
+    "body": "La page de REG.RU sur les clients de messagerie donne un seul nom pour les connexions chiffrées à une boîte de son hébergement : <code>mail.hosting.reg.ru</code>, comme serveur entrant et sortant. Son tableau de ports liste 993 pour IMAP et 465 pour SMTP avec SSL/TLS, et 143 et 587 pour un usage non chiffré ; la page ajoute, dans ses sections Thunderbird et The Bat!, que la configuration chiffrée est disponible sur l'hébergement Linux. L'identifiant est l'adresse complète, <code>name@ваш.домен</code> dans la notation de REG.RU, avec le mot de passe de la boîte défini dans le panneau. L'hôte a répondu à une connexion TLS réelle avec un certificat pour <code>*.hosting.reg.ru</code> en TLS 1.2, une courte bannière <code>IMAP4 ready</code> annonçant UIDPLUS, IDLE et QUOTA, et un salut SMTP avec PLAIN et LOGIN et une limite de message de 50 Mo. Le serveur IMAP n'annonce pas SASL-IR, ce que MCPEmails gère par l'échange d'authentification en deux temps. La boîte elle-même se crée dans le panneau d'hébergement : dans ispmanager sous <b>Почта</b>, <b>Создать ящик</b>, une fois le domaine de messagerie présent sous <b>Почтовые домены</b>."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Créez ou retrouvez la boîte dans le panneau d'hébergement",
+      "p": "Dans ispmanager, ouvrez <b>Почта</b>. Le domaine doit d'abord exister sous <b>Почтовые домены</b> ; ensuite <b>Создать ящик</b> demande le nom avant le @, le domaine et un mot de passe. Dans cPanel, la même chose se trouve sous <b>Почта</b>, <b>Почтовые учетные записи</b>, et dans Plesk sous <b>Почта</b>, <b>Создать адрес электронной почты</b>. REG.RU indique qu'une nouvelle boîte est active en moins d'une heure. Le mot de passe que vous y définissez est celui qu'IMAP vérifie."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple info@your.domain, avec le mot de passe de la boîte. Pour un domaine .рф, saisissez la partie domaine en Punycode, comme le font les propres instructions iOS de REG.RU. L'hôte <code>mail.hosting.reg.ru</code> est prérempli dans les deux sens, avec 993 et SSL pour IMAP et 465 et SSL pour SMTP, et a été vérifié par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Mail d'hébergement uniquement : Яндекс 360 et les autres produits mail de REG.RU utilisent d'autres hôtes",
+      "p": "REG.RU revend plusieurs services de messagerie, et sa propre page d'aide envoie les adresses Mail.ru vers imap.mail.ru et les adresses Yandex vers imap.yandex.ru, chacune avec le mot de passe d'application ou l'interrupteur d'accès de ce fournisseur. <code>mail.hosting.reg.ru</code> est réservé à une boîte créée dans votre panneau d'hébergement. Si le mail de votre domaine tourne sur Яндекс 360 ou un autre service commandé via REG.RU, suivez la page de ce fournisseur ; l'hôte indiqué ici refusera la connexion."
+    },
+    {
+      "h": "Un plafond de 36 processus sur l'hébergement mutualisé, et les connexions IMAP comptent",
+      "p": "La page de dépannage de REG.RU explique que l'hébergement mutualisé n'autorise pas plus de 36 processus simultanés, et que chaque connexion IMAP ouverte en est un. Plusieurs logiciels de messagerie sur plusieurs appareils peuvent atteindre le plafond, après quoi le mail et le site web du même compte deviennent instables. Le conseil de REG.RU est de limiter chaque client à une connexion en cache. MCPEmails ouvre une connexion par requête et la ferme, plutôt que d'en garder plusieurs inactives, et pèse donc peu dans le décompte ; si vous atteignez la limite, ce sont les logiciels qui gardent des connexions ouvertes qu'il faut réduire."
+    },
+    {
+      "h": "L'envoi est plafonné par jour et par message",
+      "p": "La page de REG.RU sur le mail d'hébergement fixe les limites : 3 000 messages par 24 heures sur l'hébergement ordinaire et 9 000 sur les offres VIP, pas plus de 150 destinataires par message, une taille maximale de message de 50 Mo, et 10 messages par jour sur un essai. La limite quotidienne couvre tout le compte d'hébergement, mail envoyé par des scripts compris, et l'envoi reprend le lendemain. Un compte d'essai n'est pas l'endroit pour tester un agent qui envoie."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message de 50 Mo, ce qui correspond à la limite indiquée par REG.RU. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers.",
+    "Le serveur négocie TLS 1.2, pas 1.3. C'est toujours une connexion moderne et vérifiée ; cela signifie seulement que la poignée de main paraît plus ancienne que celle de la plupart des hôtes de ce site."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail de l'hébergement REG.RU ?",
+      "a": "Pas seul. Claude n'a pas de connecteur REG.RU intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de REG.RU ?",
+      "a": "Pour une boîte de l'hébergement REG.RU, IMAP est mail.hosting.reg.ru sur le port 993 avec SSL/TLS et SMTP est mail.hosting.reg.ru sur le port 465 avec SSL/TLS, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. L'hôte a été confirmé par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi le mot de passe de ma boîte REG.RU est-il refusé ?",
+      "a": "Vérifiez trois choses : que la boîte existe dans le panneau d'hébergement et n'est pas sur un autre produit mail de REG.RU comme Яндекс 360, que l'identifiant est l'adresse complète avec un domaine en Punycode pour .рф, et que le mot de passe est celui défini sur la boîte dans ispmanager, cPanel ou Plesk plutôt que celui de votre compte REG.RU."
+    },
+    {
+      "q": "REG.RU exige-t-il un mot de passe d'application ?",
+      "a": "Non, pas pour le mail de son hébergement. Le mot de passe de la boîte authentifie IMAP comme SMTP. Les mots de passe d'application n'apparaissent sur la page d'aide de REG.RU que pour les boîtes Mail.ru et Yandex, qui sont d'autres services."
+    },
+    {
+      "q": "Mon courrier REG.RU est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez REG.RU en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes REG.RU",
+    "sub": "Connectez le mail de l'hébergement REG.RU en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

@@ -1,14 +1,13 @@
 {
   "_sources": [
-    "https://www.startmail.com/features/",
-    "https://support.startmail.com/",
-    "https://www.getmailbird.com/best-startmail-app-macos/",
-    "https://discussions.apple.com/thread/256239542"
+    "https://support.startmail.com/hc/en-us/articles/360006536217",
+    "https://support.startmail.com/hc/en-us/articles/360007448378",
+    "https://www.startmail.com/features/"
   ],
   "auth": {
     "method": "app-password",
     "label": "Contraseña de dispositivo de confianza",
-    "helpUrl": "https://support.startmail.com/",
+    "helpUrl": "https://support.startmail.com/hc/en-us/articles/360006536217",
     "usernameForm": "Tu dirección de StartMail completa, también si es de un dominio propio. El nombre de usuario nunca es solo la parte local.",
     "status": "active"
   },
@@ -37,7 +36,7 @@
     },
     {
       "h": "Añade un dispositivo en StartMail y copia la contraseña generada",
-      "p": "Inicia sesión en StartMail en un navegador, abre <b>Settings</b> (ajustes) y ve a la sección <b>trusted devices</b> (dispositivos de confianza), que es donde se gestiona el acceso IMAP. Elige <b>Add device</b> (añadir dispositivo) y ponle un nombre que identifique esta conexión. StartMail genera una contraseña aleatoria y la muestra una vez, así que cópiala antes de cerrar el cuadro de diálogo. Esa sección también controla el acceso IMAP de la cuenta, así que si un inicio de sesión se rechaza antes incluso de haber usado la contraseña, comprueba ahí que IMAP está activado."
+      "p": "Inicia sesión en StartMail en un navegador, abre <b>Settings</b> y ve a <b>Trusted devices/IMAP</b>. Si es tu primer dispositivo, activa ahí primero el acceso IMAP. Elige <b>ADD DEVICE</b>, ponle un nombre al dispositivo, introduce la contraseña de tu cuenta y confirma. StartMail muestra entonces los datos de conexión y la contraseña del dispositivo, y avisa de que los muestra una sola vez, así que copia la contraseña antes de cerrar el cuadro de diálogo."
     },
     {
       "h": "Añade el buzón en MCPEmails",
@@ -86,7 +85,7 @@
     },
     {
       "q": "¿Dónde genero una contraseña IMAP de StartMail?",
-      "a": "En la interfaz web de StartMail, abre Settings y ve a la sección de dispositivos de confianza, que es donde se gestiona el acceso IMAP. Elige añadir un dispositivo, ponle un nombre, y StartMail genera una contraseña aleatoria de unos dieciséis caracteres y la muestra una vez. Cópiala enseguida; no hay forma de volver a leerla, solo de borrar el dispositivo y añadir otro."
+      "a": "En la interfaz web de StartMail, abre Settings y ve a Trusted devices/IMAP. Activa el acceso IMAP si es tu primer dispositivo, elige ADD DEVICE, ponle un nombre e introduce la contraseña de tu cuenta. StartMail genera una contraseña de dispositivo de 16 dígitos y la muestra una vez; cópiala enseguida, porque la única vuelta atrás es quitar el dispositivo y añadir otro. Una cuenta admite hasta cinco configuraciones IMAP."
     },
     {
       "q": "¿Puede mi IA leer mis mensajes de StartMail cifrados con PGP?",

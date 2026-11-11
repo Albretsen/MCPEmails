@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "https://www.arsys.es/blog/configurar-correo-arsys-en-gmail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "usernameForm": "Tu dirección completa, nombre@tudominio.es. Arsys indica la propia dirección de correo como usuario, y la contraseña es la establecida al dar de alta el buzón.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de Arsys: conecta el correo de Arsys a Claude",
+    "description": "Servidor MCP para el correo de Arsys. Conecta los buzones de tu dominio (info@, facturacion@) a Claude, ChatGPT y Cursor por IMAP en imap.serviciodecorreo.es:993 con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo Arsys + IA",
+    "titleLine1": "Servidor MCP para el correo de Arsys:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes info@, facturacion@ y tu propio nombre en un dominio alojado en Arsys? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón y no con tu acceso de cliente de Arsys.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de Arsys. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en imap.serviciodecorreo.es, puerto 993, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. El Centro de Soporte de Arsys indica exactamente estos datos para la configuración manual: imap.serviciodecorreo.es en 993 y smtp.serviciodecorreo.es en 465, ambos con conexión SSL/TLS requerida, la dirección como usuario y la contraseña establecida al dar de alta el buzón. No hay contraseña de aplicación ni nada que activar. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, nada que activar",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de Arsys?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta Arsys: los hosts serviciodecorreo.es, IMAP en 993 y SMTP en 465",
+    "body": "Arsys aloja sus buzones en una plataforma con dominio propio, serviciodecorreo.es, y por eso el nombre del servidor no dice Arsys. Su Centro de Soporte da los datos de configuración manual: el servidor de correo entrante <code>imap.serviciodecorreo.es</code> en el puerto 993 y el servidor de correo saliente <code>smtp.serviciodecorreo.es</code> en el puerto 465, ambos con conexión SSL/TLS requerida, siendo el usuario tu dirección de correo y la contraseña la establecida al dar de alta el buzón. Ambos hosts respondieron a una conexión TLS real bajo un certificado para <code>*.serviciodecorreo.es</code>: un breve banner <code>IMAP4 ready</code> que anuncia UIDPLUS, IDLE, CONDSTORE y SORT, y un saludo SMTP con PLAIN y LOGIN y un límite de mensaje de 51 MB; el puerto 587 con STARTTLS también funciona para enviar. La guía de Gmail de Arsys menciona además mail.arsys.es y smtp.arsys.es, pero mail.arsys.es rechazó la conexión en el puerto 993 al probarlo, así que los nombres serviciodecorreo.es del Centro de Soporte son los que usa MCPEmails. Si olvidas la contraseña, Arsys dice que puedes actualizarla en la sección <b>Cambio de contraseña</b> del apartado <b>Buzones</b> del Panel de Control."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Localiza o fija la contraseña del buzón en el Panel de Control",
+      "p": "Entra en el Panel de Control de Arsys y abre <b>Buzones</b>. Cada dirección tiene ahí una opción <b>Cambio de contraseña</b>; esa contraseña, establecida al dar de alta el buzón o cambiada después, es la que IMAP comprueba. Tu acceso de cliente de Arsys es otra credencial y el servidor de correo lo rechaza."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña en MCPEmails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, por ejemplo info@tudominio.es, con la contraseña del buzón. Los hosts <code>imap.serviciodecorreo.es</code> y <code>smtp.serviciodecorreo.es</code> vienen rellenados con 993 y 465, ambos SSL/TLS, y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor se llama serviciodecorreo.es, no arsys.es",
+      "p": "La gente busca un host de Arsys y encuentra dos juegos de nombres. La página de datos actual del Centro de Soporte lista solo <code>imap.serviciodecorreo.es</code> y <code>smtp.serviciodecorreo.es</code>; una entrada más antigua del blog de Arsys sobre Gmail nombra también mail.arsys.es y smtp.arsys.es. Al probarlos, mail.arsys.es rechazó IMAP en 993 mientras que los hosts serviciodecorreo.es respondieron con un certificado válido. Usa los nombres serviciodecorreo.es, y si un programa de correo se ha autoconfigurado con los de arsys.es y ha dejado de funcionar, esta es la razón."
+    },
+    {
+      "h": "Cambia la contraseña en Buzones, no en el área de cliente",
+      "p": "La página de datos de Arsys es explícita: la contraseña es la establecida al dar de alta el buzón, y si la olvidas la actualizas en Cambio de contraseña del apartado Buzones del Panel de Control. La contraseña de tu cuenta de cliente de Arsys vive en otro sitio y nunca autentica IMAP. Tras un cambio, Arsys recuerda actualizarla en todos los dispositivos y programas, y eso incluye MCPEmails."
+    },
+    {
+      "h": "Solo AUTH=PLAIN en IMAP, sin MOVE y sin SPECIAL-USE",
+      "p": "El servidor IMAP anuncia únicamente <code>AUTH=PLAIN</code>, que es lo que usa MCPEmails, mientras que SMTP acepta PLAIN y LOGIN. Ofrece <code>UIDPLUS</code>, así que un mensaje copiado informa de su nuevo id, pero no <code>MOVE</code> ni <code>SPECIAL-USE</code>: archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge, y las carpetas de enviados, borradores y papelera se reconocen por su nombre. En un buzón en español suelen llamarse Enviados, Borradores y Papelera; nombra la carpeta en tu instrucción si el agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de unos 51 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Arsys?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Arsys. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de Arsys?",
+      "a": "IMAP es imap.serviciodecorreo.es en el puerto 993 con SSL/TLS. SMTP es smtp.serviciodecorreo.es en el puerto 465 con SSL/TLS, o 587 con STARTTLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. Ambos hosts se confirmaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Arsys en un cliente de correo?",
+      "a": "Normalmente porque es la contraseña del área de cliente de Arsys y no la del buzón. IMAP comprueba la contraseña fijada en cada dirección, que puedes restablecer en Cambio de contraseña del apartado Buzones del Panel de Control. La otra causa habitual es un cliente autoconfigurado con mail.arsys.es; usa imap.serviciodecorreo.es."
+    },
+    {
+      "q": "¿Necesita Arsys una contraseña de aplicación?",
+      "a": "No. Arsys no tiene un sistema de contraseñas específicas de aplicación. La contraseña del buzón autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de Arsys en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en Arsys por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de Arsys",
+    "sub": "Conecta el correo de Arsys en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}

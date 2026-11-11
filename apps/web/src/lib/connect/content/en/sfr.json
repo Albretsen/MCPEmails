@@ -1,34 +1,33 @@
 {
   "_sources": [
-    "https://webmail.sfr.fr/",
-    "https://actuneuf.com/sfr/internet/imap",
-    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
-    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "https://assistance.sfr.fr/sfrmail-appli/sfrmail/problemes-acces-boite-email-sfr.html",
+    "https://webmail.sfr.fr/"
   ],
   "auth": {
-    "method": "mail-password",
-    "label": "SFR Mail password",
-    "helpUrl": "https://webmail.sfr.fr/",
-    "usernameForm": "Your full address, including the domain: prenom.nom@sfr.fr.",
+    "method": "account-password",
+    "label": "SFR password",
+    "helpUrl": "https://assistance.sfr.fr/sfrmail-appli/sfrmail/configurer-messagerie-recevoir-email-sfr.html",
+    "usernameForm": "Your full SFR address, prenom.nom@sfr.fr, or the same form on @neuf.fr, @cegetel.net, @club-internet.fr, @9online.fr or @9business.fr.",
     "status": "active"
   },
   "meta": {
     "title": "SFR Mail IMAP Settings and Claude MCP Access",
-    "description": "Connect an SFR Mail box to Claude, Cursor and any MCP client at imap.sfr.fr:993. The SFR Mail password is separate from your Espace Client password."
+    "description": "Connect an SFR Mail box to Claude, Cursor and any MCP client at imap.sfr.fr:993 with your SFR address and password, as SFR documents it. TLS 1.2 or 1.3 required."
   },
   "hero": {
     "eyebrow": "SFR Mail + AI",
     "titleLine1": "Connect your SFR mailbox",
     "titleLine2": "to Claude, Cursor, any MCP client",
-    "lead": "Give your AI agent a real SFR inbox. Read, search, send, reply, schedule and organize mail over IMAP with the password that belongs to the mailbox rather than to your customer account.",
-    "answer": "Claude cannot reach an SFR mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.sfr.fr on port 993, authenticating with your full sfr.fr address and your SFR Mail password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. The credential is the point of failure worth knowing in advance: SFR Mail keeps its own password, separate from your Espace Client password, and changing one does not change the other. One inbox is free, forever.",
+    "lead": "Give your AI agent a real SFR inbox. Read, search, send, reply, schedule and organize mail over IMAP with the SFR address and password you already use for the Webmail SFR.",
+    "answer": "Claude cannot reach an SFR mailbox on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imap.sfr.fr on port 993, authenticating with your full sfr.fr address and your SFR password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. SFR's own assistance page lists exactly these servers for every @sfr.fr, @neuf.fr, @cegetel.net and @9online.fr mailbox: imap.sfr.fr on 993 and smtp.sfr.fr on 465 with SSL/TLS, TLS 1.2 or 1.3, the complete address as the account name and your normal password. There is no app password to generate. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
-    "meta1": "SFR Mail password, not Espace Client",
+    "meta1": "Your SFR password, TLS 1.2 or 1.3",
     "meta2": "Email fetched live, never stored"
   },
   "method": {
-    "title": "How SFR connects: IMAP, and a mailbox password of its own",
-    "body": "SFR serves IMAP at <code>imap.sfr.fr</code> on port 993 over implicit TLS and SMTP submission at <code>smtp.sfr.fr</code> on port 465, with authentication required. Both hosts were confirmed from a live TLS connection and are shared across all SFR mailboxes; there is nothing regional or per-customer to look up. What is specific to SFR is the credential model. The Espace Client on sfr.fr and SFR Mail are two accounts with two passwords. You are free to set them to the same string, but they stay independent, so rotating the Espace Client password leaves the mailbox password untouched and a mail client keeps working, while rotating the mailbox password takes every client offline and leaves the Espace Client alone. The mailbox password is changed inside SFR Mail itself, under the settings section for configuring your mailboxes, not in the customer portal."
+    "title": "How SFR connects: IMAP on 993, SMTP on 465, one SFR password",
+    "body": "SFR documents its servers on the assistance page about configuring a mail program. For sending, <code>smtp.sfr.fr</code> on port 465 with SSL/TLS or 587 with STARTTLS, using TLS 1.2 or 1.3; for receiving over IMAP, <code>imap.sfr.fr</code> on port 993 with TLS 1.2, 1.3 or SSL/TLS. Both hosts were confirmed from a live TLS connection and are shared by every SFR mailbox, so there is nothing regional or per-customer to look up. The account name is the complete address, and SFR's own example is prenom.nom@sfr.fr; the password is described simply as normal, the one you use for the Webmail SFR, which SFR says is already configured with your Espace Client identifiers. SFR adds a requirement worth noting: the Webmail no longer supports SSL and TLS 1.0 or 1.1, and it asks users of mail programs to move to TLS 1.2 or 1.3. MCPEmails connects with TLS 1.2 or later only, so that condition is met. One oddity on SFR's page: under the IMAP heading it pastes a Numericable example with @numericable.fr as the account name. For an SFR address the account name is the SFR address itself; the Numericable servers are a separate section for @numericable.fr and @noos.fr mailboxes."
   },
   "setup": [
     {
@@ -36,30 +35,30 @@
       "p": "Sign up at mcpemails.com. The free plan connects one inbox forever and does not ask for a card."
     },
     {
-      "h": "Confirm or reset the SFR Mail password inside the webmail",
-      "p": "Sign in at webmail.sfr.fr with the address you want to connect. Open the settings (the tools or <b>Réglages</b> control at the top right) and the section for configuring your mailboxes (<b>Configuration de mes boîtes mails</b>). The password change lives there. That is the credential the IMAP server checks, and it is not the one you type into the Espace Client on sfr.fr."
+      "h": "Check the address and password in the Webmail SFR first",
+      "p": "Sign in at webmail.sfr.fr with the full address you want to connect and your SFR password. SFR's own troubleshooting advice is the same: the identifier is your SFR email address, and a mail program that is refused should first be checked against the Webmail. If the Webmail refuses you too, reset the password from the Espace Client before going further."
     },
     {
-      "h": "Consider giving the agent a secondary address",
-      "p": "SFR lets a subscriber create additional addresses and aliases from the same mailbox configuration screen, alongside the main address that came with the line. If you would rather not hand an agent the address everyone you know writes to, create a second one there and connect that. It is the same hosts and ports."
+      "h": "Mind the domain and the TLS version",
+      "p": "The same servers serve @sfr.fr, @neuf.fr, @cegetel.net, @club-internet.fr, @9online.fr and @9business.fr addresses. A @numericable.fr or @noos.fr mailbox uses imap.numericable.fr and smtps.numericable.fr instead, from the Numericable section of SFR's page. Whatever connects must speak TLS 1.2 or 1.3, which MCPEmails does."
     },
     {
       "h": "Add the mailbox in MCPEmails",
-      "p": "Choose IMAP / SMTP, enter the full address such as prenom.nom@sfr.fr, and paste the SFR Mail password. The SFR hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+      "p": "Choose IMAP / SMTP, enter the full address such as prenom.nom@sfr.fr, and your SFR password. The SFR hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],
   "gotchas": [
     {
-      "h": "The Espace Client password and the SFR Mail password are two different things",
-      "p": "This is the SFR failure that wastes the most time, because both credentials belong to the same person, both are called <b>mot de passe SFR</b> in casual use, and either one can be typed into a mail client without an error that explains anything. They are independent accounts: changing one does not change the other, even if you deliberately set them to the same value at some point in the past and assume they are still in sync. When a client login is refused, go into SFR Mail itself and reset the mailbox password there, then use exactly that value in MCPEmails."
+      "h": "SFR blocks a mailbox after too many failed logins, and after six months unused",
+      "p": "SFR's access-problems page lists what gets an SFR mailbox blocked: too many unsuccessful connection attempts, too many emails sent in a short time, or sends from several IP addresses in a short time, and it adds that an address not used in the last six months may be blocked as well. A mail program retrying a wrong password is exactly the first case. SFR's remedy is to change the password and enter the new one on every device, browser and mail program. So get the password right in the Webmail before you let any client, MCPEmails included, try it repeatedly."
     },
     {
       "h": "No SASL-IR, so a client that assumes it gets a bare BAD",
-      "p": "SFR's IMAP banner is as short as they come (<code>* OK IMAP4 ready</code>) and it does not advertise <code>SASL-IR</code>. The server therefore rejects the one-step authentication that sends the credential along with the <code>AUTHENTICATE</code> command, replying with an unqualified <code>BAD</code> that is indistinguishable from bad credentials. Given the password confusion above, that is a particularly unhelpful combination: the two most likely causes of an SFR login failure produce the same message. MCPEmails detects the <code>BAD</code> and retries the two-step exchange, so this half is already handled for you."
+      "p": "SFR's IMAP banner is as short as they come (<code>* OK IMAP4 ready</code>) and it does not advertise <code>SASL-IR</code>. The server therefore rejects the one-step authentication that sends the credential along with the <code>AUTHENTICATE</code> command, replying with an unqualified <code>BAD</code> that is indistinguishable from bad credentials. MCPEmails detects the <code>BAD</code> and retries the two-step exchange, so this half is handled for you, but it is why other IMAP tooling fails against SFR with a message about the password."
     },
     {
       "h": "Sending is capped at 20 MB, which is low for a French ISP",
-      "p": "<code>smtp.sfr.fr</code> announces a maximum message size of 20,971,520 bytes. That is the encoded size of the whole message, and base64 inflates an attachment by roughly a third, so a file over about 15 MB on disk will not go. An agent asked to forward a large attachment gets a hard SMTP rejection at submission time rather than a slow send or a bounce later."
+      "p": "<code>smtp.sfr.fr</code> announces a maximum message size of 20,971,520 bytes. That is the encoded size of the whole message, and base64 inflates an attachment by roughly a third, so a file over about 15 MB on disk will not go. An agent asked to forward a large attachment gets a hard SMTP rejection at submission time rather than a slow send or a bounce later. SFR also suspends sending from a mailbox that sends too much too fast, so a bulk job should be paced."
     },
     {
       "h": "No IDLE, no MOVE and no SPECIAL-USE on a French-named mailbox",
@@ -78,19 +77,19 @@
     },
     {
       "q": "What are the SFR IMAP and SMTP settings?",
-      "a": "IMAP is imap.sfr.fr on port 993 with implicit TLS. SMTP is smtp.sfr.fr on port 465, also implicit TLS, with authentication required. The username is your complete sfr.fr address and the password is your SFR Mail password. Both hosts were confirmed from a live TLS connection and are shared across all SFR mailboxes."
+      "a": "IMAP is imap.sfr.fr on port 993 with SSL/TLS. SMTP is smtp.sfr.fr on port 465 with SSL/TLS, or 587 with STARTTLS, with authentication required and TLS 1.2 or 1.3. The account name is your complete sfr.fr address and the password is your SFR password. Both hosts were confirmed from a live TLS connection and are the ones SFR's assistance page lists."
     },
     {
       "q": "Why is my SFR password rejected in a mail client?",
-      "a": "Almost always because it is the Espace Client password rather than the SFR Mail password. The two accounts are independent and changing one leaves the other alone. Sign in to webmail.sfr.fr, open the mailbox configuration section in the settings, reset the mail password there and use that exact value in the client."
+      "a": "Check it in the Webmail SFR first, which is SFR's own advice: if it works there, the mail program has a typo, a wrong server or an old TLS version. If the Webmail refuses it too, the mailbox may be blocked after too many failed attempts or six months without use; change the password from the Espace Client and enter the new one everywhere. A VPN that changes your IP address often can also make SFR treat the attempts as suspicious."
     },
     {
       "q": "Does SFR issue an app password?",
-      "a": "SFR publishes no application-specific password mechanism for mail clients. What it has instead is a mailbox password that is already separate from your customer account password, which serves a similar purpose: you can rotate it without touching your Espace Client sign-in, and rotating your Espace Client password does not disconnect your clients."
+      "a": "No. SFR publishes no application-specific password for mail programs. Its page describes the password as normal: the same one you use for the Webmail SFR, with your complete address as the account name."
     },
     {
-      "q": "Can I give an agent a second SFR address?",
-      "a": "Yes. SFR subscribers can create additional addresses and aliases from the mailbox configuration screen in the SFR Mail settings. A secondary address connects over the same imap.sfr.fr and smtp.sfr.fr hosts, and keeps your agent's activity out of the address your correspondents actually use."
+      "q": "Which SFR addresses use these servers?",
+      "a": "SFR lists @sfr.fr, @neuf.fr, @cegetel.net and @9online.fr for imap.sfr.fr and smtp.sfr.fr, and its troubleshooting page adds @club-internet.fr and @9business.fr as SFR addresses. Numericable and Noos mailboxes (@numericable.fr, @noos.fr and related domains) use imap.numericable.fr and smtps.numericable.fr on the same ports."
     },
     {
       "q": "Is my SFR mail stored on your servers?",
