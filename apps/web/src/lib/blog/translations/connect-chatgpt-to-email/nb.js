@@ -86,7 +86,7 @@ MCPEmails gir ChatGPT målrettede e-postverktøy i stedet for et passord eller e
 - **Utkast, mapper og planlegging:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` og \`schedule_list\`.
 - **Resten:** \`contact_search\`, \`signature_get\`, \`signature_set\`, pluss \`automation\` og \`automation_read\` for gjentakende regler.
 
-Én begrensning å planlegge rundt: MCPEmails er basert på polling. Det finnes ingen webhooks og ingen hendelser serveren starter selv, så ChatGPT ser etter ny post når du ber den om det, ikke i det øyeblikket en melding lander.
+Én begrensning å planlegge rundt: inne i en chat ser ChatGPT etter ny post når du ber den om det, ikke i det øyeblikket en melding lander. Ingenting i koblingen vekker ChatGPT av seg selv. (Din egen kode kan vekkes: Pro- og Business-arbeidsområder kan legge til en webhook under API-nøkler som poster til URL-en din når det kommer ny post.)
 
 ## OpenAI Codex i terminalen
 
@@ -124,7 +124,7 @@ Nei. Codex er en terminalflate, så den bruker en avgrenset API-nøkkel i en \`A
 Nei. Hver melding hentes direkte fra leverandøren din for den forespørselen som ba om den, og forkastes deretter. Bare den krypterte leverandørlegitimasjonen beholdes. [Hvorfor det betyr noe at e-post aldri lagres](/blog/why-email-never-stored-matters) forklarer resonnementet.
 
 **Hva koster det?**
-Gratis dekker én tilkoblet innboks og 150 fakturerbare e-posthandlinger per UTC-kalendermåned, med de første 3 dagene utelatt fra tellingen. Den månedlige kvoten gjelder arbeidsområder opprettet 13.09.2026 eller senere. Arbeidsområder opprettet tidligere er unntatt. Personal koster $9 per måned for 3 innbokser med ubegrensede e-posthandlinger, og Pro koster $15 per måned for opptil 10 innbokser. Se [priser](/pricing).
+Gratis dekker én tilkoblet innboks, med grensene som står på [prissiden](/pricing). Betalte planer legger til innbokser.
 
 ## Neste steg
 

@@ -7,7 +7,7 @@
     "eyebrow": "Preços",
     "titleLine1": "Uma caixa de entrada, grátis.",
     "titleLine2": "Três caixas de entrada, $9.",
-    "titleLine2Yearly": "Três caixas de entrada, $86.40 por ano.",
+    "titleLine2Yearly": "Três caixas de entrada, $86,40 por ano.",
     "lead": "Conecte uma caixa de correio uma vez e seu agente pode ler, pesquisar, organizar, rascunhar, agendar e enviar. O Free cobre uma caixa de entrada. O Personal cobre três por $9 por mês. O Pro cobre até 10 para uma pessoa que toca um negócio, em um só login. O Business inclui 10 caixas de correio, cobra $3 por mês por cada uma além disso e deixa toda a sua equipe entrar sem custo extra."
   },
   "billing": {
@@ -221,7 +221,7 @@
       },
       {
         "q": "Como funciona o desconto anual?",
-        "a": "Pagar anualmente economiza cerca de 20% em relação ao mensal: o Personal custa $86.40 por ano ($7.20 por mês), o Pro custa $144 por ano ($12 por mês) e o Business custa $374.40 por ano ($31.20 por mês), com cada caixa de correio extra a $28.80 por ano ($2.40 por mês). Você é cobrado uma vez, por 12 meses adiantados. Cancelar interrompe a renovação, e você mantém o acesso até o fim do ano que pagou. Fora o reembolso de 14 dias na primeira cobrança, não reembolsamos os meses restantes."
+        "a": "Pagar anualmente economiza cerca de 20% em relação ao mensal: o Personal custa $86,40 por ano ($7,20 por mês), o Pro custa $144 por ano ($12 por mês) e o Business custa $374,40 por ano ($31,20 por mês), com cada caixa de correio extra a $28,80 por ano ($2,40 por mês). Você é cobrado uma vez, por 12 meses adiantados. Cancelar interrompe a renovação, e você mantém o acesso até o fim do ano que pagou. Fora o reembolso de 14 dias na primeira cobrança, não reembolsamos os meses restantes."
       },
       {
         "q": "Quais provedores de e-mail são suportados?",

@@ -2,7 +2,7 @@ const translation = {
   title: 'Hva er en MCP-e-postserver? En forklaring i klartekst',
   description:
     'En MCP-e-postserver lar en AI-agent lese og sende e-post via rene verb i stedet for rå IMAP og passord. Her er hva det egentlig betyr.',
-  coverAlt: 'Hva er en MCP-e-postserver — en forklaring i klartekst fra MCPEmails',
+  coverAlt: 'Hva er en MCP-e-postserver: en forklaring i klartekst fra MCPEmails',
   content: `En MCP-e-postserver er en liten tjeneste som gir en AI-agent som Claude eller Cursor direkte les- og send-tilgang til en ekte innboks, ved hjelp av Model Context Protocol. I stedet for å gi agenten et e-postpassord og et IMAP-bibliotek, gir den agenten en kort liste med handlinger: list opp meldingene mine, les denne, søk etter det, send et svar. Agenten kaller disse handlingene som et hvilket som helst annet verktøy, og serveren tar seg av det rotete leverandørarbeidet bak kulissene.
 
 Hvis du har hørt begrepet «MCP» bli kastet rundt og vil ha versjonen uten sjargong av hva en MCP-*e-postserver* faktisk gjør, så er dette den. La oss bygge det opp én bit om gangen.
@@ -21,7 +21,7 @@ En MCP-e-postserver er en MCP-server hvis verktøy tilfeldigvis handler om e-pos
 
 Her er den konkrete versjonen. Du kobler Gmail, Outlook, iCloud, Fastmail eller hvilken som helst IMAP-innboks til serveren én gang. Serveren eksponerer deretter e-post som en håndfull verktøy. Når agenten din vil håndtere e-post, kaller den ett av disse verktøyene, serveren snakker med leverandøren din over IMAP og SMTP (eller Microsoft Graph for Outlook) på dine vegne, og den returnerer et rent resultat.
 
-En nyttig måte å se det på: MCP-e-postserveren er en **oversetter og en utkaster**. Oversetter-delen gjør agentens enkle forespørsel («les den siste meldingen fra utleieren min») om til riktig leverandørspesifikt API-kall, og gjør det rotete svaret (MIME-deler, koding, tråd-headere) om til noe lesbart igjen. Utkaster-delen avgjør hva agenten har lov til å gjøre — bare lese, eller lese og sende — og slipper den aldri i nærheten av det faktiske passordet ditt.
+En nyttig måte å se det på: MCP-e-postserveren er en **oversetter og en utkaster**. Oversetter-delen gjør agentens enkle forespørsel («les den siste meldingen fra utleieren min») om til riktig leverandørspesifikt API-kall, og gjør det rotete svaret (MIME-deler, koding, tråd-headere) om til noe lesbart igjen. Utkaster-delen avgjør hva agenten har lov til å gjøre (bare lese, eller lese og sende) og slipper den aldri i nærheten av det faktiske passordet ditt.
 
 ## Verktøy, ikke rå IMAP
 
@@ -41,15 +41,15 @@ En MCP-e-postserver erstatter det med **verb**. Agenten ser ikke protokoller. De
 }
 \`\`\`
 
-Hvert verktøy bortsett fra \`inbox_list\` tar en \`action\`: \`email_read\` dekker å liste, lese og søke; \`email_compose\` dekker å sende, svare og videresende. Noen flere verktøy fyller ut resten av flaten (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), men disse få kjerneverbene dekker det daglige arbeidet. Agenten starter alltid med \`inbox_list\` for å finne ut hvilke kontoer som er tilkoblet og deres \`inbox_id\` — den kopierer aldri inn en UUID fra en konfigurasjonsfil. Deretter lister, leser, søker og sender den.
+Hvert verktøy bortsett fra \`inbox_list\` tar en \`action\`: \`email_read\` dekker å liste, lese og søke; \`email_compose\` dekker å sende, svare og videresende. Noen flere verktøy fyller ut resten av flaten (\`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, \`contact_search\`), men disse få kjerneverbene dekker det daglige arbeidet. Agenten starter alltid med \`inbox_list\` for å finne ut hvilke kontoer som er tilkoblet og deres \`inbox_id\`; den kopierer aldri inn en UUID fra en konfigurasjonsfil. Deretter lister, leser, søker og sender den.
 
 Skiftet fra «her er et bibliotek, finn ut av det» til «her er tre verb, hvert med en handling» er hele poenget. Verb er forutsigbare. De har en fast form, et dokumentert svar og en tilknyttet tillatelse. Det er det som gjør e-post trygt å automatisere i stedet for bare noe man kan demonstrere.
 
 ## Hvorfor en agent trenger verb, ikke passordet ditt
 
-Den naive måten å gi en agent e-posttilgang på er å slippe postkassepassordet ditt inn i en prompt eller en konfigurasjon og la den kjøre en IMAP-klient. Ikke gjør dette. Et passord er en hovednøkkel — det gir tilgang til alt, for alltid, uten noen måte å begrense det til «bare lesing» og ingen ren måte å trekke det tilbake på uten å endre det overalt.
+Den naive måten å gi en agent e-posttilgang på er å slippe postkassepassordet ditt inn i en prompt eller en konfigurasjon og la den kjøre en IMAP-klient. Ikke gjør dette. Et passord er en hovednøkkel: det gir tilgang til alt, for alltid, uten noen måte å begrense det til «bare lesing» og ingen ren måte å trekke det tilbake på uten å endre det overalt.
 
-Verb er annerledes. Når agenten din kobler seg til MCPEmails, får den et token som er begrenset til nøyaktig det du godkjente: \`read:email\`, \`send:email\`, eller begge. Agenten holder en evne, ikke en legitimasjon. Hvis du bare ga lesetilgang, finnes det ikke noe send-verb i menyen dens — den kan fysisk ikke sende e-post til noen.
+Verb er annerledes. Når agenten din kobler seg til MCPEmails, får den et token som er begrenset til nøyaktig det du godkjente på samtykkeskjermen, fra **Skrivebeskyttet** via **Standard** (legger til sending og utkast) til **Full tilgang** (legger til planlegging, mapper og sletting), eller et tilpasset utvalg av enkelttillatelser. Agenten holder en evne, ikke en legitimasjon. Hvis du bare ga lesetilgang, finnes det ikke noe send-verb i menyen dens; den kan fysisk ikke sende e-post til noen.
 
 Og selve hemmeligheten? Den blir liggende på serveren, kryptert. MCPEmails lagrer én ting per innboks: et app-passord eller OAuth-token, kryptert med AES-256-GCM, dekryptert på serverne våre bare når en forespørsel trenger det, og aldri sendt til agenten din. E-posten din selv blir aldri lagret. Hvert verktøykall henter meldingen direkte fra leverandøren din og forkaster den i det øyeblikket agenten har den. Innholdet i e-posten din ligger ikke i en database et sted og venter på å lekke. Hvis du vil ha den lengre versjonen av hvorfor det designvalget betyr noe, skrev jeg om det i [hvorfor det er viktig at e-posten din aldri lagres](/blog/why-email-never-stored-matters).
 
@@ -62,9 +62,9 @@ En reell interaksjon ser slik ut. Si at du ber Claude om å oppdatere deg på in
 1. Agenten kaller \`inbox_list\` og finner jobb-Gmailen din.
 2. Den kaller \`email_read\` med \`action: "list"\` og \`unread: true\` for å hente det som er nytt.
 3. For alt som ser viktig ut, kaller den \`email_read\` med \`action: "read"\` for å hente hele innholdet.
-4. Den oppsummerer, og hvis du har godkjent sendetilgang, kan den utforme et svar med \`email_compose\` (\`action: "reply"\`) — som setter tråd-headerne automatisk slik at svaret havner i riktig samtale.
+4. Den oppsummerer, og hvis du har godkjent sendetilgang, kan den utforme et svar med \`email_compose\` (\`action: "reply"\`), som setter tråd-headerne automatisk slik at svaret havner i riktig samtale.
 
-Én ærlig begrensning det er verdt å vite om på forhånd: dette er **polling, ikke push**. Det finnes ingen webhooks. Serveren varsler ikke agenten din når ny e-post kommer inn. For å reagere på ny e-post må agenten sjekke etter en tidsplan. Det er en bevisst avveining, og den former hvordan du ville bygd noe som en [autosvarer](/blog/build-email-auto-responder-mcp-agent) eller en [rutine for innbokstriage](/blog/ai-agent-triage-summarize-inbox).
+Én begrensning det er verdt å vite om på forhånd: MCP i seg selv er **polling, ikke push**. Serveren svarer når agenten spør og varsler den aldri, så en agent i en chat reagerer på ny e-post ved å sjekke etter en tidsplan. (MCPEmails tilbyr en webhook for ny post til din egen kode, på Pro og Business.) Det former hvordan du ville bygd noe som en [autosvarer](/blog/build-email-auto-responder-mcp-agent) eller en [rutine for innbokstriage](/blog/ai-agent-triage-summarize-inbox).
 
 ## Hostet server kontra å bygge din egen
 

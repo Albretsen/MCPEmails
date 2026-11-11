@@ -42,7 +42,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. 点击**继续（Continue）**，检查 Claude 检测到的登录设置（保持默认即可），然后点击**添加（Add）**。
-5. 用你的 MCPEmails 账户登录，并批准你想要的范围：\`read:email\`、\`send:email\`，或两者都选。
+5. 用你的 MCPEmails 账户登录，并选择给 Claude 多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。**自定义**则可以逐项开启或关闭权限。
 6. 在对话中点击左下角的 **+**，选择**连接器（Connectors）**，然后打开 MCPEmails。
 
 在 Team 或 Enterprise 方案中，由 Owner 在 **Organization settings → Connectors** 下添加一次连接器。之后成员打开 **Customize → Connectors**，找到 MCPEmails 并点击 **Connect**。
@@ -75,7 +75,7 @@ https://mcpemails.com/api/mcp
 
 Claude 也有自己的 Gmail 连接器，它同样可以发送邮件。[Claude 能读取我的邮件并发送邮件吗？](/blog/can-claude-read-my-email) 按邮箱逐一把它和 MCPEmails 做了比较。
 
-有一点要事先说明：MCPEmails 是基于轮询的。没有推送 webhook，所以 Claude 是在你让它检查时才对新邮件作出反应，而不是在邮件抵达的那一刻。对于几乎所有助手类工作流而言，这正是恰到好处的模型。
+有一点要事先说明：Claude 是在你让它检查时才对新邮件作出反应，而不是在邮件抵达的那一刻。对于几乎所有助手类工作流而言，这正是恰到好处的模型。（你自己的代码则不同：Pro 和 Business 工作区可以在 API 密钥页面添加一个 webhook，新邮件到达时它会向你的 URL 发送 POST。）
 
 ## 把 Gmail 连接到 Claude 安全吗？
 
@@ -106,7 +106,7 @@ Claude 也有自己的 Gmail 连接器，它同样可以发送邮件。[Claude �
 
 ## 总结
 
-这就是全部内容：一个 Google 应用专用密码、一个端点 URL，Claude 就能读取、搜索并发送你真实的邮件，而且从不存储它们。免费层不收任何费用、无需信用卡，可连接一个邮箱；Personal 每月 9 美元，最多可连接三个；Pro 最多可连接 10 个（请查看[价格](/pricing)）。
+这就是全部内容：一个 Google 应用专用密码、一个端点 URL，Claude 就能读取、搜索并发送你真实的邮件，而且从不存储它们。免费层不收任何费用、无需信用卡，可连接一个邮箱；付费套餐可连接更多（请查看[价格](/pricing)）。
 
 准备好了吗？[免费连接你的 Gmail](/signup)，把端点粘贴进 Claude，让它帮你总结未读邮件。`,
 };

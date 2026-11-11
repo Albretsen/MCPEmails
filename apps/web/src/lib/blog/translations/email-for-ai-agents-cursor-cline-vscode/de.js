@@ -26,7 +26,7 @@ Cursor unterstützt OAuth 2.0 für MCP-Server, und das ist der bequeme Weg. Es g
 
 1. Öffnen Sie die Einstellungen von Cursor und suchen Sie den Bereich für MCP-Server.
 2. Fügen Sie einen neuen Server mit der URL \`https://www.mcpemails.com/api/mcp\` hinzu.
-3. Cursor öffnet ein Browserfenster. Melden Sie sich bei Ihrem MCPEmails-Konto an und genehmigen Sie die Scopes, die der Agent erhalten soll: \`read:email\`, \`send:email\` oder beide.
+3. Cursor öffnet ein Browserfenster. Melden Sie sich bei Ihrem MCPEmails-Konto an und wählen Sie auf dem Zustimmungsbildschirm, wie viel Zugriff der Agent bekommt: **Nur-Lese-Zugriff**, **Standard** oder **Vollzugriff**, oder unter **Benutzerdefiniert** jede Berechtigung einzeln.
 4. Die Verbindung wird grün, und die E-Mail-Tools erscheinen in der Tool-Liste von Cursor.
 
 Technisch ist das der OAuth-2.0-Authorization-Code-Flow mit PKCE, und das Token in Cursor ist genau auf das begrenzt, was Sie genehmigt haben. Haben Sie nur \`read:email\` erteilt, kann der Agent schlicht nicht senden. Wenn Sie fertig sind, widerrufen Sie die Verbindung mit einem Klick unter **Dashboard → API-Schlüssel** (dort liegen auch die OAuth-Freigaben), und Cursor verliert den Zugriff sofort.
@@ -101,13 +101,13 @@ Der Agent führt \`inbox_list\` aus, dann \`email_read\` mit der Aktion \`list\`
 
 Er ruft \`email_compose\` mit der Aktion \`reply\` auf, der Verlauf bleibt erhalten, und die Antwort geht über mein eigenes Gmail hinaus. Sie kommt also von meiner Adresse mit der Reputation meiner Domain an. Mehr zu Triage-Prompts lesen Sie unter [wie ein KI-Agent Ihr Postfach sortiert und zusammenfasst](/blog/ai-agent-triage-summarize-inbox).
 
-Eine Einschränkung gibt es: Es gibt keine Webhooks. Der Server schickt Ihnen neue E-Mails nicht von selbst. Soll der Agent auf eingehende Nachrichten reagieren, fragen Sie regelmäßig ab: \`email_read\` mit der Aktion \`list\` und \`unread: true\` nach Zeitplan. Das ist eine bewusste Designentscheidung, und sie bestimmt, wie Sie alles Reaktive bauen, etwa einen [automatischen Antwortdienst über MCP](/blog/build-email-auto-responder-mcp-agent).
+Eine Einschränkung gibt es: Die MCP-Tools melden sich nie von selbst bei Ihnen. Soll der Agent auf eingehende Nachrichten reagieren, fragen Sie den Server regelmäßig ab, also \`email_read\` mit der Aktion \`list\` und \`unread: true\` nach Zeitplan, oder Sie lassen einen Webhook für neue E-Mails Ihren Code wecken (Pro- und Business-Workspaces legen ihn im Dashboard unter API-Schlüssel an, und er schickt die Nachrichten-IDs per POST an Ihre URL). So oder so bestimmt das, wie Sie alles Reaktive bauen, etwa einen [automatischen Antwortdienst über MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratenlimits für Zugriff per Skript
 
 Wenn Sie den Server aus einem Cron-Job oder einer engen Agenten-Schleife ansteuern, beachten Sie die Limits. Jeder Tarif hat eine Obergrenze pro Minute für den gesamten Workspace, und jeder API-Schlüssel erhält Minuten-, Stunden- und Tagesfenster, die nach diesem Tarif bemessen sind: Ein Schlüssel kann die volle Minuten-Obergrenze des Tarifs nutzen, mehrere Schlüssel teilen sie sich. Erfolgreiche \`tools/call\`-Antworten tragen \`RateLimit-Limit\`, \`RateLimit-Remaining\` und \`RateLimit-Reset\`, ein 429 trägt \`Retry-After\`. Die Obergrenze jedes Tarifs finden Sie auf der [Preisseite](/pricing).
 
-Erreichen Sie ein Ratenlimit, gibt der Server einen wiederholbaren Fehler (Code \`-32003\`) mit \`data.retry_after\` in Sekunden zurück. Halten Sie sich daran: Warten Sie so lange und versuchen Sie es dann erneut. Nicht alles lässt sich wiederholen: Wenn Sie das monatliche Aktionskontingent Ihres Tarifs aufgebraucht haben, liefert der Aufruf ein normales Tool-Ergebnis mit \`isError: true\` und einem \`_meta["com.mcpemails/usage_limit"]\`-Block. Es gibt kein \`retry_after\`, und kein Wiederholen hilft vor \`reset_at\`. Wiederholen Sie außerdem nie blind einen Versand mit \`email_compose\` nach einem allgemeinen Fehler, sonst verschicken Sie Duplikate. Prüfen Sie zuerst, ob die E-Mail tatsächlich gesendet wurde.
+Erreichen Sie ein Ratenlimit, gibt der Server einen wiederholbaren Fehler (Code \`-32003\`) mit \`data.retry_after\` in Sekunden zurück. Halten Sie sich daran: Warten Sie so lange und versuchen Sie es dann erneut. Nicht alles lässt sich wiederholen: Erreicht ein Workspace ein Nutzungslimit seines Tarifs, liefert der Aufruf ein normales Tool-Ergebnis mit \`isError: true\` und einem \`_meta["com.mcpemails/usage_limit"]\`-Block. Es gibt kein \`retry_after\`, und kein Wiederholen hilft vor \`reset_at\`. Wiederholen Sie außerdem nie blind einen Versand mit \`email_compose\` nach einem allgemeinen Fehler, sonst verschicken Sie Duplikate. Prüfen Sie zuerst, ob die E-Mail tatsächlich gesendet wurde.
 
 ## Fazit
 

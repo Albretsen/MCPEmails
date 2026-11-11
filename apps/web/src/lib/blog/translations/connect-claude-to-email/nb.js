@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Klikk **Continue**, se over innloggingsinnstillingene Claude fant (standardvalgene holder), og klikk **Add**.
-5. Logg inn på MCPEmails og godkjenn scopene du ønsker: \`read:email\`, \`send:email\` eller begge.
+5. Logg inn på MCPEmails og velg hvor mye tilgang Claude skal få: **Skrivebeskyttet**, **Standard** (legger til sending og utkast) eller **Full tilgang** (legger til planlegging, mapper og sletting). Med **Tilpasset** slår du hver enkelt tillatelse av eller på.
 6. I en samtale klikker du **+** nede til venstre, velger **Connectors** og slår på MCPEmails.
 
 På et Team- eller Enterprise-abonnement legger en Owner til connectoren én gang under **Organization settings → Connectors**. Medlemmene åpner deretter **Customize → Connectors**, finner MCPEmails og klikker **Connect**.
@@ -92,7 +92,7 @@ MCPEmails gir Claude fokuserte e-postverktøy i stedet for et passord eller en r
 - **Organisere:** \`email_organize\` flytter, merker, flagger og arkiverer meldinger.
 - **Jobbe med utkast, mapper, planlegging og kontakter:** \`draft\`, \`folder\`, \`schedule\` og \`contact_search\` dekker resten av en praktisk e-postflyt.
 
-MCPEmails er poll-basert: Claude sjekker ny e-post når du ber den om det, i stedet for å motta et push-varsel i samme øyeblikk som en e-post kommer.
+Claude leser e-posten din ved å kalle verktøy: den sjekker ny e-post når du ber den om det, og ingenting dyttes inn i chatten i samme øyeblikk som en e-post kommer. Trenger din egen kode push, kan Pro- og Business-arbeidsområder legge til en signert webhook for ny e-post under API-nøkler i dashbordet.
 
 ## Feilsøking av tilkobling og Claude-oppsett
 

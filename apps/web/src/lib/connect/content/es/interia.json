@@ -67,7 +67,8 @@
   ],
   "limits": [
     "Interia no anuncia MOVE ni SPECIAL-USE, así que archivar se ejecuta como copia más marca más expunge, y Enviados, Borradores y Papelera se identifican por nombre. En un buzón en polaco suelen ser Wysłane, Kopie robocze y Kosz, así que indica la carpeta si un agente no la encuentra.",
-    "Activar el inicio de sesión en dos pasos en la cuenta de Interia desconecta el buzón de todos los clientes de correo, MCPEmails incluido, y no existe ninguna contraseña de aplicación para restablecerlo."
+    "Activar el inicio de sesión en dos pasos en la cuenta de Interia desconecta el buzón de todos los clientes de correo, MCPEmails incluido, y no existe ninguna contraseña de aplicación para restablecerlo.",
+    "Una cuenta gratuita de Interia permite 1 GB de transferencia al día desde programas de correo (PocztaPRO: 15 GB); cuando se agota, el envío y el acceso desde clientes de correo se detienen durante 24 horas. Cada mensaje tiene un límite de 100 MB."
   ],
   "faq": [
     {

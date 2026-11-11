@@ -57,11 +57,17 @@ export const RELEASE_WAVES = {
   // Numbered below the held cohort because a dated wave may not follow a held
   // one; the held set was wave 10 until this cohort was added.
   10: '2026-11-04',
-  // HELD, not scheduled. These seven need a human spot-check first: SFR and
+  // Italian, Czech and Polish hosts researched on official help pages and
+  // probed on 2026-11-10: Aruba, Libero and Virgilio, TIM, Tiscali, PEC
+  // (Aruba PEC, Legalmail, Poste), Centrum/Atlas/Volný and Gazeta.pl, plus
+  // WP.pl, checked against pomoc.wp.pl and moved out of the held cohort.
+  11: '2026-11-10',
+  // HELD, not scheduled. These six need a human spot-check first: SFR and
   // StartMail are sourced more weakly than the rest of the set, and Rogers has
   // app-password availability contradicted between two live vendor pages. Set
-  // a date here once someone has read them.
-  11: null,
+  // a date here once someone has read them. (This was wave 11 until the
+  // 2026-11-10 cohort was added: a dated wave may not follow a held one.)
+  12: null,
 };
 
 /**

@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "Zahlung aktualisieren",
     "paymentIssueConfirm": "Ihre Bank möchte, dass Sie die letzte Zahlung bestätigen. Ihr Plan bleibt aktiv.",
     "paymentIssueConfirmCta": "Zahlung bestätigen",
+    "inboxAlertOne": "{address} muss neu verbunden werden. Die Anmeldung funktioniert nicht mehr, daher kann Ihre KI-App dort nichts lesen, entwerfen oder senden.",
+    "inboxAlertMany": "{count} Postfächer müssen neu verbunden werden. Die Anmeldung funktioniert nicht mehr, daher kann Ihre KI-App sie nicht nutzen.",
+    "inboxAlertReconnect": "Neu verbinden",
+    "inboxAlertOpenInboxes": "Postfächer öffnen",
     "inviteSentNotDelivered": "Einladung für {email} erstellt, aber die E-Mail konnte nicht gesendet werden. Nutzen Sie bei der offenen Einladung „Erneut senden“.",
     "inviteResent": "Einladung erneut an {email} gesendet.",
     "inviteResendFailed": "Die Einladung konnte nicht erneut gesendet werden.",
@@ -417,6 +421,43 @@
       "seznam": {
         "password": "Ist die Zwei-Faktor-Authentifizierung (dvoufázové ověření) aktiv, funktioniert Ihr Seznam-Passwort hier nicht mehr. Legen Sie unter Zabezpečení účtu ein Heslo pro aplikace fest und verwenden Sie dieses."
       },
+      "aruba": {
+        "password": "Aruba prüft das Passwort dieses Postfachs, das unter Gestione caselle im Aruba-Panel festgelegt wird, nicht Ihren Login für den Aruba-Kundenbereich. Bei einem Hosting-Basic-Tarif von vor Juni 2017 ist IMAP ein eigenes Zusatzmodul, das auf der Domain aktiv sein muss."
+      },
+      "libero": {
+        "password": "Ist Password Sicura aktiv, lehnen Libero und Virgilio Ihr normales Passwort in Mail-Apps ab. Öffnen Sie im Kontobereich Password per App und verwenden Sie die dort angezeigte 16-stellige Password Specifica per Applicazioni; es ist ein Passwort für alle Apps, die Sie verbinden."
+      },
+      "tim": {
+        "line": "TIM erlaubt Mail-Apps nur bei einem Postfach, das an einen aktiven TIM-Festnetz- oder Mobilfunkanschluss gebunden ist. Ohne einen solchen lässt TIM Mail-Apps nur aus dem eigenen Netz zu, und das ist MCPEmails nicht."
+      },
+      "tiscali": {
+        "password": "Tiscali erwartet Ihr Tiscali-Mail-Passwort zusammen mit der vollständigen Adresse. Die Hilfe beschreibt die Zwei-Faktor-Authentifizierung nur für die Anmeldung im Webmail und sagt nichts zu Mail-Apps: Ist sie aktiv und die Anmeldung schlägt fehl, prüfen Sie das zuerst."
+      },
+      "arubaPec": {
+        "password": "Ist die verifica in 2 passaggi aktiv, lehnt Aruba PEC das Postfach-Passwort in Mail-Apps ab. Erzeugen Sie unter Gestione account PEC, dann Sicurezza, eine Password per programmi di posta und verwenden Sie diese. Sie läuft nach sechs Monaten ab."
+      },
+      "legalmail": {
+        "password": "Legalmail meldet sich mit der User ID oder der PEC-Adresse und dem Passwort des Postfachs an; eine User ID gehört in das Feld Benutzername unter Erweiterte Einstellungen. Verwenden Sie stattdessen eine Application Password, erstellen Sie eine 16-stellige unter Password applicative in den Kontoeinstellungen; jede hat ein eigenes Ablaufdatum, prüfen Sie also, ob es noch gilt."
+      },
+      "postecert": {
+        "password": "Öffnen Sie bei PEC Postecertifica das PEC-Dashboard, wählen Sie Genera password und verwenden Sie dieses Client-Passwort; das Webmail-Passwort wird nie akzeptiert, und das Client-Passwort läuft alle 90 Tage ab."
+      },
+      "centrum": {
+        "password": "Ist dvoufaktorové ověření aktiv, lehnen Centrum, Atlas und Volný Ihr Passwort in Mail-Apps ab. Erzeugen Sie im Bereich Dvoufaktorové ověření der Web-Einstellungen, an einem Computer, ein aplikační heslo und verwenden Sie dieses.",
+        "smtp": "Zum Senden braucht es das kostenlose erweiterte Postfach (navýšení schránky): Bestätigen Sie in den Web-Einstellungen eine Telefonnummer und testen Sie dann erneut."
+      },
+      "wp": {
+        "imap": "Aktivieren Sie IMAP bei {provider}: Opcje, Reiter IMAP/POP, dann IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "Ist logowanie dwustopniowe aktiv, erstellen Sie unter Bezpieczeństwo, Logowanie dwustopniowe, ein hasło do programu pocztowego und verwenden Sie es statt Ihres {provider}-Passworts."
+      },
+      "onet": {
+        "protocols": "Geben Sie IMAP und SMTP in Onet Poczta frei: Ustawienia (das Zahnrad), Konto, Reiter Konto Główne, dann der Schalter auf der Kachel des jeweiligen Protokolls.",
+        "appPassword": "Ist weryfikacja dwuetapowa aktiv, erzeugen Sie unter Bezpieczeństwo im Onet Konto ein hasło do aplikacji und verwenden Sie es statt Ihres Onet-Passworts."
+      },
+      "interia": {
+        "program": "Öffnen Sie bei Interia Ustawienia, Ustawienia główne, Reiter Parametry, und stellen Sie korzystam z programu pocztowego auf TAK.",
+        "twoStep": "Interia sperrt Mail-Programme, solange logowanie dwuetapowe aktiv ist, und kennt keine App-Passwörter. Schalten Sie es aus, um zu verbinden."
+      },
       "gmx": {
         "imap": "{provider} schaltet den POP3- und IMAP-Zugriff standardmäßig aus. Aktivieren Sie ihn unter E-Mail-Einstellungen, dann POP3/IMAP.",
         "twoFactor": "Bei aktivierter Zwei-Faktor-Authentifizierung verwenden Sie ein App-Passwort statt Ihres normalen Passworts."
@@ -594,6 +635,16 @@
     "switchCta": "Zur jährlichen Abrechnung wechseln",
     "switchBusy": "Wird vorbereitet...",
     "ended": "Das Black-Week-Angebot ist vorbei, daher wurde nichts abgebucht. Die Beträge oben sind der reguläre Preis."
+  },
+  "annualSwitch": {
+    "title": "Zur jährlichen Abrechnung wechseln",
+    "body": "Zahlen Sie {plan} einmal im Jahr und sparen Sie {percent} % gegenüber monatlicher Zahlung.",
+    "current": "Die ungenutzten Tage Ihres laufenden Monats werden gutgeschrieben, daher ist die heutige Abbuchung etwas niedriger als ein ganzes Jahr. Sie sehen den genauen Betrag, bevor etwas abgebucht wird.",
+    "cta": "Zu jährlich wechseln",
+    "busy": "Wird vorbereitet...",
+    "noticeBody": "Sie zahlen {plan} monatlich. Die jährliche Abrechnung kostet {percent} % weniger.",
+    "noticeCta": "Jährliche Abrechnung ansehen",
+    "close": "Schließen"
   },
   "founder": {
     "line": "Gründerpreis: ${price} pro Monat, solange Ihr Abonnement besteht. Für die ersten {total} Unternehmen oder bis zum 31. Dezember 2026, je nachdem, was zuerst eintritt. Jedes weitere Postfach kostet ${addon} pro Monat.",

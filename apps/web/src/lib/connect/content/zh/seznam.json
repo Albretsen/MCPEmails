@@ -8,7 +8,7 @@
     "method": "account-password",
     "label": "Seznam 密码",
     "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
-    "usernameForm": "包括 @ 之后所有内容的完整地址：name@seznam.cz 或 name@email.cz。",
+    "usernameForm": "包括 @ 之后所有内容的完整地址：name@seznam.cz、name@email.cz 或 name@post.cz。",
     "status": "active"
   },
   "meta": {

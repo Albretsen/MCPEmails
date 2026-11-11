@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "Actualizar pago",
     "paymentIssueConfirm": "Tu banco quiere que confirmes el último pago. Tu plan sigue activo.",
     "paymentIssueConfirmCta": "Confirmar pago",
+    "inboxAlertOne": "Hay que volver a conectar {address}. Su inicio de sesión dejó de funcionar, así que tu app de IA no puede leer, redactar ni enviar desde ella.",
+    "inboxAlertMany": "Hay que volver a conectar {count} bandejas de entrada. Su inicio de sesión dejó de funcionar, así que tu app de IA no puede usarlas.",
+    "inboxAlertReconnect": "Volver a conectar",
+    "inboxAlertOpenInboxes": "Abrir bandejas",
     "inviteSentNotDelivered": "Se creó la invitación para {email}, pero no se pudo enviar el correo. Usa Reenviar en la invitación pendiente.",
     "inviteResent": "Invitación reenviada a {email}.",
     "inviteResendFailed": "No se pudo reenviar la invitación.",
@@ -417,6 +421,43 @@
       "seznam": {
         "password": "Si la autenticación de dos factores (dvoufázové ověření) está activada, tu contraseña de Seznam deja de funcionar aquí. Crea una Heslo pro aplikace en Zabezpečení účtu y usa esa."
       },
+      "aruba": {
+        "password": "Aruba comprueba la contraseña de este buzón, la que se define en Gestione caselle en el panel de Aruba, no la de tu área de cliente de Aruba. En un plan Hosting Basic anterior a junio de 2017, IMAP es un complemento aparte que debe estar activo en el dominio."
+      },
+      "libero": {
+        "password": "Con Password Sicura activada, Libero y Virgilio rechazan tu contraseña normal en las apps de correo. Abre Password per App en el área de la cuenta y usa la Password Specifica per Applicazioni de 16 caracteres que aparece ahí; es una sola contraseña para todas las apps que conectes."
+      },
+      "tim": {
+        "line": "TIM solo permite apps de correo en un buzón vinculado a una línea fija o móvil de TIM activa. Sin ella, TIM admite apps de correo únicamente desde su propia red, y MCPEmails no está en ella."
+      },
+      "tiscali": {
+        "password": "Tiscali pide tu contraseña de Tiscali Mail con la dirección completa. Su ayuda documenta la autenticación de dos factores solo para el acceso al webmail y no dice nada de las apps de correo, así que si está activada y el acceso falla, es lo primero que debes comprobar."
+      },
+      "arubaPec": {
+        "password": "Con la verifica in 2 passaggi activada, Aruba PEC rechaza la contraseña del buzón en las apps de correo. Genera una Password per programmi di posta en Gestione account PEC, luego Sicurezza, y usa esa. Caduca a los seis meses."
+      },
+      "legalmail": {
+        "password": "Legalmail inicia sesión con el User ID o la dirección PEC y la contraseña del buzón; el User ID va en el campo Usuario, en Configuración avanzada. Si prefieres una Application Password, crea una de 16 dígitos en Password applicative, en los ajustes de la cuenta; cada una tiene su propia fecha de caducidad, así que comprueba que no haya vencido."
+      },
+      "postecert": {
+        "password": "En PEC Postecertifica, abre el panel de la PEC, elige Genera password y usa esa contraseña de cliente; la contraseña del webmail nunca se acepta y la de cliente caduca cada 90 días."
+      },
+      "centrum": {
+        "password": "Con dvoufaktorové ověření activado, Centrum, Atlas y Volný rechazan tu contraseña en las apps de correo. Genera una aplikační heslo en la sección Dvoufaktorové ověření de los ajustes web, desde un ordenador, y usa esa.",
+        "smtp": "Para enviar hace falta el buzón ampliado gratuito (navýšení schránky): confirma un número de teléfono en los ajustes web y vuelve a probar."
+      },
+      "wp": {
+        "imap": "Activa IMAP en {provider}: Opcje, la pestaña IMAP/POP y luego IMAP (pobieraj i wysyłaj wiadomości).",
+        "twoStep": "Con logowanie dwustopniowe activado, crea una hasło do programu pocztowego en Bezpieczeństwo, Logowanie dwustopniowe, y úsala en lugar de tu contraseña de {provider}."
+      },
+      "onet": {
+        "protocols": "Desbloquea IMAP y SMTP en Onet Poczta: Ustawienia (la rueda dentada), Konto, la pestaña Konto Główne y luego el interruptor de la ficha de cada protocolo.",
+        "appPassword": "Con weryfikacja dwuetapowa activada, genera una hasło do aplikacji en Bezpieczeństwo dentro de Onet Konto y úsala en lugar de tu contraseña de Onet."
+      },
+      "interia": {
+        "program": "En Interia abre Ustawienia, Ustawienia główne, la pestaña Parametry, y pon korzystam z programu pocztowego en TAK.",
+        "twoStep": "Interia bloquea los programas de correo mientras logowanie dwuetapowe está activado y no tiene contraseñas de aplicación. Desactívalo para conectar."
+      },
       "gmx": {
         "imap": "{provider} desactiva por defecto el acceso POP3 e IMAP. Actívalo en E-Mail-Einstellungen, luego POP3/IMAP.",
         "twoFactor": "Con la autenticación de dos factores activada, usa una contraseña de aplicación en lugar de tu contraseña normal."
@@ -594,6 +635,16 @@
     "switchCta": "Cambiar a anual",
     "switchBusy": "Preparando...",
     "ended": "La oferta de Black Week ha terminado, así que no se ha cobrado nada. Los importes de arriba son el precio habitual."
+  },
+  "annualSwitch": {
+    "title": "Cambia a facturación anual",
+    "body": "Paga {plan} una vez al año y ahorra un {percent} % frente al pago mensual.",
+    "current": "Los días no usados de tu mes actual se descuentan, así que el cargo de hoy es algo menor que un año completo. Verás el importe exacto antes de que se cobre nada.",
+    "cta": "Cambiar a anual",
+    "busy": "Preparando...",
+    "noticeBody": "Pagas {plan} cada mes. La facturación anual cuesta un {percent} % menos.",
+    "noticeCta": "Ver facturación anual",
+    "close": "Cerrar"
   },
   "founder": {
     "line": "Precio fundador: ${price} al mes, que mantienes mientras sigas suscrito. Para las primeras {total} empresas o hasta el 31 de diciembre de 2026, lo que ocurra antes. Cada buzón adicional cuesta ${addon} al mes.",

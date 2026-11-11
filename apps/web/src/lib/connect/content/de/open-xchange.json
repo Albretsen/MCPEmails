@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "https://documentation.open-xchange.com/7.10.4/middleware/mail/mail_proxy_configuration.html",
+    "https://documentation.open-xchange.com/7.8.2/middleware/components/search/crossfolder_fts_in_mail.html",
+    "https://www.oxpedia.org/wiki/index.php?title=Authentication_IMAP_Plugin_description",
+    "https://wiki.open-xchange.com/wiki/index.php?title=Install_and_configure_the_mail-account_plugin"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postfach-Passwort",
+    "helpUrl": "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "usernameForm": "Was der IMAP-Server hinter App Suite erwartet: meist die vollständige Adresse wie name@ihredomain.de, manchmal ein eigener Login-Name. Die Middleware-Einstellung com.openexchange.mail.loginSource entscheidet, welches von beiden App Suite selbst sendet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Open-Xchange und Claude: das IMAP-Backend verbinden",
+    "description": "Open-Xchange App Suite ist eine Groupware-Oberfläche, kein IMAP-Server. Verbinden Sie das Dovecot-Backend dahinter per IMAP mit Claude, Cursor und ChatGPT."
+  },
+  "hero": {
+    "eyebrow": "Open-Xchange + KI",
+    "titleLine1": "Ein Open-Xchange-Postfach verbinden",
+    "titleLine2": "mit Claude, Cursor und ChatGPT",
+    "lead": "App Suite ist die Oberfläche, nicht der Mailspeicher. Sobald Sie wissen, welcher IMAP-Server dahintersteht, ist das Anbinden eines KI-Agenten Routine: lesen, suchen, beantworten, senden, planen und ablegen, aus jedem MCP-Client.",
+    "answer": "Claude kann ein Open-Xchange-Postfach nicht von sich aus erreichen, und Open-Xchange App Suite ist nicht der Server, mit dem man sich verbindet. App Suite ist Groupware-Middleware, die mit einem separaten IMAP- und SMTP-Backend spricht, in den meisten Installationen Dovecot. MCPEmails ist ein gehosteter MCP-Server, der sich per IMAP mit diesem Backend verbindet, normalerweise auf Port 993, mit dem Postfach-Passwort, sodass Claude, Cursor oder jeder MCP-Client diese E-Mails lesen, suchen, senden und sortieren kann. Der zu verwendende Host ist der Mailserver, den Ihre Installation oder Ihr Anbieter veröffentlicht, nicht die Adresse der App-Suite-Weboberfläche. Ein Postfach ist kostenlos.",
+    "meta0": "1 Postfach dauerhaft kostenlos",
+    "meta1": "Backend-Postfach-Passwort, nicht die Web-URL",
+    "meta2": "E-Mails live abgerufen, nie gespeichert"
+  },
+  "method": {
+    "title": "So verbindet sich Open-Xchange: über den Mailserver, an den App Suite weiterreicht",
+    "body": "Open-Xchange App Suite speichert Kalender, Kontakte, Aufgaben und Dateien, aber keine E-Mails. Für E-Mail ist es ein Client, der im Auftrag des Nutzers IMAP-Sitzungen zu einem separaten Server öffnet und das Ergebnis im Browser darstellt. Open-Xchange selbst sagt, dass jedes System mit IMAP und SMTP als Backend dienen kann und dass Dovecot die empfohlene Wahl für eine neue Installation ist. Welchen Server eine Installation nutzt, steht in <code>/opt/open-xchange/etc/mail.properties</code>, in <code>com.openexchange.mail.mailServer</code> für IMAP und <code>com.openexchange.mail.transportServer</code> für den Versand, mit IMAP-spezifischem Verhalten wie <code>com.openexchange.imap.imapSearch</code> daneben in <code>imap.properties</code>. Mit diesem Backend verbindet sich MCPEmails. Alles auf unserer englischen Dovecot-Seite zu Listenern, Ordnerrollen und Zertifikaten gilt dafür, denn in den meisten App-Suite-Installationen ist es schlicht Dovecot."
+  },
+  "setup": [
+    {
+      "h": "Kostenloses MCPEmails-Konto anlegen",
+      "p": "Registrieren Sie sich auf mcpemails.com. Ein Postfach ist dauerhaft kostenlos, eine Kreditkarte ist nicht nötig."
+    },
+    {
+      "h": "Den IMAP-Host hinter App Suite finden",
+      "p": "Betreiben Sie die Installation selbst, lesen Sie <code>com.openexchange.mail.mailServer</code> aus <code>/opt/open-xchange/etc/mail.properties</code> auf einem Middleware-Knoten. Ist App Suite das Webmail Ihres Anbieters, ignorieren Sie die Middleware ganz und nehmen den IMAP-Hostnamen, den dieser Anbieter für Mailprogramme dokumentiert; das ist die Antwort, die er ohnehin veröffentlicht. In Deutschland begegnet Ihnen App Suite zum Beispiel als Webmail von IONOS."
+    },
+    {
+      "h": "Den Login-Namen bestätigen, den das Backend erwartet",
+      "p": "Melden Sie sich in einem Mailprogramm auf dem Rechner an oder prüfen Sie <code>com.openexchange.mail.loginSource</code> in der Middleware-Konfiguration, um zu sehen, ob das Backend die vollständige E-Mail-Adresse oder einen eigenen Login-Namen erwartet. Fügen Sie das Postfach dann in MCPEmails hinzu: IMAP / SMTP wählen, diesen Host, den Login-Namen und das Postfach-Passwort eintragen."
+    },
+    {
+      "h": "MCP-URL in Ihre KI einfügen",
+      "p": "Fügen Sie https://mcpemails.com/api/mcp in Claude, Cursor oder ChatGPT als Konnektor ein, autorisieren Sie den Zugriff, und Ihr Agent arbeitet im Postfach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Die Web-Adresse von App Suite ist kein Mailhost, und oft antwortet dort nichts",
+      "p": "An diesem Fehler drehen sich die meisten im Kreis. Sie lesen E-Mails unter etwas wie <code>webmail.yourprovider.com</code>, das wirkt also wie der Mailserver, ist aber ein HTTP-Anwendungsknoten. Port 993 darauf ist häufig geschlossen, und wenn er antwortet, ist es womöglich ein Load Balancer, der nichts Brauchbares terminiert. Schlimmer: In einer selbst gehosteten Installation ist der Wert von <code>com.openexchange.mail.mailServer</code> sehr oft eine interne Adresse, manchmal <code>127.0.0.1:143</code> auf derselben Maschine oder ein interner Name, der nur im Cluster auflöst, weil der einzige Client, der ihn je erreichen sollte, die Middleware selbst war. Ist das bei Ihnen so, müssen Sie bewusst einen externen IMAP-Endpunkt mit eigenem Zertifikat veröffentlichen, bevor irgendein externer Client, dieser eingeschlossen, sich verbinden kann."
+    },
+    {
+      "h": "Kam App Suite mit Ihrem Hosting, sind die Einstellungen des Anbieters die Antwort",
+      "p": "Open-Xchange verkauft App Suite an Betreiber, nicht an Endkunden, die meisten begegnen ihr also als Webmail eines anderen, ohne dass der Produktname je auf dem Bildschirm steht. IONOS und Namecheap Private Email sind zwei, die Sie vielleicht kennen. Sind Sie so hierhergekommen, existiert keine der oben genannten Konfigurationsdateien auf einer Maschine, die Sie erreichen können, und Sie brauchen sie auch nicht: Ihr Anbieter veröffentlicht IMAP- und SMTP-Hostnamen für Mailprogramme, und genau die will MCPEmails. Verwenden Sie den dokumentierten Host, den Port und das Postfach-Passwort des Anbieters, App Suite ist dann nur das Webmail, das Ihr Anbieter zufällig lizenziert hat."
+    },
+    {
+      "h": "Probleme beheben: loginSource bestimmt den Benutzernamen, und Master-Authentifizierung kann heißen, dass Sie keinen haben",
+      "p": "App Suite sendet nicht unbedingt Ihre E-Mail-Adresse als IMAP-Benutzernamen. Die Middleware-Einstellung <code>com.openexchange.mail.loginSource</code> wählt zwischen der primären Adresse, dem App-Suite-Login-Namen und anderen Formen. Deshalb sind die Zugangsdaten, mit denen Sie sich im Browser anmelden, nicht immer die, die der Mailserver sieht. Installationen mit Master-Passwort-Authentifizierung gehen noch einen Schritt weiter: Die Middleware meldet sich am IMAP-Server als Master-Benutzer an und gibt das Zielpostfach mit, ein einzelner Nutzer hat also womöglich gar kein eigenes IMAP-Passwort. In dem Fall kann sich kein gewöhnliches Programm als dieser Nutzer anmelden, bis der Betreiber eines einrichtet, und noch so viele Versuche mit dem Web-Passwort helfen nicht. Manche Installationen haben das Backend zudem auf <code>XOAUTH2</code> oder <code>OAUTHBEARER</code> umgestellt, dann wird eine einfache Passwort-Anmeldung rundweg abgelehnt. Lehnt der Server Sie ab, prüfen Sie also: echter Mailhost statt Web-URL, Login-Name laut loginSource, und ob der Betreiber überhaupt ein IMAP-Passwort pro Nutzer vergibt."
+    }
+  ],
+  "limits": [
+    "Nur E-Mail läuft über diese Verbindung. Kalender, Adressbuch, Aufgaben und Drive-Dateien von App Suite liefert die Middleware über ihre eigene HTTP-API, sie sind nicht Teil einer IMAP-Sitzung, ein so verbundener Agent sieht also E-Mails und sonst nichts.",
+    "Ein Backend, das nur in Ihrem Netz erreichbar ist, lässt sich nicht mit einem gehosteten Dienst verbinden. MCPEmails ist selbst hostbar, der vernünftige Weg, wenn der IMAP-Server bewusst nicht im öffentlichen Internet steht.",
+    "In einer Installation mit Master-Authentifizierung setzt das Verbinden eines Programms voraus, dass der Betreiber echte IMAP-Zugangsdaten pro Nutzer einrichtet. Das entscheidet, wer die Plattform betreibt, nicht Sie im Browser."
+  ],
+  "faq": [
+    {
+      "q": "Funktioniert Claude mit Open-Xchange?",
+      "a": "Ja, über den Mailserver dahinter. Claude hat keinen Open-Xchange-Konnektor, und App Suite bietet keinen MCP-Endpunkt, aber das Postfach selbst liegt auf einem gewöhnlichen IMAP-Server. MCPEmails, mit diesem Server verbunden, gibt Claude Zugriff auf dieselben E-Mails, die Sie in App Suite sehen: lesen, suchen, senden, beantworten, planen und ablegen, und dasselbe Postfach funktioniert in Cursor und ChatGPT."
+    },
+    {
+      "q": "Wie lauten die IMAP- und SMTP-Einstellungen von Open-Xchange?",
+      "a": "Es gibt keine einzelne Antwort, weil Open-Xchange Software ist, die Betreiber installieren, kein Maildienst mit festen Hostnamen. In einer selbst gehosteten Installation steht das Backend in mail.properties. Kam App Suite mit einem Hosting-Paket, verwenden Sie die IMAP- und SMTP-Hostnamen, die Ihr Anbieter für Mailprogramme veröffentlicht, typischerweise 993 für IMAP und 465 oder 587 für den Versand."
+    },
+    {
+      "q": "Ist Open-Xchange dasselbe wie Dovecot?",
+      "a": "Nein, aber sie werden meist zusammen betrieben. Open-Xchange ist die Groupware-Schicht, die E-Mails, Kalender und Dateien darstellt. Dovecot ist der IMAP-Server, der die Nachrichten tatsächlich hält, und Open-Xchange empfiehlt ihn als Backend für neue Installationen. Unsere englische Dovecot-Seite behandelt Listener, Zertifikate und Ordnerverhalten, die Ihnen begegnen, sobald Sie verbunden sind."
+    },
+    {
+      "q": "Warum verweigert Port 993 auf meiner Webmail-Adresse die Verbindung?",
+      "a": "Weil diese Adresse zur App-Suite-Webschicht gehört, die HTTP spricht. Der IMAP-Server ist eine andere Maschine oder ein anderer Name, und in vielen Installationen ist er bewusst gar nicht im Internet veröffentlicht. Nehmen Sie den echten Mail-Hostnamen aus der Einrichtungsdokumentation Ihres Anbieters für Mailprogramme, oder aus der Middleware-Konfiguration, wenn die Installation Ihre ist."
+    },
+    {
+      "q": "Werden meine E-Mails auf Ihren Servern gespeichert?",
+      "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von dem Server abgerufen, der Ihr Postfach hält, und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Geben Sie Ihrer KI ein Open-Xchange-Postfach",
+    "sub": "Verbinden Sie den Mailserver hinter App Suite. Ein Postfach dauerhaft kostenlos, ohne Kreditkarte."
+  }
+}

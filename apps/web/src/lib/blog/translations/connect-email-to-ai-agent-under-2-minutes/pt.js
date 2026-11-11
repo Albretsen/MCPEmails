@@ -16,7 +16,7 @@ Antes de mexer em um provedor, decida como seu agente de IA vai falar com o MCPE
 
 1. No claude.ai, vá em **Personalizar → Conectores**, depois **Add connector** (Adicionar conector).
 2. Cole o endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Clique em **Conectar**, faça login na sua conta do MCPEmails e aprove os escopos que você quiser (\`read:email\`, \`send:email\` ou os dois).
+3. Clique em **Conectar**, faça login na sua conta do MCPEmails e aprove o nível de acesso que você quiser (**Somente leitura**, **Padrão**, **Acesso total** ou um conjunto personalizado de permissões).
 
 Isso é todo o lado do cliente. Os tokens têm exatamente o escopo que você aprovou, e você pode revogar a conexão no painel com um clique. Se quiser os prós e contras explicados, veja [OAuth vs. chaves de API para acesso de IA ao e-mail](/blog/oauth-vs-api-keys-ai-email-access). Para um passo a passo por cliente, veja como [conectar o Claude ao seu e-mail](/blog/connect-claude-to-email) ou [conectar o ChatGPT ao seu e-mail](/blog/connect-chatgpt-to-email).
 
@@ -104,7 +104,7 @@ Seja qual for o provedor escolhido, o primeiro movimento do agente é sempre o m
 
 Um bom teste rápido: peça ao agente "resuma meus três e-mails não lidos mais recentes". Ele vai rodar \`inbox_list\`, depois \`email_read\` com \`action: "list"\` e \`unread: true\`, e então \`email_read\` com \`action: "read"\` em cada um. Se isso funcionar, sua conexão está ativa.
 
-Uma ressalva que vale deixar clara desde o início: o MCPEmails funciona por consulta periódica. Não há webhooks nem eventos push, então um agente reage a e-mails novos verificando em um intervalo definido, em vez de ser avisado. Esse é o modelo certo para a maioria dos fluxos de trabalho, e é assim que os padrões de [triagem e resumo da caixa de entrada](/blog/ai-agent-triage-summarize-inbox) funcionam.
+Uma ressalva que vale deixar clara desde o início: um agente dentro de um chat reage a e-mails novos verificando em um intervalo definido, em vez de ser avisado. Esse é o modelo certo para a maioria dos fluxos de trabalho, e é assim que os padrões de [triagem e resumo da caixa de entrada](/blog/ai-agent-triage-summarize-inbox) funcionam. Se o seu próprio código precisa de um aviso, os espaços de trabalho Pro e Business podem adicionar em Chaves de API um webhook que faz um POST para a sua URL quando chega e-mail novo.
 
 ## Por que é seguro fazer isso rápido
 
@@ -112,7 +112,7 @@ A velocidade aqui não vem de cortar caminho na segurança. O e-mail é buscado 
 
 ## Resumindo
 
-É isso: uma conexão de caixa de entrada, um endpoint, um punhado de ferramentas. O plano Free conecta uma caixa de entrada e não pede cartão; o Personal custa US$ 9 por mês para até três caixas, e o Pro conecta até 10. Veja os [preços](/pricing). Quer testar? [Comece grátis](/signup), conecte sua caixa de entrada e cole o endpoint no seu agente.`,
+É isso: uma conexão de caixa de entrada, um endpoint, um punhado de ferramentas. O plano Free conecta uma caixa de entrada e não pede cartão; os planos pagos adicionam mais. Veja os [preços](/pricing). Quer testar? [Comece grátis](/signup), conecte sua caixa de entrada e cole o endpoint no seu agente.`,
 };
 
 export default translation;

@@ -22,7 +22,7 @@ Le mot de passe d’application devient l’unique identifiant que MCPEmails con
 3. Cliquez sur le **+** (Generate an app-specific password), donnez-lui un libellé comme \`MCPEmails\`, puis confirmez avec le mot de passe de votre Apple Account.
 4. Apple vous affiche un mot de passe au format \`abcd-efgh-ijkl-mnop\`. Copiez-le maintenant. Vous ne pourrez pas le revoir plus tard.
 
-Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account — les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCPEmails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher. La [page des réglages iCloud Mail](/connect/icloud) reprend les mêmes valeurs.
+Vous aurez besoin de l’authentification à deux facteurs activée sur votre Apple Account : les mots de passe d’application ne sont pas disponibles sans elle. L’hôte IMAP d’iCloud est \`imap.mail.me.com\` et le SMTP est \`smtp.mail.me.com\`, mais MCPEmails les remplit pour vous lorsque vous choisissez iCloud comme fournisseur, vous n’aurez donc généralement pas à y toucher. La [page des réglages iCloud Mail](/connect/icloud) reprend les mêmes valeurs.
 
 ## Générer un mot de passe d’application pour Fastmail
 
@@ -42,14 +42,14 @@ Pour Yahoo, Zoho, Yandex, un serveur de messagerie auto-hébergé ou toute autre
 - Votre **adresse e-mail** comme nom d’utilisateur
 - Le **mot de passe d’application** comme mot de passe
 
-Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi — mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte. Pour les ports, les modes TLS et le dépannage sur tout autre hôte, consultez le [guide complet du connecteur IMAP](/blog/claude-imap-connector).
+Si vous n’avez vraiment qu’un mot de passe classique et que le fournisseur ne propose pas de mots de passe d’application, cela fonctionnera aussi, mais le mot de passe d’application reste le bon choix. Il limite la zone d’impact. Révoquez-le et seule cette connexion s’arrête, pas tout votre compte. Pour les ports, les modes TLS et le dépannage sur tout autre hôte, consultez le [guide complet du connecteur IMAP](/blog/claude-imap-connector).
 
 ## Connecter la boîte dans MCPEmails
 
 Une fois le mot de passe copié :
 
 1. Ouvrez le dashboard et allez dans **Inboxes → Connect Inbox**.
-2. Choisissez votre fournisseur — **iCloud**, **Fastmail** ou **Generic IMAP**.
+2. Choisissez votre fournisseur : **iCloud**, **Fastmail** ou **Generic IMAP**.
 3. Collez votre adresse e-mail et le mot de passe d’application. Pour l’IMAP générique, confirmez aussi l’hôte et le port.
 4. Enregistrez. La boîte est opérationnelle en moins d’une minute.
 
@@ -63,11 +63,11 @@ Dans claude.ai :
 
 1. Allez dans **Customize → Connectors**.
 2. Cliquez sur **Add connector** et collez l’endpoint : \`https://www.mcpemails.com/api/mcp\`
-3. Cliquez sur **Connect**, connectez-vous avec votre compte MCPEmails et approuvez les scopes souhaités — \`read:email\`, \`send:email\` ou les deux.
+3. Cliquez sur **Connect**, connectez-vous avec votre compte MCPEmails et choisissez le niveau d’accès de Claude : **Lecture seule**, **Standard** (ajoute l’envoi et les brouillons) ou **Accès complet** (ajoute la programmation, les dossiers et la suppression).
 
-Aucune clé API, aucun fichier de configuration. claude.ai utilise OAuth avec PKCE en coulisses, et le jeton que reçoit Claude est limité exactement à ce que vous avez approuvé. Si vous êtes sur un client qui ne gère pas OAuth — Cursor, Cline, un script cURL — vous créez plutôt une clé limitée, ce que je détaille dans [l’accès e-mail pour Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
+Aucune clé API, aucun fichier de configuration. claude.ai utilise OAuth avec PKCE en coulisses, et le jeton que reçoit Claude est limité exactement à ce que vous avez approuvé. Si vous êtes sur un client qui ne gère pas OAuth (Cursor, Cline, un script cURL), vous créez plutôt une clé limitée, ce que je détaille dans [l’accès e-mail pour Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode).
 
-Une fois connecté, demandez d’abord à Claude d’exécuter \`inbox_list\`. Cela renvoie votre boîte et son \`inbox_id\`, vous n’avez donc jamais à copier-coller un UUID. À partir de là, place aux [outils principaux](/docs) — \`email_read\` (lister, lire et rechercher des messages), \`email_compose\` (envoyer, répondre, transférer) et \`email_organize\` — plus quelques autres pour les dossiers, les brouillons, la planification et les contacts. Chacun s’utilise via un paramètre \`action\`.
+Une fois connecté, demandez d’abord à Claude d’exécuter \`inbox_list\`. Cela renvoie votre boîte et son \`inbox_id\`, vous n’avez donc jamais à copier-coller un UUID. À partir de là, place aux [outils principaux](/docs) : \`email_read\` (lister, lire et rechercher des messages), \`email_compose\` (envoyer, répondre, transférer) et \`email_organize\`, plus quelques autres pour les dossiers, les brouillons, la planification et les contacts. Chacun s’utilise via un paramètre \`action\`.
 
 Un prompt pour confirmer que tout fonctionne :
 
@@ -81,14 +81,14 @@ Voici le point que les gens oublient. Une suppression normale envoie le message 
 
 Sur les autres hôtes IMAP, c’est plus simple. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** : Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP (ou Outlook) le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
 
-La recherche se comporte elle aussi un peu différemment. Gmail dispose de toute sa syntaxe d’opérateurs, Outlook utilise KQL et les fournisseurs IMAP utilisent la recherche textuelle IMAP — capable, mais pas aussi expressive que les opérateurs de Gmail. Bon à savoir si vous écrivez des prompts orientés recherche.
+La recherche se comporte elle aussi un peu différemment. Gmail dispose de toute sa syntaxe d’opérateurs, Outlook utilise KQL et les fournisseurs IMAP utilisent la recherche textuelle IMAP, capable mais pas aussi expressive que les opérateurs de Gmail. Bon à savoir si vous écrivez des prompts orientés recherche.
 
 ## Ce que vous pouvez construire une fois la connexion établie
 
 Le fonctionnement est le même quel que soit le fournisseur, donc tout workflow que vous avez vu pour Gmail marche sur votre boîte Fastmail ou iCloud. En voici quelques-uns qui en valent la peine :
 
 - Un tri matinal qui signale ce qui requiert un humain et rédige des réponses au reste. Voir [tri et synthèse de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
-- Un répondeur automatique quasi en temps réel. Une réserve honnête : MCPEmails fonctionne par interrogation périodique (poll), pas par push — il n’y a pas de webhooks, l’agent vérifie donc l’arrivée de nouveaux messages selon une planification. Le [montage d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) explique comment bien s’y prendre.
+- Un répondeur automatique quasi en temps réel. Une réserve : dans une conversation, l’agent vérifie l’arrivée de nouveaux messages selon une planification ; pour du push, il faut un webhook de nouveau message, que les espaces de travail Pro et Business peuvent ajouter sous Clés API. Le [montage d’un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) explique les deux approches.
 
 Si vous hésitez encore à brancher l’e-mail sur un agent tout court, commencez par l’article pilier : [comment donner à votre agent IA l’accès à l’e-mail](/blog/how-to-give-your-ai-agent-email-access).
 

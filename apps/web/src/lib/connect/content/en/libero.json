@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://aiuto.libero.it/articolo/mail/configurare-libero-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.virgilio.it/articolo/mail/configurare-virgilio-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "https://aiuto.libero.it/articolo/mail/casella-libero-mail-disattivata-per-inutilizzo-come-riattivarla/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Libero Mail password, or the Password Specifica per Applicazioni once Password Sicura is on",
+    "helpUrl": "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "usernameForm": "Your full address including the domain: nome@libero.it, nome@iol.it, nome@blu.it, nome@inwind.it or nome@virgilio.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Libero Mail and Virgilio Mail to Claude & Any MCP Client",
+    "description": "Connect Libero Mail or Virgilio Mail to Claude, Cursor and any MCP client over IMAP at imapmail.libero.it:993 or in.virgilio.it:993. Your account password works until Password Sicura is on, then a 16-character app password does."
+  },
+  "hero": {
+    "eyebrow": "Libero Mail + AI",
+    "titleLine1": "Connect Libero Mail to Claude,",
+    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "lead": "Give your AI agent a real Libero or Virgilio mailbox. Read, search, send, reply, schedule and organize mail over IMAP with the password you already use, in every MCP client rather than just one.",
+    "answer": "Claude cannot reach Libero Mail on its own. MCPEmails is a hosted MCP server that connects it over IMAP at imapmail.libero.it on port 993, signing in with your full address and your Libero Mail password, so Claude, Cursor or any MCP client can read, search, send and organize that mail. The same Italiaonline platform serves iol.it, blu.it and inwind.it addresses on the Libero hosts, and Virgilio Mail on in.virgilio.it and out.virgilio.it. If you have turned on Password Sicura, the account password stops working in mail programs and a 16-character Password Specifica per Applicazioni takes its place. One inbox is free, forever.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Account password, unless Password Sicura is on",
+    "meta2": "Email fetched live, never stored"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Virgilio Mail", "host": "in.virgilio.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Virgilio Mail", "host": "out.virgilio.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "The first two rows are Libero Mail, which also covers @iol.it, @blu.it and @inwind.it. The two below are Virgilio Mail. All four hosts were verified from a live TLS connection. For any other address, use the",
+      "label": "email settings lookup",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "How Libero Mail connects: IMAP and your Libero password",
+    "body": "Libero serves IMAP at <code>imapmail.libero.it</code> on port 993 and SMTP at <code>smtp.libero.it</code> on port 465, both with SSL/TLS and authentication required on SMTP. Libero's help is specific about the username: always the full address with its domain, whether that is @libero.it, @iol.it, @blu.it or @inwind.it, and the password of your Libero Mail account. Virgilio Mail, run by the same company, publishes its own names, <code>in.virgilio.it</code> on 993 and <code>out.virgilio.it</code> on 465, with the same rules. There is no IMAP switch to find in the webmail and no plan condition: IMAP is documented for every mailbox. What changes the password is <b>Password Sicura</b>, Libero's two-step login. Once it is on, Libero states that the normal password keeps working in the browser, and apps and mail programs need the 16-character <b>Password Specifica per Applicazioni</b> from the <b>Password per App</b> section of the account area."
+  },
+  "setup": [
+    {
+      "h": "Create your free MCPEmails account",
+      "p": "Sign up at mcpemails.com. The free plan connects one inbox, forever, and does not ask for a card."
+    },
+    {
+      "h": "Check whether Password Sicura is on",
+      "p": "Sign in to Libero Mail in a browser and open the gear icon (<b>Impostazioni</b>) at the top right. If the menu offers <b>Attiva Password Sicura</b>, it is off and your ordinary Libero password is the one to use. If it is already on, the same menu opens the Password Sicura settings, where <b>Vedi Password per App</b> shows the password for mail programs. Virgilio keeps the same settings under <b>Impostazioni Password Sicura</b> in the account area at account.virgilio.it."
+    },
+    {
+      "h": "With Password Sicura on, use the app password",
+      "p": "Under <b>Password per App</b>, click <b>Genera Password</b>. Libero issues one 16-character Password Specifica per Applicazioni, the same one for every app and mail program you connect, and it replaces your normal password there only; the normal password still signs you in to the webmail."
+    },
+    {
+      "h": "Paste the address and password into MCPEmails",
+      "p": "Choose IMAP / SMTP, enter the full address with its domain, and paste whichever password applies. The hosts and ports are prefilled from the verified values on this page. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Password Sicura silently retires your password for mail programs",
+      "p": "Libero's help is explicit: with Password Sicura on, an app or mail program that is refused is almost always one still holding the account password instead of the Password Specifica per Applicazioni. The failure looks like a typo, because the server answers with a plain refusal. The fix is the <b>Password per App</b> section of the account area, and the 16-character value it shows. Turning Password Sicura off again puts the account password back in charge."
+    },
+    {
+      "h": "Four months without a login and the mailbox is switched off",
+      "p": "Libero deactivates a free mailbox that has not been signed in to for more than four months (120 days), and a deactivated mailbox neither receives nor sends. Signing in at login.libero.it within nine months reactivates it at no cost; after nine months (270 days) the mailbox and its contents are deleted. An agent reading over IMAP does count as use, but if you are reviving an old address, sign in to the webmail first and check it is active before connecting it."
+    },
+    {
+      "h": "Virgilio is the same platform with different host names",
+      "p": "A Virgilio address will not sign in on the Libero hosts, and the reverse, even though both answer with the same Dovecot banner and send through the same iol.local cluster. Virgilio documents <code>in.virgilio.it</code> for IMAP and <code>out.virgilio.it</code> for SMTP, and its own Password Sicura pages mirror Libero's. MCPEmails prefills the right pair from the address you type."
+    },
+    {
+      "h": "Outgoing messages stop at 25 MB",
+      "p": "Libero documents a 25 MB cap on an outgoing message, from the website and from the app alike; above that, the webmail converts the message to a DriveMail link, which carries up to 2 GB. The SMTP server advertises 50 MB, but the mailbox rule is the one to plan for, so a large attachment is better sent as a link than pushed through a client."
+    }
+  ],
+  "limits": [
+    "Libero does not advertise SPECIAL-USE, so folders are matched by name rather than by role. On an Italian mailbox that usually means Posta in arrivo, Posta inviata, Bozze and Cestino. If you have renamed a folder, name it when you ask for a move.",
+    "A standard Libero mailbox cannot forward all mail to an outside address; that is a Mail Plus feature. It does not affect an IMAP connection, which reads the mailbox in place."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Libero Mail?",
+      "a": "Not directly. Claude has no built-in Libero connector and cannot open an IMAP connection by itself. Connecting an MCP server such as MCPEmails to your libero.it, iol.it, blu.it, inwind.it or virgilio.it mailbox gives Claude read, search, send, reply, schedule and organize access to it, and the same connection works in Cursor and other MCP clients."
+    },
+    {
+      "q": "What are the Libero Mail IMAP and SMTP settings?",
+      "a": "IMAP is imapmail.libero.it on port 993 with SSL/TLS. SMTP is smtp.libero.it on port 465, also SSL/TLS, with authentication required. The username is your full address including the domain. Virgilio Mail uses in.virgilio.it on 993 and out.virgilio.it on 465. All four hosts were confirmed from a live TLS connection."
+    },
+    {
+      "q": "Why is my Libero password rejected in a mail client?",
+      "a": "Almost always because Password Sicura is on. Libero then accepts the account password in the browser only, and apps and mail programs need the 16-character Password Specifica per Applicazioni shown under Password per App in the account area. The other cause is a mailbox deactivated after four months without a login, which you reactivate by signing in to the webmail."
+    },
+    {
+      "q": "Do I need Libero Mail Plus for IMAP?",
+      "a": "No. Libero's configuration guide lists IMAP without any plan condition, and its Mail Plus pages describe the paid benefits as no advertising, forwarding to outside addresses, disposable aliases, more space, priority support and exemption from the inactivity rule. IMAP is not among them."
+    },
+    {
+      "q": "Does this work for Virgilio Mail too?",
+      "a": "Yes. Virgilio is run by the same company and documents the same setup with its own hosts, in.virgilio.it and out.virgilio.it, and its own Password Sicura with a 16-character app password. Enter the address with the virgilio.it domain and MCPEmails prefills the Virgilio hosts."
+    },
+    {
+      "q": "Is my Libero mail stored on your servers?",
+      "a": "No. Messages are fetched live from Libero over IMAP for each request and passed to your AI client. Credentials are encrypted at rest and message bodies are not retained."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI a Libero inbox",
+    "sub": "Connect Libero Mail or Virgilio Mail in minutes. One inbox free forever, no card required."
+  }
+}

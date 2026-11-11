@@ -10,7 +10,7 @@ const post = {
   },
   cover: '/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg',
   coverAlt: {
-    en: 'Connect your email to an AI agent in under 2 minutes — Gmail, Outlook, iCloud, Fastmail, and IMAP over MCP',
+    en: 'Connect your email to an AI agent in under 2 minutes: Gmail, Outlook, iCloud, Fastmail, and IMAP over MCP',
     es: 'Conecta tu correo a un agente de IA en menos de 2 minutos: Gmail, Outlook, iCloud, Fastmail e IMAP con MCP',
   },
   authorId: 'asgeir',
@@ -19,7 +19,7 @@ const post = {
   tags: ['Tutorial', 'Gmail', 'Outlook', 'IMAP'],
   featured: false,
   content: {
-    en: `You connect your email to an AI agent in two moves: connect the inbox in the MCPEmails dashboard, then point your agent at one endpoint URL. With an OAuth-capable client like claude.ai, that's it. No code, no SDK, and your email is never stored anywhere — every read and send hits your provider live and is discarded the moment the agent has it.
+    en: `You connect your email to an AI agent in two moves: connect the inbox in the MCPEmails dashboard, then point your agent at one endpoint URL. With an OAuth-capable client like claude.ai, that's it. No code, no SDK, and your email is never stored anywhere: every read and send hits your provider live and is discarded the moment the agent has it.
 
 This is the fast guide. Pick your provider below, follow the four or five steps, and you'll have Claude (or Cursor, or a custom script) reading and sending real mail in about the time it takes to read this paragraph twice. For the deeper "what is this and is it safe" version, start with the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access).
 
@@ -27,15 +27,15 @@ This is the fast guide. Pick your provider below, follow the four or five steps,
 
 Before you touch a provider, decide how your AI agent will talk to MCPEmails. There are two paths and they both use the same endpoint and the same tools.
 
-**Path A — OAuth client (claude.ai, Claude Desktop, Cursor).** No API key. You paste a URL and approve a sign-in:
+**Path A: OAuth client (claude.ai, Claude Desktop, Cursor).** No API key. You paste a URL and approve a sign-in:
 
 1. In claude.ai, go to **Customize → Connectors → Add connector**.
 2. Paste the endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Click **Connect**, sign in to your MCPEmails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both).
+3. Click **Connect**, sign in to your MCPEmails account, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting).
 
 That's the whole client side. Tokens are scoped to exactly what you approved, and you can revoke the connection from the dashboard in one click. If you want the trade-offs spelled out, see [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access). For a client-specific walkthrough, see how to [connect Claude to your email](/blog/connect-claude-to-email) or [connect ChatGPT to your email](/blog/connect-chatgpt-to-email).
 
-**Path B — API-key client (Cline, JetBrains, cURL, custom agents).** For anything without built-in OAuth:
+**Path B: API-key client (Cline, JetBrains, cURL, custom agents).** For anything without built-in OAuth:
 
 1. Go to **Dashboard → API Keys** and create a key.
 2. Pick its scopes (\`read:email\`, \`send:email\`).
@@ -80,22 +80,22 @@ iCloud doesn't hand third parties OAuth, so you generate an app-specific passwor
 
 iCloud runs over IMAP/SMTP under the hood, so you get the same tool set as everyone else.
 
-### Fastmail (app-specific password — not OAuth)
+### Fastmail (app-specific password, not OAuth)
 
-A quick correction if you've read older docs: **Fastmail connects with an app password, not OAuth.** Don't go looking for a "Sign in with Fastmail" button — there isn't one here.
+A quick correction if you've read older docs: **Fastmail connects with an app password, not OAuth.** Don't go looking for a "Sign in with Fastmail" button; there isn't one here.
 
 1. In Fastmail, open **Settings → Privacy & Security → Integrations** (or **App Passwords**).
 2. Create a new app password. Give it mail (IMAP/SMTP) access and name it "MCPEmails."
 3. Copy the password Fastmail generates.
 4. In **Dashboard → Inboxes → Connect Inbox → Fastmail**, enter your Fastmail address and paste it.
 
-That's it — Fastmail behaves exactly like the other IMAP providers from the agent's side.
+That's it: Fastmail behaves exactly like the other IMAP providers from the agent's side.
 
 ### Generic IMAP (Yahoo, Zoho, Yandex, and the rest)
 
 Anything that speaks IMAP/SMTP works through one connector. The pattern is identical to iCloud and Fastmail: make an app password at your provider, then paste it.
 
-1. In your provider's security settings, create an **app password** (Yahoo, Zoho, and Yandex all bury this under account security). Use a real app password, not your login password — most providers block plain-password IMAP now anyway.
+1. In your provider's security settings, create an **app password** (Yahoo, Zoho, and Yandex all bury this under account security). Use a real app password, not your login password; most providers block plain-password IMAP now anyway.
 2. **Dashboard → Inboxes → Connect Inbox → IMAP.**
 3. Enter your email address and the app password. MCPEmails autodetects common servers; if yours is unusual, drop in the IMAP and SMTP host/port your provider lists.
 4. Save. The inbox connects and is ready.
@@ -104,7 +104,7 @@ For provider-specific quirks across iCloud, Fastmail, and the long tail of IMAP 
 
 ## First call: discover, then act
 
-Whichever provider you picked, the agent's first move is always the same. Have it call \`inbox_list\` to discover what's connected and grab each inbox's \`inbox_id\` — the agent never copy-pastes a UUID. From there it works through a small set of consolidated tools — \`email_read\` (with an \`action\` of \`list\`, \`read\`, or \`search\`), \`email_compose\` (\`send\`, \`reply\`, or \`forward\`), and \`email_organize\` for moving, flagging, and archiving — plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\`:
+Whichever provider you picked, the agent's first move is always the same. Have it call \`inbox_list\` to discover what's connected and grab each inbox's \`inbox_id\`; the agent never copy-pastes a UUID. From there it works through a small set of consolidated tools (\`email_read\` with an \`action\` of \`list\`, \`read\`, or \`search\`; \`email_compose\` with \`send\`, \`reply\`, or \`forward\`; and \`email_organize\` for moving, flagging, and archiving), plus \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\`:
 
 \`\`\`json
 {
@@ -119,7 +119,7 @@ Whichever provider you picked, the agent's first move is always the same. Have i
 
 A good smoke test: ask your agent "summarize my three most recent unread emails." It'll run \`inbox_list\`, then \`email_read\` with \`action: "list"\` and \`unread: true\`, then \`email_read\` with \`action: "read"\` on each. If that works, your connection is live.
 
-One honest caveat worth setting up front: MCPEmails is poll-based. There are no webhooks or push events, so an agent reacts to new mail by checking on a schedule rather than getting pinged. That's the right model for most workflows, and it's how the [inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) patterns work.
+One caveat worth setting up front: an agent in a chat reacts to new mail by checking on a schedule, not by getting pinged. That's the right model for most workflows, and it's how the [inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) patterns work. If your own code needs a push, Pro and Business workspaces can add a webhook under API Keys that posts to your URL when new mail arrives.
 
 ## Why this is safe to do quickly
 
@@ -127,7 +127,7 @@ Speed here doesn't come from cutting corners on security. Email is fetched live 
 
 ## Wrap-up
 
-That's the whole thing: one inbox connection, one endpoint, a handful of tools. The Free tier connects one inbox and needs no card; Personal is $9/month for up to three inboxes, and Pro connects up to 10. See [pricing](/pricing). Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
+That's the whole thing: one inbox connection, one endpoint, a handful of tools. The Free tier connects one inbox and needs no card; the paid plans add more. See [pricing](/pricing). Ready to try it? [Start free](/signup), connect your inbox, and paste the endpoint into your agent.`,
     es: `Conectas tu correo a un agente de IA en dos pasos: conecta el buzón en el panel de MCPEmails y luego apunta tu agente a una única URL de endpoint. Con un cliente compatible con OAuth como claude.ai, eso es todo. Sin código, sin SDK, y tu correo no se almacena en ningún sitio: cada lectura y cada envío llega a tu proveedor en tiempo real y se descarta en cuanto el agente lo recibe.
 
 Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinco pasos y tendrás a Claude (o Cursor, o un script propio) leyendo y enviando correo real en aproximadamente el tiempo que tardas en leer este párrafo dos veces. Si prefieres la versión más a fondo de "qué es esto y si es seguro", empieza por la [guía completa para dar acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access).
@@ -136,15 +136,15 @@ Esta es la guía rápida. Elige tu proveedor más abajo, sigue los cuatro o cinc
 
 Antes de tocar un proveedor, decide cómo hablará tu agente de IA con MCPEmails. Hay dos caminos y ambos usan el mismo endpoint y las mismas herramientas.
 
-**Camino A — cliente con OAuth (claude.ai, Claude Desktop, Cursor).** Sin clave de API. Pegas una URL y apruebas un inicio de sesión:
+**Camino A: cliente con OAuth (claude.ai, Claude Desktop, Cursor).** Sin clave de API. Pegas una URL y apruebas un inicio de sesión:
 
 1. En claude.ai, ve a **Personalizar → Conectores → Añadir conector**.
 2. Pega el endpoint: \`https://www.mcpemails.com/api/mcp\`
-3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCPEmails y aprueba los permisos que quieras (\`read:email\`, \`send:email\`, o ambos).
+3. Pulsa **Conectar**, inicia sesión en tu cuenta de MCPEmails y elige el acceso: **Solo lectura**, **Estándar** (añade el envío y los borradores) o **Acceso completo** (añade la programación, las carpetas y la eliminación).
 
 Eso es todo en el lado del cliente. Los tokens se limitan exactamente a lo que aprobaste, y puedes revocar la conexión desde el panel con un clic. Si quieres ver los pros y contras al detalle, lee [OAuth frente a claves de API para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access). Si quieres una guía para un cliente concreto, mira cómo [conectar Claude a tu correo](/blog/connect-claude-to-email) o [conectar ChatGPT a tu correo](/blog/connect-chatgpt-to-email).
 
-**Camino B — cliente con clave de API (Cline, JetBrains, cURL, agentes propios).** Para cualquier cosa sin OAuth integrado:
+**Camino B: cliente con clave de API (Cline, JetBrains, cURL, agentes propios).** Para cualquier cosa sin OAuth integrado:
 
 1. Ve a **Panel → API Keys** y crea una clave.
 2. Elige sus permisos (\`read:email\`, \`send:email\`).
@@ -228,7 +228,7 @@ Sea cual sea el proveedor que elijas, el primer movimiento del agente siempre es
 
 Una buena prueba rápida: pídele al agente "resume mis tres correos sin leer más recientes". Ejecutará \`inbox_list\`, luego \`email_read\` con \`action: "list"\` y \`unread: true\` y después \`email_read\` con \`action: "read"\` en cada uno. Si eso funciona, tu conexión está activa.
 
-Una advertencia honesta que conviene dejar clara desde el principio: MCPEmails funciona por sondeo. No hay webhooks ni eventos push, así que un agente reacciona al correo nuevo comprobándolo según una programación, no recibiendo un aviso. Es el modelo adecuado para la mayoría de flujos, y así funcionan los patrones de [clasificación y resumen del buzón](/blog/ai-agent-triage-summarize-inbox).
+Una advertencia que conviene dejar clara desde el principio: un agente dentro de un chat reacciona al correo nuevo comprobándolo según una programación, no recibiendo un aviso. Es el modelo adecuado para la mayoría de flujos, y así funcionan los patrones de [clasificación y resumen del buzón](/blog/ai-agent-triage-summarize-inbox). Si tu propio código necesita un aviso, los espacios de trabajo Pro y Business pueden añadir un webhook en Claves de API que hace un POST a tu URL cuando llega correo nuevo.
 
 ## Por qué es seguro hacerlo rápido
 
@@ -236,7 +236,7 @@ La rapidez aquí no viene de recortar en seguridad. El correo se obtiene en tiem
 
 ## Para terminar
 
-Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. El plan Gratis conecta un buzón, no cuesta nada ni pide tarjeta; Personal cuesta 9 USD al mes y conecta hasta tres buzones; Pro conecta todos los que tengas; consulta los [precios](/pricing). ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
+Eso es todo: una conexión de buzón, un endpoint, un puñado de herramientas. El plan Gratis conecta un buzón, no cuesta nada ni pide tarjeta; los planes de pago añaden más. Consulta los [precios](/pricing). ¿Listo para probarlo? [Empieza gratis](/signup), conecta tu buzón y pega el endpoint en tu agente.`,
   },
 };
 

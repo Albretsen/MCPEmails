@@ -1,0 +1,114 @@
+{
+  "_sources": [
+    "https://aiuto.libero.it/articolo/mail/configurare-libero-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.virgilio.it/articolo/mail/configurare-virgilio-mail-con-client-di-posta-imap-e-smtp/",
+    "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "https://aiuto.libero.it/articolo/mail/casella-libero-mail-disattivata-per-inutilizzo-come-riattivarla/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Libero Mail-passord, eller Password Specifica per Applicazioni når Password Sicura er på",
+    "helpUrl": "https://aiuto.libero.it/articolo/sicurezza/password-sicura-specifica-applicazioni-client/",
+    "usernameForm": "Hele adressen din inkludert domenet: nome@libero.it, nome@iol.it, nome@blu.it, nome@inwind.it eller nome@virgilio.it.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Libero Mail og Virgilio Mail til Claude og enhver MCP-klient",
+    "description": "Koble Libero Mail eller Virgilio Mail til Claude, Cursor og enhver MCP-klient over IMAP på imapmail.libero.it:993 eller in.virgilio.it:993. Kontopassordet virker til Password Sicura er på, deretter et app-passord på 16 tegn."
+  },
+  "hero": {
+    "eyebrow": "Libero Mail + AI",
+    "titleLine1": "Koble Libero Mail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Libero- eller Virgilio-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Libero Mail på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imapmail.libero.it port 993 og logger inn med hele adressen din og Libero Mail-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Samme Italiaonline-plattform betjener iol.it-, blu.it- og inwind.it-adresser på Libero-vertene, og Virgilio Mail på in.virgilio.it og out.virgilio.it. Har du slått på Password Sicura, slutter kontopassordet å virke i e-postprogrammer, og en Password Specifica per Applicazioni på 16 tegn tar over. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassord, med mindre Password Sicura er på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Virgilio Mail", "host": "in.virgilio.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Virgilio Mail", "host": "out.virgilio.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene er Libero Mail, som også dekker @iol.it, @blu.it og @inwind.it. De to under er Virgilio Mail. Alle fire vertene ble verifisert via en direkte TLS-tilkobling. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Slik kobler Libero Mail seg til: IMAP og Libero-passordet ditt",
+    "body": "Libero tilbyr IMAP på <code>imapmail.libero.it</code> port 993 og SMTP på <code>smtp.libero.it</code> port 465, begge med SSL/TLS og autentisering påkrevd på SMTP. Liberos hjelp er tydelig på brukernavnet: alltid hele adressen med domene, enten det er @libero.it, @iol.it, @blu.it eller @inwind.it, og passordet til Libero Mail-kontoen din. Virgilio Mail, som drives av samme selskap, publiserer sine egne navn, <code>in.virgilio.it</code> på 993 og <code>out.virgilio.it</code> på 465, med de samme reglene. Det finnes ingen IMAP-bryter å lete etter i webmailen og ingen krav til abonnement: IMAP er dokumentert for alle postkasser. Det som endrer passordet, er <b>Password Sicura</b>, Liberos totrinnsinnlogging. Når den er på, sier Libero at det vanlige passordet fortsatt virker i nettleseren, mens apper og e-postprogrammer trenger <b>Password Specifica per Applicazioni</b> på 16 tegn fra seksjonen <b>Password per App</b> i kontoområdet."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk om Password Sicura er på",
+      "p": "Logg inn på Libero Mail i en nettleser og åpne tannhjulikonet (<b>Impostazioni</b>) øverst til høyre. Tilbyr menyen <b>Attiva Password Sicura</b>, er den av, og det vanlige Libero-passordet ditt er det du skal bruke. Er den allerede på, åpner samme meny innstillingene for Password Sicura, der <b>Vedi Password per App</b> viser passordet for e-postprogrammer. Virgilio har de samme innstillingene under <b>Impostazioni Password Sicura</b> i kontoområdet på account.virgilio.it."
+    },
+    {
+      "h": "Med Password Sicura på, bruk app-passordet",
+      "p": "Under <b>Password per App</b> klikker du <b>Genera Password</b>. Libero utsteder ett Password Specifica per Applicazioni på 16 tegn, det samme for alle apper og e-postprogrammer du kobler til, og det erstatter det vanlige passordet ditt bare der; det vanlige passordet logger deg fortsatt inn i webmailen."
+    },
+    {
+      "h": "Lim adressen og passordet inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen med domene, og lim inn det passordet som gjelder. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Password Sicura pensjonerer i det stille passordet ditt for e-postprogrammer",
+      "p": "Liberos hjelp er tydelig: med Password Sicura på er en app eller et e-postprogram som avvises, nesten alltid ett som fortsatt bruker kontopassordet i stedet for Password Specifica per Applicazioni. Feilen ser ut som en skrivefeil, fordi serveren svarer med et rent avslag. Løsningen er seksjonen <b>Password per App</b> i kontoområdet og verdien på 16 tegn den viser. Slår du Password Sicura av igjen, tar kontopassordet over på nytt."
+    },
+    {
+      "h": "Fire måneder uten innlogging, og postkassen slås av",
+      "p": "Libero deaktiverer en gratis postkasse som ikke har vært logget inn på i mer enn fire måneder (120 dager), og en deaktivert postkasse verken mottar eller sender. Logger du inn på login.libero.it innen ni måneder, reaktiveres den uten kostnad; etter ni måneder (270 dager) slettes postkassen og innholdet. En agent som leser via IMAP, teller som bruk, men gjenoppliver du en gammel adresse, logg inn i webmailen først og sjekk at den er aktiv før du kobler den til."
+    },
+    {
+      "h": "Virgilio er samme plattform med andre vertsnavn",
+      "p": "En Virgilio-adresse logger ikke inn på Libero-vertene, og omvendt, selv om begge svarer med samme Dovecot-banner og sender gjennom samme iol.local-klynge. Virgilio dokumenterer <code>in.virgilio.it</code> for IMAP og <code>out.virgilio.it</code> for SMTP, og Password Sicura-sidene deres speiler Liberos. MCPEmails forhåndsutfyller riktig par ut fra adressen du skriver."
+    },
+    {
+      "h": "Utgående meldinger stopper på 25 MB",
+      "p": "Libero dokumenterer en grense på 25 MB for en utgående melding, fra nettstedet og fra appen likt; over det gjør webmailen meldingen om til en DriveMail-lenke, som tar inntil 2 GB. SMTP-serveren annonserer 50 MB, men det er postkasseregelen du bør planlegge etter, så et stort vedlegg sendes bedre som lenke enn gjennom en klient."
+    }
+  ],
+  "limits": [
+    "Libero annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle. I en italiensk postkasse betyr det vanligvis Posta in arrivo, Posta inviata, Bozze og Cestino. Har du omdøpt en mappe, oppgi den når du ber om en flytting.",
+    "En vanlig Libero-postkasse kan ikke videresende all e-post til en ekstern adresse; det er en Mail Plus-funksjon. Det påvirker ikke en IMAP-tilkobling, som leser postkassen der den ligger."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Libero Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Libero-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til libero.it-, iol.it-, blu.it-, inwind.it- eller virgilio.it-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Libero Mail?",
+      "a": "IMAP er imapmail.libero.it på port 993 med SSL/TLS. SMTP er smtp.libero.it på port 465, også SSL/TLS, med autentisering påkrevd. Brukernavnet er hele adressen din inkludert domenet. Virgilio Mail bruker in.virgilio.it på 993 og out.virgilio.it på 465. Alle fire vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Libero-passordet mitt avvist i en e-postklient?",
+      "a": "Nesten alltid fordi Password Sicura er på. Libero godtar da kontopassordet bare i nettleseren, og apper og e-postprogrammer trenger Password Specifica per Applicazioni på 16 tegn som vises under Password per App i kontoområdet. Den andre årsaken er en postkasse som er deaktivert etter fire måneder uten innlogging, og som du reaktiverer ved å logge inn i webmailen."
+    },
+    {
+      "q": "Trenger jeg Libero Mail Plus for IMAP?",
+      "a": "Nei. Liberos oppsettsveiledning oppgir IMAP uten noe krav til abonnement, og Mail Plus-sidene beskriver de betalte fordelene som ingen reklame, videresending til eksterne adresser, engangsalias, mer plass, prioritert support og unntak fra inaktivitetsregelen. IMAP er ikke blant dem."
+    },
+    {
+      "q": "Virker dette for Virgilio Mail også?",
+      "a": "Ja. Virgilio drives av samme selskap og dokumenterer samme oppsett med egne verter, in.virgilio.it og out.virgilio.it, og sin egen Password Sicura med et app-passord på 16 tegn. Skriv inn adressen med virgilio.it-domenet, så forhåndsutfyller MCPEmails Virgilio-vertene."
+    },
+    {
+      "q": "Lagres Libero-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Libero via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Libero-innboks",
+    "sub": "Koble til Libero Mail eller Virgilio Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -25,9 +25,9 @@
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API. Nos planos Team e Enterprise, um Owner adiciona o conector em Organization settings → Connectors (configurações da organização, conectores), e depois os membros clicam em \"Connect\" em Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "No chatgpt.com, abra Plugins → Personal, clique em \"Add\" no canto superior direito e depois em \"Add custom MCP server\" (adicionar servidor MCP personalizado). Não dá para fazer isso no app para celular.",
-      "step2": "Dê o nome MCPEmails e cole a URL acima em \"Connection\" (conexão).",
-      "step3": "Escolha OAuth, marque \"I understand and want to continue\" (entendo e quero continuar) e clique em \"Create as a plugin\" (criar como plugin).",
+      "step1": "No chatgpt.com, abra Plugins → Personal (Pessoais), clique em \"Add\" (Adicionar) no canto superior direito e depois em \"Adicionar servidor MCP personalizado\". Não dá para fazer isso no app para celular.",
+      "step2": "Dê o nome MCPEmails e cole a URL acima em \"Conexão\".",
+      "step3": "Escolha OAuth, marque \"Entendo e quero continuar\" e clique em \"Criar como plugin\".",
       "step4": "Entre com o MCPEmails para autorizar. Não precisa de chave de API.",
       "step5": "Em um chat, digite @ e escolha MCPEmails. A escolha vale só para aquela mensagem, então mencione com @ de novo quando uma pergunta seguinte precisar do seu e-mail.",
       "note": "Servidores MCP personalizados podem ser adicionados no ChatGPT Go e nos planos pagos. Nos planos Business e Enterprise, talvez um admin ou owner precise adicioná-lo."
@@ -871,7 +871,7 @@
     "paymentRequiredClose": "Fechar",
     "paymentRequiredToast": "O pagamento não foi concluído, então você continua no {plan}. Abra o portal de cobrança para pagar a fatura em aberto.",
     "proInboxesKept": "Seu plano Pro mantém caixas de entrada conectadas ilimitadas.",
-    "businessMailboxRate": "10 caixas de correio incluídas em todos os seus espaços de trabalho. Cada caixa de correio extra é cobrada junto com o plano: $3 por mês ou $28.80 por ano.",
+    "businessMailboxRate": "10 caixas de correio incluídas em todos os seus espaços de trabalho. Cada caixa de correio extra é cobrada junto com o plano: $3 por mês ou $28,80 por ano.",
     "confirmExtraMailboxes": "Inclui {count, plural, one {# caixa de correio extra} other {# caixas de correio extras}} além das 10 incluídas.",
     "pass": {
       "offerLine": "Ou Personal por 3 meses, pago uma vez, {price}. Nada é renovado.",
@@ -938,7 +938,11 @@
       "freeConfirm": "Mudar para o Free",
       "freeBody": "Seu plano continua ativo até {date}, que já está pago. Depois disso a conta passa para o Free. Nada é excluído.",
       "freeToast": "Pronto. Seu plano continua ativo até {date} e depois passa para o Free.",
-      "pendingCheckout": "Há uma pausa ou uma mudança de plano agendada na sua assinatura. Use Retomar antes ou Manter nesta página primeiro e depois mude de plano."
+      "pendingCheckout": "Há uma pausa ou uma mudança de plano agendada na sua assinatura. Use Retomar antes ou Manter nesta página primeiro e depois mude de plano.",
+      "endsBanner": "Seu plano {plan} termina em {date}. Nada é excluído.",
+      "keepMyPlan": "Manter meu plano",
+      "keepPlanBody": "O encerramento agendado é removido. {plan} continua e renova em {date} por {amount}, como antes. Nada é cobrado hoje.",
+      "keepPlanToast": "Seu plano {plan} continua."
     },
     "cancelReason": {
       "prompt": "Você cancelou seu plano. Se quiser nos contar o motivo, um toque basta.",

@@ -26,7 +26,7 @@ Cursor 为 MCP 服务器支持 OAuth 2.0，这是最省心的路径。没有 API
 
 1. 打开 Cursor 设置，找到 MCP servers 部分。
 2. 添加一个新服务器，URL 填 \`https://www.mcpemails.com/api/mcp\`。
-3. Cursor 会打开一个浏览器窗口。登录你的 MCPEmails 账号，并批准你想让智能体拥有的权限范围——\`read:email\`、\`send:email\`，或两者都给。
+3. Cursor 会打开一个浏览器窗口。登录你的 MCPEmails 账号，并选择给智能体多大的访问权限：**只读**、**标准**（增加发送和草稿）或**完全访问**（增加定时发送、文件夹和删除）。
 4. 连接变为绿色，邮件工具出现在 Cursor 的工具列表中。
 
 在底层，这是带 PKCE 的 OAuth 2.0 授权码流程，而 Cursor 持有的令牌的权限范围正好就是你批准的那些。如果你只授予了 \`read:email\`，智能体就根本无法发送。用完之后，从 **Dashboard → API Keys** 一键撤销该连接（OAuth 授权也在那里管理），Cursor 的访问权限会立即失效。
@@ -101,13 +101,13 @@ curl -s https://www.mcpemails.com/api/mcp \\
 
 它会调用动作为 \`reply\` 的 \`email_compose\`，会话串联会被自动处理，回复通过我自己的 Gmail 发出，所以它从我的地址寄出，带着我自己域名的信誉。想要更深入地了解整理类提示词，请看[如何让 AI 智能体整理并总结你的收件箱](/blog/ai-agent-triage-summarize-inbox)。
 
-一个需要坦白的局限：没有 webhook。服务器不会主动把新邮件推送给你。如果你想让智能体对收到的邮件做出反应，就需要轮询——按计划周期性地调用动作 \`list\` 且带 \`unread: true\` 的 \`email_read\`。这是一个刻意的设计选择，它也决定了你如何构建任何带反应性的东西，比如一个[基于 MCP 的自动回复器](/blog/build-email-auto-responder-mcp-agent)。
+一个局限：MCP 工具从不会主动呼叫你。如果你想让智能体对收到的邮件做出反应，就需要轮询——按计划周期性地调用动作 \`list\` 且带 \`unread: true\` 的 \`email_read\`，或者让新邮件 webhook 唤醒你的代码（Pro 和 Business 工作区可以在控制台的 API 密钥页面添加一个，它会把消息 ID 以 POST 发到你的 URL）。无论哪种方式，它都决定了你如何构建任何带反应性的东西，比如一个[基于 MCP 的自动回复器](/blog/build-email-auto-responder-mcp-agent)。
 
 ## 脚本化访问的速率限制
 
 如果你是从一个 cron 任务或一个紧密的智能体循环来驱动服务器，要留意限制。每个套餐对整个工作区都有一个每分钟上限，每个 API 密钥会得到按该套餐确定大小的每分钟、每小时和每天窗口，所以单个密钥就能用满套餐的每分钟上限，多个密钥则共享它。成功的 \`tools/call\` 响应带有 \`RateLimit-Limit\`、\`RateLimit-Remaining\` 和 \`RateLimit-Reset\`，429 响应带有 \`Retry-After\`。各套餐的上限见[价格页面](/pricing)。
 
-当你触及速率限制时，服务器会返回一个可重试的错误（代码 \`-32003\`），并在 \`data.retry_after\` 中给出以秒为单位的等待时间。请遵守它——退避这么长时间再重试。不过并非所有错误都可重试：如果用尽了套餐的每月操作额度，调用会返回一个普通工具结果，带 \`isError: true\` 和一个 \`_meta["com.mcpemails/usage_limit"]\` 区块，没有 \`retry_after\`，在 \`reset_at\` 之前无论重试多少次都不会成功。另外，永远不要在一次通用失败后盲目重试 \`email_compose\` 的发送；你会发出重复邮件。先检查它是否真的发送出去了。
+当你触及速率限制时，服务器会返回一个可重试的错误（代码 \`-32003\`），并在 \`data.retry_after\` 中给出以秒为单位的等待时间。请遵守它——退避这么长时间再重试。不过并非所有错误都可重试：如果工作区达到了套餐用量上限，调用会返回一个普通工具结果，带 \`isError: true\` 和一个 \`_meta["com.mcpemails/usage_limit"]\` 区块，没有 \`retry_after\`，在 \`reset_at\` 之前无论重试多少次都不会成功。另外，永远不要在一次通用失败后盲目重试 \`email_compose\` 的发送；你会发出重复邮件。先检查它是否真的发送出去了。
 
 ## 小结
 

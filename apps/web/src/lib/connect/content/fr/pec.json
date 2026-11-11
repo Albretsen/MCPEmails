@@ -1,0 +1,126 @@
+{
+  "_sources": [
+    "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "https://guide.aruba.it/pec/account-e-sicurezza/password/generare-password-programmi-posta",
+    "https://help.infocert.it/home/guida/guida-alla-configurazione-legalmail---mozilla-thunderbird?lang=it",
+    "https://help.infocert.it/home/faq/che-cosa-e-l-application-password",
+    "https://postecert.poste.it/pec/configurazione.shtml",
+    "https://www.poste.it/assistenza/faq-posta-elettronica-certificata"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe de la boîte PEC, ou le mot de passe pour programmes de messagerie délivré par votre fournisseur",
+    "helpUrl": "https://guide.aruba.it/pec/configurazione-programmi-di-posta/client-posta-e-dispositivi-mobili",
+    "usernameForm": "Votre adresse PEC complète : nome@pec.it ou nome@pec.tuodominio.it chez Aruba, le User ID ou l'adresse PEC chez Legalmail, nome@postecert.it ou nome@postecertifica.it chez Poste.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connectez une boîte PEC (Aruba PEC, Legalmail, Poste) à Claude",
+    "description": "Connectez la messagerie certifiée italienne (PEC) à Claude, Cursor et tout client MCP via IMAP : Aruba PEC sur imaps.pec.aruba.it:993, Legalmail sur mbox.cert.legalmail.it:993, Poste sur mail.postecert.it:993 ou mail.postecertifica.it:993. La règle de mot de passe de chaque fournisseur, et ce que voit l'agent."
+  },
+  "hero": {
+    "eyebrow": "PEC + IA",
+    "titleLine1": "Connectez votre boîte PEC à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "La Posta Elettronica Certificata, c'est là qu'arrivent les amendes, les appels d'offres, les factures et les recommandés, et là où personne n'a envie de regarder. Donnez-y un accès IMAP à votre agent IA : lisez, recherchez, résumez et classez le courrier certifié, accusés compris, avec les identifiants que votre fournisseur PEC délivre pour les programmes de messagerie.",
+    "answer": "Claude ne peut pas accéder seul à une boîte PEC. MCPEmails est un serveur MCP hébergé qui en connecte une via IMAP, exactement comme le feraient Thunderbird ou Outlook : Aruba PEC sur imaps.pec.aruba.it, port 993, Legalmail sur mbox.cert.legalmail.it sur 993, Poste sur mail.postecert.it ou mail.postecertifica.it sur 993, chacun avec son propre serveur SMTP sur 465. Les trois fournisseurs documentent cet accès pour les clients de messagerie ordinaires. Ce qui diffère, c'est le mot de passe. Aruba accepte le mot de passe de la boîte jusqu'à l'activation de la vérification en deux étapes, puis un mot de passe dédié aux programmes de messagerie valable six mois ; Legalmail accepte le User ID ou l'adresse PEC avec le mot de passe de la boîte, ou une Application Password de 16 chiffres ; la PEC Postecertifica de Poste n'accepte jamais le mot de passe du webmail dans un client et en délivre un depuis son tableau de bord, qui expire tous les 90 jours. La lecture en IMAP montre à l'agent l'enveloppe certifiée avec le message d'origine en pièce jointe ; l'envoi par le SMTP du fournisseur produit un message certifié comme avec n'importe quel client. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe pour programmes de messagerie de votre fournisseur",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, Legalmail", "host": "mbox.cert.legalmail.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Legalmail", "host": "sendm.cert.legalmail.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, Postecert", "host": "mail.postecert.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, Postecert", "host": "mail.postecert.it", "port": 465, "security": "tls" },
+      { "label": "IMAP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 993, "security": "tls" },
+      { "label": "SMTP, PEC postecertifica", "host": "mail.postecertifica.it", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "Les deux premières lignes concernent Aruba PEC, qui sert les boîtes @pec.it et pec.tuodominio.it. Legalmail et Poste suivent. Chaque serveur a été vérifié via une connexion TLS réelle. Pour une PEC chez un autre fournisseur, utilisez la",
+      "label": "recherche de paramètres e-mail",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes PEC dans l'entreprise ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment la PEC se connecte : IMAP et SMTP standard, avec la règle de mot de passe de chaque fournisseur",
+    "body": "La PEC est un e-mail ordinaire enveloppé dans un transport certifié, et tous les grands fournisseurs la servent par les protocoles standard. Aruba documente <code>imaps.pec.aruba.it</code> sur 993 et <code>smtps.pec.aruba.it</code> sur 465, tous deux en SSL/TLS, avec l'adresse PEC comme nom d'utilisateur et la précision que les protocoles sont actifs par défaut. Le manuel d'exploitation d'InfoCert indique <code>mbox.cert.legalmail.it</code> sur 993 pour IMAP et <code>sendm.cert.legalmail.it</code> sur 465 pour l'envoi, TLS 1.2 ou plus récent, avec le User ID ou l'adresse PEC et le mot de passe de la boîte. Les pages de configuration de Poste indiquent <code>mail.postecert.it</code> pour les anciennes boîtes Postecert et <code>mail.postecertifica.it</code> pour PEC Postecertifica, IMAP sur 993 et SMTP sur 465 avec authentification. Les mots de passe suivent les règles REM-Policy-IT adoptées par l'AgID pour la PEC européenne : une connexion forte pour le webmail, et pour les clients de messagerie un mot de passe d'application que le titulaire crée après s'être authentifié de façon forte, et qui change périodiquement. Aruba l'appelle <b>Password per programmi di posta</b>, généré une fois la vérification en deux étapes activée et valable six mois ; Legalmail, l'<b>Application Password</b>, facultative aujourd'hui, 16 chiffres, créée sous <b>Password applicative</b> dans les paramètres du compte ; Poste, sur PEC Postecertifica, le mot de passe client, généré depuis le tableau de bord PEC avec <b>Genera password</b>, obligatoire, et expirant tous les 90 jours. MCPEmails utilise celui que votre fournisseur vous remet, avec les mêmes IMAP et SMTP que n'importe quel client."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Obtenez l'identifiant que votre fournisseur délivre pour les programmes de messagerie",
+      "p": "<b>Aruba PEC</b> : si la vérification en deux étapes (verifica in 2 passaggi) est désactivée, le mot de passe de la boîte fonctionne tel quel. Si elle est activée, ce qu'une PEC adaptée au standard européen exige, ouvrez <b>Gestione account PEC</b>, puis <b>Sicurezza</b>, puis <b>Password per programmi di posta</b>, cliquez sur <b>Attiva</b> et copiez le mot de passe généré ; il dure six mois et <b>Genera nuova password</b> le remplace. <b>Legalmail</b> : votre User ID (ou l'adresse PEC) et le mot de passe de la boîte fonctionnent, ou créez une Application Password sous <b>Password applicative</b> dans les paramètres du compte avec <b>Crea nuova</b>. <b>Poste</b> : sur PEC Postecertifica, ouvrez le tableau de bord et choisissez <b>Genera password</b> ; le mot de passe du webmail n'est jamais accepté par un client. Pour une ancienne boîte Postecert, la page de configuration de Poste n'indique que les serveurs et les ports."
+    },
+    {
+      "h": "Vérifiez que les protocoles sont activés sur la boîte",
+      "p": "Sur Aruba PEC, le webmail a <b>Impostazioni</b> dans le menu utilisateur, puis <b>SMTP/POP/IMAP</b>, avec un onglet <b>Accessi</b>. Les protocoles sont actifs par défaut, et Aruba prévient que tout désactiver bloque chaque programme de messagerie ; le mot de passe pour programmes de messagerie ne peut même pas être généré tant qu'au moins un protocole n'est pas actif. Chez Legalmail, chaque Application Password a sa propre date d'expiration, affichée à côté d'elle dans la liste Password applicative."
+    },
+    {
+      "h": "Collez l'identifiant dans MCPEmails, puis l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse PEC (ou le User ID chez Legalmail, sous Paramètres avancés), et collez le mot de passe. Les serveurs et ports sont préremplis pour les adresses Aruba, Legalmail et Poste. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte PEC."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ce que voit l'agent : la busta di trasporto, avec le vrai message à l'intérieur",
+      "p": "Un message PEC n'arrive pas sous la forme du message que l'expéditeur a écrit. Le fournisseur de l'expéditeur l'enveloppe dans une enveloppe certifiée, la <b>busta di trasporto</b>, signée par ce fournisseur, dont le corps indique qui a envoyé quoi à qui et quand, avec le message d'origine en pièce jointe sous le nom <code>postacert.eml</code> et les données de certification dans <code>daticert.xml</code>. En IMAP, cette enveloppe est le message : quand vous demandez à l'agent ce que dit une PEC, il lit l'original joint. Les accusés fonctionnent de la même façon : la <b>ricevuta di accettazione</b> de votre fournisseur et la <b>ricevuta di avvenuta consegna</b> de celui du destinataire arrivent comme des messages distincts dans la boîte, ce qui explique qu'une boîte PEC se remplisse de trois éléments par lettre envoyée. Un agent est doué pour classer exactement cela."
+    },
+    {
+      "h": "Le mot de passe de chaque fournisseur a sa propre durée de vie",
+      "p": "Le mot de passe d'Aruba pour les programmes de messagerie est valable six mois, et dans les deux dernières semaines l'espace du compte propose <b>Posticipa scadenza</b> pour le prolonger de six mois, ou <b>Genera nuova password</b> pour le remplacer ; quand il expire, la connexion échoue par un refus sec, et un mot de passe oublié ne se récupère pas, il se régénère. Le mot de passe client Postecertifica de Poste expire tous les 90 jours et se régénère depuis le tableau de bord. Legalmail liste chaque Application Password avec sa propre date d'expiration, et une icône de corbeille sur la ligne la supprime. Quand une connexion PEC qui fonctionnait depuis des mois s'arrête, l'expiration est la première chose à vérifier. MCPEmails signale la connexion refusée sur la boîte, et vous y collez le nouveau mot de passe."
+    },
+    {
+      "h": "L'envoi doit passer par le SMTP du fournisseur, et il compte",
+      "p": "Aruba précise que les messages certifiés ne peuvent être envoyés que par le serveur SMTP d'Aruba, et qu'un autre serveur ne produit aucun message certifié. MCPEmails envoie toujours par le serveur SMTP de la boîte connectée, donc une PEC envoyée par l'agent est aussi certifiée qu'une PEC envoyée depuis Outlook, avec les mêmes accusés et le même effet juridique ; la certification vient de votre fournisseur, pas du client. C'est une raison d'être prudent : une PEC à une administration est un recommandé. Beaucoup de gens cantonnent l'agent à la lecture, au classement et aux brouillons, et appuient eux-mêmes sur envoyer. Une PEC n'a par ailleurs pleine valeur juridique qu'entre deux adresses PEC : le guide d'Aruba dit que le message doit partir d'une boîte PEC et arriver dans une autre, et Poste précise que la remise à une adresse ordinaire dépend du fournisseur du destinataire."
+    },
+    {
+      "h": "100 Mo par message, partagés entre les destinataires chez Aruba",
+      "p": "Les trois fournisseurs plafonnent un message PEC à 100 Mo pièces jointes comprises ; Legalmail garantit des pièces jointes jusqu'à 70 Mo dans cette limite, et Aruba précise que la limite est partagée entre les destinataires, donc une pièce jointe de 50 Mo ne part qu'à deux au maximum. Au-delà du plafond, Aruba émet une ricevuta di mancata accettazione plutôt qu'un rebond, que l'agent trouvera dans la boîte comme n'importe quel autre accusé."
+    }
+  ],
+  "limits": [
+    "Chaque fournisseur PEC a sa propre règle de connexion : le mot de passe pour programmes de messagerie d'Aruba une fois la vérification en deux étapes activée, le User ID ou l'adresse PEC de Legalmail avec le mot de passe de la boîte (ou une Application Password), le mot de passe client de Postecertifica généré depuis le tableau de bord et qui expire tous les 90 jours. Le mot de passe du webmail n'est pas l'identifiant sur PEC Postecertifica, ni chez Aruba une fois la vérification en deux étapes activée.",
+    "Les fournisseurs n'annoncent pas SPECIAL-USE, donc les dossiers sont reconnus par leur nom et non par leur rôle : sur une boîte PEC italienne, généralement Posta in arrivo, Posta inviata, Bozze et Cestino. Nommez le dossier quand vous demandez un déplacement.",
+    "Un message certifié ne s'envoie que par le SMTP du fournisseur, que MCPEmails utilise. Un envoi depuis MCPEmails produit une vraie PEC avec ses accusés, alors traitez l'envoi de l'agent comme le vôtre."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec une boîte PEC ?",
+      "a": "Pas directement. Claude n'a pas de connecteur PEC intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme MCPEmails à une boîte Aruba PEC, Legalmail ou Poste en IMAP donne à Claude un accès en lecture, recherche, résumé, classement et envoi, et la même connexion fonctionne dans Cursor et les autres clients MCP. L'enveloppe du fournisseur, les accusés et l'effet juridique restent inchangés."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP d'Aruba PEC, Legalmail et Poste ?",
+      "a": "Aruba PEC : imaps.pec.aruba.it sur 993 et smtps.pec.aruba.it sur 465. Legalmail : mbox.cert.legalmail.it sur 993 et sendm.cert.legalmail.it sur 465. Poste : mail.postecert.it ou, pour PEC postecertifica, mail.postecertifica.it, sur 993 et 465. Tous en SSL/TLS, authentification obligatoire, et tous confirmés via une connexion TLS réelle."
+    },
+    {
+      "q": "Quel mot de passe une boîte PEC accepte-t-elle dans un programme de messagerie ?",
+      "a": "Aruba : le mot de passe de la boîte ou, une fois la vérification en deux étapes activée, la Password per programmi di posta générée sous Gestione account PEC, Sicurezza, valable six mois. Legalmail : le User ID ou l'adresse PEC avec le mot de passe de la boîte, ou une Application Password de 16 chiffres créée sous Password applicative. Poste, sur PEC Postecertifica : un mot de passe client généré dans le tableau de bord PEC avec Genera password, qui expire tous les 90 jours ; le mot de passe du webmail n'y est jamais accepté."
+    },
+    {
+      "q": "Le standard européen de la PEC (REM) a-t-il empêché les clients de messagerie de fonctionner ?",
+      "a": "Non. Les règles REM-Policy-IT conservent POP3, IMAP et SMTP : le titulaire se connecte au panneau du fournisseur avec une authentification forte, active l'accès client et crée un mot de passe d'application qui ne fonctionne que dans les clients de messagerie et change périodiquement, six mois étant la valeur indicative. Aruba, InfoCert et Poste appliquent chacun cette règle à leur manière, d'où les différences entre les mots de passe ci-dessus."
+    },
+    {
+      "q": "L'agent peut-il lire les accusés et la pièce jointe d'origine ?",
+      "a": "Oui. La busta di trasporto arrive comme un message avec l'original en pièce jointe postacert.eml et daticert.xml à côté, et la ricevuta di accettazione comme la ricevuta di avvenuta consegna arrivent comme des messages à part. MCPEmails lit les messages et les pièces jointes en IMAP, donc l'agent peut résumer l'original et rapprocher les accusés de ce que vous avez envoyé."
+    },
+    {
+      "q": "Mon courrier PEC est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre fournisseur PEC en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez votre boîte PEC à votre IA",
+    "sub": "Connectez Aruba PEC, Legalmail ou Poste en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

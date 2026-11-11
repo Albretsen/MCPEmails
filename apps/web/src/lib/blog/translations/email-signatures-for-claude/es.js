@@ -6,16 +6,16 @@ const translation = {
     'Firmas de correo para Claude: configura una firma por bandeja una vez y Claude firma cada mensaje que envía, en todos los proveedores',
   content: `Cuando Claude envía un correo por ti, debería parecer que lo enviaste tú. Eso incluye la despedida: tu nombre, tu cargo, la línea de tu empresa, ese enlace a tu página de reservas. Hasta ahora, o bien escribías tu firma en cada prompt, o aceptabas correos que terminaban de forma un poco abrupta. Hoy eso cambia: **MCPEmails ahora aplica tu firma automáticamente a cada mensaje que Claude envía.**
 
-Las firmas son **por bandeja**. Cada buzón conectado conserva la suya, así que la firma de fundador va en tu dirección de trabajo y un sencillo "— Sam" va en la personal. Una vez configurada, no vuelves a pensar en ella.
+Las firmas son **por bandeja**. Cada buzón conectado conserva la suya, así que la firma de fundador va en tu dirección de trabajo y un sencillo "Un saludo, Sam" va en la personal. Una vez configurada, no vuelves a pensar en ella.
 
 ## Qué se firma
 
 Configúrala una vez y la firma se añade automáticamente a todo lo que Claude envía desde esa bandeja:
 
-- **Correos nuevos** — \`email_compose\` (acción \`send\`).
-- **Respuestas y reenvíos** — \`email_compose\` (acciones \`reply\` y \`forward\`).
-- **Borradores** — \`draft\`, así que lo que revisas ya lleva tu despedida en su sitio.
-- **Envíos programados** — \`schedule\`, así que un mensaje en cola para el lunes por la mañana sale firmado.
+- **Correos nuevos:** \`email_compose\` (acción \`send\`).
+- **Respuestas y reenvíos:** \`email_compose\` (acciones \`reply\` y \`forward\`).
+- **Borradores:** \`draft\`, así que lo que revisas ya lleva tu despedida en su sitio.
+- **Envíos programados:** \`schedule\`, así que un mensaje en cola para el lunes por la mañana sale firmado.
 
 No hay nada más que decir en tu prompt. "Responde a Dana y dile que la presentación va adjunta" produce un correo completo y firmado.
 
@@ -33,9 +33,9 @@ Esto no es un detalle exclusivo de Gmail. Las firmas se aplican en **todos** los
 
 **1. El editor de firmas en el panel.** Abre una bandeja en el panel de MCPEmails y edita su firma en línea. Cada bandeja tiene la suya, así que puedes darle a cada dirección la voz adecuada.
 
-**2. Solo pídeselo a Claude.** Hay una nueva herramienta \`signature\`, así que puedes configurar o cambiar tu firma en lenguaje natural sin salir del chat:
+**2. Solo pídeselo a Claude.** Hay una herramienta \`signature_set\` (y \`signature_get\` para consultar la actual), así que puedes configurar o cambiar tu firma en lenguaje natural sin salir del chat:
 
-> "Configura la firma de mi bandeja de trabajo como: Sam Rivera, Fundador, Acme — calendly.com/sam"
+> "Configura la firma de mi bandeja de trabajo como: Sam Rivera, Fundador, Acme, calendly.com/sam"
 
 Claude la escribe para esa bandeja, y a partir de entonces cada envío va firmado. Pídele que actualice la firma más tarde y hace lo mismo.
 
@@ -66,7 +66,7 @@ Todos: Gmail, Outlook, Fastmail, iCloud y cualquier otra cuenta IMAP. MCPEmails 
 Sí. Usa la opción \`include_signature\` (simplemente dile a Claude que omita la firma) para un mensaje escueto puntual. Tu firma guardada permanece para todo lo demás.
 
 **¿Cómo configuro mi firma?**
-De dos formas: edítala por bandeja en el panel, o pídeselo a Claude, por ejemplo, "configura mi firma como …" mediante la nueva herramienta \`signature\`.
+De dos formas: edítala por bandeja en el panel, o pídeselo a Claude, por ejemplo, "configura mi firma como …" mediante la herramienta \`signature_set\`.
 
 ## Conclusión
 

@@ -1,0 +1,111 @@
+{
+  "_sources": [
+    "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "https://freemail.help.economia.cz/articles/95768-casto-kladene-dotazy"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Centrum-passord, eller et aplikační heslo når tofaktor er på",
+    "helpUrl": "https://freemail.help.economia.cz/articles/44668-adresy-postovnich-serveru",
+    "usernameForm": "Hele adressen din inkludert domenet: jmeno@centrum.cz, jmeno@atlas.cz eller jmeno@volny.cz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Centrum.cz-, Atlas.cz- og Volný.cz-e-post til Claude og enhver MCP-klient",
+    "description": "Koble en Centrum.cz-, Atlas.cz- eller Volný.cz-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på imap.centrum.cz:993. Sending krever den gratis utvidede postkassen (navýšená schránka); med tofaktor på, et app-passord."
+  },
+  "hero": {
+    "eyebrow": "Centrum.cz + AI",
+    "titleLine1": "Koble Centrum.cz-e-post til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Centrum-, Atlas- eller Volný-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Centrum.cz-e-post på egen hånd. MCPEmails er en hostet MCP-server som kobler til via IMAP på imap.centrum.cz port 993 og logger inn med hele adressen din og Centrum-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Atlas.cz og Volný.cz kjører på samme Economia-plattform med egne IMAP-navn, imap.atlas.cz og imap.volny.cz. To regler fra leverandøren: sending over SMTP virker bare på en utvidet postkasse (navýšená schránka), som er gratis og krever et telefonnummer i nettinnstillingene, og med tofaktorverifisering på logger e-postprogrammer inn med et aplikační heslo i stedet for kontopassordet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassord, eller et app-passord med tofaktor",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "IMAP, @atlas.cz", "host": "imap.atlas.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @atlas.cz", "host": "smtp.centrum.cz", "port": 465, "security": "tls" },
+      { "label": "IMAP, @volny.cz", "host": "imap.volny.cz", "port": 993, "security": "tls" },
+      { "label": "SMTP, @volny.cz", "host": "smtp.volny.cz", "port": 465, "security": "tls" }
+    ],
+    "lookup": {
+      "intro": "De to første radene er @centrum.cz, og hjelpesiden sier at de også skal brukes for de andre domenene, som @cbox.cz og @mujmail.cz. Atlas og Volný har egne IMAP-navn under. Alle vertene ble verifisert via en direkte TLS-tilkobling. For andre adresser kan du bruke",
+      "label": "oppslag av e-postinnstillinger",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "method": {
+    "title": "Slik kobler Centrum.cz seg til: IMAP, og SMTP når postkassen er utvidet",
+    "body": "Centrum tilbyr IMAP på <code>imap.centrum.cz</code> port 993 med SSL/TLS og SMTP på <code>smtp.centrum.cz</code> port 465 med SSL/TLS (587 med STARTTLS er også dokumentert), med autentisering på og hele adressen som brukernavn. Samme hjelpeside dekker Atlas.cz og Volný.cz: <code>imap.atlas.cz</code> sender gjennom smtp.centrum.cz, mens Volný har både <code>imap.volny.cz</code> og <code>smtp.volny.cz</code>. For alle andre domener på plattformen sier Centrum at du skal bruke centrum.cz-innstillingene. Det finnes ingen IMAP-bryter å lete etter, men det er et vilkår for sending som hjelpesiden sier i én setning: for å bruke SMTP trenger du en utvidet postkasse, som er gratis og gjøres i nettinnstillingene med et telefonnummer. En vanlig postkasse er 100 MB; en utvidet er 15 GB. Med tofaktorverifisering på sier FAQ-en at e-postprogrammer logger inn med et applikasjonspassord generert i seksjonen <b>Dvoufaktorové ověření</b> i nettinnstillingene, som mobilsiden og appen ikke viser."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis MCPEmails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Utvid postkassen så SMTP virker",
+      "p": "Logg inn i webmailen på en datamaskin, åpne postkasseinnstillingene og fullfør den gratis utvidelsen (<b>navýšení schránky</b>) ved å bekrefte et telefonnummer. Centrum knytter SMTP til dette: uten den lykkes IMAP-innloggingen og sendekontrollen feiler. Utvidelsen løfter også postkassen fra 100 MB til 15 GB."
+    },
+    {
+      "h": "Med tofaktor på, generer et aplikační heslo",
+      "p": "Bruker du <b>dvoufaktorové ověření</b>, avvises kontopassordet ditt av e-postprogrammer. Åpne seksjonen <b>Dvoufaktorové ověření</b> i nettinnstillingene og generer et applikasjonspassord der; mobilversjonen av postkassen og appen tilbyr det ikke. Bruk den verdien i MCPEmails. Med tofaktor av er det vanlige Centrum-passordet ditt påloggingen."
+    },
+    {
+      "h": "Lim adressen og passordet inn i MCPEmails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen med domene, og lim inn det passordet som gjelder. Vertene og portene er forhåndsutfylt for centrum.cz-, atlas.cz- og volny.cz-adresser. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Lesing virker og sending feiler: postkassen er ikke utvidet",
+      "p": "Dette er Centrum-feilen, og den er lett å mistolke fordi IMAP-halvdelen er i orden. Hjelpesiden er tydelig på at SMTP krever en utvidet postkasse (navýšení er gratis og gjøres i nettinnstillingene med et telefonnummer). Inntil da avvises sendekontrollen i MCPEmails, og tilkoblingsskjemaet tilbyr bare lesing. Gjør utvidelsen, test på nytt, så følger sending med."
+    },
+    {
+      "h": "Tofaktor krever et app-passord, og bare nettinnstillingene på datamaskin utsteder det",
+      "p": "Med dvoufaktorové ověření på sier FAQ-en at e-postprogrammer skal logge inn med et aplikační heslo generert i seksjonen Dvoufaktorové ověření, og påpeker at denne innstillingen ikke kan nås fra mobilversjonen av postkassen eller mobilappen. Administrerer du kontoen fra en telefon, kan passordet du trenger altså bare lages fra en datamaskin. Selve avslaget gir ikke noe hint om hvilken av de to påloggingene serveren ville ha."
+    },
+    {
+      "h": "En naken IMAP-server: ingen IDLE, ingen MOVE, ingen UIDPLUS",
+      "p": "Banneret annonserer IMAP4rev1, LITERAL+, ID, SASL-IR og AUTH=PLAIN, og ingenting annet. Uten IDLE finnes ny e-post ved polling, som er slik MCPEmails jobber uansett. Uten MOVE kjøres arkivering av en melding som en kopi, et flagg og en expunge, og uten UIDPLUS rapporteres ikke den nye ID-en til kopien tilbake. Ingen av delene er fatale; masseorganisering er bare tregere enn funksjonslisten til en større leverandør ville gjort den. Oppfører mappesynkronisering seg rart i en skrivebordsklient, foreslår Centrums hjelp å sette IMAP-stiprefikset til INBOX."
+    },
+    {
+      "h": "Atlas og Volný deler plattformen, men ikke IMAP-navnet",
+      "p": "En @atlas.cz-adresse logger inn på <code>imap.atlas.cz</code> og sender gjennom smtp.centrum.cz; en @volny.cz-adresse bruker <code>imap.volny.cz</code> og <code>smtp.volny.cz</code>. Hjelpesiden gir Atlas et eget IMAP-navn i stedet for Centrums, så bruk det. MCPEmails forhåndsutfyller riktig par ut fra adressen du skriver, og SMTP-serveren identifiserer seg som en centrum.cz-maskin i alle tilfeller, noe som er normalt."
+    }
+  ],
+  "limits": [
+    "SMTP er bare tilgjengelig på en utvidet postkasse (navýšená schránka). Inntil den gratis utvidelsen er gjort i nettinnstillingene, kobles postkassen til bare for lesing.",
+    "SMTP-serveren begrenser en melding til 25 MB inkludert kodede vedlegg, så en stor fil avvises ved sending i stedet for å bli kuttet.",
+    "Centrum annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle. I en tsjekkisk postkasse betyr det vanligvis Doručené, Odeslané, Koncepty og Koš. Oppgi mappen når du ber om en flytting."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Centrum.cz-, Atlas.cz- eller Volný.cz-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Centrum-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som MCPEmails til centrum.cz-, atlas.cz- eller volny.cz-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Centrum.cz?",
+      "a": "IMAP er imap.centrum.cz på port 993 med SSL/TLS. SMTP er smtp.centrum.cz på port 465 med SSL/TLS (eller 587 med STARTTLS), autentisering påkrevd. Atlas bruker imap.atlas.cz med smtp.centrum.cz; Volný bruker imap.volny.cz og smtp.volny.cz. Brukernavnet er hele adressen din. Alle vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor kan MCPEmails lese Centrum-e-posten min, men ikke sende?",
+      "a": "Fordi sending over SMTP krever en utvidet postkasse. Centrums hjelp sier at utvidelsen er gratis og gjøres i nettinnstillingene på en datamaskin ved å bekrefte et telefonnummer. Når den er gjort, tester du tilkoblingen på nytt, så virker sending."
+    },
+    {
+      "q": "Hvorfor blir Centrum-passordet mitt avvist i en e-postklient?",
+      "a": "Er tofaktorverifisering på, trenger e-postprogrammer et aplikační heslo generert i seksjonen Dvoufaktorové ověření i nettinnstillingene, som bare kan nås fra datamaskinversjonen. Er tofaktor av, sjekk at brukernavnet er hele adressen med domene, og at en Atlas- eller Volný-adresse bruker sin egen IMAP-vert."
+    },
+    {
+      "q": "Lagres Centrum-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Centrum via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Centrum.cz-innboks",
+    "sub": "Koble til Centrum, Atlas eller Volný på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

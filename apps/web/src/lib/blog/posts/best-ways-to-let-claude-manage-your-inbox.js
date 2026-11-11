@@ -3,7 +3,7 @@ const post = {
   title: 'The Best Ways to Let Claude Manage Your Inbox in 2026',
   description: 'A frank roundup of the best ways to let Claude manage your inbox in 2026: native integrations, DIY MCP servers, copy-paste, browser extensions, and hosted MCP.',
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
-  coverAlt: 'The best ways to let Claude manage your inbox in 2026 — MCPEmails',
+  coverAlt: 'The best ways to let Claude manage your inbox in 2026 (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: "2026-04-28T09:00:00.000Z",
   updatedAt: "2026-04-28T09:00:00.000Z",
@@ -17,26 +17,26 @@ This is a roundup, not an ad. I'll walk through every approach, where it shines,
 
 Before comparing tools, get clear on what the job needs. "Manage my inbox" almost always means some mix of:
 
-- **Read access** — pull recent messages, read a full thread, search by sender or keyword.
-- **Send access** — draft and send replies, with correct threading so the conversation doesn't fork.
-- **Multiple accounts** — your work Gmail and your personal iCloud, not just one.
-- **Trust** — you're handing an AI access to years of private correspondence. Where do the credentials live? Does anyone store the email body?
+- **Read access**: pull recent messages, read a full thread, search by sender or keyword.
+- **Send access**: draft and send replies, with correct threading so the conversation doesn't fork.
+- **Multiple accounts**: your work Gmail and your personal iCloud, not just one.
+- **Trust**: you're handing an AI access to years of private correspondence. Where do the credentials live? Does anyone store the email body?
 
 Hold those four against each option. The differences get obvious fast.
 
 ## Option 1: A hosted MCP email server
 
-This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts. These are the core of the 21 tools, and most of them pick their operation with an \`action\` parameter.
+This is the [Model Context Protocol](https://modelcontextprotocol.io) approach, run for you. You connect your inbox once in a dashboard, paste one endpoint URL into Claude, and the agent gets a clean set of email tools. Claude calls them like any other tool: \`inbox_list\` to see your accounts, \`email_read\` to list, read, or search messages, \`email_compose\` to send, reply, or forward, plus \`email_organize\`, \`folder\`, \`draft\`, \`schedule\`, and \`contact_search\` for flags, folders, drafts, scheduling, and contacts. These are the core of the tool set, and most of them pick their operation with an \`action\` parameter.
 
 MCPEmails is the one I build, so take the recommendation with that in mind, but the architecture is the reason it wins for most people, not the marketing. Every tool call hits your provider live (IMAP/SMTP for Gmail and most providers, Microsoft Graph for Outlook), hands the message to Claude, and discards it. **The email body is never stored.** Per inbox we persist an encrypted OAuth token or app password, AES-256-GCM encrypted at rest, decrypted on our servers only when a request needs it, and never sent to Claude. Beyond that we keep only the few details a feature you turn on needs, such as a scheduled message waiting to go out. If you want the long version of why that matters, read [why "email is never stored" matters](/blog/why-email-never-stored-matters).
 
-Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → Add connector**, paste \`https://www.mcpemails.com/api/mcp\`, click Connect, sign in to your MCPEmails account, and approve the scopes you want (\`read:email\`, \`send:email\`, or both). No API key, no SDK, no config file. There's a [two-minute connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) if you want the click-by-click. The [complete guide to connecting Claude to your email](/blog/connect-claude-to-email) then walks through each provider in turn.
+Setup is genuinely quick. In claude.ai you go to **Customize → Connectors → Add connector**, paste \`https://www.mcpemails.com/api/mcp\`, click Connect, sign in to your MCPEmails account, and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting). No API key, no SDK, no config file. There's a [two-minute connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) if you want the click-by-click. The [complete guide to connecting Claude to your email](/blog/connect-claude-to-email) then walks through each provider in turn.
 
-**Good for:** almost everyone — non-technical users, people with Gmail and Outlook and IMAP all at once, anyone who cares that the body isn't stored.
+**Good for:** almost everyone (non-technical users, people with Gmail and Outlook and IMAP all at once, anyone who cares that the body isn't stored).
 
-**The honest trade-offs:** it's a third-party service in your auth path (you can revoke from the dashboard in one click, but you're trusting the host's security model). And there are no webhooks. To react to new mail, Claude has to poll — call \`email_read\` with \`action: list\` and \`unread: true\` on a schedule. Push notifications don't exist in MCP. Any tool that claims real-time email reactions is either polling under the hood or storing your mail.
+**Trade-offs:** it's a third-party service in your auth path (you can revoke from the dashboard in one click, but you're trusting the host's security model). And MCP itself has no push: to react to new mail inside a chat, Claude has to poll, calling \`email_read\` with \`action: list\` and \`unread: true\` on a schedule. For your own code, Pro and Business workspaces can add a webhook under **API Keys** in the dashboard, and MCPEmails sends a signed POST to your URL when new mail arrives. Any tool that claims real-time reactions without one of those two is either polling under the hood or storing your mail.
 
-The Free tier is $0 forever with one connected inbox and a 60-request/minute burst limit. Personal ($9/month) connects up to three inboxes and raises the burst limit; Pro ($15/month) connects up to 10; Business adds members and roles. Cost is rarely the deciding factor here.
+The Free tier is free forever with one connected inbox. Personal adds inboxes and a higher burst limit, Pro more again, and Business adds members and roles. Cost is rarely the deciding factor here; the current numbers are on the [pricing page](/pricing).
 
 ## Option 2: A DIY / self-hosted MCP server
 
@@ -44,7 +44,7 @@ Same protocol, your infrastructure. There are open-source Gmail MCP servers on G
 
 **Good for:** engineers who want full control, an air-gapped or compliance-bound environment, or anyone who flatly won't put credentials through a third party.
 
-**The honest trade-offs:** you own the OAuth app registration, token refresh, encryption at rest, and uptime. Most public Gmail MCP repos are Gmail-only — adding Outlook means a separate Microsoft Graph integration, and IMAP is a third code path. The "free" server costs you real engineering hours, and a half-built credential store is less safe than a hosted one done right. I broke this down in detail in [hosted vs self-hosted Gmail MCP server](/blog/hosted-vs-self-hosted-gmail-mcp-server) — short version, self-host only if control is worth the maintenance.
+**Trade-offs:** you own the OAuth app registration, token refresh, encryption at rest, and uptime. Most public Gmail MCP repos are Gmail-only; adding Outlook means a separate Microsoft Graph integration, and IMAP is a third code path. The "free" server costs you real engineering hours, and a half-built credential store is less safe than a hosted one done right. I broke this down in detail in [hosted vs self-hosted Gmail MCP server](/blog/hosted-vs-self-hosted-gmail-mcp-server). Short version: self-host only if control is worth the maintenance.
 
 ## Option 3: Copy-paste into the chat
 
@@ -52,7 +52,7 @@ The zero-setup option. You select an email, paste it into Claude, ask for a repl
 
 **Good for:** a one-off. Drafting a single tricky reply when you don't want to wire anything up.
 
-**The honest trade-offs:** it doesn't scale past one message, Claude can't see the rest of the thread or search your archive, and you're the integration — every copy, paste, and send is manual. It's not "managing your inbox." It's using Claude as a writing assistant with email-shaped input.
+**Trade-offs:** it doesn't scale past one message, Claude can't see the rest of the thread or search your archive, and you're the integration: every copy, paste, and send is manual. It's not "managing your inbox." It's using Claude as a writing assistant with email-shaped input.
 
 ## Option 4: A browser extension
 
@@ -60,7 +60,7 @@ Extensions that inject an AI sidebar into Gmail's web UI. They read what's on sc
 
 **Good for:** people who live in Gmail's web client all day and want drafts without leaving the tab.
 
-**The honest trade-offs:** they're tied to one provider's web UI, so they break when Gmail reshuffles its DOM and they do nothing for Outlook, iCloud, or a desktop client. Many read the entire page and route it through their own backend, which is exactly the storage question you should be asking. And they're bound to the browser — Claude can't act on your mail from a terminal, a script, or claude.ai. If you care about the security side, [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) is worth a read before installing anything that reads your whole inbox.
+**Trade-offs:** they're tied to one provider's web UI, so they break when Gmail reshuffles its DOM and they do nothing for Outlook, iCloud, or a desktop client. Many read the entire page and route it through their own backend, which is exactly the storage question you should be asking. And they're bound to the browser, so Claude can't act on your mail from a terminal, a script, or claude.ai. If you care about the security side, [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) is worth a read before installing anything that reads your whole inbox.
 
 ## Option 5: Native client integrations
 
@@ -68,13 +68,13 @@ Some mail clients are starting to ship built-in AI features, and some AI clients
 
 **Good for:** if your exact client already has it and you only use that one client.
 
-**The honest trade-offs:** you're locked to whatever the vendor decided to support. Switch clients or add a second email account on a different provider and the integration doesn't follow you. The data-handling terms are whatever the vendor wrote, and they vary wildly. Coverage in 2026 is still patchy.
+**Trade-offs:** you're locked to whatever the vendor decided to support. Switch clients or add a second email account on a different provider and the integration doesn't follow you. The data-handling terms are whatever the vendor wrote, and they vary wildly. Coverage in 2026 is still patchy.
 
 ## So which one should you actually use?
 
 Here's my opinionated take.
 
-**Pick a hosted MCP server** if you want Claude to manage real inboxes — plural, across providers — without babysitting infrastructure or wondering who's keeping your email. It's the only option on this list that's both seconds-to-set-up and built around never storing the body. This is the default I'd recommend to almost anyone.
+**Pick a hosted MCP server** if you want Claude to manage real inboxes (plural, across providers) without babysitting infrastructure or wondering who's keeping your email. It's the only option on this list that's both seconds-to-set-up and built around never storing the body. This is the default I'd recommend to almost anyone.
 
 **Self-host** only if control or compliance genuinely outweighs the maintenance, and you have the engineering time to do credential storage properly.
 
@@ -86,7 +86,7 @@ One more thing that separates the serious options from the toys: sending. With M
 
 ## Get started
 
-If the hosted route sounds right, you can [connect an inbox and Claude in under two minutes](/blog/connect-email-to-ai-agent-under-2-minutes) or read [the docs](/docs) for the full tool reference. The free plan is enough to try the whole flow — [start free](/signup) and let Claude actually do something with your inbox.`,
+If the hosted route sounds right, you can [connect an inbox and Claude in under two minutes](/blog/connect-email-to-ai-agent-under-2-minutes) or read [the docs](/docs) for the full tool reference. The free plan is enough to try the whole flow: [start free](/signup) and let Claude actually do something with your inbox.`,
 };
 
 export default post;

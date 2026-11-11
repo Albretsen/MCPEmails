@@ -4,13 +4,13 @@ const post = {
   description:
     'A practical how-to for AI agent inbox triage: copy-paste prompts that list unread mail, read what matters, summarize and prioritize, and poll on a schedule.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'AI agent triaging and summarizing an inbox over MCP — MCPEmails',
+  coverAlt: 'AI agent triaging and summarizing an inbox over MCP (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: "2026-04-23T09:00:00.000Z",
   updatedAt: "2026-04-23T09:00:00.000Z",
   tags: ['Workflows', 'Claude', 'Tutorial', 'AI agents'],
   featured: false,
-  content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\` — with \`action: list\` and \`unread: true\` to pull what's new, then \`action: read\` for the handful that look important — and then a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.
+  content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\`, first with \`action: list\` and \`unread: true\` to pull what's new, then with \`action: read\` for the handful that look important, and finally a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.
 
 This post gives you the exact prompts I use, what good output looks like, and how to run the same loop on a schedule so your morning triage happens before you sit down. It assumes your agent already has email access through [MCPEmails](/blog/how-to-give-your-ai-agent-email-access). If you haven't connected an inbox yet, the [under-two-minutes connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) gets you there first.
 
@@ -18,11 +18,11 @@ This post gives you the exact prompts I use, what good output looks like, and ho
 
 Every triage session is the same five steps. Your agent figures out the order on its own once you describe the goal, but it helps to know what's happening under the hood:
 
-1. \`inbox_list\` — discover connected inboxes and their \`inbox_id\` UUIDs. The agent never hardcodes a UUID; it looks one up here.
-2. \`email_read\` with \`action: list\` and \`unread: true\` — pull the unread queue for one inbox, newest first.
-3. \`email_read\` with \`action: read\` — open the full body for the few messages worth reading in detail.
-4. Summarize and prioritize — pure reasoning, no tool call. The model groups, ranks, and explains.
-5. \`email_compose\` with \`action: reply\` (optional) — draft or send for the ones that need an answer.
+1. \`inbox_list\`: discover connected inboxes and their \`inbox_id\` UUIDs. The agent never hardcodes a UUID; it looks one up here.
+2. \`email_read\` with \`action: list\` and \`unread: true\`: pull the unread queue for one inbox, newest first.
+3. \`email_read\` with \`action: read\`: open the full body for the few messages worth reading in detail.
+4. Summarize and prioritize: pure reasoning, no tool call. The model groups, ranks, and explains.
+5. \`email_compose\` with \`action: reply\` (optional): draft or send for the ones that need an answer.
 
 Steps 1 through 4 are read-only. If you connected with a \`read:email\`-scoped [OAuth grant or API key](/blog/oauth-vs-api-keys-ai-email-access), the agent physically cannot send anything, which is exactly what you want for an automated summary you'll skim later.
 
@@ -30,7 +30,7 @@ Steps 1 through 4 are read-only. If you connected with a \`read:email\`-scoped [
 
 Start simple. This is the one I run most days. Paste it into Claude (or any MCP client connected to MCPEmails) and let it work:
 
-> Look at my main inbox. Pull everything unread, then give me a summary grouped into three buckets: needs a reply today, FYI / can wait, and probably noise. For each item in the first two buckets, give me one line: who it's from and what they want. Don't open anything I don't need — skim the subjects and senders first, only read the body when the subject is ambiguous.
+> Look at my main inbox. Pull everything unread, then give me a summary grouped into three buckets: needs a reply today, FYI / can wait, and probably noise. For each item in the first two buckets, give me one line: who it's from and what they want. Don't open anything I don't need: skim the subjects and senders first, only read the body when the subject is ambiguous.
 
 Notice what that prompt does. It tells the agent to lean on \`email_read\` (action list) metadata (sender, subject, snippet) and to call \`email_read\` with \`action: read\` sparingly. That keeps the session fast and well under the rate limits: every API key gets windows sized to your plan's per-minute ceiling, and several keys share that ceiling (see [pricing](/pricing)). A 40-message unread queue triaged this way is maybe a dozen tool calls, not forty.
 
@@ -56,45 +56,45 @@ That is genuinely useful in a way a raw inbox is not. The agent read the three m
 
 ## Prompt 2: deep triage with priorities and reasoning
 
-When the unread count is ugly — a Monday after a long weekend — I want more than buckets. I want the agent to defend its ranking so I can trust it:
+When the unread count is ugly (a Monday after a long weekend), I want more than buckets. I want the agent to defend its ranking so I can trust it:
 
 > My inbox is a mess. Triage everything unread from the last 4 days. Rank the top 8 by how urgent they actually are, not by how loud the sender is. For each, tell me the deadline if there is one, who's blocked, and your one-sentence reasoning for the rank. Read the full body for anything in your top 8 so you're not guessing.
 
 The "not by how loud the sender is" line matters. Without it, agents over-index on ALL CAPS subjects and "URGENT" from automated systems. With it, you get judgment:
 
 \`\`\`text
-1. Priya — blocked on staging creds since Thu. A teammate can't ship
+1. Priya: blocked on staging creds since Thu. A teammate can't ship
    until you respond. No formal deadline but it's costing time now.
-2. Stripe dispute — hard deadline in 5 days, money attached, but you
+2. Stripe dispute: hard deadline in 5 days, money attached, but you
    have buffer so it's #2 not #1.
-3. Dana (Acme) — contract sign-off by Fri. Important, not yet urgent.
+3. Dana (Acme): contract sign-off by Fri. Important, not yet urgent.
 ...
 \`\`\`
 
-For this prompt the agent will call \`email_read\` with \`action: read\` eight times, once per top item, because you asked it to stop guessing. That's the right trade: a few extra calls for rankings you can act on. If the agent does hit a limit mid-run, MCPEmails returns a retryable error with a \`retry_after\` value in seconds — a well-behaved client waits that long and resumes rather than hammering the server.
+For this prompt the agent will call \`email_read\` with \`action: read\` eight times, once per top item, because you asked it to stop guessing. That's the right trade: a few extra calls for rankings you can act on. If the agent does hit a limit mid-run, MCPEmails returns a retryable error with a \`retry_after\` value in seconds; a well-behaved client waits that long and resumes rather than hammering the server.
 
 ## Prompt 3: triage that ends in a reply
 
 Triage is more valuable when it closes loops. Once you trust the summaries, let the agent draft. I keep a human in the loop for sends, so my prompt asks for drafts, not autopilot:
 
-> Same triage as usual. For anything in "needs a reply today" that I can answer in two sentences, draft the reply and show it to me. Don't send yet — I'll say "send 1 and 3" or edit them. Match my usual tone: short, direct, no corporate filler.
+> Same triage as usual. For anything in "needs a reply today" that I can answer in two sentences, draft the reply and show it to me. Don't send yet; I'll say "send 1 and 3" or edit them. Match my usual tone: short, direct, no corporate filler.
 
 The agent runs the read-only loop, then writes drafts inline. When you say "send 1 and 3," it calls \`email_compose\` with \`action: reply\` for those two. Replies thread automatically: MCPEmails sets the \`In-Reply-To\` and \`References\` headers for you, so your answer lands in the right conversation instead of starting a new one. The mail goes out through your own provider (Gmail's SMTP, Microsoft Graph, or your provider's SMTP), so deliverability and your domain reputation stay yours. Nothing is relayed from some shared sending domain.
 
-If you want to take the next step and remove yourself from the loop entirely, that's a different shape of automation — see [building an email auto-responder with an MCP agent](/blog/build-email-auto-responder-mcp-agent) for the guardrails I'd put on it before letting an agent send unattended.
+If you want to take the next step and remove yourself from the loop entirely, that's a different shape of automation; see [building an email auto-responder with an MCP agent](/blog/build-email-auto-responder-mcp-agent) for the guardrails I'd put on it before letting an agent send unattended.
 
 ## Running triage on a schedule
 
-Here's the honest limitation: MCP is **poll, not push.** MCPEmails has no webhooks and sends no server-initiated events. Your agent doesn't get pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread: true\` on a timer.
+One limitation to know: MCP is **poll, not push.** The tools answer when your agent asks, and an agent in a chat is not pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread: true\` on a timer, or your own code has to be woken by a new-mail webhook, which Pro and Business workspaces can add under API Keys in the dashboard.
 
-In practice that means one of two setups:
+In practice that means one of two setups for a chat-based agent:
 
-- A scheduled job — a cron entry, a scheduled task in your agent platform, or Claude's own scheduling if your client supports it — that fires the morning-summary prompt at 8am and again after lunch. Twice a day covers most people.
+- A scheduled job (a cron entry, a scheduled task in your agent platform, or Claude's own scheduling if your client supports it) that fires the morning-summary prompt at 8am and again after lunch. Twice a day covers most people.
 - An always-on agent loop that polls every few minutes during work hours. This is overkill for a personal inbox and burns rate limit for little gain. Reserve it for genuinely time-sensitive mailboxes like support@ or alerts@.
 
 I run the scheduled-job version. Two polls a day, each one a single morning-summary prompt against my main inbox. It costs a handful of tool calls and lands a clean digest in front of me before I open the mail client. For most people, that beats a real-time loop on every axis that matters.
 
-Whatever cadence you pick, keep the polling honest: more frequent polling does not mean faster, it just means more requests against the same 60-to-1,000-per-minute ceiling. Match the interval to how fast the inbox actually moves.
+Whatever cadence you pick, keep the polling honest: more frequent polling does not mean faster, it just means more requests against the same per-minute ceiling your plan sets. Match the interval to how fast the inbox actually moves.
 
 ## A few things that make triage noticeably better
 
@@ -103,7 +103,7 @@ Whatever cadence you pick, keep the polling honest: more frequent polling does n
 - **Cap the reads.** "Only open the body when the subject is ambiguous" or "read the top 8" keeps sessions fast and cheap. Unbounded "read everything" is slow and rarely better.
 - **Stay read-only until you trust it.** Run with a \`read:email\` scope for a week. Add \`send:email\` only once the drafts are consistently good.
 
-If triage is the first workflow you're trying, it's a good one to start with — it's read-only, the payoff is immediate, and it builds the trust you'll want before handing over send access. For more ideas once you're comfortable, here are [seven things an AI agent can do with inbox access](/blog/7-things-ai-agent-can-do-with-inbox-access).
+If triage is the first workflow you're trying, it's a good one to start with: it's read-only, the payoff is immediate, and it builds the trust you'll want before handing over send access. For more ideas once you're comfortable, here are [seven things an AI agent can do with inbox access](/blog/7-things-ai-agent-can-do-with-inbox-access).
 
 ## Try it on your own inbox
 

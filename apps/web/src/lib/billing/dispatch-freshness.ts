@@ -30,6 +30,8 @@ export interface FreshnessRow {
   id: number;
   template: string;
   scope_key: string;
+  /** Read by payment_failed_restart only: did this customer come back? */
+  stripe_customer_id?: string | null;
 }
 
 /**
@@ -51,6 +53,20 @@ export interface FreshnessStripe {
       cancel_at_period_end?: boolean | null;
       cancel_at?: number | null;
       pause_collection?: { resumes_at?: number | null } | null;
+      /** current_period_end: plan_ending_5d; price: annual_renewal_30. */
+      items?: {
+        data?: Array<{
+          current_period_end?: number | null;
+          price?: { id?: string | null; recurring?: { interval?: string | null } | null } | null;
+        }> | null;
+      } | null;
+    }>;
+    /**
+     * payment_failed_restart only. Optional so a test can leave it out; the
+     * real SDK always has it.
+     */
+    list?(params: { customer: string; status: 'all'; limit: number }): Promise<{
+      data: Array<{ status?: string | null }>;
     }>;
   };
   paymentMethods: {
@@ -112,6 +128,28 @@ export async function checkFreshness(
       return { send: true };
     }
 
+    // ── Restart after a card-failure cancel: are they back already? ────────
+    // scope_key is the ended subscription. A new subscription (the link in
+    // this very email, or any other way back) means the email is moot. The
+    // successful charge also cancels the row in the webhook; this is the
+    // backstop for an event we never saw.
+    if (row.template === 'payment_failed_restart') {
+      const ended = await stripe.subscriptions.retrieve(row.scope_key);
+      if (ended.status !== 'canceled') return { send: false, reason: 'no_longer_due' };
+      if (row.stripe_customer_id && stripe.subscriptions.list) {
+        const { data } = await stripe.subscriptions.list({
+          customer: row.stripe_customer_id,
+          status: 'all',
+          limit: 20,
+        });
+        const back = data.some((sub) =>
+          ['active', 'trialing', 'past_due', 'unpaid', 'incomplete'].includes(sub.status ?? ''),
+        );
+        if (back) return { send: false, reason: 'subscription_reactivated' };
+      }
+      return { send: true };
+    }
+
     // ── Pause: is the subscription still paused to that date? ──────────────
     // scope_key is "sub_xxx:<unix seconds>": the pause start for the receipt,
     // the renewal that bills again for the reminder. An extension or an early
@@ -129,6 +167,58 @@ export async function checkFreshness(
       if (resumesAt == null || resumesAt + 3600 !== billsAt) return { send: false, reason: 'no_longer_due' };
       // A cancel that lands on or before that renewal means nothing resumes.
       if (subscription.cancel_at != null && subscription.cancel_at <= billsAt) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      return { send: true };
+    }
+
+    // ── Plan ending: is it still ending on that date? ──────────────────────
+    // scope_key is "sub_xxx:<unix seconds of the scheduled stop>". A customer
+    // who kept the plan, paused instead, or moved the date gets nothing.
+    if (row.template === 'plan_ending_5d') {
+      const [subscriptionId, secondsPart] = row.scope_key.split(':');
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      const stopping = scheduledToStop({
+        cancel_at_period_end: subscription.cancel_at_period_end ?? null,
+        cancel_at: subscription.cancel_at ?? null,
+      });
+      if (!stopping) return { send: false, reason: 'subscription_reactivated' };
+      if (subscription.pause_collection) return { send: false, reason: 'no_longer_due' };
+      const stopAt =
+        subscription.cancel_at ??
+        Math.min(...(subscription.items?.data ?? []).map((item) => item.current_period_end ?? Infinity));
+      if (!Number.isFinite(stopAt) || stopAt !== Number(secondsPart)) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      return { send: true };
+    }
+
+    // ── Annual renewal: does it still renew, yearly, on that date? ─────────
+    // scope_key is "sub_xxx:<period end unix seconds>". Anything that makes
+    // the email untrue since it was queued (a cancel, a pause, a switch to
+    // monthly, an earlier renewal) drops it.
+    if (row.template === 'annual_renewal_30') {
+      const [subscriptionId, secondsPart] = row.scope_key.split(':');
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (subscription.status !== 'active' && subscription.status !== 'trialing') {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (scheduledToStop({
+        cancel_at_period_end: subscription.cancel_at_period_end ?? null,
+        cancel_at: subscription.cancel_at ?? null,
+      })) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (subscription.pause_collection) return { send: false, reason: 'no_longer_due' };
+      const items = subscription.items?.data ?? [];
+      const yearly = items.find((item) => item.price?.recurring?.interval === 'year');
+      if (!yearly || items.some((item) => item.price?.recurring?.interval === 'month')) {
+        return { send: false, reason: 'no_longer_due' };
+      }
+      if (yearly.current_period_end !== Number(secondsPart)) {
         return { send: false, reason: 'no_longer_due' };
       }
       return { send: true };

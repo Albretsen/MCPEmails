@@ -18,6 +18,8 @@ import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { CheckoutReturnPassCard, PassEndingBanner } from './PersonalPass';
 import { FinishSetupLink, ResetOnboardingCard } from './OnboardingEntry';
 import { PaymentIssueBanner } from './PaymentIssueBanner';
+import { AnnualSwitchNotice } from './AnnualSwitch';
+import { BrokenInboxBanner } from './BrokenInboxBanner';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -1473,6 +1475,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           subscriptionStatus={serverWorkspace?.subscriptionStatus ?? null}
           lastDeclineCode={serverWorkspace?.lastDeclineCode ?? null}
         />
+        {/* Broken-inbox alert arm only (src/lib/retention/inbox-alert.ts): every page but Inboxes. */}
+        <BrokenInboxBanner
+          enabled={serverWorkspace?.inboxAlertBanner === true}
+          route={route}
+          userRole={userRole}
+          inboxes={inboxes}
+          onReconnect={onReconnectInbox}
+          onOpenInboxes={() => setRoute("inboxes")}
+        />
         {/* The /onboarding flow, not finished yet: a way back (OnboardingEntry.jsx). */}
         <FinishSetupLink onboarding={serverWorkspace?.onboarding} />
         {cancelledPlan === 'personal' && (
@@ -1484,6 +1495,15 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
         {route !== "settings" && (
           <PassEndingBanner passState={passState} workspaceId={workspace?.id} onOpenBilling={() => setRoute("settings")} />
+        )}
+        {/* Owner on monthly, decided on the server (annual-switch.ts). */}
+        {route === "overview" && (
+          <AnnualSwitchNotice
+            annualSwitch={serverWorkspace?.annualSwitch ?? null}
+            stripePrices={stripePrices}
+            workspaceId={workspace?.id ?? null}
+            onOpenBilling={() => setRoute("settings")}
+          />
         )}
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (

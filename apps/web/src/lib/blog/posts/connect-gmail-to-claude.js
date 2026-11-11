@@ -52,7 +52,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Click **Continue**, review the sign-in settings Claude detected (the defaults are fine), and click **Add**.
-5. Sign in with your MCPEmails account and approve the scopes you want: \`read:email\`, \`send:email\`, or both.
+5. Sign in with your MCPEmails account and choose how much access Claude gets: **Read-only**, **Standard** (adds sending and drafts) or **Full access** (adds scheduling, folders and deleting). **Custom** lets you switch each permission on or off.
 6. In a chat, click **+** at the lower left, choose **Connectors** and switch MCPEmails on.
 
 On a Team or Enterprise plan, an Owner adds the connector once under **Organization settings → Connectors**. Members then open **Customize → Connectors**, find MCPEmails and click **Connect**.
@@ -85,7 +85,7 @@ Once connected, Claude works through a small set of consolidated tools, so it ca
 
 Claude also has a Gmail connector of its own, and it can send too. [Can Claude read my email and send emails?](/blog/can-claude-read-my-email) compares it with MCPEmails, mailbox by mailbox.
 
-One thing to expect up front: MCPEmails is poll-based. There are no push webhooks, so Claude reacts to new mail when you ask it to check, not the instant a message arrives. For almost every assistant workflow, that's exactly the right model.
+One thing to expect up front: Claude reacts to new mail when you ask it to check, not the instant a message arrives. For almost every assistant workflow, that's exactly the right model. (Your own code is different: Pro and Business workspaces can add a webhook under API Keys that posts to your URL when new mail arrives.)
 
 ## Is it safe to connect Gmail to Claude?
 
@@ -116,7 +116,7 @@ No. You paste an app password, a separate credential that Google generates and y
 
 ## Wrap-up
 
-That's the whole thing: one Google app password, one endpoint URL, and Claude can read, search, and send your real mail, without ever storing it. The Free tier costs nothing, needs no card, and connects one inbox; Personal is $9/month for up to three inboxes, and Pro connects up to 10 (see [pricing](/pricing)).
+That's the whole thing: one Google app password, one endpoint URL, and Claude can read, search, and send your real mail, without ever storing it. The Free tier costs nothing, needs no card, and connects one inbox; the paid plans add more (see [pricing](/pricing)).
 
 Ready? [Connect your Gmail free](/signup), paste the endpoint into Claude, and ask it to summarize your unread mail.`,
 };

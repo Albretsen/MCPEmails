@@ -80,7 +80,7 @@ Mit dieser letzten Fähigkeit sollten Sie vorsichtig sein. Endgültiges Löschen
 
 Ein IMAP-Konnektor deckt viel ab, macht aber nicht jeden Anbieter gleich.
 
-- **Kein Push bei eingehenden E-Mails:** MCPEmails arbeitet nur nach dem Anfrage-Antwort-Prinzip. Es sendet keine Webhooks und stößt Claude nicht an, wenn eine Nachricht eintrifft. Ein automatisierter Workflow muss in festen Abständen abfragen, zum Beispiel indem er ungelesene E-Mails auflistet.
+- **Kein Push in Claude bei eingehenden E-Mails:** Die MCP-Tools arbeiten nach dem Anfrage-Antwort-Prinzip, nichts stößt Claude an, wenn eine Nachricht eintrifft. Ein Workflow im Chat fragt in festen Abständen ab, zum Beispiel indem er ungelesene E-Mails auflistet. Eigener Code kann stattdessen von einem Webhook für neue E-Mails geweckt werden, den Pro- und Business-Workspaces unter API-Schlüssel anlegen.
 - **Die Suche hängt vom Übertragungsweg ab:** Strukturierte Filter für Absender, Betreff, Text und Datum funktionieren bei allen Anbietern, aber allgemeines IMAP unterstützt den Suchfilter \`has_attachment\` nicht. Die eigene Suchsyntax eines Anbieters lässt sich nicht übertragen.
 - **Ordner sind keine Gmail-Labels:** IMAP verschiebt eine Nachricht zwischen Ordnern, während Gmail einer Nachricht mehrere Labels geben kann. Den praktischen Unterschied erklärt [Gmail-Labels und IMAP-Ordner](/blog/gmail-labels-vs-imap-folders-ai-agents).
 - **Zum Senden ist SMTP nötig:** Eine funktionierende IMAP-Anmeldung beweist, dass Claude eingehende E-Mails erreicht, nicht dass SMTP-Host, Port oder Sendeberechtigung stimmen. Testen Sie eine harmlose ausgehende Nachricht, bevor Sie sich auf einen Antwort-Workflow verlassen.

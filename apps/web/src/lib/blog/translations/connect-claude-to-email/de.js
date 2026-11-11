@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Klicken Sie auf **Weiter**, prüfen Sie die erkannten Anmeldeeinstellungen (die Standardwerte passen) und klicken Sie auf **Hinzufügen**.
-5. Melden Sie sich bei MCPEmails an und genehmigen Sie die gewünschten Berechtigungen: \`read:email\`, \`send:email\` oder beide.
+5. Melden Sie sich bei MCPEmails an und wählen Sie auf dem Zustimmungsbildschirm, wie viel Zugriff Claude bekommt: **Nur-Lese-Zugriff**, **Standard** oder **Vollzugriff**, oder unter **Benutzerdefiniert** jede Berechtigung einzeln.
 6. Klicken Sie in einem Chat unten links auf **+**, wählen Sie **Konnektoren** und schalten Sie MCPEmails ein.
 
 In einem Team- oder Enterprise-Tarif fügt ein Owner den Konnektor einmal unter **Organisationseinstellungen → Konnektoren** hinzu. Mitglieder öffnen dann **Anpassen → Konnektoren**, suchen MCPEmails und klicken auf **Verbinden**.
@@ -92,14 +92,14 @@ MCPEmails gibt Claude gezielte E-Mail-Tools statt eines Passworts oder einer roh
 - **Organisieren:** \`email_organize\` verschiebt, labelt, markiert und archiviert Nachrichten.
 - **Entwürfe, Ordner, Planung und Kontakte:** \`draft\`, \`folder\`, \`schedule\` und \`contact_search\` decken den Rest eines praktischen E-Mail-Workflows ab.
 
-MCPEmails arbeitet mit Abfragen: Claude prüft auf neue E-Mails, wenn Sie darum bitten, und erhält kein Push-Ereignis in dem Moment, in dem eine E-Mail eintrifft.
+Claude liest Ihre E-Mails, indem es Tools aufruft: Es sieht nach neuen Nachrichten, wenn Sie darum bitten, und nichts wird in dem Moment in den Chat geschoben, in dem eine E-Mail eintrifft. Braucht Ihr eigener Code einen Push, können Pro- und Business-Workspaces im Dashboard unter **API-Schlüssel** einen signierten Webhook für neue E-Mails anlegen.
 
 ## Fehlerbehebung bei Verbindung und Claude-Einrichtung
 
 - **Der Anbieter lehnt das Passwort ab:** Verwenden Sie ein vom Anbieter erzeugtes App-Passwort, nicht das Passwort, mit dem Sie sich im Web anmelden. Erzeugen Sie es neu, nachdem Sie die Zwei-Faktor-Authentifizierung aktiviert haben, falls das verlangt wird.
 - **Eine eigene IMAP-Verbindung läuft in ein Timeout:** Prüfen Sie IMAP/SMTP-Host, Port und TLS-Modus des Anbieters. Port 993 nutzt normalerweise implizites TLS, Port 143 normalerweise STARTTLS.
-- **Claude ist verbunden, sieht aber keine E-Mails:** Prüfen Sie zuerst, ob das Postfach in MCPEmails aktiv ist, verbinden Sie Claude dann neu und genehmigen Sie **read:email**. Bitten Sie Claude, **inbox_list** aufzurufen, bevor es Nachrichten liest.
-- **Claude kann lesen, aber nicht senden:** Verbinden Sie sich neu mit **send:email** und prüfen Sie, ob die Verbindung zum Anbieter SMTP oder das native Senden des Anbieters unterstützt.
+- **Claude ist verbunden, sieht aber keine E-Mails:** Prüfen Sie zuerst, ob das Postfach in MCPEmails aktiv ist, verbinden Sie Claude dann neu und wählen Sie mindestens **Nur-Lese-Zugriff**. Bitten Sie Claude, **inbox_list** aufzurufen, bevor es Nachrichten liest.
+- **Claude kann lesen, aber nicht senden:** Verbinden Sie Claude neu und wählen Sie **Standard** oder **Vollzugriff** (beide enthalten das Senden) und prüfen Sie, ob die Verbindung zum Anbieter SMTP oder das native Senden des Anbieters unterstützt.
 
 Kommen Sie immer noch nicht weiter? Prüfen Sie in der [Anbieter-Übersicht](/docs/providers) die Funktionen, [öffnen Sie dann die Einrichtungsanleitung](/docs#quickstart) und testen Sie eine reine Leseanfrage, bevor Sie das Senden freischalten.
 

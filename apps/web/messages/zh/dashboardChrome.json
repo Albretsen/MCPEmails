@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "更新付款方式",
     "paymentIssueConfirm": "您的银行需要您确认最近一次付款。您的套餐仍然有效。",
     "paymentIssueConfirmCta": "确认付款",
+    "inboxAlertOne": "{address} 需要重新连接。其登录已失效，因此您的 AI 应用无法在其中读取、起草或发送邮件。",
+    "inboxAlertMany": "{count} 个收件箱需要重新连接。其登录已失效，因此您的 AI 应用无法使用它们。",
+    "inboxAlertReconnect": "重新连接",
+    "inboxAlertOpenInboxes": "打开收件箱",
     "inviteSentNotDelivered": "已为 {email} 创建邀请，但邮件未能发送。请在待处理的邀请上点击“重新发送”。",
     "inviteResent": "已向 {email} 重新发送邀请。",
     "inviteResendFailed": "重新发送邀请失败。",
@@ -416,6 +420,43 @@
       },
       "seznam": {
         "password": "如果开启了双重认证（dvoufázové ověření），Seznam 密码在这里将无法使用。请在 Zabezpečení účtu 中设置 Heslo pro aplikace 并使用它。"
+      },
+      "aruba": {
+        "password": "Aruba 校验的是这个邮箱的密码，即在 Aruba 面板的 Gestione caselle 中设置的密码，而不是你登录 Aruba 客户区的密码。2017 年 6 月之前开通的 Hosting Basic 套餐中，IMAP 是单独的附加服务，必须在域名上处于启用状态。"
+      },
+      "libero": {
+        "password": "开启 Password Sicura 后，Libero 和 Virgilio 会在邮件应用中拒绝你的普通密码。请打开账户区域的 Password per App，使用那里显示的 16 位 Password Specifica per Applicazioni；你连接的所有应用共用这一个密码。"
+      },
+      "tim": {
+        "line": "TIM 只允许绑定了有效 TIM 固话或手机线路的邮箱使用邮件应用。没有绑定时，TIM 只接受来自其自有网络的邮件应用，而 MCPEmails 不在其中。"
+      },
+      "tiscali": {
+        "password": "Tiscali 需要你的 Tiscali Mail 密码和完整的邮箱地址。其帮助只针对网页邮箱登录说明了双重认证，没有提到邮件应用，所以如果已开启且登录失败，请先检查这一点。"
+      },
+      "arubaPec": {
+        "password": "开启 verifica in 2 passaggi 后，Aruba PEC 会在邮件应用中拒绝邮箱密码。请在 Gestione account PEC 的 Sicurezza 中生成一个 Password per programmi di posta 并使用它。该密码六个月后过期。"
+      },
+      "legalmail": {
+        "password": "Legalmail 使用 User ID 或 PEC 地址加邮箱密码登录；User ID 填写在高级设置的用户名中。如果改用 Application Password，请在账户设置的 Password applicative 中创建一个 16 位的；每个都有自己的到期日期，请确认它没有过期。"
+      },
+      "postecert": {
+        "password": "在 PEC Postecertifica 中，打开 PEC 管理面板，选择 Genera password 并使用这个客户端密码；网页邮箱密码永远不会被接受，客户端密码每 90 天过期一次。"
+      },
+      "centrum": {
+        "password": "开启 dvoufaktorové ověření 后，Centrum、Atlas 和 Volný 会在邮件应用中拒绝你的密码。请在电脑上进入网页设置的 Dvoufaktorové ověření 部分生成一个 aplikační heslo 并使用它。",
+        "smtp": "发信需要免费的扩容邮箱（navýšení schránky）：在网页设置中确认一个手机号码，然后再测试一次。"
+      },
+      "wp": {
+        "imap": "在 {provider} 中开启 IMAP：Opcje，IMAP/POP 标签页，然后开启 IMAP（pobieraj i wysyłaj wiadomości）。",
+        "twoStep": "开启 logowanie dwustopniowe 后，请在 Bezpieczeństwo 的 Logowanie dwustopniowe 中创建一个 hasło do programu pocztowego，用它代替你的 {provider} 密码。"
+      },
+      "onet": {
+        "protocols": "在 Onet Poczta 中解除 IMAP 和 SMTP 的屏蔽：Ustawienia（齿轮图标）、Konto、Konto Główne 标签页，然后打开各协议卡片上的开关。",
+        "appPassword": "开启 weryfikacja dwuetapowa 后，请在 Onet Konto 的 Bezpieczeństwo 中生成一个 hasło do aplikacji，用它代替你的 Onet 密码。"
+      },
+      "interia": {
+        "program": "在 Interia 中打开 Ustawienia、Ustawienia główne、Parametry 标签页，把 korzystam z programu pocztowego 设为 TAK。",
+        "twoStep": "只要 logowanie dwuetapowe 处于开启状态，Interia 就会屏蔽邮件程序，而且没有应用密码。请关闭它再连接。"
       },
       "gmx": {
         "imap": "{provider} 默认关闭 POP3 和 IMAP 访问。请在 E-Mail-Einstellungen 的 POP3/IMAP 中开启。",

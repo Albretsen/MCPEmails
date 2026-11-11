@@ -25,6 +25,7 @@
       "sub": "几分钟内将 Gmail、Outlook、Fastmail 或任意 IMAP 账户连接到你的 AI 智能体。",
       "primary": "免费开始",
       "secondary": "阅读文档"
-    }
+    },
+    "breadcrumbAria": "面包屑导航"
   }
 }

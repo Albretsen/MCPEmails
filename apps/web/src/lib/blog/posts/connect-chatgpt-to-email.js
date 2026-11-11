@@ -93,7 +93,7 @@ MCPEmails hands ChatGPT focused tools rather than a password or a raw IMAP socke
 - **Drafts, folders and scheduling:** \`draft\`, \`draft_list\`, \`folder\`, \`folder_list\`, \`schedule\` and \`schedule_list\`.
 - **The rest:** \`contact_search\`, \`signature_get\`, \`signature_set\`, plus \`automation\` and \`automation_read\` for recurring rules.
 
-One limit to plan around: MCPEmails is poll-based. There are no webhooks and no server-initiated events, so ChatGPT checks for new mail when you ask it to rather than the moment a message lands.
+One limit to plan around: inside a chat, ChatGPT checks for new mail when you ask it to, not the moment a message lands. Nothing in the connector wakes ChatGPT on its own. (Your own code can be woken: Pro and Business workspaces can add a webhook under API Keys that posts to your URL when new mail arrives.)
 
 ## OpenAI Codex in the terminal
 
@@ -131,7 +131,7 @@ No. Codex is a terminal surface, so it uses a scoped API key on an \`Authorizati
 No. Every message is fetched live from your provider for the request that asked for it, then discarded. Only the encrypted provider credential is retained. [Why never storing email matters](/blog/why-email-never-stored-matters) explains the reasoning.
 
 **What does it cost?**
-Free covers one connected inbox and 150 billable email actions per UTC calendar month, with the first 3 days uncounted. That monthly allowance applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. Paid plans add inboxes and unlimited email actions: see [pricing](/pricing).
+Free covers one connected inbox, with the limits listed on the [pricing page](/pricing). Paid plans add inboxes.
 
 ## Next step
 

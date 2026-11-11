@@ -51,6 +51,16 @@ const REGISTRY: RegistryEntry[] = [
     smtp: { host: 'smtp.gmail.com', port: 465, security: 'tls' } },
   { slug: 'proton', name: 'Proton Mail', domain: 'protonmail.com', status: 'limited', locales: ['en'], imap: null, smtp: null },
   { slug: 'office365', name: 'Microsoft 365', domain: 'office365.com', status: 'supported', locales: ['en'], imap: null, smtp: null },
+  // Pages that several table presets share (2026-11-10).
+  { slug: 'tim', name: 'TIM Mail', domain: 'tim.it', status: 'supported', locales: ['en'],
+    imap: { host: 'imap.tim.it', port: 143, security: 'starttls' },
+    smtp: { host: 'smtp.tim.it', port: 587, security: 'starttls' } },
+  { slug: 'pec', name: 'PEC', domain: 'pec.it', status: 'supported', locales: ['en'],
+    imap: { host: 'imaps.pec.aruba.it', port: 993, security: 'tls' },
+    smtp: { host: 'smtps.pec.aruba.it', port: 465, security: 'tls' } },
+  { slug: 'centrum', name: 'Centrum.cz', domain: 'centrum.cz', status: 'supported', locales: ['en'],
+    imap: { host: 'imap.centrum.cz', port: 993, security: 'tls' },
+    smtp: { host: 'smtp.centrum.cz', port: 465, security: 'tls' } },
 ];
 
 /** A fetch that answers DoH from `dns` ({"MX example.com": ["10 mx.example.net."]}) and the ISPDB from `ispdb`. */
@@ -277,6 +287,29 @@ test('a Locaweb custom domain is found through its MX', async () => {
   assert.equal(r.label, 'Locaweb');
   assert.equal(r.imap.host, 'email-ssl.com.br');
   assert.equal(r.source, 'mx');
+});
+
+test('Italian and Czech sibling domains are answered from the table and link the shared page', async () => {
+  const alice = await run('a@alice.it');
+  assert.equal(alice.r.kind, 'found');
+  if (alice.r.kind !== 'found') return;
+  assert.equal(alice.r.source, 'table');
+  assert.equal(alice.r.slug, 'tim');
+  assert.deepEqual([alice.r.imap.host, alice.r.imap.port, alice.r.imap.security], ['in.alice.it', 143, 'starttls']);
+  assert.equal(alice.calls.length, 0);
+
+  const poste = await run('a@postecertifica.it');
+  assert.equal(poste.r.kind, 'found');
+  if (poste.r.kind !== 'found') return;
+  assert.equal(poste.r.slug, 'pec');
+  assert.equal(poste.r.requiresAppPassword, true);
+  assert.equal(poste.r.imap.host, 'mail.postecertifica.it');
+
+  const atlas = await run('a@atlas.cz');
+  assert.equal(atlas.r.kind, 'found');
+  if (atlas.r.kind !== 'found') return;
+  assert.equal(atlas.r.slug, 'centrum');
+  assert.deepEqual([atlas.r.imap.host, atlas.r.smtp.host], ['imap.atlas.cz', 'smtp.centrum.cz']);
 });
 
 test('Yahoo! JAPAN is answered from the table, with no app-password claim', async () => {

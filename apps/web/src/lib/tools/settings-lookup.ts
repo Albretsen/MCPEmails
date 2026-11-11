@@ -200,6 +200,29 @@ export const PRESET_SLUG: Readonly<Record<string, string>> = Object.freeze({
   hetzner: 'hetzner',
   freenet: 'freenet',
   bluewin: 'bluewin',
+  // Italy, Czechia and Poland (2026-11-10). One page per platform: Virgilio
+  // on the Libero page, alice.it and tin.it on the TIM page, the three PEC
+  // providers on the PEC page, Atlas and Volný on the Centrum page.
+  aruba: 'aruba',
+  'aruba-free': 'aruba',
+  libero: 'libero',
+  virgilio: 'libero',
+  tim: 'tim',
+  'tim-alice': 'tim',
+  'tim-tin': 'tim',
+  tiscali: 'tiscali',
+  'aruba-pec': 'pec',
+  legalmail: 'pec',
+  postecert: 'pec',
+  postecertifica: 'pec',
+  centrum: 'centrum',
+  atlas: 'centrum',
+  volny: 'centrum',
+  wp: 'wp-pl',
+  'o2-pl': 'o2-pl',
+  onet: 'onet',
+  interia: 'interia',
+  'gazeta-pl': 'gazeta-pl',
 });
 
 /**

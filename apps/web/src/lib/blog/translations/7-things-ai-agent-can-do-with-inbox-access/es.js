@@ -2,12 +2,12 @@ const translation = {
   title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
   description:
     'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
-  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP — MCPEmails',
+  coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP (MCPEmails)',
   content: `En cuanto tu agente puede leer y enviar correo de verdad, se acaban las demos de juguete y empieza el trabajo real. Aquí tienes siete cosas que puedes ponerle a hacer hoy mismo: clasificar el montón de correos sin leer, resumir un hilo largo, redactar respuestas con tu voz, rescatar ese adjunto concreto, hacer seguimiento de lo pendiente, dirigir el correo al sitio correcto y enviarte un resumen semanal.
 
 Cada ejemplo de abajo se corresponde con herramientas MCP reales que puedes invocar ahora mismo. Las herramientas son las mismas tanto si conectas Gmail, Outlook, iCloud, Fastmail o un buzón IMAP genérico. Si todavía no has conectado un agente a tu bandeja, la [guía completa para darle acceso al correo a tu agente de IA](/blog/how-to-give-your-ai-agent-email-access) cubre la configuración; el [tutorial de conexión en 2 minutos](/blog/connect-email-to-ai-agent-under-2-minutes) es el camino rápido.
 
-Una advertencia honesta por adelantado, porque condiciona la mitad de esta lista: **MCPEmails funciona por sondeo (poll), no por push.** No hay webhooks ni eventos iniciados por el servidor. Al agente no le avisan cuando llega correo. Lo comprueba según una programación. Suena a limitación, y para algunos casos lo es, pero también significa que nada se dispara sin un reloj que tú controlas. Iré señalando dónde importa el sondeo.
+Una advertencia por adelantado, porque condiciona la mitad de esta lista: **las herramientas funcionan por petición y respuesta.** Al agente no le avisan cuando llega correo; lo comprueba según una programación. Suena a limitación, y para algunos casos lo es, pero también significa que nada se dispara sin un reloj que tú controlas. Si quieres un aviso push, los espacios de trabajo Pro y Business pueden añadir un webhook en **Claves de API** dentro del panel, y MCPEmails envía un POST firmado a tu URL cuando llega correo nuevo. Iré señalando dónde importan los tiempos.
 
 ## El conjunto de herramientas, de un vistazo
 
@@ -73,7 +73,7 @@ Este une todos los anteriores: \`email_read\` (acción search y luego list) para
 
 ## Cuánto cuesta esto y dónde están los límites
 
-Los siete funcionan en el [plan Gratis](/pricing), que cuesta $0 y conecta una bandeja a 60 peticiones por minuto. Personal ($9/mes) conecta hasta tres bandejas y sube el límite de ráfaga a 120 peticiones por minuto; Pro ($15/mes) conecta hasta 10 y lo sube a 300; Business ($39/mes) incluye 10 buzones, añade miembros con roles y un espacio de trabajo separado por cliente, y lo sube a 1.000 peticiones por minuto. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal por $9/mes, y Pro solo cuando pases de tres bandejas.
+Los siete funcionan en el [plan Gratis](/pricing), que no cuesta nada y conecta una bandeja. Personal añade bandejas para una sola persona y sube el límite de ráfaga; Pro añade más bandejas para quien lleva un negocio, lo sube otra vez e incorpora webhooks de correo nuevo; Business incluye un bloque de buzones, con un precio por buzón a partir de ahí, además de miembros con roles y un espacio de trabajo separado por cliente. Una bandeja sobra para un resumen semanal; en cuanto quieras el trabajo y lo personal en el mismo agente, eso es Personal. El número de bandejas y los precios actuales están en la [página de precios](/pricing).
 
 Cuando llegues a un límite, el servidor devuelve un error reintentable con \`data.retry_after\` en segundos. Respétalo. Y nunca reintentes a ciegas un envío de \`email_compose\`, porque un reintento tras agotarse el tiempo de espera puede significar que dos copias del mismo mensaje aterricen en la bandeja de alguien.
 

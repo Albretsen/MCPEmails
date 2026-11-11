@@ -63,8 +63,8 @@
     "infoRateLimits": "Limites de taxa: <b>janelas por minuto, por hora e por dia para cada chave</b>, dimensionadas para o seu plano, além do teto do espaço de trabalho definido pelo plano",
     "infoFormat": "Formato da resposta: <b>JSON-RPC 2.0</b>. Resultados bem-sucedidos também trazem um objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialização",
-    "pollingHeading": "Polling, não push",
-    "pollingBody": "O MCPEmails funciona só com requisição e resposta: todo resultado vem de uma chamada de ferramenta feita pelo seu agente. <b>Não há webhooks, notificações push nem eventos iniciados pelo servidor</b>, então um e-mail que chega nunca dispara sozinho uma chamada do agente. Para reagir a novos e-mails, faça o seu agente <b>consultar periodicamente (polling)</b>, por exemplo chamando <code>email_read</code> com <code>action: \"list\"</code> e <code>unread: true</code> no intervalo que o seu fluxo exigir (respeitando os limites de taxa acima)."
+    "pollingHeading": "Polling, mais webhook no Pro e no Business",
+    "pollingBody": "As ferramentas MCP funcionam por requisição e resposta: todo resultado vem de uma chamada de ferramenta feita pelo seu agente, e um e-mail que chega nunca dispara sozinho uma chamada. O jeito mais simples de reagir a novos e-mails é <b>consultar periodicamente (polling)</b>, por exemplo chamando <code>email_read</code> com <code>action: \"list\"</code> e <code>unread: true</code> no intervalo que o seu fluxo exigir (respeitando os limites de taxa acima). Se você quiser push, espaços de trabalho Pro e Business podem adicionar um <b>webhook</b> em Chaves de API, no painel: o MCPEmails envia um POST assinado para a sua URL quando chega um e-mail novo, com os IDs das mensagens (e, se você preferir, remetente e assunto), nunca o corpo da mensagem, e o seu código os abre com <code>email_read</code>."
   },
   "operations": {
     "eyebrow": "Feito para o trabalho real com e-mail",

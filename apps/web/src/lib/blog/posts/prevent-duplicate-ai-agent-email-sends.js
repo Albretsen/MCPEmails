@@ -4,13 +4,13 @@ const post = {
   description:
     'Retries happen. Learn how MCPEmails idempotency keys help prevent duplicate sends, replies, forwards, draft sends, and scheduled emails from AI agents.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
-  coverAlt: 'Preventing duplicate AI agent email sends — MCPEmails',
+  coverAlt: 'Preventing duplicate AI agent email sends (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:15:00.000Z',
   updatedAt: '2026-08-02T09:15:00.000Z',
   tags: ['Email reliability', 'AI agents', 'Idempotency', 'Email automation'],
   featured: false,
-  content: `A timeout does not always mean an email failed to send. Sometimes a provider accepted the message just before the connection dropped. If an agent blindly retries, one customer can receive the same email twice—an awkward outcome for any workflow and a serious one for outreach, support, or billing.
+  content: `A timeout does not always mean an email failed to send. Sometimes a provider accepted the message just before the connection dropped. If an agent blindly retries, one customer can receive the same email twice, an awkward outcome for any workflow and a serious one for outreach, support, or billing.
 
 MCPEmails supports idempotency keys for outbound operations. Give one logical send attempt a unique key, and a retry with the same key is recognized as the same request instead of treated as permission to send again.
 
@@ -22,7 +22,7 @@ This applies to new emails, replies, forwards, sending a saved draft, and creati
 
 ## The right pattern for an agent workflow
 
-Create one idempotency key per user-visible action—not per network attempt. For example:
+Create one idempotency key per user-visible action, not per network attempt. For example:
 
 1. An agent prepares a reply to a specific support ticket.
 2. The workflow gives that reply one unique idempotency key.

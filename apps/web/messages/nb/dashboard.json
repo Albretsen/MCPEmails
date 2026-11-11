@@ -938,7 +938,11 @@
       "freeConfirm": "Bytt til Free",
       "freeBody": "Abonnementet er aktivt til {date}, som du allerede har betalt for. Deretter går kontoen over til Free. Ingenting slettes.",
       "freeToast": "Ferdig. Abonnementet er aktivt til {date} og går deretter over til Free.",
-      "pendingCheckout": "Det er bestilt en pause eller et bytte av abonnement. Bruk Fortsett tidligere eller Behold på denne siden først, og endre deretter abonnementet."
+      "pendingCheckout": "Det er bestilt en pause eller et bytte av abonnement. Bruk Fortsett tidligere eller Behold på denne siden først, og endre deretter abonnementet.",
+      "endsBanner": "{plan}-abonnementet ditt avsluttes {date}. Ingenting slettes.",
+      "keepMyPlan": "Behold abonnementet",
+      "keepPlanBody": "Den planlagte avslutningen fjernes. {plan} fortsetter og fornyes {date} med {amount}, som før. Ingenting belastes i dag.",
+      "keepPlanToast": "{plan}-abonnementet ditt fortsetter."
     },
     "cancelReason": {
       "prompt": "Du har sagt opp abonnementet. Hvis du vil fortelle oss hvorfor, holder det med ett trykk.",

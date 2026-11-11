@@ -61,7 +61,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Clique em **Continuar**, confira as configurações de login que o Claude detectou (os padrões servem) e clique em **Adicionar**.
-5. Faça login no MCPEmails e aprove os escopos que você quer: \`read:email\`, \`send:email\` ou os dois.
+5. Faça login no MCPEmails e aprove o nível de acesso que você quer: **Somente leitura**, **Padrão**, **Acesso total** ou um conjunto personalizado de permissões.
 6. Em um chat, clique em **+** no canto inferior esquerdo, escolha **Conectores** e ative o MCPEmails.
 
 No plano Team ou Enterprise, um Owner adiciona o conector uma vez em **Configurações da organização → Conectores**. Os membros então abrem **Personalizar → Conectores**, localizam o MCPEmails e clicam em **Conectar**.

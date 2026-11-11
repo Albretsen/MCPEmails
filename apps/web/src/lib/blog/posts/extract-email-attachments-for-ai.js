@@ -4,7 +4,7 @@ const post = {
   description:
     'Use MCPEmails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
-  coverAlt: 'AI agent extracting text from an email attachment — MCPEmails',
+  coverAlt: 'AI agent extracting text from an email attachment (MCPEmails)',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:05:00.000Z',
   updatedAt: '2026-08-02T09:05:00.000Z',

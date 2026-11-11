@@ -17,9 +17,11 @@ import { MIcon, MBtn } from '../MarketingPrimitives';
 import { isSsoRequiredError } from '@/lib/sso/enforcement';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, MicrosoftIcon, SocialButton, OrDivider } from './AuthShared';
 import { microsoftSignInEnabled } from '@/lib/auth/microsoft-flag.mjs';
+import { useDocumentTitle } from '../i18n/useDocumentTitle';
 
 export function SignupApp({ redirectTo = null, connectProvider = null, connectClient = null, authorizing = null }) {
   const t = useTranslations('auth');
+  useDocumentTitle(t('signup.title'));
   const SIGNUP_LOADING_MESSAGES = [
     t('signup.loading1'),
     t('signup.loading2'),
