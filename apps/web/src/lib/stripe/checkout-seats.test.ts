@@ -127,6 +127,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
     planCategory: (plan: string | null | undefined) => plan ?? 'free',
     recordCheckoutStarted: async () => {},
+    recordAnnualSwitchCompleted: async () => {},
     recordPassEvent: async () => {},
     recordPlanChange: async () => {},
   },
