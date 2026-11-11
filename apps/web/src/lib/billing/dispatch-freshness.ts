@@ -30,6 +30,8 @@ export interface FreshnessRow {
   id: number;
   template: string;
   scope_key: string;
+  /** Read by payment_failed_restart only: did this customer come back? */
+  stripe_customer_id?: string | null;
 }
 
 /**
@@ -58,6 +60,13 @@ export interface FreshnessStripe {
           price?: { id?: string | null; recurring?: { interval?: string | null } | null } | null;
         }> | null;
       } | null;
+    }>;
+    /**
+     * payment_failed_restart only. Optional so a test can leave it out; the
+     * real SDK always has it.
+     */
+    list?(params: { customer: string; status: 'all'; limit: number }): Promise<{
+      data: Array<{ status?: string | null }>;
     }>;
   };
   paymentMethods: {
@@ -115,6 +124,28 @@ export async function checkFreshness(
       // successful charge.
       if (subscription.status === 'active' || subscription.status === 'trialing') {
         return { send: false, reason: 'subscription_reactivated' };
+      }
+      return { send: true };
+    }
+
+    // ── Restart after a card-failure cancel: are they back already? ────────
+    // scope_key is the ended subscription. A new subscription (the link in
+    // this very email, or any other way back) means the email is moot. The
+    // successful charge also cancels the row in the webhook; this is the
+    // backstop for an event we never saw.
+    if (row.template === 'payment_failed_restart') {
+      const ended = await stripe.subscriptions.retrieve(row.scope_key);
+      if (ended.status !== 'canceled') return { send: false, reason: 'no_longer_due' };
+      if (row.stripe_customer_id && stripe.subscriptions.list) {
+        const { data } = await stripe.subscriptions.list({
+          customer: row.stripe_customer_id,
+          status: 'all',
+          limit: 20,
+        });
+        const back = data.some((sub) =>
+          ['active', 'trialing', 'past_due', 'unpaid', 'incomplete'].includes(sub.status ?? ''),
+        );
+        if (back) return { send: false, reason: 'subscription_reactivated' };
       }
       return { send: true };
     }

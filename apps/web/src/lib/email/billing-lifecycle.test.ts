@@ -36,9 +36,17 @@ import {
   lifecycleIdempotencyKey,
   sendBillingLifecycleEmail,
   sendInputForQueueRow,
+  paymentRestartUrl,
   type BillingTemplate,
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
+import {
+  STRIPE_RETRY_WINDOW_DAYS,
+  daysLeftPhrase,
+  finalNoticeDayOffset,
+  retryDaysLeft,
+  retryWindowPhrase,
+} from '@/lib/billing/retry-window';
 import {
   LEGAL_ENTITY_NAME,
   LEGAL_ORG_NUMBER,
@@ -46,6 +54,11 @@ import {
 } from '@/lib/email/legal';
 import { PLANS } from '@/lib/stripe/plans';
 import { verifyFeedbackToken } from '@/lib/billing/feedback-token';
+
+/** Whole URLs in a text body, so tests compare links exactly instead of by substring. */
+function urlsIn(text: string): string[] {
+  return text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? [];
+}
 
 // The signed /billing/feedback links in cancel_ask need the server secret.
 process.env.CSRF_SECRET = 'ab'.repeat(32);
@@ -632,11 +645,13 @@ test('a workspace-keyed row with an unusable payload is refused as not_composabl
 // Schedules
 // ---------------------------------------------------------------------------
 
-test('the dunning schedule is 0, 3, 7, 14 days and the first is immediate', () => {
+test('the dunning schedule is 0, 3, 7 and the last week of the 28-day retry window', () => {
+  assert.equal(STRIPE_RETRY_WINDOW_DAYS, 28, 'must match the Stripe Dashboard: Smart Retries within 1 month');
   assert.deepEqual(
     DUNNING_SCHEDULE.map((s) => s.dayOffset),
-    [0, 3, 7, 14],
+    [0, 3, 7, 21],
   );
+  assert.equal(DUNNING_SCHEDULE[3].template, 'dunning_14', 'the final notice keeps its template id');
   assert.equal(DUNNING_SCHEDULE[0].template, 'dunning_1');
   assert.equal(
     DUNNING_SCHEDULE[0].dayOffset,
@@ -1066,10 +1081,17 @@ test('an SCA email without a hosted invoice falls back to the billing page', () 
   }
 });
 
-test('the day-14 email is the same for an SCA renewal as for any decline', () => {
-  const sca = composeBillingEmail('dunning_14', payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE }));
-  const plain = composeBillingEmail('dunning_14', payload({ declineCode: null, hostedInvoiceUrl: HOSTED_INVOICE }));
+test('the closed-subscription final note is the same for an SCA renewal as for any decline', () => {
+  const sca = composeBillingEmail('dunning_14', payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE, subscriptionClosed: true }));
+  const plain = composeBillingEmail('dunning_14', payload({ declineCode: null, hostedInvoiceUrl: HOSTED_INVOICE, subscriptionClosed: true }));
   assert.deepEqual(sca, plain);
+});
+
+test('the scheduled final notice for an SCA renewal asks for approval, never a new card', () => {
+  const sca = composeBillingEmail('dunning_14', payload({ declineCode: 'authentication_required', hostedInvoiceUrl: HOSTED_INVOICE }))!;
+  assert.match(sca.body, /approv/);
+  assert.doesNotMatch(sca.body, /card update/i);
+  assert.match(sca.htmlBody, /Confirm the payment/);
 });
 
 test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branch', () => {
@@ -1106,6 +1128,124 @@ test('the non-SCA dunning copy is byte-for-byte what it was before the SCA branc
   assert.equal(out.length, 240);
   assert.equal(
     createHash('sha256').update(JSON.stringify(out)).digest('hex'),
-    '4e0055c8dfe0959a0c7b3295732b5b0a4ccba22369a41f5d39e353d02b6c46e0',
+    // Recomputed 2026-11-11 on purpose: the retry window went from 2 weeks
+    // to 1 month (retry-window.ts), so dunning_1/3/7 quote the new window and
+    // dunning_14 became the last-week reminder.
+    '72c1ae092e8257a0199d7f13a4778d4d0283106562a4280c0022bac7eaf790e8',
   );
+});
+
+// ---------------------------------------------------------------------------
+// The retry window in the copy (2026-11-11: Smart Retries within 1 month)
+// ---------------------------------------------------------------------------
+
+test('no dunning email still promises the old two-week window', () => {
+  for (const template of ['dunning_1', 'dunning_3', 'dunning_7', 'dunning_14'] as const) {
+    for (const declineCode of [null, 'insufficient_funds']) {
+      const email = composeBillingEmail(template, payload({ declineCode, hostedInvoiceUrl: HOSTED_INVOICE }))!;
+      const all = `${email.subject}\n${email.body}\n${email.htmlBody}`;
+      assert.doesNotMatch(all, /two weeks|eleven days|day 14/i, template);
+    }
+  }
+});
+
+test('the days of retries left are read from the window, per email', () => {
+  const d1 = composeBillingEmail('dunning_1', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
+  assert.match(d1.body, /retried automatically over the next month/);
+  const d3 = composeBillingEmail('dunning_3', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
+  assert.match(d3.body, /about 25 days of retries left/);
+  const d7 = composeBillingEmail('dunning_7', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
+  assert.match(d7.body, /about 21 days of retries left/);
+  const d14 = composeBillingEmail('dunning_14', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
+  assert.match(d14.body, /The retries end in about a week/);
+  assert.match(d14.body, /still running today/);
+  assert.ok(urlsIn(d14.body).some((u) => u === HOSTED_INVOICE), 'the scheduled final notice links to the invoice to fix the card');
+});
+
+test('dunning_14 brought forward on deletion says the subscription is closing', () => {
+  const closed = composeBillingEmail('dunning_14', payload({ subscriptionClosed: true }))!;
+  assert.match(closed.body, /The retries are finished, so the subscription is closing/);
+  assert.doesNotMatch(closed.body, /still running/);
+});
+
+test('retry window helpers', () => {
+  assert.equal(finalNoticeDayOffset(30), 23);
+  assert.equal(finalNoticeDayOffset(14), 7);
+  assert.equal(retryDaysLeft(3, 30), 27);
+  assert.equal(retryDaysLeft(40, 30), 0);
+  assert.equal(retryWindowPhrase(30), 'month');
+  assert.equal(retryWindowPhrase(14), 'two weeks');
+  assert.equal(retryWindowPhrase(45), '45 days');
+  assert.equal(daysLeftPhrase(7), 'about a week');
+  assert.equal(daysLeftPhrase(1), 'a day or so');
+  assert.equal(daysLeftPhrase(27), 'about 27 days');
+});
+
+// ---------------------------------------------------------------------------
+// payment_failed_restart
+// ---------------------------------------------------------------------------
+
+function restartPayload(overrides: Partial<LifecyclePayload> = {}): LifecyclePayload {
+  return {
+    planId: 'personal',
+    amountCents: 500,
+    currency: 'usd',
+    restartInterval: 'month',
+    restartKeepsPrice: true,
+    restartFromSubscriptionId: 'sub_ENDED123',
+    ...overrides,
+  };
+}
+
+test('the restart email is transactional and links to the same plan and interval', () => {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  assert.equal(categoryOf('payment_failed_restart'), 'transactional');
+  const email = composeBillingEmail('payment_failed_restart', restartPayload())!;
+  assert.equal(email.category, 'transactional');
+  assert.equal(email.unsubscribeUrl, undefined);
+  const url = 'https://mcpemails.com/api/stripe/checkout/start?plan=personal&interval=month&restart=sub_ENDED123';
+  assert.ok(email.body.includes(url));
+  assert.ok(email.htmlBody.includes(url.replace(/&/g, '&amp;')) || email.htmlBody.includes(url));
+  assert.match(email.subject, /Personal plan has ended/);
+});
+
+test('the restart email says why, says nothing is deleted, and has exactly one link', () => {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  const email = composeBillingEmail('payment_failed_restart', restartPayload())!;
+  assert.match(email.body, /card payment for it did not go through/);
+  assert.match(email.body, /Nothing is deleted/);
+  assert.match(email.body, /at the price you had, \$5\.00 a month|at the price you had, \$5 a month/);
+  const links = email.body.match(/https:\/\/mcpemails\.com\/(?!$)\S*/g) ?? [];
+  assert.deepEqual(
+    links.filter((l) => l.includes('/api/')),
+    ['https://mcpemails.com/api/stripe/checkout/start?plan=personal&interval=month&restart=sub_ENDED123'],
+  );
+  // Plain: no discount, no other plan, no threat, no em dash.
+  assert.doesNotMatch(email.body, /discount|% off|coupon|upgrade|Business plan|last chance|will be deleted|\u2014/i);
+});
+
+test('the restart email promises the old price only when the queue checked it', () => {
+  const unchecked = composeBillingEmail('payment_failed_restart', restartPayload({ restartKeepsPrice: false }))!;
+  assert.doesNotMatch(unchecked.body, /price you had/);
+  assert.match(unchecked.body, /checkout page shows the price before you pay/);
+  assert.doesNotMatch(unchecked.body, /\$5/);
+});
+
+test('a yearly restart links to the yearly interval', () => {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  const email = composeBillingEmail(
+    'payment_failed_restart',
+    restartPayload({ planId: 'solo', restartInterval: 'year', amountCents: 14400 }),
+  )!;
+  assert.ok(email.body.includes('plan=solo&interval=year'));
+  assert.match(email.body, /a year/);
+  assert.match(email.subject, /Pro plan has ended/);
+});
+
+test('the restart email falls back to the pricing page without a plan', () => {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  assert.equal(paymentRestartUrl('https://mcpemails.com', restartPayload({ restartInterval: null })), null);
+  const email = composeBillingEmail('payment_failed_restart', restartPayload({ planId: null }))!;
+  assert.ok(urlsIn(email.body).some((u) => u === 'https://mcpemails.com/pricing'));
+  assert.doesNotMatch(email.body, /checkout\/start/);
 });

@@ -236,6 +236,13 @@ export async function queueCancellationSequence(options: {
   periodEndSeconds: number | null;
   payload: LifecyclePayload;
   now?: Date;
+  /**
+   * False leaves out `cancel_ask` and queues only the win-backs. Used when a
+   * card-failure cancel gets the restart email instead: "You cancelled your
+   * plan" is not true of a card that ran out of retries, and two emails in
+   * the same minute is one too many.
+   */
+  includeQuestion?: boolean;
 }): Promise<number> {
   const { db, target, subscriptionId, periodEndSeconds, payload } = options;
   const now = options.now ?? new Date();
@@ -244,19 +251,22 @@ export async function queueCancellationSequence(options: {
     ? `${subscriptionId}:${Math.floor(periodEnd.getTime() / 1000)}`
     : subscriptionId;
 
-  const rows: QueueRow[] = [
-    {
-      stripe_customer_id: target.stripeCustomerId,
-      user_id: target.userId,
-      recipient: target.recipient,
-      template: 'cancel_ask',
-      scope_key: scopeKey,
-      // Immediately. The reason they cancelled is freshest right now, and this
-      // is the one email in the file whose value is entirely in the reply.
-      send_after: now.toISOString(),
-      payload,
-    },
-  ];
+  const rows: QueueRow[] =
+    options.includeQuestion === false
+      ? []
+      : [
+          {
+            stripe_customer_id: target.stripeCustomerId,
+            user_id: target.userId,
+            recipient: target.recipient,
+            template: 'cancel_ask',
+            scope_key: scopeKey,
+            // Immediately. The reason they cancelled is freshest right now, and this
+            // is the one email in the file whose value is entirely in the reply.
+            send_after: now.toISOString(),
+            payload,
+          },
+        ];
 
   // No period end means we cannot honestly schedule "14 days after it ended",
   // so the win-backs are skipped rather than guessed. The question still goes.
@@ -391,6 +401,43 @@ export async function queueCardExpiryWarning(options: {
 }
 
 // ---------------------------------------------------------------------------
+// Restart after a card-failure cancel
+// ---------------------------------------------------------------------------
+
+/**
+ * Queue `payment_failed_restart`, due now. One per ended subscription:
+ * scope_key is the subscription id, so a redelivered deletion inserts
+ * nothing. The eligibility decision (reason payment_failed, a successful MCP
+ * call in the last 7 days, the flag) is the caller's; see
+ * src/lib/billing/payment-restart.ts.
+ */
+export async function queuePaymentRestart(options: {
+  db: SupabaseClient<Database>;
+  target: QueueTarget;
+  subscriptionId: string;
+  payload: LifecyclePayload;
+  now?: Date;
+}): Promise<number> {
+  const { db, target, subscriptionId, payload } = options;
+  const now = options.now ?? new Date();
+  return insertRows(
+    db,
+    [
+      {
+        stripe_customer_id: target.stripeCustomerId,
+        user_id: target.userId,
+        recipient: target.recipient,
+        template: 'payment_failed_restart',
+        scope_key: subscriptionId,
+        send_after: now.toISOString(),
+        payload,
+      },
+    ],
+    `payment restart ${subscriptionId}`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Cancelling an in-flight sequence
 // ---------------------------------------------------------------------------
 
@@ -481,10 +528,12 @@ export async function cancelOpenSequence(options: {
  * one after the fact would be telling a customer their access is intact on the
  * day it stopped.
  *
- * dunning_14 is BROUGHT FORWARD instead. Its copy is "the retries are finished,
- * so the subscription is closing", which is not true on day 14 by calendar; it
- * is true at exactly the moment Stripe closes the subscription, and that moment
- * is this event. Cancelling it, which is what this function used to do, deleted
+ * dunning_14 is BROUGHT FORWARD instead, with `subscriptionClosed` added to its
+ * payload so it says "the retries are finished, so the subscription is
+ * closing". Its scheduled day sits in the last week of the retry window
+ * (retry-window.ts), and Stripe may close the subscription before then; the
+ * closing sentence is true at exactly the moment Stripe closes it, and that
+ * moment is this event. Cancelling it, which is what this function used to do, deleted
  * the one email in the sequence written for precisely this and left the
  * customer with no final word at all. Its `send_after` is moved to now and it
  * is dispatched right after the response (the cron is the fallback).
@@ -497,30 +546,68 @@ export async function cancelDunningForCustomer(
   db: SupabaseClient<Database>,
   stripeCustomerId: string,
   reason: CancelReason,
+  options: {
+    /**
+     * What happens to an unsent dunning_14. 'bring_forward' (the default) sends
+     * it now with `subscriptionClosed` set, so it says the plan has closed.
+     * 'cancel' drops it: used when the restart email (payment_failed_restart)
+     * is queued for the same deletion and already says everything it would.
+     */
+    finalNotice?: 'bring_forward' | 'cancel';
+  } = {},
 ): Promise<number> {
+  const finalNotice = options.finalNotice ?? 'bring_forward';
   const cancelled = await cancelOpenSequence({
     db,
     stripeCustomerId,
-    templates: ['dunning_1', 'dunning_3', 'dunning_7'],
+    templates:
+      finalNotice === 'cancel'
+        ? ['dunning_1', 'dunning_3', 'dunning_7', 'dunning_14']
+        : ['dunning_1', 'dunning_3', 'dunning_7'],
     reason,
   });
+  if (finalNotice === 'cancel') return cancelled;
 
   try {
-    const { data, error } = await db
+    // Read, then write each row: the payload gains `subscriptionClosed`, which
+    // switches dunning_14 from "the retries end in about a week" (its
+    // scheduled day, in the last week of the retry window) to "the
+    // subscription is closing". Since the window grew to a month, Stripe can
+    // close a subscription before that day comes round.
+    const { data: pending, error: readError } = await db
       .from('billing_email_sends')
-      .update({ send_after: new Date().toISOString() })
+      .select('id, payload')
       .eq('stripe_customer_id', stripeCustomerId)
       .eq('template', 'dunning_14')
       .is('sent_at', null)
-      .is('cancelled_at', null)
-      .select('id, send_after');
-    if (error) {
+      .is('cancelled_at', null);
+    if (readError) {
       console.error(
-        `[lifecycle-queue] could not bring dunning_14 forward for ${stripeCustomerId}: ${error.message}`,
+        `[lifecycle-queue] could not bring dunning_14 forward for ${stripeCustomerId}: ${readError.message}`,
       );
-    } else {
-      await kickDueRows(dueIds(data), `dunning_14 brought forward ${stripeCustomerId}`);
+      return cancelled;
     }
+    const moved: Array<{ id: number; send_after: string }> = [];
+    for (const row of (pending ?? []) as Array<{ id: number; payload: LifecyclePayload | null }>) {
+      const { data, error } = await db
+        .from('billing_email_sends')
+        .update({
+          send_after: new Date().toISOString(),
+          payload: { ...(row.payload ?? {}), subscriptionClosed: true },
+        })
+        .eq('id', row.id)
+        .is('sent_at', null)
+        .is('cancelled_at', null)
+        .select('id, send_after');
+      if (error) {
+        console.error(
+          `[lifecycle-queue] could not bring dunning_14 forward for ${stripeCustomerId}: ${error.message}`,
+        );
+        continue;
+      }
+      moved.push(...((data ?? []) as Array<{ id: number; send_after: string }>));
+    }
+    await kickDueRows(dueIds(moved), `dunning_14 brought forward ${stripeCustomerId}`);
   } catch (err) {
     console.error('[lifecycle-queue] bringing dunning_14 forward failed, swallowed:', {
       error: err instanceof Error ? err.message : String(err),

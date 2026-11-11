@@ -29,6 +29,7 @@ import {
   queueCancellationSequence,
   queueCardExpiryWarning,
   queueDunningSequence,
+  queuePaymentRestart,
   resolveRecipient,
   resolveUserId,
 } from '@/lib/billing/lifecycle-queue';
@@ -150,8 +151,12 @@ test('TWO DIFFERENT EVENT IDS for the same failed invoice queue nothing the seco
   assert.equal(secondAttempt, 0);
   assert.equal(queued(db).length, 4);
   // And the schedule is the ORIGINAL one. A second attempt must not push the
-  // day-14 email out to day 17.
-  assert.equal(queued(db)[3].send_after, new Date('2026-09-21T12:00:00.000Z').toISOString());
+  // final notice out by three days.
+  const finalDay = DUNNING_SCHEDULE[3].dayOffset;
+  assert.equal(
+    queued(db)[3].send_after,
+    new Date(Date.parse('2026-09-07T12:00:00.000Z') + finalDay * 86_400_000).toISOString(),
+  );
 });
 
 test('a SECOND, GENUINELY DIFFERENT failed invoice gets its own sequence', async () => {
@@ -345,6 +350,9 @@ test('a deleted subscription cancels the first three dunning emails and BRINGS T
     'and is due now rather than on its original day-14 date',
   );
   assert.notEqual(last.send_after, new Date('2026-09-21T12:00:00.000Z').toISOString());
+  // And it now says the plan has closed, not "the retries end in about a week".
+  assert.equal((last.payload as { subscriptionClosed?: boolean }).subscriptionClosed, true);
+  assert.equal((last.payload as { planId?: string }).planId, 'personal', 'the rest of the payload is kept');
 
   // The win-backs are untouched: this event is exactly when they start to make
   // sense.
@@ -847,4 +855,127 @@ test('the last send is the most recent one, not the last row read', () => {
     row({ template: 'dunning_3', sent_at: '2026-09-01T00:00:00.000Z' }),
   ]);
   assert.equal(s.lastSentAt, '2026-09-03T00:00:00.000Z');
+});
+
+
+// ---------------------------------------------------------------------------
+// payment_failed_restart (2026-11-11)
+// ---------------------------------------------------------------------------
+
+test('with the restart email queued, deletion cancels all four dunning emails', async () => {
+  const db = new FakeSupabase();
+  await queueDunningSequence({
+    db: asClient(db),
+    target: target(),
+    invoiceId: INVOICE,
+    payload: payload(),
+    now: new Date('2026-09-07T12:00:00.000Z'),
+  });
+  const n = await cancelDunningForCustomer(asClient(db), CUSTOMER, 'subscription_deleted', {
+    finalNotice: 'cancel',
+  });
+  assert.equal(n, 4);
+  assert.ok(queued(db).every((r) => r.cancelled_at), 'no final note on top of the restart email');
+});
+
+test('the restart email is queued once per ended subscription, due now', async () => {
+  const db = new FakeSupabase();
+  const now = new Date('2026-11-11T10:00:00.000Z');
+  const first = await queuePaymentRestart({
+    db: asClient(db),
+    target: target(),
+    subscriptionId: SUBSCRIPTION,
+    payload: { planId: 'personal', restartInterval: 'month', restartKeepsPrice: true },
+    now,
+  });
+  const replay = await queuePaymentRestart({
+    db: asClient(db),
+    target: target(),
+    subscriptionId: SUBSCRIPTION,
+    payload: { planId: 'personal', restartInterval: 'month', restartKeepsPrice: true },
+    now: new Date('2026-11-11T10:05:00.000Z'),
+  });
+  assert.equal(first, 1);
+  assert.equal(replay, 0);
+  const rows = queued(db);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].template, 'payment_failed_restart');
+  assert.equal(rows[0].scope_key, SUBSCRIPTION);
+  assert.equal(rows[0].send_after, now.toISOString());
+});
+
+test('a cancellation series without the question queues only the win-backs', async () => {
+  const db = new FakeSupabase();
+  await queueCancellationSequence({
+    db: asClient(db),
+    target: target(),
+    subscriptionId: SUBSCRIPTION,
+    periodEndSeconds: Math.floor(Date.parse('2026-11-11T00:00:00.000Z') / 1000),
+    payload: payload(),
+    includeQuestion: false,
+  });
+  assert.deepEqual(queued(db).map((r) => r.template).sort(), ['winback_14', 'winback_30']);
+});
+
+test('a restart, then the successful first charge, cancels the restart email and the win-backs as reactivated', async () => {
+  const db = new FakeSupabase();
+  await queuePaymentRestart({
+    db: asClient(db),
+    target: target(),
+    subscriptionId: SUBSCRIPTION,
+    payload: { planId: 'personal', restartInterval: 'month' },
+  });
+  // Pretend the dispatcher has not sent it yet (queue_only, or a slow tick).
+  await queueCancellationSequence({
+    db: asClient(db),
+    target: target(),
+    subscriptionId: SUBSCRIPTION,
+    periodEndSeconds: Math.floor(Date.parse('2026-11-11T00:00:00.000Z') / 1000),
+    payload: payload(),
+    includeQuestion: false,
+  });
+  // What handleInvoicePaymentSucceeded does for any paid invoice of the customer.
+  const n = await cancelOpenSequence({
+    db: asClient(db),
+    stripeCustomerId: CUSTOMER,
+    templates: ['winback_14', 'winback_30', 'payment_failed_restart'],
+    reason: 'subscription_reactivated',
+  });
+  assert.equal(n, 3);
+  assert.ok(queued(db).every((r) => r.cancel_reason === 'subscription_reactivated'));
+});
+
+function restartStripe(opts: { endedStatus?: string; others?: string[]; withList?: boolean }): FreshnessStripe {
+  return {
+    invoices: { retrieve: async () => ({}) },
+    paymentMethods: { retrieve: async () => ({}) },
+    subscriptions: {
+      retrieve: async () => ({ status: opts.endedStatus ?? 'canceled' }),
+      ...(opts.withList === false
+        ? {}
+        : {
+            list: async () => ({
+              data: [{ status: opts.endedStatus ?? 'canceled' }, ...(opts.others ?? []).map((status) => ({ status }))],
+            }),
+          }),
+    },
+  };
+}
+
+test('freshness: the restart email goes while the customer has no live subscription', async () => {
+  const row = { id: 1, template: 'payment_failed_restart', scope_key: SUBSCRIPTION, stripe_customer_id: CUSTOMER };
+  assert.deepEqual(await checkFreshness(restartStripe({}), row), { send: true });
+  assert.deepEqual(await checkFreshness(restartStripe({ withList: false }), row), { send: true });
+});
+
+test('freshness: a new subscription since the cancel stops the restart email', async () => {
+  const row = { id: 1, template: 'payment_failed_restart', scope_key: SUBSCRIPTION, stripe_customer_id: CUSTOMER };
+  assert.deepEqual(await checkFreshness(restartStripe({ others: ['active'] }), row), {
+    send: false,
+    reason: 'subscription_reactivated',
+  });
+  assert.deepEqual(await checkFreshness(restartStripe({ endedStatus: 'active' }), row), {
+    send: false,
+    reason: 'no_longer_due',
+  });
 });
