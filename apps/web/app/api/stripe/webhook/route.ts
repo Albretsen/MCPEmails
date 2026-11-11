@@ -833,6 +833,9 @@ async function handleCheckoutSessionCompleted(
           }
           : null,
         sessionId: session.id,
+        // The buyer's referral link is looked up from this, for the one
+        // "give a month, get a month" line (src/lib/referrals/link.ts).
+        userId,
         // 'unpaid' for a delayed method (SEPA Direct Debit): the email then
         // says the debit is processing instead of "payment received".
         paymentStatus: session.payment_status ?? null,
