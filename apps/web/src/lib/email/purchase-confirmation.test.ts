@@ -467,5 +467,9 @@ test('the send uses a referral link it is handed', async () => {
   );
   // Match the link as a whole token, not as a substring (CodeQL js/incomplete-url-substring-sanitization).
   const links: string[] = String(calls[0].payload.text).match(/https:\/\/\S+/g) ?? [];
-  assert.ok(links.includes('https://mcpemails.com/r/ABCD2345'), links.join(' '));
+  const hasReferralLink = links.some((link) => {
+    const url = new URL(link);
+    return url.protocol === 'https:' && url.hostname === 'mcpemails.com' && url.pathname === '/r/ABCD2345';
+  });
+  assert.ok(hasReferralLink, links.join(' '));
 });
