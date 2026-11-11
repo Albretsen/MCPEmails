@@ -1159,7 +1159,7 @@ test('the days of retries left are read from the window, per email', () => {
   const d14 = composeBillingEmail('dunning_14', payload({ hostedInvoiceUrl: HOSTED_INVOICE }))!;
   assert.match(d14.body, /The retries end in about a week/);
   assert.match(d14.body, /still running today/);
-  assert.ok(urlsIn(d14.body).includes(HOSTED_INVOICE), 'the scheduled final notice links to the invoice to fix the card');
+  assert.ok(urlsIn(d14.body).some((u) => u === HOSTED_INVOICE), 'the scheduled final notice links to the invoice to fix the card');
 });
 
 test('dunning_14 brought forward on deletion says the subscription is closing', () => {
@@ -1246,6 +1246,6 @@ test('the restart email falls back to the pricing page without a plan', () => {
   delete process.env.NEXT_PUBLIC_APP_URL;
   assert.equal(paymentRestartUrl('https://mcpemails.com', restartPayload({ restartInterval: null })), null);
   const email = composeBillingEmail('payment_failed_restart', restartPayload({ planId: null }))!;
-  assert.ok(urlsIn(email.body).includes('https://mcpemails.com/pricing'));
+  assert.ok(urlsIn(email.body).some((u) => u === 'https://mcpemails.com/pricing'));
   assert.doesNotMatch(email.body, /checkout\/start/);
 });
