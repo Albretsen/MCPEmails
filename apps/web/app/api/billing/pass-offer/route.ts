@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { evaluatePassOffer, isPassOfferSurface } from '@/lib/billing/pass-offer';
+import { SERVER_PASS_SURFACES, evaluatePassOffer, isPassOfferSurface } from '@/lib/billing/pass-offer';
 
 /**
  * POST /api/billing/pass-offer
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = (await request.json().catch(() => null)) as { surface?: unknown; workspaceId?: unknown } | null;
     const surface = body?.surface;
     const workspaceId = typeof body?.workspaceId === 'string' ? body.workspaceId : null;
-    // paywall_email_3 is a server-side surface; a browser never asks for it.
-    if (!isPassOfferSurface(surface) || surface === 'paywall_email_3' || !workspaceId) {
+    // The email surfaces are server-side; a browser never asks for them.
+    if (!isPassOfferSurface(surface) || SERVER_PASS_SURFACES.has(surface) || !workspaceId) {
       return noStore(HIDDEN);
     }
 
