@@ -154,6 +154,10 @@ export type ProductFunnelEvent = {
     | 'second_inbox_prompt_shown' | 'second_inbox_prompt_clicked'
     | 'plan_summary_shown' | 'plan_summary_dismissed' | 'plan_summary_clicked'
     | 'usage_meter_shown' | 'grace_end_note_shown'
+    // "How did you hear about MCPEmails?" (20261111150000,
+    // src/lib/onboarding/heard-about.mjs). Once per workspace, category
+    // surface_overview; the answer itself is on workspaces.heard_about.
+    | 'heard_about_answered' | 'heard_about_dismissed'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
     | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
