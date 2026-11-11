@@ -938,7 +938,11 @@
       "freeConfirm": "Cambiar a Free",
       "freeBody": "Tu plan sigue activo hasta el {date}, que ya has pagado. Después, la cuenta pasa a Free. No se elimina nada.",
       "freeToast": "Hecho. Tu plan sigue activo hasta el {date} y después pasa a Free.",
-      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan."
+      "pendingCheckout": "Tu suscripción tiene una pausa o un cambio de plan programado. Usa primero Reanudar antes o Mantener en esta página y luego cambia de plan.",
+      "endsBanner": "Tu plan {plan} termina el {date}. No se elimina nada.",
+      "keepMyPlan": "Mantener mi plan",
+      "keepPlanBody": "Se quita la cancelación programada. {plan} continúa y se renueva el {date} por {amount}, como antes. Hoy no se cobra nada.",
+      "keepPlanToast": "Tu plan {plan} continúa."
     },
     "cancelReason": {
       "prompt": "Has cancelado tu plan. Si quieres contarnos por qué, basta con un toque.",
