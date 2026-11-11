@@ -410,3 +410,65 @@ test('the paused notice goes out with no automation attached', async () => {
   await dispatchForwardNotices(store, async (email: any) => { sent.push(email); return { ok: true, id: 'r1' }; });
   assert.equal(sent[0].subject, 'A no-approval rule has been paused');
 });
+
+// ── Who is emailed: the Business privacy model (migration 20261111190000) ───
+// A rule on someone's private inbox names that person's mail, so its notices go
+// to the inbox's owner alone. A company-wide inbox keeps owners and admins.
+
+const { SupabaseForwardNoticeStore } = await import('./forward-notices-store.ts');
+
+function storeDb(tables: Record<string, Array<Record<string, any>>>) {
+  const from = (table: string) => {
+    const filters: Array<(row: Record<string, any>) => boolean> = [];
+    const rows = () => (tables[table] ?? []).filter((row) => filters.every((keep) => keep(row)));
+    const builder: any = {
+      select: () => builder,
+      eq: (column: string, value: unknown) => { filters.push((row) => row[column] === value); return builder; },
+      is: (column: string, value: unknown) => { filters.push((row) => (row[column] ?? null) === value); return builder; },
+      in: (column: string, values: unknown[]) => { filters.push((row) => values.includes(row[column])); return builder; },
+      maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
+      then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data: rows(), error: null }).then(resolve),
+    };
+    return builder;
+  };
+  return { from } as any;
+}
+
+function noticeTables(inbox: Record<string, unknown>) {
+  return {
+    workspaces: [{ id: 'ws-1', deleted_at: null }],
+    triage_rules: [{ id: RULE, workspace_id: 'ws-1', inbox_id: 'inbox-1' }],
+    inboxes: [{ id: 'inbox-1', ...inbox }],
+    workspace_members: [
+      { workspace_id: 'ws-1', user_id: 'owner-1', role: 'owner' },
+      { workspace_id: 'ws-1', user_id: 'admin-1', role: 'admin' },
+      { workspace_id: 'ws-1', user_id: 'member-1', role: 'member' },
+      { workspace_id: 'ws-1', user_id: 'viewer-1', role: 'viewer' },
+    ],
+    users: ['owner-1', 'admin-1', 'member-1', 'viewer-1'].map((id) => ({
+      id, email: `${id}@example.test`, unsubscribe_token: TOKEN, unsubscribed_categories: [], deleted_at: null,
+    })),
+  };
+}
+
+const emailsOf = async (inbox: Record<string, unknown>, ruleId: string | null = RULE) =>
+  (await new SupabaseForwardNoticeStore(storeDb(noticeTables(inbox))).recipients('ws-1', 'approval_notices', ruleId))
+    .map((recipient: { email: string }) => recipient.email).sort();
+
+test('privacy: a private inbox\'s rule notices go to its owner alone', async () => {
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: 'member-1' }), ['member-1@example.test']);
+  // An owner/admin who owns the private inbox gets it as the only recipient too.
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: 'admin-1' }), ['admin-1@example.test']);
+});
+
+test('privacy: a private inbox whose owner is a viewer, gone, or unset notifies nobody', async () => {
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: 'viewer-1' }), []);
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: 'left-the-workspace' }), []);
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: null }), []);
+});
+
+test('privacy: a company-wide inbox, or a notice with no rule, still goes to owners and admins', async () => {
+  const both = ['admin-1@example.test', 'owner-1@example.test'];
+  assert.deepEqual(await emailsOf({ visibility: 'company', owner_user_id: 'member-1' }), both);
+  assert.deepEqual(await emailsOf({ visibility: 'private', owner_user_id: 'member-1' }, null), both);
+});

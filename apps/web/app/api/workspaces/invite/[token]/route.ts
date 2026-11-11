@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
@@ -121,12 +122,13 @@ export async function DELETE(
   const tokenHash = hashToken(rawToken);
   const service = createServiceRoleClient();
 
-  const { error: deleteError, count } = await service
+  const { data: cancelled, error: deleteError, count } = await service
     .from('workspace_invites')
     .delete({ count: 'exact' })
     .eq('token_hash', tokenHash)
     .eq('workspace_id', workspaceId)
-    .is('accepted_at', null);
+    .is('accepted_at', null)
+    .select('id, email, role');
 
   if (deleteError) {
     console.error('[invite/cancel] Delete failed:', deleteError.message);
@@ -136,6 +138,16 @@ export async function DELETE(
   if (!count || count === 0) {
     return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
   }
+
+  // Security audit view (never throws).
+  const gone = Array.isArray(cancelled) ? cancelled[0] : null;
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'invite_cancelled',
+    target: gone?.email ?? null,
+    details: gone?.role ? { role: gone.role } : {},
+  });
 
   return NextResponse.json({ cancelled: true });
 }

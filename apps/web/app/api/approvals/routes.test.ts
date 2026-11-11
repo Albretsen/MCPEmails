@@ -23,10 +23,15 @@ let signedIn: { id: string } | null = { id: 'user-1' };
 function query(table: string) {
   const filters: Array<[string, unknown]> = [];
   let columns: string[] | null = null;
+  let embedsInbox = false;
   // Projects to the selected columns, as PostgREST does, so a route that
-  // stopped selecting the payload really does not get it.
-  const project = (r: Row) =>
-    columns ? Object.fromEntries(columns.filter((c) => c in r).map((c) => [c, r[c]])) : { ...r };
+  // stopped selecting the payload really does not get it. An `inboxes(...)`
+  // embed is resolved from the inboxes table by inbox_id.
+  const project = (r: Row) => {
+    const out: Row = columns ? Object.fromEntries(columns.filter((c) => c in r).map((c) => [c, r[c]])) : { ...r };
+    if (embedsInbox) out.inboxes = (tables.inboxes ?? []).find((i) => i.id === r.inbox_id) ?? null;
+    return out;
+  };
   const extra: Array<(r: Row) => boolean> = [];
   const rows = () =>
     (tables[table] ?? [])
@@ -34,7 +39,8 @@ function query(table: string) {
       .map(project);
   const builder: any = {
     select: (list = '*') => {
-      const names = String(list).split(',').map((c) => c.trim()).filter((c) => c && !c.includes('('));
+      embedsInbox = String(list).includes('inboxes(');
+      const names = String(list).split(/,(?![^(]*\))/).map((c) => c.trim()).filter((c) => c && !c.includes('('));
       columns = names.includes('*') ? null : names;
       return builder;
     },
@@ -62,6 +68,25 @@ nodeMock.module('@/lib/supabase/server', {
 });
 nodeMock.module('@/lib/supabase/service', { namedExports: { createServiceRoleClient: () => db } });
 nodeMock.module('@/lib/workspace/active', { namedExports: { resolveActiveWorkspaceId: async () => 'ws-1' } });
+// The decision itself (atomic claim, dispatcher marker) is covered in
+// src/lib/approvals/approvals.test.ts; here only WHO reaches it matters.
+const decisions: Array<{ approvalId: string; userId: string; decision: string }> = [];
+nodeMock.module('@/lib/approvals/decide', {
+  namedExports: {
+    canDecide: (role: string | null | undefined) => role === 'owner' || role === 'admin',
+    parseRenderedRevision: (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? v : null),
+    // Imported by the forward helpers the queue route uses (forward-again.ts).
+    isExpired: (approval: { expires_at?: string | null } | null) => {
+      const at = approval?.expires_at ? Date.parse(approval.expires_at) : Number.NaN;
+      return Number.isFinite(at) && at <= Date.now();
+    },
+    kickDispatch: async () => {},
+    decideApproval: async (args: { approvalId: string; userId: string; decision: string }) => {
+      decisions.push({ approvalId: args.approvalId, userId: args.userId, decision: args.decision });
+      return { ok: true };
+    },
+  },
+});
 
 const { encryptToken } = await import('../../../src/lib/crypto.ts');
 const detail = (await import('./[id]/route.ts')) as any;
@@ -84,6 +109,7 @@ function seed(role: string, payload: Row, operation = 'email_send') {
       created_at: '2026-10-16T10:00:00.000Z',
     }],
     workspace_members: [{ workspace_id: 'ws-1', user_id: 'user-1', role }],
+    inboxes: [{ id: 'inbox-1', email_address: 'box@example.com', display_name: null, owner_user_id: 'owner-1', visibility: 'company' }],
   };
 }
 
@@ -230,4 +256,163 @@ test('queue: a row past its deadline is not offered, and is listed as expired', 
   assert.equal(payload.decided[0].decider, 'none');
   assert.equal(payload.decided[0].decided_via, null);
   assert.equal('decided_by' in payload.decided[0], false);
+});
+
+// ── Business privacy model (migration 20261111190000) ─────────────────────
+// inbox-1 below is a PRIVATE inbox owned by 'owner-of-inbox'; the caller is
+// user-1 with the role under test.
+
+function seedPrivate(role: string, inboxOwner = 'owner-of-inbox') {
+  seed(role, { to: ['colleague@example.com'], bcc: ['drop@evil.example'], body: 'secret words' });
+  tables.inboxes = [{ id: 'inbox-1', email_address: 'box@example.com', display_name: 'Box', owner_user_id: inboxOwner, visibility: 'private' }];
+}
+
+const patch = (body: unknown) =>
+  list.PATCH(new Request('https://mcpemails.test/api/approvals', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', origin: 'https://mcpemails.test', host: 'mcpemails.test' },
+    body: JSON.stringify(body),
+  }));
+
+test('privacy queue: a member never sees a held send of someone else\'s private inbox', async () => {
+  seedPrivate('member');
+  const body = await (await list.GET()).json();
+  assert.equal(body.approvals.length, 0);
+  assert.equal(JSON.stringify(body).includes('Notes'), false);
+});
+
+test('privacy queue: owner and admin get metadata only, and may still decide', async () => {
+  for (const role of ['owner', 'admin']) {
+    seedPrivate(role);
+    const body = await (await list.GET()).json();
+    assert.equal(body.approvals.length, 1, role);
+    const row = body.approvals[0];
+    assert.equal(row.redacted, true);
+    assert.equal(row.can_decide, true);
+    assert.equal(row.inboxes.email_address, 'box@example.com');
+    assert.deepEqual(row.summary, {});
+    assert.equal(JSON.stringify(body).includes('Notes'), false, 'no subject');
+    assert.equal(JSON.stringify(body).includes('colleague@example.com'), false, 'no recipients');
+    assert.equal(JSON.stringify(body).includes('owner-of-inbox'), false, 'no owner id leaks through the embed');
+  }
+});
+
+test('privacy queue: the inbox owner sees their own held send in full and may decide it as a member', async () => {
+  seedPrivate('member', 'user-1');
+  const body = await (await list.GET()).json();
+  assert.equal(body.approvals.length, 1);
+  assert.equal(body.approvals[0].redacted, undefined);
+  assert.equal(body.approvals[0].summary.subject, 'Notes');
+  assert.equal(body.approvals[0].can_decide, true);
+});
+
+test('privacy queue: a member on a company inbox sees it but cannot decide (unchanged)', async () => {
+  seed('member', { to: ['colleague@example.com'], body: 'x' });
+  const body = await (await list.GET()).json();
+  assert.equal(body.approvals[0].summary.subject, 'Notes');
+  assert.equal(body.approvals[0].can_decide, false);
+});
+
+test('privacy details: a member gets 404; owner/admin get no subject, recipients or Bcc', async () => {
+  seedPrivate('member');
+  assert.equal((await get()).status, 404);
+  for (const role of ['owner', 'admin']) {
+    seedPrivate(role);
+    const res = await get();
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.redacted, true);
+    assert.equal(body.subject, '');
+    assert.deepEqual(body.to, []);
+    assert.deepEqual(body.bcc, []);
+    assert.equal(body.bcc_count, 0);
+    assert.equal(body.inbox_address, 'box@example.com');
+    assert.equal(body.can_decide, true);
+    assert.equal(JSON.stringify(body).includes('drop@evil.example'), false);
+  }
+});
+
+test('privacy: a recipient-rule hold on someone else\'s private inbox shows owner/admin the recipients, never the subject', async () => {
+  for (const role of ['owner', 'admin']) {
+    seedPrivate(role);
+    tables.send_approvals[0].hold_reason = 'recipient_rule';
+    const queue = await (await list.GET()).json();
+    const row = queue.approvals[0];
+    assert.equal(row.redacted, true, role);
+    assert.deepEqual(row.summary, { to: ['colleague@example.com'], cc: [], bcc_count: 1 }, role);
+    assert.equal(JSON.stringify(queue).includes('Notes'), false, 'no subject in the queue');
+
+    const body = await (await get()).json();
+    assert.equal(body.redacted, true);
+    assert.deepEqual(body.to, ['colleague@example.com']);
+    assert.deepEqual(body.bcc, ['drop@evil.example'], 'the Bcc addresses the rule may have held');
+    assert.equal(body.bcc_count, 1);
+    assert.equal(body.subject, '');
+    assert.equal(JSON.stringify(body).includes('Notes'), false, 'no subject');
+    assert.equal(JSON.stringify(body).includes('secret words'), false, 'no body');
+  }
+  // A member still gets nothing.
+  seedPrivate('member');
+  tables.send_approvals[0].hold_reason = 'recipient_rule';
+  assert.equal((await get()).status, 404);
+});
+
+test('privacy decide (PATCH): the inbox owner decides their own private inbox as a member', async () => {
+  seedPrivate('member', 'user-1');
+  decisions.length = 0;
+  const res = await patch({ id: ID, decision: 'reject' });
+  assert.equal(res.status, 200);
+  assert.deepEqual(decisions, [{ approvalId: ID, userId: 'user-1', decision: 'reject' }]);
+});
+
+test('privacy decide (PATCH): a member cannot decide someone else\'s private send (404) or a company send (403)', async () => {
+  seedPrivate('member');
+  decisions.length = 0;
+  assert.equal((await patch({ id: ID, decision: 'approve', revision: 3 })).status, 404);
+  seed('member', { to: ['colleague@example.com'], body: 'x' });
+  assert.equal((await patch({ id: ID, decision: 'approve', revision: 3 })).status, 403);
+  assert.deepEqual(decisions, []);
+});
+
+test('privacy decide (PATCH): an owner may still decide a private send they cannot read', async () => {
+  seedPrivate('owner');
+  decisions.length = 0;
+  assert.equal((await patch({ id: ID, decision: 'reject' })).status, 200);
+  assert.equal(decisions.length, 1);
+});
+
+test('privacy: a lapsed rule forward from someone else\'s private inbox is listed for an owner without its rule, recipients or Forward again', async () => {
+  tables = {
+    workspace_members: [{ workspace_id: 'ws-1', user_id: 'user-1', role: 'owner' }],
+    inboxes: [{ id: 'inbox-1', email_address: 'box@example.com', display_name: 'Box', owner_user_id: 'owner-of-inbox', visibility: 'private' }],
+    triage_rules: [{ id: 'rule-1', deleted_at: null }],
+    send_approvals: [
+      {
+        id: 'late',
+        workspace_id: 'ws-1',
+        inbox_id: 'inbox-1',
+        status: 'pending',
+        operation: 'email_forward',
+        summary: { to: ['payroll@example.com'], subject: 'Salaries' },
+        expires_at: new Date(Date.now() - 60_000).toISOString(),
+        triage_rule_id: 'rule-1',
+        triage_rule_name: 'Payroll for Kari',
+      },
+    ],
+  };
+  const payload = await (await list.GET()).json();
+  assert.equal(payload.decided.length, 1);
+  const row = payload.decided[0];
+  assert.equal(row.redacted, true);
+  assert.equal(row.status, 'expired');
+  assert.equal(row.kind, 'rule_forward');
+  assert.equal(row.rule_name, null);
+  assert.equal(row.can_forward_again, false);
+  for (const secret of ['Payroll for Kari', 'payroll@example.com', 'Salaries', 'owner-of-inbox']) {
+    assert.equal(JSON.stringify(payload).includes(secret), false, secret);
+  }
+  // A member does not see the row at all.
+  tables.workspace_members[0].role = 'member';
+  const member = await (await list.GET()).json();
+  assert.equal(member.decided.length, 0);
 });

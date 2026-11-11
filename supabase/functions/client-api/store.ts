@@ -14,6 +14,7 @@ import type { AssistantAllowance, AssistantUsage, PlanSlug } from "./assistant-d
 import type { Membership, MembershipSource, WorkspaceRole } from "./auth.ts";
 import { LOGIN_REFUSED_LIKE, loginRefusedMarker } from "./mail/health.ts";
 import type { ApiKeyRow, InboxRow } from "./seam.ts";
+import { type InboxAclRow, type InboxScope, parseCredentialScope, scopeAllows, scopeFromAcl } from "./visibility.ts";
 
 /** `api_keys.kind` for the hidden per-workspace row. */
 export const WEB_CLIENT_KEY_KIND = "web_client";
@@ -63,6 +64,12 @@ export interface Store extends MembershipSource {
   markLoginRefused(inboxId: string, workspaceId: string, at: number): Promise<void>;
   /** Remove that marker, and only that marker, after a login that worked. */
   clearLoginRefused(inboxId: string, workspaceId: string): Promise<void>;
+  /**
+   * Which inboxes of this workspace `userId` may see (visibility.ts), from
+   * `credential_inbox_scope`. Throws when it cannot be read: the caller must
+   * refuse, never fall back to "everything".
+   */
+  inboxScope(workspaceId: string, userId: string): Promise<InboxScope>;
 }
 
 const PLAN_SLUGS: readonly string[] = ["free", "personal", "solo", "pro"];
@@ -95,6 +102,9 @@ export function unusableKeyHash(): string {
 
 // The review-card build column is deliberately not selected: it tracks what an
 // MCP client's tools/list was told, and this key never serves a tools/list.
+/** The inbox ACL: enough to apply the visibility rule, nothing else. */
+const ACL_COLUMNS = "id, workspace_id, visibility, owner_user_id";
+
 const KEY_COLUMNS =
   "id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at";
 
@@ -124,6 +134,8 @@ interface EmbeddedWorkspace {
   web_client_enabled: boolean | null;
   api_keys?: ApiKeyRow[] | null;
   inboxes?: InboxRow[] | null;
+  /** Every live inbox of the workspace, parked ones included: id + the two ACL columns. */
+  inbox_acl?: InboxAclRow[] | null;
 }
 
 interface EmbeddedMemberRow {
@@ -140,7 +152,7 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
       .from("workspace_members")
       .select(
         "workspace_id, role, joined_at, workspaces!inner(id, display_name, plan, web_client_enabled, deleted_at, " +
-          `api_keys(${KEY_COLUMNS}), inboxes(${inboxColumns}))`,
+          `api_keys(${KEY_COLUMNS}), inboxes(${inboxColumns}), inbox_acl:inboxes(${ACL_COLUMNS}))`,
       )
       .eq("user_id", userId)
       .is("workspaces.deleted_at", null)
@@ -149,7 +161,10 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
       .is("workspaces.inboxes.deleted_at", null)
       // A parked inbox (mcp-server/parked-inbox.ts) never enters the inbox
       // cache, so no mail call can be served from a row the plan excludes.
-      .is("workspaces.inboxes.parked_at", null);
+      .is("workspaces.inboxes.parked_at", null)
+      // The ACL covers parked inboxes too: one somebody else keeps private is
+      // still "hidden", whatever the plan's cap did to it.
+      .is("workspaces.inbox_acl.deleted_at", null);
     // Any refusal (an ambiguous relationship after a schema change, a column
     // a migration has not landed) falls back to the plain query below.
     if (error || !Array.isArray(data)) return null;
@@ -158,6 +173,13 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
       const ws = first(row.workspaces);
       if (!ws) continue;
       const key = (ws.api_keys ?? []).find((k) => k.workspace_id === row.workspace_id && !k.deleted_at) ?? null;
+      // The ACL rows are THIS user's view only because the scope is computed
+      // for `userId` here; the row list is cut down to it before it leaves.
+      // Rows without the ACL columns: no scope, and no rows either, so
+      // nothing reaches a cache before app.ts has asked the database.
+      const acl = (ws.inbox_acl ?? []).filter((inbox) => inbox.workspace_id === row.workspace_id);
+      const scope = Array.isArray(ws.inbox_acl) ? scopeFromAcl(acl, userId) : null;
+      const rows = (ws.inboxes ?? []).filter((inbox) => inbox.workspace_id === row.workspace_id);
       out.push({
         workspace_id: row.workspace_id,
         role: row.role,
@@ -166,7 +188,8 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
         plan: ws.plan,
         web_client_enabled: ws.web_client_enabled === true,
         web_client_key: key,
-        inbox_rows: (ws.inboxes ?? []).filter((inbox) => inbox.workspace_id === row.workspace_id),
+        inbox_rows: scope ? rows.filter((inbox) => scopeAllows(scope, inbox.id)) : [],
+        ...(scope ? { inbox_scope: scope } : {}),
       });
     }
     return out;
@@ -280,6 +303,16 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
         p_model: usage.model.slice(0, 200),
       });
       if (error) throw new Error(`assistant_finalize_failed:${error.code ?? "error"}`);
+    },
+
+    async inboxScope(workspaceId, userId) {
+      const { data, error } = await db.rpc("credential_inbox_scope", {
+        p_workspace_id: workspaceId,
+        p_user_id: userId,
+        p_inbox_ids: null,
+      });
+      if (error) throw new Error(`inbox_scope_failed:${error.code ?? "error"}`);
+      return parseCredentialScope(data);
     },
 
     async markLoginRefused(inboxId, workspaceId, at) {

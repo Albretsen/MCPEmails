@@ -70,6 +70,13 @@ export interface MailEnv {
   apiKey: ApiKeyRow;
   /** May this caller run write and send ops. */
   canWrite: boolean;
+  /**
+   * May this caller see this inbox (the visibility rule, ../visibility.ts).
+   * Checked before anything else touches an inbox id, the shared row and
+   * health caches included. Absent: no per-person rule (the new-mail watcher,
+   * which acts for the workspace and filters its recipients instead).
+   */
+  canSee?: (inboxId: string) => boolean;
   /** Runs a task after the response; failures go to `onBackgroundError`. */
   onBackgroundError?: (name: string, error: unknown) => void;
   /**
@@ -128,6 +135,19 @@ function isThrottledSearchResult(outcome: ExecutorOutcome): boolean {
   return at !== -1 && isSearchThrottle(new Error(resultText(outcome.result).slice(at)));
 }
 
+/** The executor's own answer for an inbox id that does not resolve, word for word. */
+const INBOX_NOT_FOUND_TEXT = "No inbox matches the given inbox_id/inbox. Call inbox_list to see " +
+  "the available inboxes (each with its inbox_id and email address).";
+
+/**
+ * Refuse an inbox this person may not see with exactly the answer a
+ * non-existent inbox gets, so the response says nothing about whether it exists.
+ */
+export function assertVisible(env: MailEnv, inboxId: string | null): void {
+  if (!inboxId || !env.canSee) return;
+  if (!env.canSee(inboxId.toLowerCase())) throw executorError("inbox_not_found", INBOX_NOT_FOUND_TEXT);
+}
+
 /**
  * Refuse, without contacting the mail host, an inbox that is already known to
  * need reconnecting: its row says so, or a login with the credentials it has
@@ -135,6 +155,7 @@ function isThrottledSearchResult(outcome: ExecutorOutcome): boolean {
  * the marker on the row, in any other). See mail/health.ts.
  */
 export function assertReachable(env: MailEnv, inboxId: string | null): void {
+  assertVisible(env, inboxId);
   if (!inboxId || !env.health) return;
   const workspaceId = env.apiKey.workspace_id;
   const state = env.health.state(inboxId, workspaceId);
@@ -286,8 +307,12 @@ export function firstPartyFor(
     trashIds: true,
     listPreviewBytes: options.previewBytes,
     threadHeaders: options.threads === true,
-    inboxRow: options.fresh ? undefined : (id, workspaceId) => env.inboxes.get(id, workspaceId),
+    // The shared row cache answers only for an inbox this caller may see.
+    inboxRow: options.fresh
+      ? undefined
+      : (id, workspaceId) => (env.canSee && !env.canSee(String(id).toLowerCase()) ? null : env.inboxes.get(id, workspaceId)),
     rememberInboxRow: (row) => {
+      if (env.canSee && !env.canSee(String((row as InboxRow).id).toLowerCase())) return;
       env.inboxes.remember(row as InboxRow);
       env.health?.observe(row as HealthRow);
     },
@@ -407,6 +432,7 @@ export async function runExecutor(
   },
 ): Promise<ExecutorOutcome> {
   const apiKey = options.apiKey ?? env.apiKey;
+  assertVisible(env, options.inboxId);
   assertReachable(env, options.inboxId);
   const args: Record<string, unknown> = { ...call.args };
   if (options.inboxId) args["inbox_id"] = options.inboxId;
@@ -603,6 +629,7 @@ export async function runMailOp(
   timings: OpTimings = newTimings(),
 ): Promise<MailOutcome> {
   const { spec, calls, inboxId, idempotencyKey } = planMailRequest(request);
+  assertVisible(env, inboxId);
   if (spec.kind !== "read" && !env.canWrite) {
     throw forbidden("Your role in this workspace is read-only.");
   }

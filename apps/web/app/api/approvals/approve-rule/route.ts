@@ -5,6 +5,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide } from '@/lib/approvals/decide';
 import { approveAllFromRule, parseApproveAllItems } from '@/lib/approvals/approve-all';
+import { canReadApprovalMail } from '@/lib/approvals/access';
 
 /**
  * POST /api/approvals/approve-rule: approve the waiting forwards a person saw,
@@ -45,6 +46,19 @@ export async function POST(request: NextRequest) {
   const items = parseApproveAllItems(body?.items);
   if (typeof body?.rule_id !== 'string' || typeof body?.address !== 'string' || !items) {
     return NextResponse.json({ error: 'A rule, an address and the requests you saw are required.' }, { status: 400 });
+  }
+
+  // A rule on someone else's private inbox answers like a missing one: the whole
+  // point of this click is that the person saw every row, and they can not see
+  // that mail (src/lib/approvals/access.ts). Its rows stay decidable one by one.
+  const { data: rule } = await db
+    .from('triage_rules')
+    .select('id, inbox_id')
+    .eq('id', body.rule_id)
+    .eq('workspace_id', workspaceId)
+    .maybeSingle();
+  if (rule && !(await canReadApprovalMail(db, rule.inbox_id, user.id))) {
+    return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
   }
 
   const result = await approveAllFromRule({

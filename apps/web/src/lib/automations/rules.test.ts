@@ -279,3 +279,44 @@ test('the hidden web-client key cannot be bound to an automation', async () => {
   assert.deepEqual(missing, { error: 'That API key is not available in this workspace.', status: 400 });
   assert.deepEqual(hidden, missing);
 });
+
+test("privacy: an automation cannot be pointed at someone else's private inbox (owner/admin included)", async () => {
+  // Migration 20261111190000: inbox_visible_to() decides; the dashboard API is
+  // the service role, so RLS does not do it for us. An RPC error fails closed.
+  const rows: Record<string, Record<string, unknown>[]> = {
+    inboxes: [{ id: 'inbox-1', workspace_id: 'ws-1', deleted_at: null }],
+    api_keys: [{ id: 'key-plain', workspace_id: 'ws-1', kind: null, scopes: [], inbox_ids: null, deleted_at: null }],
+  };
+  let visible: boolean | 'error' = false;
+  const rpcCalls: Array<Record<string, unknown>> = [];
+  const db = {
+    rpc: async (name: string, args: Record<string, unknown>) => {
+      assert.equal(name, 'inbox_visible_to');
+      rpcCalls.push(args);
+      return visible === 'error' ? { data: null, error: { message: 'boom' } } : { data: visible, error: null };
+    },
+    from(table: string) {
+      let matches = rows[table] ?? [];
+      const chain = {
+        select: () => chain,
+        eq: (column: string, value: unknown) => {
+          matches = matches.filter((row) => row[column] === value);
+          return chain;
+        },
+        is: (column: string, value: unknown) => {
+          matches = matches.filter((row) => (row[column] ?? null) === value);
+          return chain;
+        },
+        maybeSingle: async () => ({ data: matches[0] ?? null, error: null }),
+      };
+      return chain;
+    },
+  };
+  const refused = { error: 'That inbox is not available in this workspace.', status: 400 };
+  assert.deepEqual(await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-plain', 'user-1'), refused);
+  assert.deepEqual(rpcCalls, [{ p_inbox_id: 'inbox-1', p_user_id: 'user-1' }]);
+  visible = 'error';
+  assert.deepEqual(await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-plain', 'user-1'), refused);
+  visible = true;
+  assert.equal(await assertWorkspaceResources(db, 'ws-1', 'inbox-1', 'key-plain', 'user-1'), null);
+});

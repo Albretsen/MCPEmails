@@ -424,7 +424,20 @@
     "capBodyProCap": "Proで接続できるメールボックスは10個です。Businessは月$39で10個を含み、追加のメールボックスは1つにつき月$3です。メンバーは追加料金なしで無制限です。",
     "capCtaBusiness": "Businessにアップグレード（月$39）",
     "capBodyProCapFounder": "Proで接続できるメールボックスは10個です。Businessは10個を含み、メンバーは追加料金なしで無制限です。",
-    "capCtaBusinessFounder": "Businessにアップグレード（月${price}）"
+    "capCtaBusinessFounder": "Businessにアップグレード（月${price}）",
+    "capBodyProCapSeat": "Proで接続できるメールボックスは10件です。Businessでは、一人ひとりが自分のメールボックスを10件まで非公開で接続でき、全社共有のメールボックスも10件含まれます（以降は1件につき月$3）。料金はメールボックスを接続した人数分で、最低2人からです。",
+    "capCtaBusinessSeat": "Businessにアップグレード",
+    "visibility": {
+      "label": "利用できる人",
+      "private": "非公開",
+      "company": "会社全体",
+      "privateHint": "この受信トレイを使えるのはあなただけです。",
+      "companyHint": "ワークスペースの全員がこの受信トレイを使えます。",
+      "ownedBy": "所有者: {name}",
+      "saveError": "この受信トレイを使える人を変更できませんでした。もう一度お試しください。",
+      "othersTitle": "他のメンバーの非公開受信トレイ",
+      "othersNote": "接続を解除することはできますが、開けるのは所有者だけです。"
+    }
   },
   "apiKeys": {
     "title": "APIキー",
@@ -764,6 +777,18 @@
         "invalid_inbox": "その受信トレイはこのワークスペースにありません。",
         "invalid_timezone": "一覧からタイムゾーンを選んでください。"
       }
+    },
+    "recipientRule": {
+      "advanced": "詳細設定",
+      "title": "許可する宛先ドメイン",
+      "help": "これらのドメイン以外の宛先へのメールは、オーナーまたは管理者が承認するまで保留されます。ドメインはカンマで区切ってください。サブドメインは個別に追加が必要です。空欄にするとすべての宛先を許可します。",
+      "placeholder": "example.co.jp, partner.co.jp",
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "保存しました。",
+      "loading": "読み込み中…",
+      "loadFailed": "宛先ルールを読み込めませんでした。",
+      "saveFailed": "宛先ルールを保存できませんでした。"
     }
   },
   "billing": {
@@ -829,7 +854,12 @@
       "businessFeature2": "メールボックス10個を含み、追加1つにつき月$3",
       "businessFeature3": "役割付きのメンバーを追加料金なしで無制限に",
       "businessFeature4": "保留中の送信を管理者が承認",
-      "businessFeature5": "1つのサブスクリプションで複数のワークスペース"
+      "businessFeature5": "1つのサブスクリプションで複数のワークスペース",
+      "businessSeatFeaturePrivate": "一人ひとりに非公開のメールボックス（1人10件まで）",
+      "businessSeatFeatureCompany": "全社共有のメールボックス10件込み、追加は1件につき月$3",
+      "businessSeatFeatureRoles": "一人ひとりに役割：閲覧者、メンバー、管理者",
+      "businessSeatFeatureRules": "送信メールの宛先ルール",
+      "businessSeatFeatureAudit": "CSVエクスポート付きの監査ログ"
     },
     "planIncludes": "プランに含まれるもの",
     "inboxesOne": "受信トレイを1件接続",
@@ -959,7 +989,9 @@
         "temporary_need": "一時的に必要だっただけ",
         "other": "その他"
       }
-    }
+    },
+    "perPersonPerMonth": "/人/月",
+    "businessPerPersonNote": "1人あたり月額${price}、最低{min}人から。メールボックスを接続した人ごとに課金されます。"
   },
   "security": {
     "title": "セキュリティ",
@@ -1007,7 +1039,31 @@
     "colDuration": "所要時間",
     "statusSuccess": "成功",
     "statusRateLimited": "レート制限",
-    "statusError": "エラー"
+    "statusError": "エラー",
+    "colPerson": "実行者",
+    "personUnknown": "記録なし",
+    "personFormer": "以前のメンバー",
+    "exportCsv": "CSV をエクスポート",
+    "events": {
+      "title": "チームの変更",
+      "sub": "招待、メンバー、ロール、メールボックスの公開範囲、宛先ルールの変更。",
+      "loading": "読み込み中…",
+      "empty": "チームの変更はまだありません。",
+      "colWhen": "日時",
+      "colEvent": "変更内容",
+      "colTarget": "対象",
+      "anyRecipient": "すべての宛先",
+      "kinds": {
+        "invite_sent": "招待を送信",
+        "invite_cancelled": "招待を取り消し",
+        "invite_accepted": "招待を承諾",
+        "member_removed": "メンバーを削除",
+        "member_left": "メンバーが退出",
+        "role_changed": "ロールを変更",
+        "inbox_visibility_changed": "メールボックスの公開範囲を変更",
+        "recipient_rule_changed": "宛先ルールを変更"
+      }
+    }
   },
   "members": {
     "title": "メンバー",
@@ -1171,7 +1227,8 @@
         "sentBody": "受信トレイから送信されました。",
         "failedTitle": "未送信",
         "failedBody": "送信できませんでした。"
-      }
+      },
+      "bodyWithheldPrivate": "この送信は他の人の非公開受信トレイからのものなので、内容は表示されません。承認または却下は引き続き行えます。"
     },
     "mode": {
       "label": "送信前の確認",
@@ -1298,7 +1355,8 @@
       "approveAllHeld": "{count, plural, other {#件は個別に確認が必要です。送信者がDKIMまたはDMARCに失敗したか、送信者を確認できませんでした。}}",
       "ruleGroupHeld": "{count, plural, other {ほかに#件は、送信者の状態により個別に確認が必要です。}}",
       "ruleGroupAllHeld": "{rule}：送信者の状態により、{count, plural, other {#件の転送}}を個別に確認する必要があります。",
-      "forwardAgainBodyFailed": "前回は何も送信されませんでした。同じメッセージと同じアドレスで新しいリクエストを作成します。最大7日間待機し、オーナーまたは管理者が承認するまで何も送信されません。原因が解消されていなければ、再び失敗します。"
+      "forwardAgainBodyFailed": "前回は何も送信されませんでした。同じメッセージと同じアドレスで新しいリクエストを作成します。最大7日間待機し、オーナーまたは管理者が承認するまで何も送信されません。原因が解消されていなければ、再び失敗します。",
+      "privateHidden": "非表示（非公開の受信トレイ）"
     },
     "timeLeft": {
       "days": "{count, plural, other {残り#日}}",

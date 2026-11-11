@@ -4,6 +4,8 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
+import { checkConnectTarget, inboxOwnedByOtherBody, privateInboxLimitErrorBody } from '@/lib/inboxes/visibility';
+import { checkPrivateInboxLimit } from '@/lib/plans/check-private-inbox-limit';
 import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
 import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
@@ -164,7 +166,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //    existing row via upsert, so it must be allowed even at the cap.
   //    Return 402 (Payment Required) so the client can distinguish a plan
   //    limit from a credential error.
-  const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
+  // Business privacy model: an address already connected in this workspace
+  // as somebody else's PRIVATE inbox is refused, never overwritten (the
+  // upsert below would replace that person's credentials). Read with the
+  // service role, because the RLS read cannot see that row at all.
+  const target = await checkConnectTarget(db, workspaceId, email, user.id);
+  if (!target.ok) {
+    return target.reason === 'owned_by_other'
+      ? NextResponse.json(inboxOwnedByOtherBody(), { status: 409 })
+      : NextResponse.json({ error: 'Failed to save inbox. Please try again.', error_code: 'save_failed' }, { status: 500 });
+  }
+  // The service role here too: a hidden inbox still holds a plan slot.
+  const alreadyConnected = await inboxExistsForEmail(db, workspaceId, email);
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'fastmail', phase: 'tcp', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
   // Never convert another provider's inbox: the upsert keys on (workspace_id,
   // email_address), so an address connected through Gmail or Outlook OAuth
@@ -177,7 +190,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(otherProviderErrorBody(otherProvider.existingProvider), { status: 409 });
   }
   if (!alreadyConnected) {
-    const inboxLimit = await checkInboxLimit(supabase, workspaceId);
+    const inboxLimit = await checkInboxLimit(supabase, workspaceId, db);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: 'plan_limit' });
       await recordInboxCapHit(workspaceId, inboxLimit);
@@ -185,6 +198,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // localised sentence. See inboxLimitErrorBody for why nothing here
       // interpolates the internal plan slug.
       return NextResponse.json(inboxLimitErrorBody(inboxLimit), { status: 402 });
+    }
+    // Business per person: at most ten PRIVATE mailboxes each. A new
+    // connection starts private, so it counts. A reconnect adds nothing.
+    const privateLimit = await checkPrivateInboxLimit({ db, workspaceId, userId: user.id });
+    if (privateLimit.atLimit) {
+      return NextResponse.json(privateInboxLimitErrorBody(privateLimit), { status: 402 });
     }
   }
 
@@ -351,6 +370,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { error: upsertError } = await db.from('inboxes').upsert(
     {
       workspace_id: workspaceId,
+      // The person connecting owns it. visibility is left to the column default
+      // (company while business_seat_pricing is off, private when on). A DB
+      // trigger keeps the owner of a live row on reconnect, and gives another
+      // person reconnecting a disconnected address a fresh row.
+      owner_user_id: user.id,
       // Fastmail app passwords grant IMAP/SMTP, not JMAP. Store as a branded
       // IMAP inbox (like iCloud/Yahoo/Zoho) so every operation routes over the
       // transport the credential actually grants; `service` carries the brand

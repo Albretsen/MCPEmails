@@ -424,7 +424,20 @@
     "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
     "capCtaBusiness": "Oppgrader til Business, 39 $/md",
     "capBodyProCapFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
-    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md"
+    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md",
+    "capBodyProCapSeat": "Pro kobler til 10 postkasser. På Business kobler hver person til opptil 10 egne postkasser, private for dem, og 10 felles postkasser for hele firmaet er inkludert, deretter $3 i måneden per stykk. Faktureres per person som kobler til en postkasse, minst 2 personer.",
+    "capCtaBusinessSeat": "Oppgrader til Business",
+    "visibility": {
+      "label": "Hvem kan bruke den",
+      "private": "Privat",
+      "company": "Hele bedriften",
+      "privateHint": "Bare du kan bruke denne innboksen.",
+      "companyHint": "Alle i arbeidsområdet kan bruke denne innboksen.",
+      "ownedBy": "Eies av {name}",
+      "saveError": "Kunne ikke endre hvem som kan bruke denne innboksen. Prøv igjen.",
+      "othersTitle": "Andres private innbokser",
+      "othersNote": "Du kan koble dem fra, men bare eierne kan åpne dem."
+    }
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -764,6 +777,18 @@
         "invalid_inbox": "Den innboksen hører ikke til dette arbeidsområdet.",
         "invalid_timezone": "Velg en tidssone fra listen."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avansert",
+      "title": "Tillatte mottakerdomener",
+      "help": "E-post til noen utenfor disse domenene venter til en eier eller administrator godkjenner den. Skill domenene med komma. Underdomener må legges inn hver for seg. La feltet stå tomt for å tillate alle mottakere.",
+      "placeholder": "eksempel.no, partner.no",
+      "save": "Lagre",
+      "saving": "Lagrer…",
+      "saved": "Lagret.",
+      "loading": "Laster…",
+      "loadFailed": "Kunne ikke laste mottakerregelen.",
+      "saveFailed": "Kunne ikke lagre mottakerregelen."
     }
   },
   "billing": {
@@ -829,7 +854,12 @@
       "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
       "businessFeature3": "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
       "businessFeature4": "Administratorer godkjenner tilbakeholdte sendinger",
-      "businessFeature5": "Flere arbeidsområder på ett abonnement"
+      "businessFeature5": "Flere arbeidsområder på ett abonnement",
+      "businessSeatFeaturePrivate": "Private postkasser for hver person, opptil 10 hver",
+      "businessSeatFeatureCompany": "10 felles postkasser for hele firmaet inkludert, $3 i måneden for hver ekstra",
+      "businessSeatFeatureRoles": "Roller for hver person: leser, medlem eller administrator",
+      "businessSeatFeatureRules": "Mottakerregler for utgående e-post",
+      "businessSeatFeatureAudit": "Revisjonslogg med CSV-eksport"
     },
     "planIncludes": "Hva planen din inkluderer",
     "inboxesOne": "1 tilkoblet innboks",
@@ -959,7 +989,9 @@
         "temporary_need": "Trengte det bare en periode",
         "other": "Annet"
       }
-    }
+    },
+    "perPersonPerMonth": "/person/måned",
+    "businessPerPersonNote": "${price} per person per måned, minst {min} personer. Du betaler for hver person som kobler til en innboks."
   },
   "security": {
     "title": "Sikkerhet",
@@ -1007,7 +1039,31 @@
     "colDuration": "Varighet",
     "statusSuccess": "Vellykket",
     "statusRateLimited": "Hastighetsbegrenset",
-    "statusError": "Feil"
+    "statusError": "Feil",
+    "colPerson": "Person",
+    "personUnknown": "Ikke registrert",
+    "personFormer": "Tidligere medlem",
+    "exportCsv": "Eksporter CSV",
+    "events": {
+      "title": "Endringer i teamet",
+      "sub": "Invitasjoner, medlemmer, roller, synlighet for innbokser og mottakerregelen.",
+      "loading": "Laster…",
+      "empty": "Ingen endringer i teamet ennå.",
+      "colWhen": "Når",
+      "colEvent": "Endring",
+      "colTarget": "Gjelder",
+      "anyRecipient": "Alle mottakere",
+      "kinds": {
+        "invite_sent": "Invitasjon sendt",
+        "invite_cancelled": "Invitasjon kansellert",
+        "invite_accepted": "Invitasjon godtatt",
+        "member_removed": "Medlem fjernet",
+        "member_left": "Medlem forlot",
+        "role_changed": "Rolle endret",
+        "inbox_visibility_changed": "Synlighet for innboks endret",
+        "recipient_rule_changed": "Mottakerregel endret"
+      }
+    }
   },
   "members": {
     "title": "Medlemmer",
@@ -1171,7 +1227,8 @@
         "sentBody": "Den har gått ut fra innboksen din.",
         "failedTitle": "Ikke sendt",
         "failedBody": "Sendingen gikk ikke gjennom."
-      }
+      },
+      "bodyWithheldPrivate": "Denne sendingen kommer fra en annens private innboks, så innholdet er skjult. Du kan fortsatt godkjenne eller avvise den."
     },
     "mode": {
       "label": "Gjennomgang før sending",
@@ -1298,7 +1355,8 @@
       "approveAllHeld": "{count, plural, =1 {1 må gjennomgås for seg: avsenderen besto ikke DKIM eller DMARC, eller kunne ikke bekreftes.} other {# må gjennomgås én etter én: avsenderne besto ikke DKIM eller DMARC, eller kunne ikke bekreftes.}}",
       "ruleGroupHeld": "{count, plural, =1 {1 til må gjennomgås for seg på grunn av avsenderen.} other {# til må gjennomgås én etter én på grunn av avsenderne.}}",
       "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 videresending må gjennomgås for seg} other {# videresendinger må gjennomgås én etter én}} på grunn av avsenderen.",
-      "forwardAgainBodyFailed": "Ingenting ble sendt forrige gang. Dette lager en ny forespørsel for samme melding og samme adresse. Den venter i opptil 7 dager, og ingenting sendes før en eier eller administrator godkjenner den. Hvis årsaken fortsatt er der, feiler den igjen."
+      "forwardAgainBodyFailed": "Ingenting ble sendt forrige gang. Dette lager en ny forespørsel for samme melding og samme adresse. Den venter i opptil 7 dager, og ingenting sendes før en eier eller administrator godkjenner den. Hvis årsaken fortsatt er der, feiler den igjen.",
+      "privateHidden": "Skjult (privat innboks)"
     },
     "timeLeft": {
       "days": "{count, plural, one {# dag igjen} other {# dager igjen}}",

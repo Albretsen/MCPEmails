@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { canDecide } from '@/lib/approvals/decide';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { noApprovalWriteError, validateNoApprovalInput } from '@/lib/approvals/no-approval';
+import { visibleInboxIds } from '@/lib/inboxes/visibility';
 import { noApprovalContext } from './shared';
 
 /**
@@ -22,7 +23,41 @@ export async function GET() {
   if (overviewError || coverageError) {
     return NextResponse.json({ error: 'Failed to load no-approval rules.' }, { status: 500 });
   }
-  return NextResponse.json({ overview, coverage: coverage ?? [] });
+  // An automation on someone else's private inbox is that person's (Business
+  // privacy model, migration 20261111190000): its name and coverage are left out,
+  // as GET /api/automations leaves the automation out.
+  const visible = await visibleInboxIds(c.db, c.workspaceId, c.user.id);
+  const { data: rules, error: rulesError } = await c.db
+    .from('triage_rules')
+    .select('id, inbox_id')
+    .eq('workspace_id', c.workspaceId);
+  if (rulesError) return NextResponse.json({ error: 'Failed to load no-approval rules.' }, { status: 500 });
+  const visibleRules = new Set(
+    ((rules ?? []) as Array<{ id: string; inbox_id: string | null }>)
+      .filter((rule) => typeof rule.inbox_id === 'string' && visible.has(rule.inbox_id.toLowerCase()))
+      .map((rule) => rule.id),
+  );
+  return NextResponse.json({
+    overview: withVisibleAutomations(overview, visibleRules),
+    coverage: ((coverage ?? []) as Array<{ triage_rule_id?: string | null }>)
+      .filter((row) => typeof row.triage_rule_id === 'string' && visibleRules.has(row.triage_rule_id)),
+  });
+}
+
+/** The overview with each rule's automations narrowed to the ones the caller may see. */
+function withVisibleAutomations(overview: unknown, visibleRules: Set<string>): unknown {
+  if (!overview || typeof overview !== 'object') return overview;
+  const value = overview as { rules?: unknown };
+  if (!Array.isArray(value.rules)) return overview;
+  return {
+    ...value,
+    rules: value.rules.map((rule: Record<string, unknown>) => ({
+      ...rule,
+      automations: Array.isArray(rule.automations)
+        ? rule.automations.filter((automation: { id?: unknown }) => typeof automation?.id === 'string' && visibleRules.has(automation.id))
+        : rule.automations,
+    })),
+  };
 }
 
 export async function POST(request: NextRequest) {

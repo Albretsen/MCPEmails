@@ -188,6 +188,42 @@ const TABLE_SECTIONS = [
   },
 ];
 
+/* ─── Business per person ───────────────────────────────────── */
+// While `business_seat_pricing` is on, the page server hands PricingClient
+// `businessSeat` (src/lib/billing/business-seat-copy.ts) and the table reads
+// as below. Off, TABLE_SECTIONS is rendered untouched.
+//
+// Rows that exist only then, inserted after "Admins approve sends held for
+// review". Private mailboxes and recipient rules are Business-only in the
+// code (inboxes.visibility, workspaces.allowed_recipient_domains). The audit
+// log and its CSV export are not gated by plan, so that row is checked
+// everywhere.
+const SEAT_ROWS = [
+  { key: 'privateMailboxes', free: false, personal: false, solo: false, pro: true },
+  { key: 'recipientRules',   free: false, personal: false, solo: false, pro: true },
+  { key: 'auditExport',      free: true,  personal: true,  solo: true,  pro: true },
+];
+
+/**
+ * TABLE_SECTIONS with Business priced per person: the two Business cells
+ * that described the flat price become literal text, and SEAT_ROWS join the
+ * analytics section. Labels for the new rows are literal text too.
+ */
+function seatTableSections(sections, seat) {
+  if (!seat) return sections;
+  return sections.map((section) => {
+    const rows = section.rows.map((row) => {
+      if (row.key === 'inboxes') return { ...row, pro: { text: seat.values.inboxes } };
+      if (row.key === 'members') return { ...row, pro: { text: seat.values.members } };
+      return row;
+    });
+    if (section.key !== 'analytics') return { ...section, rows };
+    const at = rows.findIndex((row) => row.key === 'adminApprovals') + 1;
+    const added = SEAT_ROWS.map((row) => ({ ...row, label: seat.rows[row.key] }));
+    return { ...section, rows: [...rows.slice(0, at), ...added, ...rows.slice(at)] };
+  });
+}
+
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function BillingToggle({ annual, onChange }) {
@@ -308,7 +344,7 @@ function SeasonalOfferLine({ offer, planKey }) {
 /**
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
-function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd', seasonalOffers = null }) {
+function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd', seasonalOffers = null, businessSeat = null }) {
   const t = useTranslations('pricing');
   const locale = useLocale();
   // EUR (an EU visitor, STRIPE_EUR_PRICES on): same digits, euro sign in the
@@ -371,10 +407,12 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
         const annualTotalCents = eur ? eurYearlyTotal : yearlyCents;
         const liveAnnualTotal = annualTotalCents ? formatAmountCents(annualTotalCents, locale) : null;
 
-        const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
+        // Business billed per person: set only while business_seat_pricing is on.
+        const seat = plan.key === 'pro' ? businessSeat?.card ?? null : null;
+        const perDisplay = liveMonthly === 0 ? t(plan.perKey) : seat ? seat.per : t('card.perMonth');
         // Set only on Business, only while the founder offer is open.
         const founder = plan.key === 'pro' ? stripePrices?.pro?.founder ?? null : null;
-        const features = t.raw(`plans.${plan.key}.features`).map(money);
+        const features = (seat ? seat.features : t.raw(`plans.${plan.key}.features`)).map(money);
 
         // The card the visitor was quoted at an in-product paywall, if they
         // arrived from one. It gets the ring .featured already uses and NOT the
@@ -405,7 +443,13 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
                 <p className="price-annual-note">{t('card.inclVat')}</p>
               )}
               {annual && liveMonthly > 0 && (
-                <p className="price-annual-note">{money(t('card.billedYearly', { total: liveAnnualTotal }))}</p>
+                <p className="price-annual-note">
+                  {money(seat ? seat.billedYearly : t('card.billedYearly', { total: liveAnnualTotal }))}
+                </p>
+              )}
+              {/* Business per person: the minimum, and who is free. */}
+              {seat && (
+                <p className="price-annual-note" data-business-seat-minimum="">{seat.minimum}</p>
               )}
               {/* Annual Personal and Pro only, inside the window only.
                   Business and monthly never get one: the offer map has no
@@ -437,7 +481,7 @@ function PlanCards({ annual, stripePrices, user, highlightPlan, currency = 'usd'
               {t.has(`plans.${plan.key}.tagline`) && (
                 <p className="price-tagline">{t(`plans.${plan.key}.tagline`)}</p>
               )}
-              <p className="price-desc">{t(`plans.${plan.key}.desc`)}</p>
+              <p className="price-desc">{seat ? seat.desc : t(`plans.${plan.key}.desc`)}</p>
             </div>
             <ul>
               {features.map((f) => (
@@ -497,17 +541,20 @@ function TableCell({ value }) {
   return <td className="tbl-val">{value}</td>;
 }
 
-function ComparisonTable({ currency = 'usd' }) {
+function ComparisonTable({ currency = 'usd', businessSeat = null }) {
   const t = useTranslations('pricing');
   const locale = useLocale();
   // String cell values are stored as message keys (e.g. "values.unlimited");
   // booleans render as check/dash. Translate keys, pass booleans through.
   // "then $3 a month each" follows the visitor's currency like the cards do.
+  // A `{ text }` cell is literal copy (Business per person, see seatTableSections).
   const cell = (v) => {
+    if (v && typeof v === 'object') return currency === 'eur' ? euroizeAmounts(v.text, locale) : v.text;
     if (typeof v !== 'string') return v;
     const text = t(`comparison.${v}`);
     return currency === 'eur' ? euroizeAmounts(text, locale) : text;
   };
+  const sections = seatTableSections(TABLE_SECTIONS, businessSeat?.pricing ?? null);
 
   return (
     <div className="comparison-wrap">
@@ -522,7 +569,7 @@ function ComparisonTable({ currency = 'usd' }) {
           </tr>
         </thead>
         <tbody>
-          {TABLE_SECTIONS.map(section => (
+          {sections.map(section => (
             <Fragment key={section.key}>
               <tr className="tbl-section-head">
                 <td colSpan={5}>{t(`comparison.sections.${section.key}.label`)}</td>
@@ -532,7 +579,7 @@ function ComparisonTable({ currency = 'usd' }) {
                 // translated feature label by `key`.
                 const featureLabel = row.name
                   ? row.name
-                  : t(`comparison.sections.${section.key}.rows.${row.key}`);
+                  : row.label ?? t(`comparison.sections.${section.key}.rows.${row.key}`);
                 return (
                   <tr key={row.name || row.key}>
                     <td className="feat-name">{featureLabel}</td>
@@ -572,13 +619,18 @@ function FaqItem({ q, a }) {
  * @param {{
  *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
  *   eurEnabled?: boolean,
+ *   businessSeat?: import('@/lib/billing/business-seat-copy').BusinessSeatPageCopy | null,
  * }} props
+ *
+ * `businessSeat` is the per-person Business copy, set by the page server only
+ * while `business_seat_pricing` is on. Null (production today) renders the
+ * page exactly as before.
  *
  * `eurEnabled` is STRIPE_EUR_PRICES as the server read it. Off (the default),
  * the page never asks for the visitor's country and renders USD exactly as
  * before. On, an EU visitor sees the same digits in EUR with "incl. VAT".
  */
-export default function PricingClient({ stripePrices, eurEnabled = false }) {
+export default function PricingClient({ stripePrices, eurEnabled = false, businessSeat = null }) {
   // Annual is the default selection, not just an available option. Which
   // interval is preselected swings the annual mix far more than the size of
   // the discount does, and annual prepay is the cheapest working capital a
@@ -612,9 +664,15 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
   // The dated Pro price question joins the FAQ only while the notice above
   // the cards is up, so the two can never disagree about whether it applies.
   const proPriceNotice = useProPriceNoticeVisible();
-  const rawFaqItems = proPriceNotice
-    ? [proPriceNoticeCopy(locale).faq, ...t.raw('faq.items')]
+  // Business per person rewrites the answers that quoted the flat price, by
+  // their index in faq.items (before the dated Pro question is prepended).
+  const seatAnswers = businessSeat?.pricing.faq ?? null;
+  const baseFaqItems = seatAnswers
+    ? t.raw('faq.items').map((item, i) => (seatAnswers[String(i)] ? { ...item, a: seatAnswers[String(i)] } : item))
     : t.raw('faq.items');
+  const rawFaqItems = proPriceNotice
+    ? [proPriceNoticeCopy(locale).faq, ...baseFaqItems]
+    : baseFaqItems;
   const faqItems =
     currency === 'eur'
       ? rawFaqItems.map((item) => ({ ...item, a: money(item.a) }))
@@ -681,7 +739,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             {money(annual ? t('hero.titleLine2Yearly') : t('hero.titleLine2'))}
           </h1>
           <p className="pricing-page-lead">
-            {money(t('hero.lead'))}
+            {money(businessSeat ? businessSeat.pricing.heroLead : t('hero.lead'))}
           </p>
           <BillingToggle annual={annual} onChange={setAnnual} />
         </div>
@@ -696,7 +754,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             className="pricing-footnote"
             style={{ margin: '0 0 24px', maxWidth: 720, color: 'var(--fg-2)' }}
           />
-          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} currency={currency} seasonalOffers={seasonalOffers} />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} currency={currency} seasonalOffers={seasonalOffers} businessSeat={businessSeat} />
           <p className="pricing-footnote" style={{ marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
@@ -727,7 +785,7 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
             <div className="eye-label">{t('comparison.eyebrow')}</div>
             <h2 style={{ fontSize: 36 }}>{t('comparison.title')}</h2>
           </div>
-          <ComparisonTable currency={currency} />
+          <ComparisonTable currency={currency} businessSeat={businessSeat} />
         </div>
       </section>
 
@@ -751,7 +809,13 @@ export default function PricingClient({ stripePrices, eurEnabled = false }) {
         <div className="container">
           <h2 className="pricing-cta-h">{t('ctaBand.title')}</h2>
           <p className="pricing-cta-sub">
-            {money(stripePrices?.pro?.founder ? t('ctaBand.subFounder') : t('ctaBand.sub'))}
+            {money(
+              businessSeat
+                ? businessSeat.pricing.ctaSub
+                : stripePrices?.pro?.founder
+                ? t('ctaBand.subFounder')
+                : t('ctaBand.sub'),
+            )}
           </p>
           <div className="pricing-cta-btns">
             <a className="btn btn-primary btn-lg" href={withReadingLang('/signup', locale)}>{t('ctaBand.ctaPrimary')}</a>

@@ -5,6 +5,8 @@ import { encryptToken } from '@/lib/crypto';
 import { exchangeOutlookCode, OutlookEmailMissingError, probeOutlookMailboxAtConnect, type OutlookTokens } from '@/lib/email-providers/outlook';
 import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inboxes/provider-conflict';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { checkConnectTarget, INBOX_OWNED_BY_OTHER_CODE, PRIVATE_INBOX_LIMIT_CODE } from '@/lib/inboxes/visibility';
+import { checkPrivateInboxLimit } from '@/lib/plans/check-private-inbox-limit';
 import { recordInboxCapHit } from '@/lib/plans/inbox-cap-events';
 import { syncMailboxAddonForWorkspace } from '@/lib/stripe/mailbox-addon';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
@@ -343,8 +345,18 @@ async function handleCallback(request: NextRequest): Promise<NextResponse> {
     return redirectWithError(INBOX_EXISTS_OTHER_PROVIDER);
   }
 
+  // Business privacy model: an address already connected in this workspace
+  // as somebody else's PRIVATE inbox is refused, never overwritten (the upsert
+  // below would replace that person's tokens). Service role: the RLS read
+  // cannot see that row at all.
+  const target = await checkConnectTarget(serviceClient, oauthState.workspace_id, tokens.email, user.id);
+  if (!target.ok) {
+    return redirectWithError(target.reason === 'owned_by_other' ? INBOX_OWNED_BY_OTHER_CODE : 'save_failed');
+  }
+
+  // The service role here too: a hidden inbox still holds a plan slot.
   const alreadyConnected = await inboxExistsForEmail(
-    supabase,
+    serviceClient,
     oauthState.workspace_id,
     tokens.email
   );
@@ -369,12 +381,16 @@ async function handleCallback(request: NextRequest): Promise<NextResponse> {
   //    reconnect (the email already has a non-deleted inbox) reuses the
   //    existing row via upsert, so it must be allowed even at the cap.
   if (!alreadyConnected) {
-    const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
+    const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id, serviceClient);
     if (inboxLimit.atLimit) {
       await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'plan_limit', phase: 'persistence', connectionType: 'first_connect' });
       await recordInboxCapHit(oauthState.workspace_id, inboxLimit);
       return redirectWithError('inbox_limit_reached');
     }
+    // Business per person: at most ten PRIVATE mailboxes each. A new
+    // connection starts private, so it counts. A reconnect adds nothing.
+    const privateLimit = await checkPrivateInboxLimit({ db: serviceClient, workspaceId: oauthState.workspace_id, userId: user.id });
+    if (privateLimit.atLimit) return redirectWithError(PRIVATE_INBOX_LIMIT_CODE);
   }
 
   // 8. Encrypt tokens before they touch the database.
@@ -397,6 +413,11 @@ async function handleCallback(request: NextRequest): Promise<NextResponse> {
     {
       workspace_id: oauthState.workspace_id,
       provider: 'outlook',
+      // The person connecting owns it. visibility is left to the column default
+      // (company while business_seat_pricing is off, private when on). A DB
+      // trigger keeps the owner of a live row on reconnect, and gives another
+      // person reconnecting a disconnected address a fresh row.
+      owner_user_id: user.id,
       email_address: tokens.email,
       oauth_access_token: encryptedAccessToken,
       oauth_refresh_token: encryptedRefreshToken,

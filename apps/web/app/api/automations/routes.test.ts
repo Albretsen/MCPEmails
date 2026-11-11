@@ -45,7 +45,24 @@ function query(table: string) {
   };
   return builder;
 }
-const db = { from: query };
+/**
+ * The visibility RPCs (migration 20261111190000), answered from the inbox rows: an
+ * inbox is visible when it is company-wide (the default here) or the caller's own.
+ */
+const visibleTo = (row: Row) => (row.visibility ?? 'company') === 'company' || row.owner_user_id === signedIn?.id;
+const db = {
+  from: query,
+  rpc: async (name: string, args: Row) => {
+    if (name === 'inbox_visible_to') {
+      const row = (tables.inboxes ?? []).find((inbox) => inbox.id === args.p_inbox_id);
+      return { data: Boolean(row && visibleTo(row)), error: null };
+    }
+    if (name === 'visible_inbox_ids') {
+      return { data: (tables.inboxes ?? []).filter((inbox) => inbox.workspace_id === args.p_workspace_id && visibleTo(inbox)).map((inbox) => inbox.id), error: null };
+    }
+    return { data: null, error: { message: `unexpected rpc ${name}` } };
+  },
+};
 
 nodeMock.module('@/lib/supabase/server', {
   namedExports: { createClient: async () => ({ auth: { getUser: async () => ({ data: { user: signedIn } }) } }) },
@@ -181,4 +198,23 @@ test('no session, no delete: a key cannot reach this', async () => {
   const response = await single.DELETE(request('DELETE', { cancel_waiting: true }), params);
   assert.equal(response.status, 401);
   assert.equal(status('a1'), 'pending');
+});
+
+// ── Business privacy model (migration 20261111190000) ───────────────────────
+
+test('privacy: DELETE of a rule on someone else\'s private inbox is a 404 and cancels nothing', async () => {
+  tables.inboxes[0].visibility = 'private';
+  tables.inboxes[0].owner_user_id = 'someone-else';
+  const response = await single.DELETE(request('DELETE', { cancel_waiting: true }), params);
+  assert.equal(response.status, 404);
+  assert.equal(tables.triage_rules[0].deleted_at, null);
+  assert.deepEqual(tables.send_approvals.filter((row) => row.status === 'cancelled'), []);
+});
+
+test('privacy: the owner of a private inbox may still delete their rule and cancel its forwards', async () => {
+  tables.inboxes[0].visibility = 'private';
+  tables.inboxes[0].owner_user_id = 'user-1';
+  const response = await single.DELETE(request('DELETE', { cancel_waiting: true }), params);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).cancelled, 2);
 });

@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide } from '@/lib/approvals/decide';
 import { forwardAgain } from '@/lib/approvals/forward-again';
+import { canReadApprovalMail } from '@/lib/approvals/access';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -36,7 +37,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const db = createServiceRoleClient();
-  const { data: approval } = await db.from('send_approvals').select('id, workspace_id').eq('id', id).maybeSingle();
+  const { data: approval } = await db.from('send_approvals')
+    .select('id, workspace_id, inbox_id')
+    .eq('id', id)
+    .maybeSingle();
   const { data: membership } = approval
     ? await db
         .from('workspace_members')
@@ -46,8 +50,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         .maybeSingle()
     : { data: null };
   if (!approval || !membership) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+  // Someone else's private inbox (src/lib/approvals/access.ts): a member gets the
+  // same 404, and an owner or admin may not queue a forward they cannot read.
+  const readable = await canReadApprovalMail(db, approval.inbox_id, user.id);
+  if (!readable && !canDecide(membership.role)) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
   if (!canDecide(membership.role)) {
     return NextResponse.json({ error: 'Only workspace owners and admins can do this.', code: 'role' }, { status: 403 });
+  }
+  if (!readable) {
+    return NextResponse.json({ error: 'This message is in someone else\'s private mailbox.', code: 'private' }, { status: 403 });
   }
 
   const outcome = await forwardAgain({ db, approvalId: id, workspaceId: approval.workspace_id });

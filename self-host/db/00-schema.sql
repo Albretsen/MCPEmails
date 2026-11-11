@@ -240,6 +240,12 @@ ALTER TABLE public.inboxes
   ADD COLUMN IF NOT EXISTS ai_instructions_updated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS parked_at              timestamptz,  -- NULL = active; set when a lower plan parks the inbox (20261024173000)
   ADD COLUMN IF NOT EXISTS parked_reason          text;         -- 'plan_limit' while parked, else NULL
+-- Inbox ownership and visibility (20261111190000). Single-tenant self-host
+-- defaults to 'company' so every key in the workspace keeps every inbox.
+ALTER TABLE public.inboxes
+  ADD COLUMN IF NOT EXISTS owner_user_id          uuid REFERENCES public.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS visibility             text NOT NULL DEFAULT 'company'
+                                                    CHECK (visibility IN ('private', 'company'));
 -- The rules for folder_overrides, as in the hosted migration 20261020230000:
 -- keys sent/drafts/trash/spam/archive, string values of 1 to 512 characters,
 -- never INBOX, never one folder for two roles.
@@ -377,6 +383,11 @@ CREATE TABLE IF NOT EXISTS public.activity_log (
 );
 ALTER TABLE public.activity_log
   ADD COLUMN IF NOT EXISTS error_details jsonb;
+-- The person the call acted as (hosted migration 20261111190100). The hosted
+-- trigger that fills it for a key with no creator is not needed here: the
+-- server writes the key's creator, and a NULL means the workspace owner.
+ALTER TABLE public.activity_log
+  ADD COLUMN IF NOT EXISTS user_id uuid;
 CREATE INDEX IF NOT EXISTS idx_activity_log_workspace_created ON public.activity_log (workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_log_api_key_created   ON public.activity_log (api_key_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_log_tool_created      ON public.activity_log (tool_name, created_at);
@@ -398,6 +409,8 @@ CREATE TABLE IF NOT EXISTS public.scheduled_sends (
   created_at        timestamptz NOT NULL DEFAULT now(),
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
+-- Who the send acts as at dispatch time (20261111190000). NULL = the workspace owner.
+ALTER TABLE public.scheduled_sends ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS scheduled_sends_pending_idx   ON public.scheduled_sends (send_at ASC) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS scheduled_sends_workspace_idx ON public.scheduled_sends (workspace_id, send_at ASC) WHERE status IN ('pending', 'sending');
 CREATE INDEX IF NOT EXISTS scheduled_sends_inbox_idx     ON public.scheduled_sends (inbox_id, created_at DESC);
@@ -1127,6 +1140,16 @@ CREATE TABLE IF NOT EXISTS public.send_approvals (
 );
 CREATE INDEX IF NOT EXISTS send_approvals_pending_expiry_idx ON public.send_approvals (expires_at) WHERE (status = 'pending'::text);
 CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_approvals (workspace_id, created_at DESC) WHERE (status = 'pending'::text);
+
+-- Business recipient rule (hosted migration 20261111190100). NULL = any
+-- recipient; otherwise a send outside these exact domains is held for approval.
+ALTER TABLE public.workspaces
+  ADD COLUMN IF NOT EXISTS allowed_recipient_domains text[];
+
+-- Why a send was held and whose it is (hosted migration 20261111190100).
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS hold_reason  text CHECK (hold_reason IS NULL OR hold_reason IN ('recipient_rule')),
+  ADD COLUMN IF NOT EXISTS requested_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 
 -- Single-use approval dispatch (hosted migration 20261016160400). The
 -- dispatcher binds an approval to the one scheduled_sends row allowed to send
@@ -2388,6 +2411,9 @@ CREATE TABLE IF NOT EXISTS public.reminders (
   created_at           timestamptz NOT NULL DEFAULT now(),
   updated_at           timestamptz NOT NULL DEFAULT now()
 );
+-- Who set the reminder up (20261111190000). NULL = the key's creator.
+ALTER TABLE public.reminders
+  ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS reminders_due_idx ON public.reminders (next_check_at)
   WHERE status IN ('pending', 'due') AND claimed_at IS NULL AND next_check_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS reminders_inbox_open_idx ON public.reminders (inbox_id, next_check_at)
@@ -2618,6 +2644,71 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO service_role;
+
+-- ============================================================
+-- Inbox visibility (hosted migration 20261111190000). What a credential acting
+-- as p_user_id may reach; see the hosted migration for the contract. NULL user
+-- acts as the workspace owner.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.credential_inbox_scope(
+  p_workspace_id uuid,
+  p_user_id uuid,
+  p_inbox_ids uuid[]
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SET search_path = public
+AS $$
+DECLARE
+  v_user   uuid;
+  v_hidden uuid[];
+  v_ids    uuid[];
+BEGIN
+  SELECT COALESCE(p_user_id, w.owner_id) INTO v_user
+    FROM public.workspaces w WHERE w.id = p_workspace_id;
+  IF v_user IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.workspace_members wm
+     WHERE wm.workspace_id = p_workspace_id AND wm.user_id = v_user
+  ) THEN
+    RETURN jsonb_build_object('restricted', true, 'inbox_ids', '[]'::jsonb);
+  END IF;
+  v_hidden := ARRAY(
+    SELECT i.id FROM public.inboxes i
+     WHERE i.workspace_id = p_workspace_id
+       AND i.visibility = 'private'
+       AND i.owner_user_id IS DISTINCT FROM v_user
+  );
+  IF cardinality(v_hidden) = 0 THEN
+    RETURN jsonb_build_object('restricted', false, 'inbox_ids', to_jsonb(p_inbox_ids));
+  END IF;
+  IF p_inbox_ids IS NOT NULL AND cardinality(p_inbox_ids) > 0 THEN
+    v_ids := ARRAY(SELECT x FROM unnest(p_inbox_ids) AS x WHERE NOT (x = ANY (v_hidden)));
+  ELSE
+    v_ids := ARRAY(SELECT i.id FROM public.inboxes i
+                    WHERE i.workspace_id = p_workspace_id AND NOT (i.id = ANY (v_hidden))
+                    ORDER BY i.id);
+  END IF;
+  RETURN jsonb_build_object('restricted', true, 'inbox_ids', to_jsonb(v_ids));
+END;
+$$;
+
+-- The same scope looked up by the bearer key's hash (asked alongside the
+-- tools/call gate). NULL for an unknown, revoked or expired key.
+CREATE OR REPLACE FUNCTION public.credential_inbox_scope_for_key(p_key_hash text)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SET search_path = public
+AS $$
+  SELECT public.credential_inbox_scope(k.workspace_id, k.created_by, k.inbox_ids)
+         || jsonb_build_object('key_id', k.id)
+    FROM public.api_keys k
+   WHERE k.key_hash = p_key_hash
+     AND k.deleted_at IS NULL
+     AND (k.expires_at IS NULL OR k.expires_at > now())
+   LIMIT 1;
+$$;
 
 -- ============================================================
 -- Seed: one operator user + one workspace (fixed UUIDs).

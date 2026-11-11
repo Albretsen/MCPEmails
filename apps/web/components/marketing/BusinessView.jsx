@@ -26,9 +26,15 @@ const DOES_ICONS = { read: 'inbox', send: 'mail', schedule: 'refresh', organize:
 const SAFETY_KEYS = ['approval', 'stored', 'keys', 'server'];
 const SAFETY_ICONS = { approval: 'shield', stored: 'ghost', keys: 'lock', server: 'server' };
 const PLAN_KEYS = ['free', 'personal', 'pro'];
+// Business billed per person (`business_seat_pricing` on) only: the page server
+// adds `copy.team` and `pricing.items.business` (src/lib/billing/business-seat-copy.ts).
+// Absent, neither section nor card renders and the page is as it was.
+const TEAM_KEYS = ['private', 'company', 'agent', 'rules', 'audit', 'paperwork'];
+const TEAM_ICONS = { private: 'lock', company: 'inbox', agent: 'cpu', rules: 'shield', audit: 'check', paperwork: 'eu' };
 
 export default function BusinessView({ copy, locale }) {
-  const { hero, pains, day, does, safety, providers, pricing, faq, ctaBand } = copy;
+  const { hero, pains, day, does, safety, providers, pricing, faq, ctaBand, team } = copy;
+  const planKeys = pricing.items.business ? [...PLAN_KEYS, 'business'] : PLAN_KEYS;
 
   return (
     <div>
@@ -48,6 +54,30 @@ export default function BusinessView({ copy, locale }) {
           </div>
         </div>
       </section>
+
+      {/* A team: private mailboxes per person, shared ones company-wide */}
+      {team && (
+        <section className="section" id="team" style={{ background: 'var(--bg-page)' }}>
+          <div className="container">
+            <div className="section-head" style={{ marginBottom: 32 }}>
+              <div className="eye-label">{team.eyebrow}</div>
+              <h2 style={{ fontSize: 36 }}>{team.title}</h2>
+              <p className="sub">{team.sub}</p>
+            </div>
+            <div className="founder-does-grid">
+              {TEAM_KEYS.map((k) => (
+                <div className="founder-does-card" key={k}>
+                  <div className="founder-does-icon">
+                    <MIcon name={TEAM_ICONS[k]} size={20} color="var(--mint-600)" />
+                  </div>
+                  <h3>{team.items[k].h}</h3>
+                  <p>{team.items[k].p}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* The job: several role addresses, one person */}
       <section className="section principles">
@@ -168,8 +198,8 @@ export default function BusinessView({ copy, locale }) {
             <h2 style={{ fontSize: 36 }}>{pricing.title}</h2>
             <p className="sub">{pricing.sub}</p>
           </div>
-          <div className="founder-does-grid business-plan-grid">
-            {PLAN_KEYS.map((k) => (
+          <div className={'founder-does-grid business-plan-grid' + (planKeys.length === 4 ? ' business-plan-grid-4' : '')}>
+            {planKeys.map((k) => (
               <div className="founder-does-card" key={k}>
                 <h3>{pricing.items[k].h}</h3>
                 <p>{pricing.items[k].p}</p>

@@ -163,6 +163,8 @@ export interface ReminderRow {
   workspace_id: string;
   inbox_id: string;
   api_key_id: string | null;
+  /** Who set it up (20261111190000); null = the key's creator. */
+  created_by?: string | null;
   kind: ReminderKind;
   status: ReminderStatus;
   condition: ReminderCondition;
@@ -532,6 +534,13 @@ export interface RemindersDeps {
   store: RemindersStore;
   /** Pro access of a workspace. Errors count as not allowed. */
   access(workspaceId: string): Promise<ReminderAccess>;
+  /**
+   * Inbox visibility: may the key that set up a follow-up still reach its
+   * inbox? It acts as the row's `created_by` when set (a web client request
+   * on the shared key), else as the key's creator. Optional so test deps can
+   * leave it out; production always has it, and it fails closed.
+   */
+  keyCanReach?(apiKeyId: string, workspaceId: string, inboxId: string, createdBy: string | null): Promise<boolean>;
   decryptRef(wrapper: unknown): Promise<MessageRef>;
   encryptRef(ref: MessageRef): Promise<EncryptedWrapper>;
   /** One provider session per inbox per run; IMAP connects lazily on first use. */
@@ -683,6 +692,22 @@ async function processInbox(
           update: {
             status: "cancelled",
             last_error_code: "api_key_revoked",
+            next_check_at: null,
+            completed_at: iso(nowMs),
+          },
+        });
+        continue;
+      }
+      if (deps.keyCanReach && !(await deps.keyCanReach(row.api_key_id, row.workspace_id, row.inbox_id, row.created_by ?? null))) {
+        // The mailbox is someone else's private inbox now, or the creator
+        // left the workspace: nobody who asked may read it any more.
+        plans.push({
+          row,
+          kind: "update",
+          counter: "cancelled",
+          update: {
+            status: "cancelled",
+            last_error_code: "inbox_not_permitted",
             next_check_at: null,
             completed_at: iso(nowMs),
           },

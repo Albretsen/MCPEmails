@@ -6,6 +6,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
 import type { StoredAction, StoredFilter } from '@/lib/automations/rules';
+import { canAccessInbox } from '@/lib/inboxes/visibility';
 import {
   RULE_COLUMNS,
   assertKeyCanRunAction,
@@ -68,6 +69,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .is('deleted_at', null)
     .maybeSingle();
   if (!existing) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
+  // A rule on someone else's private inbox is not this caller's to see or edit.
+  if (!existing.inbox_id || !(await canAccessInbox(c.db, existing.inbox_id, c.user.id))) {
+    return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
+  }
 
   const patch: TablesUpdate<'triage_rules'> = { updated_at: new Date().toISOString() };
 
@@ -107,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.inbox_id !== undefined || body.api_key_id !== undefined) {
     if (!isUuid(nextInboxId)) return NextResponse.json({ error: 'Choose the inbox this automation runs against.' }, { status: 400 });
     if (!isUuid(nextApiKeyId)) return NextResponse.json({ error: 'Choose the API key this automation acts with.' }, { status: 400 });
-    const ownership = await assertWorkspaceResources(c.db, c.workspaceId, nextInboxId, nextApiKeyId);
+    const ownership = await assertWorkspaceResources(c.db, c.workspaceId, nextInboxId, nextApiKeyId, c.user.id);
     if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
     patch.inbox_id = nextInboxId;
     patch.api_key_id = nextApiKeyId;
@@ -209,21 +214,24 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
 
+  // A rule on someone else's private inbox answers like a missing one.
+  const { data: target } = await c.db.from('triage_rules')
+    .select('inbox_id, running_since')
+    .eq('id', id)
+    .eq('workspace_id', c.workspaceId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (!target?.inbox_id || !(await canAccessInbox(c.db, target.inbox_id, c.user.id))) {
+    return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
+  }
+
   const body = await request.json().catch(() => null);
   const cancelWaiting = body?.cancel_waiting === true;
 
   // A run in flight can still queue a forward after the cancel below, and that
   // forward would stay approvable while the person was told it had gone.
-  if (cancelWaiting) {
-    const { data: current } = await c.db.from('triage_rules')
-      .select('running_since')
-      .eq('id', id)
-      .eq('workspace_id', c.workspaceId)
-      .is('deleted_at', null)
-      .maybeSingle();
-    if (current?.running_since) {
-      return NextResponse.json({ error: 'This automation is running right now. Try again once the run finishes.' }, { status: 409 });
-    }
+  if (cancelWaiting && target.running_since) {
+    return NextResponse.json({ error: 'This automation is running right now. Try again once the run finishes.' }, { status: 409 });
   }
 
   // Soft delete via the service-role client. The SELECT policy is evaluated

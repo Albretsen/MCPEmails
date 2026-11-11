@@ -65,9 +65,13 @@ class FakeDb {
     this.tables = tables;
   }
   from(table: string) { return new FakeQuery(this, table); }
-  rpc(name: string) {
+  /** Inboxes the signed-in person may not see (inbox_visible_to answers false). */
+  hiddenInboxes = new Set<string>();
+  rpc(name: string, args: Row = {}) {
     if (name === 'dispatch_scheduled_sends') this.rpcs += 1;
-    const answer = { data: null, error: null };
+    const answer = name === 'inbox_visible_to'
+      ? { data: !this.hiddenInboxes.has(args.p_inbox_id), error: null }
+      : { data: null, error: null };
     return { maybeSingle: async () => answer, then: (resolve: (v: any) => unknown) => Promise.resolve(answer).then(resolve) };
   }
 }
@@ -621,4 +625,44 @@ test('approve route: an owner gets one outcome per row', async () => {
   const response = await approveRoute.POST(request(approveBody));
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).outcomes, [{ id: 'a', outcome: 'approved' }]);
+});
+
+// ── Business privacy model (migration 20261111190000) ───────────────────────
+// inbox-1 is someone else's private inbox: inbox_visible_to answers false.
+
+test('privacy: the original of a forward from someone else\'s private inbox is 404 for a member, no content for an owner', async () => {
+  const params = { params: Promise.resolve({ id: ID }) };
+  routeDb = forwardDb();
+  routeDb.hiddenInboxes.add('inbox-1');
+  routeDb.tables.workspace_members[0].role = 'member';
+  assert.equal((await originalRoute.GET({}, params)).status, 404);
+  for (const role of ['owner', 'admin']) {
+    routeDb.tables.workspace_members[0].role = role;
+    const response = await originalRoute.GET({}, params);
+    assert.equal(response.status, 403, role);
+    assert.equal((await response.json()).code, 'private');
+  }
+});
+
+test('privacy: Forward again on someone else\'s private inbox creates nothing, for any role', async () => {
+  for (const [role, status] of [['member', 404], ['owner', 403], ['admin', 403]] as const) {
+    routeDb = forwardDb();
+    routeDb.hiddenInboxes.add('inbox-1');
+    routeDb.tables.workspace_members[0].role = role;
+    const response = await forwardRoute.POST(request({}), { params: Promise.resolve({ id: ID }) });
+    assert.equal(response.status, status, role);
+    assert.equal(routeDb.tables.send_approvals.length, 1, role);
+  }
+});
+
+test('privacy: Approve all from a rule on someone else\'s private inbox answers 404 and approves nothing', async () => {
+  routeDb = approveDb([waiting('a')]);
+  routeDb.tables.triage_rules[0].inbox_id = 'inbox-1';
+  routeDb.hiddenInboxes.add('inbox-1');
+  const response = await approveRoute.POST(request(approveBody));
+  assert.equal(response.status, 404);
+  assert.equal(routeDb.tables.send_approvals[0].status, 'pending');
+  // The same rule on an inbox the owner may see still works.
+  routeDb.hiddenInboxes.clear();
+  assert.equal((await approveRoute.POST(request(approveBody))).status, 200);
 });

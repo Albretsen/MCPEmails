@@ -6,13 +6,20 @@ import PricingClient from '../../../components/marketing/PricingClient';
 import { attachFounder, founderDisplayFor } from '@/lib/stripe/founder-display';
 import { FOUNDER_VALID_UNTIL, pricesWithFounder } from '@/lib/stripe/founder-offer';
 import { requireLocale } from '@/i18n/require-locale';
+import { withBusinessSeatPrices } from '@/lib/stripe/business-seat-display';
+import { businessSeatPageCopy } from '@/lib/billing/business-seat-copy';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   requireLocale(locale);
   const t = await getTranslations({ locale, namespace: 'pricing' });
   const title = t.has('meta.title') ? t('meta.title') : 'Pricing';
-  const description = t.has('meta.description')
+  // Business per person (switch on): the stock description quotes the flat
+  // Business price, so it is replaced. Off, the description is unchanged.
+  const seat = businessSeatPageCopy(locale, await withBusinessSeatPrices(await fetchStripePrices()));
+  const description = seat
+    ? seat.pricing.metaDescription
+    : t.has('meta.description')
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   return {
@@ -45,7 +52,14 @@ export default async function PricingPage({ params }) {
   // when the count cannot be read, and always in zh. Read per request; the
   // flag and the place count are each cached 60 s (founder-offer-server.ts).
   const founder = await founderDisplayFor({ locale });
-  const stripePrices = pricesWithFounder(attachFounder(await fetchStripePrices(), founder), locale);
+  // Business billed per person while `business_seat_pricing` is on: the
+  // Business amounts become the per-person pair and `businessSeat` carries
+  // the copy that goes with them (src/lib/billing/business-seat-copy.ts).
+  // Off, or a failed read, leaves both untouched and the page as it was.
+  const stripePrices = await withBusinessSeatPrices(
+    pricesWithFounder(attachFounder(await fetchStripePrices(), founder), locale),
+  );
+  const businessSeat = businessSeatPageCopy(locale, stripePrices);
   // EUR on or off, read when this page renders and handed to the client,
   // which decides per visitor (EU or not) without making the page dynamic.
   // On means STRIPE_EUR_PRICES, or the automatic launch once it completed
@@ -57,7 +71,9 @@ export default async function PricingPage({ params }) {
 
   const t = await getTranslations({ locale, namespace: 'pricing' });
   const title = t.has('meta.title') ? t('meta.title') : 'Pricing';
-  const description = t.has('meta.description')
+  const description = businessSeat
+    ? businessSeat.pricing.metaDescription
+    : t.has('meta.description')
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   // Emits the real plan catalogue as Product + Offers, so an assistant asked
@@ -68,13 +84,14 @@ export default async function PricingPage({ params }) {
     {
       eur: eurEnabled,
       founder: founder ? { monthlyCents: founder.monthlyCents, validUntil: FOUNDER_VALID_UNTIL } : null,
+      businessPerPerson: businessSeat ? { monthlyCents: stripePrices.pro.monthlyCents } : null,
     },
   );
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <PricingClient stripePrices={stripePrices} eurEnabled={eurEnabled} />
+      <PricingClient stripePrices={stripePrices} eurEnabled={eurEnabled} businessSeat={businessSeat} />
     </>
   );
 }

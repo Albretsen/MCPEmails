@@ -150,11 +150,13 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import {
   basePlanItem,
   getPlanByStripePriceId,
+  isBusinessSeatPriceId,
   PLANS,
   type BillingInterval,
   type PlanId,
 } from '@/lib/stripe/plans';
 import { syncMailboxAddon } from '@/lib/stripe/mailbox-addon';
+import { syncBusinessSeats } from '@/lib/stripe/business-seats';
 import { recordFounderPlace, recordFounderPlaceFromInvoice } from '@/lib/stripe/founder-places';
 import { hasPaidInvoice, neverPaidSepa } from '@/lib/stripe/sepa-entitlement';
 import { markCheckoutLinkComplete } from '@/lib/stripe/checkout-link';
@@ -751,7 +753,7 @@ async function handleCheckoutSessionCompleted(
   }
   const synced = await syncPlanFromCheckoutSession(session, 'checkout.session.completed');
   if (!synced) return;
-  const { userId, resolvedPlan, resolvedInterval } = synced;
+  const { userId, resolvedPlan, resolvedInterval, perPerson } = synced;
 
   if (resolvedPlan === 'free') return;
   // Bound once, narrowed, for the `after()` closures below.
@@ -840,6 +842,8 @@ async function handleCheckoutSessionCompleted(
           }
           : null,
         sessionId: session.id,
+        // Business billed per person: the email lists the per-person features.
+        perPerson: purchasedPlan === 'pro' && perPerson,
         // 'unpaid' for a delayed method (SEPA Direct Debit): the email then
         // says the debit is processing instead of "payment received".
         paymentStatus: session.payment_status ?? null,
@@ -870,6 +874,8 @@ async function syncPlanFromCheckoutSession(
   userId: string | null;
   resolvedPlan: PlanId | 'free';
   resolvedInterval: BillingInterval | null;
+  /** The base price is a per-person Business seat price. */
+  perPerson: boolean;
 } | null> {
   if (session.mode !== 'subscription') return null;
 
@@ -911,6 +917,7 @@ async function syncPlanFromCheckoutSession(
   // Resolved from the price the customer actually subscribed to; the checkout
   // metadata is only the fallback.
   let resolvedInterval: BillingInterval | null = null;
+  let perPerson = false;
 
   if (subscriptionId) {
     try {
@@ -925,6 +932,7 @@ async function syncPlanFromCheckoutSession(
       // plan_id (they should agree, but the subscription is authoritative).
       const priceId = basePlanItem(subscription.items.data)?.price?.id;
       const resolved = getPlanByStripePriceId(priceId);
+      perPerson = isBusinessSeatPriceId(priceId ?? null);
       if (resolved) {
         resolvedPlan = resolved.plan.id;
         resolvedInterval = resolved.interval;
@@ -972,7 +980,7 @@ async function syncPlanFromCheckoutSession(
 
   if (resolvedPlan !== 'free') await unparkAfterCheckout(customerId, userId, resolvedPlan);
 
-  return { userId, resolvedPlan, resolvedInterval };
+  return { userId, resolvedPlan, resolvedInterval, perPerson };
 }
 
 /**
@@ -1424,6 +1432,10 @@ async function handleSubscriptionUpserted(
     after(async () => {
       const owner = ownerId ?? (await resolveUserId(createServiceRoleClient(), customerId, null));
       if (owner) await syncMailboxAddon(owner);
+      // Business billed per person: the seat quantity follows the people
+      // who are billable now (business-seats.ts). No-op with the switch off
+      // and on any base price that is not a seat price; never throws.
+      if (owner) await syncBusinessSeats(owner);
       // A paid subscription on the founder price takes its place in the
       // counter and gets the cohort tag. No-op for any other price.
       await recordFounderPlace({

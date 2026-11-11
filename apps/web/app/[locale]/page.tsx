@@ -6,6 +6,8 @@ import { routing } from '@/i18n/routing';
 import { requireLocale } from '@/i18n/require-locale';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
+import { withBusinessSeatPrices } from '@/lib/stripe/business-seat-display';
+import { businessSeatPageCopy } from '@/lib/billing/business-seat-copy';
 
 export async function generateMetadata({
   params,
@@ -54,7 +56,10 @@ export default async function HomePage({
   const { locale } = await params;
   requireLocale(locale);
   setRequestLocale(locale);
-  const stripePrices = await fetchStripePrices();
+  // Business per person while `business_seat_pricing` is on; untouched when
+  // it is off (src/lib/stripe/business-seat-display.ts).
+  const stripePrices = await withBusinessSeatPrices(await fetchStripePrices());
+  const businessSeat = businessSeatPageCopy(locale, stripePrices);
 
   const t = await getTranslations({ locale, namespace: 'home.meta' });
   // The visible FAQ (components/marketing/Sections.jsx, Faq) reads this same
@@ -65,6 +70,9 @@ export default async function HomePage({
     name: t('title'),
     description: t('description'),
     faq: Array.isArray(faqItems) ? faqItems : [],
+    businessPerPerson: businessSeat && stripePrices.pro?.monthlyCents
+      ? { monthlyCents: stripePrices.pro.monthlyCents }
+      : null,
   });
 
   return (
@@ -75,7 +83,7 @@ export default async function HomePage({
       />
       {/* EUR on (env switch or the completed launch, eur-launch.ts) as read at
           render; off renders exactly as before. */}
-      <HomeClient stripePrices={stripePrices} eurEnabled={await eurDisplayEnabled()} />
+      <HomeClient stripePrices={stripePrices} eurEnabled={await eurDisplayEnabled()} businessSeat={businessSeat} />
     </>
   );
 }

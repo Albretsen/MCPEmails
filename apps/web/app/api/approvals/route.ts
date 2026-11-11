@@ -9,6 +9,7 @@ import { APPROVAL_RULE_LINK_COLUMNS, approvalDecider, withApprovalOrigin } from 
 import { readSummary } from '@/lib/approvals/payload';
 import { deliveryFromScheduledSend, loadScheduledSendsByApproval, provablyNotSent } from '@/lib/approvals/delivery';
 import { forwardAgainWindowOpen } from '@/lib/approvals/forward-again';
+import { approvalAccess, embeddedInbox, holdReasonOf, redactApprovalRow, type ApprovalAccess } from '@/lib/approvals/access';
 
 async function context() {
   const auth = await createClient();
@@ -32,7 +33,7 @@ export async function GET() {
   // Read at one moment, so a row is on one side of its deadline or the other.
   const nowIso = new Date().toISOString();
   const { data, error } = await selectTolerantly<unknown[]>(
-    ['id', 'inbox_id', 'operation', 'summary', 'send_at', 'status', 'created_at', 'expires_at', 'revision', 'no_approval_wait_reason', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'],
+    ['id', 'inbox_id', 'operation', 'summary', 'send_at', 'status', 'created_at', 'expires_at', 'revision', 'hold_reason', 'no_approval_wait_reason', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name, owner_user_id, visibility)'],
     ['no_approval_wait_reason', ...APPROVAL_RULE_LINK_COLUMNS],
     (columns) => c.db.from('send_approvals')
       .select(columns)
@@ -48,15 +49,22 @@ export async function GET() {
   // when it opens (GET /api/approvals/[id]).
   // The summary is stored encrypted since 2026-10-30 (older rows in clear);
   // the panel gets the plain object either way.
-  const pendingRows = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
-    ...withApprovalOrigin(row),
-    summary: readSummary(row.summary),
+  //
+  // Privacy model (src/lib/approvals/access.ts): a held send from someone
+  // else's private inbox is left out for a member and reduced to metadata for
+  // an owner or admin. `can_decide` is per row, because the owner of a private
+  // inbox decides their own sends whatever their role.
+  const pendingRaw = withAccess((data ?? []) as Record<string, unknown>[], c.role, c.user.id);
+  const pendingRows = pendingRaw.map(({ row, access }) => ({
+    raw: row,
+    access,
+    shaped: { ...withApprovalOrigin(row), summary: readSummary(row.summary) },
   }));
 
   // Recently decided sends, so the panel can show WHERE each decision was made
   // (`decided_via`: the review card in Claude vs. this dashboard). A failure
   // here is not fatal — the pending queue is the load-bearing part of the view.
-  const decidedColumns = ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'expires_at', 'decided_at', 'decided_by', 'decided_via', 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name)'];
+  const decidedColumns = ['id', 'inbox_id', 'operation', 'summary', 'status', 'created_at', 'expires_at', 'decided_at', 'decided_by', 'decided_via', 'hold_reason', 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS, 'inboxes(email_address, display_name, owner_user_id, visibility)'];
   const { data: decided } = await selectTolerantly<unknown[]>(
     decidedColumns,
     [...PENDING_APPROVAL_COLUMNS, 'no_approval_rule_name', ...APPROVAL_RULE_LINK_COLUMNS],
@@ -77,18 +85,19 @@ export async function GET() {
       .order('expires_at', { ascending: false }).limit(20),
   );
 
-  const closed: Record<string, unknown>[] = [
+  const closedWithAccess = withAccess([
     ...((lapsed ?? []) as Record<string, unknown>[]).map((row) => ({ ...row, status: 'expired' })),
     ...((decided ?? []) as Record<string, unknown>[]),
-  ]
+  ], c.role, c.user.id)
     // Both lists are kept whole. Cutting the merge to 20 would let a busy day push
     // out a row that expired just now, and with it the Forward again button.
-    .sort((a, b) => closedAt(b).localeCompare(closedAt(a)));
+    .sort((a, b) => closedAt(b.row).localeCompare(closedAt(a.row)));
+  const closed = closedWithAccess.map(({ row }) => row);
 
   const closedIds = closed.map((row) => String(row.id));
   const ruleIds = [
     ...new Set(
-      [...closed, ...((data ?? []) as Record<string, unknown>[])]
+      [...closed, ...pendingRaw.map(({ row }) => row)]
         .map((row) => row.triage_rule_id)
         .filter((id): id is string => typeof id === 'string'),
     ),
@@ -111,12 +120,12 @@ export async function GET() {
   const ruleDeleted = (kind: string, ruleId: string | null) =>
     kind === 'rule_forward' && (!ruleId || deletedRules.has(ruleId));
 
-  const approvals = pendingRows.map((row) => ({
-    ...row,
-    rule_deleted: ruleDeleted(row.kind, row.rule_id),
+  const approvals = pendingRows.map(({ raw, access, shaped }) => shapeForCaller(raw, access, {
+    ...shaped,
+    rule_deleted: ruleDeleted(shaped.kind, shaped.rule_id),
   }));
 
-  const decidedRows = closed.map((row) => {
+  const decidedRows = closedWithAccess.map(({ row, access }) => {
     const origin = withApprovalOrigin(row);
     const { decided_by: _decidedBy, ...rest } = origin as typeof origin & { decided_by?: unknown };
     const expired = row.status === 'expired';
@@ -124,7 +133,7 @@ export async function GET() {
     const marker = markers.get(String(row.id));
     // Failed, and the record proves nothing went out. The route checks again.
     const failedNotSent = row.status === 'approved' && provablyNotSent(marker);
-    return {
+    return shapeForCaller(row, access, {
       ...rest,
       summary: readSummary(row.summary),
       decider: approvalDecider(row),
@@ -143,9 +152,57 @@ export async function GET() {
         && liveRules.has(origin.rule_id)
         && !reforwarded.has(row.id)
         && forwardAgainWindowOpen(row),
-    };
+    });
   });
   return NextResponse.json({ approvals, decided: decidedRows });
+}
+
+/** Drops the rows the caller may not see (privacy model, src/lib/approvals/access.ts). */
+function withAccess(rows: Record<string, unknown>[], role: string, userId: string) {
+  const out: { row: Record<string, unknown>; access: ApprovalAccess }[] = [];
+  for (const row of rows) {
+    const access = approvalAccess(role, userId, embeddedInbox(row), holdReasonOf(row));
+    if (!access.hidden) out.push({ row, access });
+  }
+  return out;
+}
+
+/**
+ * One visible row as the caller may see it. Someone else's private inbox is
+ * reduced to metadata (redactApprovalRow) plus the queue's own state: where it
+ * came from (never the rule's name), delivery, and what the panel offers.
+ * Every row loses the embed's owner columns.
+ */
+function shapeForCaller(
+  raw: Record<string, unknown>,
+  access: ApprovalAccess,
+  shaped: Record<string, unknown>,
+): Record<string, unknown> {
+  if (access.redacted) {
+    return {
+      ...redactApprovalRow(raw, access.showRecipients
+        ? { recipients: true, summary: readSummary(raw.summary) as Record<string, unknown> }
+        : {}),
+      status: shaped.status,
+      kind: shaped.kind,
+      rule_id: null,
+      rule_name: null,
+      rule_deleted: shaped.rule_deleted ?? false,
+      ...('decider' in shaped ? { decider: shaped.decider } : {}),
+      decided_via: shaped.decided_via ?? null,
+      ...('delivery' in shaped ? { delivery: shaped.delivery } : {}),
+      // Forward again re-sends mail the caller may not read: the route refuses it.
+      ...('can_forward_again' in shaped ? { can_forward_again: false } : {}),
+      no_approval_wait_reason: raw.no_approval_wait_reason ?? null,
+      can_decide: access.canDecide,
+    };
+  }
+  const inbox = raw.inboxes as { email_address?: string; display_name?: string | null } | null;
+  return {
+    ...shaped,
+    inboxes: inbox ? { email_address: inbox.email_address, display_name: inbox.display_name ?? null } : null,
+    can_decide: access.canDecide,
+  };
 }
 
 /**
@@ -163,12 +220,24 @@ export async function PATCH(request: NextRequest) {
   }
   const c = await context();
   if (!c) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-  if (!canDecide(c.role)) return NextResponse.json({ error: 'Only workspace owners and admins can decide sends.' }, { status: 403 });
   const body = await request.json().catch(() => null);
   const id = body?.id; const decision = body?.decision;
   // The version of the request the dialog showed; see decideApproval.
   const revision = parseRenderedRevision(body?.revision);
   if (typeof id !== 'string' || !['approve', 'reject'].includes(decision)) return NextResponse.json({ error: 'An approval id and decision are required.' }, { status: 400 });
+
+  // Who may decide depends on the send's inbox as well as the role: the owner
+  // of a private inbox decides their own sends (src/lib/approvals/access.ts).
+  // A send the caller may not see is the same 404 as a missing id.
+  if (!canDecide(c.role)) {
+    const { data: held } = await c.db.from('send_approvals')
+      .select('id, inbox_id, hold_reason, inboxes(owner_user_id, visibility)')
+      .eq('id', id).eq('workspace_id', c.workspaceId).maybeSingle();
+    if (!held) return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
+    const access = approvalAccess(c.role, c.user.id, embeddedInbox(held as Record<string, unknown>), holdReasonOf(held as Record<string, unknown>));
+    if (access.hidden) return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
+    if (!access.canDecide) return NextResponse.json({ error: 'Only workspace owners and admins can decide sends.' }, { status: 403 });
+  }
 
   const outcome = await decideApproval({
     db: c.db,

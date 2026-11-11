@@ -218,7 +218,9 @@ export function ApprovalReview({ review, csrfToken }) {
   // A forward's files are the original's, listed from the mailbox below.
   const hasAttachments = review.attachment_count > 0 || (review.forward_carries_original && !isForward);
   // The original is read live only while someone can still act on it.
-  const showOriginal = isForward && !decided && review.role !== 'viewer' && (state === 'pending' || state === 'expired');
+  // Never for someone else's private inbox: its owner/admin decides without the content.
+  const showOriginal = isForward && !decided && review.role !== 'viewer'
+    && review.body?.unavailable !== 'withheld_private' && (state === 'pending' || state === 'expired');
 
   return (
     <div className="review-shell">
@@ -320,6 +322,7 @@ export function ApprovalReview({ review, csrfToken }) {
           {review.body.unavailable === 'absent' && isForward ? null : review.body.unavailable ? (
             <p className="review-body-note">
               {t(`approvals.review.body${review.body.unavailable === 'withheld_role' ? 'WithheldRole'
+                : review.body.unavailable === 'withheld_private' ? 'WithheldPrivate'
                 : review.body.unavailable === 'stored_with_provider' ? 'StoredWithProvider'
                 : review.body.unavailable === 'decrypt_failed' ? 'DecryptFailed'
                 : 'Absent'}`)}

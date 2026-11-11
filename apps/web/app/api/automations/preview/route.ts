@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   if (!isUuid(body.inbox_id)) return NextResponse.json({ error: 'Choose the inbox this automation runs against.' }, { status: 400 });
   if (!isUuid(body.api_key_id)) return NextResponse.json({ error: 'Choose the API key this automation acts with.' }, { status: 400 });
 
-  const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id);
+  const ownership = await assertWorkspaceResources(c.db, c.workspaceId, body.inbox_id, body.api_key_id, c.user.id);
   if (ownership) return NextResponse.json({ error: ownership.error }, { status: ownership.status });
 
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

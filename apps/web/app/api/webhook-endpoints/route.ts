@@ -121,7 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const verdict = await validateWebhookUrl(url);
   if (!verdict.ok) return NextResponse.json({ error: verdict.message, error_code: verdict.code }, { status: 400 });
 
-  const inboxes = await validateInboxIds(service, access.workspaceId, inboxIds);
+  const inboxes = await validateInboxIds(service, access.workspaceId, inboxIds, access.userId);
   if (!inboxes.ok) return NextResponse.json({ error: inboxes.error, error_code: inboxes.code }, { status: 400 });
 
   // The plaintext exists in this function and in the response only.

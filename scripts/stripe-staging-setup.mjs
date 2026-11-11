@@ -33,6 +33,11 @@
  *   --recreate-webhook   delete and recreate the staging endpoint to obtain a
  *                        new signing secret (Stripe shows it only at creation).
  *
+ * The catalog includes the two Business per-person prices
+ * (STRIPE_PRICE_BUSINESS_SEAT_MONTHLY / _YEARLY, lookup keys business_seat_month
+ * and business_seat_year, $19 and $182.40 on the Business product) that
+ * pricing_switches.business_seat_pricing sells; prod does not have them yet.
+ *
  * The spec is STRIPE_SPEC.md in the staging tracker; the data lives in
  * scripts/staging-lib.mjs (tested by scripts/staging-lib.test.mjs).
  * The customer portal configuration already exists (created by hand to

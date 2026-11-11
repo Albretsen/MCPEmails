@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { cleanOriginal } from '@/lib/approvals/original';
+import { canDecide } from '@/lib/approvals/decide';
+import { canReadApprovalMail } from '@/lib/approvals/access';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
@@ -17,7 +19,9 @@ const UPSTREAM_TIMEOUT_MS = 20_000;
  *
  * Read-only. The workspace comes from the approval row, a missing approval and one
  * in another workspace answer the same 404, and `viewer` gets no message content,
- * as on the review page (src/lib/approvals/review.ts).
+ * as on the review page (src/lib/approvals/review.ts). Someone else's private
+ * inbox (src/lib/approvals/access.ts) is the same 404 for a member, and no content
+ * for an owner or admin, who may still decide the forward without reading it.
  */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,7 +34,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const db = createServiceRoleClient();
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id')
+    .select('id, workspace_id, inbox_id')
     .eq('id', id)
     .maybeSingle();
   const { data: membership } = approval
@@ -42,8 +46,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         .maybeSingle()
     : { data: null };
   if (!approval || !membership) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+  const readable = await canReadApprovalMail(db, approval.inbox_id, user.id);
+  if (!readable && !canDecide(membership.role)) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
   if (membership.role === 'viewer') {
     return NextResponse.json({ error: 'Your role cannot see message content.', code: 'role' }, { status: 403 });
+  }
+  if (!readable) {
+    return NextResponse.json({ error: 'This message is in someone else\'s private mailbox.', code: 'private' }, { status: 403 });
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
