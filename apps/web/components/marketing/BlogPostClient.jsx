@@ -342,6 +342,16 @@ export default function BlogPostClient({ post }) {
           color: var(--fg-2); font-size: 18px; font-style: italic; line-height: 1.6;
         }
         .blog-prose hr { border: none; border-top: 1px solid var(--border-1); margin: 40px 0; }
+        .blog-prose .blog-table-wrap { margin: 0 0 24px; overflow-x: auto; }
+        .blog-prose table {
+          width: 100%; min-width: 560px; border-collapse: collapse;
+          font-size: 15px; line-height: 1.55; color: var(--fg-1);
+        }
+        .blog-prose th {
+          text-align: left; font-weight: 700; color: var(--fg-0);
+          padding: 10px 12px; border-bottom: 1px solid var(--border-1);
+        }
+        .blog-prose td { padding: 10px 12px; border-bottom: 1px solid var(--border-1); vertical-align: top; }
         .blog-prose figure { margin: 0 0 24px; }
         .blog-prose figure img { width: 100%; border-radius: var(--radius-lg); display: block; }
         .blog-prose figcaption { font-size: 13px; color: var(--fg-3); text-align: center; margin-top: 8px; }

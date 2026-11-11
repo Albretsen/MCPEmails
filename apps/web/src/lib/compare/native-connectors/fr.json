@@ -113,6 +113,11 @@
       "googleGmailMcp": "Google for Developers : configurer le serveur MCP Gmail"
     }
   },
+  "guide": {
+    "h": "Besoin de la carte complète des options ?",
+    "p": "Connecteurs intégrés, services MCP hébergés, applications de bureau, auto-hébergement et outils d'automatisation, pour Yahoo, IMAP, les domaines personnalisés et plusieurs boîtes, datés et sourcés.",
+    "link": "Lire : comment connecter n'importe quel compte e-mail à Claude ou ChatGPT"
+  },
   "ctaBand": {
     "title": "Donnez à votre IA toutes vos boîtes",
     "sub": "Connectez une boîte en quelques minutes. Une boîte gratuite, sans carte bancaire.",

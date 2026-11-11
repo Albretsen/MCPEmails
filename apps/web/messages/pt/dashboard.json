@@ -124,6 +124,25 @@
     "waitingLive": "Esta página se atualiza sozinha quando a primeira chamada chegar.",
     "waitingStopped": "Ainda nenhuma chamada. Recarregue esta página depois de testar um prompt."
   },
+  "heardAbout": {
+    "title": "Como você conheceu o MCPEmails?",
+    "sub": "Um clique nos ajuda a saber onde as pessoas nos encontram. Opcional.",
+    "dismiss": "Fechar",
+    "send": "Enviar",
+    "otherLabel": "Onde você ouviu falar do MCPEmails?",
+    "otherPlaceholder": "Conte onde (opcional)",
+    "options": {
+      "chatgpt": "Resposta do ChatGPT",
+      "claude": "Resposta do Claude",
+      "gemini": "Resposta do Gemini ou da IA do Google",
+      "google_search": "Pesquisa no Google",
+      "colleague": "Um colega ou amigo",
+      "directory": "Diretório de apps ou lista de MCP",
+      "video": "YouTube ou vídeo",
+      "forum": "Reddit ou fórum",
+      "other": "Outro"
+    }
+  },
   "firstWeek": {
     "title": "Sua primeira semana",
     "sub": "Alguns passos para o MCPEmails entrar na sua rotina.",
@@ -938,7 +957,11 @@
       "freeConfirm": "Mudar para o Free",
       "freeBody": "Seu plano continua ativo até {date}, que já está pago. Depois disso a conta passa para o Free. Nada é excluído.",
       "freeToast": "Pronto. Seu plano continua ativo até {date} e depois passa para o Free.",
-      "pendingCheckout": "Há uma pausa ou uma mudança de plano agendada na sua assinatura. Use Retomar antes ou Manter nesta página primeiro e depois mude de plano."
+      "pendingCheckout": "Há uma pausa ou uma mudança de plano agendada na sua assinatura. Use Retomar antes ou Manter nesta página primeiro e depois mude de plano.",
+      "endsBanner": "Seu plano {plan} termina em {date}. Nada é excluído.",
+      "keepMyPlan": "Manter meu plano",
+      "keepPlanBody": "O encerramento agendado é removido. {plan} continua e renova em {date} por {amount}, como antes. Nada é cobrado hoje.",
+      "keepPlanToast": "Seu plano {plan} continua."
     },
     "cancelReason": {
       "prompt": "Você cancelou seu plano. Se quiser nos contar o motivo, um toque basta.",

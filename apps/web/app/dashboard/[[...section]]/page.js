@@ -24,6 +24,7 @@ import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import { getActiveSeasonalOffers } from '../../../src/lib/stripe/seasonal-offer-server';
 import { getSeasonalSwitchOffer, mayOfferSeasonalSwitch } from '../../../src/lib/stripe/seasonal-switch';
 import { withSeasonalOffers } from '../../../src/lib/billing/seasonal-offer-view.mjs';
+import { loadAnnualSwitch } from '@/lib/billing/annual-switch-server';
 import {
   attachFounder,
   founderDisplayFor,
@@ -31,6 +32,8 @@ import {
   withFounderSubscriberPrices,
 } from '../../../src/lib/stripe/founder-display';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
+import { inboxAlertMode } from '@/lib/retention/inbox-alert';
+import { loadInboxAlertArm } from '@/lib/retention/inbox-alert-store';
 import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
 import { isOnboardingStep } from '@/lib/onboarding/flow';
@@ -939,6 +942,13 @@ export default async function DashboardPage({ params, searchParams }) {
       ? (await loadGmailOAuthCapState(createServiceRoleClient())).closed
       : true,
   });
+  // Broken-inbox alert banner (src/lib/retention/inbox-alert.ts): only while
+  // INBOX_ALERT_ENABLED=on and only for a workspace the dispatcher put in the
+  // `alert` arm. The arm is read only for a paid plan, where it can exist.
+  const inboxAlertBanner = Boolean(workspace?.id) &&
+    inboxAlertMode() === 'on' &&
+    ['personal', 'solo', 'pro'].includes(plan) &&
+    (await loadInboxAlertArm(createServiceRoleClient(), workspace.id)) === 'alert';
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -1039,6 +1049,20 @@ export default async function DashboardPage({ params, searchParams }) {
   const referralTileFacts = referralEnabled && workspace
     ? await fetchReferralTileFacts(supabase, workspace.id, plan)
     : null;
+
+  // "How did you hear about MCPEmails?" (components/dashboard/HeardAboutCard.jsx):
+  // true only while workspaces.heard_about_at is NULL, for the owner. Its own
+  // read so a missing column (code deployed before 20261111150000_heard_about)
+  // costs this one card, never the workspace query above; an error is false.
+  let heardAboutPending = false;
+  if (workspace && workspace.owner_id === user.id) {
+    const { data: heardRow, error: heardError } = await supabase
+      .from('workspaces')
+      .select('heard_about_at')
+      .eq('id', workspace.id)
+      .maybeSingle();
+    heardAboutPending = !heardError && heardRow != null && heardRow.heard_about_at == null;
+  }
 
   // The single Streamable HTTP MCP endpoint clients connect to.
   const mcpUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'}/api/mcp`;
@@ -1145,6 +1169,23 @@ export default async function DashboardPage({ params, searchParams }) {
     workspace?.owner_id === user.id,
   );
 
+  // The monthly-to-annual card (billing page) and notice (Overview), or null.
+  // Behind ANNUAL_SWITCH_CARD_ENABLED; reads Stripe only for an owner on a
+  // monthly-shaped live plan that passed every cheap check, and never during
+  // the Black Week window (the seasonal card owns it then). See
+  // src/lib/billing/annual-switch.ts.
+  const annualSwitch = seasonalSwitch
+    ? null
+    : await loadAnnualSwitch({
+        userId: user.id,
+        workspaceId: workspace?.id ?? null,
+        plan,
+        isOwner: workspace?.owner_id === user.id,
+        compedScale,
+        onPass: Boolean(passState),
+        subscriptionStatus: ownBilling?.subscription_status ?? null,
+      });
+
   return (
     <DashboardApp
       initialRoute={initialRoute}
@@ -1187,6 +1228,8 @@ export default async function DashboardPage({ params, searchParams }) {
         // The referral program: OUR rollout gate, internal only for now.
         // Without it there is no Invite entry, tile or code field.
         referralEnabled,
+        // The one-time "How did you hear about MCPEmails?" card on the Overview.
+        heardAboutPending,
         // The Pro feature gate for this workspace: { visible, allowed }.
         proFeatures: { visible: proFeatureAccess.visible, allowed: proFeatureAccess.allowed },
         // Whether the connect modal offers "Prefer to sign in with Google?"
@@ -1195,10 +1238,15 @@ export default async function DashboardPage({ params, searchParams }) {
         // Black Week 2026: the offer for the billing page's switch card, or
         // null (see src/lib/stripe/seasonal-switch.ts).
         seasonalSwitch,
+        // The monthly-to-annual switch: { planId, currency, noticeVisible }
+        // or null (src/lib/billing/annual-switch-server.ts).
+        annualSwitch,
         // Failed-payment banner (components/dashboard/PaymentIssueBanner.jsx).
         // The owner's own subscription only: a member never sees who pays.
         subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,
         lastDeclineCode: workspace?.owner_id === user.id ? ownBilling?.last_decline_code ?? null : null,
+        // Broken-inbox alert arm: the red banner above every page but Inboxes.
+        inboxAlertBanner,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

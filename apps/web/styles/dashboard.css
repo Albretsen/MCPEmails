@@ -103,6 +103,16 @@ body { background: var(--bg-page); }
 }
 .nav-item.active .count { background: rgba(37,71,229,0.12); color: var(--cobalt-700); }
 
+/* The referral entry pinned above the account footer (Sidebar.jsx). */
+.sidebar .invite-promo {
+  margin-top: auto; margin-bottom: 8px; height: auto; padding: 8px 10px;
+  align-items: flex-start;
+}
+.sidebar .invite-promo + .footer-user { margin-top: 0; }
+.invite-promo-icon { margin-top: 2px; flex-shrink: 0; }
+.invite-promo-text { display: flex; flex-direction: column; min-width: 0; }
+.invite-promo-title { font-size: 13.5px; font-weight: 500; }
+.invite-promo-sub { font-size: 11.5px; font-weight: 400; color: var(--fg-3); line-height: 1.35; }
 .sidebar .footer-user {
   margin-top: auto; padding: 10px;
   display: flex; align-items: center; gap: 10px;

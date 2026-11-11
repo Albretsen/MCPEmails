@@ -89,6 +89,7 @@ import connectYahooMailToChatgptAndClaude from './posts/connect-yahoo-mail-to-ch
 import connectChatgptOutlookComHotmail from './posts/connect-chatgpt-to-outlook-com-hotmail';
 import dailyEmailBriefing from './posts/daily-email-briefing-with-claude-and-chatgpt';
 import multipleAccountsClaudeCowork from './posts/multiple-email-accounts-in-claude-cowork';
+import connectAnyEmailToClaudeAndChatgpt from './posts/connect-any-email-to-claude-and-chatgpt';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -136,6 +137,7 @@ const MODULE_POSTS = [
   connectChatgptOutlookComHotmail,
   dailyEmailBriefing,
   multipleAccountsClaudeCowork,
+  connectAnyEmailToClaudeAndChatgpt,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -245,6 +247,10 @@ const RELEVANCE_ORDER = [
   // workspaces pay, against 8% for claude-code).
   'connect-chatgpt-to-email',
   'multiple-email-accounts-in-claude-and-chatgpt',
+  // Added 2026-11-11: the roundup for "connect my Yahoo / IMAP / custom domain
+  // / several mailboxes to Claude or ChatGPT", the questions answer engines
+  // were answering with other vendors' names.
+  'connect-any-email-to-claude-and-chatgpt',
   'multiple-email-accounts-in-claude-cowork',
   'can-claude-read-my-email',
   'connect-email-to-ai-agent-under-2-minutes',

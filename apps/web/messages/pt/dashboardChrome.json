@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "Atualizar pagamento",
     "paymentIssueConfirm": "Seu banco pede que você confirme o último pagamento. Seu plano continua ativo.",
     "paymentIssueConfirmCta": "Confirmar pagamento",
+    "inboxAlertOne": "{address} precisa ser reconectada. O login parou de funcionar, então seu app de IA não consegue ler, criar rascunhos nem enviar por ela.",
+    "inboxAlertMany": "{count} caixas de entrada precisam ser reconectadas. O login parou de funcionar, então seu app de IA não consegue usá-las.",
+    "inboxAlertReconnect": "Reconectar",
+    "inboxAlertOpenInboxes": "Abrir caixas de entrada",
     "inviteSentNotDelivered": "Convite criado para {email}, mas não foi possível enviar o e-mail. Use Reenviar no convite pendente.",
     "inviteResent": "Convite reenviado para {email}.",
     "inviteResendFailed": "Não foi possível reenviar o convite.",
@@ -135,7 +139,8 @@
     "openSearch": "Abrir pesquisa (Command K)",
     "navWorkflows": "Fluxos de trabalho",
     "navAutomations": "Automações",
-    "navInvite": "Convide um amigo"
+    "navInvite": "Convide um amigo",
+    "invitePromo": "Dê um mês, ganhe um mês"
   },
   "topbar": {
     "mcpLabel": "Endpoint MCP",
@@ -631,6 +636,16 @@
     "switchCta": "Mudar para o anual",
     "switchBusy": "Preparando...",
     "ended": "A oferta da Black Week terminou, então nada foi cobrado. Os valores acima são o preço normal."
+  },
+  "annualSwitch": {
+    "title": "Mude para cobrança anual",
+    "body": "Pague o {plan} uma vez por ano e economize {percent}% em comparação com o pagamento mensal.",
+    "current": "Os dias não usados do seu mês atual são creditados, então a cobrança de hoje fica um pouco abaixo de um ano inteiro. Você vê o valor exato antes de qualquer cobrança.",
+    "cta": "Mudar para anual",
+    "busy": "Preparando...",
+    "noticeBody": "Você paga o {plan} todo mês. A cobrança anual custa {percent}% menos.",
+    "noticeCta": "Ver cobrança anual",
+    "close": "Fechar"
   },
   "founder": {
     "line": "Preço de fundador: ${price} por mês, mantido enquanto você continuar assinante. Disponível para as primeiras {total} empresas ou até 31 de dezembro de 2026, o que acontecer primeiro. Caixas de correio extras custam ${addon} por mês cada.",

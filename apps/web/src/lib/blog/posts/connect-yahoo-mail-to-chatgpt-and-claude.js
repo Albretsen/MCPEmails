@@ -35,7 +35,7 @@ What turns up instead when you search:
 - **Automation platforms** that pass single messages from Yahoo to an AI model when a trigger fires. Useful for one fixed workflow, not for asking questions about your mail in a chat.
 - **Copying and pasting** messages into the chat, which works for one email at a time.
 
-An MCP server is the route that gives the AI your actual mailbox. ChatGPT and Claude both accept one as a custom connector, and the server does the Yahoo sign-in.
+An MCP server is the route that gives the AI your actual mailbox. ChatGPT and Claude both accept one as a custom connector, and the server does the Yahoo sign-in. [How to connect any email account to Claude or ChatGPT](/blog/connect-any-email-to-claude-and-chatgpt) compares every route, hosted and self-hosted.
 
 ## What you need
 

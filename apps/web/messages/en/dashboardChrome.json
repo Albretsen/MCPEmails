@@ -103,6 +103,10 @@
     "paymentIssueDeclinedCta": "Update payment",
     "paymentIssueConfirm": "Your bank wants you to confirm the last payment. Your plan is still active.",
     "paymentIssueConfirmCta": "Confirm payment",
+    "inboxAlertOne": "{address} needs to be reconnected. Its sign-in stopped working, so your AI app cannot read, draft or send from it.",
+    "inboxAlertMany": "{count} inboxes need to be reconnected. Their sign-in stopped working, so your AI app cannot use them.",
+    "inboxAlertReconnect": "Reconnect",
+    "inboxAlertOpenInboxes": "Open Inboxes",
     "inviteSentNotDelivered": "Invite created for {email}, but the email could not be sent. Use Resend on the pending invite.",
     "inviteResent": "Invite resent to {email}.",
     "inviteResendFailed": "Failed to resend the invite.",
@@ -135,7 +139,8 @@
     "openSearch": "Open search (Command K)",
     "navWorkflows": "Workflows",
     "navAutomations": "Automations",
-    "navInvite": "Invite a friend"
+    "navInvite": "Invite a friend",
+    "invitePromo": "Give a month, get a month"
   },
   "topbar": {
     "mcpLabel": "MCP endpoint",
@@ -631,6 +636,16 @@
     "switchCta": "Switch to annual",
     "switchBusy": "Preparing...",
     "ended": "The Black Week offer has ended, so nothing was charged. The amounts above are the regular price."
+  },
+  "annualSwitch": {
+    "title": "Switch to annual billing",
+    "body": "Pay for {plan} once a year and save {percent}% compared with paying monthly.",
+    "current": "The unused days of your current month are credited, so today's charge is a bit less than a full year. You see the exact amount before anything is charged.",
+    "cta": "Switch to annual",
+    "busy": "Preparing...",
+    "noticeBody": "You pay for {plan} every month. Annual billing costs {percent}% less.",
+    "noticeCta": "See annual billing",
+    "close": "Close"
   },
   "founder": {
     "line": "Founder price: ${price} a month, kept for as long as you stay subscribed. Open to the first {total} companies or until 31 December 2026, whichever comes first. Extra mailboxes are ${addon} a month each.",

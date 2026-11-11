@@ -22,8 +22,12 @@
  *
  * ELIGIBILITY IS CHECKED AT SEND TIME, FOR EVERY STEP. Any failure stops the
  * sequence:
- *   - users.marketing_consent_at IS NOT NULL (explicit opt-in; there is no
- *     soft opt-in here), and the first paywall happened AFTER that consent
+ *   - an arm (lifecycle-region.ts): `consented` when
+ *     users.marketing_consent_at is set and the first paywall happened AFTER
+ *     it; otherwise, only for first paywalls at or after
+ *     LIFECYCLE_EXPANSION_START_AT, `soft_opt_in` for owners positively known
+ *     to be outside Europe (same three emails) or `service_notice` for
+ *     everyone else (ONE plain notice, no steps 2 and 3, no prices)
  *   - not globally unsubscribed, and 'lifecycle' not in unsubscribed_categories
  *   - no active / trialing / past_due / unpaid subscription, workspace on Free
  *   - workspace exists and is not soft-deleted
@@ -43,6 +47,20 @@
  * sequence: step n+1 requires step n to be 'sent'. The Resend Idempotency-Key
  * (`paywall_followup_<step>-<workspace id>`) covers a lost response.
  *
+ * HOLDOUT. From LIFECYCLE_EXPANSION_START_AT, 20% of workspaces (hash of the
+ * workspace id, salted) get a step-1 row with status 'holdout' and no email,
+ * in every arm. That row ends the sequence like any non-'sent' row. Read-out:
+ *
+ *   SELECT detail AS arm, status, count(*)
+ *     FROM lifecycle_email_sends
+ *    WHERE template = 'paywall_followup_1' AND status IN ('sent', 'holdout')
+ *      AND sent_at >= '<start>'
+ *    GROUP BY 1, 2;
+ *
+ * joined to checkout_completed on the workspace (trigger_key). The arm is kept
+ * in `detail` on the claimed, sent and holdout rows; older rows have NULL,
+ * which means `consented`.
+ *
  * A stop that must outlive the moment (unsubscribed, subscribed, workspace
  * deleted, and any stop after step 1 went out) is written as a 'skipped' row
  * through the same ON CONFLICT DO NOTHING insert, so the sequence stays
@@ -54,9 +72,17 @@
 import { createHash } from 'node:crypto';
 
 import {
+  expansionCovers,
+  lifecycleArm,
+  ownerRegion,
+  type ExpansionConfig,
+  type LifecycleArm,
+} from '@/lib/email/lifecycle-region';
+import {
   PAYWALL_FOLLOWUP_CATEGORY,
   PAYWALL_FOLLOWUP_STEPS,
   composePaywallFollowup,
+  composePaywallNotice,
   type PaywallFollowupStep,
   type PaywallKind,
   type PaywallPassLine,
@@ -106,11 +132,22 @@ const SUBSCRIBED_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+export const HOLDOUT_PERCENT = 20;
+
+/**
+ * Deterministic 20% holdout by workspace, salted so it is independent of the
+ * abandoned-checkout and activation-help splits on the same id.
+ */
+export function isHoldout(workspaceId: string): boolean {
+  const digest = createHash('sha256').update(`paywall_followup:v1:${workspaceId}`).digest();
+  return digest.readUInt32BE(0) % 100 < HOLDOUT_PERCENT;
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type LedgerStatus = 'claimed' | 'sent' | 'failed' | 'skipped';
+export type LedgerStatus = 'claimed' | 'sent' | 'failed' | 'skipped' | 'holdout';
 
 export interface LedgerRow {
   template: string;
@@ -141,6 +178,8 @@ export interface CandidateContext extends FirstPaywall {
   unlimitedInboxes: boolean;
   internal: boolean;
   inboxCount: number;
+  /** acquisition_country of every workspace this owner has (lifecycle-region.ts). */
+  ownerCountries: Array<string | null>;
   /** The owner's rows for THIS sequence, across all of their workspaces. */
   ledger: LedgerRow[];
 }
@@ -152,6 +191,7 @@ export type StopReason =
   | 'internal'
   | 'no_consent'
   | 'paywall_before_consent'
+  | 'notice_is_one_email'
   | 'unsubscribed'
   | 'unsubscribed_lifecycle'
   | 'no_unsubscribe_token'
@@ -163,7 +203,8 @@ export type StopReason =
   | 'not_composable';
 
 export type Decision =
-  | { kind: 'send'; step: PaywallFollowupStep }
+  | { kind: 'send'; step: PaywallFollowupStep; arm: LifecycleArm }
+  | { kind: 'holdout'; step: 1; arm: LifecycleArm }
   | { kind: 'wait'; step: PaywallFollowupStep; dueAt: string }
   | { kind: 'stop'; step: PaywallFollowupStep; reason: StopReason; persist: boolean }
   | { kind: 'done'; reason: 'completed' | `ended_at_step_${PaywallFollowupStep}_${string}` };
@@ -192,6 +233,8 @@ export interface DecideOptions {
    * were not required. runPaywallFollowup refuses it outside dry_run.
    */
   ignoreConsent?: boolean;
+  /** The new arms and the holdout. Absent = nobody (today's behaviour). */
+  expansion?: ExpansionConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -260,6 +303,8 @@ export function decide(ctx: CandidateContext, now: Date, options: DecideOptions 
     if (row.status !== 'sent') {
       return { kind: 'done', reason: `ended_at_step_${s}_${row.detail ?? row.status}` };
     }
+    // The service notice is one email, never a sequence.
+    if (row.detail === 'service_notice') return { kind: 'done', reason: 'completed' };
     previousSentMs = ms(row.finishedAt ?? row.sentAt);
   }
   if (step === null) return { kind: 'done', reason: 'completed' };
@@ -274,11 +319,50 @@ export function decide(ctx: CandidateContext, now: Date, options: DecideOptions 
   // 3. Eligibility, at send time.
   const reason = ineligibility(ctx, firstMs, options);
   if (reason) return stop(step, reason);
+  const arm = paywallArm(ctx, firstMs, options);
+  if (!isArm(arm)) return stop(step, arm);
+  if (arm === 'service_notice' && step > 1) return stop(step, 'notice_is_one_email');
 
   // 4. Too late for this step: never sent late.
   if (nowMs > firstMs + timing.windowEndMs) return stop(step, 'window_missed');
 
-  return { kind: 'send', step };
+  // 5. The holdout, step 1 only. For the consented arm it waits until the
+  // expansion is live, so a dry run never withholds a consented email.
+  const expansion = options.expansion;
+  if (
+    step === 1 &&
+    expansion &&
+    expansionCovers(expansion, firstMs) &&
+    (arm !== 'consented' || expansion.live) &&
+    isHoldout(ctx.workspaceId)
+  ) {
+    return { kind: 'holdout', step: 1, arm };
+  }
+
+  return { kind: 'send', step, arm };
+}
+
+function isArm(value: LifecycleArm | StopReason): value is LifecycleArm {
+  return value === 'consented' || value === 'soft_opt_in' || value === 'service_notice';
+}
+
+/**
+ * The arm for this workspace's owner, or the stop reason when there is none.
+ * Exported for the tests.
+ */
+export function paywallArm(
+  ctx: CandidateContext,
+  firstPaywallMs: number,
+  options: DecideOptions = {},
+): LifecycleArm | StopReason {
+  const owner = ctx.owner;
+  const consentMs = ms(owner?.marketingConsentAt);
+  // Only a paywall hit AFTER the opt-in is covered by it.
+  if (options.ignoreConsent || (Number.isFinite(consentMs) && firstPaywallMs > consentMs)) return 'consented';
+  if (!options.expansion || !expansionCovers(options.expansion, firstPaywallMs)) {
+    return Number.isFinite(consentMs) ? 'paywall_before_consent' : 'no_consent';
+  }
+  return lifecycleArm({ consented: false, region: ownerRegion(ctx.ownerCountries ?? []) });
 }
 
 function stop(step: PaywallFollowupStep, reason: StopReason): Decision {
@@ -300,12 +384,11 @@ export function ineligibility(
   if (!owner || owner.id !== ctx.workspace.ownerId) return 'owner_missing';
   if (ctx.internal) return 'internal';
 
-  if (!options.ignoreConsent) {
-    const consentMs = ms(owner.marketingConsentAt);
-    if (!Number.isFinite(consentMs)) return 'no_consent';
-    // Only a paywall hit AFTER the opt-in may start the sequence.
-    if (!(firstPaywallMs > consentMs)) return 'paywall_before_consent';
-  }
+  // No arm (no consent covering this paywall, and the expansion does not
+  // cover it either) means "not in the sequence", checked before anything
+  // that would write a row.
+  const arm = paywallArm(ctx, firstPaywallMs, options);
+  if (!isArm(arm)) return arm;
 
   if (owner.unsubscribedAt) return 'unsubscribed';
   if ((owner.unsubscribedCategories ?? []).includes(PAYWALL_FOLLOWUP_CATEGORY)) return 'unsubscribed_lifecycle';
@@ -333,7 +416,7 @@ export interface ClaimRow {
   workspaceId: string;
   step: PaywallFollowupStep;
   email: string;
-  status: 'claimed' | 'skipped';
+  status: 'claimed' | 'skipped' | 'holdout';
   detail: string | null;
 }
 
@@ -380,6 +463,8 @@ export interface RunOptions {
   now?: Date;
   maxSends?: number;
   ignoreConsent?: boolean;
+  /** The new arms and the holdout (lifecycle-region.ts). Absent = nobody. */
+  expansion?: ExpansionConfig;
   /** Returns true when the run should stop early (wall clock). */
   outOfTime?: () => boolean;
   /**
@@ -400,10 +485,19 @@ export interface RunEntry {
   paywallKind: PaywallKind;
   inboxCount: number;
   decision: Decision['kind'];
+  arm: LifecycleArm | null;
   step: PaywallFollowupStep | null;
   reason: string | null;
   subject: string | null;
-  outcome: 'sent' | 'failed' | 'lost_claim' | 'skipped_recorded' | 'would_send' | 'none';
+  outcome:
+    | 'sent'
+    | 'failed'
+    | 'lost_claim'
+    | 'skipped_recorded'
+    | 'holdout_recorded'
+    | 'would_send'
+    | 'would_hold_out'
+    | 'none';
 }
 
 export interface RunReport {
@@ -414,6 +508,11 @@ export interface RunReport {
   lostClaims: number;
   skippedRecorded: number;
   wouldSend: Record<`step${PaywallFollowupStep}`, number>;
+  /** Holdout rows written (send) or that would be (dry run, or expansion not live). */
+  heldOut: number;
+  wouldHoldOut: number;
+  /** Sends and would-sends per arm. */
+  byArm: Record<LifecycleArm, number>;
   waiting: number;
   stopped: Record<string, number>;
   done: number;
@@ -435,7 +534,11 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
     throw new Error('ignoreConsent is a dry-run reporting option and cannot be used to send');
   }
   if (mode === 'send' && !options.send) throw new Error('mode "send" needs a sender');
-  const decideOptions: DecideOptions = { ignoreConsent: mode === 'dry_run' && options.ignoreConsent === true };
+  const decideOptions: DecideOptions = {
+    ignoreConsent: mode === 'dry_run' && options.ignoreConsent === true,
+    expansion: options.expansion,
+  };
+  const expansionLive = options.expansion?.live === true;
 
   const report: RunReport = {
     mode,
@@ -445,6 +548,9 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
     lostClaims: 0,
     skippedRecorded: 0,
     wouldSend: { step1: 0, step2: 0, step3: 0 },
+    heldOut: 0,
+    wouldHoldOut: 0,
+    byArm: { consented: 0, soft_opt_in: 0, service_notice: 0 },
     waiting: 0,
     stopped: {},
     done: 0,
@@ -469,7 +575,7 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
 
     // Re-read this one workspace immediately before acting on a send, so the
     // eligibility check is as close to the send as it can be.
-    if (decision.kind === 'send' && mode === 'send') {
+    if ((decision.kind === 'send' || decision.kind === 'holdout') && mode === 'send') {
       const [fresh] = await store.loadContexts([initial]);
       ctx = fresh ?? { ...initial, workspace: null };
       decision = decide(ctx, now, decideOptions);
@@ -481,6 +587,7 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
       paywallKind: ctx.paywallKind,
       inboxCount: ctx.inboxCount,
       decision: decision.kind,
+      arm: decision.kind === 'send' || decision.kind === 'holdout' ? decision.arm : null,
       step: decision.kind === 'done' ? null : decision.step,
       reason: decision.kind === 'stop' || decision.kind === 'done' ? decision.reason : null,
       subject: null,
@@ -515,26 +622,58 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
       continue;
     }
 
-    // decision.kind === 'send'
     const owner = ctx.owner!;
+    // A new arm (anything not consented) only acts once the expansion is live.
+    const dryForArm = mode === 'dry_run' || (decision.arm !== 'consented' && !expansionLive);
+
+    if (decision.kind === 'holdout') {
+      if (dryForArm) {
+        report.wouldHoldOut += 1;
+        entry.outcome = 'would_hold_out';
+        continue;
+      }
+      const won = await store.claim({
+        userId: owner.id,
+        workspaceId: ctx.workspaceId,
+        step: 1,
+        email: owner.email?.trim() ?? '',
+        status: 'holdout',
+        detail: decision.arm,
+      });
+      if (won) {
+        report.heldOut += 1;
+        entry.outcome = 'holdout_recorded';
+      } else {
+        report.lostClaims += 1;
+        entry.outcome = 'lost_claim';
+      }
+      continue;
+    }
+
+    // decision.kind === 'send'
     let pass: PaywallPassLine | null = null;
-    if (decision.step === 3 && mode === 'send' && options.passOffer) {
+    if (decision.step === 3 && !dryForArm && options.passOffer) {
       try {
         pass = await options.passOffer(ctx.workspaceId, now);
       } catch {
         pass = null;
       }
     }
-    const composed = composePaywallFollowup({
-      step: decision.step,
-      paywallKind: ctx.paywallKind,
-      unsubscribeToken: owner.unsubscribeToken,
-      pass,
-    });
+    const composed =
+      decision.arm === 'service_notice'
+        ? composePaywallNotice({ paywallKind: ctx.paywallKind, unsubscribeToken: owner.unsubscribeToken })
+        : composePaywallFollowup({
+            step: decision.step,
+            paywallKind: ctx.paywallKind,
+            unsubscribeToken: owner.unsubscribeToken,
+            pass,
+            arm: decision.arm,
+          });
     entry.subject = composed?.subject ?? null;
 
-    if (mode === 'dry_run') {
+    if (dryForArm) {
       report.wouldSend[`step${decision.step}`] += 1;
+      report.byArm[decision.arm] += 1;
       entry.outcome = 'would_send';
       continue;
     }
@@ -564,7 +703,8 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
       step: decision.step,
       email: owner.email!.trim(),
       status: 'claimed',
-      detail: null,
+      // The arm stays on the row (finish() leaves detail alone on a send).
+      detail: decision.arm,
     });
     if (!won) {
       report.lostClaims += 1;
@@ -590,6 +730,7 @@ export async function runPaywallFollowup(options: RunOptions): Promise<RunReport
     if (result.ok) {
       await store.finish(key, { status: 'sent', providerId: result.id });
       report.sent += 1;
+      report.byArm[decision.arm] += 1;
       entry.outcome = 'sent';
       if (pass && options.onPassOfferShown) {
         try {

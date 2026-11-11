@@ -62,6 +62,7 @@ import {
   billingTarget,
   planCategory,
   recordCheckoutStarted,
+  recordAnnualSwitchCompleted,
   recordPassEvent,
   recordPlanChange,
   type PlanChangeDirection,
@@ -708,6 +709,12 @@ export async function runCheckout(input: {
    * every check there passes; otherwise ignored.
    */
   restartFrom?: unknown;
+  /**
+   * 'annual_switch' when the confirmed change came from the monthly-to-annual
+   * card (src/lib/billing/annual-switch.ts). Only labels the funnel row
+   * `annual_switch_completed`; it never changes what is charged.
+   */
+  source?: unknown;
 }): Promise<CheckoutOutcome> {
   // ── 1. Authenticate ────────────────────────────────────────────────────────
   const supabase = await createClient();
@@ -865,6 +872,7 @@ async function checkoutFor(
     country?: unknown;
     /** See runCheckout. */
     restartFrom?: unknown;
+    source?: unknown;
   },
   options: CheckoutOptions & { allowPlanChange: boolean },
 ): Promise<CheckoutOutcome> {
@@ -1440,6 +1448,16 @@ async function checkoutFor(
         target,
         outcome: 'success',
       });
+      // The annual card's own completion row: a monthly subscription that
+      // moved to the same plan's yearly price from that card.
+      if (
+        input.source === 'annual_switch' &&
+        interval === 'year' &&
+        fromPrice?.interval === 'month' &&
+        fromPrice.planId === planId
+      ) {
+        await recordAnnualSwitchCompleted(workspace.id, planId);
+      }
 
       return {
         kind: 'changed',
