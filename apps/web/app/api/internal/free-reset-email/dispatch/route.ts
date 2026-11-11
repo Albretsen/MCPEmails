@@ -12,6 +12,10 @@
  *                                  only: nothing is claimed, written or sent.
  *   ?dry_run=1                     forces a dry run for one call. A query
  *                                  string can only make the route quieter.
+ *   ?as_of=<ISO time>              STAGING AND DEVELOPMENT ONLY (ignored when
+ *                                  APP_ENV is production or unset): run as if
+ *                                  it were that moment, so the 2nd-of-month
+ *                                  run can be checked end to end any day.
  *
  * AUTH. `X-Dispatch-Secret`, constant-time compared against DISPATCH_SECRET.
  * No body is read: the route selects its own work.
@@ -27,6 +31,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { budgetExhausted } from '@/lib/billing/dispatch-freshness';
 import { lifecycleFrom, lifecycleReplyTo } from '@/lib/email/lifecycle';
 import { expansionConfig, expansionCovers } from '@/lib/email/lifecycle-region';
+import { isProduction } from '@/lib/env/app-env';
 import { freeResetMaxPerRun, runFreeReset, type Sender } from '@/lib/email/free-reset-email';
 import { SupabaseFreeResetStore } from '@/lib/email/free-reset-email-store';
 import { paywallEmailPassLine, recordPassOfferShownOnce } from '@/lib/billing/pass-offer';
@@ -81,11 +86,14 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const expansion = expansionConfig();
-  const now = new Date();
+  const params = new URL(request.url).searchParams;
+  const asOf = isProduction() ? null : params.get('as_of');
+  const asOfDate = asOf ? new Date(asOf) : null;
+  const now = asOfDate && Number.isFinite(asOfDate.getTime()) ? asOfDate : new Date();
   if (!expansionCovers(expansion, now.getTime())) {
     return Response.json({ skipped: 'LIFECYCLE_EXPANSION_START_AT is unset or in the future' }, { status: 200 });
   }
-  const forceDry = new URL(request.url).searchParams.get('dry_run') === '1';
+  const forceDry = params.get('dry_run') === '1';
   const mode = forceDry ? 'dry_run' : 'send';
   const started = Date.now();
 
