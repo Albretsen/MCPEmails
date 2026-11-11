@@ -1,6 +1,7 @@
 import { neutralizeList, neutralizeNullable, neutralizeText } from '@/lib/textSafety';
-import { canDecide, isExpired } from './decide';
+import { isExpired } from './decide';
 import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload, readSummary } from './payload';
+import { approvalAccess, embeddedInbox, holdReasonOf } from './access';
 
 export { reviewerBccFor } from './payload';
 
@@ -95,7 +96,7 @@ export interface ReviewBody {
   html: string | null;
   truncated: boolean;
   /** Why there is no body to show, when there isn't one. */
-  unavailable: null | 'withheld_role' | 'stored_with_provider' | 'decrypt_failed' | 'absent';
+  unavailable: null | 'withheld_role' | 'withheld_private' | 'stored_with_provider' | 'decrypt_failed' | 'absent';
 }
 
 export interface ReviewAttachment {
@@ -255,7 +256,7 @@ export async function loadApprovalForReview(
 ): Promise<ApprovalReviewModel | ReviewLoadFailure> {
   const { data: approval } = await db
     .from('send_approvals')
-    .select('*, inboxes(id, email_address, display_name, provider, service, smtp_host, smtp_port)')
+    .select('*, inboxes(id, email_address, display_name, provider, service, smtp_host, smtp_port, owner_user_id, visibility)')
     .eq('id', approvalId)
     .maybeSingle();
 
@@ -273,6 +274,14 @@ export async function loadApprovalForReview(
 
   const role = String(membership.role ?? 'viewer');
   const inbox = approval.inboxes ?? {};
+
+  // Privacy model (./access.ts): someone else's private inbox is the same
+  // not_found for a member; an owner or admin may decide it but sees only the
+  // delivery metadata, never recipients, subject, attachments or body.
+  const access = approvalAccess(role, userId, embeddedInbox(approval), holdReasonOf(approval));
+  if (access.hidden) return 'not_found';
+  const privateHidden = access.redacted;
+  const withhold = role === 'viewer' || privateHidden;
   const summary = readSummary(approval.summary);
   const state = effectiveState(approval);
 
@@ -295,10 +304,13 @@ export async function loadApprovalForReview(
   if (role === 'viewer') {
     body = { text: null, html: null, truncated: false, unavailable: 'withheld_role' };
   }
+  if (privateHidden) {
+    body = { text: null, html: null, truncated: false, unavailable: 'withheld_private' };
+  }
 
   let payload: Record<string, unknown> | null = null;
   let draftSnapshot: Record<string, any> | null = null;
-  if (role !== 'viewer') {
+  if (!withhold) {
     payload = readPayload(approval);
     draftSnapshot = isDraftSend ? draftSnapshotFrom(payload) : null;
     if (!payload && approval.payload) {
@@ -321,23 +333,23 @@ export async function loadApprovalForReview(
   const summaryCc = neutralizeList(summary.cc).filter(Boolean);
   const payloadTo = neutralizeList(payload?.to).filter(Boolean);
   const payloadCc = neutralizeList(payload?.cc).filter(Boolean);
-  const to = summaryTo.length ? summaryTo : payloadTo;
-  const cc = summaryCc.length ? summaryCc : payloadCc;
-  const subject = neutralizeText(
+  const to = privateHidden ? [] : summaryTo.length ? summaryTo : payloadTo;
+  const cc = privateHidden ? [] : summaryCc.length ? summaryCc : payloadCc;
+  const subject = privateHidden ? '' : neutralizeText(
     (typeof summary.subject === 'string' && summary.subject) ||
       (typeof payload?.subject === 'string' && (payload!.subject as string)) ||
       '',
   );
 
-  const attachments = draftSnapshot ? draftAttachmentsFrom(draftSnapshot) : attachmentsFrom(payload);
+  const attachments = privateHidden ? [] : draftSnapshot ? draftAttachmentsFrom(draftSnapshot) : attachmentsFrom(payload);
   // A draft's files are not arguments, so the summary counts none of them.
-  const attachmentCount = draftSnapshot
+  const attachmentCount = privateHidden ? 0 : draftSnapshot
     ? attachments.length
     : typeof summary.attachment_count === 'number'
       ? (summary.attachment_count as number)
       : attachments.length;
-  const bcc = role === 'viewer' ? [] : bccFromPayload(approval.operation, payload);
-  const replyTo = role === 'viewer'
+  const bcc = withhold ? [] : bccFromPayload(approval.operation, payload);
+  const replyTo = withhold
     ? []
     : neutralizeList(
         draftSnapshot
@@ -349,7 +361,7 @@ export async function loadApprovalForReview(
   // Decided from the payload itself, not from the role-dependent body above,
   // so a viewer's read-only page and an admin's page agree on it.
   const approvable = !isUnsendableLegacyDraft(approval, payload ?? readPayload(approval));
-  const summaryBccCount = typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0;
+  const summaryBccCount = !privateHidden && typeof summary.bcc_count === 'number' ? (summary.bcc_count as number) : 0;
 
   return {
     id: approval.id,
@@ -387,7 +399,7 @@ export async function loadApprovalForReview(
     body,
     provider: providerRouteFor(inbox),
     role,
-    canDecide: canDecide(role),
+    canDecide: access.canDecide,
     // Used to mean "an empty To is expected here". It no longer is: since
     // `buildApprovalSummary` (supabase/functions/mcp-server/index.ts) resolves
     // the real recipients and subject at queue time, a reply and a draft-send
@@ -401,6 +413,7 @@ export async function loadApprovalForReview(
     // absent recipient on an email_send) and the copy behind it was rewritten
     // to say so.
     recipientsResolvedAtSend:
+      !privateHidden &&
       to.length === 0 &&
       (approval.operation === 'email_reply' || approval.operation === 'draft_send'),
   };

@@ -87,14 +87,31 @@ export async function DELETE(
   //    deleted, so a returned row authorizes the disconnect. Non-secret
   //    columns only: authenticated cannot read the encrypted credentials
   //    (20261016160200); step 3 reads them with the service-role client.
-  const { data: inbox, error: fetchError } = await supabase
+  const { data: visibleInbox } = await supabase
     .from('inboxes')
     .select('id, workspace_id, provider, imap_host')
     .eq('id', inboxId)
     .is('deleted_at', null)
     .single();
 
-  if (fetchError || !inbox) {
+  // 2a. Someone else's private inbox is hidden from the RLS read above, but a
+  //     workspace owner or admin may still disconnect it (they manage seats;
+  //     they never read its settings). The row is read with the service role
+  //     and the caller's role is checked in ITS workspace; anyone else gets
+  //     the same 404 as a missing id.
+  let inbox = visibleInbox;
+  if (!inbox) {
+    const { data: hidden } = await createServiceRoleClient()
+      .from('inboxes')
+      .select('id, workspace_id, provider, imap_host')
+      .eq('id', inboxId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    const hiddenRole = hidden ? await fetchWorkspaceRole(supabase, hidden.workspace_id, user.id) : null;
+    if (hidden && canManageWorkspace(hiddenRole)) inbox = hidden;
+  }
+
+  if (!inbox) {
     return NextResponse.json({ error: 'Inbox not found.' }, { status: 404 });
   }
 

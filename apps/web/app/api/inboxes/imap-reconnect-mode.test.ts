@@ -36,6 +36,11 @@ interface World {
   upserts: Array<{ payload: Record<string, unknown>; onConflict: string | undefined }>;
   dialled: string[];
   limitChecks: number;
+  /** Whether checkInboxLimit answers "at the cap". */
+  atCap: boolean;
+  /** Whether checkPrivateInboxLimit answers "at the cap", and who it was asked about. */
+  privateAtCap: boolean;
+  privateChecks: Array<{ workspaceId: string; userId: string }>;
 }
 
 let world: World;
@@ -52,6 +57,8 @@ function storedRow(mode: 'both' | 'imap' | 'smtp'): Record<string, unknown> {
     smtp_host: mode === 'imap' ? null : 'smtp.example.test',
     smtp_port: mode === 'imap' ? null : 465,
     deleted_at: null,
+    owner_user_id: USER.id,
+    visibility: 'private',
   };
 }
 
@@ -61,6 +68,9 @@ function reset(mode: 'both' | 'imap' | 'smtp'): void {
     upserts: [],
     dialled: [],
     limitChecks: 0,
+    atCap: true,
+    privateAtCap: false,
+    privateChecks: [],
   };
 }
 
@@ -74,11 +84,31 @@ function upsert(payload: Record<string, unknown>, opts?: { onConflict?: string }
   return Promise.resolve({ error: null });
 }
 
+/**
+ * The one read the route makes itself (lib/inboxes/visibility.ts
+ * checkConnectTarget): the live row for (workspace_id, email_address).
+ */
+function select(columns: string) {
+  const filters: Record<string, unknown> = {};
+  const chain = {
+    eq(column: string, value: unknown) { filters[column] = value; return chain; },
+    is(column: string, value: unknown) { filters[column] = value; return chain; },
+    async maybeSingle() {
+      const row = world.rows.get(`${filters.workspace_id}|${filters.email_address}`);
+      if (!row || row.deleted_at) return { data: null, error: null };
+      const out: Record<string, unknown> = {};
+      for (const c of columns.split(',').map((x) => x.trim())) out[c] = row[c];
+      return { data: out, error: null };
+    },
+  };
+  return chain;
+}
+
 function client() {
   return {
     from(table: string) {
       assert.equal(table, 'inboxes', `unexpected table ${table}`);
-      return { upsert };
+      return { upsert, select };
     },
     auth: { getUser: async () => ({ data: { user: USER }, error: null }) },
   };
@@ -108,9 +138,19 @@ nodeMock.module('@/lib/plans/check-inbox-limit', {
     checkInboxLimit: async () => {
       world.limitChecks += 1;
       // A Free workspace at its cap: a brand-new address would be refused.
-      return { atLimit: true, plan: 'free', currentCount: 1, maxInboxes: 1 };
+      return { atLimit: world.atCap, plan: 'free', currentCount: 1, maxInboxes: 1 };
     },
     inboxLimitErrorBody: () => ({ error: 'limit', error_code: 'inbox_limit_reached' }),
+  },
+});
+nodeMock.module('@/lib/plans/check-private-inbox-limit', {
+  namedExports: {
+    checkPrivateInboxLimit: async (args: { workspaceId: string; userId: string }) => {
+      world.privateChecks.push({ workspaceId: args.workspaceId, userId: args.userId });
+      return world.privateAtCap
+        ? { atLimit: true, currentCount: 10, maxPrivateInboxes: 10 }
+        : { atLimit: false, currentCount: 0, maxPrivateInboxes: null };
+    },
   },
 });
 nodeMock.module('@/lib/plans/inbox-cap-events', { namedExports: { recordInboxCapHit: async () => {} } });
@@ -155,6 +195,11 @@ function connect(body: Record<string, unknown>) {
       body: JSON.stringify({ email: ADDRESS, appPassword: 'app-password', ...body }),
     }) as never,
   );
+}
+
+function connectUncapped(body: Record<string, unknown>) {
+  world.atCap = false;
+  return connect(body);
 }
 
 const IMAP = { imapHost: 'imap.example.test', imapPort: 993, imapSecurity: 'tls' };
@@ -221,4 +266,78 @@ test('a brand-new address at the cap is still refused (control)', async () => {
   assert.equal(res.status, 402);
   assert.equal(world.limitChecks, 1);
   assert.equal(world.upserts.length, 0);
+});
+
+// ── Business privacy model (migration 20261111190000) ─────────────────────
+
+test('a new connection is owned by the person connecting it', async () => {
+  world.rows.clear();
+  world.limitChecks = 0;
+  // Not at the cap for this one.
+  const res = await connectUncapped({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200, JSON.stringify(await res.clone().json()));
+  assert.equal(world.upserts.length, 1);
+  assert.equal(world.upserts[0].payload.owner_user_id, USER.id);
+  assert.equal('visibility' in world.upserts[0].payload, false, 'visibility keeps the private default');
+});
+
+test("reconnecting one's own private inbox still works", async () => {
+  const res = await connect({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200);
+  assertSameRow();
+});
+
+test("reconnecting someone else's COMPANY inbox still works", async () => {
+  Object.assign(stored(), { owner_user_id: 'someone-else', visibility: 'company' });
+  const res = await connect({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200);
+  assertSameRow();
+});
+
+test("an address that is someone else's PRIVATE inbox is refused: nothing dialled, nothing written", async () => {
+  Object.assign(stored(), { owner_user_id: 'someone-else', visibility: 'private' });
+  const res = await connect({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 409);
+  const body = await res.json();
+  assert.equal(body.error_code, 'inbox_owned_by_other');
+  assert.equal(typeof body.error, 'string');
+  assert.deepEqual(world.dialled, []);
+  assert.equal(world.upserts.length, 0);
+  assert.equal(stored().imap_password, undefined, 'the stored credential is untouched');
+});
+
+test('a soft-deleted private row of someone else does not block a fresh connection', async () => {
+  Object.assign(stored(), { owner_user_id: 'someone-else', visibility: 'private', deleted_at: '2026-11-01T00:00:00Z' });
+  const res = await connectUncapped({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200);
+  assert.equal(world.upserts[0].payload.owner_user_id, USER.id);
+});
+
+// ── Business per-person private mailbox cap (check-private-inbox-limit.ts) ──
+
+test('a new connection over the private mailbox cap is refused with its own code, nothing written', async () => {
+  world.rows.clear();
+  world.privateAtCap = true;
+  const res = await connectUncapped({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 402);
+  const body = await res.json();
+  assert.equal(body.error_code, 'private_inbox_limit_reached');
+  assert.equal(body.max_private_inboxes, 10);
+  assert.deepEqual(world.privateChecks, [{ workspaceId: WS, userId: USER.id }]);
+  assert.equal(world.upserts.length, 0);
+  assert.deepEqual(world.dialled, []);
+});
+
+test('a reconnect of an existing address is never checked against the private cap', async () => {
+  world.privateAtCap = true;
+  const res = await connect({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200);
+  assert.deepEqual(world.privateChecks, []);
+});
+
+test('under the private cap a new connection goes through', async () => {
+  world.rows.clear();
+  const res = await connectUncapped({ mode: 'both', ...IMAP, ...SMTP });
+  assert.equal(res.status, 200);
+  assert.equal(world.privateChecks.length, 1);
 });

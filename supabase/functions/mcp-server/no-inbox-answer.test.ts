@@ -160,3 +160,17 @@ Deno.test("a failing lookup still answers, with no provider named", async () => 
   assertStringIncludes(text, "No mailbox is connected");
   assert(!text.includes("Your account email"));
 });
+
+Deno.test("teammates' private mailboxes: the answer is left as written, not the first-run text", async () => {
+  const structured = {
+    inboxes: [],
+    setup_required: true,
+    setup_url: "https://mcpemails.com/dashboard/inboxes",
+    private_mailboxes_owned_by_teammates: 2,
+    message: "teammates",
+  };
+  const response = { jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: JSON.stringify(structured) }], structuredContent: structured } };
+  assertEquals(noInboxMode(response, null), null);
+  await enrichNoInboxResult(response, null, ctx({}, "a@gmail.com", null));
+  assertEquals((response.result as Record<string, any>).structuredContent.message, "teammates");
+});

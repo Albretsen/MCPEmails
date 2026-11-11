@@ -641,6 +641,18 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // the fix is an action elsewhere on the page.
       toast({ message: tr('app.inboxExistsOtherProvider'), variant: 'warning', duration: 0 });
       setRouteState('inboxes');
+    } else if (errorParam === 'private_inbox_limit_reached') {
+      // Business per-person cap on PRIVATE mailboxes (lib/plans/
+      // check-private-inbox-limit.ts). Upgrading does not lift it; making a
+      // mailbox company-wide does, so no upgrade panel.
+      toast({ message: tr('app.privateInboxLimitReached'), variant: 'warning', duration: 0 });
+      setRouteState('inboxes');
+    } else if (errorParam === 'inbox_owned_by_other') {
+      // The address is already connected in this workspace as somebody
+      // else's private mailbox (lib/inboxes/visibility.ts). The callback
+      // refused rather than overwrite their connection; nothing changed.
+      toast({ message: tr('app.inboxOwnedByOther'), variant: 'warning', duration: 0 });
+      setRouteState('inboxes');
     } else if (errorParam === 'outlook_no_mailbox') {
       // Microsoft signed the person in, but the account has no Exchange Online
       // mailbox, so no inbox was created. The same account gives the same
@@ -1463,7 +1475,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} userRole={userRole} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} onReconnect={onReconnectInbox} onGoToInboxes={() => setRoute("inboxes")} onGoToAutomations={() => setRoute("automations")} firstToolUsed={workspace?.firstToolUsed === true} referralEnabled={workspace?.referralEnabled === true} referralTileFacts={referralTileFacts} heardAboutPending={serverWorkspace?.heardAboutPending === true} isOwner={serverWorkspace?.isOwner === true} onGoToInvite={() => setRoute("invite")} flowB={serverWorkspace?.flowB ?? null} onGoToUsage={() => setRoute("usage")} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} onContactSupport={openHelpFromConnect} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onSwapParked={onSwapParkedInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} onConnectionChanged={onInboxConnectionChanged} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} chatConfirmRolledOut={workspace?.chatConfirmEnabled === true} proFeatures={workspace?.proFeatures ?? null} userRole={userRole} onGoToKeys={() => setRoute("keys")} onContactSupport={openHelpFromConnect} hiddenInboxes={serverWorkspace?.hiddenInboxes ?? []} currentUserId={user?.id ?? null} showVisibilityControl={serverWorkspace?.businessSeatPricing === true && (workspace?.plan === 'pro' || members.length > 1)} multiMember={members.length > 1} onVisibilityChanged={(id, visibility) => setInboxes(xs => xs.map(x => (x.id === id ? { ...x, visibility } : x)))} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} userRole={userRole} currentUserId={user?.id} members={members} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} workspaceId={workspace?.id} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}

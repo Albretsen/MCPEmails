@@ -443,7 +443,20 @@
     "capBodyProCap": "Pro conecta 10 buzones. Business incluye 10 por 39 $ al mes y añade cada buzón adicional por 3 $ al mes, con miembros ilimitados sin coste extra.",
     "capCtaBusiness": "Mejorar a Business, 39 $/mes",
     "capBodyProCapFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
-    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes"
+    "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes",
+    "capBodyProCapSeat": "Pro conecta 10 buzones. En Business cada persona conecta hasta 10 propios, en privado, y se incluyen 10 buzones compartidos con toda la empresa; después, $3 al mes cada uno. Se factura por cada persona que conecta un buzón, con un mínimo de 2 personas.",
+    "capCtaBusinessSeat": "Mejorar a Business",
+    "visibility": {
+      "label": "Quién puede usarlo",
+      "private": "Privado",
+      "company": "Toda la empresa",
+      "privateHint": "Solo tú puedes usar este buzón.",
+      "companyHint": "Todos en el espacio de trabajo pueden usar este buzón.",
+      "ownedBy": "De {name}",
+      "saveError": "No se pudo cambiar quién puede usar este buzón. Inténtalo de nuevo.",
+      "othersTitle": "Buzones privados de otras personas",
+      "othersNote": "Puedes desconectarlos, pero solo sus propietarios pueden abrirlos."
+    }
   },
   "apiKeys": {
     "title": "Claves de API",
@@ -783,6 +796,18 @@
         "invalid_inbox": "Esa bandeja de entrada no pertenece a este espacio de trabajo.",
         "invalid_timezone": "Elige una zona horaria de la lista."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avanzado",
+      "title": "Dominios de destinatario permitidos",
+      "help": "Los correos a cualquier persona fuera de estos dominios esperan a que un propietario o administrador los apruebe. Separa los dominios con comas. Cada subdominio necesita su propia entrada. Déjalo vacío para permitir cualquier destinatario.",
+      "placeholder": "ejemplo.com, socio.com",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Guardado.",
+      "loading": "Cargando…",
+      "loadFailed": "No se pudo cargar la regla de destinatarios.",
+      "saveFailed": "No se pudo guardar la regla de destinatarios."
     }
   },
   "billing": {
@@ -804,6 +829,8 @@
     "custom": "A medida",
     "perMonth": "/mes",
     "billedYearly": "Facturado ${total}/año",
+    "perPersonPerMonth": "/persona/mes",
+    "businessPerPersonNote": "${price} por persona al mes, mínimo {min} personas. Pagas por cada persona que conecta un buzón.",
     "talkToSales": "Hablar con ventas",
     "redirecting": "Un momento…",
     "currentPlan": "Plan actual",
@@ -848,7 +875,12 @@
       "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",
       "businessFeature3": "Miembros ilimitados con roles, sin coste extra",
       "businessFeature4": "Los administradores aprueban los envíos retenidos",
-      "businessFeature5": "Varios espacios de trabajo con una sola suscripción"
+      "businessFeature5": "Varios espacios de trabajo con una sola suscripción",
+      "businessSeatFeaturePrivate": "Buzones privados para cada persona, hasta 10 cada una",
+      "businessSeatFeatureCompany": "10 buzones compartidos con toda la empresa incluidos, $3 al mes por cada uno adicional",
+      "businessSeatFeatureRoles": "Roles para cada persona: lector, miembro o administrador",
+      "businessSeatFeatureRules": "Reglas de destinatarios para el correo saliente",
+      "businessSeatFeatureAudit": "Registro de auditoría con exportación CSV"
     },
     "planIncludes": "Qué incluye tu plan",
     "inboxesOne": "1 bandeja conectada",
@@ -1026,7 +1058,31 @@
     "colDuration": "Duración",
     "statusSuccess": "Éxito",
     "statusRateLimited": "Tasa limitada",
-    "statusError": "Error"
+    "statusError": "Error",
+    "colPerson": "Persona",
+    "personUnknown": "Sin registrar",
+    "personFormer": "Antiguo miembro",
+    "exportCsv": "Exportar CSV",
+    "events": {
+      "title": "Cambios en el equipo",
+      "sub": "Invitaciones, miembros, roles, visibilidad de los buzones y la regla de destinatarios.",
+      "loading": "Cargando…",
+      "empty": "Todavía no hay cambios en el equipo.",
+      "colWhen": "Cuándo",
+      "colEvent": "Cambio",
+      "colTarget": "Afecta a",
+      "anyRecipient": "Cualquier destinatario",
+      "kinds": {
+        "invite_sent": "Invitación enviada",
+        "invite_cancelled": "Invitación cancelada",
+        "invite_accepted": "Invitación aceptada",
+        "member_removed": "Miembro eliminado",
+        "member_left": "Miembro salió",
+        "role_changed": "Rol cambiado",
+        "inbox_visibility_changed": "Visibilidad del buzón cambiada",
+        "recipient_rule_changed": "Regla de destinatarios cambiada"
+      }
+    }
   },
   "members": {
     "title": "Miembros",
@@ -1109,6 +1165,7 @@
       "bodyTitle": "Mensaje",
       "bodyTruncated": "Este mensaje supera los 64 KB y se ha recortado aquí. Ábrelo en el panel para leerlo completo.",
       "bodyWithheldRole": "El texto del mensaje se muestra a propietarios, administradores y miembros del espacio. Tu rol solo puede revisar los datos de entrega.",
+      "bodyWithheldPrivate": "Este envío sale del buzón privado de otra persona, así que su contenido está oculto. Aun así puedes aprobarlo o rechazarlo.",
       "bodyStoredWithProvider": "Esta solicitud se preparó antes de que MCPEmails guardara una copia del borrador, así que su texto no se puede mostrar aquí y, si se aprueba, no se enviará. Recházala y pide a tu asistente que vuelva a enviar el borrador.",
       "bodyDecryptFailed": "No se ha podido descifrar el mensaje guardado, así que no puede mostrarse. Rechaza esta solicitud y pide al asistente que la prepare de nuevo.",
       "bodyAbsent": "Esta solicitud no tiene texto de mensaje.",
@@ -1205,7 +1262,8 @@
       "loadingDetails": "Cargando…",
       "approveAndSend": "Aprobar y enviar",
       "approveSub": "Esto envía ahora el correo preparado.",
-      "approvedToast": "Correo aprobado. Enviando ahora."
+      "approvedToast": "Correo aprobado. Enviando ahora.",
+      "privateHidden": "Oculto (buzón privado)"
     }
   },
   "automations": {

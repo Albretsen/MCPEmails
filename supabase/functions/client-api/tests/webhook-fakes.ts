@@ -44,6 +44,11 @@ export interface FakeWebhookStore extends WebhookStore {
   /** inbox id -> workspace id, provider and watch state, of live inboxes. */
   inboxes: Map<string, { workspace_id: string; provider: string; mail_host?: string | null; last_error?: string | null; backoff_until?: string | null }>;
   hasTargetsCalls: number;
+  /** `${endpointId}:${inboxId}` pairs the endpoint's creator may NOT see (the visibility rule). */
+  hidden: Set<string>;
+  /** When set, `endpointSeesInbox` throws (the visibility read failed). */
+  visibilityFails: boolean;
+  visibilityCalls: number;
   endpoint(row: Partial<FakeEndpoint> & { id: string; workspace_id: string }): FakeEndpoint;
 }
 
@@ -60,6 +65,14 @@ export function fakeWebhookStore(now: () => number): FakeWebhookStore {
     allowed: new Set(),
     inboxes: new Map(),
     hasTargetsCalls: 0,
+    hidden: new Set(),
+    visibilityFails: false,
+    visibilityCalls: 0,
+    endpointSeesInbox(endpointId, inboxId) {
+      store.visibilityCalls++;
+      if (store.visibilityFails) return Promise.reject(new Error("webhook_scope_failed:XX000"));
+      return Promise.resolve(!store.hidden.has(`${endpointId}:${inboxId}`));
+    },
     endpoint(row) {
       const full: FakeEndpoint = {
         url: `https://hooks.receiver.example/${row.id}`,

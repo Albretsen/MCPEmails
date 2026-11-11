@@ -71,6 +71,16 @@ nodeMock.module('@/lib/plans/check-inbox-limit', {
     inboxLimitErrorBody: () => ({ error: 'limit', error_code: 'inbox_limit_reached' }),
   },
 });
+nodeMock.module('@/lib/inboxes/visibility', {
+  namedExports: {
+    checkConnectTarget: async () => ({ ok: true, exists: false }),
+    inboxOwnedByOtherBody: () => ({ error: 'owned', error_code: 'inbox_owned_by_other' }),
+    privateInboxLimitErrorBody: () => ({ error: 'private cap', error_code: 'private_inbox_limit_reached' }),
+  },
+});
+nodeMock.module('@/lib/plans/check-private-inbox-limit', {
+  namedExports: { checkPrivateInboxLimit: async () => ({ atLimit: false, currentCount: 0, maxPrivateInboxes: null }) },
+});
 nodeMock.module('@/lib/plans/inbox-cap-events', { namedExports: { recordInboxCapHit: async () => {} } });
 nodeMock.module('@/lib/stripe/mailbox-addon', { namedExports: { syncMailboxAddonForWorkspace: async () => {} } });
 nodeMock.module('@/lib/inboxes/provider-conflict', {

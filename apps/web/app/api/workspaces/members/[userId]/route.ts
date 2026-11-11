@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkMemberLimit } from '@/lib/plans/check-member-limit';
+import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 import {
   demotionRevocationNotice,
   removeWorkspaceMember,
@@ -108,6 +110,19 @@ export async function DELETE(
     console.error('[members/remove] Delete failed:', removeError.message);
     return NextResponse.json({ error: 'Failed to remove member.' }, { status: 500 });
   }
+
+  // Business billed per person: a removed member with a mailbox stops being
+  // billed (business-seats.ts). After the response; never throws.
+  after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
+
+  // Security audit view (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'member_removed',
+    target: targetUserId,
+    details: { role: targetMember.role },
+  });
 
   return NextResponse.json({ removed: true, userId: targetUserId });
 }
@@ -236,6 +251,22 @@ export async function PATCH(
   if (updateError) {
     console.error('[members/patch] Update failed:', updateError.message);
     return NextResponse.json({ error: 'Failed to update member role.' }, { status: 500 });
+  }
+
+  // Business billed per person: a viewer is never billed and a member or
+  // admin with a mailbox is, so a role change can move the seat count
+  // (business-seats.ts). After the response; never throws.
+  after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
+
+  // Security audit view (never throws).
+  if (targetMember.role !== newRole) {
+    await recordWorkspaceAuditEvent(service, {
+      workspaceId,
+      actorUserId: user.id,
+      kind: 'role_changed',
+      target: targetUserId,
+      details: { from: targetMember.role, to: newRole },
+    });
   }
 
   // 6. A role change has to reach the credentials the member is already

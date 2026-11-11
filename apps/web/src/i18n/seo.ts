@@ -1,6 +1,6 @@
 import { routing } from './routing';
 import { languageTag } from './locale-policy.mjs';
-import { PLANS } from '@/lib/stripe/plans';
+import { BUSINESS_MIN_SEATS, PLANS } from '@/lib/stripe/plans';
 import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
 
@@ -111,23 +111,53 @@ export const OG_LOCALE: Record<string, string> = {
  * day, in USD and (same digits, like every EUR price) in EUR. Absent, every
  * price is the catalogue's.
  */
+/**
+ * `businessPerPerson` is set only while `business_seat_pricing` is on: the
+ * Business Offer then carries the per-person monthly price, says so in its
+ * description, and names the minimum as an eligible quantity of people.
+ */
+type BusinessPerPerson = { monthlyCents: number } | null;
+
+const PER_PERSON_DESCRIPTION =
+  `Billed per person who connects a mailbox, ${BUSINESS_MIN_SEATS} people minimum. ` +
+  'Private mailboxes for each person and company-wide mailboxes for shared addresses.';
+
+function perPersonFields(businessPerPerson: BusinessPerPerson) {
+  if (!businessPerPerson) return {};
+  return {
+    description: PER_PERSON_DESCRIPTION,
+    eligibleQuantity: { '@type': 'QuantitativeValue', minValue: BUSINESS_MIN_SEATS, unitText: 'person' },
+  };
+}
+
 function planOffers(
   url: string,
   {
     eur = false,
     founder = null,
-  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
+    businessPerPerson = null,
+  }: {
+    eur?: boolean;
+    founder?: { monthlyCents: number; validUntil: string } | null;
+    businessPerPerson?: BusinessPerPerson;
+  } = {},
 ) {
   const usd = (['free', 'personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const founderOffer = id === 'pro' && founder ? founder : null;
-    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const perPerson = id === 'pro' ? businessPerPerson : null;
+    const founderOffer = id === 'pro' && founder && !perPerson ? founder : null;
+    const cents = perPerson
+      ? perPerson.monthlyCents
+      : founderOffer
+      ? founderOffer.monthlyCents
+      : plan.monthlyPriceCents;
     const price = (cents / 100).toString();
     return {
       ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
+      ...perPersonFields(perPerson),
       url,
       price,
       priceCurrency: 'USD',
@@ -148,14 +178,20 @@ function planOffers(
   // The USD offers above stay exactly as they were.
   const eurOffers = (['personal', 'solo', 'pro'] as const).map((id) => {
     const plan = PLANS[id];
-    const founderOffer = id === 'pro' && founder ? founder : null;
-    const cents = founderOffer ? founderOffer.monthlyCents : plan.monthlyPriceCents;
+    const perPerson = id === 'pro' ? businessPerPerson : null;
+    const founderOffer = id === 'pro' && founder && !perPerson ? founder : null;
+    const cents = perPerson
+      ? perPerson.monthlyCents
+      : founderOffer
+      ? founderOffer.monthlyCents
+      : plan.monthlyPriceCents;
     const price = (cents / 100).toString();
     return {
       ...(founderOffer ? { priceValidUntil: founderOffer.validUntil } : {}),
       '@type': 'Offer',
       name: plan.name,
       description: plan.description,
+      ...perPersonFields(perPerson),
       url,
       price,
       priceCurrency: 'EUR',
@@ -248,7 +284,13 @@ export function homeJsonLd(
   {
     description,
     faq = [],
-  }: { name: string; description: string; faq?: { q: string; a: string }[] }
+    businessPerPerson = null,
+  }: {
+    name: string;
+    description: string;
+    faq?: { q: string; a: string }[];
+    businessPerPerson?: BusinessPerPerson;
+  }
 ) {
   const home = localePath(locale, '');
   const orgId = `${APP_URL}/#organization`;
@@ -304,7 +346,7 @@ export function homeJsonLd(
           'Threaded reply drafts',
           'Outlook / Microsoft 365 via Microsoft Graph',
         ],
-        offers: planOffers(localePath(locale, '/pricing')),
+        offers: planOffers(localePath(locale, '/pricing'), { businessPerPerson }),
         ...reviewMarkup(),
       },
       // The same `home.faq.items` the Faq section renders, so the markup can
@@ -407,7 +449,12 @@ export function pricingJsonLd(
   {
     eur = false,
     founder = null,
-  }: { eur?: boolean; founder?: { monthlyCents: number; validUntil: string } | null } = {},
+    businessPerPerson = null,
+  }: {
+    eur?: boolean;
+    founder?: { monthlyCents: number; validUntil: string } | null;
+    businessPerPerson?: BusinessPerPerson;
+  } = {},
 ) {
   const url = localePath(locale, '/pricing');
   const graph = pageJsonLd(locale, { path: '/pricing', title, description })['@graph'];
@@ -428,7 +475,7 @@ export function pricingJsonLd(
           name: 'MCPEmails',
           url: APP_URL,
         },
-        offers: planOffers(url, { eur, founder }),
+        offers: planOffers(url, { eur, founder, businessPerPerson }),
       },
     ],
   };

@@ -63,6 +63,8 @@ import { createResend } from '@/lib/email/resend';
 import {
   BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
   BUSINESS_INCLUDED_INBOXES,
+  BUSINESS_MIN_SEATS,
+  BUSINESS_PRIVATE_INBOXES_PER_PERSON,
   PLANS,
   planDisplayName,
   type BillingInterval,
@@ -114,6 +116,13 @@ export interface PurchaseConfirmationInput {
    */
   paymentStatus?: string | null;
   /**
+   * Business billed per person (the base price is a seat price, sold only
+   * while `business_seat_pricing` is on). The email then describes what a
+   * per-person subscription includes instead of the flat plan's list, which
+   * promises members "at no extra cost". Absent or false: unchanged.
+   */
+  perPerson?: boolean;
+  /**
    * The buyer's referral link (src/lib/referrals/link.ts), or null/absent when
    * the program is off for them. When present the email carries one short
    * "give a month, get a month" line with it; nothing else changes.
@@ -135,6 +144,23 @@ function referralLine(link: string | null | undefined): { text: string; url: str
     url: link,
   };
 }
+
+/**
+ * What per-person Business includes, in the email's own words. Only what the
+ * code does: private mailboxes per person (inboxes.visibility), company-wide
+ * mailboxes with the add-on past the included ten, roles, admin approval of
+ * held sends, recipient rules, the audit log and its export.
+ */
+export const BUSINESS_SEAT_EMAIL_FEATURES: readonly string[] = [
+  'Everything in Pro',
+  `Private mailboxes for each person, up to ${BUSINESS_PRIVATE_INBOXES_PER_PERSON} each`,
+  'Roles for each person: viewer, member or admin',
+  'Admins approve held sends',
+  'Recipient rules for outgoing mail',
+  'Audit log with CSV export',
+  'Several workspaces on one subscription',
+  'Webhooks for new mail',
+];
 
 export interface ComposedEmail {
   subject: string;
@@ -208,9 +234,18 @@ function localCharge(input: PurchaseConfirmationInput): { amount: string; note: 
  * Inboxes are what they are paying for, so the jump from Free is stated
  * explicitly rather than left for them to work out.
  */
-function inboxHeadline(planId: Exclude<PlanId, 'free'>, currency: string | null): string {
+function inboxHeadline(
+  planId: Exclude<PlanId, 'free'>,
+  currency: string | null,
+  perPerson = false,
+): string {
   const max = PLANS[planId].limits.maxInboxes;
   const free = PLANS.free.limits.maxInboxes;
+  if (planId === 'pro' && perPerson) {
+    return `Billed per person who connects a mailbox, ${BUSINESS_MIN_SEATS} people minimum; anyone without one of their own is free, whatever their role. ` +
+      `${BUSINESS_INCLUDED_INBOXES} company-wide mailboxes are included, and each extra one is ` +
+      `${formatPriceCents(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS, 'en-US', currency ?? 'usd')} a month.`;
+  }
   // Business is uncapped because it bills past the included mailboxes, not
   // because they are free. "Unlimited" here would contradict the invoice.
   if (planId === 'pro') {
@@ -263,9 +298,11 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
 
   // plans.ts writes the per-mailbox price in USD; a EUR buyer reads it in
   // EUR, same digits (src/lib/stripe/eur-prices.ts).
+  const perPerson = planId === 'pro' && input.perPerson === true;
+  const planFeatures = perPerson ? BUSINESS_SEAT_EMAIL_FEATURES : plan.features;
   const features = (input.currency ?? 'usd').toLowerCase() === 'eur'
-    ? plan.features.map((feature) => euroizeAmounts(feature, 'en-US'))
-    : plan.features;
+    ? planFeatures.map((feature) => euroizeAmounts(feature, 'en-US'))
+    : planFeatures;
 
   const body = [
     lead,
@@ -276,7 +313,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
     ...(charged ? [`${chargedLabel}: ${charged.amount}`, charged.note] : []),
     '',
     'WHAT YOU GET',
-    inboxHeadline(planId, input.currency),
+    inboxHeadline(planId, input.currency, perPerson),
     ...features.map((feature) => `- ${feature}`),
     '',
     'CONNECT YOUR NEXT INBOX',
@@ -350,7 +387,7 @@ export function buildPurchaseConfirmationEmail(input: PurchaseConfirmationInput)
               </table>
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">What you get</p>
               <p style="margin:0 0 10px;font-size:15px;color:#0f172a;line-height:1.5;font-weight:600;">
-                ${escapeHtml(inboxHeadline(planId, input.currency))}
+                ${escapeHtml(inboxHeadline(planId, input.currency, perPerson))}
               </p>
               <ul style="margin:0 0 26px;padding:0 0 0 20px;">${featureItems}</ul>
               <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Connect your next inbox</p>

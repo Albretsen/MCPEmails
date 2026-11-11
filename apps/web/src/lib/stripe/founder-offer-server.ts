@@ -13,12 +13,16 @@
  *
  * Nothing is read at all outside the window or when the founder prices are
  * not configured, so this costs nothing on the normal path.
+ *
+ * Closed whenever `pricing_switches.business_seat_pricing` is on (Business
+ * billed per person, business-seats.ts).
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { founderPriceIdFor } from '@/lib/stripe/plans';
+import { businessSeatPricingOn, resetBusinessSeatSwitchCache } from '@/lib/stripe/business-seats';
 import {
   FOUNDER_FLAG_KEY,
   founderOfferFor,
@@ -39,6 +43,7 @@ let countCache: { value: number; at: number } | null = null;
 export function resetFounderOfferCaches(): void {
   flagCache = null;
   countCache = null;
+  resetBusinessSeatSwitchCache();
 }
 
 async function readFlag(db: Db, nowMs: number): Promise<boolean | null> {
@@ -105,12 +110,18 @@ export async function currentFounderOffer(opts?: {
   try {
     const db = opts?.db ?? createServiceRoleClient();
     const nowMs = now.getTime();
-    const [flagOn, placesTaken, ownerHas] = await Promise.all([
+    const [flagOn, placesTaken, ownerHas, seatPricing] = await Promise.all([
       readFlag(db, nowMs),
       readPlacesTaken(db, nowMs, opts?.fresh === true),
       opts?.ownerId ? readOwnerHasFounderSub(db, opts.ownerId) : Promise.resolve(false),
+      businessSeatPricingOn({ db, fresh: opts?.fresh === true, now: nowMs }),
     ]);
     if (flagOn !== true || ownerHas == null) return null;
+    // Business billed per person replaces the founder price for new buyers:
+    // while that switch is on, no surface offers it and no checkout sells it.
+    // Existing founders keep their price (businessPriceFor), and the founder
+    // prices are never archived.
+    if (seatPricing) return null;
     return founderOfferFor({
       now,
       flagOn,

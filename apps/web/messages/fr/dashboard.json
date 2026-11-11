@@ -443,7 +443,20 @@
     "capBodyProCap": "Pro connecte 10 boîtes. Business en inclut 10 pour 39 $ par mois et ajoute chaque boîte supplémentaire pour 3 $ par mois, avec des membres illimités sans surcoût.",
     "capCtaBusiness": "Passer à Business, 39 $/mois",
     "capBodyProCapFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
-    "capCtaBusinessFounder": "Passer à Business, {price} $/mois"
+    "capCtaBusinessFounder": "Passer à Business, {price} $/mois",
+    "capBodyProCapSeat": "Pro connecte 10 boîtes. Avec Business, chaque personne connecte jusqu'à 10 boîtes à elle, en privé, et 10 boîtes partagées avec toute l'entreprise sont incluses, puis 3 $ par mois chacune. Facturé pour chaque personne qui connecte une boîte, 2 personnes minimum.",
+    "capCtaBusinessSeat": "Passer à Business",
+    "visibility": {
+      "label": "Qui peut l'utiliser",
+      "private": "Privée",
+      "company": "Toute l'entreprise",
+      "privateHint": "Vous seul pouvez utiliser cette boîte.",
+      "companyHint": "Tous les membres de l'espace de travail peuvent utiliser cette boîte.",
+      "ownedBy": "Appartient à {name}",
+      "saveError": "Impossible de modifier qui peut utiliser cette boîte. Réessayez.",
+      "othersTitle": "Boîtes privées des autres membres",
+      "othersNote": "Vous pouvez les déconnecter, mais seuls leurs propriétaires peuvent les ouvrir."
+    }
   },
   "apiKeys": {
     "title": "Clés API",
@@ -783,6 +796,18 @@
         "invalid_inbox": "Cette boîte de réception n'appartient pas à cet espace de travail.",
         "invalid_timezone": "Choisissez un fuseau horaire dans la liste."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avancé",
+      "title": "Domaines de destinataires autorisés",
+      "help": "Un e-mail adressé à quelqu'un en dehors de ces domaines attend l'approbation d'un propriétaire ou d'un administrateur. Séparez les domaines par des virgules. Chaque sous-domaine doit être ajouté séparément. Laissez vide pour autoriser tous les destinataires.",
+      "placeholder": "exemple.fr, partenaire.fr",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré.",
+      "loading": "Chargement…",
+      "loadFailed": "Impossible de charger la règle des destinataires.",
+      "saveFailed": "Impossible d'enregistrer la règle des destinataires."
     }
   },
   "billing": {
@@ -804,6 +829,8 @@
     "custom": "Sur mesure",
     "perMonth": "/mois",
     "billedYearly": "Facturé {total} $/an",
+    "perPersonPerMonth": "/personne/mois",
+    "businessPerPersonNote": "{price} $ par personne et par mois, {min} personnes minimum. Vous payez pour chaque personne qui connecte une boîte mail.",
     "talkToSales": "Parler aux ventes",
     "redirecting": "Un instant…",
     "currentPlan": "Formule actuelle",
@@ -848,7 +875,12 @@
       "businessFeature2": "10 boîtes incluses, 3 $ par mois pour chaque boîte en plus",
       "businessFeature3": "Membres illimités avec rôles, sans surcoût",
       "businessFeature4": "Les administrateurs approuvent les envois en attente",
-      "businessFeature5": "Plusieurs espaces de travail sur un seul abonnement"
+      "businessFeature5": "Plusieurs espaces de travail sur un seul abonnement",
+      "businessSeatFeaturePrivate": "Des boîtes privées pour chaque personne, jusqu'à 10 chacune",
+      "businessSeatFeatureCompany": "10 boîtes partagées avec toute l'entreprise incluses, 3 $ par mois pour chaque boîte en plus",
+      "businessSeatFeatureRoles": "Des rôles pour chaque personne : observateur, membre ou administrateur",
+      "businessSeatFeatureRules": "Règles de destinataires pour le courrier sortant",
+      "businessSeatFeatureAudit": "Journal d'audit avec export CSV"
     },
     "planIncludes": "Ce que votre formule inclut",
     "inboxesOne": "1 boîte connectée",
@@ -1026,7 +1058,31 @@
     "colDuration": "Durée",
     "statusSuccess": "Réussi",
     "statusRateLimited": "Débit limité",
-    "statusError": "Erreur"
+    "statusError": "Erreur",
+    "colPerson": "Personne",
+    "personUnknown": "Non enregistré",
+    "personFormer": "Ancien membre",
+    "exportCsv": "Exporter en CSV",
+    "events": {
+      "title": "Modifications de l'équipe",
+      "sub": "Invitations, membres, rôles, visibilité des boîtes et règle des destinataires.",
+      "loading": "Chargement…",
+      "empty": "Aucune modification de l'équipe pour le moment.",
+      "colWhen": "Quand",
+      "colEvent": "Modification",
+      "colTarget": "Concerne",
+      "anyRecipient": "N'importe quel destinataire",
+      "kinds": {
+        "invite_sent": "Invitation envoyée",
+        "invite_cancelled": "Invitation annulée",
+        "invite_accepted": "Invitation acceptée",
+        "member_removed": "Membre retiré",
+        "member_left": "Membre parti",
+        "role_changed": "Rôle modifié",
+        "inbox_visibility_changed": "Visibilité de la boîte modifiée",
+        "recipient_rule_changed": "Règle des destinataires modifiée"
+      }
+    }
   },
   "members": {
     "title": "Membres",
@@ -1109,6 +1165,7 @@
       "bodyTitle": "Message",
       "bodyTruncated": "Ce message dépasse 64 Ko et a été tronqué ici. Ouvrez-le dans le tableau de bord pour tout lire.",
       "bodyWithheldRole": "Le texte du message est visible par les propriétaires, administrateurs et membres de l'espace. Votre rôle ne peut consulter que les détails de remise.",
+      "bodyWithheldPrivate": "Cet envoi provient de la boîte privée d'une autre personne, son contenu est donc masqué. Vous pouvez quand même l'approuver ou le refuser.",
       "bodyStoredWithProvider": "Cette demande a été préparée avant que MCPEmails n’enregistre une copie du brouillon : son texte ne peut pas être affiché ici et, même approuvée, elle ne sera pas envoyée. Rejetez-la et demandez à votre assistant de renvoyer le brouillon.",
       "bodyDecryptFailed": "Le message stocké n'a pas pu être déchiffré et ne peut donc pas être affiché. Rejetez cette demande et demandez à votre assistant de la refaire.",
       "bodyAbsent": "Cette demande ne contient aucun texte de message.",
@@ -1205,7 +1262,8 @@
       "loadingDetails": "Chargement…",
       "approveAndSend": "Approuver et envoyer",
       "approveSub": "Cela envoie l'e-mail préparé maintenant.",
-      "approvedToast": "E-mail approuvé. Envoi en cours."
+      "approvedToast": "E-mail approuvé. Envoi en cours.",
+      "privateHidden": "Masqué (boîte privée)"
     }
   },
   "automations": {

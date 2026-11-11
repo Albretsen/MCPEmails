@@ -196,6 +196,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -210,6 +211,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -224,6 +226,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -270,6 +273,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -284,6 +288,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -298,6 +303,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -315,6 +321,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -329,6 +336,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -343,6 +351,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -360,6 +369,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -374,6 +384,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -388,6 +399,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -405,6 +417,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -419,6 +432,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -433,6 +447,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -450,6 +465,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -464,6 +480,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -478,6 +495,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -495,6 +513,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -509,6 +528,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -523,6 +543,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -540,6 +561,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -554,6 +576,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -568,6 +591,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -585,6 +609,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -599,6 +624,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -613,6 +639,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -630,6 +657,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -644,6 +672,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -658,6 +687,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -675,6 +705,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -689,6 +720,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -703,6 +735,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -720,6 +753,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -734,6 +768,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -748,6 +783,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -765,6 +801,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -779,6 +816,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -793,6 +831,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -810,6 +849,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -824,6 +864,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -838,6 +879,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -855,6 +897,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -869,6 +912,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -883,6 +927,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -900,6 +945,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -914,6 +960,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -928,6 +975,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -945,6 +993,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -959,6 +1008,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -973,6 +1023,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -990,6 +1041,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -1004,6 +1056,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1018,6 +1071,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1035,6 +1089,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -1049,6 +1104,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1063,6 +1119,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1080,6 +1137,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -1094,6 +1152,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1108,6 +1167,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1125,6 +1185,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         Insert: {
@@ -1139,6 +1200,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1153,6 +1215,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -2837,6 +2900,7 @@ export type Database = {
           oauth_refresh_token: string | null
           oauth_scope: string | null
           oauth_token_expires_at: string | null
+          owner_user_id: string | null
           parked_at: string | null
           parked_reason: string | null
           provider: string
@@ -2856,6 +2920,7 @@ export type Database = {
           smtp_tls: boolean
           status: string
           updated_at: string
+          visibility: string
           workspace_id: string
         }
         Insert: {
@@ -2881,6 +2946,7 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          owner_user_id?: string | null
           parked_at?: string | null
           parked_reason?: string | null
           provider: string
@@ -2900,6 +2966,7 @@ export type Database = {
           smtp_tls?: boolean
           status?: string
           updated_at?: string
+          visibility?: string
           workspace_id: string
         }
         Update: {
@@ -2925,6 +2992,7 @@ export type Database = {
           oauth_refresh_token?: string | null
           oauth_scope?: string | null
           oauth_token_expires_at?: string | null
+          owner_user_id?: string | null
           parked_at?: string | null
           parked_reason?: string | null
           provider?: string
@@ -2944,9 +3012,17 @@ export type Database = {
           smtp_tls?: boolean
           status?: string
           updated_at?: string
+          visibility?: string
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inboxes_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inboxes_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -4171,6 +4247,7 @@ export type Database = {
           condition: string
           consecutive_failures: number
           created_at: string
+          created_by: string | null
           due_at: string
           folder: string | null
           id: string
@@ -4196,6 +4273,7 @@ export type Database = {
           condition?: string
           consecutive_failures?: number
           created_at?: string
+          created_by?: string | null
           due_at: string
           folder?: string | null
           id?: string
@@ -4221,6 +4299,7 @@ export type Database = {
           condition?: string
           consecutive_failures?: number
           created_at?: string
+          created_by?: string | null
           due_at?: string
           folder?: string | null
           id?: string
@@ -4245,6 +4324,13 @@ export type Database = {
             columns: ["api_key_id"]
             isOneToOne: false
             referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -4330,6 +4416,7 @@ export type Database = {
       scheduled_sends: {
         Row: {
           created_at: string
+          created_by: string | null
           error_detail: string | null
           id: string
           inbox_id: string
@@ -4343,6 +4430,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           error_detail?: string | null
           id?: string
           inbox_id: string
@@ -4356,6 +4444,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           error_detail?: string | null
           id?: string
           inbox_id?: string
@@ -4368,6 +4457,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "scheduled_sends_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scheduled_sends_inbox_id_fkey"
             columns: ["inbox_id"]
@@ -4402,11 +4498,13 @@ export type Database = {
           decision_note: string | null
           dispatch_scheduled_send_id: string | null
           expires_at: string | null
+          hold_reason: string | null
           id: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted: boolean
+          requested_by: string | null
           revision: number
           send_at: string | null
           status: string
@@ -4423,11 +4521,13 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          hold_reason?: string | null
           id?: string
           inbox_id: string
           operation: string
           payload: Json
           payload_encrypted?: boolean
+          requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -4444,11 +4544,13 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          hold_reason?: string | null
           id?: string
           inbox_id?: string
           operation?: string
           payload?: Json
           payload_encrypted?: boolean
+          requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -4489,6 +4591,13 @@ export type Database = {
             columns: ["inbox_id"]
             isOneToOne: false
             referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "send_approvals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -5894,6 +6003,58 @@ export type Database = {
           },
         ]
       }
+      workspace_audit_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          kind: string
+          target: string | null
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          kind: string
+          target?: string | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          kind?: string
+          target?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_audit_events_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "workspace_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_invites: {
         Row: {
           accepted_at: string | null
@@ -6079,6 +6240,7 @@ export type Database = {
           acquisition_utm_campaign: string | null
           acquisition_utm_medium: string | null
           acquisition_utm_source: string | null
+          allowed_recipient_domains: string[] | null
           analytics_first_credential_created_at: string | null
           analytics_first_credential_method: string | null
           analytics_first_inbox_connected_at: string | null
@@ -6150,6 +6312,7 @@ export type Database = {
           acquisition_utm_campaign?: string | null
           acquisition_utm_medium?: string | null
           acquisition_utm_source?: string | null
+          allowed_recipient_domains?: string[] | null
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_inbox_connected_at?: string | null
@@ -6221,6 +6384,7 @@ export type Database = {
           acquisition_utm_campaign?: string | null
           acquisition_utm_medium?: string | null
           acquisition_utm_source?: string | null
+          allowed_recipient_domains?: string[] | null
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_inbox_connected_at?: string | null
@@ -6476,6 +6640,19 @@ export type Database = {
           slug: string
         }[]
       }
+      credential_inbox_scope: {
+        Args: {
+          p_inbox_ids: string[]
+          p_user_id: string
+          p_workspace_id: string
+        }
+        Returns: Json
+      }
+      credential_inbox_scope_for_key: {
+        Args: { p_key_hash: string }
+        Returns: Json
+      }
+      default_inbox_visibility: { Args: never; Returns: string }
       dispatch_activation_help: { Args: never; Returns: undefined }
       dispatch_annual_renewal_reminder: { Args: never; Returns: undefined }
       dispatch_billing_lifecycle: {
@@ -7345,6 +7522,10 @@ export type Database = {
         Args: { overrides: Json }
         Returns: boolean
       }
+      inbox_visible_to: {
+        Args: { p_inbox_id: string; p_user_id: string }
+        Returns: boolean
+      }
       internal_account_domains: { Args: never; Returns: string[] }
       internal_account_emails: { Args: never; Returns: string[] }
       invoke_outlook_token_refresh: { Args: never; Returns: undefined }
@@ -7440,6 +7621,7 @@ export type Database = {
           status: string
         }[]
       }
+      my_visible_inbox_ids: { Args: never; Returns: string[] }
       my_workspace_ids: { Args: never; Returns: string[] }
       next_support_ticket_ref: { Args: never; Returns: string }
       onboarding_convert_on: {
@@ -7481,6 +7663,10 @@ export type Database = {
       purge_outbound_send_events: { Args: never; Returns: Json }
       purge_send_history: { Args: never; Returns: Json }
       purge_support_history: { Args: never; Returns: Json }
+      purge_workspace_audit_events_batch: {
+        Args: { p_limit?: number; p_min_days?: number }
+        Returns: number
+      }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {
@@ -7680,6 +7866,10 @@ export type Database = {
           ends_at: string
         }[]
       }
+      visible_inbox_ids: {
+        Args: { p_user_id: string; p_workspace_id: string }
+        Returns: string[]
+      }
       webhook_capped_inboxes: {
         Args: { p_workspace_id?: string }
         Returns: {
@@ -7754,6 +7944,24 @@ export type Database = {
           calls: number
           inbox_id: string
           last_success_at: string
+        }[]
+      }
+      workspace_inbox_directory: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          can_access: boolean
+          created_at: string
+          display_name: string
+          email_address: string
+          id: string
+          owner_display_name: string
+          owner_email: string
+          owner_user_id: string
+          parked_at: string
+          provider: string
+          service: string
+          status: string
+          visibility: string
         }[]
       }
       workspace_pro_features: {

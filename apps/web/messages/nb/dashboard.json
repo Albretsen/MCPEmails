@@ -443,7 +443,20 @@
     "capBodyProCap": "Pro kobler til 10 postkasser. Business inkluderer 10 for 39 dollar i måneden og legger til hver ekstra postkasse for 3 dollar i måneden, med ubegrenset antall medlemmer uten ekstra kostnad.",
     "capCtaBusiness": "Oppgrader til Business, 39 $/md",
     "capBodyProCapFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
-    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md"
+    "capCtaBusinessFounder": "Oppgrader til Business, {price} $/md",
+    "capBodyProCapSeat": "Pro kobler til 10 postkasser. På Business kobler hver person til opptil 10 egne postkasser, private for dem, og 10 felles postkasser for hele firmaet er inkludert, deretter $3 i måneden per stykk. Faktureres per person som kobler til en postkasse, minst 2 personer.",
+    "capCtaBusinessSeat": "Oppgrader til Business",
+    "visibility": {
+      "label": "Hvem kan bruke den",
+      "private": "Privat",
+      "company": "Hele bedriften",
+      "privateHint": "Bare du kan bruke denne innboksen.",
+      "companyHint": "Alle i arbeidsområdet kan bruke denne innboksen.",
+      "ownedBy": "Eies av {name}",
+      "saveError": "Kunne ikke endre hvem som kan bruke denne innboksen. Prøv igjen.",
+      "othersTitle": "Andres private innbokser",
+      "othersNote": "Du kan koble dem fra, men bare eierne kan åpne dem."
+    }
   },
   "apiKeys": {
     "title": "API-nøkler",
@@ -783,6 +796,18 @@
         "invalid_inbox": "Den innboksen hører ikke til dette arbeidsområdet.",
         "invalid_timezone": "Velg en tidssone fra listen."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avansert",
+      "title": "Tillatte mottakerdomener",
+      "help": "E-post til noen utenfor disse domenene venter til en eier eller administrator godkjenner den. Skill domenene med komma. Underdomener må legges inn hver for seg. La feltet stå tomt for å tillate alle mottakere.",
+      "placeholder": "eksempel.no, partner.no",
+      "save": "Lagre",
+      "saving": "Lagrer…",
+      "saved": "Lagret.",
+      "loading": "Laster…",
+      "loadFailed": "Kunne ikke laste mottakerregelen.",
+      "saveFailed": "Kunne ikke lagre mottakerregelen."
     }
   },
   "billing": {
@@ -804,6 +829,8 @@
     "custom": "Tilpasset",
     "perMonth": "/måned",
     "billedYearly": "Faktureres ${total}/år",
+    "perPersonPerMonth": "/person/måned",
+    "businessPerPersonNote": "${price} per person per måned, minst {min} personer. Du betaler for hver person som kobler til en innboks.",
     "talkToSales": "Snakk med salg",
     "redirecting": "Et øyeblikk…",
     "currentPlan": "Nåværende abonnement",
@@ -848,7 +875,12 @@
       "businessFeature2": "10 postkasser inkludert, 3 dollar i måneden for hver ekstra",
       "businessFeature3": "Ubegrenset antall medlemmer med roller, uten ekstra kostnad",
       "businessFeature4": "Administratorer godkjenner tilbakeholdte sendinger",
-      "businessFeature5": "Flere arbeidsområder på ett abonnement"
+      "businessFeature5": "Flere arbeidsområder på ett abonnement",
+      "businessSeatFeaturePrivate": "Private postkasser for hver person, opptil 10 hver",
+      "businessSeatFeatureCompany": "10 felles postkasser for hele firmaet inkludert, $3 i måneden for hver ekstra",
+      "businessSeatFeatureRoles": "Roller for hver person: leser, medlem eller administrator",
+      "businessSeatFeatureRules": "Mottakerregler for utgående e-post",
+      "businessSeatFeatureAudit": "Revisjonslogg med CSV-eksport"
     },
     "planIncludes": "Hva planen din inkluderer",
     "inboxesOne": "1 tilkoblet innboks",
@@ -1026,7 +1058,31 @@
     "colDuration": "Varighet",
     "statusSuccess": "Vellykket",
     "statusRateLimited": "Hastighetsbegrenset",
-    "statusError": "Feil"
+    "statusError": "Feil",
+    "colPerson": "Person",
+    "personUnknown": "Ikke registrert",
+    "personFormer": "Tidligere medlem",
+    "exportCsv": "Eksporter CSV",
+    "events": {
+      "title": "Endringer i teamet",
+      "sub": "Invitasjoner, medlemmer, roller, synlighet for innbokser og mottakerregelen.",
+      "loading": "Laster…",
+      "empty": "Ingen endringer i teamet ennå.",
+      "colWhen": "Når",
+      "colEvent": "Endring",
+      "colTarget": "Gjelder",
+      "anyRecipient": "Alle mottakere",
+      "kinds": {
+        "invite_sent": "Invitasjon sendt",
+        "invite_cancelled": "Invitasjon kansellert",
+        "invite_accepted": "Invitasjon godtatt",
+        "member_removed": "Medlem fjernet",
+        "member_left": "Medlem forlot",
+        "role_changed": "Rolle endret",
+        "inbox_visibility_changed": "Synlighet for innboks endret",
+        "recipient_rule_changed": "Mottakerregel endret"
+      }
+    }
   },
   "members": {
     "title": "Medlemmer",
@@ -1109,6 +1165,7 @@
       "bodyTitle": "Melding",
       "bodyTruncated": "Denne meldingen er lengre enn 64 KB og er avkortet her. Åpne den i dashbordet for å lese alt.",
       "bodyWithheldRole": "Meldingsteksten vises til eiere, administratorer og medlemmer av arbeidsområdet. Din rolle kan bare se leveringsdetaljene.",
+      "bodyWithheldPrivate": "Denne sendingen kommer fra en annens private innboks, så innholdet er skjult. Du kan fortsatt godkjenne eller avvise den.",
       "bodyStoredWithProvider": "Denne forespørselen ble laget før MCPEmails tok vare på en kopi av utkastet, så teksten kan ikke vises her, og den blir ikke sendt selv om du godkjenner den. Avvis den og be assistenten sende utkastet på nytt.",
       "bodyDecryptFailed": "Den lagrede meldingen kunne ikke dekrypteres og kan derfor ikke vises. Avvis denne forespørselen og be assistenten forberede den på nytt.",
       "bodyAbsent": "Denne forespørselen har ingen meldingstekst.",
@@ -1205,7 +1262,8 @@
       "loadingDetails": "Laster inn…",
       "approveAndSend": "Godkjenn og send",
       "approveSub": "Dette sender den forberedte e-posten nå.",
-      "approvedToast": "E-posten er godkjent. Sendes nå."
+      "approvedToast": "E-posten er godkjent. Sendes nå.",
+      "privateHidden": "Skjult (privat innboks)"
     }
   },
   "automations": {

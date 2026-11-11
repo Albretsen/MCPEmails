@@ -3,6 +3,7 @@ import type { Database } from '@/types/database.types';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { canManageWorkspace } from '@/lib/workspace/roles';
 import { resolveEffectiveWorkspacePlan } from '@/lib/plans/effective-plan';
+import { allVisible, visibleInboxIds } from '@/lib/inboxes/visibility';
 
 /**
  * Who is asking, in which workspace, with which role, and whether the plan
@@ -125,6 +126,10 @@ export async function validateInboxIds(
   service: SupabaseClient<Database>,
   workspaceId: string,
   raw: unknown,
+  // The caller. Every listed inbox must also be visible to them (the Business
+  // privacy model, 20261111190000): an owner or admin cannot point a webhook
+  // at someone else's private inbox by its id.
+  userId?: string,
 ): Promise<{ ok: true; value: string[] | null } | { ok: false; error: string; code: 'inbox_invalid' | 'inbox_cap' }> {
   if (raw === null || raw === undefined) return { ok: true, value: null };
   if (!Array.isArray(raw) || raw.length === 0) {
@@ -147,6 +152,9 @@ export async function validateInboxIds(
     .in('id', ids);
   if (error) return { ok: false, error: 'Could not check the inbox selection.', code: 'inbox_invalid' };
   if ((data ?? []).length !== ids.length) {
+    return { ok: false, error: 'One or more inboxes are not in this workspace.', code: 'inbox_invalid' };
+  }
+  if (userId !== undefined && !allVisible(ids, await visibleInboxIds(service, workspaceId, userId))) {
     return { ok: false, error: 'One or more inboxes are not in this workspace.', code: 'inbox_invalid' };
   }
   return { ok: true, value: ids };

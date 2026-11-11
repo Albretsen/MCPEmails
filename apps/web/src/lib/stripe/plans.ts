@@ -235,6 +235,32 @@ export const BUSINESS_EXTRA_INBOX_MONTHLY_CENTS = 300;
 export const BUSINESS_EXTRA_INBOX_YEARLY_CENTS = 2880;
 
 // ---------------------------------------------------------------------------
+// Business per person (2026-11-11, behind `pricing_switches.business_seat_pricing`).
+//
+// While the switch is on, a NEW Business subscription is billed per person:
+// the base item is a per-unit seat price and its quantity is the number of
+// billable people, never below BUSINESS_MIN_SEATS. Who is billable and how
+// the quantity is kept in step lives in src/lib/stripe/business-seats.ts.
+// Company-wide mailboxes keep the add-on above (10 included, then $3 each);
+// private mailboxes are covered by the person's seat, up to
+// BUSINESS_PRIVATE_INBOXES_PER_PERSON per workspace.
+//
+// The flat $39 / founder / Team subscriptions are untouched: nothing syncs a
+// quantity on a base price that is not a seat price.
+//
+//   STRIPE_PRICE_BUSINESS_SEAT_MONTHLY=price_...  ($29 per person, lookup key business_seat_month)
+//   STRIPE_PRICE_BUSINESS_SEAT_YEARLY=price_...   ($278.40 per person, lookup key business_seat_year)
+// ---------------------------------------------------------------------------
+/** Business per person, per month, in USD cents. */
+export const BUSINESS_SEAT_MONTHLY_CENTS = 2900;
+/** The same, per year: 12 x $29 less the 20% every annual price carries. */
+export const BUSINESS_SEAT_YEARLY_CENTS = 27840;
+/** The fewest people a per-person Business subscription is billed for. */
+export const BUSINESS_MIN_SEATS = 2;
+/** Private mailboxes one person may own per workspace on per-person Business. */
+export const BUSINESS_PRIVATE_INBOXES_PER_PERSON = 10;
+
+// ---------------------------------------------------------------------------
 // Plan definition
 // ---------------------------------------------------------------------------
 export interface Plan {
@@ -718,6 +744,9 @@ function planByCatalogueId(
   // above, so a renewal maps even when the variables were set after load.
   const founderInterval = founderPriceInterval(priceId);
   if (founderInterval) return { plan: PLANS.pro, interval: founderInterval };
+  // The per-person Business prices, likewise read at call time.
+  const seatInterval = businessSeatPriceInterval(priceId);
+  if (seatInterval) return { plan: PLANS.pro, interval: seatInterval };
   for (const plan of Object.values(PLANS)) {
     const idx = plan.legacyStripePriceIds.indexOf(priceId);
     if (idx !== -1) {
@@ -922,6 +951,50 @@ export function founderPriceInterval(
 
 export function isFounderPriceId(priceId: string | null | undefined): boolean {
   return founderPriceInterval(priceId) !== null;
+}
+
+// ---------------------------------------------------------------------------
+// The Business per-person (seat) prices. Read at call time, like the founder
+// and add-on ids, so a test can set them after import.
+// ---------------------------------------------------------------------------
+export function businessSeatPriceId(interval: BillingInterval): string | null {
+  const raw =
+    interval === 'year'
+      ? process.env.STRIPE_PRICE_BUSINESS_SEAT_YEARLY
+      : process.env.STRIPE_PRICE_BUSINESS_SEAT_MONTHLY;
+  return raw?.trim() || null;
+}
+
+/**
+ * The interval of a seat price id, or null when the id is not one. An EUR
+ * launch twin of a seat price (plans.ts priceTwinMap) counts as the seat
+ * price it stands in for.
+ */
+export function businessSeatPriceInterval(
+  priceId: string | null | undefined,
+): BillingInterval | null {
+  if (!priceId) return null;
+  const monthly = businessSeatPriceId('month');
+  const yearly = businessSeatPriceId('year');
+  if (priceId === monthly) return 'month';
+  if (priceId === yearly) return 'year';
+  const original = priceTwinMap().get(priceId);
+  if (original && original === monthly) return 'month';
+  if (original && original === yearly) return 'year';
+  return null;
+}
+
+export function isBusinessSeatPriceId(priceId: string | null | undefined): boolean {
+  return businessSeatPriceInterval(priceId) !== null;
+}
+
+/**
+ * The seat quantity Stripe bills for a number of billable people: never
+ * below BUSINESS_MIN_SEATS, and a garbage count reads as the minimum.
+ */
+export function businessSeatQuantity(billablePeople: number): number {
+  const count = Number.isFinite(billablePeople) ? Math.floor(billablePeople) : 0;
+  return Math.max(BUSINESS_MIN_SEATS, count);
 }
 
 /** The interval of an add-on price id, or null when the id is not one. */
