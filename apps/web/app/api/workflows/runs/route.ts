@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
-import { canOperateWorkspace, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
+import { canManageWorkspace, canOperateWorkspace, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
 
 /** Operational metadata only; email content is never selected or returned. */
 type BulkRunSummary = {
@@ -40,7 +40,12 @@ export async function GET() {
   const context = await getContext();
   if (!context) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
 
-  const db = createServiceRoleClient();
+  // Owners and admins see every run in the workspace (operational metadata,
+  // never mail content). Everyone else reads through RLS, which since the
+  // Business privacy model (20261111190000) hides runs on other people's
+  // private inboxes.
+  const role = await fetchWorkspaceRole(context.supabase, context.workspaceId, context.userId);
+  const db = canManageWorkspace(role) ? createServiceRoleClient() : context.supabase;
   const { data, error } = await db
     .from('bulk_runs')
     .select('id, inbox_id, operation, status, total, processed, succeeded, failed, cancel_requested_at, created_at, completed_at, error_code, inboxes(email_address, display_name)')
@@ -71,6 +76,19 @@ export async function PATCH(request: NextRequest) {
   const role = await fetchWorkspaceRole(context.supabase, context.workspaceId, context.userId);
   if (!canOperateWorkspace(role)) {
     return NextResponse.json(insufficientRoleBody(VIEWER_CANNOT_STOP_RUN), { status: 403 });
+  }
+
+  // A member may stop only a run they can see: the RLS read hides runs on
+  // other people's private inboxes (20261111190000). Owners and admins may
+  // stop any run, as before.
+  if (!canManageWorkspace(role)) {
+    const { data: visibleRun } = await context.supabase
+      .from('bulk_runs')
+      .select('id')
+      .eq('id', id)
+      .eq('workspace_id', context.workspaceId)
+      .maybeSingle();
+    if (!visibleRun) return NextResponse.json({ error: 'This run has already finished or is unavailable.' }, { status: 409 });
   }
 
   const db = createServiceRoleClient();

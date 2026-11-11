@@ -16,11 +16,20 @@ import {
   type WaitingForwards,
 } from '@/lib/approvals/forward-notices';
 
+/** Matches no user id: a private inbox with no owner notifies nobody. */
+const NO_ONE = '00000000-0000-0000-0000-000000000000';
+
 /** Far above what a person can review; the count stays exact below it. */
 const WAITING_READ_LIMIT = 500;
 
 export class SupabaseForwardNoticeStore implements NoticeStore {
-  constructor(private readonly db: SupabaseClient<Database>) {}
+  // A plain field, not a parameter property: the node --test suites run this file
+  // with --experimental-strip-types, which cannot strip parameter properties.
+  private readonly db: SupabaseClient<Database>;
+
+  constructor(db: SupabaseClient<Database>) {
+    this.db = db;
+  }
 
   async claim(limit: number): Promise<ClaimedNotice[]> {
     const { data, error } = await this.db.rpc('claim_forward_approval_notices', { p_limit: limit });
@@ -135,7 +144,7 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     return data?.name ?? null;
   }
 
-  async recipients(workspaceId: string, category: string): Promise<NoticeRecipient[]> {
+  async recipients(workspaceId: string, category: string, triageRuleId?: string | null): Promise<NoticeRecipient[]> {
     const { data: workspace, error: workspaceError } = await this.db
       .from('workspaces')
       .select('id')
@@ -145,13 +154,28 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     if (workspaceError) throw new Error(workspaceError.message);
     if (!workspace) return [];
 
-    const { data: members, error: membersError } = await this.db
-      .from('workspace_members')
-      .select('user_id')
-      .eq('workspace_id', workspaceId)
-      .in('role', ['owner', 'admin']);
-    if (membersError) throw new Error(membersError.message);
-    const ids = (members ?? []).map((member) => member.user_id);
+    // A rule on someone's private inbox: the email names that person's mail, so
+    // it goes to them alone, while they are a member who may decide.
+    const privateOwner = triageRuleId ? await this.privateInboxOwner(workspaceId, triageRuleId) : null;
+    let ids: string[];
+    if (privateOwner) {
+      const { data: member, error: memberError } = await this.db
+        .from('workspace_members')
+        .select('user_id, role')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', privateOwner)
+        .maybeSingle();
+      if (memberError) throw new Error(memberError.message);
+      ids = member && member.role !== 'viewer' ? [member.user_id] : [];
+    } else {
+      const { data: members, error: membersError } = await this.db
+        .from('workspace_members')
+        .select('user_id')
+        .eq('workspace_id', workspaceId)
+        .in('role', ['owner', 'admin']);
+      if (membersError) throw new Error(membersError.message);
+      ids = (members ?? []).map((member) => member.user_id);
+    }
     if (ids.length === 0) return [];
 
     const { data: users, error: usersError } = await this.db
@@ -163,6 +187,31 @@ export class SupabaseForwardNoticeStore implements NoticeStore {
     return (users ?? [])
       .filter((user) => !(user.unsubscribed_categories ?? []).includes(category))
       .map((user) => ({ userId: user.id, email: user.email, unsubscribeToken: user.unsubscribe_token }));
+  }
+
+  /**
+   * The owner of the rule's inbox when that inbox is private, else null. A rule
+   * whose inbox row is gone, or whose private inbox has no owner, answers a
+   * sentinel nobody is: the notice then reaches no one rather than everyone.
+   */
+  private async privateInboxOwner(workspaceId: string, triageRuleId: string): Promise<string | null> {
+    const { data: rule, error: ruleError } = await this.db
+      .from('triage_rules')
+      .select('inbox_id')
+      .eq('id', triageRuleId)
+      .eq('workspace_id', workspaceId)
+      .maybeSingle();
+    if (ruleError) throw new Error(ruleError.message);
+    if (!rule?.inbox_id) return null;
+    const { data: inbox, error: inboxError } = await this.db
+      .from('inboxes')
+      .select('visibility, owner_user_id')
+      .eq('id', rule.inbox_id)
+      .maybeSingle();
+    if (inboxError) throw new Error(inboxError.message);
+    if (!inbox) return NO_ONE;
+    if (inbox.visibility === 'company') return null;
+    return inbox.owner_user_id ?? NO_ONE;
   }
 
   async finish(id: string, outcome: NoticeFinish): Promise<void> {

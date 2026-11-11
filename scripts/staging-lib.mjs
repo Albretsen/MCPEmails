@@ -218,7 +218,7 @@ export const PRODUCTS = Object.freeze([
     key: 'business',
     name: 'MCPEmails Business',
     description:
-      '10 mailboxes included, $3 a month for each extra. Unlimited members with roles, admins approve held sends, several workspaces on one subscription.',
+      'MCPEmails for teams, billed per person who connects a mailbox, 2 people minimum. 10 company-wide mailboxes included, $3 a month for each extra. Roles, admins approve held sends, several workspaces on one subscription.',
     tax_code: TAX_CODE,
     metadata: {},
   },
@@ -269,6 +269,16 @@ export const PRICES = Object.freeze([
     env: 'STRIPE_PRICE_BUSINESS_FOUNDER_YEARLY', product: 'business', amount: 27840, interval: 'year', tax: 'exclusive',
     nickname: 'Business founder yearly', lookup_key: 'business_founder_year', metadata: { offer: 'founder2026' },
     eurAlways: { unit_amount: 27840, tax_behavior: 'exclusive' },
+  },
+  // Business per person (pricing_switches.business_seat_pricing): $19 and
+  // $182.40 a person, on the Business product. Not in prod yet.
+  {
+    env: 'STRIPE_PRICE_BUSINESS_SEAT_MONTHLY', product: 'business', amount: 1900, interval: 'month', tax: 'exclusive',
+    nickname: 'Business per person monthly', lookup_key: 'business_seat_month',
+  },
+  {
+    env: 'STRIPE_PRICE_BUSINESS_SEAT_YEARLY', product: 'business', amount: 18240, interval: 'year', tax: 'exclusive',
+    nickname: 'Business per person yearly', lookup_key: 'business_seat_year',
   },
   { env: 'STRIPE_PRICE_PERSONAL_PASS_3M', product: 'pass', amount: 2900, interval: null, tax: 'exclusive', noEur: true },
   { env: 'STRIPE_PRICE_JAPAN_ROUTE_YEARLY', product: 'japan_route', amount: 12000, interval: 'year', tax: 'unspecified', eurAmount: 10800 },
@@ -492,6 +502,9 @@ export const DEFAULT_PRICING_SWITCHES = Object.freeze({
   pro_inbox_cap: true,
   pro_features_public: true,
   business_founder_price: true,
+  // Business billed per person: staging runs with it on (closes the founder
+  // offer for new buyers while on).
+  business_seat_pricing: true,
   eur_launch_live: false,
 });
 

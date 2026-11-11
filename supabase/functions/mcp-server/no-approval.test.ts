@@ -295,6 +295,8 @@ interface Seen {
   returned: Array<[string, string, string]>;
   noted: Array<[string, boolean]>;
   rechecked: number;
+  // deno-lint-ignore no-explicit-any
+  keys: any[];
 }
 
 async function dispatch(
@@ -305,17 +307,22 @@ async function dispatch(
     outcome?: { logStatus: "success" | "error"; logErrorCode: string | null };
     throws?: Error;
     allowance?: boolean;
+    /** Does the approver stand for the workspace recipient rule? Left out, deps has none. */
+    approverAdmin?: boolean;
   },
 ) {
-  const seen: Seen = { sent: 0, returned: [], noted: [], rechecked: 0 };
+  const seen: Seen = { sent: 0, returned: [], noted: [], rechecked: 0, keys: [] };
   const deps = {
-    runApprovedOperation() {
+    // deno-lint-ignore no-explicit-any
+    runApprovedOperation(_operation: string, _original: Row, key: any) {
       seen.sent += 1;
+      seen.keys.push(key);
       if (options.throws) return Promise.reject(options.throws);
       return Promise.resolve(options.outcome ?? { logStatus: "success" as const, logErrorCode: null });
     },
     completeApprovedIdempotency: () => Promise.resolve(),
     sendViaProvider: () => Promise.reject(new Error("not used")),
+    ...(options.approverAdmin === undefined ? {} : { approverOverridesRule: () => Promise.resolve(options.approverAdmin) }),
     ...(options.allowance === false
       ? { reserveRuleForward: () => Promise.resolve({ allowed: false, reservationId: null }) }
       : {}),
@@ -404,4 +411,30 @@ Deno.test("a person's approval does not go through the rule's check", async () =
   assertEquals(seen.rechecked, 0);
   assertEquals(seen.sent, 1);
   assertEquals(seen.noted, []);
+});
+
+// ── The workspace recipient rule (Business, migration 20261111190100) ──────
+
+Deno.test("a no-approval rule never decides a forward the recipient rule held", () => {
+  const start = SOURCE.indexOf("async function forwardWithoutApproval(");
+  const body = SOURCE.slice(start, SOURCE.indexOf("/** Assembles the dependency bundle", start));
+  const guard = body.indexOf("approval.row.hold_reason === RECIPIENT_RULE_HOLD_REASON) return false");
+  assert(guard > 0, "a recipient-rule hold returns before anything is evaluated");
+  assert(guard < body.indexOf('"no_approval_evaluate"') && guard < body.indexOf('"no_approval_auto_decide"'));
+});
+
+Deno.test("a recipient-rule hold a no-approval rule decided anyway is re-run with the rule asked again", async () => {
+  const { inbox, tables } = await world();
+  tables.send_approvals[0].hold_reason = "recipient_rule";
+  const seen = await dispatch(tables, inbox, { approverAdmin: false });
+  assertEquals(seen.sent, 1);
+  assertEquals(seen.keys[0].approvalRuleRecheck, true, "an automatic decision never stands for the recipient rule");
+});
+
+Deno.test("a recipient-rule hold an owner or admin approved is not asked again", async () => {
+  const { inbox, tables } = await world();
+  Object.assign(tables.send_approvals[0], { hold_reason: "recipient_rule", decided_via: "dashboard", decided_by: "user-1" });
+  const seen = await dispatch(tables, inbox, { approverAdmin: false });
+  assertEquals(seen.sent, 1);
+  assertEquals(seen.keys[0].approvalRuleRecheck, undefined);
 });

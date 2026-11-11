@@ -424,7 +424,20 @@
     "capBodyProCap": "Pro verbindet 10 Postfächer. Business enthält 10 für $39 pro Monat, jedes weitere Postfach kostet $3 pro Monat, und Mitglieder sind unbegrenzt ohne Aufpreis.",
     "capCtaBusiness": "Upgrade auf Business, $39/Monat",
     "capBodyProCapFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
-    "capCtaBusinessFounder": "Upgrade auf Business, ${price}/Monat"
+    "capCtaBusinessFounder": "Upgrade auf Business, ${price}/Monat",
+    "capBodyProCapSeat": "Pro verbindet 10 Postfächer. Bei Business verbindet jede Person bis zu 10 eigene Postfächer, privat, und 10 unternehmensweite Postfächer sind inklusive, danach je $3 pro Monat. Abgerechnet wird pro Person, die ein Postfach verbindet, mindestens 2 Personen.",
+    "capCtaBusinessSeat": "Auf Business upgraden",
+    "visibility": {
+      "label": "Wer es nutzen kann",
+      "private": "Privat",
+      "company": "Ganzes Unternehmen",
+      "privateHint": "Nur Sie können dieses Postfach nutzen.",
+      "companyHint": "Alle im Workspace können dieses Postfach nutzen.",
+      "ownedBy": "Gehört {name}",
+      "saveError": "Konnte nicht ändern, wer dieses Postfach nutzen kann. Bitte erneut versuchen.",
+      "othersTitle": "Private Postfächer anderer Personen",
+      "othersNote": "Sie können diese trennen, öffnen können sie nur ihre Inhaber."
+    }
   },
   "apiKeys": {
     "title": "API-Schlüssel",
@@ -764,6 +777,18 @@
         "invalid_inbox": "Dieser Posteingang gehört nicht zu diesem Arbeitsbereich.",
         "invalid_timezone": "Wählen Sie eine Zeitzone aus der Liste."
       }
+    },
+    "recipientRule": {
+      "advanced": "Erweitert",
+      "title": "Erlaubte Empfängerdomains",
+      "help": "E-Mails an Empfänger außerhalb dieser Domains warten, bis ein Inhaber oder Admin sie freigibt. Trennen Sie Domains mit Kommas. Subdomains brauchen einen eigenen Eintrag. Leer lassen, um alle Empfänger zu erlauben.",
+      "placeholder": "beispiel.de, partner.de",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert.",
+      "loading": "Wird geladen…",
+      "loadFailed": "Die Empfängerregel konnte nicht geladen werden.",
+      "saveFailed": "Die Empfängerregel konnte nicht gespeichert werden."
     }
   },
   "billing": {
@@ -829,7 +854,12 @@
       "businessFeature2": "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
       "businessFeature3": "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
       "businessFeature4": "Admins geben zurückgehaltene Sendungen frei",
-      "businessFeature5": "Mehrere Workspaces in einem Abonnement"
+      "businessFeature5": "Mehrere Workspaces in einem Abonnement",
+      "businessSeatFeaturePrivate": "Private Postfächer für jede Person, bis zu 10 pro Person",
+      "businessSeatFeatureCompany": "10 unternehmensweite Postfächer inklusive, je $3 pro Monat für jedes weitere",
+      "businessSeatFeatureRoles": "Rollen für jede Person: Betrachter, Mitglied oder Admin",
+      "businessSeatFeatureRules": "Empfängerregeln für ausgehende E-Mails",
+      "businessSeatFeatureAudit": "Audit-Log mit CSV-Export"
     },
     "planIncludes": "Was Ihr Tarif enthält",
     "inboxesOne": "1 verbundenes Postfach",
@@ -959,7 +989,9 @@
         "temporary_need": "Nur vorübergehend benötigt",
         "other": "Anderes"
       }
-    }
+    },
+    "perPersonPerMonth": "/Person/Monat",
+    "businessPerPersonNote": "${price} pro Person und Monat, mindestens {min} Personen. Sie zahlen für jede Person, die ein Postfach verbindet."
   },
   "security": {
     "title": "Sicherheit",
@@ -1007,7 +1039,31 @@
     "colDuration": "Dauer",
     "statusSuccess": "Erfolgreich",
     "statusRateLimited": "Ratenlimit erreicht",
-    "statusError": "Fehler"
+    "statusError": "Fehler",
+    "colPerson": "Person",
+    "personUnknown": "Nicht erfasst",
+    "personFormer": "Ehemaliges Mitglied",
+    "exportCsv": "Als CSV exportieren",
+    "events": {
+      "title": "Änderungen im Team",
+      "sub": "Einladungen, Mitglieder, Rollen, Sichtbarkeit der Postfächer und die Empfängerregel.",
+      "loading": "Wird geladen…",
+      "empty": "Noch keine Änderungen im Team.",
+      "colWhen": "Wann",
+      "colEvent": "Änderung",
+      "colTarget": "Betrifft",
+      "anyRecipient": "Alle Empfänger",
+      "kinds": {
+        "invite_sent": "Einladung gesendet",
+        "invite_cancelled": "Einladung zurückgezogen",
+        "invite_accepted": "Einladung angenommen",
+        "member_removed": "Mitglied entfernt",
+        "member_left": "Mitglied ausgetreten",
+        "role_changed": "Rolle geändert",
+        "inbox_visibility_changed": "Sichtbarkeit des Postfachs geändert",
+        "recipient_rule_changed": "Empfängerregel geändert"
+      }
+    }
   },
   "members": {
     "title": "Mitglieder",
@@ -1171,7 +1227,8 @@
         "sentBody": "Sie ist aus deinem Postfach rausgegangen.",
         "failedTitle": "Nicht gesendet",
         "failedBody": "Der Versand ist nicht durchgegangen."
-      }
+      },
+      "bodyWithheldPrivate": "Dieser Versand stammt aus dem privaten Postfach einer anderen Person, daher ist der Inhalt ausgeblendet. Sie können ihn trotzdem freigeben oder ablehnen."
     },
     "mode": {
       "label": "Vor dem Senden prüfen",
@@ -1298,7 +1355,8 @@
       "approveAllHeld": "{count, plural, =1 {1 muss einzeln geprüft werden: Der Absender hat DKIM oder DMARC nicht bestanden oder konnte nicht bestätigt werden.} other {# müssen einzeln geprüft werden: Die Absender haben DKIM oder DMARC nicht bestanden oder konnten nicht bestätigt werden.}}",
       "ruleGroupHeld": "{count, plural, =1 {1 weitere muss wegen des Absenders einzeln geprüft werden.} other {# weitere müssen wegen der Absender einzeln geprüft werden.}}",
       "ruleGroupAllHeld": "{rule}: {count, plural, =1 {1 Weiterleitung muss} other {# Weiterleitungen müssen}} wegen des Absenders einzeln geprüft werden.",
-      "forwardAgainBodyFailed": "Beim letzten Mal wurde nichts gesendet. Dies erstellt eine neue Anfrage für dieselbe Nachricht und dieselbe Adresse. Sie wartet bis zu 7 Tage, und nichts wird gesendet, bis ein Inhaber oder Admin sie freigibt. Besteht die Ursache noch, schlägt sie erneut fehl."
+      "forwardAgainBodyFailed": "Beim letzten Mal wurde nichts gesendet. Dies erstellt eine neue Anfrage für dieselbe Nachricht und dieselbe Adresse. Sie wartet bis zu 7 Tage, und nichts wird gesendet, bis ein Inhaber oder Admin sie freigibt. Besteht die Ursache noch, schlägt sie erneut fehl.",
+      "privateHidden": "Ausgeblendet (privates Postfach)"
     },
     "timeLeft": {
       "days": "{count, plural, one {noch # Tag} other {noch # Tage}}",

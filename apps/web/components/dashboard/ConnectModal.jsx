@@ -191,6 +191,11 @@ const ERROR_HEADLINE_KEYS = {
   // 409: the address is already connected through Gmail or Outlook OAuth,
   // and the route refused to convert it. See lib/inboxes/provider-conflict.ts.
   inbox_exists_other_provider: 'connect.errorInboxOtherProviderShort',
+  // 409: the address is somebody else's private mailbox in this workspace
+  // (lib/inboxes/visibility.ts); the route refused to overwrite it.
+  inbox_owned_by_other: 'connect.errorInboxOwnedByOtherShort',
+  // 402: Business per-person private mailbox cap; not an upgrade case.
+  private_inbox_limit_reached: 'connect.errorPrivateInboxLimitShort',
   // 422: a personal Microsoft address (outlook.com, hotmail.*, live.*,
   // msn.com) on the IMAP or app-password form. Microsoft turned off password
   // sign-in for those on 2024-09-16, so no server or password can make it
@@ -1076,7 +1081,7 @@ export function ConnectModal({
   // `businessShaped` only ever matters at the Free cap, where it widens the
   // offer from Personal alone to Personal and Pro side by side. The rule that
   // decides that is inboxCapOffer's, not this component's.
-  const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped });
+  const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped, seatPricing: Boolean(stripePrices?.pro?.perPerson) });
   // The Business founder price swaps the $39 sentences for founder ones
   // while it is open; every other offer keeps its own keys.
   const capCopy = founderCapCopy(upgradeCopy, stripePrices);

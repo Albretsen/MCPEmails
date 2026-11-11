@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 import { mapInviteAcceptError } from '@/lib/workspace/invite-accept-error';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
+import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
@@ -80,6 +83,23 @@ export async function POST(
   if (!result) {
     return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
   }
+
+  // Business billed per person: joining alone bills nothing (a person is
+  // billed once they own a mailbox), but someone who already owns one there
+  // from an earlier membership is billable again at once (business-seats.ts).
+  // After the response; a no-op with the switch off; never throws.
+  const joinedWorkspaceId = result.workspace_id;
+  after(() => syncBusinessSeatsForWorkspace(joinedWorkspaceId).then(() => undefined));
+
+  // Security audit view (never throws). The RPC ran as the user, so the row
+  // is written here with the service role.
+  await recordWorkspaceAuditEvent(createServiceRoleClient, {
+    workspaceId: joinedWorkspaceId,
+    actorUserId: user.id,
+    kind: 'invite_accepted',
+    target: user.email ?? user.id,
+    details: { role: result.role },
+  });
 
   const res = NextResponse.json({
     workspaceId:   result.workspace_id,

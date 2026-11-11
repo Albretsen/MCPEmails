@@ -551,3 +551,15 @@ test('review page: an expired rule forward does not say someone decided, and poi
   assert.equal(text.includes('Decided in'), false);
   root.unmount();
 });
+
+test("review page: a forward from someone else's private inbox reads no original and shows no content", async () => {
+  const calls = panelFetch({});
+  const root = await mountReview(
+    review({ kind: 'rule_forward', rule_name: null, operation: 'email_forward', forward_carries_original: true, body: { text: null, html: null, truncated: false, unavailable: 'withheld_private' }, role: 'owner' }),
+  );
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(calls.some((call) => call.url === `/api/approvals/${ID}/original`), false);
+  assert.equal(document.body.textContent.includes("someone else's private mailbox"), true);
+  assert.equal(buttonNamed('Reject').disabled, false);
+  root.unmount();
+});

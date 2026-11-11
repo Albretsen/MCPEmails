@@ -78,7 +78,10 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
   const [submitting, setSubmitting] = useState(false);
   const [again, setAgain] = useState(null);
   const [approveAll, setApproveAll] = useState(null);
+  // The role rule; each row also carries `can_decide` from the API, which adds
+  // the owner of a private inbox deciding their own sends (lib/approvals/access.ts).
   const canDecide = userRole === 'owner' || userRole === 'admin';
+  const rowCanDecide = (item) => (typeof item.can_decide === 'boolean' ? item.can_decide : canDecide);
   const now = useNow();
   const polls = useRef(0);
 
@@ -226,7 +229,7 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
         </div>
       </div>
 
-      {!canDecide && !loading && !error ? (
+      {!canDecide && !items.some(rowCanDecide) && !loading && !error ? (
         <div className="alert" role="status" style={{ marginBottom: 16 }}>
           {t('approvals.panel.memberNotice')}
         </div>
@@ -308,9 +311,13 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
                   <td data-label={t('approvals.panel.colRequest')}>
                     <RequestSource item={item} t={t} />
                   </td>
-                  <td data-label={t('approvals.panel.colRecipient')} className="approvals-wrap">{recipientLabel(item, t)}</td>
+                  <td data-label={t('approvals.panel.colRecipient')} className="approvals-wrap">
+                    {item.redacted && !recipientsOf(item).length ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : recipientLabel(item, t)}
+                  </td>
                   <td data-label={t('approvals.panel.colSubject')}>
-                    <span className="approvals-wrap">{item.summary?.subject || t('approvals.panel.noSubject')}</span>
+                    {item.redacted
+                      ? <span className="sub">{t('approvals.panel.privateHidden')}</span>
+                      : <span className="approvals-wrap">{item.summary?.subject || t('approvals.panel.noSubject')}</span>}
                     <span className="approvals-cell-sub">{approvalLabel(item, t)}</span>
                     {item.no_approval_wait_reason && t.has(`automations.noApproval.reason.${item.no_approval_wait_reason}`) ? (
                       <span className="approvals-cell-sub">{t(`automations.noApproval.reason.${item.no_approval_wait_reason}`)}</span>
@@ -320,7 +327,7 @@ export function ApprovalsPanel({ userRole, onItemsChange, ruleFilter = null, onC
                     {formatTimeLeft(t, item.expires_at, now) ?? '—'}
                   </td>
                   <td data-label="" className="right">
-                    {canDecide ? (
+                    {rowCanDecide(item) ? (
                       <div className="approvals-actions">
                         <Btn size="sm" variant="secondary" onClick={() => setDecisionItem({ item, decision: 'reject' })}>{t('approvals.panel.reject')}</Btn>
                         <Btn size="sm" variant="primary" onClick={() => setDecisionItem({ item, decision: 'approve' })}>{t('approvals.panel.reviewApprove')}</Btn>
@@ -417,7 +424,9 @@ function DecidedTable({ rows, canDecide, onForwardAgain, t }) {
                 <tr key={row.id}>
                   <td data-label={t('approvals.panel.colRequest')}><RequestSource item={row} t={t} /></td>
                   <td data-label={t('approvals.panel.colSubject')}>
-                    <span className="approvals-wrap">{row.summary?.subject || t('approvals.panel.noSubject')}</span>
+                    {row.redacted
+                      ? <span className="sub">{t('approvals.panel.privateHidden')}</span>
+                      : <span className="approvals-wrap">{row.summary?.subject || t('approvals.panel.noSubject')}</span>}
                     <span className="approvals-cell-sub">{approvalLabel(row, t)}</span>
                   </td>
                   <td data-label={t('approvals.panel.colOutcome')}><Outcome row={row} t={t} /></td>
@@ -648,6 +657,7 @@ function DecisionDialog({ item, decision, changed, submitting, now, onCancel, on
   const recipients = details
     ? (details.to?.length ? details.to.join(', ') : t('approvals.panel.noRecipient'))
     : recipientLabel(item, t);
+  const redacted = Boolean(item.redacted || details?.redacted);
   const subject = details ? details.subject : item.summary?.subject;
   const notApprovable = details?.approvable === false;
   const confirmDisabled = submitting || (approving && (!details || notApprovable));
@@ -690,7 +700,7 @@ function DecisionDialog({ item, decision, changed, submitting, now, onCancel, on
           <dl style={{ margin: 0, display: 'grid', gap: 10 }}>
             <div><dt className="sub">{t('approvals.panel.fieldRequest')}</dt><dd style={{ margin: '2px 0 0' }}><RequestSource item={item} t={t} /></dd></div>
             <div><dt className="sub">{t('approvals.panel.fieldInbox')}</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{approvalLabel(item, t)}</dd></div>
-            <div><dt className="sub">{t('approvals.panel.fieldRecipients')}</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{recipients}</dd></div>
+            <div><dt className="sub">{t('approvals.panel.fieldRecipients')}</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{redacted && !details?.to?.length && !recipientsOf(item).length ? t('approvals.panel.privateHidden') : recipients}</dd></div>
             {bccCount > 0 ? (
               <div>
                 <dt className="sub">{t('approvals.review.bcc')}</dt>
@@ -699,10 +709,10 @@ function DecisionDialog({ item, decision, changed, submitting, now, onCancel, on
                 </dd>
               </div>
             ) : null}
-            <div><dt className="sub">{t('approvals.panel.fieldSubject')}</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{subject || t('approvals.panel.noSubject')}</dd></div>
+            <div><dt className="sub">{t('approvals.panel.fieldSubject')}</dt><dd style={{ margin: '2px 0 0', overflowWrap: 'anywhere' }}>{redacted ? t('approvals.panel.privateHidden') : subject || t('approvals.panel.noSubject')}</dd></div>
             {timeLeft ? <div><dt className="sub">{t('approvals.panel.colTimeLeft')}</dt><dd style={{ margin: '2px 0 0' }}>{timeLeft}</dd></div> : null}
           </dl>
-          {isForward ? <OriginalMessage approvalId={item.id} /> : null}
+          {isForward && !redacted ? <OriginalMessage approvalId={item.id} /> : null}
           <p className="sub" style={{ margin: 0 }}>
             <Link href={`/approvals/${item.id}`}>{t('approvals.panel.openReview')}</Link>
           </p>

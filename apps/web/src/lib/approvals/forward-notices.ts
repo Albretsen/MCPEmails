@@ -2,7 +2,8 @@
  * The emails about rule forwards: one when a rule queues them, one before they
  * expire, one when an approved or unattended forward fails, and a receipt for what
  * a no-approval rule sent. Sent to the workspace's owners and admins, the only
- * people who can approve.
+ * people who can approve, or, for a rule on someone's private inbox, to that
+ * inbox's owner alone (see NoticeStore.recipients).
  *
  * TWO OPT-OUTS. Receipts have their own category. Everything else shares one, so
  * stopping receipts can never stop the emails saying a forward waits or failed.
@@ -364,8 +365,13 @@ export interface NoticeStore {
   noApprovalRuleName?(ruleId: string): Promise<string | null>;
   /** The forwards one failed notice counts. */
   failed?(noticeId: string, workspaceId: string): Promise<FailedForwards | null>;
-  /** Owners and admins of a live workspace who have not opted out of this category. */
-  recipients(workspaceId: string, category: string): Promise<NoticeRecipient[]>;
+  /**
+   * Owners and admins of a live workspace who have not opted out of this category.
+   * When the rule's inbox is someone's PRIVATE inbox (Business privacy model,
+   * migration 20261111190000) only that inbox's owner, while they are a member who
+   * may decide: the email names the rule and the addresses, which are their mail.
+   */
+  recipients(workspaceId: string, category: string, triageRuleId?: string | null): Promise<NoticeRecipient[]>;
   finish(id: string, outcome: NoticeFinish): Promise<void>;
   logEvent(event: {
     status: 'sent' | 'failed';
@@ -460,7 +466,7 @@ async function dispatchOne(notice: ClaimedNotice, store: NoticeStore, send: Noti
     return 'cancelled';
   }
   const category = notice.kind === 'receipt' ? APPROVAL_RECEIPTS_CATEGORY : APPROVAL_NOTICES_CATEGORY;
-  const recipients = await store.recipients(notice.workspace_id, category);
+  const recipients = await store.recipients(notice.workspace_id, category, notice.triage_rule_id);
   if (recipients.length === 0) {
     await store.finish(notice.id, { status: 'cancelled', error: 'no_recipients' });
     return 'cancelled';

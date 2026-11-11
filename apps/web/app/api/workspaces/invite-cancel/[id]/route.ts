@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
 /**
  * DELETE /api/workspaces/invite-cancel/[id]
@@ -67,12 +68,13 @@ export async function DELETE(
 
   // Delete the invite, scoped to the workspace to prevent cross-workspace deletion.
   const service = createServiceRoleClient();
-  const { error: deleteError, count } = await service
+  const { data: cancelled, error: deleteError, count } = await service
     .from('workspace_invites')
     .delete({ count: 'exact' })
     .eq('id', inviteId)
     .eq('workspace_id', workspaceId)
-    .is('accepted_at', null);
+    .is('accepted_at', null)
+    .select('email, role');
 
   if (deleteError) {
     console.error('[invite-cancel] Delete failed:', deleteError.message);
@@ -82,6 +84,16 @@ export async function DELETE(
   if (!count || count === 0) {
     return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
   }
+
+  // Security audit view (never throws).
+  const gone = Array.isArray(cancelled) ? cancelled[0] : null;
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'invite_cancelled',
+    target: gone?.email ?? inviteId,
+    details: gone?.role ? { role: gone.role } : {},
+  });
 
   return NextResponse.json({ cancelled: true });
 }

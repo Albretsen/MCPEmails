@@ -7,6 +7,7 @@ import { ImapPool, type PoolableClient } from "../imap-pool.ts";
 import { RateLimiter } from "../rate-limit.ts";
 import type { ApiKeyRow, ExecutorOutcome, McpSeam } from "../seam.ts";
 import type { AllowanceRow, ReservationRow, Store } from "../store.ts";
+import type { InboxScope } from "../visibility.ts";
 
 export const SUPABASE_URL = "http://supabase.client-api-test.invalid";
 export const JWT_SECRET = "client-api-test-secret-not-a-real-one";
@@ -113,6 +114,12 @@ export interface FakeStore extends Store {
   finalized: Array<{ id: string; usage: AssistantUsage }>;
   /** `markLoginRefused` / `clearLoginRefused` calls, in order. */
   loginMarks: Array<{ op: "mark" | "clear"; inboxId: string; workspaceId: string }>;
+  /**
+   * What `inboxScope` answers, by `${workspaceId}:${userId}`. Absent: nothing
+   * is hidden (every single-member workspace). The value "fail" makes it throw.
+   */
+  scopes: Map<string, InboxScope | "fail">;
+  scopeCalls: number;
 }
 
 export function fakeStore(rows: Membership[] = [membership()]): FakeStore {
@@ -126,6 +133,14 @@ export function fakeStore(rows: Membership[] = [membership()]): FakeStore {
     allowanceRow: { plan: "free", cap: 20, used: 3, remaining: 17, max_tokens_per_run: 120000, ...period },
     finalized: [],
     loginMarks: [],
+    scopes: new Map(),
+    scopeCalls: 0,
+    inboxScope(workspaceId, userId) {
+      store.scopeCalls++;
+      const scope = store.scopes.get(`${workspaceId}:${userId}`);
+      if (scope === "fail") return Promise.reject(new Error("inbox_scope_failed:XX000"));
+      return Promise.resolve(scope ?? { restricted: false });
+    },
     markLoginRefused(inboxId, workspaceId) {
       store.loginMarks.push({ op: "mark", inboxId, workspaceId });
       return Promise.resolve();

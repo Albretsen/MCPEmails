@@ -1,0 +1,102 @@
+{
+  "card": {
+    "desc": "Für ein Team: Jede Person verbindet ihre eigenen Postfächer privat, und die gemeinsamen Adressen des Unternehmens sind unternehmensweit.",
+    "per": "/Person/Monat",
+    "billedYearly": "${yearly}/Jahr pro Person, jährlich abgerechnet",
+    "minimum": "Mindestens {min} Personen. Sie zahlen für jede Person, die ein Postfach verbindet; wer kein eigenes Postfach hat, ist kostenlos, unabhängig von der Rolle.",
+    "features": [
+      "Alles aus Pro",
+      "Private Postfächer für jede Person, bis zu {private} pro Person",
+      "{included} unternehmensweite Postfächer inklusive, danach je ${addon} pro Monat",
+      "Rollen für jede Person: Betrachter, Mitglied oder Admin",
+      "Admins geben zur Prüfung zurückgehaltene Sendungen frei",
+      "Empfängerregeln: E-Mails an jemanden außerhalb Ihrer erlaubten Domains warten auf Freigabe",
+      "Audit-Log mit CSV-Export",
+      "Rechnungen auf Ihr Unternehmen mit Ihrer USt-IdNr.",
+      "Auftragsverarbeitungsvertrag (AVV/DPA)"
+    ]
+  },
+  "pricing": {
+    "metaDescription": "Free verbindet ein Postfach, Personal drei und Pro bis zu 10. Business kostet ${price} pro Person und Monat für ein Team, mit privaten Postfächern für jede Person und gemeinsamen für das Unternehmen.",
+    "heroLead": "Verbinden Sie ein Postfach einmal, und Ihr Agent kann lesen, suchen, ordnen, Entwürfe schreiben, planen und senden. Free deckt ein Postfach ab, Personal drei und Pro bis zu 10 für eine Person, die ein Unternehmen führt. Business ist für ein Team, für ${price} pro Person und Monat: Jede Person verbindet ihre eigenen Postfächer privat, und die gemeinsamen Adressen des Unternehmens sind unternehmensweit.",
+    "values": {
+      "inboxes": "Bis zu {private} private pro Person, dazu {included} unternehmensweite, danach je ${addon} pro Monat",
+      "members": "Unbegrenzt, abgerechnet pro Person mit Postfach"
+    },
+    "rows": {
+      "privateMailboxes": "Private Postfächer für jede Person",
+      "recipientRules": "Empfängerregeln für ausgehende E-Mails",
+      "auditExport": "Export des Audit-Logs (CSV)"
+    },
+    "faq": {
+      "5": "Personal ist ein Platz mit drei verbundenen Postfächern, einer Obergrenze von 120 Anfragen pro Minute, 90 Tagen Analyseverlauf und priorisiertem E-Mail-Support. Pro ist weiterhin ein Platz und ein Login, mit bis zu 10 verbundenen Postfächern, sodass eine Person die Postfächer eines Unternehmens betreuen kann (Vertrieb, Rechnungen, Support, Info). Dazu kommen eine Obergrenze von 300 Anfragen pro Minute, zwei Jahre Analyseverlauf statt 90 Tagen und priorisierter E-Mail-Support, und Pro arbeitet weiter, wenn der Chat geschlossen ist: Erinnerungen an Antworten auf gesendete E-Mails, Zurückstellen, ein täglicher Morgenüberblick im Posteingang, eine Suche über alle verbundenen Postfächer und Anweisungen für Ihre KI pro Postfach. Business ist für ein Team, für ${price} pro Person und Monat, mindestens {min} Personen. Jede Person verbindet bis zu {private} eigene Postfächer, privat, und gemeinsame Adressen können unternehmensweit geteilt werden: {included} sind inklusive, danach je ${addon} pro Monat. Business ergänzt Rollen (Betrachter, Mitglied, Admin), Admins, die zurückgehaltene Sendungen freigeben, Empfängerregeln, ein Audit-Log mit Export, mehrere Workspaces in einem Abonnement und eine Obergrenze von 1.000 Anfragen pro Minute. Alles aus Pro ist enthalten.",
+      "6": "Zählen Sie zuerst die Personen. Wenn eine Person info@, vertrieb@, rechnung@ und den Rest betreut, ist das Pro: ein Login, bis zu 10 verbundene Postfächer, und jedes Postfach behält seinen eigenen Absendernamen und seine Signatur und sendet über seinen eigenen Mailserver. Zwei oder drei Adressen passen in Personal. Wenn Kolleginnen und Kollegen einen eigenen Login brauchen, ist das Business: Jede Person verbindet ihr eigenes Postfach privat, und gemeinsame Adressen wie info@ und vertrieb@ sind für das ganze Team freigegeben. Das kostet ${price} pro Person und Monat, mindestens {min} Personen, und Sie zahlen nur für Personen, die ein Postfach verbinden. Jedes Postfach, das IMAP und SMTP spricht, lässt sich verbinden, egal wo es gehostet ist, ebenso Gmail, Google Workspace und Microsoft 365; bei einem Microsoft-365-Firmenkonto muss die IT-Administration die App eventuell einmal freigeben.",
+      "7": "Personal deckt drei verbundene Postfächer ab. Ein viertes bringt Sie zu Pro, das bis zu 10 Postfächer mit einem Agenten und einem Login abdeckt. Darüber hinaus, oder sobald eine Kollegin oder ein Kollege Zugang braucht, kostet Business ${price} pro Person und Monat, mindestens {min} Personen: Jede Person kann bis zu {private} private Postfächer verbinden, und {included} unternehmensweite Postfächer sind inklusive, danach je ${addon} pro Monat. Wenn Sie knapp über drei liegen und das für Sie nicht passt, schreiben Sie uns an hello@mcpemails.com.",
+      "9": "Jährliche Zahlung spart bei allen bezahlten Tarifen etwa 20 % gegenüber monatlicher, und die Karten oben zeigen beide Preise. Business kostet ${yearly} pro Person und Jahr (${yearlyMonth} pro Monat), und jedes unternehmensweite Postfach über die {included} inklusiven hinaus kostet ${addonYearly} pro Jahr. Sie zahlen einmal für 12 Monate im Voraus. Eine Kündigung beendet die Verlängerung, und Sie behalten den Zugang bis zum Ende des bezahlten Jahres. Abgesehen von der 14-tägigen Erstattung der ersten Zahlung erstatten wir die restlichen Monate nicht."
+    },
+    "ctaSub": "Starten Sie mit Free: ein Postfach, keine Karte nötig. Personal bringt Sie auf drei Postfächer und Pro auf 10 für eine Person. Business kostet ${price} pro Person und Monat für ein Team, mindestens {min} Personen."
+  },
+  "home": {
+    "sub": "Free verbindet ein Postfach mit {freeActions} E-Mail-Aktionen im Monat. Personal verbindet drei. Pro verbindet bis zu 10 für eine Person, die ein Unternehmen führt. Business ist für ein Team und wird pro Person abgerechnet, die ein Postfach verbindet: Die eigene E-Mail jeder Person bleibt privat, und gemeinsame Adressen sind unternehmensweit."
+  },
+  "forBusiness": {
+    "hero": {
+      "eyebrow": "Für ein kleines Unternehmen und alle, die seine E-Mails betreuen",
+      "titleLine1": "Ihr eigenes Postfach bleibt privat,",
+      "titleLine2": "die Adressen des Unternehmens sind gemeinsam",
+      "lead": "Jede Person verbindet ihr eigenes Postfach, und es bleibt privat. info@, vertrieb@ und support@ werden einmal verbunden und unternehmensweit geteilt. Die KI, die eine Person nutzt, sieht nur, was diese Person sehen darf, und Admins legen die Regeln für ausgehende E-Mails fest. Eine Person, die alle Adressen allein betreut, ist ebenfalls abgedeckt."
+    },
+    "team": {
+      "eyebrow": "Für ein Team",
+      "title": "Jede Person betreut ihre eigene E-Mail, die gemeinsamen Adressen alle zusammen",
+      "sub": "Business kostet ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Wer kein eigenes Postfach hat, ist kostenlos, unabhängig von der Rolle.",
+      "items": {
+        "private": {
+          "h": "Standardmäßig privat",
+          "p": "Ein Postfach, das jemand verbindet, ist privat, bis zu {private} pro Person. Kolleginnen und Kollegen, Admins und der Workspace-Inhaber sehen, dass es verbunden ist, können seine E-Mails aber weder lesen noch aus ihrem KI-Client erreichen."
+        },
+        "company": {
+          "h": "Gemeinsame Adressen, unternehmensweit",
+          "p": "Geben Sie info@, vertrieb@ oder support@ unternehmensweit frei, und alle im Workspace können es aus ihrem eigenen KI-Client bearbeiten, im Rahmen ihrer Rolle. {included} unternehmensweite Postfächer sind inklusive, danach je ${addon} pro Monat."
+        },
+        "agent": {
+          "h": "Die KI sieht, was ihre Person sieht",
+          "p": "Ein API-Schlüssel oder ein verbundener KI-Client handelt als die Person, die ihn eingerichtet hat. Er erreicht ihre eigenen Postfächer und die unternehmensweiten, sonst nichts, und verliert den Zugang, wenn die Person den Workspace verlässt."
+        },
+        "rules": {
+          "h": "Admins legen die Regeln fest",
+          "p": "Rollen (Betrachter, Mitglied, Admin), Freigabe zurückgehaltener Sendungen und Empfängerregeln: Sobald Sie die Domains festlegen, an die E-Mails gehen dürfen, wartet eine Nachricht an jemanden außerhalb davon auf Freigabe, statt verschickt zu werden."
+        },
+        "audit": {
+          "h": "Nachvollziehbar, wer was getan hat",
+          "p": "Das Audit-Log zeigt, was jeder KI-Client getan hat, und jede Änderung an Mitgliedern, Rollen und der Freigabe von Postfächern. Inhaber und Admins können es als CSV exportieren."
+        },
+        "paperwork": {
+          "h": "Unterlagen für ein Unternehmen",
+          "p": "Rechnungen tragen Ihren Firmennamen und Ihre USt-IdNr., ein Auftragsverarbeitungsvertrag (AVV/DPA) ist veröffentlicht, und Daten werden in der EU (Stockholm) gespeichert."
+        }
+      }
+    },
+    "pricing": {
+      "sub": "Free, Personal und Pro sind jeweils ein Login, und es ändert sich nur, wie viele Postfächer dieser Login verbindet. Business ist für ein Team und wird pro Person abgerechnet.",
+      "business": {
+        "h": "Business, ${price} pro Person und Monat: ein Team",
+        "p": "Mindestens {min} Personen, abgerechnet für jede Person, die ein Postfach verbindet. Bis zu {private} private Postfächer pro Person, dazu {included} unternehmensweite, danach je ${addon} pro Monat."
+      },
+      "note": "Wer kein eigenes Postfach hat, ist kostenlos, und Sie können pro Unternehmen oder Kunde einen eigenen Workspace führen."
+    },
+    "faq": {
+      "0": "Ja, wenn eine Person die Postfächer betreut. Pro ist ein Login mit bis zu 10 verbundenen Postfächern, sodass eine Person info@, vertrieb@, rechnung@ und support@ mit einem Agenten betreuen kann. Sobald Kolleginnen und Kollegen einen eigenen Login brauchen, kostet Business ${price} pro Person und Monat: Das eigene Postfach jeder Person bleibt privat, und die gemeinsamen Adressen sind unternehmensweit.",
+      "5": "Free, Personal und Pro sind Tarife mit einem Login. Bei Business meldet sich jede Kollegin und jeder Kollege mit einem eigenen Konto an und verbindet das eigene Postfach, das privat bleibt, während unternehmensweite Postfächer wie info@ geteilt werden. Sie zahlen ${price} pro Monat für jede Person, die ein Postfach verbindet, mindestens {min} Personen. Wer kein Postfach verbindet, kostet nichts, unabhängig von der Rolle.",
+      "extra": [
+        {
+          "q": "Kann ein Admin mein Postfach lesen?",
+          "a": "Nein. Der Workspace-Inhaber und die Admins sehen, dass Ihr Postfach verbunden ist, seine Adresse und seinen Status, und können es trennen, aber sie können seine E-Mails nicht lesen und keinen API-Schlüssel dafür erstellen. Nur Sie können es unternehmensweit freigeben, und erst dann kann der Rest des Teams darin arbeiten."
+        }
+      ]
+    },
+    "ctaBand": {
+      "sub": "Verbinden Sie das erste Postfach kostenlos, ohne Karte. Fügen Sie den Rest hinzu, wenn Sie so weit sind: bis zu 10 mit Pro für eine Person, oder Business für ein Team für ${price} pro Person und Monat."
+    }
+  }
+}

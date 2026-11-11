@@ -234,3 +234,54 @@ test('Escape closes the Approve all dialog', async (t) => {
   await pressEscape();
   assert.equal(view.container.querySelectorAll('[aria-labelledby="approve-all-title"]').length, 0);
 });
+
+// ---------------------------------------------------------------------------
+// Business privacy model: someone else's private inbox (lib/approvals/access.ts).
+// The API sends such a row redacted; the owner of a private inbox may decide
+// their own row as a member (`can_decide`).
+// ---------------------------------------------------------------------------
+const redacted = (id) => ({
+  id,
+  inbox_id: 'ib-0002',
+  operation: 'email_forward',
+  status: 'pending',
+  created_at: '2026-10-31T10:00:00.000Z',
+  expires_at: FUTURE,
+  kind: 'rule_forward',
+  rule_id: null,
+  rule_name: null,
+  inboxes: { email_address: 'kari@example.test', display_name: null },
+  summary: {},
+  redacted: true,
+  can_decide: true,
+});
+
+test('privacy: a redacted row shows the mailbox and hides recipients and subject, and its dialog reads no original', async (t) => {
+  const { view } = await openApprovals(t, [redacted('p1')]);
+  const text = view.container.textContent;
+  assert.ok(text.includes('kari@example.test'));
+  assert.ok(text.includes(panel.privateHidden));
+  assert.equal(text.includes(panel.noRecipient), false);
+  const requested = [];
+  const previous = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    requested.push(String(url));
+    if (String(url) === '/api/approvals/p1') {
+      return { ok: true, status: 200, json: async () => ({ id: 'p1', redacted: true, to: [], cc: [], bcc: [], bcc_count: 0, subject: '', revision: 1, approvable: true, can_decide: true }) };
+    }
+    return previous(url, init);
+  };
+  t.after(() => { globalThis.fetch = previous; });
+  await click(buttonNamed(view.container, panel.reviewApprove));
+  const dialog = view.container.querySelector('[aria-labelledby="approval-decision-title"]');
+  assert.ok(dialog);
+  assert.ok(dialog.textContent.includes(panel.privateHidden));
+  assert.equal(requested.some((url) => url.endsWith('/original')), false, 'no live read of the original');
+});
+
+test('privacy: a member deciding their own private inbox gets the decision buttons', async (t) => {
+  const { view } = await render(t, { approvals: [approval('own', { can_decide: true })], role: 'member' });
+  await click(navItem(view.container, 'Approvals'));
+  assert.ok(buttonNamed(view.container, 'Reject'));
+  assert.equal(view.container.textContent.includes(panel.memberNotice), false);
+});

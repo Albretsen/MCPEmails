@@ -393,8 +393,12 @@ nodeMock.module('@/lib/supabase/service', {
           // and user_usage_entitlements through the service-role client. Same
           // fixtures as the cookie client, so both paths see the same buyer.
           maybeSingle: () =>
-            (currentSupabase.from(table) as unknown as { maybeSingle: () => Promise<unknown> })
-              .maybeSingle(),
+            // The per-person Business switch is off throughout this file;
+            // checkout-seats.test.ts covers it on.
+            table === 'pricing_switches'
+              ? Promise.resolve({ data: { enabled: false }, error: null })
+              : (currentSupabase.from(table) as unknown as { maybeSingle: () => Promise<unknown> })
+                  .maybeSingle(),
           is: () =>
             Promise.resolve(
               table === 'workspaces'
@@ -2134,6 +2138,11 @@ const KEYS_BEFORE_EUR = [
   'mode',
   'subscription_data',
   'success_url',
+  // The paperwork, on every session since 2026-11-11 whatever the tax switch
+  // says: tax ID and company name, and the customer_update Stripe requires
+  // for them on an existing customer (tax-switch.ts checkoutPaperworkParams).
+  'customer_update',
+  'tax_id_collection',
 ].sort();
 
 const COUNTRIES = ['DE', 'SE', 'NO', 'US'] as const;
@@ -2203,9 +2212,7 @@ test('every switch on: Sweden gets EUR with tax, the others keep Stripe localizi
           [
             ...KEYS_BEFORE_EUR,
             'automatic_tax',
-            'customer_update',
             'payment_method_configuration',
-            'tax_id_collection',
             ...(country === 'SE' ? ['currency'] : []),
           ].sort(),
           country,
@@ -2249,9 +2256,9 @@ test('STRIPE_FORCE_USD pins USD and drops the EUR and tax additions, whatever el
       for (const country of COUNTRIES) {
         const params = await sessionFor(country);
         assert.equal(params.currency, 'usd', country);
-        for (const key of ['automatic_tax', 'tax_id_collection', 'customer_update']) {
-          assert.equal(key in params, false, `${country}: ${key}`);
-        }
+        assert.equal('automatic_tax' in params, false, `${country}: automatic_tax`);
+        // The paperwork stays: it is not a tax or currency choice.
+        assert.deepEqual(params.tax_id_collection, { enabled: true }, country);
         assert.equal('ip_country' in (params.metadata as object), false, country);
         assert.doesNotMatch(String(params.success_url), /currency=/, country);
         const { currency: _c, ...rest } = params;

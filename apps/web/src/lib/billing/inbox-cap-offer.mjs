@@ -76,7 +76,11 @@
  * @property {boolean} recommended     The plan this panel steers toward (dual panels only).
  *
  * @param {number|null|undefined} maxInboxes - The cap that was hit.
- * @param {{businessShaped?: boolean}} [context]
+ * @param {{businessShaped?: boolean, seatPricing?: boolean}} [context]
+ *   `seatPricing`: Business is billed per person (`stripePrices.pro.perPerson`,
+ *   only while `business_seat_pricing` is on). The Business offer then uses
+ *   its per-person body, buy label and feature lines instead of the ones that
+ *   quote $39 and "members at no extra cost".
  * @returns {{
  *   plan: string, titleKey: string, bodyKey: string, ctaKey: string,
  *   featureKeys: string[], noticeBodyKey: string, dual: boolean,
@@ -96,14 +100,15 @@ export function inboxCapOffer(maxInboxes, context) {
   // rather than to 10, so a later change to Pro's cap cannot fall back to
   // offering Pro to a Pro subscriber.
   if ((maxInboxes ?? 1) > PERSONAL_CAP) {
-    const business = businessOffer();
+    const seatPricing = context?.seatPricing === true;
+    const business = seatPricing ? businessSeatOffer() : businessOffer();
     return {
       plan: business.plan,
       titleKey: 'connect.businessCapTitle',
-      bodyKey: 'connect.businessCapBody',
+      bodyKey: seatPricing ? 'connect.businessCapBodySeat' : 'connect.businessCapBody',
       ctaKey: business.ctaKey,
       featureKeys: [...business.featureKeys],
-      noticeBodyKey: 'inboxes.capBodyProCap',
+      noticeBodyKey: seatPricing ? 'inboxes.capBodyProCapSeat' : 'inboxes.capBodyProCap',
       dual: false,
       offers: [business],
     };
@@ -203,6 +208,23 @@ function businessOffer() {
       'connect.businessFeatureMembers',
       'connect.businessFeatureApprovals',
       'connect.businessFeatureWorkspaces',
+    ],
+  };
+}
+
+/** Business billed per person: same shape, per-person copy. */
+function businessSeatOffer() {
+  return {
+    plan: 'pro',
+    ctaKey: 'connect.businessCapCtaSeat',
+    noticeCtaKey: 'inboxes.capCtaBusinessSeat',
+    pitchKey: null,
+    recommended: false,
+    featureKeys: [
+      'connect.businessSeatFeaturePrivate',
+      'connect.businessSeatFeatureCompany',
+      'connect.businessFeatureApprovals',
+      'connect.businessSeatFeatureRules',
     ],
   };
 }

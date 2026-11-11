@@ -40,7 +40,7 @@ const KEY_HEX = "0123456789abcdef".repeat(4);
 Deno.env.set("ENCRYPTION_KEY", KEY_HEX);
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { handleScheduledDispatch } = await import("./index.ts");
+const { handleScheduledDispatch, DEFAULT_SCHEDULED_DISPATCH_DEPS, holdScheduledSendForRecipientRule } = await import("./index.ts");
 
 const WS_VICTIM = "11111111-1111-4111-8111-111111111111";
 const WS_ATTACKER = "22222222-2222-4222-8222-222222222222";
@@ -69,6 +69,22 @@ interface RecordedQuery {
  * updates really mutate (so a conditional claim really is conditional), and
  * `select("*")` returns the whole row while a column list projects it.
  */
+/**
+ * credential_inbox_scope (inbox visibility, migration 20261111190000): nothing
+ * in these fixtures is anyone's hidden private inbox, so every key is
+ * unrestricted. scheduled-send-tenancy.test.ts covers the refusals.
+ */
+function visibilityRpc(name: string, args: Record<string, unknown>) {
+  return Promise.resolve(
+    name === "credential_inbox_scope"
+      ? { data: { restricted: false, inbox_ids: args.p_inbox_ids ?? null }, error: null }
+      : { data: null, error: { message: `unexpected rpc ${name}` } },
+  );
+}
+
+/** When set, an UPDATE it matches answers an error (and changes nothing). */
+let failUpdatesOn: ((table: string, patch: Row | null) => boolean) | null = null;
+
 function recordingClient(tables: Record<string, Row[]>) {
   const queries: RecordedQuery[] = [];
   const from = (table: string) => {
@@ -92,6 +108,11 @@ function recordingClient(tables: Record<string, Row[]>) {
     let settled: { data: Row[]; error: null } | null = null;
     const settle = () => {
       if (settled) return settled;
+      if (q.op === "update" && failUpdatesOn?.(table, q.patch)) {
+        // deno-lint-ignore no-explicit-any
+        settled = { data: [], error: { message: "update failed" } } as any;
+        return settled!;
+      }
       const rows = matched();
       if (q.op === "update" && q.patch) for (const row of rows) Object.assign(row, q.patch);
       settled = { data: rows.map(project), error: null };
@@ -126,7 +147,7 @@ function recordingClient(tables: Record<string, Row[]>) {
     };
     return builder;
   };
-  return { client: { from }, queries, tables };
+  return { client: { from, rpc: visibilityRpc }, queries, tables };
 }
 
 /** AES-256-GCM, IV(12) || ciphertext || tag, base64url — the stored-token layout. */
@@ -247,6 +268,14 @@ function harness(
     brake?: boolean;
     /** Stand in the rule forward's ledger claim and lookup. */
     prepareRuleForward?: (id: string, stored: Row) => Promise<unknown>;
+    /** Inbox visibility: may the scheduling user still reach the inbox? Left out, deps has none. */
+    reach?: (workspaceId: string, userId: string | null, inboxId: string) => boolean;
+    /** Inbox visibility: the approval key narrowed to its creator's inboxes. Left out, deps has none. */
+    narrow?: (key: Row) => Row;
+    /** The workspace recipient rule (recipient-domain-rule.ts). Left out, deps has none. */
+    rule?: { ok: true; domains: string[] | null } | { ok: false };
+    /** Does the approver stand for the rule (owner/admin)? Left out, deps has none. */
+    approverAdmin?: boolean;
   } = {},
 ) {
   const rec = recordingClient(tables);
@@ -275,12 +304,39 @@ function harness(
       }
       : {}),
   };
+  const reachCalls: Array<[string, string | null, string]> = [];
+  const visibilityDeps = {
+    ...(behaviour.reach
+      ? {
+        scheduledByCanReach(_db: unknown, ws: string, user: string | null, inboxId: string) {
+          reachCalls.push([ws, user, inboxId]);
+          return Promise.resolve(behaviour.reach!(ws, user, inboxId));
+        },
+      }
+      : {}),
+    ...(behaviour.narrow ? { narrowKey: (_db: unknown, key: Row) => Promise.resolve(behaviour.narrow!(key)) } : {}),
+  };
+  const ruleHolds: Array<{ row: Row; payload: Row }> = [];
+  const ruleDeps = {
+    ...(behaviour.rule
+      ? {
+        recipientRule: () => Promise.resolve(behaviour.rule!),
+        holdForRecipientRule(_db: unknown, row: Row, payload: Row) {
+          ruleHolds.push({ row, payload });
+          return Promise.resolve("held-approval-id");
+        },
+      }
+      : {}),
+    ...(behaviour.approverAdmin !== undefined
+      ? { approverOverridesRule: () => Promise.resolve(behaviour.approverAdmin!) }
+      : {}),
+  };
   const run = async () => {
     // deno-lint-ignore no-explicit-any
-    const res = await handleScheduledDispatch(rec.client as any, deps as any);
+    const res = await handleScheduledDispatch(rec.client as any, { ...deps, ...visibilityDeps, ...ruleDeps } as any);
     return await res.json();
   };
-  return { run, calls, ...rec };
+  return { run, calls, reachCalls, ruleHolds, ...rec };
 }
 
 function sendRow(tables: Record<string, Row[]>, id: string): Row {
@@ -892,4 +948,317 @@ Deno.test("an AI forward does not take the rule forward path", async () => {
   assertEquals((await h.run()).dispatched, 1);
   assertEquals(asked, 0);
   assertEquals(h.calls.approved.length, 1);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inbox visibility (migration 20261111190000)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const MEMBER = "88888888-8888-4888-8888-888888888888";
+
+Deno.test("visibility: a send whose creator can no longer see the inbox fails, never sent", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A, { created_by: MEMBER })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => false });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.errored, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.reachCalls, [[WS_VICTIM, MEMBER, INBOX_VICTIM]]);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "error");
+  assertStringIncludes(String(row.error_detail), "can no longer use this mailbox");
+});
+
+Deno.test("visibility: a send whose creator still sees the inbox goes out; a legacy row asks as null", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.reachCalls, [[WS_VICTIM, null, INBOX_VICTIM]]);
+});
+
+Deno.test("visibility: the dispatcher selects created_by off scheduled_sends", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { reach: () => true });
+  await h.run();
+  const q = h.queries.find((x) => x.table === "scheduled_sends" && x.op === "select");
+  assert(q, "scheduled_sends select missing");
+  assertStringIncludes(String(q.projection), "created_by");
+});
+
+Deno.test("visibility: an approved schedule whose key was narrowed away from the inbox is refused", async () => {
+  const approval = await approvalRow({ operation: "schedule_create" });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { narrow: (key) => ({ ...key, inbox_ids: ["00000000-0000-0000-0000-000000000000"] }) });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(h.calls.sent.length, 0);
+  assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "no longer has access");
+});
+
+Deno.test("visibility: an approved operation re-runs with the narrowed key", async () => {
+  const approval = await approvalRow();
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { narrow: (key) => ({ ...key, inbox_ids: [INBOX_VICTIM_2] }) });
+  await h.run();
+  assertEquals(h.calls.approved.length, 1);
+  assertEquals(h.calls.approved[0].key.inbox_ids, [INBOX_VICTIM_2]);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The workspace recipient rule at send time (recipient-domain-rule.ts,
+// migration 20261111190100)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("recipient rule: a due send to someone outside the allowed domains is held, never sent", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["corp.example"] }, brake: true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.calls.brake.length, 0, "held before the brake counts it");
+  assertEquals(h.ruleHolds.length, 1);
+  assertEquals(h.ruleHolds[0].payload.to, MESSAGE.to);
+  assertEquals(h.ruleHolds[0].row.id, SEND_A);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "cancelled");
+  assertStringIncludes(String(row.error_detail), "Held for approval");
+  assertStringIncludes(String(row.error_detail), "owner or admin");
+});
+
+Deno.test("recipient rule: a due send inside the allowed domains goes out", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["example.com"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.ruleHolds.length, 0);
+});
+
+Deno.test("recipient rule: Cc and Bcc count; a subdomain is not the domain", async () => {
+  const withBcc = { ...MESSAGE, cc: ["a@example.com"], bcc: ["leak@sub.example.com"] };
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A, { payload: { v: 1, data: await encrypt(JSON.stringify(withBcc)) } })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["example.com"] } });
+  const summary = await h.run();
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+});
+
+Deno.test("recipient rule: no rule set, every recipient goes", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: null } });
+  assertEquals((await h.run()).dispatched, 1);
+});
+
+Deno.test("recipient rule: an unreadable rule defers the send (pending, nothing sent)", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: false } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.deferred, 1);
+  assertEquals(h.calls.sent.length, 0);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "pending");
+  assertStringIncludes(String(row.error_detail), "allowed recipient domains could not be read");
+});
+
+Deno.test("recipient rule: an approved schedule is a human's decision and is not held again", async () => {
+  const approval = await approvalRow({ operation: "schedule_create" });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.ruleHolds.length, 0);
+});
+
+Deno.test("recipient rule: an approved KEYLESS rule hold sends as the person who scheduled it", async () => {
+  const approval = await approvalRow({
+    operation: "schedule_create",
+    api_key_id: null,
+    hold_reason: "recipient_rule",
+    requested_by: MEMBER,
+  });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+  }, { reach: () => true, rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.calls.sent[0].params.subject, "Approved");
+  // The marker itself is not asked (it has no created_by); the approval's requester is.
+  assertEquals(h.reachCalls, [[WS_VICTIM, MEMBER, INBOX_VICTIM]]);
+  assertEquals(h.calls.completed, [[APPROVAL, "success", null]]);
+});
+
+Deno.test("recipient rule: a keyless rule hold whose requester lost the inbox is refused", async () => {
+  const approval = await approvalRow({
+    operation: "schedule_create",
+    api_key_id: null,
+    hold_reason: "recipient_rule",
+    requested_by: MEMBER,
+  });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+  }, { reach: () => false });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(h.calls.sent.length, 0);
+  assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "can no longer use this mailbox");
+});
+
+Deno.test("recipient rule: only a schedule_create rule hold may be keyless", async () => {
+  for (const overrides of [
+    { operation: "email_send", api_key_id: null, hold_reason: "recipient_rule" },
+    { operation: "schedule_create", api_key_id: null, hold_reason: null },
+  ]) {
+    const h = harness({
+      scheduled_sends: [marker(SEND_A)],
+      inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+      send_approvals: [await approvalRow(overrides)],
+    }, { reach: () => true });
+    const summary = await h.run();
+    assertEquals(summary.dispatched, 0, JSON.stringify(overrides));
+    assertEquals(h.calls.sent.length + h.calls.approved.length, 0);
+    assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "approved request not found");
+  }
+});
+
+Deno.test("recipient rule: production deps read the rule and write the hold", () => {
+  assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.recipientRule === "function");
+  assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.holdForRecipientRule === "function");
+});
+
+// ── Approvals the recipient rule must ask again ─────────────────────────────
+
+Deno.test("recipient rule: an approval by someone who is not owner/admin is re-run with the rule asked again", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: false, approved: () => ({ logStatus: "error", logErrorCode: "recipient_rule_rehold" }) });
+  const summary = await h.run();
+  assertEquals(h.calls.approved.length, 1);
+  assertEquals(h.calls.approved[0].key.approvalRuleRecheck, true);
+  assertEquals(h.calls.approved[0].key.internalApprovalDispatch, true);
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.held, 1);
+  // Back on the hold as a recipient-rule hold (owner/admin decide), unbound.
+  const approval = h.tables.send_approvals[0];
+  assertEquals(approval.status, "pending");
+  assertEquals(approval.hold_reason, "recipient_rule");
+  assertEquals(approval.decided_by, null);
+  assertEquals(approval.dispatch_scheduled_send_id, null);
+  assertEquals(h.calls.completed, [], "the idempotency record stays pending");
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "cancelled");
+  assertStringIncludes(String(row.error_detail), "owner or admin");
+});
+
+Deno.test("recipient rule: an owner's or admin's approval stands for the rule (no re-check)", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.approved[0].key.approvalRuleRecheck, undefined);
+});
+
+Deno.test("recipient rule: an approved schedule by a non-admin with recipients outside goes back on the SAME hold", async () => {
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [await approvalRow({ operation: "schedule_create", decided_by: MEMBER })],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { approverAdmin: false, rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.ruleHolds.length, 0, "no second approval");
+  assertEquals(h.tables.send_approvals[0].status, "pending");
+  assertEquals(h.tables.send_approvals[0].hold_reason, "recipient_rule");
+});
+
+Deno.test("recipient rule: a hold whose row cannot be closed is retried, and the hold is idempotent on the row", async () => {
+  // Only the close (status 'cancelled') fails: the claim and the hold work.
+  failUpdatesOn = (table, patch) => table === "scheduled_sends" && patch?.status === "cancelled";
+  try {
+    const h = harness({
+      scheduled_sends: [await encryptedSend(SEND_A)],
+      inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    }, { rule: { ok: true, domains: ["corp.example"] } });
+    const summary = await h.run();
+    assertEquals(h.calls.sent.length, 0);
+    assertEquals(summary.dispatched, 0);
+    assertEquals(h.ruleHolds.length, 1, "the hold was written");
+    assertEquals(summary.held + summary.deferred >= 1, true);
+    assert(sendRow(h.tables, SEND_A).status !== "cancelled" && sendRow(h.tables, SEND_A).status !== "sent", "left for the next tick, never sent");
+  } finally {
+    failUpdatesOn = null;
+  }
+  // The production hold writes one approval per scheduled row: a second call
+  // finds the first instead of inserting again.
+  const rows: Row[] = [];
+  const db = {
+    from(_t: string) {
+      let id: unknown = null;
+      let insert: Row | null = null;
+      const b = {
+        select() { return b; },
+        eq(c: string, v: unknown) { if (c === "id") id = v; return b; },
+        insert(r: Row) { insert = r; return b; },
+        maybeSingle() {
+          if (insert) { rows.push(insert); return Promise.resolve({ data: { id: insert.id }, error: null }); }
+          const hit = rows.find((r) => r.id === id);
+          return Promise.resolve({ data: hit ? { id: hit.id } : null, error: null });
+        },
+      };
+      return b;
+    },
+  };
+  const row = { id: SEND_A, workspace_id: WS_VICTIM, inbox_id: INBOX_VICTIM, send_at: DUE(), created_by: MEMBER };
+  // deno-lint-ignore no-explicit-any
+  const first = await holdScheduledSendForRecipientRule(db as any, row, { ...MESSAGE });
+  // deno-lint-ignore no-explicit-any
+  const second = await holdScheduledSendForRecipientRule(db as any, row, { ...MESSAGE });
+  assertEquals(first, second);
+  assertEquals(rows.length, 1);
+  assertEquals(DEFAULT_SCHEDULED_DISPATCH_DEPS.approverOverridesRule !== undefined, true);
 });

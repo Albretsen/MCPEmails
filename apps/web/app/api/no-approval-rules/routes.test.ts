@@ -29,18 +29,29 @@ const sessionClient = {
   },
 };
 
+/** What the GET reads: the overview, the coverage, the inboxes the caller sees, the automations. */
+let overviewData: any = { rules: [] };
+let coverageData: any[] = [];
+let visibleInboxes: string[] = [];
+let triageRules: Array<{ id: string; inbox_id: string | null }> = [];
+
 const serviceClient = {
-  from: () => {
+  from: (table: string) => {
     const chain: any = {
       select: () => chain,
       eq: () => chain,
       maybeSingle: async () => ({ data: { role } }),
+      then: (resolve: (value: unknown) => unknown) =>
+        Promise.resolve({ data: table === 'triage_rules' ? triageRules : [], error: null }).then(resolve),
     };
     return chain;
   },
   rpc: async (name: string, args: any) => {
     serviceCalls.push([name, args]);
-    return { data: name === 'no_approval_rules_overview' ? { rules: [] } : [], error: null };
+    if (name === 'no_approval_rules_overview') return { data: overviewData, error: null };
+    if (name === 'no_approval_workspace_coverage') return { data: coverageData, error: null };
+    if (name === 'visible_inbox_ids') return { data: visibleInboxes, error: null };
+    return { data: [], error: null };
   },
 };
 
@@ -75,6 +86,10 @@ function reset() {
   sessionCalls = [];
   serviceCalls = [];
   sessionError = null;
+  overviewData = { rules: [] };
+  coverageData = [];
+  visibleInboxes = [];
+  triageRules = [];
 }
 
 const writes: Array<[string, () => Promise<Response>]> = [
@@ -161,4 +176,30 @@ test('reading is for every member', async () => {
   reset();
   signedIn = null;
   assert.equal((await collection.GET()).status, 401);
+});
+
+// ── Business privacy model (migration 20261111190000) ───────────────────────
+
+test('privacy: automations on someone else\'s private inbox are left out of the overview and the coverage', async () => {
+  reset();
+  visibleInboxes = ['inbox-company'];
+  triageRules = [
+    { id: 'auto-visible', inbox_id: 'inbox-company' },
+    { id: 'auto-private', inbox_id: 'inbox-someone-else' },
+  ];
+  overviewData = {
+    paused_all: false,
+    rules: [{ id: 'r1', name: 'Books', automations: [{ id: 'auto-visible', name: 'Invoices' }, { id: 'auto-private', name: 'Payroll for Kari' }] }],
+  };
+  coverageData = [
+    { triage_rule_id: 'auto-visible', runs_without_approval: true },
+    { triage_rule_id: 'auto-private', runs_without_approval: true },
+  ];
+  const res = await collection.GET();
+  assert.equal(res.status, 200);
+  const payload = await res.json();
+  assert.deepEqual(payload.overview.rules[0].automations.map((a: any) => a.id), ['auto-visible']);
+  assert.deepEqual(payload.coverage.map((row: any) => row.triage_rule_id), ['auto-visible']);
+  assert.equal(JSON.stringify(payload).includes('Payroll for Kari'), false);
+  assert.equal(payload.overview.paused_all, false);
 });

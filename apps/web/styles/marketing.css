@@ -1477,8 +1477,11 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
    Reuses the founders classes above. The one addition: the plan picker has
    three cards, which the two-column founders grid would leave lopsided. */
 .founder-does-grid.business-plan-grid { grid-template-columns: repeat(3, 1fr); }
+/* Four cards (Business billed per person adds its own): two by two. */
+.founder-does-grid.business-plan-grid.business-plan-grid-4 { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 900px) {
-  .founder-does-grid.business-plan-grid { grid-template-columns: 1fr; }
+  .founder-does-grid.business-plan-grid,
+  .founder-does-grid.business-plan-grid.business-plan-grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ── Provider compatibility matrix (/docs/providers) ────────────────────────

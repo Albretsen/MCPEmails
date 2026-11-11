@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { fetchWorkspaceRole } from '@/lib/workspace/roles';
 import { removeWorkspaceMember } from '@/lib/workspace/membership';
+import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
 /**
  * POST /api/workspaces/[id]/leave
@@ -89,6 +91,19 @@ export async function POST(
     console.error('[workspaces/leave] Leave failed:', leaveError.message);
     return NextResponse.json({ error: 'Failed to leave the workspace.' }, { status: 500 });
   }
+
+  // Business billed per person: someone who leaves stops being billed
+  // (business-seats.ts). After the response; never throws.
+  after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
+
+  // Security audit view (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'member_left',
+    target: user.id,
+    details: { role: callerRole },
+  });
 
   const res = NextResponse.json({ left: true, workspaceId });
   if (request.cookies.get(ACTIVE_WORKSPACE_COOKIE)?.value === workspaceId) {

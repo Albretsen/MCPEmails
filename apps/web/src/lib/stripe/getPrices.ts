@@ -67,6 +67,12 @@ export interface StripePlanPrices {
    * above are that price. Set by `withFounderSubscriberPrices`.
    */
   founderSubscriber?: boolean;
+  /**
+   * Business only, and only while `business_seat_pricing` is on: the amounts
+   * above are per person, and checkout bills at least `minPeople`. Set by
+   * `withBusinessSeatPrices` (business-seat-display.ts).
+   */
+  perPerson?: { minPeople: number };
 }
 
 /** What a surface needs to print the founder line. */

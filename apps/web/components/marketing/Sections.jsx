@@ -1164,13 +1164,19 @@ export function Quote() {
  *   onGetStarted?: () => void,
  *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
  *   currency?: 'usd' | 'eur',
+ *   businessSeat?: import('@/lib/billing/business-seat-copy').BusinessSeatPageCopy | null,
  * }} props
  *
  * `currency` comes from useDisplayCurrency in HomeClient: 'eur' only for an EU
  * visitor while STRIPE_EUR_PRICES is on, and then every amount here is the
  * same digits in EUR with "incl. VAT". 'usd' renders exactly as before.
+ *
+ * `businessSeat` is the per-person Business copy, set by the page server only
+ * while `business_seat_pricing` is on (src/lib/billing/business-seat-copy.ts):
+ * the Business card then reads per person, with the minimum under the price.
+ * Null keeps the card exactly as it was.
  */
-export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
+export function Pricing({ onGetStarted, stripePrices, currency = 'usd', businessSeat = null }) {
   const t = useTranslations('home');
   const locale = useLocale();
   const signupHref = useSignupHref();
@@ -1210,7 +1216,7 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
         <div className="section-head">
           <div className="eye-label">{t('pricing.eyebrow')}</div>
           <h2>{t('pricing.title')}</h2>
-          <p className="sub">{money(t('pricing.sub'))}</p>
+          <p className="sub">{money(businessSeat ? businessSeat.home.sub : t('pricing.sub'))}</p>
         </div>
         <div className="price-grid">
           {tiers.map((tier) => {
@@ -1229,7 +1235,9 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
                   locale,
                 )
               : formatUsdCopy(monthlyCents, locale);
-            const features = t.raw(`pricing.tiers.${tier.msgKey}.features`).map(money);
+            // Business per person: its own description, unit, minimum and features.
+            const seat = tier.msgKey === 'business' ? businessSeat?.card ?? null : null;
+            const features = (seat ? seat.features : t.raw(`pricing.tiers.${tier.msgKey}.features`)).map(money);
 
             return (
               <div className={"price" + (tier.accent ? " featured" : "")} data-badge={tier.accent ? t('pricing.mostPopular') : undefined} key={tier.msgKey}>
@@ -1237,15 +1245,18 @@ export function Pricing({ onGetStarted, stripePrices, currency = 'usd' }) {
                   <h3>{t(`pricing.tiers.${tier.msgKey}.name`)}</h3>
                   <div className="num">
                     {livePrice}
-                    {tier.per && <small> {tier.per}</small>}
+                    {tier.per && <small> {seat ? seat.per : tier.per}</small>}
                   </div>
                   {eur && monthlyCents > 0 && (
                     <p className="price-annual-note">{t('pricing.inclVat')}</p>
                   )}
+                  {seat && (
+                    <p className="price-annual-note" data-business-seat-minimum="">{seat.minimum}</p>
+                  )}
                   {t.has(`pricing.tiers.${tier.msgKey}.tagline`) && (
                     <p className="price-tagline">{t(`pricing.tiers.${tier.msgKey}.tagline`)}</p>
                   )}
-                  <p className="price-desc">{t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
+                  <p className="price-desc">{seat ? seat.desc : t(`pricing.tiers.${tier.msgKey}.desc`)}</p>
                 </div>
                 <ul>
                   {features.map((f) => (

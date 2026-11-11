@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isUnsendableLegacyDraft, readPayload, readSummary, reviewerBccFor } from '@/lib/approvals/payload';
 import { deliveryFromScheduledSend, loadScheduledSendsByApproval } from '@/lib/approvals/delivery';
 import { neutralizeList, neutralizeText } from '@/lib/textSafety';
+import { approvalAccess, embeddedInbox, holdReasonOf } from '@/lib/approvals/access';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -38,7 +39,7 @@ export async function GET(
   const db = createServiceRoleClient();
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id, operation, summary, status, revision, payload, payload_encrypted, expires_at, send_at')
+    .select('id, workspace_id, inbox_id, operation, summary, status, revision, created_at, expires_at, send_at, payload, payload_encrypted, hold_reason, inboxes(email_address, owner_user_id, visibility)')
     .eq('id', id)
     .maybeSingle();
 
@@ -52,10 +53,12 @@ export async function GET(
     : { data: null };
   if (!approval || !membership) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
 
-  const summary = readSummary(approval.summary);
-  const payload = readPayload(approval);
-  const bcc = reviewerBccFor(approval, membership.role);
-  const summaryBccCount = typeof summary.bcc_count === 'number' ? summary.bcc_count : 0;
+  // Privacy model (src/lib/approvals/access.ts): someone else's private inbox
+  // is a 404 for a member, and metadata only for an owner or admin, who may
+  // still decide but never sees the recipients, subject or Bcc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const access = approvalAccess(membership.role, user.id, embeddedInbox(approval as any), holdReasonOf(approval as any));
+  if (access.hidden) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
   // Polled by the review page after approval, so it can say Sent or Failed.
   const delivery = approval.status === 'approved'
     ? deliveryFromScheduledSend(
@@ -63,6 +66,48 @@ export async function GET(
         approval.send_at,
       )
     : null;
+  if (access.redacted) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inbox = (approval as any).inboxes as { email_address?: string | null } | null;
+    // A recipient-rule hold: the owner/admin is asked about the recipients,
+    // so they see To, Cc and the Bcc addresses. Never the subject or body.
+    const recipients = access.showRecipients
+      ? (() => {
+          const s = readSummary(approval.summary);
+          const bcc = reviewerBccFor(approval, membership.role);
+          const count = typeof s.bcc_count === 'number' ? s.bcc_count : 0;
+          return {
+            to: neutralizeList(s.to).filter(Boolean),
+            cc: neutralizeList(s.cc).filter(Boolean),
+            bcc,
+            bcc_count: Math.max(count, bcc.length),
+          };
+        })()
+      : { to: [], cc: [], bcc: [], bcc_count: 0 };
+    return NextResponse.json(
+      {
+        id: approval.id,
+        status: approval.status,
+        operation: approval.operation,
+        revision: approval.revision,
+        created_at: approval.created_at ?? null,
+        expires_at: approval.expires_at ?? null,
+        delivery,
+        inbox_address: inbox?.email_address ?? null,
+        ...recipients,
+        subject: '',
+        redacted: true,
+        can_decide: access.canDecide,
+        approvable: !isUnsendableLegacyDraft(approval, readPayload(approval)),
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  const summary = readSummary(approval.summary);
+  const payload = readPayload(approval);
+  const bcc = reviewerBccFor(approval, membership.role);
+  const summaryBccCount = typeof summary.bcc_count === 'number' ? summary.bcc_count : 0;
 
   return NextResponse.json(
     {
@@ -77,6 +122,7 @@ export async function GET(
       bcc,
       bcc_count: Math.max(summaryBccCount, bcc.length),
       approvable: !isUnsendableLegacyDraft(approval, payload),
+      can_decide: access.canDecide,
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );
