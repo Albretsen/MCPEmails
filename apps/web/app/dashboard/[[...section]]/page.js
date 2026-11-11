@@ -31,6 +31,8 @@ import {
   withFounderSubscriberPrices,
 } from '../../../src/lib/stripe/founder-display';
 import { loadPassBillingState } from '@/lib/billing/pass-offer';
+import { inboxAlertMode } from '@/lib/retention/inbox-alert';
+import { loadInboxAlertArm } from '@/lib/retention/inbox-alert-store';
 import { clientOnboardingVariant, getOnboardingVariant } from '@/lib/onboarding/variant';
 import { inferOnboardingClient } from '@/lib/onboarding/clients.mjs';
 import { isOnboardingStep } from '@/lib/onboarding/flow';
@@ -939,6 +941,13 @@ export default async function DashboardPage({ params, searchParams }) {
       ? (await loadGmailOAuthCapState(createServiceRoleClient())).closed
       : true,
   });
+  // Broken-inbox alert banner (src/lib/retention/inbox-alert.ts): only while
+  // INBOX_ALERT_ENABLED=on and only for a workspace the dispatcher put in the
+  // `alert` arm. The arm is read only for a paid plan, where it can exist.
+  const inboxAlertBanner = Boolean(workspace?.id) &&
+    inboxAlertMode() === 'on' &&
+    ['personal', 'solo', 'pro'].includes(plan) &&
+    (await loadInboxAlertArm(createServiceRoleClient(), workspace.id)) === 'alert';
   // The period the usage-summary RPC scopes its (undisplayed) action meter to:
   // the allowance's own window, or the UTC month when that call failed.
   const billingWindow = actionAllowance
@@ -1215,6 +1224,8 @@ export default async function DashboardPage({ params, searchParams }) {
         // The owner's own subscription only: a member never sees who pays.
         subscriptionStatus: workspace?.owner_id === user.id ? ownBilling?.subscription_status ?? null : null,
         lastDeclineCode: workspace?.owner_id === user.id ? ownBilling?.last_decline_code ?? null : null,
+        // Broken-inbox alert arm: the red banner above every page but Inboxes.
+        inboxAlertBanner,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}
