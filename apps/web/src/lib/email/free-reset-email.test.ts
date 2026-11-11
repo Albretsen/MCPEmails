@@ -275,8 +275,15 @@ test('copy: promotional version names the Personal price and the usage_limit_rea
   assert.match(m.text, new RegExp(`allowance of ${FREE_ACTION_ALLOWANCE} email actions started over on 1 December`));
   assert.match(m.text, /refused on 4 days/);
   assert.ok(m.text.includes(`Personal removes the monthly limit for ${formatPriceCents(PLANS.personal.monthlyPriceCents).replace(/\.00$/, '')} a month.`));
-  assert.ok(m.text.includes('https://mcpemails.test/dashboard/settings?upgrade=personal&interval=month&offer=usage_cap'));
-  assert.ok(m.text.includes('https://mcpemails.test/dashboard/usage'));
+  const urls = m.text
+    .split('\n')
+    .filter((line) => line.startsWith('https://'))
+    .map((line) => new URL(line));
+  const upgrade = urls.find((u) => u.pathname === '/dashboard/settings');
+  assert.equal(upgrade?.host, 'mcpemails.test');
+  assert.equal(upgrade?.search, '?upgrade=personal&interval=month&offer=usage_cap');
+  const usage = urls.find((u) => u.pathname === '/dashboard/usage');
+  assert.equal(usage?.host, 'mcpemails.test');
   assert.ok(m.text.includes(POSTAL_ADDRESS_LINE));
   assert.ok(m.headers['List-Unsubscribe'].includes(TOKEN));
 });
