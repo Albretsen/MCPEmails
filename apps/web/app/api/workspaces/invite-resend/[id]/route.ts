@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 import { sendInviteEmail } from '@/lib/email/send-invite';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
 
@@ -125,6 +126,15 @@ export async function POST(
     console.error('[invite-resend] Token rotation failed:', rotateError.message);
     return NextResponse.json({ error: 'Failed to resend invite.' }, { status: 500 });
   }
+
+  // Security audit view: a resend is a new invite link (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'invite_sent',
+    target: invite.email,
+    details: { role: invite.role, resend: true },
+  });
 
   // Inviter and workspace names for the email body, same lookups the original
   // send does. Service-role: the users table is not readable by an ordinary

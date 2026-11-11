@@ -1,0 +1,102 @@
+{
+  "card": {
+    "desc": "Para uma equipe: cada pessoa conecta suas próprias caixas de correio de forma privada, e os endereços compartilhados da empresa ficam disponíveis para toda a empresa.",
+    "per": "/pessoa/mês",
+    "billedYearly": "Cobrado ${yearly}/ano por pessoa",
+    "minimum": "Mínimo de {min} pessoas. Você paga por cada pessoa que conecta uma caixa de correio; administradores e visualizadores sem caixa própria não pagam.",
+    "features": [
+      "Tudo do Pro",
+      "Caixas de correio privadas para cada pessoa, até {private} cada",
+      "{included} caixas compartilhadas com toda a empresa incluídas, depois ${addon} por mês cada",
+      "Funções para cada pessoa: visualizador, membro ou administrador",
+      "Admins aprovam envios retidos para revisão",
+      "Regras de destinatários: e-mails para alguém fora dos domínios permitidos aguardam aprovação",
+      "Log de auditoria com exportação em CSV",
+      "Faturas em nome da empresa com seu número de identificação fiscal",
+      "Acordo de tratamento de dados (DPA)"
+    ]
+  },
+  "pricing": {
+    "metaDescription": "O Free conecta uma caixa de entrada, o Personal três e o Pro até 10. O Business custa ${price} por pessoa por mês para uma equipe, com caixas privadas para cada pessoa e compartilhadas para a empresa.",
+    "heroLead": "Conecte uma caixa de correio uma vez e seu agente pode ler, pesquisar, organizar, rascunhar, agendar e enviar. O Free cobre uma caixa, o Personal três e o Pro até 10 para uma pessoa que toca um negócio. O Business é para uma equipe, por ${price} por pessoa por mês: cada pessoa conecta suas próprias caixas de forma privada, e os endereços compartilhados da empresa ficam disponíveis para toda a empresa.",
+    "values": {
+      "inboxes": "Até {private} privadas por pessoa, mais {included} compartilhadas, depois ${addon} por mês cada",
+      "members": "Ilimitados, cobrança por pessoa com caixa de correio"
+    },
+    "rows": {
+      "privateMailboxes": "Caixas de correio privadas para cada pessoa",
+      "recipientRules": "Regras de destinatários para e-mails enviados",
+      "auditExport": "Exportação do log de auditoria (CSV)"
+    },
+    "faq": {
+      "5": "O Personal é um usuário com três caixas de entrada conectadas, limite de 120 requisições por minuto, 90 dias de histórico de análises e suporte prioritário por e-mail. O Pro continua sendo um usuário e um login, com até 10 caixas de correio conectadas, para que uma pessoa cuide das caixas de uma empresa (vendas, faturas, suporte, contato). Ele também tem limite de 300 requisições por minuto, dois anos de histórico de análises em vez de 90 dias e suporte prioritário por e-mail, e continua trabalhando com o chat fechado: lembretes de acompanhamento de e-mails enviados, adiar mensagens, um resumo matinal diário na sua caixa de entrada, uma busca em todas as caixas conectadas e instruções para sua IA por caixa. O Business é para uma equipe, por ${price} por pessoa por mês, com mínimo de {min} pessoas. Cada pessoa conecta até {private} caixas próprias, privadas para ela, e os endereços compartilhados podem ficar disponíveis para toda a empresa: {included} estão incluídos, depois ${addon} por mês cada. O Business acrescenta funções (visualizador, membro, administrador), admins que aprovam envios retidos, regras de destinatários, log de auditoria com exportação, vários espaços de trabalho em uma só assinatura e limite de 1.000 requisições por minuto. Tudo do Pro está incluído.",
+      "6": "Conte primeiro as pessoas. Se uma pessoa cuida de contato@, vendas@, faturas@ e do resto, é o Pro: um login, até 10 caixas de correio conectadas, e cada caixa mantém seu próprio nome de remetente e assinatura e envia pelo próprio servidor de e-mail. Dois ou três endereços cabem no Personal. Quando colegas precisam do próprio login, é o Business: cada pessoa conecta sua própria caixa de forma privada, e endereços compartilhados como contato@ e vendas@ ficam disponíveis para toda a equipe. Custa ${price} por pessoa por mês, mínimo de {min} pessoas, e você só paga por quem conecta uma caixa. Qualquer caixa que fale IMAP e SMTP se conecta, seja qual for o provedor, assim como Gmail, Google Workspace e Microsoft 365; uma conta corporativa do Microsoft 365 pode exigir que o administrador de TI aprove o aplicativo uma vez.",
+      "7": "O Personal cobre três caixas de entrada conectadas. Uma quarta leva você ao Pro, que cobre até 10 caixas de correio em um agente e um login. Além disso, ou quando um colega precisa de acesso, o Business custa ${price} por pessoa por mês com mínimo de {min} pessoas: cada pessoa pode conectar até {private} caixas privadas, e {included} caixas compartilhadas com toda a empresa estão incluídas, depois ${addon} por mês cada. Se você está logo acima de três e isso não funciona para você, fale com a gente em hello@mcpemails.com.",
+      "9": "Pagar por ano economiza cerca de 20% em relação ao mensal em todos os planos pagos, e os cartões acima mostram os dois preços. O Business custa ${yearly} por pessoa por ano (${yearlyMonth} por mês), e cada caixa compartilhada além das {included} incluídas custa ${addonYearly} por ano. A cobrança é feita uma vez, por 12 meses, adiantada. Cancelar interrompe a renovação e você mantém o acesso até o fim do ano pago. Fora o reembolso de 14 dias da primeira cobrança, não reembolsamos os meses restantes."
+    },
+    "ctaSub": "Comece no Free: uma caixa de entrada, sem cartão. O Personal leva você a três caixas e o Pro a 10 para uma pessoa. O Business custa ${price} por pessoa por mês para uma equipe, mínimo de {min} pessoas."
+  },
+  "home": {
+    "sub": "O Free conecta uma caixa de entrada com {freeActions} ações de e-mail por mês. O Personal conecta três. O Pro conecta até 10 para uma pessoa que toca um negócio. O Business é para uma equipe e cobra por pessoa que conecta uma caixa: o e-mail de cada um continua privado, e os endereços compartilhados ficam disponíveis para toda a empresa."
+  },
+  "forBusiness": {
+    "hero": {
+      "eyebrow": "Para uma pequena empresa e quem cuida do e-mail dela",
+      "titleLine1": "Sua caixa continua privada,",
+      "titleLine2": "os endereços da empresa são compartilhados",
+      "lead": "Cada pessoa conecta sua própria caixa de correio, e ela continua privada. contato@, vendas@ e suporte@ são conectados uma vez e compartilhados com toda a empresa. A IA que cada pessoa usa só vê o que essa pessoa pode ver, e os administradores definem as regras do que sai. Uma pessoa que cuida sozinha de todos os endereços também está coberta."
+    },
+    "team": {
+      "eyebrow": "Para uma equipe",
+      "title": "Cada um cuida do próprio e-mail, e dos endereços compartilhados em conjunto",
+      "sub": "O Business custa ${price} por mês para cada pessoa que conecta uma caixa de correio, mínimo de {min} pessoas. Administradores e visualizadores sem caixa própria não pagam.",
+      "items": {
+        "private": {
+          "h": "Privada por padrão",
+          "p": "A caixa que alguém conecta é privada para essa pessoa, até {private} cada. Colegas, administradores e o dono do espaço de trabalho veem que ela está conectada, mas não podem ler os e-mails nem acessá-la pelo cliente de IA deles."
+        },
+        "company": {
+          "h": "Endereços compartilhados com toda a empresa",
+          "p": "Compartilhe contato@, vendas@ ou suporte@ com toda a empresa e todos no espaço de trabalho podem trabalhar nele pelo próprio cliente de IA, dentro da sua função. {included} caixas compartilhadas estão incluídas, depois ${addon} por mês cada."
+        },
+        "agent": {
+          "h": "A IA vê o que a pessoa vê",
+          "p": "Uma chave de API ou um cliente de IA conectado age como a pessoa que o configurou. Ele alcança as caixas dela e as compartilhadas, nada mais, e perde o acesso quando essa pessoa sai do espaço de trabalho."
+        },
+        "rules": {
+          "h": "Os administradores definem as regras",
+          "p": "Funções (visualizador, membro, administrador), aprovação de envios retidos e regras de destinatários: depois que você lista os domínios para os quais o e-mail pode ir, uma mensagem para alguém fora deles aguarda aprovação em vez de sair."
+        },
+        "audit": {
+          "h": "Um registro de quem fez o quê",
+          "p": "O log de auditoria mostra o que cada cliente de IA fez e cada mudança em membros, funções e compartilhamento de caixas. Donos e administradores podem exportá-lo em CSV."
+        },
+        "paperwork": {
+          "h": "Documentação para uma empresa",
+          "p": "As faturas trazem o nome da sua empresa e seu número de identificação fiscal, há um acordo de tratamento de dados (DPA) publicado, e os dados ficam armazenados na UE (Estocolmo)."
+        }
+      }
+    },
+    "pricing": {
+      "sub": "Free, Personal e Pro são um login cada, e o que muda é quantas caixas esse login conecta. O Business é para uma equipe e cobra por pessoa.",
+      "business": {
+        "h": "Business, ${price} por pessoa por mês: uma equipe",
+        "p": "Mínimo de {min} pessoas, cobrança por pessoa que conecta uma caixa. Até {private} caixas privadas por pessoa, mais {included} compartilhadas, depois ${addon} por mês cada."
+      },
+      "note": "Administradores e visualizadores sem caixa própria não pagam, e você pode ter um espaço de trabalho separado por empresa ou cliente."
+    },
+    "faq": {
+      "0": "Sim, se uma pessoa cuida das caixas. O Pro é um login com até 10 caixas de correio conectadas, então uma só pessoa pode cuidar de contato@, vendas@, faturas@ e suporte@ com um agente. Quando colegas precisam do próprio login, o Business custa ${price} por pessoa por mês: a caixa de cada um continua privada, e os endereços compartilhados ficam disponíveis para toda a empresa.",
+      "5": "Free, Personal e Pro são planos de um login só. No Business cada colega entra com a própria conta e conecta a própria caixa, que continua privada, enquanto caixas compartilhadas como contato@ são de todos. Você paga ${price} por mês por cada pessoa que conecta uma caixa, mínimo de {min} pessoas. Administradores e visualizadores que não conectam nenhuma caixa não custam nada.",
+      "extra": [
+        {
+          "q": "Um administrador pode ler minha caixa de correio?",
+          "a": "Não. O dono do espaço de trabalho e os administradores veem que sua caixa está conectada, o endereço e o status, e podem desconectá-la, mas não podem ler os e-mails nem criar uma chave de API para ela. Só você pode compartilhá-la com toda a empresa, e só então o resto da equipe pode trabalhar nela."
+        }
+      ]
+    },
+    "ctaBand": {
+      "sub": "Conecte a primeira caixa de graça, sem cartão. Adicione o resto quando quiser: até 10 no Pro para uma pessoa, ou o Business para uma equipe por ${price} por pessoa por mês."
+    }
+  }
+}

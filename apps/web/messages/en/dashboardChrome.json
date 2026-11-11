@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Pro connects 10 mailboxes. Business includes 10, with unlimited members at no extra cost.",
     "businessCapCtaFounder": "Upgrade to Business, ${price}/mo",
+    "businessCapBodySeat": "Pro connects 10 mailboxes. On Business each person connects up to 10 of their own, privately, and 10 company-wide mailboxes are included, then $3 a month each. Billed per person who connects a mailbox, 2 people minimum.",
+    "businessCapCtaSeat": "Upgrade to Business",
+    "businessSeatFeaturePrivate": "Private mailboxes for each person, up to 10 each",
+    "businessSeatFeatureCompany": "10 company-wide mailboxes included, $3 a month for each extra",
+    "businessSeatFeatureRules": "Recipient rules for outgoing mail",
     "errorYahooJapanShort": "Yahoo! JAPAN mail is a separate service from Yahoo Mail and has no app passwords. Go back and choose IMAP / SMTP instead."
   },
   "commandPalette": {

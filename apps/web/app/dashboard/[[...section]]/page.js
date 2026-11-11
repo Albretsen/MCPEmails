@@ -15,6 +15,7 @@ import { stampAcquisitionCountry } from '@/lib/acquisition-country-stamp';
 import { stampArabicGuideBrowserLanguage } from '@/lib/acquisition-browser-language';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { hiddenInboxDirectory } from '@/lib/inboxes/visibility';
+import { AUDIT_DEFAULT_PAGE_SIZE, fetchAuditCallsPage } from '@/lib/security/audit-log';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
@@ -622,68 +623,37 @@ async function fetchUsageData(supabase, workspaceId, billingWindow, historyDays 
  * }>}
  */
 async function fetchAuditLog(supabase, workspaceId) {
-  const pageSize = 25;
+  const pageSize = AUDIT_DEFAULT_PAGE_SIZE;
   // DELIBERATELY UNBOUNDED, unlike the usage analytics above.
   //
   // The analytics retention window was briefly applied here too and then taken
   // back out. An audit log is a SECURITY artifact, not a usage metric: cutting
   // it by price tier means the customers least equipped to detect a compromise
   // keep the least evidence of one, and this product holds mailbox
-  // credentials. The industry does not do this either. Where an audit log is
-  // offered at all it is gated as a whole feature and then kept generously
-  // (Linear 90 days, Vercel 90, 1Password 365, GitHub retains indefinitely and
-  // merely defaults the VIEW to three months); the one vendor that scales it
-  // down hard by tier, Auth0 at 1-30 days, is publicly complained about for it.
-  // Nobody ships a 7-day audit log. Do not re-add a window here without a
-  // reason that is about storage, not packaging.
+  // credentials. Do not re-add a window here without a reason that is about
+  // storage, not packaging. What it can show is bounded by storage: the
+  // per-plan activity_log job (migration 20261020153742) never deletes a
+  // mailbox-changing call before 90 days on any plan.
   //
-  // What it can show is bounded by storage, not by this query: the per-plan
-  // activity_log job (migration 20261020153742) never deletes a
-  // mailbox-changing call before 90 days on any plan, and keeps read-only
-  // calls at least as long as the plan's Usage window.
-
-  const [countResult, rowsResult] = await Promise.all([
-    supabase
-      .from('activity_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId),
-    supabase
-      .from('activity_log')
-      .select(
-        'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',
-      )
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: false })
-      .range(0, pageSize - 1),
-  ]);
-
-  if (rowsResult.error) {
-    console.error('[fetchAuditLog]', rowsResult.error.message);
+  // The same page GET /api/security/audit-log serves (src/lib/security/audit-log.ts),
+  // including who acted. People are resolved with the service role.
+  let service = null;
+  try {
+    service = createServiceRoleClient();
+  } catch (err) {
+    console.error('[fetchAuditLog]', err instanceof Error ? err.message : String(err));
     return { entries: [], total: 0, page: 0, pageSize };
   }
-
-  const entries = (rowsResult.data ?? []).map((row) => {
-    const inbox = row.inboxes;
-    const apiKey = row.api_keys;
-    return {
-      id: row.id,
-      tool: row.tool_name,
-      inbox: inbox?.display_name ?? inbox?.email_address ?? null,
-      apiKeyName: apiKey?.name ?? null,
-      apiKeyPrefix: apiKey?.key_prefix ?? null,
-      status: row.status,
-      errorCode: row.error_code ?? null,
-      durationMs: row.duration_ms ?? null,
-      createdAt: row.created_at,
-    };
-  });
-
-  return {
-    entries,
-    total: countResult.count ?? 0,
+  const result = await fetchAuditCallsPage(supabase, service, workspaceId, {
     page: 0,
     pageSize,
-  };
+    filters: { since: null, until: null },
+  });
+  if (!result.ok) {
+    console.error('[fetchAuditLog]', result.error);
+    return { entries: [], total: 0, page: 0, pageSize };
+  }
+  return { entries: result.entries, total: result.total, page: 0, pageSize };
 }
 
 /**

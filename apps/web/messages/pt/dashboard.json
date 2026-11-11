@@ -425,6 +425,8 @@
     "capCtaBusiness": "Mudar para o Business, $39/mês",
     "capBodyProCapFounder": "O Pro conecta 10 caixas de correio. O Business inclui 10, com membros ilimitados sem custo adicional.",
     "capCtaBusinessFounder": "Mudar para o Business, ${price}/mês",
+    "capBodyProCapSeat": "O Pro conecta 10 caixas de correio. No Business, cada pessoa conecta até 10 caixas próprias, de forma privada, e 10 caixas compartilhadas com toda a empresa estão incluídas; depois, $3 por mês cada. A cobrança é por pessoa que conecta uma caixa, com mínimo de 2 pessoas.",
+    "capCtaBusinessSeat": "Fazer upgrade para o Business",
     "visibility": {
       "label": "Quem pode usar",
       "private": "Privada",
@@ -775,6 +777,18 @@
         "invalid_inbox": "Essa caixa de entrada não está neste espaço de trabalho.",
         "invalid_timezone": "Escolha um fuso horário da lista."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avançado",
+      "title": "Domínios de destinatário permitidos",
+      "help": "E-mails para qualquer pessoa fora desses domínios aguardam a aprovação de um proprietário ou administrador. Separe os domínios com vírgulas. Cada subdomínio precisa de uma entrada própria. Deixe vazio para permitir qualquer destinatário.",
+      "placeholder": "exemplo.com.br, parceiro.com.br",
+      "save": "Salvar",
+      "saving": "Salvando…",
+      "saved": "Salvo.",
+      "loading": "Carregando…",
+      "loadFailed": "Não foi possível carregar a regra de destinatários.",
+      "saveFailed": "Não foi possível salvar a regra de destinatários."
     }
   },
   "billing": {
@@ -842,7 +856,12 @@
       "businessFeature2": "10 caixas de correio incluídas, $3 por mês por caixa extra",
       "businessFeature3": "Membros ilimitados com funções, sem custo adicional",
       "businessFeature4": "Admins aprovam envios retidos",
-      "businessFeature5": "Vários espaços de trabalho em uma só assinatura"
+      "businessFeature5": "Vários espaços de trabalho em uma só assinatura",
+      "businessSeatFeaturePrivate": "Caixas de correio privadas para cada pessoa, até 10 cada",
+      "businessSeatFeatureCompany": "10 caixas compartilhadas com toda a empresa incluídas, $3 por mês por caixa extra",
+      "businessSeatFeatureRoles": "Funções para cada pessoa: visualizador, membro ou administrador",
+      "businessSeatFeatureRules": "Regras de destinatários para e-mails enviados",
+      "businessSeatFeatureAudit": "Log de auditoria com exportação em CSV"
     },
     "planIncludes": "O que o seu plano inclui",
     "inboxesOne": "1 caixa de entrada conectada",
@@ -1016,7 +1035,31 @@
     "colDuration": "Duração",
     "statusSuccess": "Sucesso",
     "statusRateLimited": "Limite de taxa",
-    "statusError": "Erro"
+    "statusError": "Erro",
+    "colPerson": "Pessoa",
+    "personUnknown": "Não registrado",
+    "personFormer": "Ex-membro",
+    "exportCsv": "Exportar CSV",
+    "events": {
+      "title": "Mudanças na equipe",
+      "sub": "Convites, membros, funções, visibilidade das caixas de entrada e a regra de destinatários.",
+      "loading": "Carregando…",
+      "empty": "Ainda não há mudanças na equipe.",
+      "colWhen": "Quando",
+      "colEvent": "Mudança",
+      "colTarget": "Afeta",
+      "anyRecipient": "Qualquer destinatário",
+      "kinds": {
+        "invite_sent": "Convite enviado",
+        "invite_cancelled": "Convite cancelado",
+        "invite_accepted": "Convite aceito",
+        "member_removed": "Membro removido",
+        "member_left": "Membro saiu",
+        "role_changed": "Função alterada",
+        "inbox_visibility_changed": "Visibilidade da caixa alterada",
+        "recipient_rule_changed": "Regra de destinatários alterada"
+      }
+    }
   },
   "members": {
     "title": "Membros",

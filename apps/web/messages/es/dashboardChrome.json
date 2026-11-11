@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
     "businessCapCtaFounder": "Mejorar a Business, ${price}/mes",
+    "businessCapBodySeat": "Pro conecta 10 buzones. En Business cada persona conecta hasta 10 propios, en privado, y se incluyen 10 buzones compartidos con toda la empresa; después, $3 al mes cada uno. Se factura por cada persona que conecta un buzón, con un mínimo de 2 personas.",
+    "businessCapCtaSeat": "Mejorar a Business",
+    "businessSeatFeaturePrivate": "Buzones privados para cada persona, hasta 10 cada una",
+    "businessSeatFeatureCompany": "10 buzones compartidos con toda la empresa incluidos, $3 al mes por cada uno adicional",
+    "businessSeatFeatureRules": "Reglas de destinatarios para el correo saliente",
     "errorYahooJapanShort": "El correo de Yahoo! JAPAN es un servicio distinto de Yahoo Mail y no tiene contraseñas de aplicación. Vuelve atrás y elige IMAP / SMTP."
   },
   "commandPalette": {

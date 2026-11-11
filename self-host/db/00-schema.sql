@@ -383,6 +383,11 @@ CREATE TABLE IF NOT EXISTS public.activity_log (
 );
 ALTER TABLE public.activity_log
   ADD COLUMN IF NOT EXISTS error_details jsonb;
+-- The person the call acted as (hosted migration 20261111130000). The hosted
+-- trigger that fills it for a key with no creator is not needed here: the
+-- server writes the key's creator, and a NULL means the workspace owner.
+ALTER TABLE public.activity_log
+  ADD COLUMN IF NOT EXISTS user_id uuid;
 CREATE INDEX IF NOT EXISTS idx_activity_log_workspace_created ON public.activity_log (workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_log_api_key_created   ON public.activity_log (api_key_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_log_tool_created      ON public.activity_log (tool_name, created_at);
@@ -1135,6 +1140,16 @@ CREATE TABLE IF NOT EXISTS public.send_approvals (
 );
 CREATE INDEX IF NOT EXISTS send_approvals_pending_expiry_idx ON public.send_approvals (expires_at) WHERE (status = 'pending'::text);
 CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_approvals (workspace_id, created_at DESC) WHERE (status = 'pending'::text);
+
+-- Business recipient rule (hosted migration 20261111130000). NULL = any
+-- recipient; otherwise a send outside these exact domains is held for approval.
+ALTER TABLE public.workspaces
+  ADD COLUMN IF NOT EXISTS allowed_recipient_domains text[];
+
+-- Why a send was held and whose it is (hosted migration 20261111130000).
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS hold_reason  text CHECK (hold_reason IS NULL OR hold_reason IN ('recipient_rule')),
+  ADD COLUMN IF NOT EXISTS requested_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 
 -- Single-use approval dispatch (hosted migration 20261016160400). The
 -- dispatcher binds an approval to the one scheduled_sends row allowed to send

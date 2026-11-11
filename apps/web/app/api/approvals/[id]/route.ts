@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isUnsendableLegacyDraft, readPayload, readSummary, reviewerBccFor } from '@/lib/approvals/payload';
 import { neutralizeList, neutralizeText } from '@/lib/textSafety';
-import { approvalAccess, embeddedInbox } from '@/lib/approvals/access';
+import { approvalAccess, embeddedInbox, holdReasonOf } from '@/lib/approvals/access';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -38,7 +38,7 @@ export async function GET(
   const db = createServiceRoleClient();
   const { data: approval } = await db
     .from('send_approvals')
-    .select('id, workspace_id, inbox_id, operation, summary, status, revision, created_at, expires_at, payload, payload_encrypted, inboxes(email_address, owner_user_id, visibility)')
+    .select('id, workspace_id, inbox_id, operation, summary, status, revision, created_at, expires_at, payload, payload_encrypted, hold_reason, inboxes(email_address, owner_user_id, visibility)')
     .eq('id', id)
     .maybeSingle();
 
@@ -56,7 +56,7 @@ export async function GET(
   // is a 404 for a member, and metadata only for an owner or admin, who may
   // still decide but never sees the recipients, subject or Bcc.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const access = approvalAccess(membership.role, user.id, embeddedInbox(approval as any));
+  const access = approvalAccess(membership.role, user.id, embeddedInbox(approval as any), holdReasonOf(approval as any));
   if (access.hidden) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
   if (access.redacted) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

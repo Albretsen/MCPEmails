@@ -1,0 +1,102 @@
+{
+  "card": {
+    "desc": "For a team: each person connects their own mailboxes privately, and the company's shared addresses are company-wide.",
+    "per": "/person/month",
+    "billedYearly": "Billed ${yearly}/year per person",
+    "minimum": "{min} people minimum. You pay for each person who connects a mailbox; admins and viewers without one are free.",
+    "features": [
+      "Everything in Pro",
+      "Private mailboxes for each person, up to {private} each",
+      "{included} company-wide mailboxes included, then ${addon} a month each",
+      "Roles for each person: viewer, member or admin",
+      "Admins approve sends held for review",
+      "Recipient rules: mail to anyone outside your allowed domains waits for approval",
+      "Audit log with CSV export",
+      "Company invoices with your VAT ID",
+      "Data processing agreement (DPA)"
+    ]
+  },
+  "pricing": {
+    "metaDescription": "Free connects one inbox, Personal three and Pro up to 10. Business is ${price} per person a month for a team, with private mailboxes for each person and shared ones for the company.",
+    "heroLead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox, Personal three, and Pro up to 10 for one person running a business. Business is for a team, at ${price} per person a month: each person connects their own mailboxes privately, and the company's shared addresses are company-wide.",
+    "values": {
+      "inboxes": "Up to {private} private per person, plus {included} company-wide, then ${addon} a month each",
+      "members": "Unlimited, billed per person with a mailbox"
+    },
+    "rows": {
+      "privateMailboxes": "Private mailboxes for each person",
+      "recipientRules": "Recipient rules for outgoing mail",
+      "auditExport": "Audit log export (CSV)"
+    },
+    "faq": {
+      "5": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, 90 days of analytics history, and priority email support. Pro is still one seat and one login, with up to 10 connected mailboxes, so one person can run the mailboxes a company has (sales, invoices, support, info). It also has a 300 requests/minute ceiling, two years of analytics history instead of 90 days, and priority email support, and it keeps working when the chat is closed: follow-up reminders on mail you sent, snooze, a daily morning brief placed in your inbox, one search across every connected inbox, and instructions for your AI per inbox. Business is for a team, at ${price} per person a month with {min} people minimum. Each person connects up to {private} mailboxes of their own, private to them, and shared addresses can be made company-wide: {included} are included, then ${addon} a month each. Business adds roles (viewer, member, admin), admins who approve sends held for review, recipient rules, an audit log with export, several workspaces on one subscription, and a 1,000 requests/minute ceiling. Everything in Pro is included.",
+      "6": "Count the people first. If one person runs info@, sales@, invoices@ and the rest, that is Pro: one login, up to 10 connected mailboxes, and each mailbox keeps its own sender name and signature and sends through its own mail server. Two or three addresses fit on Personal. When colleagues need their own login, that is Business: each person connects their own mailbox privately, and shared addresses like info@ and sales@ are company-wide for the whole team. It is ${price} per person a month, {min} people minimum, and you only pay for people who connect a mailbox. Any mailbox that speaks IMAP and SMTP connects, whoever hosts it, and so do Gmail, Google Workspace and Microsoft 365; a company Microsoft 365 account may need its IT admin to approve the app once.",
+      "7": "Personal covers three connected inboxes. A fourth moves you to Pro, which covers up to 10 mailboxes on one agent and one login. Past that, or once a colleague needs in, Business is ${price} per person a month with {min} people minimum: each person can connect up to {private} private mailboxes, and {included} company-wide mailboxes are included, then ${addon} a month each. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com.",
+      "9": "Paying annually saves about 20% versus monthly on every paid plan, and the cards above show both prices. Business is ${yearly} per person a year (${yearlyMonth} a month), and each company-wide mailbox past the included {included} is ${addonYearly} a year. You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+    },
+    "ctaSub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes and Pro to 10 for one person. Business is ${price} per person a month for a team, {min} people minimum."
+  },
+  "home": {
+    "sub": "Free connects one inbox with {freeActions} email actions a month. Personal connects three. Pro connects up to 10 for one person running a business. Business is for a team, billed per person who connects a mailbox: everyone's own mail stays private, and shared addresses are company-wide."
+  },
+  "forBusiness": {
+    "hero": {
+      "eyebrow": "For a small company and the people who run its email",
+      "titleLine1": "Your own mailbox stays private,",
+      "titleLine2": "the company's addresses are shared",
+      "lead": "Each person connects their own mailbox, and it stays private to them. info@, sales@ and support@ are connected once and shared company-wide. The AI each person uses sees only what that person may see, and admins set the rules for what goes out. One person running every address alone is covered too."
+    },
+    "team": {
+      "eyebrow": "For a team",
+      "title": "Everyone works their own mail, and the shared addresses together",
+      "sub": "Business is ${price} a month for each person who connects a mailbox, {min} people minimum. Admins and viewers without a mailbox of their own are free.",
+      "items": {
+        "private": {
+          "h": "Private by default",
+          "p": "A mailbox someone connects is private to them, up to {private} each. Colleagues, admins and the workspace owner see that it is connected, but cannot read its mail or reach it from their AI client."
+        },
+        "company": {
+          "h": "Shared addresses, company-wide",
+          "p": "Make info@, sales@ or support@ company-wide and everyone in the workspace can work it from their own AI client, within their role. {included} company-wide mailboxes are included, then ${addon} a month each."
+        },
+        "agent": {
+          "h": "The AI sees what its person sees",
+          "p": "An API key or a connected AI client acts as the person who set it up. It reaches their own mailboxes and the company-wide ones, nothing else, and loses access when they leave the workspace."
+        },
+        "rules": {
+          "h": "Admins set the rules",
+          "p": "Roles (viewer, member, admin), approval of held sends, and recipient rules: once you list the domains mail may go to, a message to anyone outside them waits for approval instead of going out."
+        },
+        "audit": {
+          "h": "A record of who did what",
+          "p": "The audit log lists what each AI client did and every change to members, roles and mailbox sharing. Owners and admins can export it as CSV."
+        },
+        "paperwork": {
+          "h": "Paperwork for a company",
+          "p": "Invoices carry your company name and VAT ID, a data processing agreement (DPA) is published, and data is stored in the EU (Stockholm)."
+        }
+      }
+    },
+    "pricing": {
+      "sub": "Free, Personal and Pro are one login each, and what changes is how many mailboxes that login connects. Business is for a team, billed per person.",
+      "business": {
+        "h": "Business, ${price} per person a month: a team",
+        "p": "{min} people minimum, billed for each person who connects a mailbox. Up to {private} private mailboxes per person, plus {included} company-wide, then ${addon} a month each."
+      },
+      "note": "Admins and viewers without a mailbox of their own are free, and you can run a separate workspace per company or client."
+    },
+    "faq": {
+      "0": "Yes, if one person operates the mailboxes. Pro is one login with up to 10 connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Once colleagues need their own login, Business is ${price} per person a month: each person's own mailbox stays private, and the shared addresses are company-wide.",
+      "5": "Free, Personal and Pro are single-login plans. On Business each colleague signs in with their own account and connects their own mailbox, which stays private to them, while company-wide mailboxes such as info@ are shared. You pay ${price} a month for each person who connects a mailbox, {min} people minimum. Admins and viewers who connect no mailbox cost nothing.",
+      "extra": [
+        {
+          "q": "Can an admin read my mailbox?",
+          "a": "No. The workspace owner and admins see that your mailbox is connected, its address and its status, and they can disconnect it, but they cannot read its mail or create an API key for it. Only you can make it company-wide, and only then can the rest of the team work it."
+        }
+      ]
+    },
+    "ctaBand": {
+      "sub": "Connect the first mailbox free, no card required. Add the rest when you are ready: up to 10 on Pro for one person, or Business for a team at ${price} per person a month."
+    }
+  }
+}

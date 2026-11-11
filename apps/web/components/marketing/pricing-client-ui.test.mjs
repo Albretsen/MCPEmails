@@ -415,3 +415,83 @@ test('German page, logged out: lang=de is inside the post-signup destination, an
     (plan) => `/signup?redirect=${encodeURIComponent(deCheckout(plan, 'year'))}&lang=de`,
   ));
 });
+
+// ── Business billed per person (business_seat_pricing on) ───────────────────
+// The page server prices Business per person (withBusinessSeatPrices) and
+// hands the client `businessSeat` (src/lib/billing/business-seat-copy.ts).
+// The card, the table, the FAQ and the closing band then quote the seat
+// numbers from the plan data, and nothing quotes the flat $39 any more.
+
+const { businessSeatPageCopy } = await import('../../src/lib/billing/business-seat-copy.ts');
+const {
+  BUSINESS_SEAT_MONTHLY_CENTS,
+  BUSINESS_SEAT_YEARLY_CENTS,
+  BUSINESS_MIN_SEATS,
+  BUSINESS_PRIVATE_INBOXES_PER_PERSON,
+  BUSINESS_INCLUDED_INBOXES,
+} = await import('../../src/lib/stripe/plans.ts');
+
+const SEAT_PRICES = {
+  pro: {
+    monthlyCents: BUSINESS_SEAT_MONTHLY_CENTS,
+    yearlyCents: BUSINESS_SEAT_YEARLY_CENTS,
+    eurMonthlyCents: BUSINESS_SEAT_MONTHLY_CENTS,
+    eurYearlyCents: BUSINESS_SEAT_YEARLY_CENTS,
+    monthlyPriceConfigured: true,
+    yearlyPriceConfigured: true,
+    perPerson: { minPeople: BUSINESS_MIN_SEATS },
+  },
+};
+
+function seatHost() {
+  const businessSeat = businessSeatPageCopy('en', SEAT_PRICES);
+  const html = renderToString(
+    createElement(
+      NextIntlClientProvider,
+      { locale: 'en', messages },
+      createElement(PricingClient, { stripePrices: SEAT_PRICES, businessSeat }),
+    ),
+  );
+  const host = document.createElement('div');
+  host.innerHTML = html;
+  return { host, card: host.querySelectorAll('.price-grid .price')[3] };
+}
+
+const dollars = (cents) => (cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2));
+
+test('per person on: the Business card quotes the seat price, per person, and the minimum', () => {
+  const { card } = seatHost();
+  // Annual is the default: the yearly seat price over 12, per person.
+  assert.equal(
+    card.querySelector('.num').textContent,
+    `$${dollars(Math.round(BUSINESS_SEAT_YEARLY_CENTS / 12))} /person/month`,
+  );
+  assert.match(card.textContent, new RegExp(`Billed \\$${dollars(BUSINESS_SEAT_YEARLY_CENTS).replace('.', '\\.')}/year per person`));
+  assert.equal(
+    card.querySelector('[data-business-seat-minimum]').textContent,
+    `${BUSINESS_MIN_SEATS} people minimum. You pay for each person who connects a mailbox; admins and viewers without one are free.`,
+  );
+  const features = [...card.querySelectorAll('li')].map((li) => li.textContent);
+  assert.ok(features.includes(`Private mailboxes for each person, up to ${BUSINESS_PRIVATE_INBOXES_PER_PERSON} each`));
+  assert.ok(features.includes(`${BUSINESS_INCLUDED_INBOXES} company-wide mailboxes included, then $3 a month each`));
+  assert.ok(!features.some((f) => /no extra cost/.test(f)));
+});
+
+test('per person on: the table, FAQ and closing band follow, and $39 is gone', () => {
+  const { host } = seatHost();
+  const text = host.textContent;
+  assert.match(text, /Recipient rules for outgoing mail/);
+  assert.match(text, /Private mailboxes for each person/);
+  assert.match(text, /Unlimited, billed per person with a mailbox/);
+  assert.match(text, new RegExp(`Business is \\$${dollars(BUSINESS_SEAT_MONTHLY_CENTS)} per person a month for a team`));
+  assert.doesNotMatch(text, /\$39|\$374\.40|Unlimited, no extra cost/);
+  // The other cards are untouched.
+  const cards = host.querySelectorAll('.price-grid .price');
+  assert.equal(cards[2].querySelector('[data-business-seat-minimum]'), null);
+});
+
+test('per person off: no seat line anywhere, the page as before', () => {
+  const { host } = pricingHost(undefined);
+  assert.equal(host.querySelectorAll('[data-business-seat-minimum]').length, 0);
+  assert.doesNotMatch(host.textContent, /per person|Recipient rules/);
+});

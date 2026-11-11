@@ -194,6 +194,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -209,6 +210,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -223,6 +225,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -269,6 +272,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -284,6 +288,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -298,6 +303,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -315,6 +321,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -330,6 +337,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -344,6 +352,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -361,6 +370,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -376,6 +386,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -390,6 +401,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -407,6 +419,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -422,6 +435,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -436,6 +450,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -453,6 +468,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -468,6 +484,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -482,6 +499,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -499,6 +517,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -514,6 +533,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -528,6 +548,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -545,6 +566,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -560,6 +582,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -574,6 +597,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -591,6 +615,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -606,6 +631,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -620,6 +646,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -637,6 +664,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -652,6 +680,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -666,6 +695,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -683,6 +713,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -698,6 +729,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -712,6 +744,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -729,6 +762,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -744,6 +778,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -758,6 +793,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -775,6 +811,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -790,6 +827,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -804,6 +842,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -821,6 +860,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -836,6 +876,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -850,6 +891,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -867,6 +909,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -882,6 +925,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -896,6 +940,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -913,6 +958,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -928,6 +974,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -942,6 +989,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -959,6 +1007,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -974,6 +1023,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -988,6 +1038,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1005,6 +1056,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -1020,6 +1072,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1034,6 +1087,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1051,6 +1105,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -1066,6 +1121,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1080,6 +1136,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1097,6 +1154,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -1112,6 +1170,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1126,6 +1185,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -1143,6 +1203,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent: string | null
+          user_id: string | null
           workspace_id: string
         }
         ComputedFields: never
@@ -1158,6 +1219,7 @@ export type Database = {
           status: string
           tool_name: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id: string
         }
         Update: {
@@ -1172,6 +1234,7 @@ export type Database = {
           status?: string
           tool_name?: string
           user_agent?: string | null
+          user_id?: string | null
           workspace_id?: string
         }
         Relationships: []
@@ -4420,11 +4483,13 @@ export type Database = {
           decision_note: string | null
           dispatch_scheduled_send_id: string | null
           expires_at: string | null
+          hold_reason: string | null
           id: string
           inbox_id: string
           operation: string
           payload: NonNullable<Json>
           payload_encrypted: boolean
+          requested_by: string | null
           revision: number
           send_at: string | null
           status: string
@@ -4442,11 +4507,13 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          hold_reason?: string | null
           id?: string
           inbox_id: string
           operation: string
           payload: NonNullable<Json>
           payload_encrypted?: boolean
+          requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -4463,11 +4530,13 @@ export type Database = {
           decision_note?: string | null
           dispatch_scheduled_send_id?: string | null
           expires_at?: string | null
+          hold_reason?: string | null
           id?: string
           inbox_id?: string
           operation?: string
           payload?: NonNullable<Json>
           payload_encrypted?: boolean
+          requested_by?: string | null
           revision?: number
           send_at?: string | null
           status?: string
@@ -4508,6 +4577,13 @@ export type Database = {
             columns: ["inbox_id"]
             isOneToOne: false
             referencedRelation: "inboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "send_approvals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -5936,6 +6012,59 @@ export type Database = {
           },
         ]
       }
+      workspace_audit_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          details: NonNullable<Json>
+          id: string
+          kind: string
+          target: string | null
+          workspace_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: NonNullable<Json>
+          id?: string
+          kind: string
+          target?: string | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: NonNullable<Json>
+          id?: string
+          kind?: string
+          target?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_audit_events_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "workspace_audit_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_invites: {
         Row: {
           accepted_at: string | null
@@ -6124,6 +6253,7 @@ export type Database = {
           acquisition_utm_campaign: string | null
           acquisition_utm_medium: string | null
           acquisition_utm_source: string | null
+          allowed_recipient_domains: string[] | null
           analytics_first_credential_created_at: string | null
           analytics_first_credential_method: string | null
           analytics_first_inbox_connected_at: string | null
@@ -6191,6 +6321,7 @@ export type Database = {
           acquisition_utm_campaign?: string | null
           acquisition_utm_medium?: string | null
           acquisition_utm_source?: string | null
+          allowed_recipient_domains?: string[] | null
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_inbox_connected_at?: string | null
@@ -6257,6 +6388,7 @@ export type Database = {
           acquisition_utm_campaign?: string | null
           acquisition_utm_medium?: string | null
           acquisition_utm_source?: string | null
+          allowed_recipient_domains?: string[] | null
           analytics_first_credential_created_at?: string | null
           analytics_first_credential_method?: string | null
           analytics_first_inbox_connected_at?: string | null
@@ -7555,6 +7687,10 @@ export type Database = {
       }
       purge_send_history: { Args: Record<PropertyKey, never>; Returns: Json }
       purge_support_history: { Args: Record<PropertyKey, never>; Returns: Json }
+      purge_workspace_audit_events_batch: {
+        Args: { p_limit?: number; p_min_days?: number }
+        Returns: number
+      }
       push_recipients: {
         Args: { p_inbox_id: string }
         Returns: {

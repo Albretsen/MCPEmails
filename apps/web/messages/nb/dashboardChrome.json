@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Pro kobler til 10 postkasser. Business inkluderer 10, med ubegrenset antall medlemmer uten ekstra kostnad.",
     "businessCapCtaFounder": "Oppgrader til Business, ${price}/md",
+    "businessCapBodySeat": "Pro kobler til 10 postkasser. På Business kobler hver person til opptil 10 egne postkasser, private for dem, og 10 felles postkasser for hele firmaet er inkludert, deretter $3 i måneden per stykk. Faktureres per person som kobler til en postkasse, minst 2 personer.",
+    "businessCapCtaSeat": "Oppgrader til Business",
+    "businessSeatFeaturePrivate": "Private postkasser for hver person, opptil 10 hver",
+    "businessSeatFeatureCompany": "10 felles postkasser for hele firmaet inkludert, $3 i måneden for hver ekstra",
+    "businessSeatFeatureRules": "Mottakerregler for utgående e-post",
     "errorYahooJapanShort": "Yahoo! JAPAN-e-post er en annen tjeneste enn Yahoo Mail og har ikke apppassord. Gå tilbake og velg IMAP / SMTP i stedet."
   },
   "commandPalette": {

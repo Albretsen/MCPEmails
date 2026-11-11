@@ -1,0 +1,102 @@
+{
+  "card": {
+    "desc": "Para un equipo: cada persona conecta sus propios buzones en privado, y las direcciones compartidas de la empresa son para toda la empresa.",
+    "per": "/persona/mes",
+    "billedYearly": "Facturado ${yearly}/año por persona",
+    "minimum": "Mínimo {min} personas. Pagas por cada persona que conecta un buzón; los administradores y lectores sin buzón propio son gratis.",
+    "features": [
+      "Todo lo de Pro",
+      "Buzones privados para cada persona, hasta {private} cada una",
+      "{included} buzones compartidos con toda la empresa incluidos, después ${addon} al mes cada uno",
+      "Roles para cada persona: lector, miembro o administrador",
+      "Los administradores aprueban los envíos retenidos para revisión",
+      "Reglas de destinatarios: el correo a alguien fuera de los dominios permitidos espera aprobación",
+      "Registro de auditoría con exportación CSV",
+      "Facturas a nombre de la empresa con tu NIF-IVA",
+      "Acuerdo de tratamiento de datos (DPA)"
+    ]
+  },
+  "pricing": {
+    "metaDescription": "Free conecta un buzón, Personal tres y Pro hasta 10. Business cuesta ${price} por persona al mes para un equipo, con buzones privados para cada persona y compartidos para la empresa.",
+    "heroLead": "Conecta un buzón una vez y tu agente puede leer, buscar, organizar, redactar, programar y enviar. Free cubre un buzón, Personal tres y Pro hasta 10 para una persona que lleva un negocio. Business es para un equipo, a ${price} por persona al mes: cada persona conecta sus propios buzones en privado, y las direcciones compartidas de la empresa son para toda la empresa.",
+    "values": {
+      "inboxes": "Hasta {private} privados por persona, más {included} compartidos, después ${addon} al mes cada uno",
+      "members": "Ilimitados, se factura por persona con buzón"
+    },
+    "rows": {
+      "privateMailboxes": "Buzones privados para cada persona",
+      "recipientRules": "Reglas de destinatarios para el correo saliente",
+      "auditExport": "Exportación del registro de auditoría (CSV)"
+    },
+    "faq": {
+      "5": "Personal es un puesto con tres buzones conectados, un límite de 120 solicitudes por minuto, 90 días de historial de analítica y soporte prioritario por correo. Pro sigue siendo un puesto y un inicio de sesión, con hasta 10 buzones conectados, para que una persona lleve los buzones de una empresa (ventas, facturas, soporte, info). También tiene un límite de 300 solicitudes por minuto, dos años de historial de analítica en lugar de 90 días y soporte prioritario por correo, y sigue funcionando con el chat cerrado: recordatorios de seguimiento del correo que enviaste, posponer, un resumen matinal diario en tu bandeja, una búsqueda en todos los buzones conectados e instrucciones para tu IA por buzón. Business es para un equipo, a ${price} por persona al mes con un mínimo de {min} personas. Cada persona conecta hasta {private} buzones propios, privados para ella, y las direcciones compartidas pueden ser para toda la empresa: {included} están incluidas, después ${addon} al mes cada una. Business añade roles (lector, miembro, administrador), administradores que aprueban los envíos retenidos, reglas de destinatarios, un registro de auditoría con exportación, varios espacios de trabajo con una sola suscripción y un límite de 1.000 solicitudes por minuto. Incluye todo lo de Pro.",
+      "6": "Cuenta primero las personas. Si una sola persona lleva info@, ventas@, facturas@ y el resto, es Pro: un inicio de sesión, hasta 10 buzones conectados, y cada buzón conserva su propio nombre de remitente y su firma y envía a través de su propio servidor de correo. Dos o tres direcciones caben en Personal. Cuando tus compañeros necesitan su propio inicio de sesión, es Business: cada persona conecta su propio buzón en privado, y las direcciones compartidas como info@ y ventas@ son para todo el equipo. Cuesta ${price} por persona al mes, mínimo {min} personas, y solo pagas por las personas que conectan un buzón. Se conecta cualquier buzón que hable IMAP y SMTP, lo aloje quien lo aloje, y también Gmail, Google Workspace y Microsoft 365; una cuenta de Microsoft 365 de empresa puede necesitar que su administrador de TI apruebe la aplicación una vez.",
+      "7": "Personal cubre tres buzones conectados. Un cuarto te lleva a Pro, que cubre hasta 10 buzones en un agente y un inicio de sesión. A partir de ahí, o cuando un compañero necesita acceso, Business cuesta ${price} por persona al mes con un mínimo de {min} personas: cada persona puede conectar hasta {private} buzones privados, y se incluyen {included} buzones compartidos con toda la empresa, después ${addon} al mes cada uno. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com.",
+      "9": "Pagar al año ahorra alrededor de un 20 % frente al pago mensual en todos los planes de pago, y las tarjetas de arriba muestran ambos precios. Business cuesta ${yearly} por persona al año (${yearlyMonth} al mes), y cada buzón compartido por encima de los {included} incluidos cuesta ${addonYearly} al año. Se cobra una vez por 12 meses por adelantado. Si cancelas, se detiene la renovación y conservas el acceso hasta que termine el año que pagaste. Aparte del reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+    },
+    "ctaSub": "Empieza en Free: un buzón, sin tarjeta. Personal te lleva a tres buzones y Pro a 10 para una persona. Business cuesta ${price} por persona al mes para un equipo, mínimo {min} personas."
+  },
+  "home": {
+    "sub": "Free conecta un buzón con {freeActions} acciones de correo al mes. Personal conecta tres. Pro conecta hasta 10 para una persona que lleva un negocio. Business es para un equipo y se factura por cada persona que conecta un buzón: el correo de cada uno sigue siendo privado y las direcciones compartidas son para toda la empresa."
+  },
+  "forBusiness": {
+    "hero": {
+      "eyebrow": "Para una pequeña empresa y quienes llevan su correo",
+      "titleLine1": "Tu buzón sigue siendo privado,",
+      "titleLine2": "las direcciones de la empresa son compartidas",
+      "lead": "Cada persona conecta su propio buzón, y sigue siendo privado para ella. info@, ventas@ y soporte@ se conectan una vez y se comparten con toda la empresa. La IA que usa cada persona solo ve lo que esa persona puede ver, y los administradores fijan las reglas de lo que sale. Una persona que lleva todas las direcciones sola también está cubierta."
+    },
+    "team": {
+      "eyebrow": "Para un equipo",
+      "title": "Cada uno lleva su propio correo, y las direcciones compartidas entre todos",
+      "sub": "Business cuesta ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Los administradores y lectores sin buzón propio son gratis.",
+      "items": {
+        "private": {
+          "h": "Privado por defecto",
+          "p": "El buzón que conecta alguien es privado para esa persona, hasta {private} cada una. Los compañeros, los administradores y el propietario del espacio de trabajo ven que está conectado, pero no pueden leer su correo ni llegar a él desde su cliente de IA."
+        },
+        "company": {
+          "h": "Direcciones compartidas con toda la empresa",
+          "p": "Comparte info@, ventas@ o soporte@ con toda la empresa y cualquiera del espacio de trabajo puede trabajar en él desde su propio cliente de IA, según su rol. Se incluyen {included} buzones compartidos, después ${addon} al mes cada uno."
+        },
+        "agent": {
+          "h": "La IA ve lo que ve su persona",
+          "p": "Una clave de API o un cliente de IA conectado actúa como la persona que lo configuró. Llega a sus propios buzones y a los compartidos, a nada más, y pierde el acceso cuando esa persona sale del espacio de trabajo."
+        },
+        "rules": {
+          "h": "Los administradores fijan las reglas",
+          "p": "Roles (lector, miembro, administrador), aprobación de los envíos retenidos y reglas de destinatarios: cuando indicas los dominios a los que puede ir el correo, un mensaje a alguien fuera de ellos espera aprobación en lugar de salir."
+        },
+        "audit": {
+          "h": "Un registro de quién hizo qué",
+          "p": "El registro de auditoría muestra lo que hizo cada cliente de IA y cada cambio de miembros, roles y buzones compartidos. Los propietarios y administradores pueden exportarlo en CSV."
+        },
+        "paperwork": {
+          "h": "Papeleo para una empresa",
+          "p": "Las facturas llevan el nombre de tu empresa y tu NIF-IVA, hay un acuerdo de tratamiento de datos (DPA) publicado, y los datos se guardan en la UE (Estocolmo)."
+        }
+      }
+    },
+    "pricing": {
+      "sub": "Free, Personal y Pro son un inicio de sesión cada uno, y lo que cambia es cuántos buzones conecta. Business es para un equipo y se factura por persona.",
+      "business": {
+        "h": "Business, ${price} por persona al mes: un equipo",
+        "p": "Mínimo {min} personas, facturado por cada persona que conecta un buzón. Hasta {private} buzones privados por persona, más {included} compartidos, después ${addon} al mes cada uno."
+      },
+      "note": "Los administradores y lectores sin buzón propio son gratis, y puedes tener un espacio de trabajo aparte para cada empresa o cliente."
+    },
+    "faq": {
+      "0": "Sí, si una sola persona lleva los buzones. Pro es un inicio de sesión con hasta 10 buzones conectados, así que una persona puede llevar info@, ventas@, facturas@ y soporte@ desde un agente. Cuando tus compañeros necesitan su propio inicio de sesión, Business cuesta ${price} por persona al mes: el buzón de cada uno sigue siendo privado y las direcciones compartidas son para toda la empresa.",
+      "5": "Free, Personal y Pro son planes de un solo inicio de sesión. En Business cada compañero entra con su propia cuenta y conecta su propio buzón, que sigue siendo privado, mientras que los buzones compartidos como info@ son de todos. Pagas ${price} al mes por cada persona que conecta un buzón, mínimo {min} personas. Los administradores y lectores que no conectan ningún buzón no cuestan nada.",
+      "extra": [
+        {
+          "q": "¿Puede un administrador leer mi buzón?",
+          "a": "No. El propietario del espacio de trabajo y los administradores ven que tu buzón está conectado, su dirección y su estado, y pueden desconectarlo, pero no pueden leer su correo ni crear una clave de API para él. Solo tú puedes compartirlo con toda la empresa, y solo entonces puede trabajar en él el resto del equipo."
+        }
+      ]
+    },
+    "ctaBand": {
+      "sub": "Conecta el primer buzón gratis, sin tarjeta. Añade el resto cuando quieras: hasta 10 en Pro para una persona, o Business para un equipo a ${price} por persona al mes."
+    }
+  }
+}

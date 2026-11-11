@@ -1,0 +1,102 @@
+{
+  "card": {
+    "desc": "For et team: hver person kobler til sine egne postkasser privat, og firmaets felles adresser deles med hele firmaet.",
+    "per": "/person/måned",
+    "billedYearly": "Faktureres ${yearly}/år per person",
+    "minimum": "Minst {min} personer. Du betaler for hver person som kobler til en postkasse; administratorer og lesere uten egen postkasse er gratis.",
+    "features": [
+      "Alt i Pro",
+      "Private postkasser for hver person, opptil {private} hver",
+      "{included} felles postkasser for hele firmaet inkludert, deretter ${addon} i måneden per stykk",
+      "Roller for hver person: leser, medlem eller administrator",
+      "Administratorer godkjenner tilbakeholdte sendinger",
+      "Mottakerregler: e-post til noen utenfor domenene dere tillater, venter på godkjenning",
+      "Revisjonslogg med CSV-eksport",
+      "Firmafakturaer med MVA-nummeret deres",
+      "Databehandleravtale (DPA)"
+    ]
+  },
+  "pricing": {
+    "metaDescription": "Free kobler til én innboks, Personal tre og Pro opptil 10. Business koster ${price} per person i måneden for et team, med private postkasser for hver person og felles postkasser for firmaet.",
+    "heroLead": "Koble til en postkasse én gang, så kan agenten din lese, søke, organisere, skrive utkast, planlegge og sende. Free dekker én innboks, Personal tre og Pro opptil 10 for én person som driver en bedrift. Business er for et team og koster ${price} per person i måneden: hver person kobler til sine egne postkasser privat, og firmaets felles adresser deles med hele firmaet.",
+    "values": {
+      "inboxes": "Opptil {private} private per person, pluss {included} felles, deretter ${addon} i måneden per stykk",
+      "members": "Ubegrenset, faktureres per person med postkasse"
+    },
+    "rows": {
+      "privateMailboxes": "Private postkasser for hver person",
+      "recipientRules": "Mottakerregler for utgående e-post",
+      "auditExport": "Eksport av revisjonslogg (CSV)"
+    },
+    "faq": {
+      "5": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler i minuttet, 90 dager med analysehistorikk og prioritert e-poststøtte. Pro er fortsatt én bruker og én innlogging, med opptil 10 tilkoblede postkasser, så én person kan drive postkassene et firma har (salg, faktura, kundeservice, info). Pro har også et tak på 300 forespørsler i minuttet, to års analysehistorikk i stedet for 90 dager og prioritert e-poststøtte, og fortsetter å jobbe når chatten er lukket: oppfølgingspåminnelser på e-post du har sendt, slumring, en daglig morgenoppsummering i innboksen, ett søk på tvers av alle tilkoblede innbokser og instruksjoner til AI-en per innboks. Business er for et team og koster ${price} per person i måneden, minst {min} personer. Hver person kobler til opptil {private} egne postkasser, private for dem, og felles adresser kan deles med hele firmaet: {included} er inkludert, deretter ${addon} i måneden per stykk. Business gir i tillegg roller (leser, medlem, administrator), administratorer som godkjenner tilbakeholdte sendinger, mottakerregler, revisjonslogg med eksport, flere arbeidsområder på ett abonnement og et tak på 1 000 forespørsler i minuttet. Alt i Pro er inkludert.",
+      "6": "Tell personene først. Hvis én person håndterer info@, salg@, faktura@ og resten, er det Pro: én innlogging, opptil 10 tilkoblede postkasser, og hver postkasse beholder sitt eget avsendernavn og sin egen signatur og sender gjennom sin egen e-postserver. To eller tre adresser passer på Personal. Når kolleger trenger sin egen innlogging, er det Business: hver person kobler til sin egen postkasse privat, og felles adresser som info@ og salg@ deles med hele teamet. Det koster ${price} per person i måneden, minst {min} personer, og du betaler bare for personer som kobler til en postkasse. Alle postkasser som snakker IMAP og SMTP kan kobles til, uansett hvem som drifter dem, og det samme kan Gmail, Google Workspace og Microsoft 365; en Microsoft 365-konto i et firma kan kreve at IT-administratoren godkjenner appen én gang.",
+      "7": "Personal dekker tre tilkoblede innbokser. En fjerde flytter deg til Pro, som dekker opptil 10 postkasser på én agent og én innlogging. Utover det, eller når en kollega trenger tilgang, koster Business ${price} per person i måneden, minst {min} personer: hver person kan koble til opptil {private} private postkasser, og {included} felles postkasser er inkludert, deretter ${addon} i måneden per stykk. Hvis du ligger rett over tre og det ikke passer for deg, si fra på hello@mcpemails.com.",
+      "9": "Årlig betaling sparer omtrent 20 % sammenlignet med månedlig på alle betalte planer, og kortene over viser begge prisene. Business koster ${yearly} per person i året (${yearlyMonth} i måneden), og hver felles postkasse utover de {included} inkluderte koster ${addonYearly} i året. Du betaler én gang for 12 måneder på forskudd. Sier du opp, stopper fornyelsen, og du beholder tilgangen til året du har betalt for er over. Utenom 14-dagers refusjon på første belastning refunderer vi ikke de gjenværende månedene."
+    },
+    "ctaSub": "Start på Free: én innboks, uten kort. Personal tar deg til tre postkasser og Pro til 10 for én person. Business koster ${price} per person i måneden for et team, minst {min} personer."
+  },
+  "home": {
+    "sub": "Free kobler til én innboks med {freeActions} e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til opptil 10 for én person som driver en bedrift. Business er for et team og faktureres per person som kobler til en postkasse: hver persons egen e-post forblir privat, og felles adresser deles med hele firmaet."
+  },
+  "forBusiness": {
+    "hero": {
+      "eyebrow": "For et lite firma og de som håndterer e-posten",
+      "titleLine1": "Din egen postkasse er privat,",
+      "titleLine2": "firmaets adresser er felles",
+      "lead": "Hver person kobler til sin egen postkasse, og den forblir privat for dem. info@, salg@ og support@ kobles til én gang og deles med hele firmaet. AI-en hver person bruker, ser bare det den personen har lov til å se, og administratorer bestemmer reglene for hva som sendes ut. Én person som håndterer alle adressene alene, er også dekket."
+    },
+    "team": {
+      "eyebrow": "For et team",
+      "title": "Alle tar sin egen e-post, og de felles adressene sammen",
+      "sub": "Business koster ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Administratorer og lesere uten egen postkasse er gratis.",
+      "items": {
+        "private": {
+          "h": "Privat som standard",
+          "p": "En postkasse noen kobler til, er privat for dem, opptil {private} hver. Kolleger, administratorer og eieren av arbeidsområdet ser at den er tilkoblet, men kan ikke lese e-posten eller nå den fra sin AI-klient."
+        },
+        "company": {
+          "h": "Felles adresser for hele firmaet",
+          "p": "Del info@, salg@ eller support@ med hele firmaet, så kan alle i arbeidsområdet jobbe i den fra sin egen AI-klient, innenfor sin rolle. {included} felles postkasser er inkludert, deretter ${addon} i måneden per stykk."
+        },
+        "agent": {
+          "h": "AI-en ser det personen ser",
+          "p": "En API-nøkkel eller en tilkoblet AI-klient handler som personen som satte den opp. Den når deres egne postkasser og de felles, ikke noe annet, og mister tilgangen når personen forlater arbeidsområdet."
+        },
+        "rules": {
+          "h": "Administratorer setter reglene",
+          "p": "Roller (leser, medlem, administrator), godkjenning av tilbakeholdte sendinger og mottakerregler: når dere har listet domenene e-post kan gå til, venter en melding til noen utenfor dem på godkjenning i stedet for å bli sendt."
+        },
+        "audit": {
+          "h": "En logg over hvem som gjorde hva",
+          "p": "Revisjonsloggen viser hva hver AI-klient gjorde og alle endringer i medlemmer, roller og deling av postkasser. Eiere og administratorer kan eksportere den som CSV."
+        },
+        "paperwork": {
+          "h": "Papirarbeid for et firma",
+          "p": "Fakturaene har firmanavnet og MVA-nummeret deres, en databehandleravtale (DPA) er publisert, og data lagres i EU (Stockholm)."
+        }
+      }
+    },
+    "pricing": {
+      "sub": "Free, Personal og Pro er én innlogging hver, og det som endres er hvor mange postkasser den innloggingen kobler til. Business er for et team og faktureres per person.",
+      "business": {
+        "h": "Business, ${price} per person i måneden: et team",
+        "p": "Minst {min} personer, fakturert for hver person som kobler til en postkasse. Opptil {private} private postkasser per person, pluss {included} felles, deretter ${addon} i måneden per stykk."
+      },
+      "note": "Administratorer og lesere uten egen postkasse er gratis, og dere kan ha et eget arbeidsområde per firma eller kunde."
+    },
+    "faq": {
+      "0": "Ja, hvis én person håndterer postkassene. Pro er én innlogging med opptil 10 tilkoblede postkasser, så én person kan drive info@, salg@, faktura@ og support@ fra én agent. Når kolleger trenger sin egen innlogging, koster Business ${price} per person i måneden: hver persons egen postkasse forblir privat, og de felles adressene deles med hele firmaet.",
+      "5": "Free, Personal og Pro er planer med én innlogging. På Business logger hver kollega inn med sin egen konto og kobler til sin egen postkasse, som forblir privat for dem, mens felles postkasser som info@ deles. Du betaler ${price} i måneden for hver person som kobler til en postkasse, minst {min} personer. Administratorer og lesere som ikke kobler til noen postkasse, koster ingenting.",
+      "extra": [
+        {
+          "q": "Kan en administrator lese postkassen min?",
+          "a": "Nei. Eieren av arbeidsområdet og administratorene ser at postkassen din er tilkoblet, adressen og statusen, og de kan koble den fra, men de kan ikke lese e-posten eller lage en API-nøkkel for den. Bare du kan dele den med hele firmaet, og først da kan resten av teamet jobbe i den."
+        }
+      ]
+    },
+    "ctaBand": {
+      "sub": "Koble til den første postkassen gratis, uten kort. Legg til resten når du er klar: opptil 10 på Pro for én person, eller Business for et team til ${price} per person i måneden."
+    }
+  }
+}

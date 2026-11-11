@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { checkMemberLimit } from '@/lib/plans/check-member-limit';
 import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 import {
   demotionRevocationNotice,
   removeWorkspaceMember,
@@ -113,6 +114,15 @@ export async function DELETE(
   // Business billed per person: a removed member with a mailbox stops being
   // billed (business-seats.ts). After the response; never throws.
   after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
+
+  // Security audit view (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId,
+    actorUserId: user.id,
+    kind: 'member_removed',
+    target: targetUserId,
+    details: { role: targetMember.role },
+  });
 
   return NextResponse.json({ removed: true, userId: targetUserId });
 }
@@ -247,6 +257,17 @@ export async function PATCH(
   // admin with a mailbox is, so a role change can move the seat count
   // (business-seats.ts). After the response; never throws.
   after(() => syncBusinessSeatsForWorkspace(workspaceId).then(() => undefined));
+
+  // Security audit view (never throws).
+  if (targetMember.role !== newRole) {
+    await recordWorkspaceAuditEvent(service, {
+      workspaceId,
+      actorUserId: user.id,
+      kind: 'role_changed',
+      target: targetUserId,
+      details: { from: targetMember.role, to: newRole },
+    });
+  }
 
   // 6. A role change has to reach the credentials the member is already
   //    holding, or it is only a label. Demoting someone to `viewer` used to

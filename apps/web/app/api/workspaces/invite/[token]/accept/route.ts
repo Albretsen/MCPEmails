@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 import { mapInviteAcceptError } from '@/lib/workspace/invite-accept-error';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { syncBusinessSeatsForWorkspace } from '@/lib/stripe/business-seats';
@@ -88,6 +90,16 @@ export async function POST(
   // After the response; a no-op with the switch off; never throws.
   const joinedWorkspaceId = result.workspace_id;
   after(() => syncBusinessSeatsForWorkspace(joinedWorkspaceId).then(() => undefined));
+
+  // Security audit view (never throws). The RPC ran as the user, so the row
+  // is written here with the service role.
+  await recordWorkspaceAuditEvent(createServiceRoleClient, {
+    workspaceId: joinedWorkspaceId,
+    actorUserId: user.id,
+    kind: 'invite_accepted',
+    target: user.email ?? user.id,
+    details: { role: result.role },
+  });
 
   const res = NextResponse.json({
     workspaceId:   result.workspace_id,

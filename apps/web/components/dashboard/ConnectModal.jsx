@@ -1081,7 +1081,7 @@ export function ConnectModal({
   // `businessShaped` only ever matters at the Free cap, where it widens the
   // offer from Personal alone to Personal and Pro side by side. The rule that
   // decides that is inboxCapOffer's, not this component's.
-  const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped });
+  const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped, seatPricing: Boolean(stripePrices?.pro?.perPerson) });
   // The Business founder price swaps the $39 sentences for founder ones
   // while it is open; every other offer keeps its own keys.
   const capCopy = founderCapCopy(upgradeCopy, stripePrices);

@@ -37,6 +37,8 @@ import { InvitePanel, OverviewReferral, BillingReferralCredit, BillingReferralCo
 import { WebhooksPanel } from './WebhooksPanel';
 import { FirstWeekChecklist } from './FirstWeekChecklist';
 import { SsoSettingsSection } from './SsoSettingsSection';
+import { RecipientRuleSection } from './RecipientRuleSection';
+import { AuditExportLink, AuditTeamChanges, personLabel } from './AuditTeamChanges';
 import { FolderOverridesEditor } from './FolderOverridesEditor';
 import { MorningBriefSection } from './MorningBriefSection';
 import { InboxInstructionsEditor } from './InboxInstructionsEditor';
@@ -1877,7 +1879,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // interval choice. Everything below maps
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
-        const offer = inboxCapOffer(maxInboxes, { businessShaped });
+        const offer = inboxCapOffer(maxInboxes, { businessShaped, seatPricing: Boolean(stripePrices?.pro?.perPerson) });
         // Founder keys for Business while the founder price is open.
         const capCopy = founderCapCopy(offer, stripePrices);
         // Null when annual cannot be sold for this plan, in which case the
@@ -6387,6 +6389,10 @@ const BILLING_PLANS = [
     name: PLAN_DISPLAY_NAMES.pro,
     // Only what Business does today: see the features note on PLANS.pro.
     featureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessFeature2', 'billing.plans.businessFeature3', 'billing.plans.businessFeature4', 'billing.plans.businessFeature5'],
+    // Business billed per person (stripePrices.pro.perPerson): "members at no
+    // extra cost" and the flat mailbox line stop being true, so these replace
+    // the list above. Numbers pinned by business-seat-copy.test.ts.
+    seatFeatureKeys: ['billing.plans.businessFeature1', 'billing.plans.businessSeatFeaturePrivate', 'billing.plans.businessSeatFeatureCompany', 'billing.plans.businessSeatFeatureRoles', 'billing.plans.businessFeature4', 'billing.plans.businessSeatFeatureRules', 'billing.plans.businessSeatFeatureAudit'],
     highlighted: false,
   },
 ];
@@ -7294,7 +7300,7 @@ function BillingSection({
 
                     {/* Feature list */}
                     <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {plan.featureKeys.map(featKey => (
+                      {(perPerson && plan.seatFeatureKeys ? plan.seatFeatureKeys : plan.featureKeys).map(featKey => (
                         <li key={featKey} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                           <Icon name="check" size={12} color="var(--mint-600)" style={{ flexShrink: 0, marginTop: 2 }} />
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.4 }}>
@@ -8348,6 +8354,9 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, inbox
         onWorkspaceUpdate={onWorkspaceUpdate}
       />
 
+      {/* Advanced: the Business recipient rule (owner/admin on Business only). */}
+      <RecipientRuleSection workspace={workspace} userRole={userRole} />
+
       {/* Morning brief (Pro): renders nothing unless the feature is visible. */}
       <MorningBriefSection workspace={workspace} inboxes={inboxes} proFeatures={proFeatures} />
 
@@ -8726,6 +8735,7 @@ function AuditTable({ entries }) {
       <thead>
         <tr>
           <th>{t('security.colTool')}</th>
+          <th>{t('security.colPerson')}</th>
           <th>{t('security.colInbox')}</th>
           <th>{t('security.colApiKey')}</th>
           <th>{t('security.colTimestamp')}</th>
@@ -8744,6 +8754,13 @@ function AuditTable({ entries }) {
               >
                 {entry.tool}
               </code>
+            </td>
+
+            {/* Person the call acted as (activity_log.user_id) */}
+            <td>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: entry.person ? 'var(--fg-2)' : 'var(--fg-4)' }}>
+                {entry.person ? personLabel(entry.person, t) : '–'}
+              </span>
             </td>
 
             {/* Inbox */}
@@ -8842,6 +8859,7 @@ function AuditTable({ entries }) {
  */
 export function SecurityPage({ auditLog, userRole }) {
   const t = useTranslations('dashboard');
+  const canManageAudit = userRole === 'owner' || userRole === 'admin';
   const initialEntries = auditLog?.entries ?? [];
   const initialTotal   = auditLog?.total    ?? 0;
   const pageSize       = auditLog?.pageSize ?? PAGE_SIZE;
@@ -8905,6 +8923,9 @@ export function SecurityPage({ auditLog, userRole }) {
       {/* SAML single sign-on: owner/admin on the enterprise plan only */}
       <SsoSettingsSection userRole={userRole} />
 
+      {/* Team changes and the CSV export: owners and admins only. */}
+      {canManageAudit && <AuditTeamChanges />}
+
       <div className="card" style={{ marginTop: 14 }}>
         <div className="card-h">
           <div>
@@ -8915,6 +8936,7 @@ export function SecurityPage({ auditLog, userRole }) {
                 : t('security.auditSub')}
             </div>
           </div>
+          {canManageAudit && totalPages <= 1 && <AuditExportLink source="calls" />}
           {/* Pagination controls: only shown when there is more than one page */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
@@ -8946,6 +8968,7 @@ export function SecurityPage({ auditLog, userRole }) {
               >
                 {''}
               </Btn>
+              {canManageAudit && <AuditExportLink source="calls" />}
             </div>
           )}
         </div>

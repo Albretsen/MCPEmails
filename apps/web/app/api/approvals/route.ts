@@ -6,7 +6,7 @@ import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide, decideApproval, parseRenderedRevision } from '@/lib/approvals/decide';
 import { PENDING_APPROVAL_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { readSummary } from '@/lib/approvals/payload';
-import { approvalAccess, embeddedInbox, redactApprovalRow } from '@/lib/approvals/access';
+import { approvalAccess, embeddedInbox, holdReasonOf, redactApprovalRow } from '@/lib/approvals/access';
 
 async function context() {
   const auth = await createClient();
@@ -23,7 +23,7 @@ export async function GET() {
   const c = await context();
   if (!c) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   const { data, error } = await c.db.from('send_approvals')
-    .select('id, inbox_id, operation, summary, send_at, status, created_at, expires_at, revision, inboxes(email_address, display_name, owner_user_id, visibility)')
+    .select('id, inbox_id, operation, summary, send_at, status, created_at, expires_at, revision, hold_reason, inboxes(email_address, display_name, owner_user_id, visibility)')
     .eq('workspace_id', c.workspaceId).eq('status', 'pending').order('created_at', { ascending: false }).limit(100);
   if (error) return NextResponse.json({ error: 'Failed to load approvals.' }, { status: 500 });
 
@@ -59,7 +59,7 @@ export async function GET() {
 function shapeRows(rows: Record<string, unknown>[], role: string, userId: string): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
   for (const row of rows) {
-    const access = approvalAccess(role, userId, embeddedInbox(row));
+    const access = approvalAccess(role, userId, embeddedInbox(row), holdReasonOf(row));
     if (access.hidden) continue;
     if (access.redacted) {
       out.push({ ...redactApprovalRow(row), can_decide: access.canDecide });
@@ -102,10 +102,10 @@ export async function PATCH(request: NextRequest) {
   // A send the caller may not see is the same 404 as a missing id.
   if (!canDecide(c.role)) {
     const { data: held } = await c.db.from('send_approvals')
-      .select('id, inbox_id, inboxes(owner_user_id, visibility)')
+      .select('id, inbox_id, hold_reason, inboxes(owner_user_id, visibility)')
       .eq('id', id).eq('workspace_id', c.workspaceId).maybeSingle();
     if (!held) return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
-    const access = approvalAccess(c.role, c.user.id, embeddedInbox(held as Record<string, unknown>));
+    const access = approvalAccess(c.role, c.user.id, embeddedInbox(held as Record<string, unknown>), holdReasonOf(held as Record<string, unknown>));
     if (access.hidden) return NextResponse.json({ error: 'Not found.', code: 'not_found' }, { status: 404 });
     if (!access.canDecide) return NextResponse.json({ error: 'Only workspace owners and admins can decide sends.' }, { status: 403 });
   }

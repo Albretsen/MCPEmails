@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "O Pro conecta 10 caixas de correio. O Business inclui 10, com membros ilimitados sem custo adicional.",
     "businessCapCtaFounder": "Fazer upgrade para o Business, ${price}/mês",
+    "businessCapBodySeat": "O Pro conecta 10 caixas de correio. No Business, cada pessoa conecta até 10 caixas próprias, de forma privada, e 10 caixas compartilhadas com toda a empresa estão incluídas; depois, $3 por mês cada. A cobrança é por pessoa que conecta uma caixa, com mínimo de 2 pessoas.",
+    "businessCapCtaSeat": "Fazer upgrade para o Business",
+    "businessSeatFeaturePrivate": "Caixas de correio privadas para cada pessoa, até 10 cada",
+    "businessSeatFeatureCompany": "10 caixas compartilhadas com toda a empresa incluídas, $3 por mês por caixa extra",
+    "businessSeatFeatureRules": "Regras de destinatários para e-mails enviados",
     "errorYahooJapanShort": "O e-mail do Yahoo! JAPAN é um serviço diferente do Yahoo Mail e não tem senhas de app. Volte e escolha IMAP / SMTP."
   },
   "commandPalette": {

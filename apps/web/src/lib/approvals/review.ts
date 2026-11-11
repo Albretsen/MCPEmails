@@ -1,7 +1,7 @@
 import { neutralizeList, neutralizeNullable, neutralizeText } from '@/lib/textSafety';
 import { isExpired } from './decide';
 import { bccFromPayload, draftSnapshotFrom, isUnsendableLegacyDraft, readPayload, readSummary } from './payload';
-import { approvalAccess, embeddedInbox } from './access';
+import { approvalAccess, embeddedInbox, holdReasonOf } from './access';
 
 export { reviewerBccFor } from './payload';
 
@@ -278,7 +278,7 @@ export async function loadApprovalForReview(
   // Privacy model (./access.ts): someone else's private inbox is the same
   // not_found for a member; an owner or admin may decide it but sees only the
   // delivery metadata, never recipients, subject, attachments or body.
-  const access = approvalAccess(role, userId, embeddedInbox(approval));
+  const access = approvalAccess(role, userId, embeddedInbox(approval), holdReasonOf(approval));
   if (access.hidden) return 'not_found';
   const privateHidden = access.redacted;
   const withhold = role === 'viewer' || privateHidden;

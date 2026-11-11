@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
     "businessCapCtaFounder": "Auf Business upgraden, ${price}/Monat",
+    "businessCapBodySeat": "Pro verbindet 10 Postfächer. Bei Business verbindet jede Person bis zu 10 eigene Postfächer, privat, und 10 unternehmensweite Postfächer sind inklusive, danach je $3 pro Monat. Abgerechnet wird pro Person, die ein Postfach verbindet, mindestens 2 Personen.",
+    "businessCapCtaSeat": "Auf Business upgraden",
+    "businessSeatFeaturePrivate": "Private Postfächer für jede Person, bis zu 10 pro Person",
+    "businessSeatFeatureCompany": "10 unternehmensweite Postfächer inklusive, je $3 pro Monat für jedes weitere",
+    "businessSeatFeatureRules": "Empfängerregeln für ausgehende E-Mails",
     "errorYahooJapanShort": "Yahoo! JAPAN Mail ist ein anderer Dienst als Yahoo Mail und hat keine App-Passwörter. Gehen Sie zurück und wählen Sie stattdessen IMAP / SMTP."
   },
   "commandPalette": {

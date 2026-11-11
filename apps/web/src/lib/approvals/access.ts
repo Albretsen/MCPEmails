@@ -14,6 +14,10 @@ import { isInboxVisibleTo, type VisibilityRow } from '@/lib/inboxes/visibility';
  *   not visible, anyone else       hidden: the same 404 as a missing id
  *
  * A held send with no inbox (inbox_id null) follows the role rule alone.
+ *
+ * A send the workspace recipient rule held (`hold_reason = 'recipient_rule'`,
+ * migration 20261111130000) is decided by an owner or admin only: the rule is
+ * the company's, so the inbox owner's own right to decide does not apply.
  */
 export interface ApprovalAccess {
   hidden: boolean;
@@ -21,10 +25,14 @@ export interface ApprovalAccess {
   canDecide: boolean;
 }
 
+/** send_approvals.hold_reason of a send the workspace recipient rule held. */
+export const RECIPIENT_RULE_HOLD_REASON = 'recipient_rule';
+
 export function approvalAccess(
   role: string | null | undefined,
   userId: string,
   inbox: (VisibilityRow & { id?: string | null }) | null | undefined,
+  holdReason?: string | null,
 ): ApprovalAccess {
   const roleDecides = canDecide(role);
   if (!inbox) return { hidden: false, redacted: false, canDecide: roleDecides };
@@ -35,6 +43,7 @@ export function approvalAccess(
       : { hidden: true, redacted: false, canDecide: false };
   }
   const ownsPrivate =
+    holdReason !== RECIPIENT_RULE_HOLD_REASON &&
     inbox.visibility === 'private' && inbox.owner_user_id === userId && role != null && role !== 'viewer';
   return { hidden: false, redacted: false, canDecide: roleDecides || ownsPrivate };
 }
@@ -58,6 +67,12 @@ export function redactApprovalRow(row: Record<string, unknown>): Record<string, 
 }
 
 /** Reads an embedded `inboxes(...)` relation as a visibility row. */
+/** The row's hold_reason, when it was selected. */
+export function holdReasonOf(row: Record<string, unknown> | null | undefined): string | null {
+  const v = row?.hold_reason;
+  return typeof v === 'string' ? v : null;
+}
+
 export function embeddedInbox(row: Record<string, unknown>): (VisibilityRow & { id?: string | null }) | null {
   if (!row.inbox_id) return null;
   const rel = row.inboxes as (VisibilityRow & { id?: string | null }) | null | undefined;

@@ -1342,6 +1342,9 @@ Deno.test("without EdgeRuntime the writes are awaited: the row exists when the r
   assertEquals({ ...row, duration_ms: 0 }, {
     workspace_id: WORKSPACE,
     api_key_id: KEY_ID,
+    // The person the call acted as: the key's creator (activity_log.user_id,
+    // migration 20261111130000).
+    user_id: OWNER,
     inbox_id: INBOX,
     tool_name: "signature_get",
     status: "success",

@@ -468,6 +468,16 @@ import {
   TargetUnresolvedError,
 } from "./send-stages.ts";
 import { assertOutboundRecipientsAllowed, outboundAllowlist } from "./outbound-allowlist.ts";
+import {
+  normalizeAllowedDomains,
+  RECIPIENT_RULE_HOLD_REASON,
+  RECIPIENT_RULE_REFUSED,
+  RECIPIENT_RULE_UNAVAILABLE,
+  recipientRuleHeldMessage,
+  recipientRuleRefusalText,
+  recipientRuleUnavailableText,
+  recipientsOutsideDomains,
+} from "./recipient-domain-rule.ts";
 import { resolveAppUrl } from "./app-env.ts";
 import {
   addressList,
@@ -3934,6 +3944,13 @@ function buildRateLimitResponse(
 interface ActivityLogParams {
   workspaceId: string;
   apiKeyId: string;
+  /**
+   * The person the call acted as: the key's or grant's `created_by`
+   * (activity_log.user_id, migration 20261111130000). Null when unknown here;
+   * the activity_log_fill_user_id trigger then fills the key's creator or,
+   * for a key with no creator, the workspace owner.
+   */
+  userId?: string | null;
   /** UUID of the inbox the tool operated on, or null for non-inbox operations. */
   inboxId: string | null;
   /** The name of the MCP tool that was called (e.g. "email_list"). */
@@ -4027,6 +4044,7 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
   const row: Record<string, unknown> = {
     workspace_id: params.workspaceId,
     api_key_id: params.apiKeyId,
+    user_id: params.userId ?? null,
     inbox_id: params.inboxId,
     tool_name: params.toolName,
     status: params.status,
@@ -18933,13 +18951,24 @@ async function executeForwardEmail(
   });
   if ("refusal" in brake) return brake.refusal;
 
+  // The workspace recipient rule (recipient-domain-rule.ts): a forward to
+  // anyone outside the allowed domains is held for an owner or admin.
+  const rule = await recipientRuleGate({
+    tool: "email_forward",
+    apiKey,
+    recipients: () => Promise.resolve([...addressList(to), ...addressList(cc), ...addressList(bcc)]),
+  });
+  if ("refusal" in rule) return rule.refusal;
+
   // Approval is deliberately enforced after all caller-controlled input and
   // sender identity checks, but before reading/sending through the provider.
   // Preserve the original operation arguments so the approval dispatcher can
   // execute the same threaded forward once a human approves it.
   try {
     const approval = await queueSendApproval(
-      brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
+      rule.hold
+        ? recipientRuleHeldInbox(senderInbox, rule.outside)
+        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -19354,12 +19383,38 @@ async function executeReplyToEmail(
   });
   if ("refusal" in brake) return brake.refusal;
 
+  // The workspace recipient rule (recipient-domain-rule.ts). A reply's
+  // recipients come from the original, so with a rule set the original's
+  // headers are read here (the same metadata read the approval summary
+  // makes); without one nothing is read. Unreadable = held, never sent.
+  const rule = await recipientRuleGate({
+    tool: "email_reply",
+    apiKey,
+    recipients: async () => {
+      if (explicitTo.length > 0) return [...explicitTo, ...extraCc, ...extraBcc];
+      const original = await readMessageForSummary(inbox, String(messageId));
+      const derived = computeReplyRecipients({
+        from: [original.from],
+        replyTo: original.reply_to_all ?? (original.reply_to ? [original.reply_to] : []),
+        to: original.to,
+        cc: original.cc,
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll,
+      });
+      if (!derived.ok) return null;
+      return [...derived.recipients.map((r) => r.email), ...extraCc, ...extraBcc];
+    },
+  });
+  if ("refusal" in rule) return rule.refusal;
+
   // Do not contact the provider until an authorized dashboard user approves
   // this exact reply request. The original args retain the message id needed
   // to derive threading headers at approved-dispatch time.
   try {
     const approval = await queueSendApproval(
-      brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
+      rule.hold
+        ? recipientRuleHeldInbox(senderInbox, rule.outside)
+        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -19842,12 +19897,21 @@ async function outboundBrakeGate(input: {
   return { hold: false };
 }
 
-/** Why a send the inbox would have sent at once was held anyway. */
-interface BrakeHold {
-  reason: "fanout";
-  /** When the same message stops being held (ISO), or null when unknown. */
-  retryAt: string | null;
-}
+/**
+ * Why a send the inbox would have sent at once was held anyway: the fan-out
+ * brake, or the workspace recipient rule (recipient-domain-rule.ts).
+ */
+type BrakeHold =
+  | {
+    reason: "fanout";
+    /** When the same message stops being held (ISO), or null when unknown. */
+    retryAt: string | null;
+  }
+  | {
+    reason: typeof RECIPIENT_RULE_HOLD_REASON;
+    /** How many recipients are outside the allowed domains. Never the addresses. */
+    outside: number;
+  };
 
 /**
  * The inbox as queueSendApproval must see it while the fan-out brake holds
@@ -19856,6 +19920,110 @@ interface BrakeHold {
  */
 function brakeHeldInbox(inbox: InboxRow, retryAt: string | null): InboxRow {
   return { ...inbox, send_approval_required: true, brakeHold: { reason: "fanout", retryAt } };
+}
+
+/**
+ * The inbox as queueSendApproval must see it while the recipient rule holds
+ * this send. Wins over a fan-out hold: the stored hold_reason is what limits
+ * the decision to owners and admins.
+ */
+function recipientRuleHeldInbox(inbox: InboxRow, outside: number): InboxRow {
+  return { ...inbox, send_approval_required: true, brakeHold: { reason: RECIPIENT_RULE_HOLD_REASON, outside } };
+}
+
+/** What the recipient rule decided for one send. */
+type RecipientRuleVerdict =
+  | { refusal: ChatConfirmRefusal }
+  | { hold: false }
+  | { hold: true; outside: number };
+
+/**
+ * `workspaces.allowed_recipient_domains`, normalised (null = any recipient).
+ * `ok: false` when it could not be read: the caller refuses the send rather
+ * than guess, since guessing "no rule" could send outside a company's list.
+ */
+async function readAllowedRecipientDomains(
+  workspaceId: string,
+  db: InboxQueryClient = supabase as unknown as InboxQueryClient,
+): Promise<{ ok: true; domains: string[] | null } | { ok: false }> {
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data, error } = await (db as any)
+      .from("workspaces")
+      .select("allowed_recipient_domains")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp-server] recipient_rule_read_failed", { workspace_id: workspaceId, error: error.message });
+      return { ok: false };
+    }
+    return { ok: true, domains: normalizeAllowedDomains((data as Record<string, unknown> | null)?.allowed_recipient_domains) };
+  } catch (err) {
+    console.error("[mcp-server] recipient_rule_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { ok: false };
+  }
+}
+
+/**
+ * The Business recipient rule for one tool-initiated send. Asked by every
+ * send handler next to outboundBrakeGate, before queueSendApproval.
+ *
+ *   no rule, or every recipient inside it   { hold: false }
+ *   someone outside                         { hold: true }: queue it with
+ *                                           recipientRuleHeldInbox
+ *   the rule could not be read              a refusal; nothing was sent
+ *   the web mail client's person pressed    a refusal: that client has no
+ *   Send to someone outside                 held-send flow, and a person who
+ *                                           typed the address learns at once
+ *
+ * `recipients` is only called when a rule is set, so a send in a workspace
+ * without one costs a single primary-key read. It returns null when the
+ * recipients cannot be known (a reply whose original could not be read): that
+ * holds, it never sends. The approval dispatcher's re-run is a human's
+ * decision and is not asked again.
+ */
+async function recipientRuleGate(input: {
+  tool: string;
+  apiKey: ApiKeyRow;
+  recipients: () => Promise<readonly string[] | null>;
+}): Promise<RecipientRuleVerdict> {
+  if (INTROSPECTION_ONLY) return { hold: false };
+  if (input.apiKey.internalApprovalDispatch === true) return { hold: false };
+  const rule = await readAllowedRecipientDomains(input.apiKey.workspace_id);
+  if (!rule.ok) {
+    return {
+      refusal: {
+        result: { content: [{ type: "text", text: recipientRuleUnavailableText(input.tool) }], isError: true, _meta: {} },
+        logStatus: "error",
+        logErrorCode: RECIPIENT_RULE_UNAVAILABLE,
+      },
+    };
+  }
+  if (!rule.domains) return { hold: false };
+  let recipients: readonly string[] | null;
+  try {
+    recipients = await input.recipients();
+  } catch {
+    recipients = null;
+  }
+  const outside = recipients === null ? 1 : recipientsOutsideDomains(rule.domains, recipients).length;
+  if (outside === 0) return { hold: false };
+  // The approval dispatcher returned above, so a human-decided send here is
+  // the web mail client's person (sendDecidedByHuman holds the marker's one read).
+  if (sendDecidedByHuman(input.apiKey)) {
+    return {
+      refusal: {
+        result: { content: [{ type: "text", text: recipientRuleRefusalText(input.tool, outside) }], isError: true, _meta: {} },
+        logStatus: "error",
+        logErrorCode: RECIPIENT_RULE_REFUSED,
+      },
+    };
+  }
+  console.info("[mcp-server] recipient_rule_hold", { workspace_id: input.apiKey.workspace_id, tool: input.tool, outside });
+  return { hold: true, outside };
 }
 
 /**
@@ -20105,8 +20273,15 @@ async function queueSendApproval(
       summary: await sealApprovalSummary(summary, encryptForStorage),
       expires_at: expiresAt,
       ...(sendAt ? { send_at: sendAt } : {}),
+      // The person whose send this is (migration 20261111130000).
+      requested_by: apiKey.created_by ?? null,
+      // Only an owner or admin may decide a send the recipient rule held. Not
+      // in PENDING_APPROVAL_COLUMNS on purpose: if the column were missing the
+      // insert fails and nothing is sent, rather than queueing a hold the
+      // inbox owner could approve themselves.
+      ...(inbox.brakeHold?.reason === RECIPIENT_RULE_HOLD_REASON ? { hold_reason: RECIPIENT_RULE_HOLD_REASON } : {}),
     },
-    PENDING_APPROVAL_COLUMNS,
+    [...PENDING_APPROVAL_COLUMNS, "requested_by"],
     (row) => supabase.from("send_approvals").insert(row).select("*").maybeSingle(),
   );
   if (error || !data) {
@@ -20188,6 +20363,17 @@ function brakeHeldPayload(
   noun: string,
   extra: Record<string, unknown>,
 ): Record<string, unknown> {
+  if (hold.reason === RECIPIENT_RULE_HOLD_REASON) {
+    return {
+      status: "pending_approval",
+      approval_id: approval.id,
+      inbox_id: inboxId,
+      ...extra,
+      hold_reason: hold.reason,
+      review_url: approval.reviewUrl,
+      message: recipientRuleHeldMessage(noun, hold.outside, approval.reviewUrl),
+    };
+  }
   const when = hold.retryAt ? ` after ${hold.retryAt}` : " in an hour";
   return {
     status: "pending_approval",
@@ -20580,11 +20766,22 @@ async function executeSendEmail(
   });
   if ("refusal" in brake) return brake.refusal;
 
+  // The workspace recipient rule (recipient-domain-rule.ts).
+  const rule = await recipientRuleGate({
+    tool: "email_send",
+    apiKey,
+    recipients: () => Promise.resolve([...sendParams.to, ...(sendParams.cc ?? []), ...(sendParams.bcc ?? [])]),
+  });
+  if ("refusal" in rule) return rule.refusal;
+  const gatedSender = rule.hold
+    ? recipientRuleHeldInbox(senderInbox, rule.outside)
+    : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox;
+
   try {
     // `heldSendSnapshot` (not an object literal) because this payload carries a
     // load-bearing key that is invisible here: `include_signature: false`, which
     // records that the body above is FINAL. See that function.
-    const approval = await queueSendApproval(brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox, apiKey, heldSendSnapshot({
+    const approval = await queueSendApproval(gatedSender, apiKey, heldSendSnapshot({
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
       subject: sendParams.subject, textBody: sendParams.textBody,
@@ -31925,7 +32122,21 @@ async function executeSendDraft(
     recipients: [],
   });
   if ("refusal" in brake) return brake.refusal;
-  const heldInbox = brake.hold ? brakeHeldInbox(inbox, brake.retryAt) : inbox;
+  // The workspace recipient rule (recipient-domain-rule.ts): with a rule set,
+  // the draft's recipients are read once here. A draft that cannot be read is
+  // held, and the held path below then reports the read failure itself.
+  const rule = await recipientRuleGate({
+    tool: "draft_send",
+    apiKey,
+    recipients: async () => {
+      const read = await readDraftForApproval(inbox, draftId);
+      return read ? [...read.to, ...read.cc, ...read.bcc] : null;
+    },
+  });
+  if ("refusal" in rule) return rule.refusal;
+  const heldInbox = rule.hold
+    ? recipientRuleHeldInbox(inbox, rule.outside)
+    : brake.hold ? brakeHeldInbox(inbox, brake.retryAt) : inbox;
 
   let approvalRecord: Record<string, unknown> = {};
   if (sendWillBeHeld(heldInbox, apiKey)) {
@@ -33241,9 +33452,25 @@ async function executeScheduleSend(
   });
   if (chatRefusal) return chatRefusal;
 
+  // The workspace recipient rule (recipient-domain-rule.ts). Asked now, so a
+  // send outside the allowed domains is held from the start; the dispatcher
+  // asks again at send time, in case the rule changed in between.
+  const rule = await recipientRuleGate({
+    tool: "schedule_create",
+    apiKey,
+    recipients: () => Promise.resolve([...to, ...cc, ...bcc] as string[]),
+  });
+  if ("refusal" in rule) return rule.refusal;
+
   payload["inbox_id"] = inbox.id;
   try {
-    const approval = await queueSendApproval(inbox, apiKey, payload, sendAt, "schedule_create");
+    const approval = await queueSendApproval(
+      rule.hold ? recipientRuleHeldInbox(inbox, rule.outside) : inbox,
+      apiKey,
+      payload,
+      sendAt,
+      "schedule_create",
+    );
     if (approval) return {
       result: await heldSendResult(approval, apiKey, inbox.id, "scheduled email", { send_at: sendAt }),
       logStatus: "success", logErrorCode: null,
@@ -34758,6 +34985,7 @@ async function handleToolsCall(
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
+        userId: apiKey.created_by ?? null,
         inboxId,
         toolName,
         status: "error",
@@ -34781,6 +35009,7 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
+      userId: apiKey.created_by ?? null,
       inboxId,
       toolName,
       status: "error",
@@ -34965,6 +35194,7 @@ async function handleToolsCall(
       await writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
+        userId: apiKey.created_by ?? null,
         inboxId,
         toolName,
         status: "error",
@@ -35145,6 +35375,7 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
+      userId: apiKey.created_by ?? null,
       inboxId,
       toolName: dispatchName,
       status: "error",
@@ -35299,6 +35530,7 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
+      userId: apiKey.created_by ?? null,
       inboxId,
       toolName: dispatchName,
       status: "error",
@@ -35344,6 +35576,7 @@ async function handleToolsCall(
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
+      userId: apiKey.created_by ?? null,
       inboxId: typeof cappedArgs?.["inbox_id"] === "string" && !isCrossInboxAll(cappedArgs["inbox_id"])
         ? cappedArgs["inbox_id"] as string
         : null,
@@ -35750,6 +35983,7 @@ async function handleToolsCall(
   postResponseWrites.push(["activity_log", () => writeActivityLog({
     workspaceId: apiKey.workspace_id,
     apiKeyId: apiKey.id,
+    userId: apiKey.created_by ?? null,
     inboxId: resolvedInboxId,
     toolName: dispatchName,
     status: logStatus,
@@ -36074,12 +36308,66 @@ interface ScheduledDispatchDeps {
   scheduledByCanReach?(db: InboxQueryClient, workspaceId: string, userId: string | null, inboxId: string): Promise<boolean>;
   /** Narrow an approval's originating key to the inboxes its creator can see. Optional, as above. */
   narrowKey?(db: InboxQueryClient, key: ApiKeyRow): Promise<ApiKeyRow>;
+  /**
+   * The workspace recipient rule (recipient-domain-rule.ts), asked at send
+   * time for a scheduled send nobody has approved yet. Optional so a test's
+   * deps can leave it out; production always has it.
+   */
+  recipientRule?(db: InboxQueryClient, workspaceId: string): Promise<{ ok: true; domains: string[] | null } | { ok: false }>;
+  /**
+   * Put a scheduled send the rule caught on the approval hold: a keyless
+   * schedule_create approval with hold_reason 'recipient_rule' carrying the
+   * same message. Returns the approval id. Required whenever recipientRule is
+   * given.
+   */
+  holdForRecipientRule?(db: InboxQueryClient, row: Record<string, unknown>, payload: Record<string, unknown>): Promise<string>;
+}
+
+/**
+ * Move a due scheduled send the recipient rule caught onto the approval hold.
+ * The approval carries the same encrypted message, its summary, the original
+ * send time and the scheduler as requested_by. It has no api_key_id (a
+ * scheduled_sends row stores none), which the dispatcher accepts only for a
+ * schedule_create held by this rule. Throws when the row cannot be written,
+ * so the caller's catch fails the send rather than sending it.
+ */
+async function holdScheduledSendForRecipientRule(
+  db: InboxQueryClient,
+  row: Record<string, unknown>,
+  payload: Record<string, unknown>,
+): Promise<string> {
+  const stored = { ...payload, inbox_id: row.inbox_id };
+  const summary = buildApprovalSummary(stored, {}, "schedule_create");
+  // deno-lint-ignore no-explicit-any
+  const { data, error } = await (db as any)
+    .from("send_approvals")
+    .insert({
+      workspace_id: row.workspace_id,
+      inbox_id: row.inbox_id,
+      api_key_id: null,
+      operation: "schedule_create",
+      payload: { v: 1, data: await encryptForStorage(JSON.stringify(stored)) },
+      payload_encrypted: true,
+      summary: await sealApprovalSummary(summary, encryptForStorage),
+      expires_at: new Date(Date.now() + APPROVAL_TTL_MS).toISOString(),
+      send_at: typeof row.send_at === "string" ? row.send_at : new Date().toISOString(),
+      requested_by: typeof row.created_by === "string" ? row.created_by : null,
+      hold_reason: RECIPIENT_RULE_HOLD_REASON,
+    })
+    .select("id")
+    .maybeSingle();
+  if (error || !data?.id) {
+    throw new Error(`could not hold this scheduled send for approval: ${error?.message ?? "no row"}. Nothing was sent.`);
+  }
+  return String(data.id);
 }
 
 const DEFAULT_SCHEDULED_DISPATCH_DEPS: ScheduledDispatchDeps = {
   // Both ask the dispatcher's own client (credential_inbox_scope).
   scheduledByCanReach: (db, workspaceId, userId, inboxId) => userCanReachInbox(db, workspaceId, userId, inboxId),
   narrowKey: (db, key) => narrowKeyToVisibleInboxes(key, db),
+  recipientRule: (db, workspaceId) => readAllowedRecipientDomains(workspaceId, db),
+  holdForRecipientRule: holdScheduledSendForRecipientRule,
   runApprovedOperation(operation, original, internalKey) {
     if (operation === "email_reply") return executeReplyToEmail(original, internalKey);
     if (operation === "email_forward") return executeForwardEmail(original, internalKey);
@@ -36203,6 +36491,8 @@ async function handleScheduledDispatch(
   let dispatched = 0;
   let errored = 0;
   let deferred = 0;
+  // Moved onto the approval hold by the recipient rule.
+  let held = 0;
 
   for (const row of pending) {
     // Optimistic lock: atomically transition pending → sending so a
@@ -36325,8 +36615,12 @@ async function handleScheduledDispatch(
       // INBOX VISIBILITY. A send goes out only while the person who scheduled
       // it can still use the mailbox: it is someone else's private inbox now,
       // or they left the workspace, so it fails terminally and says why.
+      // An approval marker (decide.ts) carries no created_by: the approval
+      // branch below decides for it, by the originating key's creator or, for
+      // a keyless recipient-rule hold, by the approval's requested_by.
       if (
         deps.scheduledByCanReach &&
+        scheduledApprovalMarkerId(row) === null &&
         !(await deps.scheduledByCanReach(
           db,
           String(row.workspace_id),
@@ -36397,7 +36691,15 @@ async function handleScheduledDispatch(
           .eq("inbox_id", row.inbox_id)
           .eq("status", "approved")
           .maybeSingle();
-        if (approvalErr || !approval || !approval.api_key_id) throw new Error("approved request not found");
+        // A scheduled send the recipient rule held at send time has no key
+        // (scheduled_sends stores none): it acts as the person who scheduled it.
+        const keylessRuleHold = !!approval &&
+          !approval.api_key_id &&
+          String(approval.operation) === "schedule_create" &&
+          approval.hold_reason === RECIPIENT_RULE_HOLD_REASON;
+        if (approvalErr || !approval || (!approval.api_key_id && !keylessRuleHold)) {
+          throw new Error("approved request not found");
+        }
         // An approval that ran out of time while still pending must never turn
         // into a delivery, even if something managed to mark it approved. The
         // decide paths already refuse to approve an expired row; this is the
@@ -36469,6 +36771,21 @@ async function handleScheduledDispatch(
           }
         }
 
+        if (keylessRuleHold) {
+          if (
+            deps.scheduledByCanReach &&
+            !(await deps.scheduledByCanReach(
+              db,
+              String(row.workspace_id),
+              typeof approval.requested_by === "string" ? approval.requested_by : null,
+              String(row.inbox_id),
+            ))
+          ) {
+            throw new Error("The person who scheduled this message can no longer use this mailbox. Nothing was sent.");
+          }
+          approvedScheduleId = approval.id as string;
+          payload = await resolveScheduledPayload(approval);
+        } else {
         const { data: keyData, error: keyErr } = await db.from("api_keys")
           .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified, card_listed")
           .eq("id", approval.api_key_id)
@@ -36558,6 +36875,7 @@ async function handleScheduledDispatch(
           dispatched++;
           continue;
         }
+        } // keyed approval
       }
       const sendParams: SendEmailParams = {
         to: Array.isArray(payload["to"]) ? (payload["to"] as string[]) : [],
@@ -36588,6 +36906,47 @@ async function handleScheduledDispatch(
       // edits made after scheduling take effect. Same single helper as the
       // interactive send path.
       applySignature(sendParams, inbox);
+
+      // ── The workspace recipient rule (recipient-domain-rule.ts) ─────────
+      // Asked at send time for a send nobody has approved: the rule may have
+      // been set after it was scheduled. A send to anyone outside the allowed
+      // domains is moved onto the approval hold (an owner or admin decides)
+      // and this row is closed with a detail that says so. An approved
+      // schedule is a human's decision and is not asked again.
+      if (approvedScheduleId === null && deps.recipientRule) {
+        const rule = await deps.recipientRule(db, String(row.workspace_id));
+        if (!rule.ok) {
+          throw new ScheduledDispatchHeld(
+            "scheduled send held: the workspace's allowed recipient domains could not be read. Nothing was sent.",
+          );
+        }
+        const outside = recipientsOutsideDomains(rule.domains, [
+          ...sendParams.to,
+          ...(sendParams.cc ?? []),
+          ...(sendParams.bcc ?? []),
+        ]).length;
+        if (outside > 0) {
+          if (!deps.holdForRecipientRule) throw new Error("recipient rule hold is not configured. Nothing was sent.");
+          const heldId = await deps.holdForRecipientRule(db, row as Record<string, unknown>, payload);
+          console.info("[dispatch] scheduled_send_recipient_rule_hold", {
+            scheduled_send_id: row.id,
+            approval_id: heldId,
+            outside,
+          });
+          await db
+            .from("scheduled_sends")
+            .update({
+              status: "cancelled",
+              error_detail:
+                "Held for approval: the workspace only sends to approved email domains and this message " +
+                "has recipients outside them. A workspace owner or admin can approve it. Nothing was sent.",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          held++;
+          continue;
+        }
+      }
 
       // ── Abuse brakes (outbound-brakes.ts) ───────────────────────────────
       // A refusal or a fan-out hold leaves the row pending, untouched, for a
@@ -36705,7 +37064,7 @@ async function handleScheduledDispatch(
     `[dispatch] Done: dispatched=${dispatched} errored=${errored} deferred=${deferred} total=${pending.length}`,
   );
   return new Response(
-    JSON.stringify({ dispatched, errored, deferred, total: pending.length }),
+    JSON.stringify({ dispatched, errored, deferred, held, total: pending.length }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 }
@@ -37224,7 +37583,19 @@ async function applyTriageAction(input: {
       // to inherit its 'off' setting. Forcing the flag on a local copy of the row
       // is how that is expressed without giving queueSendApproval a bypass
       // parameter that some future caller would reach for.
-      const gatedInbox: InboxRow = { ...inboxRow, send_approval_required: true };
+      // The workspace recipient rule (recipient-domain-rule.ts): a forward to
+      // anyone outside the allowed domains is held as a recipient-rule hold, so
+      // only an owner or admin may approve it.
+      const ruleKey = triageApiKeyAsApiKeyRow(input.apiKey);
+      const rule = await recipientRuleGate({
+        tool: "email_forward",
+        apiKey: ruleKey,
+        recipients: () => Promise.resolve(action.to),
+      });
+      if ("refusal" in rule) return { ok: false, error_code: rule.refusal.logErrorCode };
+      const gatedInbox: InboxRow = rule.hold
+        ? recipientRuleHeldInbox(inboxRow, rule.outside)
+        : { ...inboxRow, send_approval_required: true };
       // The stored payload is the argument shape executeForwardEmail expects, so
       // an approved forward is re-run through the ordinary tool path by the
       // scheduled dispatcher. Note what is NOT here: internalApprovalDispatch is
@@ -37237,7 +37608,7 @@ async function applyTriageAction(input: {
       };
       const approval = await queueSendApproval(
         gatedInbox,
-        triageApiKeyAsApiKeyRow(input.apiKey),
+        ruleKey,
         payload,
         undefined,
         "email_forward",
@@ -37321,6 +37692,8 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
   return {
     id: key.id,
     workspace_id: key.workspace_id,
+    // Who the rule acts as (send_approvals.requested_by, activity_log.user_id).
+    created_by: (key as TriageApiKey & { created_by?: string | null }).created_by ?? null,
     name: key.name,
     key_prefix: "",
     key_hash: "",
@@ -40046,6 +40419,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
+        userId: apiKey.created_by ?? null,
         inboxId: rateLimitedInboxId,
         toolName: rateLimitedToolName,
         status: "rate_limited",
@@ -40098,6 +40472,7 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
       writeActivityLog({
         workspaceId: apiKey.workspace_id,
         apiKeyId: apiKey.id,
+        userId: apiKey.created_by ?? null,
         inboxId: quotaInboxId,
         toolName: quotaToolName,
         status: "rate_limited",

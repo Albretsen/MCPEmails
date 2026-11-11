@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { isInboxVisibility, ownsInbox } from '@/lib/inboxes/visibility';
 import { canManageInboxes, fetchWorkspaceRole, insufficientRoleBody } from '@/lib/workspace/roles';
+import { recordWorkspaceAuditEvent } from '@/lib/workspace/audit-events';
 
 /**
  * PATCH /api/inboxes/[id]/visibility  { visibility: 'private' | 'company' }
@@ -51,7 +52,7 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
 
   const { data: inbox, error: fetchError } = await supabase
     .from('inboxes')
-    .select('id, workspace_id, owner_user_id, visibility')
+    .select('id, workspace_id, owner_user_id, visibility, email_address')
     .eq('id', inboxId)
     .is('deleted_at', null)
     .single();
@@ -73,7 +74,8 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
 
   if (inbox.visibility === visibility) return NextResponse.json({ visibility });
 
-  const { data: saved, error: updateError } = await createServiceRoleClient()
+  const service = createServiceRoleClient();
+  const { data: saved, error: updateError } = await service
     .from('inboxes')
     .update({ visibility, updated_at: new Date().toISOString() })
     .eq('id', inboxId)
@@ -86,6 +88,20 @@ export async function PATCH(request: NextRequest, { params }: Params): Promise<N
     console.error('[inbox-visibility] update failed:', updateError?.message ?? 'no row');
     return NextResponse.json({ error: 'Could not change who can use this mailbox.' }, { status: 500 });
   }
+  // Security audit view (never throws).
+  await recordWorkspaceAuditEvent(service, {
+    workspaceId: inbox.workspace_id,
+    actorUserId: user.id,
+    kind: 'inbox_visibility_changed',
+    target: inboxId,
+    details: {
+      from: inbox.visibility,
+      to: saved.visibility,
+      ...(typeof (inbox as { email_address?: unknown }).email_address === 'string'
+        ? { inbox: (inbox as { email_address: string }).email_address }
+        : {}),
+    },
+  });
   // Company-wide mailboxes past the included ten are billed by the mailbox
   // add-on (and, on seat pricing, the sync also brings the seats in step), so
   // a switch either way re-syncs. After the response; a failure is logged and

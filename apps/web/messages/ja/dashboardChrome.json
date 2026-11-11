@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Proで接続できるメールボックスは10個です。Businessには10個が含まれ、メンバーは追加費用なしで無制限です。",
     "businessCapCtaFounder": "Businessにアップグレード（月額${price}）",
+    "businessCapBodySeat": "Proで接続できるメールボックスは10件です。Businessでは、一人ひとりが自分のメールボックスを10件まで非公開で接続でき、全社共有のメールボックスも10件含まれます（以降は1件につき月$3）。料金はメールボックスを接続した人数分で、最低2人からです。",
+    "businessCapCtaSeat": "Businessにアップグレード",
+    "businessSeatFeaturePrivate": "一人ひとりに非公開のメールボックス（1人10件まで）",
+    "businessSeatFeatureCompany": "全社共有のメールボックス10件込み、追加は1件につき月$3",
+    "businessSeatFeatureRules": "送信メールの宛先ルール",
     "errorYahooJapanShort": "Yahoo!メール（Yahoo! JAPAN）はYahoo Mailとは別のサービスで、アプリ パスワードはありません。戻って IMAP / SMTP を選んでください。"
   },
   "commandPalette": {

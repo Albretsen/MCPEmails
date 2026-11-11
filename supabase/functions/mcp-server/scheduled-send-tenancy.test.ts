@@ -40,7 +40,7 @@ const KEY_HEX = "0123456789abcdef".repeat(4);
 Deno.env.set("ENCRYPTION_KEY", KEY_HEX);
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { handleScheduledDispatch } = await import("./index.ts");
+const { handleScheduledDispatch, DEFAULT_SCHEDULED_DISPATCH_DEPS } = await import("./index.ts");
 
 const WS_VICTIM = "11111111-1111-4111-8111-111111111111";
 const WS_ATTACKER = "22222222-2222-4222-8222-222222222222";
@@ -262,6 +262,8 @@ function harness(
     reach?: (workspaceId: string, userId: string | null, inboxId: string) => boolean;
     /** Inbox visibility: the approval key narrowed to its creator's inboxes. Left out, deps has none. */
     narrow?: (key: Row) => Row;
+    /** The workspace recipient rule (recipient-domain-rule.ts). Left out, deps has none. */
+    rule?: { ok: true; domains: string[] | null } | { ok: false };
   } = {},
 ) {
   const rec = recordingClient(tables);
@@ -301,12 +303,22 @@ function harness(
       : {}),
     ...(behaviour.narrow ? { narrowKey: (_db: unknown, key: Row) => Promise.resolve(behaviour.narrow!(key)) } : {}),
   };
+  const ruleHolds: Array<{ row: Row; payload: Row }> = [];
+  const ruleDeps = behaviour.rule
+    ? {
+      recipientRule: () => Promise.resolve(behaviour.rule!),
+      holdForRecipientRule(_db: unknown, row: Row, payload: Row) {
+        ruleHolds.push({ row, payload });
+        return Promise.resolve("held-approval-id");
+      },
+    }
+    : {};
   const run = async () => {
     // deno-lint-ignore no-explicit-any
-    const res = await handleScheduledDispatch(rec.client as any, { ...deps, ...visibilityDeps } as any);
+    const res = await handleScheduledDispatch(rec.client as any, { ...deps, ...visibilityDeps, ...ruleDeps } as any);
     return await res.json();
   };
-  return { run, calls, reachCalls, ...rec };
+  return { run, calls, reachCalls, ruleHolds, ...rec };
 }
 
 function sendRow(tables: Record<string, Row[]>, id: string): Row {
@@ -781,4 +793,146 @@ Deno.test("visibility: an approved operation re-runs with the narrowed key", asy
   await h.run();
   assertEquals(h.calls.approved.length, 1);
   assertEquals(h.calls.approved[0].key.inbox_ids, [INBOX_VICTIM_2]);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The workspace recipient rule at send time (recipient-domain-rule.ts,
+// migration 20261111130000)
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("recipient rule: a due send to someone outside the allowed domains is held, never sent", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["corp.example"] }, brake: true });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+  assertEquals(h.calls.brake.length, 0, "held before the brake counts it");
+  assertEquals(h.ruleHolds.length, 1);
+  assertEquals(h.ruleHolds[0].payload.to, MESSAGE.to);
+  assertEquals(h.ruleHolds[0].row.id, SEND_A);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "cancelled");
+  assertStringIncludes(String(row.error_detail), "Held for approval");
+  assertStringIncludes(String(row.error_detail), "owner or admin");
+});
+
+Deno.test("recipient rule: a due send inside the allowed domains goes out", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["example.com"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.ruleHolds.length, 0);
+});
+
+Deno.test("recipient rule: Cc and Bcc count; a subdomain is not the domain", async () => {
+  const withBcc = { ...MESSAGE, cc: ["a@example.com"], bcc: ["leak@sub.example.com"] };
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A, { payload: { v: 1, data: await encrypt(JSON.stringify(withBcc)) } })],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["example.com"] } });
+  const summary = await h.run();
+  assertEquals(summary.held, 1);
+  assertEquals(h.calls.sent.length, 0);
+});
+
+Deno.test("recipient rule: no rule set, every recipient goes", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: null } });
+  assertEquals((await h.run()).dispatched, 1);
+});
+
+Deno.test("recipient rule: an unreadable rule defers the send (pending, nothing sent)", async () => {
+  const h = harness({
+    scheduled_sends: [await encryptedSend(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: false } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(summary.deferred, 1);
+  assertEquals(h.calls.sent.length, 0);
+  const row = sendRow(h.tables, SEND_A);
+  assertEquals(row.status, "pending");
+  assertStringIncludes(String(row.error_detail), "allowed recipient domains could not be read");
+});
+
+Deno.test("recipient rule: an approved schedule is a human's decision and is not held again", async () => {
+  const approval = await approvalRow({ operation: "schedule_create" });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+    api_keys: [apiKey(KEY_VICTIM, WS_VICTIM)],
+  }, { rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.ruleHolds.length, 0);
+});
+
+Deno.test("recipient rule: an approved KEYLESS rule hold sends as the person who scheduled it", async () => {
+  const approval = await approvalRow({
+    operation: "schedule_create",
+    api_key_id: null,
+    hold_reason: "recipient_rule",
+    requested_by: MEMBER,
+  });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+  }, { reach: () => true, rule: { ok: true, domains: ["corp.example"] } });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 1);
+  assertEquals(h.calls.sent.length, 1);
+  assertEquals(h.calls.sent[0].params.subject, "Approved");
+  // The marker itself is not asked (it has no created_by); the approval's requester is.
+  assertEquals(h.reachCalls, [[WS_VICTIM, MEMBER, INBOX_VICTIM]]);
+  assertEquals(h.calls.completed, [[APPROVAL, "success", null]]);
+});
+
+Deno.test("recipient rule: a keyless rule hold whose requester lost the inbox is refused", async () => {
+  const approval = await approvalRow({
+    operation: "schedule_create",
+    api_key_id: null,
+    hold_reason: "recipient_rule",
+    requested_by: MEMBER,
+  });
+  const h = harness({
+    scheduled_sends: [marker(SEND_A)],
+    inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+    send_approvals: [approval],
+  }, { reach: () => false });
+  const summary = await h.run();
+  assertEquals(summary.dispatched, 0);
+  assertEquals(h.calls.sent.length, 0);
+  assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "can no longer use this mailbox");
+});
+
+Deno.test("recipient rule: only a schedule_create rule hold may be keyless", async () => {
+  for (const overrides of [
+    { operation: "email_send", api_key_id: null, hold_reason: "recipient_rule" },
+    { operation: "schedule_create", api_key_id: null, hold_reason: null },
+  ]) {
+    const h = harness({
+      scheduled_sends: [marker(SEND_A)],
+      inboxes: [inbox(INBOX_VICTIM, WS_VICTIM)],
+      send_approvals: [await approvalRow(overrides)],
+    }, { reach: () => true });
+    const summary = await h.run();
+    assertEquals(summary.dispatched, 0, JSON.stringify(overrides));
+    assertEquals(h.calls.sent.length + h.calls.approved.length, 0);
+    assertStringIncludes(String(sendRow(h.tables, SEND_A).error_detail), "approved request not found");
+  }
+});
+
+Deno.test("recipient rule: production deps read the rule and write the hold", () => {
+  assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.recipientRule === "function");
+  assert(typeof DEFAULT_SCHEDULED_DISPATCH_DEPS.holdForRecipientRule === "function");
 });

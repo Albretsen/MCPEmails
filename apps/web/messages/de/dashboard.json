@@ -425,6 +425,8 @@
     "capCtaBusiness": "Upgrade auf Business, $39/Monat",
     "capBodyProCapFounder": "Pro verbindet 10 Postfächer. Business enthält 10, und Mitglieder sind ohne Aufpreis unbegrenzt.",
     "capCtaBusinessFounder": "Upgrade auf Business, ${price}/Monat",
+    "capBodyProCapSeat": "Pro verbindet 10 Postfächer. Bei Business verbindet jede Person bis zu 10 eigene Postfächer, privat, und 10 unternehmensweite Postfächer sind inklusive, danach je $3 pro Monat. Abgerechnet wird pro Person, die ein Postfach verbindet, mindestens 2 Personen.",
+    "capCtaBusinessSeat": "Auf Business upgraden",
     "visibility": {
       "label": "Wer es nutzen kann",
       "private": "Privat",
@@ -775,6 +777,18 @@
         "invalid_inbox": "Dieser Posteingang gehört nicht zu diesem Arbeitsbereich.",
         "invalid_timezone": "Wählen Sie eine Zeitzone aus der Liste."
       }
+    },
+    "recipientRule": {
+      "advanced": "Erweitert",
+      "title": "Erlaubte Empfängerdomains",
+      "help": "E-Mails an Empfänger außerhalb dieser Domains warten, bis ein Inhaber oder Admin sie freigibt. Trennen Sie Domains mit Kommas. Subdomains brauchen einen eigenen Eintrag. Leer lassen, um alle Empfänger zu erlauben.",
+      "placeholder": "beispiel.de, partner.de",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert.",
+      "loading": "Wird geladen…",
+      "loadFailed": "Die Empfängerregel konnte nicht geladen werden.",
+      "saveFailed": "Die Empfängerregel konnte nicht gespeichert werden."
     }
   },
   "billing": {
@@ -842,7 +856,12 @@
       "businessFeature2": "10 Postfächer inklusive, $3 pro Monat für jedes weitere",
       "businessFeature3": "Unbegrenzt viele Mitglieder mit Rollen, ohne Aufpreis",
       "businessFeature4": "Admins geben zurückgehaltene Sendungen frei",
-      "businessFeature5": "Mehrere Workspaces in einem Abonnement"
+      "businessFeature5": "Mehrere Workspaces in einem Abonnement",
+      "businessSeatFeaturePrivate": "Private Postfächer für jede Person, bis zu 10 pro Person",
+      "businessSeatFeatureCompany": "10 unternehmensweite Postfächer inklusive, je $3 pro Monat für jedes weitere",
+      "businessSeatFeatureRoles": "Rollen für jede Person: Betrachter, Mitglied oder Admin",
+      "businessSeatFeatureRules": "Empfängerregeln für ausgehende E-Mails",
+      "businessSeatFeatureAudit": "Audit-Log mit CSV-Export"
     },
     "planIncludes": "Was Ihr Tarif enthält",
     "inboxesOne": "1 verbundenes Postfach",
@@ -1016,7 +1035,31 @@
     "colDuration": "Dauer",
     "statusSuccess": "Erfolgreich",
     "statusRateLimited": "Ratenlimit erreicht",
-    "statusError": "Fehler"
+    "statusError": "Fehler",
+    "colPerson": "Person",
+    "personUnknown": "Nicht erfasst",
+    "personFormer": "Ehemaliges Mitglied",
+    "exportCsv": "Als CSV exportieren",
+    "events": {
+      "title": "Änderungen im Team",
+      "sub": "Einladungen, Mitglieder, Rollen, Sichtbarkeit der Postfächer und die Empfängerregel.",
+      "loading": "Wird geladen…",
+      "empty": "Noch keine Änderungen im Team.",
+      "colWhen": "Wann",
+      "colEvent": "Änderung",
+      "colTarget": "Betrifft",
+      "anyRecipient": "Alle Empfänger",
+      "kinds": {
+        "invite_sent": "Einladung gesendet",
+        "invite_cancelled": "Einladung zurückgezogen",
+        "invite_accepted": "Einladung angenommen",
+        "member_removed": "Mitglied entfernt",
+        "member_left": "Mitglied ausgetreten",
+        "role_changed": "Rolle geändert",
+        "inbox_visibility_changed": "Sichtbarkeit des Postfachs geändert",
+        "recipient_rule_changed": "Empfängerregel geändert"
+      }
+    }
   },
   "members": {
     "title": "Mitglieder",

@@ -133,10 +133,13 @@ Deno.test("a held send goes to the approval queue (held, never dropped)", () => 
   for (const handler of ["executeSendEmail", "executeReplyToEmail", "executeForwardEmail", "executeSendDraft"]) {
     const start = SOURCE.indexOf(`async function ${handler}(`);
     const body = SOURCE.slice(start, SOURCE.indexOf("\nasync function ", start + 1));
+    // Since 2026-11-11 the recipient rule (recipient-domain-rule.ts) can hold
+    // the same send first; the brake's hold is still the fallback.
     assert(
-      /queueSendApproval\(\s*(?:brake\.hold \? brakeHeldInbox\(|heldInbox,)/.test(body),
+      /queueSendApproval\(\s*(?:brake\.hold \? brakeHeldInbox\(|heldInbox,|gatedSender,|rule\.hold\s*\?\s*recipientRuleHeldInbox\([^)]*\)\s*:\s*brake\.hold \? brakeHeldInbox\()/.test(body),
       `${handler} queues the send for approval while the inbox is held`,
     );
+    assert(/brake\.hold \? brakeHeldInbox\(/.test(body), `${handler} still holds on the fan-out brake`);
   }
   assert(
     /function brakeHeldInbox\(inbox: InboxRow, retryAt: string \| null\): InboxRow \{\s*return \{ \.\.\.inbox, send_approval_required: true, brakeHold: \{ reason: "fanout", retryAt \} \};/

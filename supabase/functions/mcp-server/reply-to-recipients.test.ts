@@ -99,6 +99,8 @@ Deno.test("Gmail reply draft: raw headers unavailable with a Reply-To creates no
 Deno.test("every reply path hands Reply-To to the shared rule", async () => {
   const index = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const calls = index.split("computeReplyRecipients({").slice(1).map((rest) => rest.slice(0, rest.indexOf("});")));
-  assertEquals(calls.length, 6, "a reply path was added or removed: update this count and check it reads Reply-To");
+  // 7 since 2026-11-11: the recipient rule (recipient-domain-rule.ts) derives a
+  // reply's recipients in executeReplyToEmail to check them against the rule.
+  assertEquals(calls.length, 7, "a reply path was added or removed: update this count and check it reads Reply-To");
   for (const call of calls) assert(/\breplyTo:/.test(call), `no replyTo in: ${call}`);
 });

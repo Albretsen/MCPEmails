@@ -3,61 +3,55 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { canManageWorkspace, fetchWorkspaceRole } from '@/lib/workspace/roles';
-
-/** Shape of a single activity_log row returned by the Supabase select. */
-interface ActivityLogRow {
-  id: string;
-  tool_name: string;
-  status: string;
-  error_code: string | null;
-  duration_ms: number | null;
-  created_at: string;
-  inboxes: { email_address: string; display_name: string | null } | null;
-  api_keys: { name: string; key_prefix: string } | null;
-}
+import {
+  auditCsvStream,
+  fetchAuditCallsPage,
+  fetchAuditEventsPage,
+  parseAuditDate,
+  parseAuditPaging,
+  type AuditFilters,
+  type AuditSource,
+} from '@/lib/security/audit-log';
 
 /**
- * GET /api/security/audit-log?page=0&pageSize=25
+ * GET /api/security/audit-log
  *
- * Returns a paginated slice of activity_log rows for the authenticated user's
- * workspace, joined with the related inbox and api_key display fields.
+ * The Security page's audit log for the caller's active workspace.
  *
  * Query parameters:
- *   page     : zero-based page index (default: 0)
- *   pageSize : rows per page, capped at 100 (default: 25)
+ *   source    'calls' (default): MCP tool calls, public.activity_log
+ *             'events': team changes, public.workspace_audit_events
+ *   page      zero-based page index (default 0)
+ *   pageSize  rows per page, capped at 100 (default 25)
+ *   since     ISO date or timestamp, inclusive (optional)
+ *   until     ISO date or timestamp, exclusive (optional)
+ *   format    'json' (default) or 'csv'
  *
- * Response shape:
- *   {
- *     entries: AuditEntry[];
- *     total: number;
- *     page: number;
- *     pageSize: number;
- *   }
+ * JSON: { entries, total, page, pageSize } for calls,
+ *       { events, total, page, pageSize } for events.
+ * CSV:  streamed, the same source and date filters, newest first, at most
+ *       50,000 rows (src/lib/security/audit-log.ts), formula-injection safe.
  *
- * AuditEntry fields:
- *   id, tool, inbox, apiKeyName, apiKeyPrefix, status, errorCode, durationMs, createdAt
+ * Who sees what (src/lib/security/audit-log.ts):
+ *   member        calls on inboxes they can see (RLS), no events, no CSV (403)
+ *   owner, admin  every call (service role, metadata only), events, CSV
  *
- * Security:
- *   - Requires a valid Supabase session cookie (dashboard auth).
- *   - RLS on activity_log enforces workspace isolation; this route also
- *     explicitly resolves the workspace from workspace_members for defence-in-depth.
- *   - Never returns encrypted credential columns from inboxes or api_keys.
+ * Every entry names the person who acted (activity_log.user_id,
+ * workspace_audit_events.actor_user_id) by email and name. Never message
+ * content, never credential columns.
  *
  * DELIBERATELY NOT bounded by the analytics retention window that
  * src/lib/analytics/retention.ts applies to the Usage page. An audit log is a
- * security artifact, not a usage metric, and truncating it by price tier
- * leaves the customers least equipped to detect a compromise with the least
- * evidence of one. The industry agrees: where an audit log is offered it is
- * gated as a whole feature and then kept generously (Linear 90 days, Vercel
- * 90, 1Password 365, GitHub indefinitely with the VIEW defaulted to three
- * months). If a window is ever added here it should be flat and generous, and
- * for a storage reason rather than a packaging one.
+ * security artifact, not a usage metric; what it can show is bounded by
+ * storage (the per-plan purge keeps every mailbox-changing call and every team
+ * change at least 90 days), not by this query.
+ *
+ * GET is the only exported method; any other is 405 from Next.js.
  */
 
-const MAX_PAGE_SIZE = 100;
-const DEFAULT_PAGE_SIZE = 25;
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<Response> {
   const supabase = await createClient();
 
   // 1. Authenticate.
@@ -65,95 +59,82 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
   // 2. Resolve workspace (cookie-aware; multi-workspace safe).
-  //    A bare `.single()` on workspace_members throws for users in 2+
-  //    workspaces, so use the shared active-workspace resolver instead.
   const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
-
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  // 3. Parse and validate query params.
+  // 3. Parse query.
   const url = new URL(request.url);
-  const rawPage = parseInt(url.searchParams.get('page') ?? '0', 10);
-  const rawPageSize = parseInt(
-    url.searchParams.get('pageSize') ?? String(DEFAULT_PAGE_SIZE),
-    10,
-  );
+  const rawSource = url.searchParams.get('source') ?? 'calls';
+  if (rawSource !== 'calls' && rawSource !== 'events') {
+    return NextResponse.json({ error: "source must be 'calls' or 'events'." }, { status: 400 });
+  }
+  const source: AuditSource = rawSource;
+  const format = url.searchParams.get('format') ?? 'json';
+  if (format !== 'json' && format !== 'csv') {
+    return NextResponse.json({ error: "format must be 'json' or 'csv'." }, { status: 400 });
+  }
+  const rawSince = url.searchParams.get('since');
+  const rawUntil = url.searchParams.get('until');
+  const filters: AuditFilters = { since: parseAuditDate(rawSince), until: parseAuditDate(rawUntil) };
+  if ((rawSince && !filters.since) || (rawUntil && !filters.until)) {
+    return NextResponse.json({ error: 'since and until must be dates.' }, { status: 400 });
+  }
+  const { page, pageSize } = parseAuditPaging(url);
 
-  const page = isNaN(rawPage) || rawPage < 0 ? 0 : rawPage;
-  const pageSize =
-    isNaN(rawPageSize) || rawPageSize < 1
-      ? DEFAULT_PAGE_SIZE
-      : Math.min(rawPageSize, MAX_PAGE_SIZE);
-
-  const from = page * pageSize;
-  const to = from + pageSize - 1;
-
-  // 3b. Which client reads. Since the Business privacy model (20261111120000)
-  //     RLS hides rows of other people's private inboxes. That is right for a
-  //     member. An owner or admin keeps every row: an audit row is metadata
-  //     (tool, status, timing, the inbox address they already see in the
-  //     inbox directory), never message content, and an audit log with holes
-  //     in it is no audit log. So they read through the service role, scoped
-  //     to the membership-checked workspace. Nothing else changes.
+  // 4. Role. Owners and admins read every row with the service role (an
+  //    audit row is metadata, and an audit log with holes in it is no audit
+  //    log); a member reads through RLS, which hides calls on other people's
+  //    private inboxes.
   const role = await fetchWorkspaceRole(supabase, workspaceId, user.id);
-  const reader = canManageWorkspace(role) ? createServiceRoleClient() : supabase;
+  if (!role) {
+    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+  }
+  const manager = canManageWorkspace(role);
+  if ((source === 'events' || format === 'csv') && !manager) {
+    return NextResponse.json(
+      { error: 'Only workspace owners and admins can see team changes and export the audit log.', error_code: 'insufficient_role' },
+      { status: 403 },
+    );
+  }
+  const service = createServiceRoleClient();
 
-  // 4. Fetch total count (no data, just the count header).
-  const { count: totalCount, error: countError } = await reader
-    .from('activity_log')
-    .select('id', { count: 'exact', head: true })
-    .eq('workspace_id', workspaceId);
-
-  if (countError) {
-    console.error('[audit-log] count query failed:', countError.message);
-    return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
+  // 5. CSV export: streamed, one page of rows in memory at a time.
+  if (format === 'csv') {
+    const day = new Date().toISOString().slice(0, 10);
+    const name = source === 'calls' ? 'tool-calls' : 'team-changes';
+    return new Response(auditCsvStream(service, workspaceId, source, filters), {
+      status: 200,
+      headers: {
+        'content-type': 'text/csv; charset=utf-8',
+        'content-disposition': `attachment; filename="mcpemails-audit-${name}-${day}.csv"`,
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+      },
+    });
   }
 
-  // 5. Fetch the requested page of rows with joined display fields.
-  const { data: rows, error: rowsError } = await reader
-    .from('activity_log')
-    .select(
-      'id, tool_name, status, error_code, duration_ms, created_at, inboxes(email_address, display_name), api_keys(name, key_prefix)',
-    )
-    .eq('workspace_id', workspaceId)
-    .order('created_at', { ascending: false })
-    .range(from, to);
-
-  if (rowsError) {
-    console.error('[audit-log] rows query failed:', rowsError.message);
-    return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
+  // 6. JSON pages.
+  if (source === 'events') {
+    const result = await fetchAuditEventsPage(service, workspaceId, { page, pageSize, filters });
+    if (!result.ok) {
+      console.error('[audit-log] events query failed:', result.error);
+      return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
+    }
+    return NextResponse.json({ events: result.events, total: result.total, page, pageSize });
   }
 
-  // 6. Shape the response: no secrets, no raw credentials.
-  const entries = ((rows ?? []) as ActivityLogRow[]).map((row) => {
-    const inboxRel = row.inboxes;
-    const keyRel = row.api_keys;
-
-    return {
-      id: row.id,
-      tool: row.tool_name,
-      inbox: inboxRel?.display_name ?? inboxRel?.email_address ?? null,
-      apiKeyName: keyRel?.name ?? null,
-      apiKeyPrefix: keyRel?.key_prefix ?? null,
-      status: row.status,
-      errorCode: row.error_code ?? null,
-      durationMs: row.duration_ms ?? null,
-      createdAt: row.created_at,
-    };
-  });
-
-  return NextResponse.json({
-    entries,
-    total: totalCount ?? 0,
-    page,
-    pageSize,
-  });
+  const reader = manager ? service : supabase;
+  const result = await fetchAuditCallsPage(reader, service, workspaceId, { page, pageSize, filters });
+  if (!result.ok) {
+    console.error('[audit-log] calls query failed:', result.error);
+    return NextResponse.json({ error: 'Failed to fetch audit log.' }, { status: 500 });
+  }
+  return NextResponse.json({ entries: result.entries, total: result.total, page, pageSize });
 }

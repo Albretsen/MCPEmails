@@ -425,6 +425,8 @@
     "capCtaBusiness": "Mejorar a Business, 39 $/mes",
     "capBodyProCapFounder": "Pro conecta 10 buzones. Business incluye 10, con miembros ilimitados sin coste extra.",
     "capCtaBusinessFounder": "Mejorar a Business, {price} $/mes",
+    "capBodyProCapSeat": "Pro conecta 10 buzones. En Business cada persona conecta hasta 10 propios, en privado, y se incluyen 10 buzones compartidos con toda la empresa; después, $3 al mes cada uno. Se factura por cada persona que conecta un buzón, con un mínimo de 2 personas.",
+    "capCtaBusinessSeat": "Mejorar a Business",
     "visibility": {
       "label": "Quién puede usarlo",
       "private": "Privado",
@@ -775,6 +777,18 @@
         "invalid_inbox": "Esa bandeja de entrada no pertenece a este espacio de trabajo.",
         "invalid_timezone": "Elige una zona horaria de la lista."
       }
+    },
+    "recipientRule": {
+      "advanced": "Avanzado",
+      "title": "Dominios de destinatario permitidos",
+      "help": "Los correos a cualquier persona fuera de estos dominios esperan a que un propietario o administrador los apruebe. Separa los dominios con comas. Cada subdominio necesita su propia entrada. Déjalo vacío para permitir cualquier destinatario.",
+      "placeholder": "ejemplo.com, socio.com",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Guardado.",
+      "loading": "Cargando…",
+      "loadFailed": "No se pudo cargar la regla de destinatarios.",
+      "saveFailed": "No se pudo guardar la regla de destinatarios."
     }
   },
   "billing": {
@@ -842,7 +856,12 @@
       "businessFeature2": "10 buzones incluidos, 3 $ al mes por cada uno adicional",
       "businessFeature3": "Miembros ilimitados con roles, sin coste extra",
       "businessFeature4": "Los administradores aprueban los envíos retenidos",
-      "businessFeature5": "Varios espacios de trabajo con una sola suscripción"
+      "businessFeature5": "Varios espacios de trabajo con una sola suscripción",
+      "businessSeatFeaturePrivate": "Buzones privados para cada persona, hasta 10 cada una",
+      "businessSeatFeatureCompany": "10 buzones compartidos con toda la empresa incluidos, $3 al mes por cada uno adicional",
+      "businessSeatFeatureRoles": "Roles para cada persona: lector, miembro o administrador",
+      "businessSeatFeatureRules": "Reglas de destinatarios para el correo saliente",
+      "businessSeatFeatureAudit": "Registro de auditoría con exportación CSV"
     },
     "planIncludes": "Qué incluye tu plan",
     "inboxesOne": "1 bandeja conectada",
@@ -1016,7 +1035,31 @@
     "colDuration": "Duración",
     "statusSuccess": "Éxito",
     "statusRateLimited": "Tasa limitada",
-    "statusError": "Error"
+    "statusError": "Error",
+    "colPerson": "Persona",
+    "personUnknown": "Sin registrar",
+    "personFormer": "Antiguo miembro",
+    "exportCsv": "Exportar CSV",
+    "events": {
+      "title": "Cambios en el equipo",
+      "sub": "Invitaciones, miembros, roles, visibilidad de los buzones y la regla de destinatarios.",
+      "loading": "Cargando…",
+      "empty": "Todavía no hay cambios en el equipo.",
+      "colWhen": "Cuándo",
+      "colEvent": "Cambio",
+      "colTarget": "Afecta a",
+      "anyRecipient": "Cualquier destinatario",
+      "kinds": {
+        "invite_sent": "Invitación enviada",
+        "invite_cancelled": "Invitación cancelada",
+        "invite_accepted": "Invitación aceptada",
+        "member_removed": "Miembro eliminado",
+        "member_left": "Miembro salió",
+        "role_changed": "Rol cambiado",
+        "inbox_visibility_changed": "Visibilidad del buzón cambiada",
+        "recipient_rule_changed": "Regla de destinatarios cambiada"
+      }
+    }
   },
   "members": {
     "title": "Miembros",

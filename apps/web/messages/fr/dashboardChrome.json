@@ -544,6 +544,11 @@
     },
     "businessCapBodyFounder": "Pro connecte 10 boîtes. Business en inclut 10, avec des membres illimités sans surcoût.",
     "businessCapCtaFounder": "Passer à Business, {price} $/mois",
+    "businessCapBodySeat": "Pro connecte 10 boîtes. Avec Business, chaque personne connecte jusqu'à 10 boîtes à elle, en privé, et 10 boîtes partagées avec toute l'entreprise sont incluses, puis 3 $ par mois chacune. Facturé pour chaque personne qui connecte une boîte, 2 personnes minimum.",
+    "businessCapCtaSeat": "Passer à Business",
+    "businessSeatFeaturePrivate": "Des boîtes privées pour chaque personne, jusqu'à 10 chacune",
+    "businessSeatFeatureCompany": "10 boîtes partagées avec toute l'entreprise incluses, 3 $ par mois pour chaque boîte en plus",
+    "businessSeatFeatureRules": "Règles de destinataires pour le courrier sortant",
     "errorYahooJapanShort": "La messagerie Yahoo! JAPAN est un service distinct de Yahoo Mail, sans mots de passe d'application. Revenez en arrière et choisissez IMAP / SMTP."
   },
   "commandPalette": {

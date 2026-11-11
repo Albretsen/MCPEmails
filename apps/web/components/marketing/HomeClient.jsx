@@ -18,9 +18,13 @@ const TWEAK_DEFAULTS = {
  * @param {{
  *   stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap,
  *   eurEnabled?: boolean,
+ *   businessSeat?: import('@/lib/billing/business-seat-copy').BusinessSeatPageCopy | null,
  * }} props
+ *
+ * `businessSeat` is set only while Business is billed per person
+ * (`business_seat_pricing` on); null renders the Business card as before.
  */
-export default function HomeClient({ stripePrices, eurEnabled = false }) {
+export default function HomeClient({ stripePrices, eurEnabled = false, businessSeat = null }) {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   // 'eur' only for an EU visitor while STRIPE_EUR_PRICES is on; see the hook.
   const currency = useDisplayCurrency(eurEnabled);
@@ -62,7 +66,7 @@ export default function HomeClient({ stripePrices, eurEnabled = false }) {
         <Examples />
         <Quote />
         <Reviews />
-        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} currency={currency} />
+        <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} currency={currency} businessSeat={businessSeat} />
         <Faq currency={currency} />
       </main>
       <Footer />
