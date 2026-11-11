@@ -133,7 +133,7 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
   },
 });
 nodeMock.module('@/lib/stripe/customer', {
-  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_seats' }) },
+  namedExports: { getOrCreateStripeCustomer: async () => ({ customerId: 'cus_seats' }), discardNewStripeCustomer: async () => {} },
 });
 nodeMock.module('@/lib/stripe/seasonal-offer-server', {
   namedExports: { getActiveSeasonalOffers: async () => ({}) },

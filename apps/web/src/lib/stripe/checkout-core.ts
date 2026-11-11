@@ -6,7 +6,7 @@ import type { FunnelEntryPoint } from '@/lib/analytics/product-funnel';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { stripe } from '@/lib/stripe/client';
-import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
+import { discardNewStripeCustomer, getOrCreateStripeCustomer } from '@/lib/stripe/customer';
 import { adaptivePricingParam } from '@/lib/stripe/adaptive-pricing';
 import {
   checkoutCurrencyFor,
@@ -1663,6 +1663,9 @@ async function checkoutFor(
   // ── 5. Get or create the single Stripe Customer for this user ─────────────
   const ownerEmail = user.email ?? '';
   let customerId: string;
+  // True when this request created the customer: a session that then fails
+  // discards it, so a failed checkout leaves no empty customer in Stripe.
+  let customerCreated = false;
 
   try {
     const result = await getOrCreateStripeCustomer({
@@ -1671,6 +1674,7 @@ async function checkoutFor(
       displayName: workspace.display_name,
     });
     customerId = result.customerId;
+    customerCreated = result.created;
   } catch (err) {
     console.error('[checkout] getOrCreateStripeCustomer failed:', err);
     await recordAttempt('stripe_error');
@@ -1901,6 +1905,7 @@ async function checkoutFor(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[checkout] stripe.checkout.sessions.create failed:', message);
+    if (customerCreated) await discardNewStripeCustomer(user.id, customerId);
     await recordAttempt('stripe_error');
     return fail(
       'stripe_session_failed',
@@ -2179,14 +2184,15 @@ export async function runPassCheckout(input: {
   }
 
   let customerId: string;
+  let customerCreated = false;
   try {
-    customerId = (
-      await getOrCreateStripeCustomer({
-        userId: user.id,
-        ownerEmail: user.email ?? '',
-        displayName: workspace.display_name,
-      })
-    ).customerId;
+    const result = await getOrCreateStripeCustomer({
+      userId: user.id,
+      ownerEmail: user.email ?? '',
+      displayName: workspace.display_name,
+    });
+    customerId = result.customerId;
+    customerCreated = result.created;
   } catch (err) {
     console.error('[checkout] pass: getOrCreateStripeCustomer failed:', err);
     await record('stripe_error');
@@ -2249,6 +2255,7 @@ export async function runPassCheckout(input: {
       '[checkout] pass: stripe.checkout.sessions.create failed:',
       err instanceof Error ? err.message : String(err),
     );
+    if (customerCreated) await discardNewStripeCustomer(user.id, customerId);
     await record('stripe_error');
     return fail('stripe_session_failed', 500, 'Failed to create checkout session. Please try again.');
   }

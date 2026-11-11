@@ -253,9 +253,17 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
   },
 });
 
+/** Orphan clean-up: whether the customer is new this request, and what was discarded. */
+let customerCreatedThisRequest = false;
+let sessionCreateThrows = false;
+const discardedCustomers: Array<[string, string]> = [];
+
 nodeMock.module('@/lib/stripe/customer', {
   namedExports: {
-    getOrCreateStripeCustomer: async () => ({ customerId: 'cus_test_grandfathered' }),
+    getOrCreateStripeCustomer: async () => ({ customerId: 'cus_test_grandfathered', created: customerCreatedThisRequest }),
+    discardNewStripeCustomer: async (userId: string, customerId: string) => {
+      discardedCustomers.push([userId, customerId]);
+    },
   },
 });
 
@@ -310,6 +318,7 @@ nodeMock.module('@/lib/stripe/client', {
       checkout: {
         sessions: {
           create: async (params: Record<string, unknown>) => {
+            if (sessionCreateThrows) throw new Error('stripe_session_down');
             sessionsCreated.push(params);
             return { url: SESSION_URL, id: 'cs_test_core_session' };
           },
@@ -2839,4 +2848,48 @@ test('a paused subscriber cannot open a second subscription', async () => {
   });
   assert.equal(outcome.kind === 'error' && outcome.reason, 'plan_change_pending');
   assert.equal(sessionsCreated.length, 0);
+});
+
+// ---------------------------------------------------------------------------
+// A failed checkout leaves no empty Stripe customer behind.
+// ---------------------------------------------------------------------------
+
+test('a session that fails discards the customer this request created', async () => {
+  customerCreatedThisRequest = true;
+  sessionCreateThrows = true;
+  discardedCustomers.length = 0;
+  try {
+    const { outcome } = await checkout({ planId: 'personal', entitlement: GRANDFATHERED });
+    assert.equal(outcome.kind, 'error');
+    assert.equal(discardedCustomers.length, 1);
+    assert.equal(discardedCustomers[0][1], 'cus_test_grandfathered');
+  } finally {
+    customerCreatedThisRequest = false;
+    sessionCreateThrows = false;
+  }
+});
+
+test('a session that fails keeps a customer that existed before the request', async () => {
+  customerCreatedThisRequest = false;
+  sessionCreateThrows = true;
+  discardedCustomers.length = 0;
+  try {
+    const { outcome } = await checkout({ planId: 'personal', entitlement: GRANDFATHERED });
+    assert.equal(outcome.kind, 'error');
+    assert.equal(discardedCustomers.length, 0);
+  } finally {
+    sessionCreateThrows = false;
+  }
+});
+
+test('a session that succeeds keeps the new customer', async () => {
+  customerCreatedThisRequest = true;
+  discardedCustomers.length = 0;
+  try {
+    const { outcome } = await checkout({ planId: 'personal', entitlement: GRANDFATHERED });
+    assert.equal(outcome.kind, 'checkout');
+    assert.equal(discardedCustomers.length, 0);
+  } finally {
+    customerCreatedThisRequest = false;
+  }
 });
