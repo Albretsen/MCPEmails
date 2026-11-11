@@ -78,7 +78,7 @@ export type PricingSurfaceCategory = 'pricing_page' | 'dashboard_billing';
  */
 export type PassFunnelCategory =
   | 'personal_pass_3m'
-  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder'
+  | 'checkout_return' | 'cap_banner' | 'paywall_email_3' | 'pass_reminder' | 'free_reset_email'
   | 'pass';
 
 /** pause_resumed: who ended it. retention_option_clicked: which option. */
@@ -165,9 +165,17 @@ export type ProductFunnelEvent = {
     | 'second_inbox_prompt_shown' | 'second_inbox_prompt_clicked'
     | 'plan_summary_shown' | 'plan_summary_dismissed' | 'plan_summary_clicked'
     | 'usage_meter_shown' | 'grace_end_note_shown'
+    // "How did you hear about MCPEmails?" (20261111150000,
+    // src/lib/onboarding/heard-about.mjs). Once per workspace, category
+    // surface_overview; the answer itself is on workspaces.heard_about.
+    | 'heard_about_answered' | 'heard_about_dismissed'
     // Connector-first consent (20261026232117, src/lib/onboarding/authorize-funnel.ts).
     // At most one of each per workspace; category = the AI app's chip id.
-    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped';
+    | 'authorize_signup_redirect' | 'authorize_inbox_step_viewed' | 'authorize_inbox_connected' | 'authorize_skipped'
+    // Broken-inbox alert (20261111140000, src/lib/retention/inbox-alert.ts).
+    // sent/holdout carry the phase (alert_1 | alert_2); reconnected the arm
+    // (alert | holdout), written for both arms.
+    | 'inbox_alert_sent' | 'inbox_alert_holdout' | 'inbox_reconnected';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'
@@ -178,7 +186,8 @@ export type ProductFunnelEvent = {
     | PlanChangeCategory | CancelReason | RetentionOptionCategory
     | 'claude_code' | OnboardingStepCategory | OnboardingAssistCategory
     | 'surface_onboarding' | 'surface_overview'
-    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100';
+    | 'level_50' | 'level_80' | 'level_100' | 'chat_80' | 'chat_100'
+    | 'alert_1' | 'alert_2' | 'alert' | 'holdout';
   errorCategory?:
     | 'auth_failed' | 'validation_failed' | 'provider_denied' | 'token_exchange_failed'
     | 'plan_limit' | 'conflict' | 'persistence_failed' | 'unknown'

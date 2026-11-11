@@ -124,6 +124,25 @@
     "waitingLive": "第一次调用到达时，本页会自动更新。",
     "waitingStopped": "仍未收到调用。试过提示词后请刷新本页。"
   },
+  "heardAbout": {
+    "title": "您是如何了解到 MCPEmails 的？",
+    "sub": "点一下，帮助我们了解大家从哪里找到我们。可选。",
+    "dismiss": "关闭",
+    "send": "发送",
+    "otherLabel": "您从哪里了解到 MCPEmails？",
+    "otherPlaceholder": "告诉我们来源（可选）",
+    "options": {
+      "chatgpt": "ChatGPT 的回答",
+      "claude": "Claude 的回答",
+      "gemini": "Gemini 或 Google AI 的回答",
+      "google_search": "Google 搜索",
+      "colleague": "同事或朋友",
+      "directory": "应用目录或 MCP 列表",
+      "video": "YouTube 或视频",
+      "forum": "Reddit 或论坛",
+      "other": "其他"
+    }
+  },
   "firstWeek": {
     "title": "你的第一周",
     "sub": "几个小步骤，让 MCPEmails 融入你的日常。",

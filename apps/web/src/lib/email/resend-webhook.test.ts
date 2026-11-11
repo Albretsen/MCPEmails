@@ -271,6 +271,7 @@ test('a suppressed owner stops the paywall follow-up (ineligibility -> unsubscri
       workspaceId: 'ws1',
       firstPaywallAt: new Date(firstMs).toISOString(),
       paywallKind: 'inbox_cap',
+      ownerCountries: [],
       workspace: { ownerId: 'u1', plan: 'free', deletedAt: null },
       owner: {
         id: 'u1',
