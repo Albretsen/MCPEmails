@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "https://www.arsys.es/blog/configurar-correo-arsys-en-gmail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.arsys.es/soporte/correo/correo-electronico-datos-configuracion",
+    "usernameForm": "Votre adresse complète, nombre@tudominio.es. Arsys indique l'adresse e-mail elle-même comme identifiant, et le mot de passe est celui défini à la création de la boîte.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Serveur MCP Arsys : connectez le mail Arsys à Claude",
+    "description": "Serveur MCP pour le mail Arsys. Connectez les boîtes de votre domaine (info@, facturacion@) à Claude, ChatGPT et Cursor en IMAP sur imap.serviciodecorreo.es:993 avec le mot de passe de la boîte."
+  },
+  "hero": {
+    "eyebrow": "Mail Arsys + IA",
+    "titleLine1": "Serveur MCP pour le mail Arsys :",
+    "titleLine2": "toutes les boîtes de votre domaine, dans Claude et ChatGPT",
+    "lead": "Vous avez info@, facturacion@ et votre propre nom sur un domaine hébergé chez Arsys ? Connectez chaque boîte à un même espace de travail et votre agent IA travaille sur toutes. Lire, chercher, envoyer, répondre, planifier et classer le courrier en IMAP, avec le mot de passe de la boîte et non votre identifiant client Arsys.",
+    "answer": "Claude ne peut pas atteindre seul une boîte Arsys. MCPEmails est un serveur MCP hébergé qui la connecte en IMAP sur imap.serviciodecorreo.es, port 993, en s'identifiant avec l'adresse complète et le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, chercher, envoyer et classer le courrier. Le centre de support d'Arsys donne exactement ces paramètres pour la configuration manuelle : imap.serviciodecorreo.es sur 993 et smtp.serviciodecorreo.es sur 465, tous deux avec SSL/TLS obligatoire, l'adresse comme identifiant et le mot de passe défini à la création de la boîte. Pas de mot de passe d'application, rien à activer. Une boîte est gratuite, pour toujours.",
+    "meta0": "Première boîte gratuite, des formules pour les autres",
+    "meta1": "Mot de passe de la boîte, rien à activer",
+    "meta2": "Courrier lu en direct, jamais stocké"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes sur votre domaine Arsys ?",
+    "label": "Voir ce que chaque formule connecte",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Comment Arsys se connecte : les hôtes serviciodecorreo.es, IMAP sur 993 et SMTP sur 465",
+    "body": "Arsys fait tourner ses boîtes sur une plateforme dotée de son propre domaine, serviciodecorreo.es, ce qui explique que le nom du serveur ne dise pas Arsys. Son centre de support donne les paramètres manuels : le serveur entrant <code>imap.serviciodecorreo.es</code> sur le port 993 et le serveur sortant <code>smtp.serviciodecorreo.es</code> sur le port 465, tous deux avec connexion SSL/TLS obligatoire, l'identifiant étant votre adresse e-mail et le mot de passe celui établi à la création de la boîte. Les deux hôtes ont répondu à une connexion TLS réelle sous un certificat pour <code>*.serviciodecorreo.es</code> : une courte bannière <code>IMAP4 ready</code> annonçant UIDPLUS, IDLE, CONDSTORE et SORT, et un salut SMTP avec PLAIN et LOGIN et une limite de message de 51 Mo ; le port 587 avec STARTTLS fonctionne aussi pour l'envoi. Le guide Gmail d'Arsys mentionne en outre mail.arsys.es et smtp.arsys.es, mais mail.arsys.es a refusé la connexion sur le port 993 lors de notre test ; ce sont donc les noms serviciodecorreo.es du centre de support que MCPEmails utilise. Si vous oubliez le mot de passe, Arsys indique de le mettre à jour sous <b>Cambio de contraseña</b> dans la section <b>Buzones</b> du Panel de Control."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte MCPEmails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. La formule gratuite connecte une boîte, pour toujours, sans demander de carte."
+    },
+    {
+      "h": "Retrouvez ou définissez le mot de passe de la boîte dans le Panel de Control",
+      "p": "Connectez-vous au Panel de Control d'Arsys et ouvrez <b>Buzones</b>. Chaque adresse y a une option <b>Cambio de contraseña</b> ; ce mot de passe, défini à la création de la boîte ou modifié depuis, est celui qu'IMAP vérifie. Votre identifiant client Arsys est un autre identifiant et le serveur de messagerie le refuse."
+    },
+    {
+      "h": "Saisissez l'adresse et le mot de passe dans MCPEmails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple info@tudominio.es, avec le mot de passe de la boîte. Les hôtes <code>imap.serviciodecorreo.es</code> et <code>smtp.serviciodecorreo.es</code> sont préremplis avec 993 et 465, tous deux en SSL/TLS, et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le serveur s'appelle serviciodecorreo.es, pas arsys.es",
+      "p": "On cherche un hôte Arsys et on trouve deux jeux de noms. La page de paramètres actuelle du centre de support ne liste que <code>imap.serviciodecorreo.es</code> et <code>smtp.serviciodecorreo.es</code> ; un article plus ancien du blog Arsys sur Gmail nomme aussi mail.arsys.es et smtp.arsys.es. Lors de notre test, mail.arsys.es a refusé IMAP sur 993 tandis que les hôtes serviciodecorreo.es ont répondu avec un certificat valide. Utilisez les noms serviciodecorreo.es, et si un logiciel de messagerie s'est autoconfiguré sur ceux d'arsys.es et a cessé de fonctionner, voilà pourquoi."
+    },
+    {
+      "h": "Changez le mot de passe dans Buzones, pas dans l'espace client",
+      "p": "La page de paramètres d'Arsys est explicite : le mot de passe est celui défini à l'enregistrement de la boîte, et en cas d'oubli vous le mettez à jour sous Cambio de contraseña dans la section Buzones du Panel de Control. Le mot de passe de votre compte client Arsys vit ailleurs et n'authentifie jamais IMAP. Après un changement, Arsys rappelle de le mettre à jour sur tous les appareils et logiciels, MCPEmails compris."
+    },
+    {
+      "h": "AUTH=PLAIN seulement en IMAP, pas de MOVE ni de SPECIAL-USE",
+      "p": "Le serveur IMAP n'annonce que <code>AUTH=PLAIN</code>, ce qu'utilise MCPEmails, tandis que SMTP accepte PLAIN et LOGIN. Il propose <code>UIDPLUS</code>, un message copié signale donc son nouvel identifiant, mais ni <code>MOVE</code> ni <code>SPECIAL-USE</code> : classer un message s'exécute comme une copie, une mise à jour de drapeau et un expunge, et les dossiers envoyés, brouillons et corbeille sont reconnus par leur nom. Sur une boîte en espagnol ils s'appellent souvent Enviados, Borradores et Papelera ; nommez le dossier dans votre instruction si l'agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP annonce une taille maximale de message d'environ 51 Mo. Un transfert portant des pièces jointes plus lourdes est refusé à l'envoi.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut exister brièvement dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le mail Arsys ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Arsys intégré. Pointer un serveur MCP comme MCPEmails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et classement, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP d'Arsys ?",
+      "a": "IMAP est imap.serviciodecorreo.es sur le port 993 avec SSL/TLS. SMTP est smtp.serviciodecorreo.es sur le port 465 avec SSL/TLS, ou 587 avec STARTTLS, authentification requise. L'identifiant est votre adresse complète et le mot de passe celui de la boîte. Les deux hôtes ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Arsys est-il refusé dans un logiciel de messagerie ?",
+      "a": "Le plus souvent parce qu'il s'agit du mot de passe de l'espace client Arsys et non de celui de la boîte. IMAP vérifie le mot de passe défini sur chaque adresse, que vous pouvez réinitialiser sous Cambio de contraseña dans la section Buzones du Panel de Control. L'autre cause fréquente est un client autoconfiguré sur mail.arsys.es ; utilisez imap.serviciodecorreo.es."
+    },
+    {
+      "q": "Arsys exige-t-il un mot de passe d'application ?",
+      "a": "Non. Arsys n'a pas de dispositif de mots de passe spécifiques aux applications. Le mot de passe de la boîte authentifie IMAP comme SMTP."
+    },
+    {
+      "q": "Mon courrier Arsys est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont lus en direct chez Arsys en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA vos boîtes Arsys",
+    "sub": "Connectez le mail Arsys en quelques minutes. Une boîte gratuite pour toujours, sans carte."
+  }
+}

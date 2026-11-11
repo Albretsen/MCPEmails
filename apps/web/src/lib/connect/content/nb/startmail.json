@@ -1,14 +1,13 @@
 {
   "_sources": [
-    "https://www.startmail.com/features/",
-    "https://support.startmail.com/",
-    "https://www.getmailbird.com/best-startmail-app-macos/",
-    "https://discussions.apple.com/thread/256239542"
+    "https://support.startmail.com/hc/en-us/articles/360006536217",
+    "https://support.startmail.com/hc/en-us/articles/360007448378",
+    "https://www.startmail.com/features/"
   ],
   "auth": {
     "method": "app-password",
     "label": "Passord for klarert enhet",
-    "helpUrl": "https://support.startmail.com/",
+    "helpUrl": "https://support.startmail.com/hc/en-us/articles/360006536217",
     "usernameForm": "Hele StartMail-adressen din, også på eget domene. Brukernavnet er aldri bare den lokale delen.",
     "status": "active"
   },
@@ -37,7 +36,7 @@
     },
     {
       "h": "Legg til en enhet i StartMail og kopier det genererte passordet",
-      "p": "Logg inn i StartMail i en nettleser, åpne <b>Settings</b>, og gå til delen <b>trusted devices</b>, der IMAP-tilgang administreres. Velg <b>Add device</b> og gi den et navn etter denne tilkoblingen. StartMail genererer et tilfeldig passord og viser det én gang, så kopier det før du lukker dialogen. Den delen styrer også IMAP-tilgangen for kontoen, så hvis en innlogging avvises før du i det hele tatt har brukt passordet, sjekk at IMAP er slått på der."
+      "p": "Logg inn i StartMail i en nettleser, åpne <b>Settings</b> og gå til <b>Trusted devices/IMAP</b>. Er dette den første enheten din, slår du først på IMAP-tilgang der. Velg <b>ADD DEVICE</b>, gi enheten et navn, skriv inn kontopassordet ditt og bekreft. StartMail viser så tilkoblingsverdiene og enhetspassordet, og sier at de vises bare én gang, så kopier passordet før du lukker dialogen."
     },
     {
       "h": "Legg til postkassen i MCPEmails",
@@ -86,7 +85,7 @@
     },
     {
       "q": "Hvor genererer jeg et IMAP-passord for StartMail?",
-      "a": "I StartMails webgrensesnitt åpner du Settings og går til delen trusted devices, der IMAP-tilgang administreres. Velg å legge til en enhet, gi den et navn, og StartMail genererer et tilfeldig passord på rundt seksten tegn og viser det én gang. Kopier det med en gang; det finnes ingen måte å lese det igjen på, bare å slette enheten og legge til en ny."
+      "a": "I StartMails webgrensesnitt åpner du Settings og går til Trusted devices/IMAP. Slå på IMAP-tilgang hvis dette er den første enheten din, velg ADD DEVICE, gi den et navn og skriv inn kontopassordet ditt. StartMail genererer et enhetspassord på 16 tegn og viser det én gang; kopier det med en gang, for den eneste veien tilbake er å fjerne enheten og legge til en ny. En konto kan ha opptil fem IMAP-oppsett."
     },
     {
       "q": "Kan AI-en min lese de PGP-krypterte StartMail-meldingene mine?",

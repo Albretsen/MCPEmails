@@ -255,8 +255,11 @@ test('every card the registry can name is a card the modal has', async (t) => {
   assert.ok(source.includes('...Object.values(IMAP_PRESETS).map(p => ({\n    k: p.service,'));
 });
 
+// `frontier` is the one page still parked in a held wave (release.mjs); it
+// stands in for "a real slug the gate refuses". It was `startmail` until that
+// cohort was reviewed and released on 2026-11-11.
 test('an unknown, unreleased or unsupported provider changes nothing and is still spent', async (t) => {
-  for (const slug of ['not-a-provider', 'startmail', 'hey', 'proton', 'tutanota']) {
+  for (const slug of ['not-a-provider', 'frontier', 'hey', 'proton', 'tutanota']) {
     const view = await renderDashboard(t, { url: `/dashboard?provider=${slug}`, stored: slug });
     await settle();
     assert.equal(modalOf(view), null, `${slug} opened the modal`);
@@ -267,7 +270,7 @@ test('an unknown, unreleased or unsupported provider changes nothing and is stil
 });
 
 test('on a first run an unusable hint still gets the ordinary first-run modal', async (t) => {
-  for (const slug of ['not-a-provider', 'proton', 'startmail']) {
+  for (const slug of ['not-a-provider', 'proton', 'frontier']) {
     const view = await renderDashboard(t, { url: `/dashboard?firstrun=1&provider=${slug}` });
     await waitForModal(view);
     assert.equal(checkedCard(view), 'IMAP / SMTP', slug);

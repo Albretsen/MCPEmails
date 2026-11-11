@@ -246,6 +246,15 @@ const ROWS: RowCase[] = [
     steps: ['connect.fix.interia.program', 'connect.fix.interia.twoStep'], links: ['interia_params'],
   },
   { name: 'Interia, IMAP disabled', input: { email: 'a@poczta.fm', imapHost: 'poczta.interia.pl', reason: 'imap_disabled' }, row: 'interia_imap_disabled', provider: 'interia', steps: ['connect.fix.interia.program'] },
+  // Web hosts (2026-11-11): the mailbox password with the full address, and the vendor page.
+  { name: 'cyber_Folks on the customer\'s own server number', input: { email: 'a@firma.example', imapHost: 's20.cyber-folks.pl' }, row: 'cyber_folks_password_rejected', provider: 'cyber_folks', steps: ['connect.fix.mailbox.password', 'connect.fix.fullAddress'], links: ['cyber_folks_help'] },
+  { name: 'TransIP', input: { email: 'a@bedrijf.example', imapHost: 'imap.transip.email' }, row: 'transip_password_rejected', provider: 'transip', links: ['transip_help'] },
+  { name: 'Combell Basic mailbox', input: { email: 'a@bedrijf.example', imapHost: 'imap.mailprotect.be' }, row: 'combell_password_rejected', provider: 'combell', links: ['combell_help'] },
+  { name: 'Websupport points at the GeoIP article', input: { email: 'a@firma.example', imapHost: 'imap.m1.websupport.sk' }, row: 'websupport_password_rejected', provider: 'websupport', links: ['websupport_geo'] },
+  { name: 'Websupport.cz is Websupport', input: { email: 'a@firma.example', imapHost: 'imap.websupport.cz' }, row: 'websupport_password_rejected', provider: 'websupport' },
+  { name: 'REG.RU hosting mail', input: { email: 'a@firma.example', imapHost: 'mail.hosting.reg.ru' }, row: 'reg_ru_password_rejected', provider: 'reg_ru', links: ['reg_ru_help'] },
+  { name: 'StackMail, found by host or by the stackmail.com address', input: { email: 'a@stackmail.com', imapHost: 'imap.stackmail.com' }, row: 'stackmail_password_rejected', provider: 'stackmail', links: ['stackmail_help'] },
+  { name: 'Arsys on serviciodecorreo.es', input: { email: 'a@empresa.example', imapHost: 'imap.serviciodecorreo.es' }, row: 'arsys_password_rejected', provider: 'arsys', links: ['arsys_help'] },
   // Microsoft 365 on the generic form
   {
     name: 'Office 365 host: switch to the Microsoft sign-in card',

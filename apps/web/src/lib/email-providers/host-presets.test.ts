@@ -250,6 +250,38 @@ test('Italian, Czech and Polish addresses resolve from the address, with the doc
   assert.equal(prefillFromEmail('a@pec.it')?.requiresAppPassword, false);
 });
 
+test('the web hosts added on 2026-11-11 are recognised from their documented hosts', () => {
+  // cyber_Folks has no shared host: any sNN.cyber-folks.pl is the customer's
+  // own server, and the lookup tool shows it back unchanged (CLUSTER_PRESETS).
+  const cases: [string, string, string][] = [
+    ['s1.cyber-folks.pl', 'cyber-folks', 's1.cyber-folks.pl'],
+    ['s20.cyber-folks.pl', 'cyber-folks', 's1.cyber-folks.pl'],
+    ['imap.transip.email', 'transip', 'imap.transip.email'],
+    ['smtp.transip.email', 'transip', 'imap.transip.email'],
+    ['imap.mailprotect.be', 'combell', 'imap.mailprotect.be'],
+    ['smtp-auth.mailprotect.be', 'combell', 'imap.mailprotect.be'],
+    ['imap.m1.websupport.sk', 'websupport', 'imap.m1.websupport.sk'],
+    ['smtp.m1.websupport.sk', 'websupport', 'imap.m1.websupport.sk'],
+    ['imap.websupport.cz', 'websupport-cz', 'imap.websupport.cz'],
+    ['mail.hosting.reg.ru', 'reg-ru', 'mail.hosting.reg.ru'],
+    ['imap.stackmail.com', 'stackmail', 'imap.stackmail.com'],
+    ['imap.serviciodecorreo.es', 'arsys', 'imap.serviciodecorreo.es'],
+  ];
+  for (const [host, id, imapHost] of cases) {
+    const preset = findMailHostPreset({ host });
+    assert.equal(preset?.id, id, host);
+    assert.equal(preset?.imapHost, imapHost, host);
+  }
+  // Every one of them takes the mailbox password: no app-password flag.
+  for (const id of ['cyber-folks', 'transip', 'combell', 'websupport', 'websupport-cz', 'reg-ru', 'stackmail', 'arsys']) {
+    assert.equal(MAIL_HOST_PRESETS.find((p) => p.id === id)?.requiresAppPassword, undefined, id);
+  }
+  // Only StackMail has addresses on the platform's own domain; a custom-domain
+  // address on any of the others is found through its host, never guessed.
+  assert.equal(prefillFromEmail('a@stackmail.com')?.imapHost, 'imap.stackmail.com');
+  assert.equal(prefillFromEmail('a@bedrijf.example'), null);
+});
+
 test('custom domains are recognised from the MX the host publishes', () => {
   const cases: [string, string, string][] = [
     ['mx.core.locaweb.com.br', 'locaweb', 'email-ssl.com.br'],

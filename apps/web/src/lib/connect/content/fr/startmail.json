@@ -1,14 +1,13 @@
 {
   "_sources": [
-    "https://www.startmail.com/features/",
-    "https://support.startmail.com/",
-    "https://www.getmailbird.com/best-startmail-app-macos/",
-    "https://discussions.apple.com/thread/256239542"
+    "https://support.startmail.com/hc/en-us/articles/360006536217",
+    "https://support.startmail.com/hc/en-us/articles/360007448378",
+    "https://www.startmail.com/features/"
   ],
   "auth": {
     "method": "app-password",
     "label": "Mot de passe d'appareil de confiance",
-    "helpUrl": "https://support.startmail.com/",
+    "helpUrl": "https://support.startmail.com/hc/en-us/articles/360006536217",
     "usernameForm": "Votre adresse StartMail complète, domaine personnalisé compris. Le nom d'utilisateur n'est jamais la seule partie locale.",
     "status": "active"
   },
@@ -37,7 +36,7 @@
     },
     {
       "h": "Ajoutez un appareil dans StartMail et copiez le mot de passe généré",
-      "p": "Connectez-vous à StartMail dans un navigateur, ouvrez <b>Settings</b> et allez dans la section <b>trusted devices</b> (appareils de confiance), où se gère l'accès IMAP. Choisissez <b>Add device</b> et nommez-le d'après cette connexion. StartMail génère un mot de passe aléatoire et l'affiche une seule fois, donc copiez-le avant de fermer la fenêtre. Cette section contrôle aussi l'accès IMAP du compte : si une connexion est refusée avant même que vous ayez utilisé le mot de passe, vérifiez qu'IMAP y est activé."
+      "p": "Connectez-vous à StartMail dans un navigateur, ouvrez <b>Settings</b> et allez dans <b>Trusted devices/IMAP</b>. S'il s'agit de votre premier appareil, activez-y d'abord l'accès IMAP. Choisissez <b>ADD DEVICE</b>, nommez l'appareil, saisissez le mot de passe de votre compte et confirmez. StartMail affiche alors les valeurs de connexion et le mot de passe d'appareil, en précisant qu'il ne les affiche qu'une seule fois : copiez le mot de passe avant de fermer la fenêtre."
     },
     {
       "h": "Ajoutez la boîte dans MCPEmails",
@@ -86,7 +85,7 @@
     },
     {
       "q": "Où générer un mot de passe IMAP StartMail ?",
-      "a": "Dans l'interface web de StartMail, ouvrez Settings et allez dans la section trusted devices, où se gère l'accès IMAP. Choisissez d'ajouter un appareil, donnez-lui un nom, et StartMail génère un mot de passe aléatoire d'environ seize caractères qu'il affiche une fois. Copiez-le immédiatement ; il est impossible de le relire, seulement de supprimer l'appareil et d'en ajouter un autre."
+      "a": "Dans l'interface web de StartMail, ouvrez Settings et allez dans Trusted devices/IMAP. Activez l'accès IMAP s'il s'agit de votre premier appareil, choisissez ADD DEVICE, nommez-le et saisissez le mot de passe de votre compte. StartMail génère un mot de passe d'appareil de 16 chiffres et l'affiche une fois ; copiez-le immédiatement, car le seul retour possible est de supprimer l'appareil et d'en ajouter un autre. Un compte peut contenir jusqu'à cinq configurations IMAP."
     },
     {
       "q": "Mon IA peut-elle lire mes messages StartMail chiffrés avec PGP ?",

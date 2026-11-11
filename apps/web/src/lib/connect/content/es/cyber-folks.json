@@ -1,0 +1,110 @@
+{
+  "_sources": [
+    "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "https://cyberfolks.pl/pomoc/jak-utworzyc-konto-pocztowe/",
+    "https://cyberfolks.pl/pomoc/zmiana-konfiguracji-skrzynki-mailowej-w-mozilla-thunderbird/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://cyberfolks.pl/pomoc/konfiguracja-klientow-poczty-porty-adres-serwera-przyklady/",
+    "usernameForm": "Tu dirección completa, por ejemplo biuro@twojadomena.pl. cyber_Folks señala una excepción: el buzón principal de la cuenta de hosting inicia sesión con el propio login del hosting.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Servidor MCP de cyber_Folks: conecta tus buzones a Claude",
+    "description": "Servidor MCP para el correo alojado en cyber_Folks. Conecta los buzones de tu dominio (biuro@, kontakt@) a Claude, ChatGPT y Cursor por IMAP en tu servidor sNN.cyber-folks.pl, puerto 993, con la contraseña del buzón."
+  },
+  "hero": {
+    "eyebrow": "Correo cyber_Folks + IA",
+    "titleLine1": "Servidor MCP para el correo de cyber_Folks:",
+    "titleLine2": "todos los buzones de tu dominio, en Claude y ChatGPT",
+    "lead": "¿Tienes biuro@, kontakt@ y tu propio nombre en un dominio alojado en cyber_Folks? Conecta cada buzón a un mismo espacio de trabajo y tu agente de IA trabaja con todos. Lee, busca, envía, responde, programa y organiza el correo por IMAP, con la contraseña del buzón y no con tu acceso de cliente de cyber_Folks.",
+    "answer": "Claude no puede llegar por sí solo a un buzón de cyber_Folks. MCPEmails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993 al servidor donde vive tu cuenta, un nombre con la forma s1.cyber-folks.pl, iniciando sesión con la dirección completa y la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. cyber_Folks publica los puertos (993 para IMAP, 465 o 587 para SMTP) y te remite a tu propio panel para leer el nombre del servidor, en Dane konfiguracyjne dentro de cyber_Admin. El envío pasa por el mismo servidor, siempre con autenticación. Un buzón es gratis, para siempre.",
+    "meta0": "Primer buzón gratis, planes para el resto",
+    "meta1": "Contraseña del buzón, tu propio servidor sNN",
+    "meta2": "Correo consultado en vivo, nunca almacenado"
+  },
+  "settingsTop": {
+    "rows": [
+      { "label": "SMTP, alternativa STARTTLS", "host": "s1.cyber-folks.pl", "port": 587, "security": "starttls" }
+    ],
+    "lookup": {
+      "intro": "El 1 de s1 representa tu propio número de servidor: cyber_Folks muestra el nombre real en Dane konfiguracyjne dentro de cyber_Admin, o en el Panel Klienta en Twoje usługi, Hosting, columna Host. Tres servidores de esa serie se verificaron con una conexión TLS real. Para cualquier otra dirección, usa la",
+      "label": "búsqueda de configuración de correo",
+      "href": "/tools/email-settings-lookup"
+    }
+  },
+  "persona": {
+    "intro": "¿Varios buzones en tu dominio de cyber_Folks?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
+  },
+  "method": {
+    "title": "Cómo conecta cyber_Folks: el nombre de tu servidor, IMAP en 993 y SMTP en 465",
+    "body": "cyber_Folks no publica un host de correo compartido. Su página de ayuda dice que el servidor entrante y saliente es el que ejecuta tu cuenta de hosting, y que su nombre aparece en cyber_Admin bajo <b>Dane konfiguracyjne</b>, tras el icono del engranaje de la esquina superior derecha, o en el Panel Klienta bajo <b>Twoje usługi</b>, <b>Hosting</b>, en la columna <b>Host</b>. Esos nombres siguen el patrón <code>s1.cyber-folks.pl</code>, con tu propio número en lugar del 1, y llevan un certificado para <code>*.cyber-folks.pl</code>: abrimos conexiones TLS a tres servidores de la serie y cada uno respondió IMAP en 993 con un banner Dovecot y SMTP en 465 y 587 con Exim. Los puertos que lista cyber_Folks son 993 para IMAP, 465 para SMTP con SSL y 587 como alternativa, y pide no usar el puerto 25. El usuario es la dirección completa, la contraseña es la que se fijó al crear el buzón, y el servidor saliente exige autenticación: sin ella responde <code>550 relay not permitted, authentication required</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratuita de MCPEmails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta un buzón, para siempre, y no pide tarjeta."
+    },
+    {
+      "h": "Lee el nombre de tu servidor en cyber_Admin",
+      "p": "Entra en cyber_Admin, pulsa el icono del engranaje arriba a la derecha y abre <b>Dane konfiguracyjne</b>. El servidor IMAP y SMTP que aparece ahí, un nombre como s1.cyber-folks.pl con tu propio número, es el que debes introducir. El mismo nombre está en el Panel Klienta bajo <b>Twoje usługi</b>, <b>Hosting</b>, en la columna <b>Host</b>."
+    },
+    {
+      "h": "Ten a mano la contraseña del buzón",
+      "p": "La contraseña pertenece a cada buzón y se fijó al crearlo en <b>MAIL</b>, <b>LISTA KONT</b> dentro de cyber_Admin (o en <b>Konta e-mail</b> en DirectAdmin). No es la contraseña del Panel Klienta. Si no la conoces, pon una nueva a ese buzón; nada más se ve afectado."
+    },
+    {
+      "h": "Introdúcelos en MCPEmails y pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, por ejemplo biuro@twojadomena.pl, la contraseña del buzón y el nombre de tu servidor, con 993 y SSL para IMAP y 465 y SSL para SMTP. Después pega https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tiene el buzón."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Usa el nombre cyber-folks.pl, no mail.tudominio.pl",
+      "p": "La página de cyber_Folks explica que el servidor también responde bajo tu propio dominio, como mail.twojadomena.pl, pero que el certificado del servidor está emitido para el nombre de cyber_Folks, así que un cliente que use el dominio recibe un aviso de certificado o una conexión TLS rechazada. MCPEmails valida los certificados y no conecta a través de un nombre que el certificado no cubra. Usa el nombre sNN.cyber-folks.pl de tu panel, que es el que recomienda el propio cyber_Folks."
+    },
+    {
+      "h": "El buzón principal de la cuenta inicia sesión con el login del hosting",
+      "p": "Cada buzón que creas inicia sesión con su dirección completa. La única excepción que documenta cyber_Folks es el buzón primario de la cuenta, cuyo usuario es el login del hosting (su ejemplo es un login corto como lnxpl) en lugar de una dirección. Si en ese buzón se rechaza la forma de dirección, prueba con el login del correo de bienvenida del hosting."
+    },
+    {
+      "h": "Solo AUTH=PLAIN en IMAP, y sin MOVE",
+      "p": "El Dovecot de cada servidor anuncia únicamente <code>AUTH=PLAIN</code> en IMAP, que es lo que usa MCPEmails, mientras que SMTP acepta PLAIN y LOGIN. La lista de capacidades previa al inicio de sesión no tiene <code>MOVE</code>, <code>UIDPLUS</code> ni <code>SPECIAL-USE</code>, así que archivar un mensaje se ejecuta como una copia, una actualización de marca y un expunge, y las carpetas de enviados, borradores y papelera se reconocen por su nombre. En un buzón polaco suelen llamarse Wysłane, Kopie robocze y Kosz; nombra la carpeta en tu instrucción si el agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP anuncia un tamaño máximo de mensaje de 100 MB. Un reenvío con adjuntos mayores se rechaza al enviarlo.",
+    "Como el servidor no anuncia MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "El nombre del servidor es por cliente. Un nombre copiado de la guía de otra persona, o el s1 que aparece en esta página, solo conecta si tu cuenta está casualmente en ese servidor."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo alojado en cyber_Folks?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para cyber_Folks. Apuntar un servidor MCP como MCPEmails al buzón por IMAP da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los datos IMAP y SMTP de cyber_Folks?",
+      "a": "IMAP es tu servidor, un nombre con la forma s1.cyber-folks.pl con tu propio número, en el puerto 993 con SSL. SMTP es el mismo servidor en el puerto 465 con SSL, o 587 con STARTTLS, con autenticación obligatoria. El usuario es tu dirección completa y la contraseña es la del buzón. cyber_Folks muestra el nombre del servidor en Dane konfiguracyjne dentro de cyber_Admin."
+    },
+    {
+      "q": "¿Dónde encuentro el nombre de mi servidor de correo de cyber_Folks?",
+      "a": "En cyber_Admin, tras el icono del engranaje arriba a la derecha, en Dane konfiguracyjne, que lista las direcciones y puertos IMAP, POP3 y SMTP. O en el Panel Klienta en Twoje usługi, Hosting, en la columna Host junto a tu servicio de hosting."
+    },
+    {
+      "q": "¿Necesita cyber_Folks una contraseña de aplicación?",
+      "a": "No. cyber_Folks no tiene un sistema de contraseñas específicas de aplicación. La contraseña fijada en el buzón autentica tanto IMAP como SMTP."
+    },
+    {
+      "q": "¿Se almacena mi correo de cyber_Folks en vuestros servidores?",
+      "a": "No. Los mensajes se consultan en vivo en tu servidor de cyber_Folks por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA tus buzones de cyber_Folks",
+    "sub": "Conecta un buzón de cyber_Folks en minutos. Un buzón gratis para siempre, sin tarjeta."
+  }
+}
