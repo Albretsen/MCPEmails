@@ -415,7 +415,7 @@ import {
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
 import { purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
-import { sendViaSmtp, SmtpAuthError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
+import { sendViaSmtp, SmtpAuthError, SmtpContentRefusedError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import {
   attachmentFilenameFor,
   buildRelayForwardMime,
@@ -1286,6 +1286,38 @@ function senderRefusedResult(operation: string, inboxId: string, fromAddress: st
     } as ToolErrorResult["result"],
     logStatus: "error",
     logErrorCode: "sender_identity_refused",
+  };
+}
+
+const CONTENT_REFUSED_ERROR_CODE = "provider_content_refused";
+
+/**
+ * The sentence for {@link SmtpContentRefusedError}: the user's mail provider
+ * refused the message as spam. Shared by the tool results and the batch
+ * forward's per-message line.
+ *
+ * It says plainly not to resend the same message, because that is what agents
+ * did with the old "delivery status unknown" text, and each resend is another
+ * refusal towards the inbox's send pause (outbound-brakes.ts).
+ */
+function contentRefusedText(reason: string): string {
+  return `Not sent: the mail server refused this message as spam, so nothing was sent and there is ` +
+    `nothing to check in Sent. Reason given: ${reason}. Do not send the same message again: it ` +
+    `will be refused the same way, and repeated refusals pause sending from this inbox for an ` +
+    `hour. Tell the user. They can reword it (fewer links, no attachments, plainer wording), ` +
+    `send it from their mail provider's own app, or ask the provider why it was flagged.`;
+}
+
+function contentRefusedResult(operation: string, inboxId: string, reason: string): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: ${CONTENT_REFUSED_ERROR_CODE}`, { inbox_id: inboxId, error: reason });
+  return {
+    result: {
+      content: [{ type: "text", text: contentRefusedText(reason) }],
+      isError: true,
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+    } as ToolErrorResult["result"],
+    logStatus: "error",
+    logErrorCode: CONTENT_REFUSED_ERROR_CODE,
   };
 }
 
@@ -18672,6 +18704,16 @@ function classifyForwardFailure(err: unknown, provider: string, fromAddress: str
     };
   }
 
+  if (err instanceof SmtpContentRefusedError) {
+    return {
+      status: "not_sent",
+      error: contentRefusedText(message),
+      ledgerCode: CONTENT_REFUSED_ERROR_CODE,
+      // Judged per message: the next one in the batch may pass the filter.
+      fatal: false,
+    };
+  }
+
   if (err instanceof SmtpNotSentError) {
     return {
       status: "not_sent",
@@ -19119,7 +19161,9 @@ async function executeForwardEmail(
     try {
       return await forwardRelayMessage(senderInbox, id, fwdParams);
     } catch (err) {
-      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, [
+        "forward", id, ...addressList(fwdParams.to), ...addressList(fwdParams.cc), ...addressList(fwdParams.bcc),
+      ]);
       throw err;
     }
   };
@@ -19248,6 +19292,10 @@ async function executeForwardEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_forward", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_forward", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -19605,7 +19653,7 @@ async function executeReplyToEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, ["reply", messageId, body]);
 
     if (message === "message_not_found") {
       return {
@@ -19673,6 +19721,10 @@ async function executeReplyToEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_reply", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_reply", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -20169,9 +20221,19 @@ async function notifyBrakeTripped(input: Parameters<typeof brakeTrippedEvent>[0]
  * third within an hour pauses it). Called from every send path's failure
  * branch with the raw error; anything that is not a policy refusal is ignored.
  */
-async function noteProviderRefusal(workspaceId: string, inboxId: string, err: unknown): Promise<void> {
+async function noteProviderRefusal(
+  workspaceId: string,
+  inboxId: string,
+  err: unknown,
+  messageKeyParts: readonly (string | null | undefined)[],
+): Promise<void> {
   if (INTROSPECTION_ONLY) return;
-  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, { workspaceId, inboxId, error: err });
+  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, {
+    workspaceId,
+    inboxId,
+    error: err,
+    messageKeyParts,
+  });
   if (outcome?.newlyTripped) {
     await notifyBrakeTripped({ workspaceId, inboxId, brake: "provider_refusal_pause", retryAt: outcome.retryAt });
   }
@@ -20949,7 +21011,10 @@ async function executeSendEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, [
+      "send", sendParams.subject, sendParams.textBody, sendParams.htmlBody,
+      ...addressList(sendParams.to), ...addressList(sendParams.cc), ...addressList(sendParams.bcc),
+    ]);
 
     if (message === "quota_exceeded") {
       return {
@@ -20980,6 +21045,10 @@ async function executeSendEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_send", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_send", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -32328,7 +32397,7 @@ async function executeSendDraft(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err, ["draft", draftId]);
     if (message === "draft_not_found") {
       return {
         result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
@@ -32384,6 +32453,10 @@ async function executeSendDraft(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("draft_send", inbox.id, inbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("draft_send", inbox.id, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -36421,7 +36494,12 @@ interface ScheduledDispatchDeps {
     alreadyCounted: boolean,
   ): Promise<BrakeDecision>;
   /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
-  noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
+  noteRefusal?(
+    workspaceId: string,
+    inboxId: string,
+    err: unknown,
+    messageKeyParts: readonly (string | null | undefined)[],
+  ): Promise<void>;
   /**
    * Inbox visibility (inbox-visibility.ts): may the person who scheduled the
    * row still use its inbox? Optional so a test's deps can leave it out;
@@ -37257,7 +37335,7 @@ async function handleScheduledDispatch(
       try {
         sendResult = await deps.sendViaProvider(inbox, sendParams);
       } catch (sendErr) {
-        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr);
+        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr, ["scheduled", String(row.id)]);
         throw sendErr;
       }
       if (approvedScheduleId !== null) {

@@ -7,6 +7,7 @@
 --   - the fan-out brake holds past N distinct recipients of one content hash
 --     and an approved (human) send skips it but is still counted
 --   - the third provider refusal in the window pauses the inbox
+--   - the same message (p_message_key) refused again counts once
 --   - workspaces.sends_frozen_at refuses everything
 --   - members can neither read nor write the tables nor call the RPCs
 --
@@ -15,7 +16,7 @@
 
 BEGIN;
 
-SELECT plan(24);
+SELECT plan(26);
 
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -126,6 +127,20 @@ SELECT is(
   'the third refusal in the window pauses the inbox, and says it just tripped');
 SELECT is(pg_temp.gate('b0a01111-0000-0000-0000-000000000002', 1, NULL, NULL, true), 'paused',
   'a paused inbox refuses, even an approved send');
+
+-- One message refused three times counts once (20261112130000).
+SELECT is(
+  ARRAY[
+    public.outbound_send_refusal('b0a0aaaa-0000-0000-0000-00000000000a', 'b0a01111-0000-0000-0000-000000000003', 3, 3600000, 3600000, repeat('e', 64))->>'duplicate',
+    public.outbound_send_refusal('b0a0aaaa-0000-0000-0000-00000000000a', 'b0a01111-0000-0000-0000-000000000003', 3, 3600000, 3600000, repeat('e', 64))->>'duplicate',
+    public.outbound_send_refusal('b0a0aaaa-0000-0000-0000-00000000000a', 'b0a01111-0000-0000-0000-000000000003', 3, 3600000, 3600000, repeat('e', 64))->>'paused'
+  ],
+  ARRAY[NULL, 'true', 'false'],
+  'a repeat refusal of the same message is recognised and does not pause');
+SELECT is(
+  (SELECT count(*)::int FROM public.outbound_send_events
+    WHERE inbox_id = 'b0a01111-0000-0000-0000-000000000003' AND kind = 'refusal'),
+  1, 'and only the first refusal of it is recorded');
 
 -- ── Freeze ─────────────────────────────────────────────────────────────────
 UPDATE public.workspaces SET sends_frozen_at = now() WHERE id = 'b0a0aaaa-0000-0000-0000-00000000000a';
