@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-12',
+    kind: 'fixed',
+    title: 'Clear answer when your mail provider flags a message as spam',
+    body:
+      "When your mail provider refuses a message as spam, your AI is now told it was not sent and to reword it rather than send it again, and the sent card says so. Before, it could read the refusal as an unclear delivery and retry the same message.",
+  },
+  {
     date: '2026-11-11',
     kind: 'added',
     title: 'Private and company-wide mailboxes for teams',

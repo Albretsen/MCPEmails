@@ -103,6 +103,37 @@ export class SmtpSenderRefusedError extends SmtpNotSentError {
   }
 }
 
+/**
+ * The server refused the message itself as spam or against its content policy.
+ *
+ * Raised for a 5xx answer to the end of DATA whose wording is about spam or
+ * content (Rackspace's `550 5.7.1 ... detected sending high likelyhood spam`,
+ * Infomaniak's `550 5.2.0 Spam message rejected`). A 5xx there is a permanent
+ * refusal (RFC 5321 4.2.5), so nothing was accepted for delivery. Not
+ * retryable: the same message is refused the same way, and every refusal
+ * counts towards the provider-refusal pause (outbound-brakes.ts). Before
+ * 2026-11-12 this was a bare Error, so the agent read "delivery status
+ * unknown" and resent the same draft three times in 26 seconds.
+ */
+export class SmtpContentRefusedError extends SmtpNotSentError {
+  constructor(message: string) {
+    super(message, false);
+    this.name = "SmtpContentRefusedError";
+  }
+}
+
+const CONTENT_REFUSAL_RE =
+  /\bspam\b|unsolicited|\bphish|content (?:policy|restrictions?|filter)|(?:message|content) (?:was )?(?:rejected|blocked) (?:due to|because|as)|policy (?:violation|reasons?)|violates? (?:our|the) policy|suspicious/i;
+
+/** Wording about the connecting address, which is not a verdict on the content. */
+const ORIGIN_WORDING_RE = /\bACR\d+\b|client host|\bIP\b|ip address/i;
+
+/** True for a 5xx end-of-DATA reply that refuses the message as spam or by content policy. */
+export function isContentRefusal(reply: Pick<SmtpReply, "code" | "text">): boolean {
+  return reply.code >= 500 && reply.code < 600 &&
+    CONTENT_REFUSAL_RE.test(reply.text) && !ORIGIN_WORDING_RE.test(reply.text);
+}
+
 const SENDER_OWNERSHIP_RE = new RegExp(
   [
     String.raw`not (?:one of )?your (?:own )?address`,
@@ -426,6 +457,9 @@ async function submitOnce(
     if (accepted.code !== 250) {
       if (isSenderOwnershipRefusal(accepted)) {
         throw new SmtpSenderRefusedError(`SMTP message from <${msg.from}> refused: ${accepted.code} ${accepted.text}`);
+      }
+      if (isContentRefusal(accepted)) {
+        throw new SmtpContentRefusedError(`SMTP: expected 250, got ${accepted.code} ${accepted.text}`);
       }
       throw new Error(`SMTP: expected 250, got ${accepted.code} ${accepted.text}`);
     }

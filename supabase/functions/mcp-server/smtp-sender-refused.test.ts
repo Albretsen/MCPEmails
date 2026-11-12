@@ -61,7 +61,7 @@ Deno.test("each send handler answers a sender refusal before the generic not-sen
     const refused = INDEX.indexOf(`senderRefusedResult("${op}"`);
     const notSent = INDEX.indexOf(`notSentResult("${op}"`);
     assert(refused > 0, `${op} maps SmtpSenderRefusedError`);
-    assert(notSent > refused && notSent - refused < 400, `${op}: checked right before notSentResult`);
+    assert(notSent > refused && notSent - refused < 700, `${op}: checked right before notSentResult`);
   }
   const batch = INDEX.slice(INDEX.indexOf("function classifyForwardFailure("));
   assert(
