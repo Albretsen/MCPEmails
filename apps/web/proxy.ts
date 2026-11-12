@@ -9,7 +9,9 @@ import { routing } from '@/i18n/routing';
 import {
   AI_CLIENT_COOKIE, AI_CLIENT_HEADER, aiClientFromRequest, normalizeAiClient, serializeAiClientCookie,
 } from '@/lib/clients/preferred.mjs';
-import { NextResponse, type NextRequest } from 'next/server';
+import { appEnv } from '@/lib/env/app-env';
+import { HOME_LAB_COOKIE, homeLabRewritePath } from '@/lib/home-lab/select.mjs';
+import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_LOCALE_PREFIX = new RegExp(`^/${routing.defaultLocale}(?:/|$)`);
 
@@ -277,6 +279,22 @@ async function routeRequest(request: NextRequest) {
   }
 
   if (isLocalizedRoute(request.nextUrl.pathname)) {
+    // Homepage Lab (staging only; NEXT_PUBLIC_APP_ENV is inlined, so a
+    // production build drops this): `/?home=vNN` or the home_lab cookie serves
+    // that variant's own route at the same URL. src/lib/home-lab/select.mjs.
+    if (process.env.NEXT_PUBLIC_APP_ENV === 'staging') {
+      const lab = homeLabRewritePath({
+        appEnv: appEnv(),
+        pathname: request.nextUrl.pathname,
+        query: request.nextUrl.searchParams.get('home'),
+        cookie: request.cookies.get(HOME_LAB_COOKIE)?.value ?? null,
+      });
+      if (lab) {
+        const url = request.nextUrl.clone();
+        url.pathname = lab;
+        request = new NextRequest(url, request);
+      }
+    }
     let response = intlMiddleware(request);
     // With localePrefix 'as-needed', next-intl answers /en and /en/<path> with
     // a 307 to the unprefixed URL. That redirect never changes, so it is a

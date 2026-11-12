@@ -1,0 +1,107 @@
+{
+  "variant": "v05",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 384930780,
+  "bold": false,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-03",
+      "idea": "Sticky split: left 5 columns hold headline and Start free pinned; right 7 columns scroll through four screenshots in order (connect, paste URL, ask, approve).",
+      "why": "The CTA never leaves the screen while the four real steps play out beside it.",
+      "url": "https://ia.net/writer",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-09",
+      "idea": "Install hero: two equal columns 'Add to Claude' and 'Add to ChatGPT', each with three numbered steps and a screenshot, Start free above both.",
+      "why": "Most visitors already chose their AI client; meet them there.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-13",
+      "idea": "Hardware labels: light grey panels with tiny uppercase labels in ink and cobalt status dots, like markings on a device.",
+      "why": "Gives the connector a tangible, engineered feel.",
+      "url": "https://teenage.engineering",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-14",
+      "idea": "Source Serif 4 600 at opsz 60 for a 72px display, Public Sans 400 body, Public Sans 700 for labels.",
+      "why": "Government-plain body under a confident serif.",
+      "url": "https://fonts.google.com/specimen/Source+Serif+4",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-16",
+      "idea": "Interview: the page as a Q and A with the maker; questions in bold, short honest answers.",
+      "why": "Conversational, human, answers objections in passing.",
+      "url": "https://press.stripe.com",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-05",
+      "idea": "Real customer quotes only, each with a name and a link to where it was published; the section is hidden when there are none approved.",
+      "why": "Avoids invented testimonials entirely.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-12",
+      "idea": "Diagrams in the margin: small line diagrams sit in the right margin next to the paragraph they explain.",
+      "why": "Diagrams support the text instead of interrupting it.",
+      "url": "https://practicaltypography.com",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-07",
+      "idea": "Hovering a provider logo reveals how it connects (OAuth or app password) in a small label below it.",
+      "why": "Useful detail on demand.",
+      "url": "https://fly.io",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-05",
+      "idea": "Hero clip > Connect (providers) > Paste URL (clients) > Ask > Approve > Sent > Pricing > FAQ",
+      "why": "The page is the setup sequence.",
+      "url": "https://vercel.com",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-02",
+      "idea": "Calm Scandinavian understatement. Sample: 'It reads your mail when you ask, and keeps none of it.'",
+      "why": "Matches Stockholm and a privacy-first product.",
+      "url": "https://www.vitsoe.com",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-16",
+      "idea": "Lowercase everywhere except product and provider names.",
+      "why": "A distinct, quiet voice in type.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": false
+    }
+  }
+}

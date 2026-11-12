@@ -1,0 +1,107 @@
+{
+  "variant": "v06",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 609717239,
+  "bold": false,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-13",
+      "idea": "Alternating rows with bleed: text in 5 left columns, screenshot in 7 columns bleeding off the right edge of the viewport, five rows.",
+      "why": "A familiar reading rhythm that gives screenshots room at real size.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-10",
+      "idea": "A 3D envelope with the draft pulled halfway out, a strong long shadow, H1 beside it.",
+      "why": "A calm, ownable object instead of an abstract graphic.",
+      "url": "https://teenage.engineering",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-05",
+      "idea": "Blueprint grid: faint 8px grid on the page background in a very light cobalt tint, diagrams drawn in cobalt lines, screenshots unframed.",
+      "why": "Technical honesty; the grid also aligns everything.",
+      "url": "https://oxide.computer",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-01",
+      "idea": "Fraunces 600 (opsz 144, SOFT 0) for H1 and H2, Instrument Sans 400/500 body at 18px, IBM Plex Mono 400 for email addresses and the connector URL.",
+      "why": "A warm serif display with plain body text; mono marks anything you can copy.",
+      "url": "https://fonts.google.com/specimen/Fraunces",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-04",
+      "idea": "By hand versus connected: the same task shown twice, once copying between inbox and chat, once with MCPEmails.",
+      "why": "Compares against the real alternative (doing it yourself), not competitors.",
+      "url": "https://proton.me/mail",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-10",
+      "idea": "Install screenshots inside each client's connector settings (Claude, ChatGPT), showing the real connector entry.",
+      "why": "Proves the integration is real, not a mockup.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-02",
+      "idea": "The 3D postbox appears once, as the anchor of the 'Connect your inbox' section, its slots labelled with provider names.",
+      "why": "One strong object at the step it represents.",
+      "url": "https://teenage.engineering",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-11",
+      "idea": "Copy feedback on the connector URL: 'Copied' replaces the button label for two seconds.",
+      "why": "Functional motion that confirms an action.",
+      "url": "https://vercel.com",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-09",
+      "idea": "Hero > Security first (never stored, Stockholm, encrypted, revoke) > Demo > Providers > Pricing > FAQ",
+      "why": "For buyers whose first question is privacy.",
+      "url": "https://proton.me/mail",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-11",
+      "idea": "FAQ plainness. Sample: 'Does it store my email? No. It fetches it when asked.'",
+      "why": "Answers in the reader's own words.",
+      "url": "https://arc.net",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-06",
+      "idea": "Only three font sizes on the whole page.",
+      "why": "Discipline that produces calm.",
+      "url": "https://practicaltypography.com",
+      "tone": "light",
+      "bold": false
+    }
+  }
+}

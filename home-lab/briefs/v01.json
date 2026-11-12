@@ -1,0 +1,107 @@
+{
+  "variant": "v01",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 198879164,
+  "bold": false,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-06",
+      "idea": "Catalogue index: the page opens with a stacked list of five 'titles' (Connect, Ask, Approve, Teams, Plans), each line linking down to its full section.",
+      "why": "A visitor sees the whole product in five lines before reading anything, then jumps to what they care about.",
+      "url": "https://press.stripe.com",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-02",
+      "idea": "Before and after on one sample mailbox: left pane a raw inbox, right pane the same inbox with three AI drafts waiting, labelled 'sample mailbox'.",
+      "why": "Shows the outcome, not the plumbing.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-16",
+      "idea": "Semantic colour only: brand colours keep their product meaning everywhere (cobalt = action, mint = sent or approved, amber = held, red = blocked), nothing decorative.",
+      "why": "Visitors learn the product's states just by reading the page.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-02",
+      "idea": "Newsreader 500 italic H1 at 72px, Newsreader 400 body at 19px, Martian Mono 400 at 12px for labels and captions.",
+      "why": "Editorial, letter-like, readable at length.",
+      "url": "https://fonts.google.com/specimen/Newsreader",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-09",
+      "idea": "Beliefs: numbered principles (mail is fetched live, you approve sends, your provider stays the source of truth) each backed by a link to how it works.",
+      "why": "A clear point of view on agents and email.",
+      "url": "https://www.vitsoe.com",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-01",
+      "idea": "A 'Works with' wall of supported providers and clients, each linking to its setup guide; labelled as compatibility, never 'trusted by'.",
+      "why": "Real, checkable, and it answers fit.",
+      "url": "https://fly.io",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-16",
+      "idea": "Clips that play only on hover or focus, with a still poster frame by default.",
+      "why": "Motion only when asked for.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-03",
+      "idea": "One looping hero clip that pauses when off screen, with visible pause control.",
+      "why": "Motion where it explains, nowhere else.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "any",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-13",
+      "idea": "Hero > Spec sheet > Fig. 1 dashboard > Fig. 2 draft card > Fig. 3 connect screens > Pricing table > Footnotes",
+      "why": "Reference order for technical readers.",
+      "url": "https://oxide.computer",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-01",
+      "idea": "Plain manual voice. Sample: 'Connect an inbox. Paste one URL. Ask.'",
+      "why": "Short instructions match a short setup.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-10",
+      "idea": "Footnotes for every claim: superscript numbers link to the docs or changelog entry that proves it.",
+      "why": "Every statement is checkable.",
+      "url": "https://practicaltypography.com",
+      "tone": "light",
+      "bold": false
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "variant": "v03",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 306090038,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-11",
+      "idea": "Two-track page: after the hero the page forks into two parallel columns, 'For you' and 'For your team (info@, sales@)', running side by side to pricing.",
+      "why": "About half of paying customers are teams on their own domain; they get their own column instead of a footnote.",
+      "url": "https://buttondown.com",
+      "tone": "light",
+      "bold": true
+    },
+    "hero": {
+      "id": "hero-01",
+      "idea": "The real draft card, rendered from the shipping card build at 1:1, with To, Subject, body and Approve / Edit buttons, next to a left-aligned H1.",
+      "why": "Proves the strongest differentiator in the first second: nothing goes out without your yes.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-15",
+      "idea": "Postmark separators: section breaks are circular postmarks in cobalt line work (date plus 'STOCKHOLM'), the only ornament on the page.",
+      "why": "One ownable ornament that also carries the data-location fact.",
+      "url": "https://letterformarchive.org",
+      "tone": "light",
+      "bold": true
+    },
+    "typography": {
+      "id": "typography-10",
+      "idea": "Archivo 800 at wdth 62 for poster-like headlines, Archivo 400 at wdth 100 body, same family for everything.",
+      "why": "Swiss-poster energy from one variable font.",
+      "url": "https://fonts.google.com/specimen/Archivo",
+      "tone": "light",
+      "bold": true
+    },
+    "narrative": {
+      "id": "narrative-15",
+      "idea": "Velocity story: the product told through what shipped recently, with dated changelog entries as chapters.",
+      "why": "Shows an active product without inventing numbers.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": true
+    },
+    "proof": {
+      "id": "proof-04",
+      "idea": "Changelog pace: the latest dated entries read from the public changelog at build time, linking to the full page.",
+      "why": "Real dates prove an active product.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-06",
+      "idea": "Only one clip on the page, in the hero; every other asset is a still.",
+      "why": "Keeps the page calm and fast.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-01",
+      "idea": "No motion at all: a static page with designed hover underlines and focus rings only.",
+      "why": "Calm, fast, accessible.",
+      "url": "https://www.vitsoe.com",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-16",
+      "idea": "Hero > Day in the life (morning, noon, evening) > Approval > Teams > Pricing > FAQ > Recent changelog",
+      "why": "Habit story with a living-product ending.",
+      "url": "https://craigmod.com/ridgeline/",
+      "tone": "light",
+      "bold": true
+    },
+    "voice": {
+      "id": "voice-16",
+      "idea": "Modest and concrete. Sample: 'A small company, a real inbox for support, and nothing of yours on our disks.'",
+      "why": "No hype, just facts a buyer can check.",
+      "url": "https://basecamp.com",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-03",
+      "idea": "The page is a printed letter: letterhead, date, 'Dear reader,', a signature, and Start free as the P.S.",
+      "why": "Mail product, mail form.",
+      "url": "https://letterformarchive.org",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

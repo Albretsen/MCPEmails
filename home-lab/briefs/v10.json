@@ -1,0 +1,107 @@
+{
+  "variant": "v10",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 1065250005,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-01",
+      "idea": "Editorial long-read: one 640px text column on the left, a wide right margin holding screenshots and short notes as marginalia, like a printed book page.",
+      "why": "Lets the product be explained in sentences, which suits a careful buyer deciding whether to give an AI their inbox.",
+      "url": "https://practicaltypography.com",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-17",
+      "idea": "Client tabs: Claude, ChatGPT, Cursor, VS Code; each tab shows that client's real screenshot doing the same task.",
+      "why": "Proves 'works in your client' with real screens.",
+      "url": "https://fly.io",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-02",
+      "idea": "Swiss rules: white ground, heavy 2px ink rules between sections, thin 1px rules inside them, cobalt only as one solid block per section.",
+      "why": "Structure through rules instead of cards and shadows.",
+      "url": "https://swissted.com",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-04",
+      "idea": "Space Grotesk 700 headings at -2% tracking, IBM Plex Sans 400 body, Space Mono 400 for addresses like info@.",
+      "why": "Technical character without looking like a terminal.",
+      "url": "https://fonts.google.com/specimen/Space+Grotesk",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-02",
+      "idea": "Demo first: the page opens with a full task walkthrough, and explanation only starts after it.",
+      "why": "People believe what they see working.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-06",
+      "idea": "Data location as a plain label: 'Data stored in Stockholm, Sweden', linking to the sub-processor list.",
+      "why": "A concrete, verifiable fact for EU buyers.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-09",
+      "idea": "Before and after comparison of the same inbox: a raw inbox screenshot and one with drafts ready, with a draggable divider.",
+      "why": "Shows the difference directly.",
+      "url": "https://ia.net/writer",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-05",
+      "idea": "The how-it-works line draws itself once as it enters view (SVG stroke offset), then stays.",
+      "why": "Draws attention to the data path once.",
+      "url": "https://tailscale.com",
+      "tone": "light",
+      "bold": true
+    },
+    "section_order": {
+      "id": "section_order-01",
+      "idea": "Hero (draft card) > Providers strip > How it works (Fig. 1 to 3) > Security model > Use cases by mailbox > Pricing > FAQ > Closing CTA",
+      "why": "Leads with the differentiator, then fit, then trust.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-09",
+      "idea": "Literary and spare. Sample: 'An inbox is a list of small promises. This helps you keep them.'",
+      "why": "Lifts a utility into something people care about.",
+      "url": "https://ia.net/writer",
+      "tone": "light",
+      "bold": true
+    },
+    "wildcard": {
+      "id": "wildcard-12",
+      "idea": "Every visual carries a museum label with real metadata (what it is, date it shipped).",
+      "why": "Proof built into captions.",
+      "url": "https://www.rijksmuseum.nl/en",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

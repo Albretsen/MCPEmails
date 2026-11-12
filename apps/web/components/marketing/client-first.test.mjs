@@ -139,7 +139,7 @@ test('no generateMetadata under app/[locale] reads the preferred client', () => 
 });
 
 test('JSON-LD on the pages that read the preferred client is built without it', () => {
-  for (const rel of ['app/[locale]/docs/clients/page.js', 'app/[locale]/docs/[client]/page.js', 'app/[locale]/page.tsx']) {
+  for (const rel of ['app/[locale]/docs/clients/page.js', 'app/[locale]/docs/[client]/page.js', 'app/[locale]/home-render.tsx']) {
     const source = readFileSync(path.join(webRoot, rel), 'utf8');
     const start = source.indexOf('const jsonLd');
     assert.notEqual(start, -1, `${rel} has no jsonLd`);
