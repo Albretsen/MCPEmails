@@ -52,7 +52,7 @@ export function HeardAboutCard({ pending = false, inboxCount = 0, isOwner = fals
   };
 
   return (
-    <div className="card" style={{ marginTop: 16 }} data-heard-about>
+    <div className="card" style={{ marginBottom: 14 }} data-heard-about>
       <div className="card-h">
         <div>
           <div className="title">{t('heardAbout.title')}</div>

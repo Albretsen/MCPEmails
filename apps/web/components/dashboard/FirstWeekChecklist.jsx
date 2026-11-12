@@ -127,7 +127,7 @@ export function FirstWeekChecklist({ inboxes = [], maxInboxes = null, userRole, 
   const descStyle = { fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 };
 
   return (
-    <div className="card" style={{ marginTop: 16 }} data-first-week-checklist>
+    <div className="card" style={{ marginBottom: 14 }} data-first-week-checklist>
       <div className="card-h">
         <div>
           <div className="title">{t('firstWeek.title')}</div>
