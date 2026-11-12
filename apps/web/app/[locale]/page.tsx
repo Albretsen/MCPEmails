@@ -1,52 +1,10 @@
-import type { Metadata } from 'next';
-import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { fetchStripePrices } from '@/lib/stripe/getPrices';
-import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
-import { routing } from '@/i18n/routing';
-import { requireLocale } from '@/i18n/require-locale';
-import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
-import { withBusinessSeatPrices } from '@/lib/stripe/business-seat-display';
-import { businessSeatPageCopy } from '@/lib/billing/business-seat-copy';
+import { requireLocale } from '@/i18n/require-locale';
+import { renderHome } from './home-render';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  requireLocale(locale);
-  const t = await getTranslations({ locale, namespace: 'home.meta' });
-
-  const title = t('title');
-  const description = t('description');
-
-  return {
-    // Absolute on purpose: the homepage title text is frozen until 2026-11-01
-    // for an SEO test, so it keeps the old suffix while the layout template
-    // now says "MCPEmails". Switch back to plain `title` after the test.
-    title: { absolute: `${title} · mcpemails` },
-    description,
-    alternates: metaAlternates(locale, ''),
-    openGraph: {
-      type: 'website',
-      url: localePath(locale, ''),
-      title,
-      description,
-      locale: OG_LOCALE[locale],
-      alternateLocale: routing.locales
-        .filter((l) => l !== locale)
-        .map((l) => OG_LOCALE[l]),
-      images: [OG_IMAGE],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [OG_IMAGE.url],
-    },
-  };
-}
+// Metadata, data and JSON-LD live in ./home-render.tsx, shared with the
+// staging-only Homepage Lab routes; this page renders exactly what it did.
+export { generateMetadata } from './home-render';
 
 export default async function HomePage({
   params,
@@ -55,35 +13,7 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   requireLocale(locale);
-  setRequestLocale(locale);
-  // Business per person while `business_seat_pricing` is on; untouched when
-  // it is off (src/lib/stripe/business-seat-display.ts).
-  const stripePrices = await withBusinessSeatPrices(await fetchStripePrices());
-  const businessSeat = businessSeatPageCopy(locale, stripePrices);
-
-  const t = await getTranslations({ locale, namespace: 'home.meta' });
-  // The visible FAQ (components/marketing/Sections.jsx, Faq) reads this same
-  // array, which is what keeps the FAQPage node and the page in step.
-  const tFaq = await getTranslations({ locale, namespace: 'home.faq' });
-  const faqItems = tFaq.raw('items');
-  const jsonLd = homeJsonLd(locale, {
-    name: t('title'),
-    description: t('description'),
-    faq: Array.isArray(faqItems) ? faqItems : [],
-    businessPerPerson: businessSeat && stripePrices.pro?.monthlyCents
-      ? { monthlyCents: stripePrices.pro.monthlyCents }
-      : null,
-  });
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {/* EUR on (env switch or the completed launch, eur-launch.ts) as read at
-          render; off renders exactly as before. */}
-      <HomeClient stripePrices={stripePrices} eurEnabled={await eurDisplayEnabled()} businessSeat={businessSeat} />
-    </>
-  );
+  return renderHome(locale, ({ stripePrices, eurEnabled, businessSeat }) => (
+    <HomeClient stripePrices={stripePrices} eurEnabled={eurEnabled} businessSeat={businessSeat} />
+  ));
 }

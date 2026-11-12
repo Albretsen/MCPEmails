@@ -1,0 +1,107 @@
+{
+  "variant": "v02",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 2027062686,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-16",
+      "idea": "Filled magazine grid: an asymmetric 6-column grid where every tile carries a real asset (screenshot crop, 3D object, real quote, diagram) with a caption; no empty tiles.",
+      "why": "Gives the coming assets a gallery without the empty bento look.",
+      "url": "https://www.siteinspire.com",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-14",
+      "idea": "Dashboard hero: a tight crop of the real dashboard with connected inboxes and recent actions, plus a 'see the draft card' secondary link.",
+      "why": "Shows there is a real product and control panel behind the connector.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-09",
+      "idea": "Marker highlight: plain black-and-white body with key phrases (never stored, you approve) highlighted in a light cobalt-soft wash, like a highlighter.",
+      "why": "Draws the eye to the two promises that matter.",
+      "url": "https://panic.com",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-17",
+      "idea": "Atkinson Hyperlegible 400/700 for headings and body, DM Mono 400 for addresses.",
+      "why": "Legibility as a value, good for an audience that reads carefully.",
+      "url": "https://fonts.google.com/specimen/Atkinson+Hyperlegible",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-14",
+      "idea": "Provider-first: 'Which inbox do you use?' picker at the top; the steps and notes below adapt to the chosen provider.",
+      "why": "Every visitor reads their own setup story.",
+      "url": "https://www.audubon.org/bird-guide",
+      "tone": "light",
+      "bold": true
+    },
+    "proof": {
+      "id": "proof-09",
+      "idea": "Listings in public MCP directories, linked out to the actual listing pages.",
+      "why": "Third-party presence that visitors can verify.",
+      "url": "https://fly.io",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-07",
+      "idea": "Detail crops at 200%: the Approve button, the To field, the inbox picker, each with a numbered callout and short label.",
+      "why": "Points at the exact controls that matter.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-02",
+      "idea": "Each section fades up 8px once on entry (200ms), disabled under prefers-reduced-motion.",
+      "why": "Gentle rhythm without distraction.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-08",
+      "idea": "Hero question > Answer card > How it got there (diagram) > What it can do > What it won't do > Pricing > Start free",
+      "why": "Task first, mechanics second.",
+      "url": "https://www.are.na",
+      "tone": "light",
+      "bold": true
+    },
+    "voice": {
+      "id": "voice-14",
+      "idea": "Postal and playful. Sample: 'We carry the letter. We don't keep a copy.'",
+      "why": "A memorable metaphor that is also the privacy promise.",
+      "url": "https://panic.com",
+      "tone": "light",
+      "bold": true
+    },
+    "wildcard": {
+      "id": "wildcard-13",
+      "idea": "The page is a manual's table of contents; every line expands into its section in place.",
+      "why": "One screen holds the whole product.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

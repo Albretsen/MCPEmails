@@ -176,6 +176,25 @@ const nextConfig = {
   // are multiple package-lock.json files on the filesystem above this package.
   turbopack: {
     root: path.resolve(__dirname, '../..'),
+    // Homepage Lab (staging only). `home-lab-entry` is the lab on a staging
+    // build and a no-op stub everywhere else, so a production build never
+    // compiles the lab or its variants (components/home-lab/README.md).
+    resolveAlias: {
+      'home-lab-entry':
+        process.env.NEXT_PUBLIC_APP_ENV === 'staging'
+          ? './components/home-lab-shell/HomeLab.tsx'
+          : './components/home-lab-shell/off.ts',
+      // One alias per variant, each the variant on staging and a null stub
+      // elsewhere, imported only by its own route (app/[locale]/home-lab/vNN).
+      ...Object.fromEntries(
+        ['v01', 'v02', 'v03', 'v04', 'v05', 'v06', 'v07', 'v08', 'v09', 'v10'].map((id) => [
+          `home-lab-${id}`,
+          process.env.NEXT_PUBLIC_APP_ENV === 'staging'
+            ? `./components/home-lab/${id}/Home.jsx`
+            : './components/home-lab-shell/off-variant.tsx',
+        ]),
+      ),
+    },
   },
 
   // ---------------------------------------------------------------------------

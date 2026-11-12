@@ -1,0 +1,107 @@
+{
+  "variant": "v07",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 637257314,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-05",
+      "idea": "Newspaper front page: masthead with today's date and 'Stockholm', a lead story about the draft card across 8 columns, a 4-column side rail 'Also in this edition' for providers and plans.",
+      "why": "News layout carries a lot of content densely and makes the Stockholm data location part of the masthead.",
+      "url": "https://stripe.com/press",
+      "tone": "light",
+      "bold": true
+    },
+    "hero": {
+      "id": "hero-06",
+      "idea": "Three-frame sequence: three stills left to right (Connect, Ask, Approve), the same size, captioned 1, 2, 3.",
+      "why": "The whole product in one row.",
+      "url": "https://oxide.computer",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-08",
+      "idea": "Framed prints: screenshots sit on cream mats with thin ink frames like prints on a wall, captions under each in small caps.",
+      "why": "Treats the product UI as the art.",
+      "url": "https://press.stripe.com",
+      "tone": "light",
+      "bold": true
+    },
+    "typography": {
+      "id": "typography-13",
+      "idea": "IBM Plex Sans Condensed 600 headings, IBM Plex Sans 400 body, IBM Plex Mono 400 labels: one superfamily, manual style.",
+      "why": "Engineering-manual coherence with zero pairing risk.",
+      "url": "https://fonts.google.com/specimen/IBM+Plex+Sans+Condensed",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-17",
+      "idea": "Install-led: start from 'You already use Claude or ChatGPT', show the install, then what to ask first.",
+      "why": "Matches visitors who arrive from client directories.",
+      "url": "https://www.raycast.com",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-07",
+      "idea": "Open by default: links to the public GitHub repository, the npm package and the docs, with 'read the code' as a secondary link.",
+      "why": "Anyone can check how it works.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": true
+    },
+    "asset_use": {
+      "id": "asset_use-15",
+      "idea": "Chat and inbox side by side, joined by a hairline that connects the message in the chat to the same message in the inbox.",
+      "why": "Makes 'live, not copied' visible.",
+      "url": "https://superhuman.com",
+      "tone": "light",
+      "bold": true
+    },
+    "motion": {
+      "id": "motion-09",
+      "idea": "Before and after screenshot crossfade on a slow 5-second loop, paused on hover.",
+      "why": "Shows change over time with no interaction needed.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-04",
+      "idea": "Masthead and lead story > Providers column > How it works > Latest changelog dispatches > Pricing > Colophon",
+      "why": "Newspaper order for the newspaper layout.",
+      "url": "https://stripe.com/press",
+      "tone": "light",
+      "bold": true
+    },
+    "voice": {
+      "id": "voice-10",
+      "idea": "Clipped fragments. Sample: 'Ask. Review. Send.'",
+      "why": "Fast to scan, easy to remember.",
+      "url": "https://www.raycast.com",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-11",
+      "idea": "Providers drawn as numbered field-guide plates I to XII.",
+      "why": "Turns the logo wall into an artefact.",
+      "url": "https://www.audubon.org/bird-guide",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

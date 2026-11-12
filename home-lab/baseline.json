@@ -1,0 +1,500 @@
+{
+ "title": "Email MCP Server: Gmail, Outlook, IMAP & Claude · mcpemails",
+ "description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored.",
+ "og": {
+  "og:title": "Email MCP Server: Gmail, Outlook, IMAP & Claude",
+  "og:description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored.",
+  "og:url": "https://mcpemails.com",
+  "og:locale": "en_US",
+  "og:image": "https://mcpemails.com/opengraph-image",
+  "og:image:width": "1200",
+  "og:image:height": "630",
+  "og:image:alt": "MCPEmails: Give your AI agent an inbox",
+  "og:locale:alternate": "ja_JP",
+  "og:type": "website",
+  "twitter:card": "summary_large_image",
+  "twitter:title": "Email MCP Server: Gmail, Outlook, IMAP & Claude",
+  "twitter:description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored.",
+  "twitter:image": "https://mcpemails.com/opengraph-image"
+ },
+ "headings": [
+  [
+   "h1",
+   "Hosted email MCP server Give your AI agent an inbox."
+  ],
+  [
+   "h2",
+   "What is an email MCP server?"
+  ],
+  [
+   "h2",
+   "Six things we believeabout email and agents."
+  ],
+  [
+   "h3",
+   "Twenty-one focused tools. The essentials, covered."
+  ],
+  [
+   "h3",
+   "Email is fetched live. Never stored."
+  ],
+  [
+   "h3",
+   "You stay in control of every send."
+  ],
+  [
+   "h3",
+   "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox."
+  ],
+  [
+   "h3",
+   "OAuth 2.0 for agents. One click to revoke."
+  ],
+  [
+   "h3",
+   "Credentials are encrypted at rest."
+  ],
+  [
+   "h2",
+   "See your whole MCP operation at a glance."
+  ],
+  [
+   "h2",
+   "You're the user. We're the pipe."
+  ],
+  [
+   "h3",
+   "Connect your inbox"
+  ],
+  [
+   "h3",
+   "Paste the URL: OAuth or API key"
+  ],
+  [
+   "h3",
+   "Your agent works the inbox"
+  ],
+  [
+   "h2",
+   "Just ask.It reads, writes, and files."
+  ],
+  [
+   "h2",
+   "Priced by inbox. No metering on paid plans."
+  ],
+  [
+   "h3",
+   "Free"
+  ],
+  [
+   "h3",
+   "Personal"
+  ],
+  [
+   "h3",
+   "Pro"
+  ],
+  [
+   "h3",
+   "Business"
+  ],
+  [
+   "h2",
+   "Questions, answered"
+  ]
+ ],
+ "first150": "Email MCP Server: Gmail, Outlook, IMAP & Claude · mcpemails Features How it works Pricing Docs Blog Sign in Get started free Hosted email MCP server Give your AI agent an inbox. Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored. Connect your inbox Read the docs 1 inbox free, forever No card required Email fetched live Running info@, sales@ and invoices@ for a company? All your work mailboxes in one agent . How a call flows t+0ms → t+312ms AI agent Claude · Cursor · VS Code · ChatGPT · any MCP client MCP MCPEmails /api/mcp endpoint IMAP Your provider Gmail · Outlook ·",
+ "word_count": 2769,
+ "internal_links": [
+  "/",
+  "/#features",
+  "/#how",
+  "/about",
+  "/best-email-mcp-servers",
+  "/blog",
+  "/blog/claude-imap-connector",
+  "/blog/connect-chatgpt-to-email",
+  "/blog/connect-claude-to-email",
+  "/cancel",
+  "/cancel?type=withdraw",
+  "/changelog",
+  "/connect",
+  "/connect/fastmail",
+  "/connect/gmail",
+  "/connect/icloud",
+  "/connect/imap",
+  "/connect/outlook",
+  "/connect/yahoo",
+  "/connect/yandex",
+  "/connect/zoho",
+  "/de",
+  "/developers",
+  "/docs",
+  "/docs#oauth",
+  "/docs#quickstart",
+  "/docs#tools",
+  "/docs/api",
+  "/docs/clients",
+  "/docs/providers",
+  "/docs/read-only-access",
+  "/dpa",
+  "/es",
+  "/for/business",
+  "/for/founders",
+  "/fr",
+  "/help",
+  "/ja",
+  "/login",
+  "/native-connectors-vs-mcp",
+  "/nb",
+  "/pricing",
+  "/privacy",
+  "/pt",
+  "/security",
+  "/self-hosting",
+  "/signup",
+  "/signup?redirect=%2Fapi%2Fstripe%2Fcheckout%2Fstart%3Fplan%3Dpersonal%26interval%3Dmonth",
+  "/signup?redirect=%2Fapi%2Fstripe%2Fcheckout%2Fstart%3Fplan%3Dpro%26interval%3Dmonth",
+  "/signup?redirect=%2Fapi%2Fstripe%2Fcheckout%2Fstart%3Fplan%3Dsolo%26interval%3Dmonth",
+  "/status",
+  "/terms",
+  "/terms#agreement",
+  "/tools/email-settings-lookup",
+  "/zh",
+  "mailto:hello@mcpemails.com",
+  "mailto:support@mcpemails.com"
+ ],
+ "external_links": [
+  "https://vikse.dev/",
+  "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US"
+ ],
+ "alternates": [
+  [
+   "canonical",
+   "https://mcpemails.com"
+  ],
+  [
+   "en",
+   "https://mcpemails.com"
+  ],
+  [
+   "nb",
+   "https://mcpemails.com/nb"
+  ],
+  [
+   "es",
+   "https://mcpemails.com/es"
+  ],
+  [
+   "fr",
+   "https://mcpemails.com/fr"
+  ],
+  [
+   "zh",
+   "https://mcpemails.com/zh"
+  ],
+  [
+   "de",
+   "https://mcpemails.com/de"
+  ],
+  [
+   "pt-BR",
+   "https://mcpemails.com/pt"
+  ],
+  [
+   "ja",
+   "https://mcpemails.com/ja"
+  ],
+  [
+   "x-default",
+   "https://mcpemails.com"
+  ]
+ ],
+ "images": [
+  {
+   "src": "/logo-wordmark.svg",
+   "alt": "MCPEmails",
+   "width": "280",
+   "height": "48",
+   "loading": null
+  },
+  {
+   "src": "/logo-wordmark-dark.svg",
+   "alt": "MCPEmails",
+   "width": "280",
+   "height": "48",
+   "loading": null
+  },
+  {
+   "src": "/logo-mark-dark.svg",
+   "alt": "MCPEmails",
+   "width": "48",
+   "height": "48",
+   "loading": null
+  }
+ ],
+ "jsonld": [
+  {
+   "@context": "https://schema.org",
+   "@graph": [
+    {
+     "@type": "Organization",
+     "@id": "https://mcpemails.com/#organization",
+     "name": "MCPEmails",
+     "alternateName": [
+      "MCP Emails",
+      "mcpemails",
+      "mcpemails.com"
+     ],
+     "url": "https://mcpemails.com",
+     "logo": "https://mcpemails.com/favicon.svg"
+    },
+    {
+     "@type": "WebSite",
+     "@id": "https://mcpemails.com/#website",
+     "name": "MCPEmails",
+     "alternateName": [
+      "MCP Emails",
+      "mcpemails",
+      "mcpemails.com"
+     ],
+     "url": "https://mcpemails.com",
+     "inLanguage": "en",
+     "publisher": {
+      "@id": "https://mcpemails.com/#organization"
+     }
+    },
+    {
+     "@type": "SoftwareApplication",
+     "name": "MCPEmails",
+     "url": "https://mcpemails.com",
+     "description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored.",
+     "applicationCategory": "BusinessApplication",
+     "applicationSubCategory": "Email",
+     "operatingSystem": "Web",
+     "publisher": {
+      "@id": "https://mcpemails.com/#organization"
+     },
+     "brand": {
+      "@id": "https://mcpemails.com/#organization"
+     },
+     "featureList": [
+      "Human approval before AI-sent email is dispatched",
+      "Transient attachment text extraction",
+      "User-invoked MCP workflow prompts",
+      "Idempotency keys for safe outbound email retries",
+      "Provider compatibility profiles",
+      "Original email export as .eml (message/rfc822)",
+      "Verified Send As addresses for Gmail and IMAP inboxes",
+      "Threaded reply drafts",
+      "Outlook / Microsoft 365 via Microsoft Graph"
+     ],
+     "offers": [
+      {
+       "@type": "Offer",
+       "name": "Free",
+       "description": "Connect one inbox and give your agent a real mailbox.",
+       "url": "https://mcpemails.com/pricing",
+       "price": "0",
+       "priceCurrency": "USD",
+       "availability": "https://schema.org/InStock",
+       "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "0",
+        "priceCurrency": "USD",
+        "unitText": "MONTH",
+        "billingDuration": 1,
+        "billingIncrement": 1
+       }
+      },
+      {
+       "@type": "Offer",
+       "name": "Personal",
+       "description": "Three mailboxes for one person or one small business: work, personal, or your first company addresses.",
+       "url": "https://mcpemails.com/pricing",
+       "price": "9",
+       "priceCurrency": "USD",
+       "availability": "https://schema.org/InStock",
+       "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "9",
+        "priceCurrency": "USD",
+        "unitText": "MONTH",
+        "billingDuration": 1,
+        "billingIncrement": 1
+       }
+      },
+      {
+       "@type": "Offer",
+       "name": "Pro",
+       "description": "For one person running a business: up to 10 mailboxes on one agent, from finance and sales to support and your own.",
+       "url": "https://mcpemails.com/pricing",
+       "price": "15",
+       "priceCurrency": "USD",
+       "availability": "https://schema.org/InStock",
+       "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "15",
+        "priceCurrency": "USD",
+        "unitText": "MONTH",
+        "billingDuration": 1,
+        "billingIncrement": 1
+       }
+      },
+      {
+       "@type": "Offer",
+       "name": "Business",
+       "description": "Billed per person who connects a mailbox, 2 people minimum. Private mailboxes for each person and company-wide mailboxes for shared addresses.",
+       "eligibleQuantity": {
+        "@type": "QuantitativeValue",
+        "minValue": 2,
+        "unitText": "person"
+       },
+       "url": "https://mcpemails.com/pricing",
+       "price": "29",
+       "priceCurrency": "USD",
+       "availability": "https://schema.org/InStock",
+       "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "29",
+        "priceCurrency": "USD",
+        "unitText": "MONTH",
+        "billingDuration": 1,
+        "billingIncrement": 1
+       }
+      }
+     ],
+     "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "reviewCount": 1,
+      "bestRating": "5",
+      "worstRating": "1"
+     },
+     "review": [
+      {
+       "@type": "Review",
+       "reviewBody": "Being able to connect all our emails into one MCP was a game changer.",
+       "datePublished": "2026-09-13",
+       "author": {
+        "@type": "Person",
+        "name": "Torstein Vikse",
+        "url": "https://vikse.dev/",
+        "worksFor": {
+         "@type": "Organization",
+         "name": "Vikse Development AS"
+        }
+       },
+       "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5",
+        "worstRating": "1"
+       },
+       "publisher": {
+        "@type": "Organization",
+        "name": "Google"
+       },
+       "url": "https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US"
+      }
+     ]
+    },
+    {
+     "@type": "FAQPage",
+     "@id": "https://mcpemails.com#faq",
+     "inLanguage": "en",
+     "mainEntity": [
+      {
+       "@type": "Question",
+       "name": "Is MCPEmails an IMAP MCP server?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Alongside Gmail and Outlook there is a generic IMAP and SMTP connector, so any mailbox with IMAP access works: your own domain, a hosting provider, a regional ISP. You enter the server details and an app password once, and your agent reads over IMAP and sends through your own SMTP server."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Can one agent work several mailboxes at once?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Connect each mailbox to the same account and your agent reaches all of them through one endpoint. It can list the connected inboxes, pick the right one for each request, and move between, say, a support address and a personal one in the same conversation. How many inboxes you can connect depends on your plan."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "How do I add the email MCP connector to Claude or ChatGPT?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Add a custom connector in your client settings, paste https://mcpemails.com/api/mcp as the server URL, and approve the sign-in. Clients that support OAuth need no API key. The same URL works in Cursor, VS Code and other MCP clients."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Do you use analytics?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Which AI clients does it work with?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Any MCP-compatible client. We're a standard streamable-http MCP server with OAuth 2.1, DCR and PKCE, so the same inbox works in Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat and more. Paste one endpoint URL and you're connected, with no per-app rebuild."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Which email providers can I connect?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Gmail and Google Workspace with a Google app password over IMAP, Outlook and Microsoft 365 by signing in with Microsoft (a work or school account may need its IT admin to approve the app once), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Is my email stored anywhere?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The mail your agent reads is fetched live from your provider on each request and never stored on our servers. The exceptions are outgoing messages that have to wait: a message you schedule for later, or a send held for your approval, is stored encrypted."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Is it really free?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The free plan connects one inbox, forever, with no card required, and your agent can read, search, send, reply, schedule and organise in it. Personal is $9 a month for a second and third mailbox on the same agent, Pro covers up to 10 for $15, and Business is for more mailboxes or when other people need in."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "What can the AI actually do with my inbox?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Twenty-one action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "How do I connect an inbox?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Create a free account, connect your mailbox (a Google app password for Gmail, sign in with Microsoft for Outlook, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
+       }
+      },
+      {
+       "@type": "Question",
+       "name": "Can I self-host it?",
+       "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MCPEmails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted plan."
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

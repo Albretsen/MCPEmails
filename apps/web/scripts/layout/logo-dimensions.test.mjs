@@ -130,7 +130,10 @@ test('CSS keeps the rendered width automatic, so the attributes act as a ratio a
 });
 
 test('every wordmark <img> has one of the two classes the CSS rule targets', () => {
-  for (const image of images.filter((i) => i.src.startsWith('logo-wordmark'))) {
+  // The staging-only Homepage Lab variants (components/home-lab/vNN) size their
+  // logo in their own CSS module, not with the global .logo-light rule. They
+  // still carry width and height, which the test above checks.
+  for (const image of images.filter((i) => i.src.startsWith('logo-wordmark') && !i.file.startsWith('components/home-lab/'))) {
     const expected = image.src === 'logo-wordmark.svg' ? 'logo-light' : 'logo-dark';
     assert.match(image.tag, new RegExp(`className="${expected}"`), `${image.file}: ${image.tag}`);
   }

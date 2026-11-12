@@ -1,0 +1,10 @@
+{
+  "_why": "Hard exclusions for deal_briefs.py. exclude: ideas that break a non-negotiable rule. families: layouts that read alike; at most max_per_family of each per deal.",
+  "exclude": ["wildcard-09"],
+  "pairs": [],
+  "families": {
+    "layout-01": "document", "layout-02": "document", "layout-04": "document", "layout-07": "document",
+    "layout-10": "document", "layout-12": "document", "layout-14": "document", "layout-15": "document"
+  },
+  "max_per_family": { "document": 3 }
+}

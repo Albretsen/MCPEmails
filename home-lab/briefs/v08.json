@@ -1,0 +1,107 @@
+{
+  "variant": "v08",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 1964509051,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-14",
+      "idea": "Spec sheet: the core of the page is one long two-column key/value table (Providers, Clients, Data location, Storage, Approval, Revoke, Plans) with screenshots between table groups.",
+      "why": "Technical buyers get every fact on one scan.",
+      "url": "https://teenage.engineering",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-15",
+      "idea": "One muted looping clip (about 12 seconds): a question typed in Claude, the draft card appears, the user clicks Approve, 'Sent' shows.",
+      "why": "The whole value loop in one clip.",
+      "url": "https://culturedcode.com/things/",
+      "tone": "any",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-12",
+      "idea": "Museum white: pure white, objects (3D envelope, draft card) shot with soft contact shadows, grey captions, very wide spacing.",
+      "why": "Calm, premium, and it makes the 3D objects feel collected rather than decorative.",
+      "url": "https://www.rijksmuseum.nl/en",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-09",
+      "idea": "Familjen Grotesk 600 headings (from a Stockholm foundry), Literata 400 body at 18px, Familjen Grotesk 500 for buttons.",
+      "why": "Quietly ties the type to Stockholm, where the data lives.",
+      "url": "https://fonts.google.com/specimen/Familjen+Grotesk",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-08",
+      "idea": "Founder letter: why the product exists and what it promises, signed, with features as a short P.S. list.",
+      "why": "A small company's best proof is a real person.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-02",
+      "idea": "Security model block with four plain statements: mail fetched live and never stored, credentials encrypted at rest, OAuth access revocable in one click, data stored in Stockholm.",
+      "why": "The four facts people actually ask about, stated plainly.",
+      "url": "https://proton.me/mail",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-17",
+      "idea": "A single 3D object in the hero, then none again; the rest of the page uses real screenshots only.",
+      "why": "Lets the object be memorable without becoming decoration.",
+      "url": "https://resend.com",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-16",
+      "idea": "A thin cobalt reading-progress line in the left index of the long-read.",
+      "why": "Calm orientation, no scroll hijack.",
+      "url": "https://practicaltypography.com",
+      "tone": "light",
+      "bold": true
+    },
+    "section_order": {
+      "id": "section_order-14",
+      "idea": "Hero > Real quotes > Feature rows (alternating) > Letter > Pricing > Closing CTA",
+      "why": "Proof early, story later.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-15",
+      "idea": "Two readers, human and agent: sections for people with a short aside to the AI. Sample: 'Note to the agent: ask before you send.'",
+      "why": "Acknowledges that agents read pages too.",
+      "url": "https://vercel.com",
+      "tone": "light",
+      "bold": true
+    },
+    "wildcard": {
+      "id": "wildcard-15",
+      "idea": "Each section header shows the date it was last updated, taken from git.",
+      "why": "Shows the page is maintained.",
+      "url": "https://linear.app",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

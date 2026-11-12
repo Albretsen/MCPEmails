@@ -1,0 +1,107 @@
+{
+  "variant": "v04",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 1373657159,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-17",
+      "idea": "Product catalogue with plates: each plan shown as a printed catalogue plate with a large number, name, and what it includes, then a single shared CTA.",
+      "why": "Pricing by inbox is simple; a plate per plan makes it scannable.",
+      "url": "https://standardsmanual.com",
+      "tone": "light",
+      "bold": false
+    },
+    "hero": {
+      "id": "hero-04",
+      "idea": "The provider list is the headline: 'Gmail. Outlook. iCloud. Fastmail. Yahoo. Zoho. Any IMAP.' set very large, each word linking to its connect guide.",
+      "why": "Answers 'does it work with mine?' before anything else.",
+      "url": "https://swissted.com",
+      "tone": "light",
+      "bold": true
+    },
+    "visual_style": {
+      "id": "visual_style-03",
+      "idea": "Ink band: a light page with one full-width brand-ink (navy) band for the security section, cobalt and mint accents inside it, light again after.",
+      "why": "A dark accent inside a light page marks the 'vault' part of the story.",
+      "url": "https://1password.com",
+      "tone": "light",
+      "bold": false
+    },
+    "typography": {
+      "id": "typography-06",
+      "idea": "Libre Caslon Text 400/700 for headings and body, Courier Prime 400 for To / From / Subject lines.",
+      "why": "Reads like a typed letter, ties the page to correspondence.",
+      "url": "https://fonts.google.com/specimen/Libre+Caslon+Text",
+      "tone": "light",
+      "bold": true
+    },
+    "narrative": {
+      "id": "narrative-01",
+      "idea": "Problem first: 'Your AI can write the email. It still can't send it.' Then the fix, then the proof.",
+      "why": "Names the friction every Claude or ChatGPT user knows.",
+      "url": "https://basecamp.com",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-13",
+      "idea": "Revoke demo: a screenshot of the revoke control and one line on what stops working immediately.",
+      "why": "Shows the user can always pull the plug.",
+      "url": "https://1password.com",
+      "tone": "light",
+      "bold": true
+    },
+    "asset_use": {
+      "id": "asset_use-10",
+      "idea": "Annotated dashboard: one large dashboard screenshot with numbered pins and a legend list below it.",
+      "why": "Explains the control panel in one image.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": false
+    },
+    "motion": {
+      "id": "motion-13",
+      "idea": "Client tabs: only the underline slides between Claude, ChatGPT, Cursor and VS Code.",
+      "why": "Minimal motion on an interactive control.",
+      "url": "https://www.raycast.com",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-17",
+      "idea": "Short hero > FAQ as main body (Setup, Safety, Teams, Billing) > Pricing > Start free",
+      "why": "Answer-led page for cautious visitors.",
+      "url": "https://arc.net",
+      "tone": "light",
+      "bold": true
+    },
+    "voice": {
+      "id": "voice-12",
+      "idea": "Mission voice. Sample: 'Your mail belongs in your mailbox, not in one more database.'",
+      "why": "Frames privacy as a principle, not a feature.",
+      "url": "https://mullvad.net/en",
+      "tone": "light",
+      "bold": true
+    },
+    "wildcard": {
+      "id": "wildcard-01",
+      "idea": "One colour only: every element in brand cobalt on white, screenshots duotoned to cobalt and paper.",
+      "why": "Forces hierarchy through size and space; strong brand recall.",
+      "url": "https://swissted.com",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "variant": "v09",
+  "seed": 1794494288,
+  "derived_seed": "1794494288:2",
+  "variant_seed": 1166650964,
+  "bold": true,
+  "tone": "light",
+  "must_haves": [
+    "providers",
+    "pricing",
+    "security and where data is stored (Stockholm)",
+    "reviews",
+    "FAQ",
+    "how it works",
+    "Business per person"
+  ],
+  "ideas": {
+    "layout": {
+      "id": "layout-15",
+      "idea": "FAQ as the page: short hero, then every question as an H2 with its answer open (no accordion), grouped Setup, Safety, Teams, Billing.",
+      "why": "Objections decide this purchase; a page that is mostly answers respects that.",
+      "url": "https://arc.net",
+      "tone": "light",
+      "bold": true
+    },
+    "hero": {
+      "id": "hero-03",
+      "idea": "A real Claude conversation screenshot: the user asks for the unpaid invoices in invoices@ and gets a short list plus drafted reminders.",
+      "why": "A business task on a shared address speaks to the team half of customers.",
+      "url": "https://superhuman.com",
+      "tone": "light",
+      "bold": false
+    },
+    "visual_style": {
+      "id": "visual_style-14",
+      "idea": "Ledger lines: pricing and spec tables on faint horizontal rules like a ledger, numbers in tabular figures, cobalt totals.",
+      "why": "Fits teams running invoices@ and keeps tables readable.",
+      "url": "https://standardsmanual.com",
+      "tone": "light",
+      "bold": true
+    },
+    "typography": {
+      "id": "typography-16",
+      "idea": "Spectral 300 italic for large display lines, Work Sans 400/500 body.",
+      "why": "Light, literary display without heaviness.",
+      "url": "https://fonts.google.com/specimen/Spectral",
+      "tone": "light",
+      "bold": false
+    },
+    "narrative": {
+      "id": "narrative-12",
+      "idea": "Built for the long haul: no lock-in, revoke in one click, your mail never leaves your provider's storage.",
+      "why": "Low commitment lowers the fear of trying it.",
+      "url": "https://buttondown.com",
+      "tone": "light",
+      "bold": false
+    },
+    "proof": {
+      "id": "proof-11",
+      "idea": "Full pricing table on the homepage, including Business per person, with no 'contact us' gate.",
+      "why": "Transparency is proof of good faith.",
+      "url": "https://plausible.io",
+      "tone": "light",
+      "bold": false
+    },
+    "asset_use": {
+      "id": "asset_use-08",
+      "idea": "Small 3D envelope renders used as step markers (1, 2, 3) in place of icons.",
+      "why": "Ownable markers instead of generic icons.",
+      "url": "https://panic.com",
+      "tone": "light",
+      "bold": true
+    },
+    "motion": {
+      "id": "motion-12",
+      "idea": "Linked FAQ answers get a brief cobalt-soft background flash when reached by anchor.",
+      "why": "Helps people land on the right answer.",
+      "url": "https://arc.net",
+      "tone": "light",
+      "bold": false
+    },
+    "section_order": {
+      "id": "section_order-07",
+      "idea": "Index > 01 What it is > 02 Providers > 03 Clients > 04 Security > 05 Approval > 06 Plans > 07 Questions",
+      "why": "Manual order, easy to jump around.",
+      "url": "https://teenage.engineering/guides/op-1",
+      "tone": "light",
+      "bold": false
+    },
+    "voice": {
+      "id": "voice-08",
+      "idea": "Business-plain for teams. Sample: 'Give the AI the invoices@ inbox. Keep the approve button for yourself.'",
+      "why": "Speaks to owners delegating shared inboxes.",
+      "url": "https://www.fastmail.com",
+      "tone": "light",
+      "bold": false
+    },
+    "wildcard": {
+      "id": "wildcard-04",
+      "idea": "Every section is an email: each one has a From / To / Subject / Date header block and a body.",
+      "why": "The product's medium becomes the page's grammar.",
+      "url": "https://www.hey.com",
+      "tone": "light",
+      "bold": true
+    }
+  }
+}

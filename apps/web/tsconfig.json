@@ -24,6 +24,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "home-lab-entry": [
+        "./components/home-lab-shell/HomeLab.tsx"
+      ],
+      "home-lab-v*": [
+        "./components/home-lab/v*/Home.jsx"
       ]
     },
     "target": "ES2017",

@@ -1,0 +1,1697 @@
+{
+ "generated": "2026-11-12",
+ "ideas": [
+  {
+   "id": "layout-01",
+   "category": "layout",
+   "idea": "Editorial long-read: one 640px text column on the left, a wide right margin holding screenshots and short notes as marginalia, like a printed book page.",
+   "why": "Lets the product be explained in sentences, which suits a careful buyer deciding whether to give an AI their inbox.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-02",
+   "category": "layout",
+   "idea": "Field manual: numbered chapters 01 to 08 with a sticky left index; each chapter ends with a small 'back to index' link.",
+   "why": "Setup really is a short sequence (connect, paste URL, ask, approve), so a manual structure tells the truth about it.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-03",
+   "category": "layout",
+   "idea": "Sticky split: left 5 columns hold headline and Start free pinned; right 7 columns scroll through four screenshots in order (connect, paste URL, ask, approve).",
+   "why": "The CTA never leaves the screen while the four real steps play out beside it.",
+   "url": "https://ia.net/writer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-04",
+   "category": "layout",
+   "idea": "Docs-shaped homepage: left sidebar of anchors (Overview, Providers, Clients, Security, Approval, Plans), main column written like a quickstart with the connector URL in a code block.",
+   "why": "Many visitors arrive from Cursor and VS Code; a docs page feels native to them and shows how little setup there is.",
+   "url": "https://resend.com",
+   "tone": "any",
+   "bold": false
+  },
+  {
+   "id": "layout-05",
+   "category": "layout",
+   "idea": "Newspaper front page: masthead with today's date and 'Stockholm', a lead story about the draft card across 8 columns, a 4-column side rail 'Also in this edition' for providers and plans.",
+   "why": "News layout carries a lot of content densely and makes the Stockholm data location part of the masthead.",
+   "url": "https://stripe.com/press",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-06",
+   "category": "layout",
+   "idea": "Catalogue index: the page opens with a stacked list of five 'titles' (Connect, Ask, Approve, Teams, Plans), each line linking down to its full section.",
+   "why": "A visitor sees the whole product in five lines before reading anything, then jumps to what they care about.",
+   "url": "https://press.stripe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-07",
+   "category": "layout",
+   "idea": "Technical paper: a short abstract under the H1, then numbered sections with every visual captioned 'Fig. 1', 'Fig. 2', footnotes at the end.",
+   "why": "Signals rigour about security and data handling without a compliance badge.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-08",
+   "category": "layout",
+   "idea": "Desktop metaphor: the page is a light desktop with three overlapping windows (Inbox, Claude chat, Draft card) that can be focused by click; a plain stacked fallback on mobile.",
+   "why": "Shows the three parts of the product side by side the way a user actually has them open.",
+   "url": "https://posthog.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-09",
+   "category": "layout",
+   "idea": "One continuous transcript: the whole page is a single chat thread top to bottom, with explanatory annotations in the left margin next to each message.",
+   "why": "The product lives inside a chat, so the page is a chat, read like a case study.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-10",
+   "category": "layout",
+   "idea": "Field-guide index: providers listed as guide entries (identification: OAuth or app password; habitat: personal or company domain; notes), filterable by type.",
+   "why": "Provider fit is the first question people ask; a guide answers it per provider instead of with a logo wall.",
+   "url": "https://www.audubon.org/bird-guide",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-11",
+   "category": "layout",
+   "idea": "Two-track page: after the hero the page forks into two parallel columns, 'For you' and 'For your team (info@, sales@)', running side by side to pricing.",
+   "why": "About half of paying customers are teams on their own domain; they get their own column instead of a footnote.",
+   "url": "https://buttondown.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-12",
+   "category": "layout",
+   "idea": "Changelog as body: below a short hero, the main content is recent dated changelog entries grouped by month, like a numbered newsletter archive.",
+   "why": "Shows a living product without claiming numbers.",
+   "url": "https://craigmod.com/ridgeline/",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-13",
+   "category": "layout",
+   "idea": "Alternating rows with bleed: text in 5 left columns, screenshot in 7 columns bleeding off the right edge of the viewport, five rows.",
+   "why": "A familiar reading rhythm that gives screenshots room at real size.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-14",
+   "category": "layout",
+   "idea": "Spec sheet: the core of the page is one long two-column key/value table (Providers, Clients, Data location, Storage, Approval, Revoke, Plans) with screenshots between table groups.",
+   "why": "Technical buyers get every fact on one scan.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-15",
+   "category": "layout",
+   "idea": "FAQ as the page: short hero, then every question as an H2 with its answer open (no accordion), grouped Setup, Safety, Teams, Billing.",
+   "why": "Objections decide this purchase; a page that is mostly answers respects that.",
+   "url": "https://arc.net",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "layout-16",
+   "category": "layout",
+   "idea": "Filled magazine grid: an asymmetric 6-column grid where every tile carries a real asset (screenshot crop, 3D object, real quote, diagram) with a caption; no empty tiles.",
+   "why": "Gives the coming assets a gallery without the empty bento look.",
+   "url": "https://www.siteinspire.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "layout-17",
+   "category": "layout",
+   "idea": "Product catalogue with plates: each plan shown as a printed catalogue plate with a large number, name, and what it includes, then a single shared CTA.",
+   "why": "Pricing by inbox is simple; a plate per plan makes it scannable.",
+   "url": "https://standardsmanual.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-01",
+   "category": "hero",
+   "idea": "The real draft card, rendered from the shipping card build at 1:1, with To, Subject, body and Approve / Edit buttons, next to a left-aligned H1.",
+   "why": "Proves the strongest differentiator in the first second: nothing goes out without your yes.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-02",
+   "category": "hero",
+   "idea": "Before and after on one sample mailbox: left pane a raw inbox, right pane the same inbox with three AI drafts waiting, labelled 'sample mailbox'.",
+   "why": "Shows the outcome, not the plumbing.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-03",
+   "category": "hero",
+   "idea": "A real Claude conversation screenshot: the user asks for the unpaid invoices in invoices@ and gets a short list plus drafted reminders.",
+   "why": "A business task on a shared address speaks to the team half of customers.",
+   "url": "https://superhuman.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-04",
+   "category": "hero",
+   "idea": "The provider list is the headline: 'Gmail. Outlook. iCloud. Fastmail. Yahoo. Zoho. Any IMAP.' set very large, each word linking to its connect guide.",
+   "why": "Answers 'does it work with mine?' before anything else.",
+   "url": "https://swissted.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-05",
+   "category": "hero",
+   "idea": "The connector URL as hero: one copyable field holding the real connector URL, a Copy button, and 'Paste this into Claude or ChatGPT.'",
+   "why": "Shows the setup really is one URL.",
+   "url": "https://vercel.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-06",
+   "category": "hero",
+   "idea": "Three-frame sequence: three stills left to right (Connect, Ask, Approve), the same size, captioned 1, 2, 3.",
+   "why": "The whole product in one row.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-07",
+   "category": "hero",
+   "idea": "The draft card as a physical 3D object lying on a light desk surface, with the H1 'Nothing sends until you say so.'",
+   "why": "Makes approval tangible and ownable; nobody else has this object.",
+   "url": "https://resend.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-08",
+   "category": "hero",
+   "idea": "A question as H1: 'What did the accountant ask for last week?' with the AI's answer card under it.",
+   "why": "Starts from a task people recognise instead of a category name.",
+   "url": "https://ia.net/writer",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-09",
+   "category": "hero",
+   "idea": "Install hero: two equal columns 'Add to Claude' and 'Add to ChatGPT', each with three numbered steps and a screenshot, Start free above both.",
+   "why": "Most visitors already chose their AI client; meet them there.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-10",
+   "category": "hero",
+   "idea": "A 3D envelope with the draft pulled halfway out, a strong long shadow, H1 beside it.",
+   "why": "A calm, ownable object instead of an abstract graphic.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-11",
+   "category": "hero",
+   "idea": "Team hero: a 3D postbox with three labelled slots (info@, sales@, invoices@) and copy aimed at small businesses on their own domain.",
+   "why": "Speaks directly to the business half of payers.",
+   "url": "https://www.fastmail.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-12",
+   "category": "hero",
+   "idea": "Type-only hero: a two-sentence statement set large, Start free under it, and the first screenshot starts right at the fold.",
+   "why": "Confidence through restraint; fast to load.",
+   "url": "https://mullvad.net/en",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-13",
+   "category": "hero",
+   "idea": "Data-path diagram hero: your inbox, then MCPEmails (passes through, stores nothing, Stockholm), then your AI, drawn as one clean horizontal line.",
+   "why": "Answers the privacy question with a picture.",
+   "url": "https://tailscale.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-14",
+   "category": "hero",
+   "idea": "Dashboard hero: a tight crop of the real dashboard with connected inboxes and recent actions, plus a 'see the draft card' secondary link.",
+   "why": "Shows there is a real product and control panel behind the connector.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "hero-15",
+   "category": "hero",
+   "idea": "One muted looping clip (about 12 seconds): a question typed in Claude, the draft card appears, the user clicks Approve, 'Sent' shows.",
+   "why": "The whole value loop in one clip.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "any",
+   "bold": false
+  },
+  {
+   "id": "hero-16",
+   "category": "hero",
+   "idea": "A printed email draft with a rubber 'APPROVED' stamp and a signature line, photographed flat, H1 to its left.",
+   "why": "Turns the approval step into a memorable mark.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "hero-17",
+   "category": "hero",
+   "idea": "Client tabs: Claude, ChatGPT, Cursor, VS Code; each tab shows that client's real screenshot doing the same task.",
+   "why": "Proves 'works in your client' with real screens.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-01",
+   "category": "visual_style",
+   "idea": "Paper and ink: warm off-white paper surface, brand ink navy for all type, brand cobalt used only on actions (Start free, Approve, links).",
+   "why": "Cobalt becomes a signal for 'this does something', which echoes the approve-before-send idea.",
+   "url": "https://press.stripe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-02",
+   "category": "visual_style",
+   "idea": "Swiss rules: white ground, heavy 2px ink rules between sections, thin 1px rules inside them, cobalt only as one solid block per section.",
+   "why": "Structure through rules instead of cards and shadows.",
+   "url": "https://swissted.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-03",
+   "category": "visual_style",
+   "idea": "Ink band: a light page with one full-width brand-ink (navy) band for the security section, cobalt and mint accents inside it, light again after.",
+   "why": "A dark accent inside a light page marks the 'vault' part of the story.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-04",
+   "category": "visual_style",
+   "idea": "Pasteup board: screenshots mounted with visible paper edges and small crop marks, slight off-white board texture behind them.",
+   "why": "Feels made by hand, the opposite of generic AI gloss.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-05",
+   "category": "visual_style",
+   "idea": "Blueprint grid: faint 8px grid on the page background in a very light cobalt tint, diagrams drawn in cobalt lines, screenshots unframed.",
+   "why": "Technical honesty; the grid also aligns everything.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-06",
+   "category": "visual_style",
+   "idea": "Manila surfaces: alternating sections on a pale envelope-manila tint and white, type in brand ink, cobalt for links.",
+   "why": "The envelope surface ties the page to mail without clip art.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-07",
+   "category": "visual_style",
+   "idea": "Quiet density: generous white space, 1px hairline borders in a light ink tint, no shadows anywhere, cobalt used under 5% of the page area.",
+   "why": "A restrained surface makes real screenshots the colour on the page.",
+   "url": "https://www.vitsoe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-08",
+   "category": "visual_style",
+   "idea": "Framed prints: screenshots sit on cream mats with thin ink frames like prints on a wall, captions under each in small caps.",
+   "why": "Treats the product UI as the art.",
+   "url": "https://press.stripe.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-09",
+   "category": "visual_style",
+   "idea": "Marker highlight: plain black-and-white body with key phrases (never stored, you approve) highlighted in a light cobalt-soft wash, like a highlighter.",
+   "why": "Draws the eye to the two promises that matter.",
+   "url": "https://panic.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-10",
+   "category": "visual_style",
+   "idea": "Duotone screenshots: every screenshot converted to brand ink plus paper, except the draft card, which stays in full colour.",
+   "why": "The one coloured object on the page is the one that matters.",
+   "url": "https://www.museum-gestaltung.ch/en/",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-11",
+   "category": "visual_style",
+   "idea": "Riso texture: diagrams printed in two overlapping inks (brand cobalt and mint) with fine grain and slight misregistration.",
+   "why": "Warm print texture without new colours.",
+   "url": "https://pudding.cool",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-12",
+   "category": "visual_style",
+   "idea": "Museum white: pure white, objects (3D envelope, draft card) shot with soft contact shadows, grey captions, very wide spacing.",
+   "why": "Calm, premium, and it makes the 3D objects feel collected rather than decorative.",
+   "url": "https://www.rijksmuseum.nl/en",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-13",
+   "category": "visual_style",
+   "idea": "Hardware labels: light grey panels with tiny uppercase labels in ink and cobalt status dots, like markings on a device.",
+   "why": "Gives the connector a tangible, engineered feel.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-14",
+   "category": "visual_style",
+   "idea": "Ledger lines: pricing and spec tables on faint horizontal rules like a ledger, numbers in tabular figures, cobalt totals.",
+   "why": "Fits teams running invoices@ and keeps tables readable.",
+   "url": "https://standardsmanual.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-15",
+   "category": "visual_style",
+   "idea": "Postmark separators: section breaks are circular postmarks in cobalt line work (date plus 'STOCKHOLM'), the only ornament on the page.",
+   "why": "One ownable ornament that also carries the data-location fact.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "visual_style-16",
+   "category": "visual_style",
+   "idea": "Semantic colour only: brand colours keep their product meaning everywhere (cobalt = action, mint = sent or approved, amber = held, red = blocked), nothing decorative.",
+   "why": "Visitors learn the product's states just by reading the page.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "visual_style-17",
+   "category": "visual_style",
+   "idea": "High-density print: smaller body (15px), tight leading, many short sections, ink rules, like a dense reference card; cobalt for headings only.",
+   "why": "Rewards readers who want every detail.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-01",
+   "category": "typography",
+   "idea": "Fraunces 600 (opsz 144, SOFT 0) for H1 and H2, Instrument Sans 400/500 body at 18px, IBM Plex Mono 400 for email addresses and the connector URL.",
+   "why": "A warm serif display with plain body text; mono marks anything you can copy.",
+   "url": "https://fonts.google.com/specimen/Fraunces",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-02",
+   "category": "typography",
+   "idea": "Newsreader 500 italic H1 at 72px, Newsreader 400 body at 19px, Martian Mono 400 at 12px for labels and captions.",
+   "why": "Editorial, letter-like, readable at length.",
+   "url": "https://fonts.google.com/specimen/Newsreader",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-03",
+   "category": "typography",
+   "idea": "Instrument Serif 400 at 96px for the H1 only, Geist 400/600 for everything else, Geist Mono 400 for the connector URL.",
+   "why": "One dramatic serif moment, then calm modern text.",
+   "url": "https://fonts.google.com/specimen/Instrument+Serif",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-04",
+   "category": "typography",
+   "idea": "Space Grotesk 700 headings at -2% tracking, IBM Plex Sans 400 body, Space Mono 400 for addresses like info@.",
+   "why": "Technical character without looking like a terminal.",
+   "url": "https://fonts.google.com/specimen/Space+Grotesk",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-05",
+   "category": "typography",
+   "idea": "Schibsted Grotesk 800 headlines (a Nordic newspaper face), Source Serif 4 400 body at 18px, Schibsted Grotesk 500 small caps style for kickers.",
+   "why": "Newspaper voice with a Scandinavian origin.",
+   "url": "https://fonts.google.com/specimen/Schibsted+Grotesk",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-06",
+   "category": "typography",
+   "idea": "Libre Caslon Text 400/700 for headings and body, Courier Prime 400 for To / From / Subject lines.",
+   "why": "Reads like a typed letter, ties the page to correspondence.",
+   "url": "https://fonts.google.com/specimen/Libre+Caslon+Text",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-07",
+   "category": "typography",
+   "idea": "All monospace: Commit Mono 400/700 (SIL OFL) throughout, scale 14 / 18 / 32 / 64, aligned to character columns.",
+   "why": "A developer-native page for Cursor and VS Code visitors.",
+   "url": "https://commitmono.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-08",
+   "category": "typography",
+   "idea": "Bricolage Grotesque 800 at wdth 75 for a large condensed H1, Bricolage Grotesque 400 body at opsz 14.",
+   "why": "One variable family, lots of character, self-hosts as a single file.",
+   "url": "https://fonts.google.com/specimen/Bricolage+Grotesque",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-09",
+   "category": "typography",
+   "idea": "Familjen Grotesk 600 headings (from a Stockholm foundry), Literata 400 body at 18px, Familjen Grotesk 500 for buttons.",
+   "why": "Quietly ties the type to Stockholm, where the data lives.",
+   "url": "https://fonts.google.com/specimen/Familjen+Grotesk",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-10",
+   "category": "typography",
+   "idea": "Archivo 800 at wdth 62 for poster-like headlines, Archivo 400 at wdth 100 body, same family for everything.",
+   "why": "Swiss-poster energy from one variable font.",
+   "url": "https://fonts.google.com/specimen/Archivo",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-11",
+   "category": "typography",
+   "idea": "Young Serif 400 headings, Hanken Grotesk 400/600 body, tabular figures for pricing.",
+   "why": "Friendly, slightly old-fashioned serif that suits a calm mail product.",
+   "url": "https://fonts.google.com/specimen/Young+Serif",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-12",
+   "category": "typography",
+   "idea": "Courier Prime 400/700 for headings set like typed memos, IBM Plex Serif 400 body.",
+   "why": "Typewritten headings make every section feel like a memo.",
+   "url": "https://fonts.google.com/specimen/Courier+Prime",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-13",
+   "category": "typography",
+   "idea": "IBM Plex Sans Condensed 600 headings, IBM Plex Sans 400 body, IBM Plex Mono 400 labels: one superfamily, manual style.",
+   "why": "Engineering-manual coherence with zero pairing risk.",
+   "url": "https://fonts.google.com/specimen/IBM+Plex+Sans+Condensed",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-14",
+   "category": "typography",
+   "idea": "Source Serif 4 600 at opsz 60 for a 72px display, Public Sans 400 body, Public Sans 700 for labels.",
+   "why": "Government-plain body under a confident serif.",
+   "url": "https://fonts.google.com/specimen/Source+Serif+4",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-15",
+   "category": "typography",
+   "idea": "Geist 500 everywhere with a capped scale (15 / 20 / 40px); the H1 is only 40px.",
+   "why": "Quiet typography so screenshots and the draft card lead.",
+   "url": "https://fonts.google.com/specimen/Geist",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "typography-16",
+   "category": "typography",
+   "idea": "Spectral 300 italic for large display lines, Work Sans 400/500 body.",
+   "why": "Light, literary display without heaviness.",
+   "url": "https://fonts.google.com/specimen/Spectral",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-17",
+   "category": "typography",
+   "idea": "Atkinson Hyperlegible 400/700 for headings and body, DM Mono 400 for addresses.",
+   "why": "Legibility as a value, good for an audience that reads carefully.",
+   "url": "https://fonts.google.com/specimen/Atkinson+Hyperlegible",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "typography-18",
+   "category": "typography",
+   "idea": "Gloock 400 high-contrast headlines, Chivo 400 body, Chivo Mono 400 labels.",
+   "why": "Strong editorial contrast in headings, sober body text.",
+   "url": "https://fonts.google.com/specimen/Gloock",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-01",
+   "category": "narrative",
+   "idea": "Problem first: 'Your AI can write the email. It still can't send it.' Then the fix, then the proof.",
+   "why": "Names the friction every Claude or ChatGPT user knows.",
+   "url": "https://basecamp.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-02",
+   "category": "narrative",
+   "idea": "Demo first: the page opens with a full task walkthrough, and explanation only starts after it.",
+   "why": "People believe what they see working.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-03",
+   "category": "narrative",
+   "idea": "Objections first: the first section after the hero answers three worries (Will it send without me? Is my mail stored? Does it work with my provider?) with proof for each.",
+   "why": "These worries are what stop signups; answer them before features.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-04",
+   "category": "narrative",
+   "idea": "By hand versus connected: the same task shown twice, once copying between inbox and chat, once with MCPEmails.",
+   "why": "Compares against the real alternative (doing it yourself), not competitors.",
+   "url": "https://proton.me/mail",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-05",
+   "category": "narrative",
+   "idea": "Use cases by mailbox: invoices@, sales@, info@ and a personal inbox, each a short story with one screenshot.",
+   "why": "Business addresses are where half the paying customers live.",
+   "url": "https://basecamp.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-06",
+   "category": "narrative",
+   "idea": "Day in the life: morning triage, midday replies, end-of-day follow-ups, each with a real task and the draft card.",
+   "why": "Shows the habit, not a one-off trick.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-07",
+   "category": "narrative",
+   "idea": "Chain of custody: follow one email from the provider, through MCPEmails, to the AI, to the draft card, to sent, stating what touches it at each step.",
+   "why": "Turns the security model into a story.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-08",
+   "category": "narrative",
+   "idea": "Founder letter: why the product exists and what it promises, signed, with features as a short P.S. list.",
+   "why": "A small company's best proof is a real person.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-09",
+   "category": "narrative",
+   "idea": "Beliefs: numbered principles (mail is fetched live, you approve sends, your provider stays the source of truth) each backed by a link to how it works.",
+   "why": "A clear point of view on agents and email.",
+   "url": "https://www.vitsoe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-10",
+   "category": "narrative",
+   "idea": "Agent's-eye view: the page narrates what the AI can see and do once connected, and where it has to stop and ask.",
+   "why": "Makes permissions concrete and reassuring.",
+   "url": "https://vercel.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-11",
+   "category": "narrative",
+   "idea": "A team story: one small business, three shared addresses, who asks the AI and who approves, ending on Business per person.",
+   "why": "Sells the Business plan through a believable flow.",
+   "url": "https://www.fastmail.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-12",
+   "category": "narrative",
+   "idea": "Built for the long haul: no lock-in, revoke in one click, your mail never leaves your provider's storage.",
+   "why": "Low commitment lowers the fear of trying it.",
+   "url": "https://buttondown.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-13",
+   "category": "narrative",
+   "idea": "What it won't do: the page opens with restraints (won't store your mail, won't send unapproved when approval is on) and only then lists what it does.",
+   "why": "Restraint is the product's selling point for cautious buyers.",
+   "url": "https://mullvad.net/en",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-14",
+   "category": "narrative",
+   "idea": "Provider-first: 'Which inbox do you use?' picker at the top; the steps and notes below adapt to the chosen provider.",
+   "why": "Every visitor reads their own setup story.",
+   "url": "https://www.audubon.org/bird-guide",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-15",
+   "category": "narrative",
+   "idea": "Velocity story: the product told through what shipped recently, with dated changelog entries as chapters.",
+   "why": "Shows an active product without inventing numbers.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "narrative-16",
+   "category": "narrative",
+   "idea": "Interview: the page as a Q and A with the maker; questions in bold, short honest answers.",
+   "why": "Conversational, human, answers objections in passing.",
+   "url": "https://press.stripe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "narrative-17",
+   "category": "narrative",
+   "idea": "Install-led: start from 'You already use Claude or ChatGPT', show the install, then what to ask first.",
+   "why": "Matches visitors who arrive from client directories.",
+   "url": "https://www.raycast.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-01",
+   "category": "proof",
+   "idea": "A 'Works with' wall of supported providers and clients, each linking to its setup guide; labelled as compatibility, never 'trusted by'.",
+   "why": "Real, checkable, and it answers fit.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-02",
+   "category": "proof",
+   "idea": "Security model block with four plain statements: mail fetched live and never stored, credentials encrypted at rest, OAuth access revocable in one click, data stored in Stockholm.",
+   "why": "The four facts people actually ask about, stated plainly.",
+   "url": "https://proton.me/mail",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-03",
+   "category": "proof",
+   "idea": "The approval flow as proof: three real screenshots of the draft card (draft, held for approval, sent).",
+   "why": "Shows the safety mechanism instead of claiming it.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-04",
+   "category": "proof",
+   "idea": "Changelog pace: the latest dated entries read from the public changelog at build time, linking to the full page.",
+   "why": "Real dates prove an active product.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-05",
+   "category": "proof",
+   "idea": "Real customer quotes only, each with a name and a link to where it was published; the section is hidden when there are none approved.",
+   "why": "Avoids invented testimonials entirely.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-06",
+   "category": "proof",
+   "idea": "Data location as a plain label: 'Data stored in Stockholm, Sweden', linking to the sub-processor list.",
+   "why": "A concrete, verifiable fact for EU buyers.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-07",
+   "category": "proof",
+   "idea": "Open by default: links to the public GitHub repository, the npm package and the docs, with 'read the code' as a secondary link.",
+   "why": "Anyone can check how it works.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "proof-08",
+   "category": "proof",
+   "idea": "Sub-processor list summarised on the homepage (name and what each does), linking to the full page.",
+   "why": "Business buyers check this before signing up.",
+   "url": "https://mullvad.net/en",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-09",
+   "category": "proof",
+   "idea": "Listings in public MCP directories, linked out to the actual listing pages.",
+   "why": "Third-party presence that visitors can verify.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-10",
+   "category": "proof",
+   "idea": "Install screenshots inside each client's connector settings (Claude, ChatGPT), showing the real connector entry.",
+   "why": "Proves the integration is real, not a mockup.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-11",
+   "category": "proof",
+   "idea": "Full pricing table on the homepage, including Business per person, with no 'contact us' gate.",
+   "why": "Transparency is proof of good faith.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-12",
+   "category": "proof",
+   "idea": "Company details in the footer: legal entity name, address and a real support address.",
+   "why": "A real company behind the product.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-13",
+   "category": "proof",
+   "idea": "Revoke demo: a screenshot of the revoke control and one line on what stops working immediately.",
+   "why": "Shows the user can always pull the plug.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "proof-14",
+   "category": "proof",
+   "idea": "OAuth scopes shown verbatim per provider (what Gmail and Microsoft ask for), with a one-line plain-English reading of each.",
+   "why": "Radical clarity about access.",
+   "url": "https://tailscale.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "proof-15",
+   "category": "proof",
+   "idea": "Self-host option as proof: a short note that the stack is available to self-host with Docker, linking to the guide.",
+   "why": "If you can run it yourself, the hosted version has nothing to hide.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "proof-16",
+   "category": "proof",
+   "idea": "Commitments list: 14-day refund, cancel any time, revoke any time, export or delete your account.",
+   "why": "Plain promises that lower the risk of trying.",
+   "url": "https://buttondown.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "proof-17",
+   "category": "proof",
+   "idea": "A named support contact: 'Questions go to support@, and a person answers', next to the founder's name.",
+   "why": "Human support is real proof for a small company.",
+   "url": "https://basecamp.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-01",
+   "category": "asset_use",
+   "idea": "Screenshots without browser chrome, 1px hairline border, captioned 'Fig. n' with one sentence each.",
+   "why": "Keeps focus on the UI and reads as documentation.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-02",
+   "category": "asset_use",
+   "idea": "The 3D postbox appears once, as the anchor of the 'Connect your inbox' section, its slots labelled with provider names.",
+   "why": "One strong object at the step it represents.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-03",
+   "category": "asset_use",
+   "idea": "The 3D draft card shown three times down the page: front (draft), edge-on (approval), back with a 'Sent' stamp (done).",
+   "why": "One object carries the whole story arc.",
+   "url": "https://resend.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-04",
+   "category": "asset_use",
+   "idea": "The how-it-works diagram as one full-width horizontal line across the page, each segment revealed as you reach it.",
+   "why": "One diagram, read left to right, no icon grid.",
+   "url": "https://tailscale.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-05",
+   "category": "asset_use",
+   "idea": "Provider logo wall as a mail-sorting cabinet: a grid of pigeonholes, one provider logo per hole, empty holes labelled 'any IMAP'.",
+   "why": "Makes the logo wall a postal object instead of a strip.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-06",
+   "category": "asset_use",
+   "idea": "Only one clip on the page, in the hero; every other asset is a still.",
+   "why": "Keeps the page calm and fast.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-07",
+   "category": "asset_use",
+   "idea": "Detail crops at 200%: the Approve button, the To field, the inbox picker, each with a numbered callout and short label.",
+   "why": "Points at the exact controls that matter.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-08",
+   "category": "asset_use",
+   "idea": "Small 3D envelope renders used as step markers (1, 2, 3) in place of icons.",
+   "why": "Ownable markers instead of generic icons.",
+   "url": "https://panic.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-09",
+   "category": "asset_use",
+   "idea": "Before and after comparison of the same inbox: a raw inbox screenshot and one with drafts ready, with a draggable divider.",
+   "why": "Shows the difference directly.",
+   "url": "https://ia.net/writer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-10",
+   "category": "asset_use",
+   "idea": "Annotated dashboard: one large dashboard screenshot with numbered pins and a legend list below it.",
+   "why": "Explains the control panel in one image.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-11",
+   "category": "asset_use",
+   "idea": "3D objects shot like catalogue products with spec captions ('Material: TLS. Contents: read live, not kept.').",
+   "why": "Playful but true captions turn props into proof.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-12",
+   "category": "asset_use",
+   "idea": "Diagrams in the margin: small line diagrams sit in the right margin next to the paragraph they explain.",
+   "why": "Diagrams support the text instead of interrupting it.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-13",
+   "category": "asset_use",
+   "idea": "Connect screens as a contact sheet: a strip of small thumbnails of each provider's connect screen (Gmail OAuth, Outlook, iCloud app password).",
+   "why": "Shows breadth of providers with real screens.",
+   "url": "https://standardsmanual.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-14",
+   "category": "asset_use",
+   "idea": "Screenshots on cream mats with museum-style labels (title, date shipped, short note).",
+   "why": "Treats the product as something made with care.",
+   "url": "https://www.rijksmuseum.nl/en",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-15",
+   "category": "asset_use",
+   "idea": "Chat and inbox side by side, joined by a hairline that connects the message in the chat to the same message in the inbox.",
+   "why": "Makes 'live, not copied' visible.",
+   "url": "https://superhuman.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "asset_use-16",
+   "category": "asset_use",
+   "idea": "Clips that play only on hover or focus, with a still poster frame by default.",
+   "why": "Motion only when asked for.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "asset_use-17",
+   "category": "asset_use",
+   "idea": "A single 3D object in the hero, then none again; the rest of the page uses real screenshots only.",
+   "why": "Lets the object be memorable without becoming decoration.",
+   "url": "https://resend.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-01",
+   "category": "motion",
+   "idea": "No motion at all: a static page with designed hover underlines and focus rings only.",
+   "why": "Calm, fast, accessible.",
+   "url": "https://www.vitsoe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-02",
+   "category": "motion",
+   "idea": "Each section fades up 8px once on entry (200ms), disabled under prefers-reduced-motion.",
+   "why": "Gentle rhythm without distraction.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-03",
+   "category": "motion",
+   "idea": "One looping hero clip that pauses when off screen, with visible pause control.",
+   "why": "Motion where it explains, nowhere else.",
+   "url": "https://culturedcode.com/things/",
+   "tone": "any",
+   "bold": false
+  },
+  {
+   "id": "motion-04",
+   "category": "motion",
+   "idea": "Hovering the Approve button on the draft card turns it into 'Sent 09:14' with a mint check, and back on leave.",
+   "why": "Lets visitors feel the approval moment.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-05",
+   "category": "motion",
+   "idea": "The how-it-works line draws itself once as it enters view (SVG stroke offset), then stays.",
+   "why": "Draws attention to the data path once.",
+   "url": "https://tailscale.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-06",
+   "category": "motion",
+   "idea": "The 3D object idles with a very slow 6-degree turn only while in view, and stops under reduced motion.",
+   "why": "Adds life to the object without stealing focus.",
+   "url": "https://resend.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-07",
+   "category": "motion",
+   "idea": "Hovering a provider logo reveals how it connects (OAuth or app password) in a small label below it.",
+   "why": "Useful detail on demand.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-08",
+   "category": "motion",
+   "idea": "A chapter number in the left margin updates as you scroll through sections.",
+   "why": "Orientation for a long page.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-09",
+   "category": "motion",
+   "idea": "Before and after screenshot crossfade on a slow 5-second loop, paused on hover.",
+   "why": "Shows change over time with no interaction needed.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-10",
+   "category": "motion",
+   "idea": "The envelope flap lifts slightly when the Start free button is hovered.",
+   "why": "A small delight tied to the main action.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-11",
+   "category": "motion",
+   "idea": "Copy feedback on the connector URL: 'Copied' replaces the button label for two seconds.",
+   "why": "Functional motion that confirms an action.",
+   "url": "https://vercel.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-12",
+   "category": "motion",
+   "idea": "Linked FAQ answers get a brief cobalt-soft background flash when reached by anchor.",
+   "why": "Helps people land on the right answer.",
+   "url": "https://arc.net",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-13",
+   "category": "motion",
+   "idea": "Client tabs: only the underline slides between Claude, ChatGPT, Cursor and VS Code.",
+   "why": "Minimal motion on an interactive control.",
+   "url": "https://www.raycast.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "motion-14",
+   "category": "motion",
+   "idea": "Screenshots reveal with a one-time left-to-right clip-path wipe on entry.",
+   "why": "A print-like reveal that suits left-aligned layout.",
+   "url": "https://www.museum-gestaltung.ch/en/",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-15",
+   "category": "motion",
+   "idea": "An 'APPROVED' stamp settles from 1.08 to 1.0 scale with a small rotation once when the draft card enters view.",
+   "why": "Gives the approval idea a single memorable beat.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-16",
+   "category": "motion",
+   "idea": "A thin cobalt reading-progress line in the left index of the long-read.",
+   "why": "Calm orientation, no scroll hijack.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "motion-17",
+   "category": "motion",
+   "idea": "A single message in the hero transcript 'arrives' (fades in) after a one-second pause on first load, then nothing else moves.",
+   "why": "Feels live without fake typing.",
+   "url": "https://superhuman.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-01",
+   "category": "section_order",
+   "idea": "Hero (draft card) > Providers strip > How it works (Fig. 1 to 3) > Security model > Use cases by mailbox > Pricing > FAQ > Closing CTA",
+   "why": "Leads with the differentiator, then fit, then trust.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-02",
+   "category": "section_order",
+   "idea": "Type-only hero > Founder letter > Demo clip > Providers > Pricing > FAQ > Footer with company details",
+   "why": "Human first, product second.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-03",
+   "category": "section_order",
+   "idea": "Hero > Three objections answered > Demo > Teams on their own domain > Pricing > Install in Claude or ChatGPT > FAQ",
+   "why": "Clears doubts before asking for anything.",
+   "url": "https://fly.io",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-04",
+   "category": "section_order",
+   "idea": "Masthead and lead story > Providers column > How it works > Latest changelog dispatches > Pricing > Colophon",
+   "why": "Newspaper order for the newspaper layout.",
+   "url": "https://stripe.com/press",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-05",
+   "category": "section_order",
+   "idea": "Hero clip > Connect (providers) > Paste URL (clients) > Ask > Approve > Sent > Pricing > FAQ",
+   "why": "The page is the setup sequence.",
+   "url": "https://vercel.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-06",
+   "category": "section_order",
+   "idea": "Hero > For you / For your team fork > Shared inboxes > Who approves > Security > Pricing (Business first) > FAQ",
+   "why": "Puts the team buyer on equal footing.",
+   "url": "https://buttondown.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-07",
+   "category": "section_order",
+   "idea": "Index > 01 What it is > 02 Providers > 03 Clients > 04 Security > 05 Approval > 06 Plans > 07 Questions",
+   "why": "Manual order, easy to jump around.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-08",
+   "category": "section_order",
+   "idea": "Hero question > Answer card > How it got there (diagram) > What it can do > What it won't do > Pricing > Start free",
+   "why": "Task first, mechanics second.",
+   "url": "https://www.are.na",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-09",
+   "category": "section_order",
+   "idea": "Hero > Security first (never stored, Stockholm, encrypted, revoke) > Demo > Providers > Pricing > FAQ",
+   "why": "For buyers whose first question is privacy.",
+   "url": "https://proton.me/mail",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-10",
+   "category": "section_order",
+   "idea": "Hero > Use cases (invoices@, sales@, info@, personal) > Draft card demo > Providers > Clients > Pricing > Changelog > CTA",
+   "why": "Leads with jobs to be done.",
+   "url": "https://basecamp.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-11",
+   "category": "section_order",
+   "idea": "Hero (provider list) > Pick your provider > Tailored setup steps > Client install > Approval > Pricing > FAQ",
+   "why": "Personal setup path from the first click.",
+   "url": "https://www.audubon.org/bird-guide",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-12",
+   "category": "section_order",
+   "idea": "Hero > By hand versus connected > Demo > Security > Pricing > FAQ",
+   "why": "Comparison-led, short.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-13",
+   "category": "section_order",
+   "idea": "Hero > Spec sheet > Fig. 1 dashboard > Fig. 2 draft card > Fig. 3 connect screens > Pricing table > Footnotes",
+   "why": "Reference order for technical readers.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-14",
+   "category": "section_order",
+   "idea": "Hero > Real quotes > Feature rows (alternating) > Letter > Pricing > Closing CTA",
+   "why": "Proof early, story later.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-15",
+   "category": "section_order",
+   "idea": "Hero > Install buttons (Claude, ChatGPT) > What to ask first (prompt list) > Providers > Security > Pricing > FAQ",
+   "why": "Gets people from install to first useful prompt.",
+   "url": "https://www.raycast.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "section_order-16",
+   "category": "section_order",
+   "idea": "Hero > Day in the life (morning, noon, evening) > Approval > Teams > Pricing > FAQ > Recent changelog",
+   "why": "Habit story with a living-product ending.",
+   "url": "https://craigmod.com/ridgeline/",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "section_order-17",
+   "category": "section_order",
+   "idea": "Short hero > FAQ as main body (Setup, Safety, Teams, Billing) > Pricing > Start free",
+   "why": "Answer-led page for cautious visitors.",
+   "url": "https://arc.net",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-01",
+   "category": "voice",
+   "idea": "Plain manual voice. Sample: 'Connect an inbox. Paste one URL. Ask.'",
+   "why": "Short instructions match a short setup.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-02",
+   "category": "voice",
+   "idea": "Calm Scandinavian understatement. Sample: 'It reads your mail when you ask, and keeps none of it.'",
+   "why": "Matches Stockholm and a privacy-first product.",
+   "url": "https://www.vitsoe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-03",
+   "category": "voice",
+   "idea": "Opinionated and direct. Sample: 'Your AI writes good email. Let it send, once you say yes.'",
+   "why": "Takes a clear position on agents and email.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-04",
+   "category": "voice",
+   "idea": "Small-maker warmth. Sample: 'This page is short because the setup is short.'",
+   "why": "Human and honest without fake intimacy.",
+   "url": "https://plausible.io",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-05",
+   "category": "voice",
+   "idea": "Wry and self-aware. Sample: 'Yes, it works with the IMAP server your company set up in 2009.'",
+   "why": "Disarms the most common fit worry with a smile.",
+   "url": "https://buttondown.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-06",
+   "category": "voice",
+   "idea": "Precise technical. Sample: 'Mail is fetched from your provider when the AI asks for it, and it is not stored.'",
+   "why": "Earns trust from developers and IT.",
+   "url": "https://oxide.computer",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-07",
+   "category": "voice",
+   "idea": "Second-person reassurance. Sample: 'You see every draft before it leaves. You can change that later.'",
+   "why": "Puts the reader in control in every sentence.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-08",
+   "category": "voice",
+   "idea": "Business-plain for teams. Sample: 'Give the AI the invoices@ inbox. Keep the approve button for yourself.'",
+   "why": "Speaks to owners delegating shared inboxes.",
+   "url": "https://www.fastmail.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-09",
+   "category": "voice",
+   "idea": "Literary and spare. Sample: 'An inbox is a list of small promises. This helps you keep them.'",
+   "why": "Lifts a utility into something people care about.",
+   "url": "https://ia.net/writer",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-10",
+   "category": "voice",
+   "idea": "Clipped fragments. Sample: 'Ask. Review. Send.'",
+   "why": "Fast to scan, easy to remember.",
+   "url": "https://www.raycast.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-11",
+   "category": "voice",
+   "idea": "FAQ plainness. Sample: 'Does it store my email? No. It fetches it when asked.'",
+   "why": "Answers in the reader's own words.",
+   "url": "https://arc.net",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-12",
+   "category": "voice",
+   "idea": "Mission voice. Sample: 'Your mail belongs in your mailbox, not in one more database.'",
+   "why": "Frames privacy as a principle, not a feature.",
+   "url": "https://mullvad.net/en",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-13",
+   "category": "voice",
+   "idea": "Newspaper headlines. Sample: 'Inbox answers itself; owner approves every reply.'",
+   "why": "Fits the newspaper layout and makes features newsworthy.",
+   "url": "https://stripe.com/press",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-14",
+   "category": "voice",
+   "idea": "Postal and playful. Sample: 'We carry the letter. We don't keep a copy.'",
+   "why": "A memorable metaphor that is also the privacy promise.",
+   "url": "https://panic.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-15",
+   "category": "voice",
+   "idea": "Two readers, human and agent: sections for people with a short aside to the AI. Sample: 'Note to the agent: ask before you send.'",
+   "why": "Acknowledges that agents read pages too.",
+   "url": "https://vercel.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "voice-16",
+   "category": "voice",
+   "idea": "Modest and concrete. Sample: 'A small company, a real inbox for support, and nothing of yours on our disks.'",
+   "why": "No hype, just facts a buyer can check.",
+   "url": "https://basecamp.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "voice-17",
+   "category": "voice",
+   "idea": "Field-guide description. Sample: 'iCloud: connects with an app password. Found in personal and family inboxes.'",
+   "why": "Matter-of-fact entries make provider fit easy.",
+   "url": "https://www.audubon.org/bird-guide",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-01",
+   "category": "wildcard",
+   "idea": "One colour only: every element in brand cobalt on white, screenshots duotoned to cobalt and paper.",
+   "why": "Forces hierarchy through size and space; strong brand recall.",
+   "url": "https://swissted.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-02",
+   "category": "wildcard",
+   "idea": "No images above the fold: type only; the first image is the draft card just below the fold.",
+   "why": "Confidence and speed.",
+   "url": "https://mullvad.net/en",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-03",
+   "category": "wildcard",
+   "idea": "The page is a printed letter: letterhead, date, 'Dear reader,', a signature, and Start free as the P.S.",
+   "why": "Mail product, mail form.",
+   "url": "https://letterformarchive.org",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-04",
+   "category": "wildcard",
+   "idea": "Every section is an email: each one has a From / To / Subject / Date header block and a body.",
+   "why": "The product's medium becomes the page's grammar.",
+   "url": "https://www.hey.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-05",
+   "category": "wildcard",
+   "idea": "The whole homepage lives inside one huge draft card frame, and the CTA is its Approve button.",
+   "why": "The page itself demonstrates approval.",
+   "url": "https://1password.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-06",
+   "category": "wildcard",
+   "idea": "Only three font sizes on the whole page.",
+   "why": "Discipline that produces calm.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-07",
+   "category": "wildcard",
+   "idea": "Everything aligns to an 80-character monospace grid with plain text rules, no terminal chrome.",
+   "why": "Developer-native and precise.",
+   "url": "https://commitmono.com",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-08",
+   "category": "wildcard",
+   "idea": "The top of the page is an envelope front: an address block 'To: you@yourcompany.com', a stamp, a Stockholm postmark; the content follows below like an unfolded letter.",
+   "why": "Ownable and on-theme without scroll tricks.",
+   "url": "https://teenage.engineering",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-09",
+   "category": "wildcard",
+   "idea": "All copy fits in 300 words; screenshots carry the rest.",
+   "why": "Forces clarity.",
+   "url": "https://www.vitsoe.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-10",
+   "category": "wildcard",
+   "idea": "Footnotes for every claim: superscript numbers link to the docs or changelog entry that proves it.",
+   "why": "Every statement is checkable.",
+   "url": "https://practicaltypography.com",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-11",
+   "category": "wildcard",
+   "idea": "Providers drawn as numbered field-guide plates I to XII.",
+   "why": "Turns the logo wall into an artefact.",
+   "url": "https://www.audubon.org/bird-guide",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-12",
+   "category": "wildcard",
+   "idea": "Every visual carries a museum label with real metadata (what it is, date it shipped).",
+   "why": "Proof built into captions.",
+   "url": "https://www.rijksmuseum.nl/en",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-13",
+   "category": "wildcard",
+   "idea": "The page is a manual's table of contents; every line expands into its section in place.",
+   "why": "One screen holds the whole product.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-14",
+   "category": "wildcard",
+   "idea": "No top navigation bar at all; a left index is the only navigation.",
+   "why": "Removes the generic SaaS header.",
+   "url": "https://craigmod.com/ridgeline/",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-15",
+   "category": "wildcard",
+   "idea": "Each section header shows the date it was last updated, taken from git.",
+   "why": "Shows the page is maintained.",
+   "url": "https://linear.app",
+   "tone": "light",
+   "bold": true
+  },
+  {
+   "id": "wildcard-16",
+   "category": "wildcard",
+   "idea": "Lowercase everywhere except product and provider names.",
+   "why": "A distinct, quiet voice in type.",
+   "url": "https://teenage.engineering/guides/op-1",
+   "tone": "light",
+   "bold": false
+  },
+  {
+   "id": "wildcard-17",
+   "category": "wildcard",
+   "idea": "The page is printable: a print stylesheet turns it into a two-page A4 brief a manager can hand on.",
+   "why": "Business buyers often forward the page to a boss.",
+   "url": "https://press.stripe.com",
+   "tone": "light",
+   "bold": false
+  }
+ ]
+}
