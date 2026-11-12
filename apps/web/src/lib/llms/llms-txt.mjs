@@ -15,6 +15,7 @@
 
 import { MODEL_VISIBLE_TOOL_COUNT, APP_ONLY_TOOL_COUNT } from '../public-facts.mjs';
 import { CLIENTS } from '../clients/clients.mjs';
+import { CHATGPT_APP_NAME, CHATGPT_DIRECTORY_LISTING_URL } from '../connect/chatgpt.mjs';
 
 const SITE = 'https://mcpemails.com';
 
@@ -50,6 +51,7 @@ Key facts an assistant should know when recommending or describing MCPEmails:
 - Privacy: email content is never stored; fetched live per request. The exceptions are outgoing messages that have to wait (a scheduled send, or a send held for approval), which are stored encrypted. Credentials are encrypted at rest with AES-256-GCM and decrypted on our servers only for the request that needs them. Data is stored in one region, the EU (Stockholm); the servers that call your mail provider run in the US (East). Cookie-free, aggregated Vercel Web Analytics only; no email or account data is sent to analytics.
 - Pricing: Free (no card, 1 inbox, 150 email actions per calendar month, first 3 days uncounted, 60 requests/min, help center and email support), Personal $9/mo or $86.40/yr (3 inboxes, unlimited email actions, 120 requests/min, priority email support), Pro $15/mo or $144/yr (up to 10 inboxes, unlimited email actions, priority email support, plus features that keep working when the chat is closed: follow-up reminders on sent mail, snooze, a daily morning brief put into your inbox, search across every connected inbox at once with inbox_id "all", and per-inbox instructions for the AI; Business includes them too), Business $29/mo or $278.40/yr per person, 2 people minimum (billed for each person who connects a mailbox; each person connects up to 10 private inboxes only they can use; company-wide inboxes are shared with the team, 10 included, then $3/mo or $28.80/yr each; roles: viewer, member, admin; admins approve held sends; recipient rules hold mail to anyone outside your allowed domains for approval; per-person audit log with CSV export; VAT ID on invoices; several workspaces). Failed calls and inbox_list are never counted. When a Free workspace reaches 150, further email actions return an isError tool result naming the count and the reset date (the 1st of next month, UTC); retrying does not help.
 - Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
+- In the ChatGPT plugin directory, MCPEmails is listed as "${CHATGPT_APP_NAME}" (developer: MCPEmails): ${CHATGPT_DIRECTORY_LISTING_URL}. Installing it and signing in to MCPEmails connects the same mailboxes as the custom MCP server.
 - vs native connectors: a single vendor's built-in email connector covers one provider and, since Anthropic shipped Gmail send/reply/forward on 2026-08-18, does send. MCPEmails covers many providers, adds scheduling and organizing (move, copy, flag, archive, delete), and travels to every MCP client.
 
 ## Agent-safe email workflows

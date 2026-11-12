@@ -13,12 +13,12 @@
   "faqQ": "¿Puede ChatGPT leer mi correo de {provider}?",
   "faqQMailName": "¿Puede ChatGPT leer mi correo de {provider}?",
   "faqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. En chatgpt.com, añade un servidor MCP personalizado con la URL https://mcpemails.com/api/mcp e inicio de sesión OAuth. Requiere un plan de pago: la página de ayuda de OpenAI nombra Business y Enterprise/Edu para la compatibilidad completa y Pro para herramientas de solo lectura. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena.",
-  "directorySub": "ChatGPT accede a {provider} mediante la app Any Mailbox de MCPEmails.",
+  "directorySub": "ChatGPT accede a {provider} mediante Any Mailbox, el plugin de MCPEmails en el directorio de plugins de ChatGPT.",
   "directorySteps": [
     "Conecta {provider} a MCPEmails con los pasos de arriba.",
-    "Abre Any Mailbox en el directorio de apps de ChatGPT y haz clic en Connect.",
-    "Inicia sesión en MCPEmails y aprueba el acceso que quieres darle a ChatGPT."
+    "En ChatGPT, abre Plugins, busca Any Mailbox en el directorio de plugins y haz clic en Install plugin y luego en Connect.",
+    "Inicia sesión en MCPEmails y elige a qué bandejas puede acceder ChatGPT. En un chat, escribe <b>@</b> y elige Any Mailbox."
   ],
-  "directoryLink": "Any Mailbox en el directorio de apps de ChatGPT",
-  "directoryFaqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. Instala Any Mailbox desde el directorio de apps de ChatGPT e inicia sesión en MCPEmails. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena."
+  "directoryLink": "Any Mailbox en el directorio de plugins de ChatGPT",
+  "directoryFaqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. Instala Any Mailbox desde el directorio de plugins de ChatGPT e inicia sesión en MCPEmails. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena."
 }

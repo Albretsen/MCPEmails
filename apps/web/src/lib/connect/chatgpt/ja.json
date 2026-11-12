@@ -13,12 +13,12 @@
   "faqQ": "ChatGPTは{provider}のメールを読めますか？",
   "faqQMailName": "ChatGPTは{provider}を読めますか？",
   "faqA": "はい。{provider}をMCPEmailsに接続すれば読めます。chatgpt.comで、URLをhttps://mcpemails.com/api/mcp、認証をOAuthにしてカスタムMCPサーバーを追加します。これには有料プランが必要で、OpenAIのヘルプページではフルサポートの対象としてBusinessとEnterprise/Edu、読み取り専用ツールの対象としてProが挙げられています。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
-  "directorySub": "ChatGPTはMCPEmailsのAny Mailboxアプリを通じて{provider}にアクセスします。",
+  "directorySub": "ChatGPTは、ChatGPTのプラグインディレクトリにあるMCPEmailsのプラグイン「Any Mailbox」を通じて{provider}にアクセスします。",
   "directorySteps": [
     "上の手順で{provider}をMCPEmailsに接続します。",
-    "ChatGPTのアプリディレクトリでAny Mailboxを開き、Connect（接続）をクリックします。",
-    "MCPEmailsにログインし、ChatGPTに許可するアクセスを承認します。"
+    "ChatGPTで「プラグイン」を開き、プラグインディレクトリでAny Mailboxを見つけて「プラグインをインストール」、続いて「接続」をクリックします。",
+    "MCPEmailsにログインし、ChatGPTがアクセスできる受信トレイを選びます。チャットで<b>@</b>と入力してAny Mailboxを選びます。"
   ],
-  "directoryLink": "ChatGPTのアプリディレクトリにあるAny Mailbox",
-  "directoryFaqA": "はい。{provider}をMCPEmailsに接続すれば読めます。ChatGPTのアプリディレクトリからAny Mailboxをインストールし、MCPEmailsにログインします。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。"
+  "directoryLink": "ChatGPTのプラグインディレクトリにあるAny Mailbox",
+  "directoryFaqA": "はい。{provider}をMCPEmailsに接続すれば読めます。ChatGPTのプラグインディレクトリからAny Mailboxをインストールし、MCPEmailsにログインします。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。"
 }

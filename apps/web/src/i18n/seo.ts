@@ -3,6 +3,23 @@ import { languageTag } from './locale-policy.mjs';
 import { BUSINESS_MIN_SEATS, PLANS } from '@/lib/stripe/plans';
 import { EU_COUNTRIES } from '@/lib/stripe/eur-prices';
 import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
+import { CHATGPT_APP_NAME, CHATGPT_DIRECTORY_LISTING_URL } from '@/lib/connect/chatgpt.mjs';
+
+/**
+ * Other names the product goes by. "MCP Emails" is the two-word spelling
+ * search engines still see; "Any Mailbox" is its name in the ChatGPT plugin
+ * directory, listed only while that listing is live (the same constant that
+ * turns the directory copy on). Every alternateName in a JSON-LD graph reads
+ * this list, so the names cannot disagree between nodes.
+ */
+export function productAlternateNames(): string[] {
+  return [
+    'MCP Emails',
+    'mcpemails',
+    'mcpemails.com',
+    ...(CHATGPT_DIRECTORY_LISTING_URL ? [CHATGPT_APP_NAME] : []),
+  ];
+}
 
 export const APP_URL = (
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'
@@ -302,7 +319,7 @@ export function homeJsonLd(
         '@type': 'Organization',
         '@id': orgId,
         name: 'MCPEmails',
-        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
+        alternateName: productAlternateNames(),
         url: APP_URL,
         logo: `${APP_URL}/favicon.svg`,
         // No `sameAs` entry: @mcpemails does not exist on X. Add the real
@@ -312,7 +329,7 @@ export function homeJsonLd(
         '@type': 'WebSite',
         '@id': siteId,
         name: 'MCPEmails',
-        alternateName: ['MCP Emails', 'mcpemails', 'mcpemails.com'],
+        alternateName: productAlternateNames(),
         url: APP_URL,
         inLanguage: locale,
         publisher: { '@id': orgId },
@@ -320,6 +337,7 @@ export function homeJsonLd(
       {
         '@type': 'SoftwareApplication',
         name: 'MCPEmails',
+        alternateName: productAlternateNames(),
         url: home,
         description,
         applicationCategory: 'BusinessApplication',

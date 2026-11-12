@@ -13,12 +13,12 @@
   "faqQ": "ChatGPT 能读取我的 {provider} 邮件吗？",
   "faqQMailName": "ChatGPT 能读取我的 {provider} 邮件吗？",
   "faqA": "可以，只要先将 {provider} 连接到 MCPEmails。在 chatgpt.com 上添加一个自定义 MCP 服务器，URL 填 https://mcpemails.com/api/mcp，并使用 OAuth 登录。这需要付费套餐：OpenAI 的帮助页面将 Business 和 Enterprise/Edu 列为完整支持，Pro 仅限只读工具。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。",
-  "directorySub": "ChatGPT 通过 MCPEmails 的 Any Mailbox 应用访问 {provider}。",
+  "directorySub": "ChatGPT 通过 Any Mailbox（MCPEmails 在 ChatGPT 插件目录中的插件）访问 {provider}。",
   "directorySteps": [
     "按照上面的步骤将 {provider} 连接到 MCPEmails。",
-    "在 ChatGPT 应用目录中打开 Any Mailbox，点击 Connect。",
-    "登录 MCPEmails，并批准你想授予 ChatGPT 的权限。"
+    "在 ChatGPT 中打开 Plugins，在插件目录中找到 Any Mailbox，点击 Install plugin（安装插件），再点击 Connect。",
+    "登录 MCPEmails，选择 ChatGPT 可以访问的收件箱。在对话中输入 <b>@</b> 并选择 Any Mailbox。"
   ],
-  "directoryLink": "ChatGPT 应用目录中的 Any Mailbox",
-  "directoryFaqA": "可以，只要先将 {provider} 连接到 MCPEmails。从 ChatGPT 应用目录安装 Any Mailbox 并登录 MCPEmails。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。"
+  "directoryLink": "ChatGPT 插件目录中的 Any Mailbox",
+  "directoryFaqA": "可以，只要先将 {provider} 连接到 MCPEmails。从 ChatGPT 插件目录安装 Any Mailbox 并登录 MCPEmails。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。"
 }

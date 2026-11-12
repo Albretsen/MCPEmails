@@ -2,21 +2,23 @@
   "_sources": [
     "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
     "apps/web/app/.well-known/oauth-authorization-server/route.ts",
-    "https://help.openai.com/en/articles/12584461"
+    "https://help.openai.com/en/articles/12584461",
+    "https://help.openai.com/en/articles/20001256 (Plugins in ChatGPT: the plugin directory, Install plugin, Connect, @)",
+    "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
-    "title": "Koble e-post til ChatGPT: oppsett av MCP-kobling",
-    "description": "Gi ChatGPT en ekte innboks med utviklermodus og en egendefinert MCP-kobling. OAuth, ingen API-nøkkel, så lese, søke, sende og planlegge e-post. Én innboks gratis."
+    "title": "Koble e-post til ChatGPT: oppsett av Any Mailbox-pluginen",
+    "description": "Gi ChatGPT en ekte innboks: installer Any Mailbox fra pluginkatalogen i ChatGPT, logg inn hos MCPEmails og velg postkassene dine. OAuth, ingen API-nøkkel. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-post",
     "titleLine1": "Koble innboksen din til ChatGPT",
-    "titleLine2": "som en egendefinert MCP-kobling",
-    "lead": "Legg til en egen MCP-server som peker på én URL, og ChatGPT kan lese, søke i, sende, svare på, videresende, planlegge og organisere den ekte e-posten din.",
+    "titleLine2": "med Any Mailbox-pluginen",
+    "lead": "Installer Any Mailbox, MCPEmails-pluginen i pluginkatalogen i ChatGPT, logg inn, og ChatGPT kan lese, søke i, sende, svare på, videresende, planlegge og organisere den ekte e-posten din.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "På chatgpt.com åpner du Plugins, Personal, Add og deretter Add custom MCP server. Gi den navnet MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection, velg OAuth, huk av bekreftelsesboksen, klikk Create as a plugin og logg inn med MCPEmails. OpenAI lister egne MCP-servere for Business og Enterprise/Edu, med bare lesetilgang på Pro, på nett. I en samtale skriver du @ og velger MCPEmails."
+    "answer": "I ChatGPT åpner du Plugins, finner Any Mailbox fra MCPEmails i pluginkatalogen og klikker Install plugin, så Connect. Logg inn hos MCPEmails og velg hvilke innbokser ChatGPT skal nå og hvor mye tilgang den får. I en samtale skriver du @ og velger Any Mailbox. Uten pluginen legger du til en egendefinert MCP-server på chatgpt.com med URL-en https://mcpemails.com/api/mcp og OAuth; OpenAI lister det for Business og Enterprise/Edu, med bare lesetilgang på Pro, på nett."
   },
   "method": {
     "title": "Slik kobler ChatGPT seg til: OAuth, ingen API-nøkkel",
@@ -25,33 +27,53 @@
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og koble til innboksen under Dashboard, Inboxes. Én innboks er gratis, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og koble til postkassen under Dashboard, Inboxes. Outlook og Microsoft 365 kobles til med Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex bruker et app-passord; alt annet kobles til over IMAP og SMTP. Én innboks er gratis, for alltid."
     },
     {
-      "h": "Åpne Add custom MCP server",
-      "p": "På chatgpt.com åpner du <b>Plugins</b> og deretter <b>Personal</b>, klikker <b>Add</b> øverst til høyre og velger <b>Add custom MCP server</b>. Dette gjøres bare i nettleseren: mobilappen kan ikke legge til en."
+      "h": "Installer Any Mailbox fra pluginkatalogen",
+      "p": "Any Mailbox er pluginen MCPEmails publiserer i pluginkatalogen i ChatGPT. I ChatGPT åpner du <b>Plugins</b> i sidepanelet, finner Any Mailbox (eller åpner oppføringen som er lenket under), klikker <b>Install plugin</b> og deretter <b>Connect</b>. Katalogen er åpen for alle ChatGPT-abonnementer, på nett, desktop og mobil."
     },
     {
-      "h": "Fyll inn serveren",
-      "p": "Gi den navnet MCPEmails og lim inn <code>https://mcpemails.com/api/mcp</code> under <b>Connection</b>."
+      "h": "Logg inn hos MCPEmails",
+      "p": "ChatGPT sender deg til MCPEmails. Logg inn med kontoen som har postkassene dine. Er du allerede innlogget, kommer du rett til samtykkeskjermen."
     },
     {
-      "h": "Velg OAuth og logg inn",
-      "p": "Velg <b>OAuth</b>, huk av for <b>I understand and want to continue</b>, klikk <b>Create as a plugin</b>, logg deretter inn med MCPEmails og godkjenn tilgangene du vil at ChatGPT skal ha."
-    },
-    {
-      "h": "Nevn den i samtalen",
-      "p": "I en samtale skriver du <b>@</b> og velger MCPEmails. Valget gjelder den ene meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din."
+      "h": "Velg postkasser og tilgang, og bruk den med @",
+      "p": "Samtykkeskjermen spør hvor mye tilgang ChatGPT skal få: Skrivebeskyttet, Standard, Full tilgang eller Tilpasset for å velge rettigheter én og én. Velg Alle innbokser eller Bestemte innbokser, og klikk <b>Gi tilgang</b>. Tilbake i ChatGPT skriver du <b>@</b> i en samtale og velger Any Mailbox, eller spør rett og slett om e-posten din: ChatGPT bruker installerte plugins når de passer til spørsmålet."
     }
   ],
+  "listingLink": "Any Mailbox i pluginkatalogen i ChatGPT",
+  "fallback": {
+    "eyebrow": "Uten pluginen",
+    "title": "Legg til samme server som egendefinert MCP-server",
+    "sub": "Hvis Any Mailbox ikke er tilgjengelig i ChatGPT-kontoen eller arbeidsområdet ditt, legger du til MCPEmails som en egendefinert MCP-server i stedet. Den når de samme postkassene. OpenAIs hjelpeside lister egne MCP-servere for Business og Enterprise/Edu på chatgpt.com, med bare lese- og henteverktøy på Pro; Go og Plus nevnes ikke.",
+    "steps": [
+      {
+        "h": "Åpne Add custom MCP server",
+        "p": "På chatgpt.com åpner du <b>Plugins</b> og deretter <b>Personal</b>, klikker <b>Add</b> øverst til høyre og velger <b>Add custom MCP server</b>. Dette gjøres bare i nettleseren: mobilappen kan ikke legge til en."
+      },
+      {
+        "h": "Fyll inn serveren",
+        "p": "Gi den navnet MCPEmails og lim inn <code>https://mcpemails.com/api/mcp</code> under <b>Connection</b>."
+      },
+      {
+        "h": "Velg OAuth og logg inn",
+        "p": "Velg <b>OAuth</b>, huk av for <b>I understand and want to continue</b>, klikk <b>Create as a plugin</b>, logg deretter inn med MCPEmails og godkjenn tilgangene du vil at ChatGPT skal ha."
+      },
+      {
+        "h": "Nevn den i samtalen",
+        "p": "I en samtale skriver du <b>@</b> og velger MCPEmails. Valget gjelder den ene meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din."
+      }
+    ]
+  },
   "gotchas": [
     {
-      "h": "Legges til i nettleseren, velges per melding",
-      "p": "Egne MCP-servere legges til på chatgpt.com; mobilappen kan ikke gjøre det. OpenAIs hjelpeside lister dem for Business- og Enterprise/Edu-arbeidsområder, der en administrator eller eier legger dem til og publiserer dem, og sier at Pro kan koble til en med bare lese- og henteverktøy; den nevner ikke Go eller Plus. Steget folk glemmer er det siste: ChatGPT bruker MCPEmails i en melding bare når du skriver <b>@</b> og velger den, så nevn den igjen når et oppfølgingsspørsmål trenger e-posten din."
+      "h": "Installer én gang, og sjekk at samtalen bruker den",
+      "p": "Pluginkatalogen er åpen for alle ChatGPT-abonnementer. På Business og Enterprise må kanskje en administrator gjøre pluginen tilgjengelig for arbeidsområdet først. Den egendefinerte MCP-serveren, reserveløsningen, finnes bare på nett og krever et betalt abonnement: OpenAI lister den for Business og Enterprise/Edu, med bare lese- og henteverktøy på Pro. I begge tilfeller er det i samtalen folk glipper: svarer ChatGPT uten å se på e-posten din, skriver du <b>@</b> og velger Any Mailbox (eller MCPEmails for den egendefinerte serveren), så den meldingen bruker den."
     },
     {
       "h": "Velg OAuth, ikke ingen autentisering, når du oppretter koblingen",
-      "p": "Koblingsskjemaet spør hvordan du vil autentisere. Denne serveren avviser anonyme kall: en uautentisert forespørsel får en 401 med en peker til OAuth-oppdagelse, som er det en standardkompatibel klient følger for å starte flyten. Velger du ingen autentisering, får du en kobling som feiler ved første verktøykall i stedet for under oppsettet, som er den forvirrende rekkefølgen."
+      "p": "Koblingsskjemaet spør hvordan du vil autentisere. Denne serveren avviser anonyme kall: en uautentisert forespørsel får en 401 med en peker til OAuth-oppdagelse, som er det en standardkompatibel klient følger for å starte flyten. Velger du ingen autentisering, får du en kobling som feiler ved første verktøykall i stedet for under oppsettet, som er den forvirrende rekkefølgen. Pluginen hopper over dette spørsmålet: den logger alltid inn med OAuth."
     },
     {
       "h": "Kun lesetilgang er et reelt valg, og ofte det riktige å starte med",
@@ -66,11 +88,15 @@
   "faq": [
     {
       "q": "Kan ChatGPT lese og sende e-posten min?",
-      "a": "Ja, gjennom en egendefinert MCP-kobling. ChatGPT kan ikke nå en postkasse på egen hånd; når du peker en kobling mot MCPEmails, får den verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, begrenset til tilgangene du godkjenner under oppsettet."
+      "a": "Ja. Installer Any Mailbox, MCPEmails-pluginen i pluginkatalogen i ChatGPT, eller legg til MCPEmails som en egendefinert MCP-server. Uansett får ChatGPT verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, begrenset til tilgangen du godkjenner når du logger inn."
+    },
+    {
+      "q": "Er Any Mailbox det samme som MCPEmails?",
+      "a": "Ja. Any Mailbox er navnet MCPEmails har i pluginkatalogen i ChatGPT, utgitt av MCPEmails. Den bruker samme konto, postkasser og samtykkeskjerm som en egendefinert MCP-server på https://mcpemails.com/api/mcp, så du trenger bare én av de to."
     },
     {
       "q": "Hvorfor kan jeg ikke legge til en egen MCP-server i ChatGPT?",
-      "a": "Egne MCP-servere legges til på chatgpt.com: mobilappen har ikke valget. OpenAIs hjelpeside nevner Business og Enterprise/Edu for full støtte, der bare en administrator eller eier kan legge til og publisere en, og Pro for bare lese- og henteverktøy; Go og Plus nevnes ikke. Hvis MCPEmails er lagt til, men ChatGPT ikke bruker den, skriver du <b>@</b> i samtalen og velger MCPEmails; valget gjelder én melding om gangen."
+      "a": "Egne MCP-servere legges til på chatgpt.com: mobilappen har ikke valget. OpenAIs hjelpeside nevner Business og Enterprise/Edu for full støtte, der bare en administrator eller eier kan legge til og publisere en, og Pro for bare lese- og henteverktøy; Go og Plus nevnes ikke. Any Mailbox-pluginen er den enklere veien: pluginkatalogen er åpen for alle ChatGPT-abonnementer. Hvis MCPEmails er lagt til, men ChatGPT ikke bruker den, skriver du <b>@</b> i samtalen og velger MCPEmails; valget gjelder én melding om gangen."
     },
     {
       "q": "Trenger jeg en API-nøkkel for ChatGPT?",
@@ -91,6 +117,6 @@
   ],
   "ctaBand": {
     "title": "Gi ChatGPT en ekte innboks",
-    "sub": "Én kobling, alle postkassene du har koblet til. Én innboks gratis for alltid."
+    "sub": "Én plugin, alle postkassene du har koblet til. Én innboks gratis for alltid."
   }
 }

@@ -44,6 +44,15 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    // DATE PLACEHOLDER: set to the day this lands on main (the Any Mailbox
+    // launch PR merges only once OpenAI approves the listing).
+    date: '2026-11-12',
+    kind: 'added',
+    title: 'MCPEmails in the ChatGPT plugin directory',
+    body:
+      'MCPEmails can now be installed from the ChatGPT plugin directory, where it is listed as Any Mailbox. Click Install plugin, sign in to MCPEmails and choose which mailboxes ChatGPT can reach, with nothing to paste. The custom MCP server on chatgpt.com keeps working as before.',
+  },
+  {
     date: '2026-11-11',
     kind: 'added',
     title: 'Private and company-wide mailboxes for teams',
