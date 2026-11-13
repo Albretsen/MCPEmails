@@ -91,6 +91,14 @@ export default async function RootLayout({ children }) {
           page and nothing else.
         */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        {/*
+          Client events (public/ce.js): script errors, failed script loads and
+          buy/contact clicks on the buy pages, sent with sendBeacon to
+          /api/analytics/client-event. A plain same-origin file on purpose: it
+          must keep reporting when the React bundle fails, and `script-src
+          'self'` covers it without a nonce. async, so it never blocks paint.
+        */}
+        <script src="/ce.js" async />
       </head>
       <body>
         {/*
