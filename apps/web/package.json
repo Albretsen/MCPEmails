@@ -222,7 +222,8 @@
     "test:pass-billing-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/pass-billing-panel-ui.test.mjs",
     "test:payment-issue-ui":"node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/payment-issue-banner-ui.test.mjs",
     "test:workspace-writes": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs app/api/analytics/first-tool-reported/route.test.ts",
-    "bundle:budget": "node scripts/bundle-budget.mjs"
+    "bundle:budget": "node scripts/bundle-budget.mjs",
+    "test:client-events": "node --test --experimental-strip-types src/lib/analytics/client-events.test.ts src/lib/analytics/client-events-script.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -206,6 +206,7 @@ export const ROUTES = [
   ['app/api/analytics/paywall/route.ts', 'arn1', '~3', '-'],
   ['app/api/analytics/referral/route.ts', 'arn1', '~3', '-'],
   ['app/api/analytics/pricing-view/route.ts', 'arn1', '1', '-'],
+  ['app/api/analytics/client-event/route.ts', 'arn1', '1', '-'],
   ['app/api/api-keys/[id]/revoke/route.ts', 'arn1', '3', '-'],
   ['app/api/api-keys/[id]/route.ts', 'arn1', '5', '-'],
   ['app/api/api-keys/route.ts', 'arn1', '8-9', '-'],
