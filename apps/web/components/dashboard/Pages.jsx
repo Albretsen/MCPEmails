@@ -9316,7 +9316,7 @@ export function MembersPage({
                       borderRadius: 8,
                       fontSize: 13.5,
                       fontFamily: 'var(--font-sans)',
-                      background: 'var(--bg-input, var(--bg-card))',
+                      backgroundColor: 'var(--bg-input, var(--bg-card))',
                       color: 'var(--fg-1)',
                       cursor: 'pointer',
                     }}
