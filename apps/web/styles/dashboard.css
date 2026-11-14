@@ -205,15 +205,16 @@ body { background: var(--bg-page); }
 .card-body { padding: 18px 20px; }
 
 /* === Table === */
-.tbl { width: 100%; border-collapse: collapse; font-family: var(--font-sans); font-size: 14px; }
-.tbl th {
+.tbl, .data-table { width: 100%; border-collapse: collapse; font-family: var(--font-sans); font-size: 14px; }
+.tbl th, .data-table th {
   text-align: left; font-weight: 500; font-size: 12px; color: var(--fg-3);
   padding: 12px 20px; border-bottom: 1px solid var(--border-1);
   letter-spacing: 0.04em; text-transform: uppercase;
 }
-.tbl td { padding: 14px 20px; border-bottom: 1px solid var(--border-1); color: var(--fg-1); vertical-align: middle; }
-.tbl tr:last-child td { border-bottom: none; }
-.tbl tr:hover td { background: var(--ink-25); }
+.tbl td, .data-table td { padding: 14px 20px; border-bottom: 1px solid var(--border-1); color: var(--fg-1); vertical-align: middle; }
+.tbl tr:last-child td, .data-table tr:last-child td { border-bottom: none; }
+.tbl tr:hover td, .data-table tbody tr:hover td { background: var(--ink-25); }
+.data-table .right { text-align: right; }
 .tbl .mono { font-family: var(--font-mono); font-size: 13px; color: var(--fg-2); }
 .tbl .right { text-align: right; }
 
