@@ -1295,9 +1295,10 @@
       "causeInterrupted": "実行が完了前に中断されました。",
       "causeUnknown": "実行ログを開いて、何が起きたか確認してください。"
     },
-    "approvalBadge": "承認が必要",
-    "enabledOn": "オン",
+    "approvalBadge": "転送は承認後に送信",
+    "enabledOn": "有効",
     "enabledOff": "オフ",
+    "nextRun": "次回チェック {time}",
     "rowRuns": "実行ログ",
     "rowEdit": "編集",
     "rowDelete": "削除",
