@@ -9309,6 +9309,7 @@ export function MembersPage({
                     onChange={e => setInviteRole(e.target.value)}
                     disabled={inviting}
                     style={{
+                      width: 'auto',
                       height: 'auto',
                       padding: '8px 32px 8px 12px',
                       border: '1px solid var(--border-1)',
