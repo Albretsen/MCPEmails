@@ -74,6 +74,11 @@ function stubFetch(t, respond) {
   const calls = [];
   const previous = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
+    // The approval-window card loads on its own; the tests below that are not
+    // about it get the default window and never see the call.
+    if (String(url) === '/api/approvals/settings' && (init.method ?? 'GET') === 'GET' && !respond.handlesSettings) {
+      return { ok: true, status: 200, json: async () => ({ windowHours: 24, canEdit: true }) };
+    }
     calls.push({ url: String(url), method: init.method ?? 'GET', body: init.body ? JSON.parse(init.body) : null });
     const { status = 200, body = {} } = respond(String(url), init, calls.length);
     return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -301,4 +306,54 @@ test('review page: a Reply-To is shown', async (t) => {
   t.after(() => view.unmount());
   assert.ok(view.container.textContent.includes(dashboard.approvals.review.replyTo));
   assert.match(view.container.textContent, /desk@example\.com/);
+});
+
+// ---------------------------------------------------------------------------
+// Approval window setting
+// ---------------------------------------------------------------------------
+
+test('dashboard: an owner changes the approval window to 7 days', async (t) => {
+  let saved = 24;
+  const respond = (url, init) => {
+    if (url === '/api/approvals/settings') {
+      if ((init.method ?? 'GET') === 'PUT') {
+        saved = JSON.parse(init.body).windowHours;
+        return { body: { windowHours: saved } };
+      }
+      return { body: { windowHours: saved, canEdit: true } };
+    }
+    return { body: { approvals: [], decided: [] } };
+  };
+  respond.handlesSettings = true;
+  const calls = stubFetch(t, respond);
+  const view = await mount(panel());
+  t.after(() => view.unmount());
+
+  const select = await waitFor(() => view.container.querySelector('select#approval-window'), { message: 'the window select' });
+  assert.equal(select.value, '24');
+  assert.deepEqual([...select.options].map((o) => o.textContent), ['1 day', '3 days', '7 days', '14 days']);
+
+  await flush(() => {
+    // React tracks the value itself: set it through the native setter.
+    Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value').set.call(select, '168');
+    select.dispatchEvent(new window.Event('change', { bubbles: true }));
+  });
+  await waitFor(() => calls.some((c) => c.method === 'PUT'), { message: 'the PUT' });
+  assert.deepEqual(calls.find((c) => c.method === 'PUT').body, { windowHours: 168 });
+  assert.equal(saved, 168);
+});
+
+test('dashboard: a member sees the approval window but cannot change it', async (t) => {
+  const respond = (url) => url === '/api/approvals/settings'
+    ? { body: { windowHours: 72, canEdit: false } }
+    : { body: { approvals: [], decided: [] } };
+  respond.handlesSettings = true;
+  stubFetch(t, respond);
+  const view = await mount(panel());
+  t.after(() => view.unmount());
+
+  const shown = await waitFor(() => view.container.querySelector('#approval-window'), { message: 'the window' });
+  assert.equal(shown.tagName, 'DIV');
+  assert.match(shown.textContent, /3 days/);
+  assert.match(shown.textContent, /owner or admin/);
 });

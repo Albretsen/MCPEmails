@@ -262,8 +262,8 @@ import { stampToolSurface } from "./card-tool-surface.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
-  APPROVAL_TTL_MS,
   approvalLapsedBeforeDecision,
+  approvalTtlMsForHours,
   approvalReviewUrl,
   buildApprovalSummary,
   buildHeldSendEnvelope,
@@ -2278,7 +2278,8 @@ async function claimOutboundIdempotency(
       idempotencyDigest(`${operation}:${stableJson(request)}`),
     ]);
     const now = new Date().toISOString();
-    // Expiry is fixed at 24h; clear an old record before claiming a key again.
+    // Expiry is 24h, or a held send's approval deadline when that is later
+    // (stretchIdempotencyToApproval); clear an old record before claiming a key again.
     await supabase.from("outbound_idempotency")
       .delete()
       .eq("api_key_id", apiKey.id)
@@ -2458,6 +2459,53 @@ async function completeOutboundIdempotency(
     return;
   }
   if (error) console.error("[mcp-server] idempotency_complete_failed", { operation, error: error.message });
+  if (approvalId && !error) {
+    await stretchIdempotencyToApproval(apiKeyId, operation, claim.keyDigest, claim.requestDigest, approvalId);
+  }
+}
+
+/**
+ * A held send's idempotency record lives as long as its approval does.
+ *
+ * The record is written with a 24h expiry. When the workspace's approval window
+ * is longer, a retry with the same key on day 2 would otherwise find no record,
+ * run the call again and queue a SECOND approval for the same message, and a
+ * reviewer approving both would send it twice. So the record's expiry is moved
+ * to the approval's deadline. Never shortened. A failure is logged and
+ * tolerated: the send is held either way, and the cost is that one duplicate
+ * request.
+ */
+async function stretchIdempotencyToApproval(
+  apiKeyId: string,
+  operation: string,
+  keyDigest: string,
+  requestDigest: string,
+  approvalId: string,
+): Promise<void> {
+  try {
+    const { data, error } = await supabase.from("send_approvals")
+      .select("expires_at")
+      .eq("id", approvalId)
+      .maybeSingle();
+    const approvalExpiry = (data as { expires_at?: string | null } | null)?.expires_at;
+    if (error || !approvalExpiry) {
+      if (error) console.error("[mcp-server] idempotency_stretch_failed", { operation, error: error.message });
+      return;
+    }
+    const { error: updateError } = await supabase.from("outbound_idempotency")
+      .update({ expires_at: approvalExpiry })
+      .eq("api_key_id", apiKeyId)
+      .eq("operation", operation)
+      .eq("key_digest", keyDigest)
+      .eq("request_digest", requestDigest)
+      .lt("expires_at", approvalExpiry);
+    if (updateError) console.error("[mcp-server] idempotency_stretch_failed", { operation, error: updateError.message });
+  } catch (err) {
+    console.error("[mcp-server] idempotency_stretch_failed", {
+      operation,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /** Records the final delivery outcome of an approval-dispatched request. */
@@ -20097,6 +20145,37 @@ type RecipientRuleVerdict =
   | { hold: true; outside: number };
 
 /**
+ * How long a held send in this workspace stays decidable, in ms
+ * (`workspaces.approval_window_hours`, set on the Approvals page). Any read
+ * failure is the 24h default: an unreadable setting never lengthens a window,
+ * and it must not stop the send from being held.
+ */
+async function workspaceApprovalTtlMs(
+  workspaceId: string,
+  db: InboxQueryClient = supabase as unknown as InboxQueryClient,
+): Promise<number> {
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data, error } = await (db as any)
+      .from("workspaces")
+      .select("approval_window_hours")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp-server] approval_window_read_failed", { workspace_id: workspaceId, error: error.message });
+      return approvalTtlMsForHours(null);
+    }
+    return approvalTtlMsForHours((data as Record<string, unknown> | null)?.approval_window_hours);
+  } catch (err) {
+    console.error("[mcp-server] approval_window_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return approvalTtlMsForHours(null);
+  }
+}
+
+/**
  * `workspaces.allowed_recipient_domains`, normalised (null = any recipient).
  * `ok: false` when it could not be read: the caller refuses the send rather
  * than guess, since guessing "no rule" could send outside a company's list.
@@ -20422,9 +20501,10 @@ async function queueSendApproval(
     await resolveApprovalSummaryFields(inbox, operation, payload),
     operation,
   );
-  // A pending request stays decidable for 24h and is then dead: the tools
-  // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
-  const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
+  // A pending request stays decidable for the workspace's approval window
+  // (24h unless an owner chose longer) and is then dead: the tools refuse it,
+  // the decide paths refuse it, and the dispatcher re-checks it.
+  const expiresAt = new Date(Date.now() + await workspaceApprovalTtlMs(apiKey.workspace_id)).toISOString();
   // `select("*")` rather than `select("id")`: the caller turns this row into the
   // review card's envelope (see `buildHeldSendEnvelope`), and returning it from
   // the statement that wrote it is both cheaper and less failure-prone than a
@@ -36585,7 +36665,7 @@ async function reholdApprovedSendForRecipientRule(
       decided_by: null,
       decided_via: null,
       dispatch_scheduled_send_id: null,
-      expires_at: new Date(Date.now() + APPROVAL_TTL_MS).toISOString(),
+      expires_at: new Date(Date.now() + await workspaceApprovalTtlMs(String(row.workspace_id), db)).toISOString(),
     })
     .eq("id", approvalId)
     .eq("workspace_id", row.workspace_id)
@@ -36673,7 +36753,7 @@ async function holdScheduledSendForRecipientRule(
       payload: { v: 1, data: await encryptForStorage(JSON.stringify(stored)) },
       payload_encrypted: true,
       summary: await sealApprovalSummary(summary, encryptForStorage),
-      expires_at: new Date(Date.now() + APPROVAL_TTL_MS).toISOString(),
+      expires_at: new Date(Date.now() + await workspaceApprovalTtlMs(String(row.workspace_id), db)).toISOString(),
       send_at: typeof row.send_at === "string" ? row.send_at : new Date().toISOString(),
       requested_by: typeof row.created_by === "string" ? row.created_by : null,
       hold_reason: RECIPIENT_RULE_HOLD_REASON,

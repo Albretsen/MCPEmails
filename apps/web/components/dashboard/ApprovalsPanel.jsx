@@ -19,6 +19,18 @@ function requestErrorMessage(error) {
   return error instanceof Error && error.message ? error.message : 'Could not load approvals.';
 }
 
+/** The approval windows a workspace can pick. Mirrors src/lib/approvals/window.ts. */
+const WINDOW_OPTIONS = [
+  { hours: 24, label: '1 day' },
+  { hours: 72, label: '3 days' },
+  { hours: 168, label: '7 days' },
+  { hours: 336, label: '14 days' },
+];
+
+function windowLabel(hours) {
+  return WINDOW_OPTIONS.find((option) => option.hours === hours)?.label ?? `${hours} hours`;
+}
+
 /** A decision the server refused because the request changed after it was shown. */
 class ChangedError extends Error {}
 
@@ -137,6 +149,8 @@ export function ApprovalsPanel({ userRole }) {
         </div>
       ) : null}
 
+      <ApprovalWindowSetting />
+
       {error ? (
         <div className="alert alert-error" role="alert" style={{ marginBottom: 16 }}>
           <span>{error}</span>
@@ -170,13 +184,14 @@ export function ApprovalsPanel({ userRole }) {
           </div>
         ) : (
           <table className="data-table">
-            <thead><tr><th>Inbox</th><th>Recipients</th><th>Subject</th><th>Requested</th><th aria-label="Decision" /></tr></thead>
+            <thead><tr><th>Inbox</th><th>Recipients</th><th>Subject</th><th>Requested</th><th>Expires</th><th aria-label="Decision" /></tr></thead>
             <tbody>{items.map((item) => (
               <tr key={item.id}>
                 <td>{approvalLabel(item)}</td>
                 <td>{item.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : recipientLabel(item)}</td>
                 <td>{item.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : item.summary?.subject || '(no subject)'}</td>
                 <td>{item.created_at ? new Date(item.created_at).toLocaleString() : 'Unknown time'}</td>
+                <td>{item.expires_at ? new Date(item.expires_at).toLocaleString() : '—'}</td>
                 <td className="right">
                   {rowCanDecide(item) ? (
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -239,7 +254,9 @@ function DecidedTable({ rows, t }) {
                 <tr key={row.id}>
                   <td>{approvalLabel(row)}</td>
                   <td>{row.redacted ? <span className="sub">{t('approvals.panel.privateHidden')}</span> : row.summary?.subject || '(no subject)'}</td>
-                  <td>{statusKey[row.status] ? t(statusKey[row.status]) : row.status}</td>
+                  <td title={row.status === 'expired' ? 'Not decided within the approval window. Nothing was sent.' : undefined}>
+                    {statusKey[row.status] ? t(statusKey[row.status]) : row.status}
+                  </td>
                   <td>
                     {viaKey && t.has(viaKey) ? (
                       <span className="approvals-via">
@@ -257,6 +274,84 @@ function DecidedTable({ rows, t }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/**
+ * How long a held send stays decidable in this workspace
+ * (GET/PUT /api/approvals/settings). Owners and admins change it; everyone
+ * else sees it. A new window applies to sends held after the change.
+ */
+function ApprovalWindowSetting() {
+  const { toast } = useToast();
+  const [state, setState] = useState({ loading: true, windowHours: 24, canEdit: false, failed: false });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/approvals/settings', { cache: 'no-store' })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Could not load the approval window.');
+        if (!cancelled) setState({ loading: false, windowHours: payload.windowHours, canEdit: payload.canEdit === true, failed: false });
+      })
+      .catch(() => { if (!cancelled) setState((current) => ({ ...current, loading: false, failed: true })); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const change = async (event) => {
+    const windowHours = Number(event.target.value);
+    const previous = state.windowHours;
+    setState((current) => ({ ...current, windowHours }));
+    setSaving(true);
+    try {
+      const response = await fetch('/api/approvals/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ windowHours }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Could not save the approval window.');
+      setState((current) => ({ ...current, windowHours: payload.windowHours }));
+      toast({ message: `Held sends now wait ${windowLabel(payload.windowHours)} for a decision.`, variant: 'success' });
+    } catch (saveError) {
+      setState((current) => ({ ...current, windowHours: previous }));
+      toast({ message: requestErrorMessage(saveError), variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (state.loading || state.failed) return null;
+  return (
+    <div className="card approvals-window" style={{ padding: 16, marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ minWidth: 0, flex: '1 1 280px' }}>
+        <label htmlFor="approval-window" style={{ fontWeight: 600, display: 'block' }}>Approval window</label>
+        <div className="sub" style={{ marginTop: 4 }}>
+          How long a held send waits for a decision. After that it expires and nothing is sent.
+          A change applies to sends held from now on.
+        </div>
+      </div>
+      {state.canEdit ? (
+        <select
+          id="approval-window"
+          className="input"
+          style={{ width: 'auto', minWidth: 140 }}
+          value={state.windowHours}
+          onChange={change}
+          disabled={saving}
+        >
+          {WINDOW_OPTIONS.map((option) => (
+            <option key={option.hours} value={option.hours}>{option.label}</option>
+          ))}
+        </select>
+      ) : (
+        <div id="approval-window" style={{ fontWeight: 600 }}>
+          {windowLabel(state.windowHours)}
+          <div className="sub" style={{ fontWeight: 400 }}>Only an owner or admin can change this.</div>
+        </div>
+      )}
     </div>
   );
 }

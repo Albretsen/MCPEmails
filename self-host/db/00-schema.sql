@@ -1212,6 +1212,10 @@ CREATE INDEX IF NOT EXISTS send_approvals_workspace_pending_idx ON public.send_a
 ALTER TABLE public.workspaces
   ADD COLUMN IF NOT EXISTS allowed_recipient_domains text[];
 
+-- Hours a held send stays decidable (hosted migration 20261114110000).
+ALTER TABLE public.workspaces
+  ADD COLUMN IF NOT EXISTS approval_window_hours integer NOT NULL DEFAULT 24;
+
 -- Why a send was held and whose it is (hosted migration 20261111190100).
 ALTER TABLE public.send_approvals
   ADD COLUMN IF NOT EXISTS hold_reason  text CHECK (hold_reason IS NULL OR hold_reason IN ('recipient_rule')),

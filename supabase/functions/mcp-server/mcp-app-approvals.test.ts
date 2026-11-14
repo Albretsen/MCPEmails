@@ -23,6 +23,7 @@ import {
   APPROVAL_TOOL_DEFINITIONS,
   APPROVAL_TOOL_NAMES,
   APPROVAL_TTL_MS,
+  approvalTtlMsForHours,
   approvalLapsedBeforeDecision,
   approvalReviewUrl,
   type ApprovalCaller,
@@ -533,6 +534,17 @@ Deno.test("expiry helpers key the dispatcher gate on the decision, not the deliv
     "a decision after the window does not resurrect it",
   );
   assertEquals(APPROVAL_TTL_MS, 24 * 60 * 60 * 1000, "24h TTL");
+});
+
+Deno.test("approvalTtlMsForHours: the four workspace windows, anything else is 24h", () => {
+  const H = 60 * 60 * 1000;
+  assertEquals(approvalTtlMsForHours(24), 24 * H, "24h window");
+  assertEquals(approvalTtlMsForHours(72), 72 * H, "72h window");
+  assertEquals(approvalTtlMsForHours(168), 168 * H, "168h window");
+  assertEquals(approvalTtlMsForHours(336), 336 * H, "336h window");
+  for (const bad of [null, undefined, 0, 1, 48, 337, 10_000, "168", NaN]) {
+    assertEquals(approvalTtlMsForHours(bad), APPROVAL_TTL_MS, `unknown window ${String(bad)} falls back to 24h`);
+  }
 });
 
 // ---------------------------------------------------------------------------
