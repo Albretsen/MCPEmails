@@ -6283,6 +6283,7 @@ export type Database = {
           analytics_first_tool_used_at: string | null
           annual_switch_dismiss_count: number
           annual_switch_dismissed_at: string | null
+          approval_window_hours: number
           bulk_undo_hidden: boolean
           card_diagnostics: boolean
           chat_checkout_link_enabled: boolean
@@ -6355,6 +6356,7 @@ export type Database = {
           analytics_first_tool_used_at?: string | null
           annual_switch_dismiss_count?: number
           annual_switch_dismissed_at?: string | null
+          approval_window_hours?: number
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6427,6 +6429,7 @@ export type Database = {
           analytics_first_tool_used_at?: string | null
           annual_switch_dismiss_count?: number
           annual_switch_dismissed_at?: string | null
+          approval_window_hours?: number
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean

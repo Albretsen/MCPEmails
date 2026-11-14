@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-14',
+    kind: 'added',
+    title: 'Choose how long held sends wait for approval',
+    body:
+      "On the Approvals page, an owner or admin can now give held sends 1, 3, 7 or 14 days to be approved, and each pending send shows when it expires.",
+  },
+  {
     date: '2026-11-12',
     kind: 'fixed',
     title: 'Clear answer when your mail provider flags a message as spam',
