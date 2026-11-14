@@ -1634,17 +1634,23 @@ export function WorkflowsPage({ mcpUrl, userRole }) {
     } catch { toast({ message: 'Could not copy the prompt.', variant: 'error' }); }
   };
   return (
-    <main className="page" style={{ maxWidth: 1040 }}>
+    <main className="page">
       <PageHeader title="Workflows" sub="Reliable email routines you can run in any MCP client. Prompts never add permissions; your connection’s scopes still control every action." />
-      <div style={{ background: 'var(--brand-soft, #eef4ff)', border: '1px solid var(--border)', borderRadius: 14, padding: 18, marginBottom: 20, color: 'var(--fg-2)', lineHeight: 1.55 }}>
-        <strong style={{ color: 'var(--fg-1)' }}>Use them your way.</strong> Copy a routine into your agent today. Clients that support MCP prompts can also discover the starter library directly from {mcpUrl}.
+      <div className="alert" role="note" style={{ marginBottom: 20, alignItems: 'flex-start' }}>
+        <Icon name="zap" size={16} />
+        <span><strong>Use them your way.</strong> Copy a routine into your agent today. Clients that support MCP prompts can also discover the starter library directly from <code className="workflow-url">{mcpUrl}</code>.</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 14 }}>
+      <div className="workflow-grid">
         {WORKFLOW_CARDS.map((card) => (
-          <article key={card.title} style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 18, background: 'var(--bg-1)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div><h2 style={{ margin: 0, fontSize: 16, color: 'var(--fg-1)' }}>{card.title}</h2><span style={{ fontSize: 12, color: 'var(--fg-3)' }}>{card.scope}</span></div>
-            <p style={{ margin: 0, color: 'var(--fg-2)', fontSize: 13, lineHeight: 1.55 }}>{card.prompt}</p>
-            <Btn onClick={() => copy(card.title, card.prompt)} icon={copied === card.title ? 'check' : 'copy'} style={{ marginTop: 'auto', alignSelf: 'flex-start' }}>{copied === card.title ? 'Copied' : 'Copy prompt'}</Btn>
+          <article key={card.title} className="card workflow-card">
+            <div className="workflow-card-head">
+              <h2>{card.title}</h2>
+              <Badge tone={card.scope === 'Read only' ? 'neutral' : 'brand'}>{card.scope}</Badge>
+            </div>
+            <p className="workflow-prompt">{card.prompt}</p>
+            <div className="workflow-card-foot">
+              <Btn size="sm" variant="secondary" onClick={() => copy(card.title, card.prompt)} icon={copied === card.title ? 'check' : 'copy'}>{copied === card.title ? 'Copied' : 'Copy prompt'}</Btn>
+            </div>
           </article>
         ))}
       </div>
@@ -5261,17 +5267,24 @@ function BulkRunsPanel({ userRole }) {
   };
 
   return <section style={{ marginTop: 28 }}>
-    <h2 style={{ margin: '0 0 6px', fontSize: 18 }}>Large-work controls</h2>
-    <p style={{ color: 'var(--fg-2)', margin: '0 0 14px' }}>See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</p>
-    {error && <div className="alert alert-error" role="alert">{error}</div>}
+    {error && <div className="alert alert-error" role="alert" style={{ marginBottom: 12 }}>{error}</div>}
     {!canStop && <div className="alert" role="status" data-testid="bulk-runs-viewer-notice" style={{ marginBottom: 12 }}>{t('workflows.bulkRuns.viewerNotice')}</div>}
-    <div className="card" style={{ overflowX: 'auto' }}>
-      {loading ? <p style={{ color: 'var(--fg-3)' }}>Loading runs…</p> : runs.length === 0 ? <div className="empty-state"><Icon name="activity" size={24} /><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
-        <table className="data-table"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
+    <div className="card">
+      <div className="card-h">
+        <div className="grow">
+          <div className="title">Large-work controls</div>
+          <div className="sub">See bulk inbox work as it happens. Stop prevents work that has not started; it does not undo messages already changed.</div>
+        </div>
+      </div>
+      <div className="tbl-wrap">
+      {loading ? <p className="sub" style={{ padding: '18px 20px', margin: 0 }}>Loading runs…</p> : runs.length === 0 ? <div className="empty"><div className="ico"><Icon name="activity" size={20} /></div><h3>No large-work runs yet</h3><p>Bulk move and flag actions will appear here while they run.</p></div> :
+        <table className="tbl"><thead><tr><th>Action</th><th>Inbox</th><th>Progress</th><th>Status</th><th>Started</th><th /></tr></thead><tbody>{runs.map((run) => {
           const active = isActiveBulkRun(run);
           const label = run.operation.replaceAll('_', ' ');
-          return <tr key={run.id}><td style={{ textTransform: 'capitalize' }}>{label}</td><td>{run.inbox}</td><td>{run.processed} / {run.total} processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'warning' : active ? 'neutral' : 'danger'}>{run.status.replaceAll('_', ' ')}</Badge></td><td>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
+          const status = run.status.replaceAll('_', ' ');
+          return <tr key={run.id}><td style={{ fontWeight: 500 }}>{label.charAt(0).toUpperCase() + label.slice(1).toLowerCase()}</td><td>{run.inbox}</td><td><span style={{ fontVariantNumeric: 'tabular-nums' }}>{run.processed} / {run.total}</span> <span className="sub">processed · {run.succeeded} changed{run.failed ? ` · ${run.failed} failed` : ''}</span></td><td><Badge tone={run.status === 'completed' ? 'live' : run.status === 'cancelled_partial' ? 'amber' : active ? 'brand' : 'red'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge></td><td className="sub" style={{ whiteSpace: 'nowrap' }}>{new Date(run.createdAt).toLocaleString()}</td><td className="right">{active && <Btn variant="secondary" size="sm" disabled={!canStop || run.status === 'cancelling' || cancelling === run.id} title={canStop ? undefined : t('workflows.bulkRuns.stopViewerTitle')} onClick={canStop ? () => cancel(run.id) : undefined}>{run.status === 'cancelling' ? 'Stopping…' : 'Stop'}</Btn>}</td></tr>;
         })}</tbody></table>}
+      </div>
     </div>
   </section>;
 }
@@ -9291,16 +9304,19 @@ export function MembersPage({
                 />
                 {teamRolesEnabled && (
                   <select
+                    className="input"
                     value={inviteRole}
                     onChange={e => setInviteRole(e.target.value)}
                     disabled={inviting}
                     style={{
-                      padding: '8px 12px',
+                      width: 'auto',
+                      height: 'auto',
+                      padding: '8px 32px 8px 12px',
                       border: '1px solid var(--border-1)',
                       borderRadius: 8,
                       fontSize: 13.5,
                       fontFamily: 'var(--font-sans)',
-                      background: 'var(--bg-input, var(--bg-card))',
+                      backgroundColor: 'var(--bg-input, var(--bg-card))',
                       color: 'var(--fg-1)',
                       cursor: 'pointer',
                     }}
