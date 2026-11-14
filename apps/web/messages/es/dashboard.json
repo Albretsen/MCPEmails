@@ -1457,9 +1457,10 @@
       "causeInterrupted": "Una ejecución se interrumpió antes de terminar.",
       "causeUnknown": "Abre el registro de ejecuciones para ver qué pasó."
     },
-    "approvalBadge": "Requiere aprobación",
+    "approvalBadge": "Cada reenvío espera tu aprobación",
     "enabledOn": "Activa",
     "enabledOff": "Inactiva",
+    "nextRun": "Próxima revisión {time}",
     "rowRuns": "Registro",
     "rowEdit": "Editar",
     "rowDelete": "Eliminar",
