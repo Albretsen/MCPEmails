@@ -1457,9 +1457,10 @@
       "causeInterrupted": "En kjøring ble avbrutt før den ble ferdig.",
       "causeUnknown": "Åpne kjøreloggen for å se hva som skjedde."
     },
-    "approvalBadge": "Krever godkjenning",
-    "enabledOn": "På",
-    "enabledOff": "Av",
+    "approvalBadge": "Du godkjenner hver videresending",
+    "enabledOn": "Aktiv",
+    "enabledOff": "Pauset",
+    "nextRun": "Neste sjekk {time}",
     "rowRuns": "Kjørelogg",
     "rowEdit": "Rediger",
     "rowDelete": "Slett",

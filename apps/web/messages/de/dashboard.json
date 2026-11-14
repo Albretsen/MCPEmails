@@ -1457,9 +1457,10 @@
       "causeInterrupted": "Ein Lauf wurde vor dem Abschluss unterbrochen.",
       "causeUnknown": "Öffnen Sie das Ausführungsprotokoll, um zu sehen, was passiert ist."
     },
-    "approvalBadge": "Freigabe nötig",
-    "enabledOn": "An",
+    "approvalBadge": "Weiterleitung erst nach Freigabe",
+    "enabledOn": "Aktiv",
     "enabledOff": "Aus",
+    "nextRun": "Nächste Prüfung {time}",
     "rowRuns": "Protokoll",
     "rowEdit": "Bearbeiten",
     "rowDelete": "Löschen",
