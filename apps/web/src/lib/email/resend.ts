@@ -20,6 +20,17 @@
  * end a sequence, which is not what a staging skip means. A batch keeps its
  * positions: skipped emails get a synthetic id in place, so callers that map
  * ids back by index still line up.
+ *
+ * IN EVERY ENVIRONMENT a recipient that cannot be a real address (no dot in
+ * the domain, or an ending such as `.x` that no top-level domain has) is
+ * dropped before the payload reaches Resend, which would answer 422 for the
+ * whole send. Such addresses come from typos at signup: production confirms
+ * email signups instantly, so nothing else catches them. The drop is logged
+ * with the domain only and does NOT alert: there is nothing to fix on our
+ * side. When no `to` recipient is left, a single send answers with an
+ * `invalid_recipient` error (the caller records it as failed, which also ends
+ * a lifecycle sequence) and a batch fills the position with an id starting
+ * `skipped-invalid-recipient`.
  */
 import { Resend } from 'resend';
 
@@ -28,6 +39,8 @@ import { isAllowlistedAddress, isProduction, recipientAllowlist } from '@/lib/en
 import { fromDomain, reportResendFailure, type ResendFailure } from '@/lib/email/resend-failure-alert';
 
 export const SKIPPED_ID_PREFIX = 'skipped-not-allowlisted';
+export const INVALID_RECIPIENT_ID_PREFIX = 'skipped-invalid-recipient';
+export const INVALID_RECIPIENT_ERROR = 'invalid_recipient';
 
 type Recipients = string | string[] | undefined;
 type Addressed = { to?: Recipients; cc?: Recipients; bcc?: Recipients };
@@ -66,6 +79,85 @@ export function filterRecipients<T extends Addressed>(payload: T, allowlist: str
   if (payload.cc !== undefined) next.cc = cc;
   if (payload.bcc !== undefined) next.bcc = bcc;
   return next;
+}
+
+// local@label.label...tld, where the last label is 2+ letters or an IDN
+// (xn--) label. Looser than RFC 5322 on purpose: it only has to catch what
+// Resend refuses, never a deliverable address.
+const ADDRESS_SHAPE = /^[^\s@<>"(),;:]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})$/i;
+
+/** True when `address` (bare or `Name <address>`) has the shape of a real address. */
+export function isPlausibleAddress(address: unknown): boolean {
+  if (typeof address !== 'string') return false;
+  const trimmed = address.trim();
+  const angled = /<([^<>]*)>\s*$/.exec(trimmed);
+  return ADDRESS_SHAPE.test((angled ? angled[1] : trimmed).trim());
+}
+
+/**
+ * Removes every recipient that cannot be a real address. Returns the payload
+ * unchanged when all are fine, the filtered payload otherwise, or null when no
+ * `to` recipient is left.
+ */
+export function dropImplausibleRecipients<T extends Addressed>(payload: T): T | null {
+  const dropped: string[] = [];
+  const keep = (value: Recipients): string[] =>
+    asList(value).filter((address) => {
+      const ok = isPlausibleAddress(address);
+      if (!ok) dropped.push(maskAddress(String(address)));
+      return ok;
+    });
+  const to = keep(payload.to);
+  const cc = keep(payload.cc);
+  const bcc = keep(payload.bcc);
+  if (dropped.length === 0) return payload;
+  console.warn(`[resend] dropped ${dropped.length} recipient(s) that are not valid addresses: ${dropped.join(', ')}`);
+  if (to.length === 0) return null;
+  const next = { ...payload, to };
+  if (payload.cc !== undefined) next.cc = cc;
+  if (payload.bcc !== undefined) next.bcc = bcc;
+  return next;
+}
+
+/**
+ * Runs before the failure watcher, so a typo'd address never reaches Resend
+ * and never raises the owner alert.
+ */
+function guardRecipients(resend: Resend): void {
+  const sendOne = resend.emails.send.bind(resend.emails);
+  resend.emails.send = (async (payload, options) => {
+    const checked = dropImplausibleRecipients(payload as Addressed);
+    if (!checked) {
+      return {
+        data: null,
+        error: {
+          name: INVALID_RECIPIENT_ERROR,
+          statusCode: 422,
+          // Plain characters only, so callers that keep a short code (safeCode) keep it.
+          message: 'invalid_recipient: no valid recipient address',
+        },
+        headers: null,
+      };
+    }
+    return sendOne(checked as typeof payload, options);
+  }) as typeof resend.emails.send;
+
+  if (!resend.batch) return;
+  const sendBatch = resend.batch.send.bind(resend.batch);
+  resend.batch.send = (async (payloads, options) => {
+    const checked = payloads.map((p) => dropImplausibleRecipients(p as Addressed) as typeof p | null);
+    const live = checked.filter((p): p is (typeof payloads)[number] => p !== null);
+    const invalidId = () => ({ id: `${INVALID_RECIPIENT_ID_PREFIX}-${crypto.randomUUID()}` });
+    if (live.length === checked.length) return sendBatch(live, options);
+    if (live.length === 0) {
+      return { data: { data: payloads.map(invalidId) }, error: null, headers: null };
+    }
+    const result = await sendBatch(live, options);
+    if (result.error || !result.data) return result;
+    const sentIds = [...result.data.data];
+    const data = checked.map((p) => (p === null ? invalidId() : sentIds.shift() ?? invalidId()));
+    return { ...result, data: { ...result.data, data } };
+  }) as typeof resend.batch.send;
 }
 
 function skippedId(): string {
@@ -128,6 +220,7 @@ export function createResend(
 ): Resend {
   const resend = new Resend(key);
   watchFailures(resend, report);
+  guardRecipients(resend);
   if (isProduction(env)) return resend;
 
   const allowlist = recipientAllowlist(env);
