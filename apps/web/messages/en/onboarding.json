@@ -202,11 +202,11 @@
       "manual": "Set it up by hand",
       "continue": "I added it",
       "chatgpt": {
-        "step1": "On chatgpt.com, open Plugins and click Add at the top right.",
-        "step2": "Choose Add custom MCP server, name it MCPEmails and paste the URL below as the Server URL.",
-        "step3": "Tick I understand and want to continue, click Create as a plugin, then Connect MCPEmails and allow access.",
-        "step4": "In a chat, type @MCPEmails to use it.",
-        "note": "Custom MCP servers need a paid plan, in a browser on chatgpt.com: OpenAI lists Business and Enterprise/Edu, with read-only access on Pro."
+        "step1": "In ChatGPT, open Plugins in the sidebar and search for Any Mailbox, by MCPEmails.",
+        "step2": "Click Install plugin, then Connect.",
+        "step3": "Sign in to MCPEmails and allow access.",
+        "step4": "In a chat, type @ and pick Any Mailbox to use it.",
+        "note": "No Any Mailbox in your account or workspace? Add a custom MCP server instead: on chatgpt.com, open Plugins, click Add, choose Add custom MCP server, paste the URL above as the Server URL and choose OAuth. OpenAI lists custom MCP servers for Business and Enterprise/Edu, with read-only access on Pro."
       },
       "key": {
         "creating": "Creating an API key for {client}",
@@ -290,7 +290,7 @@
     "noHandshake": {
       "title": "{client} has not connected yet",
       "claude": "Reload claude.ai and start a new chat. In Claude Desktop, quit the app fully and open it again.",
-      "chatgpt": "Open a new chat on chatgpt.com, type @ and pick MCPEmails.",
+      "chatgpt": "Open a new chat in ChatGPT, type @ and pick Any Mailbox (or MCPEmails, if you added it as a custom MCP server).",
       "editor": "Reload the {client} window and check that MCPEmails shows as connected in its MCP list. If it does not, paste the URL again.",
       "cli": "Quit and restart {client}, then check that MCPEmails is listed and connected.",
       "api": "Send the request again and check that the Authorization header carries your key."
@@ -298,7 +298,7 @@
     "noCall": {
       "title": "{client} is connected but has not used MCPEmails yet",
       "claude": "Switch MCPEmails on in this chat (+ > Connectors) or start a new chat, then paste the prompt again.",
-      "chatgpt": "In the chat, type @ and pick MCPEmails, then paste the prompt again.",
+      "chatgpt": "In the chat, type @ and pick Any Mailbox (or MCPEmails, for a custom MCP server), then paste the prompt again.",
       "other": "Start a new chat and paste the prompt again. It names MCPEmails, so {client} knows to use it."
     },
     "reconnect": {

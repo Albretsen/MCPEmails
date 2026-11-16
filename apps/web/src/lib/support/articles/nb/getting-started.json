@@ -188,17 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "Koble til ChatGPT",
-      "summary": "Legg til https://mcpemails.com/api/mcp som egendefinert MCP-server på chatgpt.com, og logg inn.",
-      "keywords": "chatgpt openai utviklermodus developer mode connector plugin apper egendefinert mcp-server oauth oppsett",
+      "summary": "Installer Any Mailbox, MCPEmails-pluginen, fra pluginkatalogen i ChatGPT og logg inn. En egendefinert MCP-server er reserveløsningen.",
+      "keywords": "chatgpt openai utviklermodus developer mode connector plugin apper egendefinert mcp-server oauth oppsett any mailbox pluginkatalog plugin directory installer",
       "steps": [
-        "På chatgpt.com åpner du Plugins og deretter Personal, velger Add og så Add custom MCP server.",
-        "Kall den MCPEmails, lim inn https://mcpemails.com/api/mcp under Connection og velg OAuth.",
-        "Huk av for I understand and want to continue, og velg Create as a plugin.",
+        "I ChatGPT åpner du Plugins i sidepanelet og søker etter Any Mailbox, fra MCPEmails.",
+        "Klikk Install plugin og deretter Connect.",
         "Logg inn på MCPEmails og velg hvilke innbokser den kan bruke.",
-        "I en chat skriver du @ og velger MCPEmails. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
+        "I en chat skriver du @ og velger Any Mailbox. Velg den igjen når et oppfølgingsspørsmål trenger e-posten din."
       ],
       "body": [
-        "Dette virker i nettleseren på chatgpt.com med et betalt abonnement; mobilappen kan ikke legge den til. OpenAIs hjelpeside nevner Business og Enterprise/Edu, der en administrator eller eier legger den til for arbeidsområdet, og skrivebeskyttet tilgang på Pro."
+        "Any Mailbox er navnet MCPEmails har i pluginkatalogen i ChatGPT. Om en plugin kan installeres, avhenger av ChatGPT-abonnement, arbeidsområde, rolle og region.",
+        "Er Any Mailbox ikke tilgjengelig for deg, legger du heller til en egendefinert MCP-server: på chatgpt.com åpner du Plugins og deretter Personal, velger Add og så Add custom MCP server, limer inn https://mcpemails.com/api/mcp under Connection, velger OAuth, huker av for I understand and want to continue og velger Create as a plugin. Dette virker i nettleseren på chatgpt.com, ikke i mobilappen. OpenAIs hjelpeside nevner Business og Enterprise/Edu, der en administrator eller eier legger den til for arbeidsområdet, og skrivebeskyttet tilgang på Pro."
       ],
       "links": [
         {

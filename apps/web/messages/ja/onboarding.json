@@ -202,11 +202,11 @@
       "manual": "手動でセットアップ",
       "continue": "追加しました",
       "chatgpt": {
-        "step1": "chatgpt.comで「プラグイン」を開き、右上のAdd（追加）をクリックします。",
-        "step2": "「カスタム MCP サーバーを追加」を選び、名前をMCPEmailsにして、下のURLをServer URLに貼り付けます。",
-        "step3": "「理解したうえで続行します」にチェックを入れ、「プラグインとして作成」をクリックし、続いてConnect MCPEmailsをクリックしてアクセスを許可します。",
-        "step4": "チャットで @MCPEmails と入力すると使えます。",
-        "note": "カスタムMCPサーバーには有料プランが必要で、chatgpt.comのブラウザー版で追加します。OpenAIが挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用のアクセスに限られます。"
+        "step1": "ChatGPTのサイドバーで「プラグイン」を開き、MCPEmails提供のAny Mailboxを検索します。",
+        "step2": "「プラグインをインストール」をクリックし、続いて「接続」をクリックします。",
+        "step3": "MCPEmailsにログインしてアクセスを許可します。",
+        "step4": "チャットで @ と入力し、Any Mailboxを選ぶと使えます。",
+        "note": "アカウントやワークスペースにAny Mailboxが表示されない場合は、代わりにカスタムMCPサーバーを追加します。chatgpt.comで「プラグイン」を開き、Add（追加）をクリックして「カスタム MCP サーバーを追加」を選び、上のURLをServer URLに貼り付けてOAuthを選びます。OpenAIがカスタムMCPサーバーの対象として挙げているのはBusinessとEnterprise/Eduで、Proでは読み取り専用のアクセスに限られます。"
       },
       "key": {
         "creating": "{client}用のAPIキーを作成しています",
@@ -290,7 +290,7 @@
     "noHandshake": {
       "title": "{client}がまだ接続していません",
       "claude": "claude.aiを再読み込みして新しいチャットを始めてください。Claude Desktopでは、アプリを完全に終了してから開き直します。",
-      "chatgpt": "chatgpt.comで新しいチャットを開き、@ と入力してMCPEmailsを選びます。",
+      "chatgpt": "ChatGPTで新しいチャットを開き、@ と入力してAny Mailbox（カスタムMCPサーバーとして追加した場合はMCPEmails）を選びます。",
       "editor": "{client}のウィンドウを再読み込みし、MCPの一覧でMCPEmailsが接続済みと表示されているか確認してください。表示されない場合は、URLをもう一度貼り付けます。",
       "cli": "{client}を終了して再起動し、MCPEmailsが一覧にあり接続済みになっているか確認してください。",
       "api": "リクエストをもう一度送り、AuthorizationヘッダーにAPIキーが含まれているか確認してください。"
@@ -298,7 +298,7 @@
     "noCall": {
       "title": "{client}は接続済みですが、まだMCPEmailsを使っていません",
       "claude": "このチャットでMCPEmailsをオンにする（+ > コネクタ）か、新しいチャットを始めてから、プロンプトをもう一度貼り付けてください。",
-      "chatgpt": "チャットで @ と入力してMCPEmailsを選び、プロンプトをもう一度貼り付けてください。",
+      "chatgpt": "チャットで @ と入力してAny Mailbox（カスタムMCPサーバーならMCPEmails）を選び、プロンプトをもう一度貼り付けてください。",
       "other": "新しいチャットを始めて、プロンプトをもう一度貼り付けてください。プロンプトにMCPEmailsの名前が入っているので、{client}はそれを使うと判断できます。"
     },
     "reconnect": {

@@ -58,8 +58,10 @@
  *    processed live in US East. There is no region picker.
  */
 
+import { CHATGPT_DIRECTORY_LISTING_URL } from '../connect/chatgpt.mjs';
+
 /** Date of the last substantive edit to this page. Feeds the visible "Updated" line, JSON-LD dateModified and the sitemap. */
-export const PAGE_UPDATED = '2026-10-20';
+export const PAGE_UPDATED = '2026-11-17';
 
 /** First published (under the old slug, /email-mcp-servers-compared). */
 export const DATE_PUBLISHED = '2026-09-08';
@@ -88,6 +90,7 @@ export function formatDate(iso) {
  * a comment: a comparison a reader cannot check is an advertisement.
  */
 const SOURCE_ITEMS = [
+  { label: 'MCPEmails in the ChatGPT plugin directory, as Any Mailbox', url: CHATGPT_DIRECTORY_LISTING_URL, checkedOn: '2026-11-17' },
   { label: 'Mailbox MCP pricing, plan limits and directory listings', url: 'https://mailbox-mcp.com/pricing/', checkedOn: '2026-10-20' },
   { label: 'Mailbox MCP security: storage, permission levels, send confirmation', url: 'https://mailbox-mcp.com/security/', checkedOn: '2026-10-20' },
   { label: 'Mailbox MCP privacy policy: server location', url: 'https://mailbox-mcp.com/privacy/', checkedOn: '2026-10-20' },
@@ -194,7 +197,7 @@ export const entries = [
     ],
     cons: [
       'No calendar, and no stored address book: contacts are scanned live out of recent mail. Mailbox MCP, anymailmcp and MailMCP all do calendars or contacts.',
-      'Not yet in the ChatGPT app directory. Our app is in review, so for now you add us as a custom connector. Mailbox MCP and Mailopoly are already listed.',
+      'In the ChatGPT plugin directory our listing is called Any Mailbox, not MCPEmails, so search for that name.',
       'For three to five mailboxes, anymailmcp is cheaper, and for one mailbox on a long term, MailMCP is.',
       'One region: data stored in Stockholm, mail processed live in US East. No security certification of our own.',
     ],
@@ -488,7 +491,7 @@ export const rows = [
   },
   {
     label: 'In the ChatGPT app directory',
-    us: 'Not yet. In review.',
+    us: 'Listed, as Any Mailbox.',
     mailboxmcp: 'Listed.',
     anymailmcp: 'Not found.',
     mailmcp: 'Not found. Added in Developer mode.',
@@ -521,11 +524,11 @@ export const faq = {
     },
     {
       q: 'How do I connect iCloud or Yahoo mail to ChatGPT or Claude?',
-      a: 'The built-in connectors in ChatGPT and Claude are built around Gmail and Microsoft 365, and we found no official MCP server from Apple or Yahoo, so you need a third-party server. Create an app password at your provider, connect the mailbox to a hosted server such as MCPEmails, Mailbox MCP, anymailmcp, MailMCP or Mailopoly, then add that server to ChatGPT or Claude. Mailbox MCP and Mailopoly can be installed from the ChatGPT app directory; MCPEmails, for now, is added as a custom connector while our directory app is in review.',
+      a: 'The built-in connectors in ChatGPT and Claude are built around Gmail and Microsoft 365, and we found no official MCP server from Apple or Yahoo, so you need a third-party server. Create an app password at your provider, connect the mailbox to a hosted server such as MCPEmails, Mailbox MCP, anymailmcp, MailMCP or Mailopoly, then add that server to ChatGPT or Claude. MCPEmails (as Any Mailbox), Mailbox MCP and Mailopoly can be installed from the ChatGPT plugin directory.',
     },
     {
       q: 'Which of these are in the ChatGPT app directory?',
-      a: `On ${CHECKED_ON} we found Mailbox MCP and Mailopoly (as Mailopoly Inbox) listed, and Composio's own guide installs it from the plugin marketplace. MCPEmails has an app in review and is not listed yet. We did not find anymailmcp or MailMCP; MailMCP's guide adds it as a custom connector in Developer mode. A directory listing means OpenAI reviewed the app; it is not a security certification.`,
+      a: `On ${CHECKED_ON} we found Mailbox MCP and Mailopoly (as Mailopoly Inbox) listed, and Composio's own guide installs it from the plugin marketplace. MCPEmails has been listed as Any Mailbox since 17 November 2026. We did not find anymailmcp or MailMCP; MailMCP's guide adds it as a custom connector in Developer mode. A directory listing means OpenAI reviewed the app; it is not a security certification.`,
     },
     {
       q: 'anymailmcp and MailMCP are cheaper. Why would I pay more?',

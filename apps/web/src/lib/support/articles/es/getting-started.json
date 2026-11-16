@@ -188,17 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "Conectar ChatGPT",
-      "summary": "Añade https://mcpemails.com/api/mcp como servidor MCP personalizado en chatgpt.com e inicia sesión.",
-      "keywords": "chatgpt openai modo desarrollador conector plugin apps servidor mcp personalizado oauth configuración developer mode",
+      "summary": "Instala Any Mailbox, el plugin de MCPEmails, desde el directorio de plugins de ChatGPT e inicia sesión. Un servidor MCP personalizado es la alternativa.",
+      "keywords": "chatgpt openai modo desarrollador conector plugin apps servidor mcp personalizado oauth configuración developer mode any mailbox directorio de plugins plugin directory instalar",
       "steps": [
-        "En chatgpt.com, abre Plugins y luego Personal, elige Add y luego Add custom MCP server.",
-        "Llámalo MCPEmails, pega https://mcpemails.com/api/mcp en Connection y elige OAuth.",
-        "Marca I understand and want to continue y elige Create as a plugin.",
+        "En ChatGPT, abre Plugins en la barra lateral y busca Any Mailbox, de MCPEmails.",
+        "Haz clic en Install plugin y luego en Connect.",
         "Inicia sesión en MCPEmails y elige qué bandejas puede usar.",
-        "En un chat, escribe @ y elige MCPEmails. Vuelve a elegirlo cuando una pregunta de seguimiento necesite tu correo."
+        "En un chat, escribe @ y elige Any Mailbox. Vuelve a elegirlo cuando una pregunta de seguimiento necesite tu correo."
       ],
       "body": [
-        "Funciona en el navegador, en chatgpt.com, con un plan de pago; la app móvil no permite añadirlo. La página de ayuda de OpenAI indica Business y Enterprise/Edu, donde lo añade un administrador o propietario para el espacio de trabajo, y acceso de solo lectura en Pro."
+        "Any Mailbox es el nombre de MCPEmails en el directorio de plugins de ChatGPT. Poder instalar un plugin depende de tu plan de ChatGPT, tu espacio de trabajo, tu rol y tu región.",
+        "Si Any Mailbox no está disponible para ti, añade un servidor MCP personalizado: en chatgpt.com, abre Plugins y luego Personal, elige Add y luego Add custom MCP server, pega https://mcpemails.com/api/mcp en Connection, elige OAuth, marca I understand and want to continue y elige Create as a plugin. Funciona en el navegador, en chatgpt.com, no en la app móvil. La página de ayuda de OpenAI indica Business y Enterprise/Edu, donde lo añade un administrador o propietario para el espacio de trabajo, y acceso de solo lectura en Pro."
       ],
       "links": [
         {

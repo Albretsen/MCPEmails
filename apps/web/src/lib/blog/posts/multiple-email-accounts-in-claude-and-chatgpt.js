@@ -26,7 +26,7 @@ const post = {
     'Several work and personal email accounts connected to Claude and ChatGPT through one MCP connector',
   authorId: 'asgeir',
   publishedAt: '2026-09-29T09:00:00.000Z',
-  updatedAt: '2026-11-11T09:00:00.000Z',
+  updatedAt: '2026-11-17T09:00:00.000Z',
   tags: ['Multiple inboxes', 'Claude', 'ChatGPT', 'MCP'],
   featured: false,
   content: `You want to ask one question and have it answered across every mailbox you run: your own address, info@, sales@, the invoices inbox, maybe a personal Gmail. This guide shows how to get several email accounts into Claude and ChatGPT at the same time, what the built-in connectors already cover, and where you need an MCP server instead.
@@ -81,6 +81,8 @@ Claude's Free plan allows one custom connector, and Pro and Max have no limit. O
 Every mailbox you connected is now available. The [Claude guide](/blog/connect-claude-to-email) has the details.
 
 ## Add it to ChatGPT
+
+**Quickest route: the plugin directory.** Since 17 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
 
 A paid ChatGPT plan can add a custom MCP server on chatgpt.com in a browser; the mobile app cannot add one. OpenAI's help page lists Business and Enterprise/Edu, where an admin or owner adds it for the workspace, and read and fetch tools only on Pro; Go and Plus are not mentioned.
 

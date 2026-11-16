@@ -135,10 +135,10 @@
       "id": "assistant-sees-nothing",
       "title": "Conectado, mas o assistente não vê nenhum e-mail",
       "summary": "A caixa de correio está conectada, mas o seu assistente diz que não tem ferramentas de e-mail ou não encontra nada.",
-      "keywords": "sem ferramentas nada vazio conector não funciona claude chatgpt cursor modo desenvolvedor escopo permissão inbox_list no tools developer mode scope plugin @",
+      "keywords": "sem ferramentas nada vazio conector não funciona claude chatgpt cursor modo desenvolvedor escopo permissão inbox_list no tools developer mode scope plugin any mailbox @",
       "steps": [
         "Abra Caixas de entrada no painel e confira se a caixa de correio aparece sem erro. Se aparecer um erro, conecte-a de novo.",
-        "Comece um novo chat depois de adicionar o conector. No Claude, confira se o MCPEmails está ativado em + e Conectores. No ChatGPT, digite @ e escolha MCPEmails, e mencione-o de novo com @ quando uma pergunta seguinte precisar dos seus e-mails.",
+        "Comece um novo chat depois de adicionar o conector. No Claude, confira se o MCPEmails está ativado em + e Conectores. No ChatGPT, digite @ e escolha Any Mailbox (ou MCPEmails, no servidor MCP personalizado), e mencione-o de novo com @ quando uma pergunta seguinte precisar dos seus e-mails.",
         "Autorize o conector com a mesma conta MCPEmails em que está a caixa de correio.",
         "O seu assistente só vê as ferramentas incluídas no escopo do seu conector ou da sua chave de API. Se você deixou um escopo desmarcado, remova o conector e adicione-o de novo.",
         "Peça primeiro ao assistente para listar as suas caixas de entrada. Os e-mails são buscados quando o assistente pede, então nada chega sozinho."

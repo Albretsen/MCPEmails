@@ -188,17 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "连接 ChatGPT",
-      "summary": "在 chatgpt.com 上把 https://mcpemails.com/api/mcp 添加为自定义 MCP 服务器，然后登录。",
-      "keywords": "chatgpt openai 开发者模式 developer mode 连接器 connector 插件 应用 apps 自定义 mcp 服务器 oauth 设置",
+      "summary": "从 ChatGPT 插件目录安装 MCPEmails 的插件 Any Mailbox 并登录。自定义 MCP 服务器是备用方案。",
+      "keywords": "chatgpt openai 开发者模式 developer mode 连接器 connector 插件 应用 apps 自定义 mcp 服务器 oauth 设置 any mailbox 插件目录 plugin directory 安装",
       "steps": [
-        "在 chatgpt.com 上打开 Plugins，再打开 Personal，点击 Add，然后点击 Add custom MCP server。",
-        "命名为 MCPEmails，在 Connection 下粘贴 https://mcpemails.com/api/mcp，并选择 OAuth。",
-        "勾选 I understand and want to continue，然后点击 Create as a plugin。",
+        "在 ChatGPT 侧边栏打开 Plugins，搜索 MCPEmails 发布的 Any Mailbox。",
+        "点击 Install plugin（安装插件），再点击 Connect。",
         "登录 MCPEmails，并选择它可以使用哪些收件箱。",
-        "在对话中输入 @ 并选择 MCPEmails。后续问题需要用到邮件时请再次选择它。"
+        "在对话中输入 @ 并选择 Any Mailbox。后续问题需要用到邮件时请再次选择它。"
       ],
       "body": [
-        "需在浏览器中使用 chatgpt.com，并使用付费套餐；移动应用无法添加。OpenAI 的帮助页面列出了 Business 和 Enterprise/Edu（由管理员或所有者为工作区添加），Pro 仅有只读访问。"
+        "Any Mailbox 是 MCPEmails 在 ChatGPT 插件目录中的名称。能否安装插件取决于你的 ChatGPT 套餐、工作区、角色和地区。",
+        "如果你无法使用 Any Mailbox，可以改为添加自定义 MCP 服务器：在 chatgpt.com 上打开 Plugins，再打开 Personal，点击 Add，然后点击 Add custom MCP server，在 Connection 下粘贴 https://mcpemails.com/api/mcp，选择 OAuth，勾选 I understand and want to continue，然后点击 Create as a plugin。需在浏览器中使用 chatgpt.com，移动应用无法添加。OpenAI 的帮助页面列出了 Business 和 Enterprise/Edu（由管理员或所有者为工作区添加），Pro 仅有只读访问。"
       ],
       "links": [
         {

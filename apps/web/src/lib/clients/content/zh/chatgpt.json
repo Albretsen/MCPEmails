@@ -31,7 +31,7 @@
     },
     {
       "h": "从插件目录安装 Any Mailbox",
-      "p": "Any Mailbox 是 MCPEmails 在 ChatGPT 插件目录中发布的插件。在 ChatGPT 侧边栏打开 <b>Plugins</b>，找到 Any Mailbox（或打开下方链接的插件页面），点击 <b>Install plugin</b>（安装插件），再点击 <b>Connect</b>。插件目录对所有 ChatGPT 套餐开放，网页版、桌面版和移动版均可使用。"
+      "p": "Any Mailbox 是 MCPEmails 在 ChatGPT 插件目录中发布的插件。在 ChatGPT 侧边栏打开 <b>Plugins</b>，找到 Any Mailbox（或打开下方链接的插件页面），点击 <b>Install plugin</b>（安装插件），再点击 <b>Connect</b>。所有 ChatGPT 套餐都能浏览插件目录，网页版、桌面版和移动版均可；能否安装某个插件取决于你的套餐、工作区、角色和地区。"
     },
     {
       "h": "登录 MCPEmails",
@@ -69,7 +69,7 @@
   "gotchas": [
     {
       "h": "安装一次，再确认对话中确实在用它",
-      "p": "插件目录对所有 ChatGPT 套餐开放。在 Business 和 Enterprise 中，可能需要管理员先为工作区启用该插件。作为备用方案的自定义 MCP 服务器只能在网页版添加，且需要付费套餐：OpenAI 将其列为 Business 和 Enterprise/Edu 支持，Pro 仅限读取和获取工具。两种方式最容易漏掉的一步都在对话里：如果 ChatGPT 没有查看你的邮件就作答，请输入 <b>@</b> 并选择 Any Mailbox（自定义服务器则选 MCPEmails），让这条消息使用它。"
+      "p": "能否安装插件取决于你的 ChatGPT 套餐、工作区、角色和地区。在 Business 和 Enterprise 中，可能需要管理员先为工作区启用该插件。作为备用方案的自定义 MCP 服务器只能在网页版添加，且需要付费套餐：OpenAI 将其列为 Business 和 Enterprise/Edu 支持，Pro 仅限读取和获取工具。两种方式最容易漏掉的一步都在对话里：如果 ChatGPT 没有查看你的邮件就作答，请输入 <b>@</b> 并选择 Any Mailbox（自定义服务器则选 MCPEmails），让这条消息使用它。"
     },
     {
       "h": "创建连接器时选择 OAuth，而不是无认证",
@@ -96,7 +96,7 @@
     },
     {
       "q": "为什么我无法在 ChatGPT 中添加自定义 MCP 服务器？",
-      "a": "自定义 MCP 服务器在 chatgpt.com 上添加，移动应用不提供此选项。OpenAI 的帮助页面将 Business 和 Enterprise/Edu 列为完整支持（只有管理员或所有者能添加并发布），Pro 仅限读取和获取工具；未提及 Go 或 Plus。Any Mailbox 插件是更简单的途径：插件目录对所有 ChatGPT 套餐开放。如果已添加 MCPEmails 但 ChatGPT 没有使用它，请在对话中输入 <b>@</b> 并选择 MCPEmails；每次选择只对一条消息有效。"
+      "a": "自定义 MCP 服务器在 chatgpt.com 上添加，移动应用不提供此选项。OpenAI 的帮助页面将 Business 和 Enterprise/Edu 列为完整支持（只有管理员或所有者能添加并发布），Pro 仅限读取和获取工具；未提及 Go 或 Plus。如果你的账户可以安装 Any Mailbox 插件，它是更简单的途径：无需粘贴 URL。如果已添加 MCPEmails 但 ChatGPT 没有使用它，请在对话中输入 <b>@</b> 并选择 MCPEmails；每次选择只对一条消息有效。"
     },
     {
       "q": "ChatGPT 需要 API 密钥吗？",

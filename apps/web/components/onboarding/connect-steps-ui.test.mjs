@@ -99,12 +99,13 @@ test('the step moves on by itself only for a grant newer than the step', async (
   assert.equal(next, 1);
 });
 
-test('ChatGPT gets the Plugins steps and the plan note; a command client gets the command', async (t) => {
+test('ChatGPT gets the plugin directory steps and the custom-server fallback; a command client gets the command', async (t) => {
   stubFetch(t);
   const { view, update } = await render(t, AddToAiStep, props({ client: 'chatgpt', clientLabel: 'ChatGPT' }));
   const steps = view.container.querySelector('[data-testid="onb-chatgpt-steps"]').textContent;
-  assert.ok(steps.includes('Plugins') && steps.includes('Add custom MCP server') && steps.includes('@MCPEmails'));
-  assert.ok(view.container.textContent.includes('paid plan'));
+  assert.ok(steps.includes('Plugins') && steps.includes('Any Mailbox') && steps.includes('Install plugin'));
+  assert.ok(!steps.includes('Add custom MCP server'), 'the directory is the main path');
+  assert.ok(view.container.textContent.includes('Add custom MCP server'), 'the custom MCP server stays as the fallback');
   await update(props({ client: 'claude_code', clientLabel: 'Claude Code' }));
   assert.ok(view.container.querySelector('[data-testid="onb-command"]').textContent.includes(`claude mcp add --transport http mcpemails ${MCP}`));
 });

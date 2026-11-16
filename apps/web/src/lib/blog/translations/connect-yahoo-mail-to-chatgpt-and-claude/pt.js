@@ -49,6 +49,8 @@ Um endereço da AOL é uma conta separada, com senha de aplicativo própria. Con
 
 ## Passo 3a: adicionar ao ChatGPT
 
+**Caminho mais rápido: o diretório de plugins.** Desde 17 de novembro de 2026, o MCPEmails está no diretório de plugins do ChatGPT como **Any Mailbox**. No ChatGPT, abra **Plugins**, procure Any Mailbox, clique em **Install plugin** e depois em **Connect**, e entre no MCPEmails. Poder instalar um plugin depende do seu plano do ChatGPT, espaço de trabalho, função e região. Se não conseguir instalar, adicione um servidor MCP personalizado com os passos abaixo.
+
 1. No chatgpt.com, abra **Plugins**, depois **Personal** (Pessoais), e clique em **Add** (Adicionar).
 2. Escolha **Adicionar servidor MCP personalizado** e dê o nome MCPEmails.
 3. Em **Conexão**, cole:

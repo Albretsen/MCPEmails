@@ -3,10 +3,10 @@
 // alternateName and llms.txt.
 // Run with: npm run test:chatgpt-listing
 //
-// THE FIRST TEST FAILS ON PURPOSE until OpenAI approves the listing and
-// CHATGPT_DIRECTORY_LISTING_URL (src/lib/connect/chatgpt.mjs) is set to the
-// real URL. It is what keeps the launch PR from merging with a placeholder
-// link. Do not skip it or loosen it: set the URL, then `npm run gen:llms`.
+// THE FIRST TEST FAILS ON PURPOSE until CHATGPT_DIRECTORY_LISTING_URL
+// (src/lib/connect/chatgpt.mjs) is set to the real listing URL. It is what
+// keeps the launch PR from merging with a placeholder link. Do not skip it or
+// loosen it: set the URL, then `npm run gen:llms`.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   CHATGPT_APP_NAME,
-  CHATGPT_DIRECTORY_LISTING_PLACEHOLDER,
+  CHATGPT_DIRECTORY_LISTING_PLACEHOLDER_MARK,
   CHATGPT_DIRECTORY_LISTING_URL,
   CHATGPT_LOCALES,
   LISTING_URL_TOKEN,
@@ -34,12 +34,11 @@ const BRAND_MISSPELT = /MCP[ -]Emails|(?<![\w./@-])[Mm]cpemails(?![\w/@]|\.\w)/;
 // localised labels. "Install plugin" is what the directory button says.
 const INSTALL = /Install plugin|プラグインをインストール|安装插件/;
 
-test('EXPECTED TO FAIL until OpenAI approves: the listing URL is the real one, not the placeholder', () => {
-  assert.notEqual(
-    CHATGPT_DIRECTORY_LISTING_URL,
-    CHATGPT_DIRECTORY_LISTING_PLACEHOLDER,
-    'CHATGPT_DIRECTORY_LISTING_URL is still the placeholder. Set it to the Any Mailbox listing URL in ' +
-      'src/lib/connect/chatgpt.mjs once OpenAI approves the plugin, then run `npm run gen:llms`.',
+test('EXPECTED TO FAIL until the listing URL is set: the URL is the real one, not the placeholder', () => {
+  assert.ok(
+    !CHATGPT_DIRECTORY_LISTING_URL.includes(CHATGPT_DIRECTORY_LISTING_PLACEHOLDER_MARK),
+    'CHATGPT_DIRECTORY_LISTING_URL is still the placeholder. Replace the placeholder URL with the Any Mailbox ' +
+      'listing URL everywhere it appears (src/lib/connect/chatgpt.mjs, public/llms.txt, docs/LISTINGS.md).',
   );
   assert.match(CHATGPT_DIRECTORY_LISTING_URL, /^https:\/\/(chatgpt\.com|openai\.com)\//);
   assert.ok(!/placeholder/i.test(CHATGPT_DIRECTORY_LISTING_URL));

@@ -102,7 +102,7 @@ UTM scheme: `utm_source=<directory>&utm_medium=directory&utm_campaign=listing`. 
 | Docker MCP catalog | https://github.com/docker/mcp-registry/pull/4973 (open) | Push to the PR branch. Title must be "Emails" | https://mcpemails.com/docs/clients?utm_source=docker&utm_medium=directory&utm_campaign=listing | unknown until merged |
 | best-of-mcp-servers | https://github.com/tolkonepiu/best-of-mcp-servers/pull/386 (open) | Push to the PR branch (`projects.yaml`) | https://mcpemails.com/docs/clients?utm_source=github_bestof&utm_medium=directory&utm_campaign=listing | no (GitHub nofollows) |
 | Claude Directory | claude.ai/directory (sign-in only); submission at claude.ai/admin-settings/directory/submissions/emails, in review | Submission form (editable in review). "Sync from server" refreshes tool and prompt NAMES only | https://mcpemails.com/docs/claude?utm_source=claude_directory&utm_medium=directory&utm_campaign=listing | n/a (behind sign-in) |
-| OpenAI app directory | Not submitted yet (needs reviewer credentials) | OpenAI developer portal submission | https://mcpemails.com/docs/chatgpt?utm_source=chatgpt_directory&utm_medium=directory&utm_campaign=listing | unknown |
+| OpenAI plugin directory (ChatGPT and Codex) | Listed 2026-11-17 as "Any Mailbox" (developer MCPEmails): https://chatgpt.com/plugins/ANY_MAILBOX_LISTING_URL_TBD | OpenAI developer portal submission | https://mcpemails.com/docs/chatgpt?utm_source=chatgpt_directory&utm_medium=directory&utm_campaign=listing | unknown |
 | Cursor directory | https://cursor.directory/plugins/mcpemails | PR to https://github.com/cursor/community-plugins | https://mcpemails.com/docs/cursor?utm_source=cursor_directory&utm_medium=directory&utm_campaign=listing | unknown |
 
 ## What the UTMs record

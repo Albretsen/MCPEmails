@@ -25,12 +25,12 @@
       "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。在 Team 和 Enterprise 上，由 Owner 在 Organization settings → Connectors 中添加，成员再在 Customize → Connectors 中点击 \"Connect\"。"
     },
     "chatgpt": {
-      "step1": "在 chatgpt.com 上打开 Plugins → Personal，点击右上角的 \"Add\"，再点击 \"Add custom MCP server\"。移动应用中无法添加。",
-      "step2": "将名称设为 MCPEmails，并在 \"Connection\" 下粘贴上方的 URL。",
-      "step3": "选择 OAuth，勾选 \"I understand and want to continue\"，然后点击 \"Create as a plugin\"。",
-      "step4": "使用 MCPEmails 登录以授权。无需 API 密钥。",
-      "step5": "在对话中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。",
-      "note": "OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu 工作区，Pro 仅限只读访问，均在 chatgpt.com 上添加。在 Business 和 Enterprise 上，可能需要管理员或所有者来添加。"
+      "step1": "在 ChatGPT 侧边栏打开 \"Plugins\"，搜索 MCPEmails 发布的 Any Mailbox。",
+      "step2": "点击 \"Install plugin\"（安装插件），再点击 \"Connect\"。",
+      "step3": "登录 MCPEmails，选择 ChatGPT 可以访问哪些收件箱以及访问权限。无需 API 密钥。",
+      "step4": "在对话中输入 @ 并选择 Any Mailbox。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。",
+      "step5": "如果你的账户或工作区里没有 Any Mailbox：在 chatgpt.com 上打开 Plugins → Personal，点击 \"Add\"，再点击 \"Add custom MCP server\"，在 \"Connection\" 下粘贴上方的 URL，选择 OAuth，然后点击 \"Create as a plugin\"。",
+      "note": "能否安装插件取决于你的 ChatGPT 套餐、工作区、角色和地区；在 Business 和 Enterprise 上，可能需要管理员先允许。OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu 工作区，Pro 仅限只读访问，均在 chatgpt.com 上添加。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "在 Claude 中，点击输入框里的 +，打开 Connectors，确认 MCPEmails 在此对话中已开启。否则 Claude 会在不读取你邮件的情况下回答。",
-      "chatgpt": "在 ChatGPT 的输入框中输入 @ 并选择 MCPEmails。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及 MCPEmails。"
+      "chatgpt": "在 ChatGPT 的输入框中输入 @ 并选择 Any Mailbox（自定义 MCP 服务器则选 MCPEmails）。该选择只对这条消息生效，后续问题需要用到邮件时，请再次 @ 提及它。"
     },
     "itWorksTitle": "已生效",
     "itWorksDesc": "你的 AI 应用刚刚第一次调用了 MCPEmails。在同一个对话中继续即可。",

@@ -31,7 +31,7 @@
     },
     {
       "h": "Instale o Any Mailbox pelo diretório de plugins",
-      "p": "Any Mailbox é o plugin que o MCPEmails publica no diretório de plugins do ChatGPT. No ChatGPT, abra <b>Plugins</b> na barra lateral, encontre o Any Mailbox (ou abra a página dele, com link abaixo), clique em <b>Install plugin</b> e depois em <b>Connect</b>. O diretório está aberto em todos os planos do ChatGPT, na web, no desktop e no celular."
+      "p": "Any Mailbox é o plugin que o MCPEmails publica no diretório de plugins do ChatGPT. No ChatGPT, abra <b>Plugins</b> na barra lateral, encontre o Any Mailbox (ou abra a página dele, com link abaixo), clique em <b>Install plugin</b> e depois em <b>Connect</b>. O diretório aparece em todos os planos do ChatGPT, na web, no desktop e no celular; poder instalar um plugin depende do seu plano, espaço de trabalho, função e região."
     },
     {
       "h": "Entre no MCPEmails",
@@ -69,7 +69,7 @@
   "gotchas": [
     {
       "h": "Instale uma vez e confira se o chat está usando",
-      "p": "O diretório de plugins está aberto em todos os planos do ChatGPT. No Business e no Enterprise, um administrador pode precisar liberar o plugin para o espaço de trabalho primeiro. O servidor MCP personalizado, a alternativa, só existe na web e exige um plano pago: a OpenAI o lista para Business e Enterprise/Edu, só com ferramentas de leitura e busca no Pro. Nos dois casos, a etapa que as pessoas esquecem está no chat: se o ChatGPT responder sem olhar seus e-mails, digite <b>@</b> e escolha Any Mailbox (ou MCPEmails, no servidor personalizado) para que aquela mensagem use o plugin."
+      "p": "Poder instalar um plugin depende do seu plano do ChatGPT, espaço de trabalho, função e região. No Business e no Enterprise, um administrador pode precisar liberar o plugin para o espaço de trabalho primeiro. O servidor MCP personalizado, a alternativa, só existe na web e exige um plano pago: a OpenAI o lista para Business e Enterprise/Edu, só com ferramentas de leitura e busca no Pro. Nos dois casos, a etapa que as pessoas esquecem está no chat: se o ChatGPT responder sem olhar seus e-mails, digite <b>@</b> e escolha Any Mailbox (ou MCPEmails, no servidor personalizado) para que aquela mensagem use o plugin."
     },
     {
       "h": "Escolha OAuth, não sem autenticação, ao criar o conector",
@@ -96,7 +96,7 @@
     },
     {
       "q": "Por que não consigo adicionar um servidor MCP personalizado no ChatGPT?",
-      "a": "Servidores MCP personalizados são adicionados em chatgpt.com: o app para celular não oferece isso. A página de ajuda da OpenAI cita Business e Enterprise/Edu para suporte completo, onde só um administrador ou proprietário pode adicionar e publicar um, e o Pro só com ferramentas de leitura e busca; Go e Plus não são mencionados. O plugin Any Mailbox é o caminho mais simples: o diretório de plugins está aberto em todos os planos do ChatGPT. Se o MCPEmails foi adicionado, mas o ChatGPT não o usa, digite <b>@</b> no chat e escolha MCPEmails; a escolha vale para uma mensagem de cada vez."
+      "a": "Servidores MCP personalizados são adicionados em chatgpt.com: o app para celular não oferece isso. A página de ajuda da OpenAI cita Business e Enterprise/Edu para suporte completo, onde só um administrador ou proprietário pode adicionar e publicar um, e o Pro só com ferramentas de leitura e busca; Go e Plus não são mencionados. O plugin Any Mailbox é o caminho mais simples se a sua conta puder instalá-lo: não há URL para colar. Se o MCPEmails foi adicionado, mas o ChatGPT não o usa, digite <b>@</b> no chat e escolha MCPEmails; a escolha vale para uma mensagem de cada vez."
     },
     {
       "q": "Preciso de uma chave de API para o ChatGPT?",
