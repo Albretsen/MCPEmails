@@ -22,7 +22,7 @@ const post = {
   coverAlt: 'ChatGPT connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-11-17T09:00:00.000Z',
+  updatedAt: '2026-11-16T21:30:00.000Z',
   tags: ['ChatGPT', 'Outlook', 'Tutorial', 'MCP'],
   featured: false,
   content: `To connect ChatGPT to a personal Outlook.com, Hotmail, Live or MSN address, add the mailbox to MCPEmails with **Connect with Microsoft**, then add one URL to ChatGPT as a custom MCP server. ChatGPT's own Outlook plugin is built around work and school Microsoft accounts, and people who try it with a personal address report being told that only business or education accounts can connect. A custom MCP server has no such limit.
@@ -60,7 +60,7 @@ Older guides tell you to create an app password and enter Outlook's IMAP setting
 
 ## Step 2: Add MCPEmails to ChatGPT
 
-**Quickest route: the plugin directory.** Since 17 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
+**Quickest route: the plugin directory.** Since 16 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
 
 1. On chatgpt.com, open **Plugins**, then **Personal**, and click **Add** at the top right.
 2. Choose **Add custom MCP server** and name it MCPEmails.

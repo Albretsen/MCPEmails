@@ -8,7 +8,7 @@ const post = {
     'Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-11-17T09:00:00.000Z',
+  updatedAt: '2026-11-16T21:30:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
   content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCPEmails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
@@ -49,7 +49,7 @@ Connect more than one mailbox if your plan allows it. ChatGPT discovers them wit
 
 ## Step 2: Add the connector in ChatGPT
 
-**Quickest route: the plugin directory.** Since 17 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
+**Quickest route: the plugin directory.** Since 16 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
 
 1. On chatgpt.com, open **Plugins**, then **Personal**, and click **Add** at the top right.
 2. Choose **Add custom MCP server** and name it MCPEmails.

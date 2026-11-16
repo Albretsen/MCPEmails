@@ -57,7 +57,7 @@ Todas as caixas que você conectou estão disponíveis agora. O [guia do Claude]
 
 ## Adicionar ao ChatGPT
 
-**Caminho mais rápido: o diretório de plugins.** Desde 17 de novembro de 2026, o MCPEmails está no diretório de plugins do ChatGPT como **Any Mailbox**. No ChatGPT, abra **Plugins**, procure Any Mailbox, clique em **Install plugin** e depois em **Connect**, e entre no MCPEmails. Poder instalar um plugin depende do seu plano do ChatGPT, espaço de trabalho, função e região. Se não conseguir instalar, adicione um servidor MCP personalizado com os passos abaixo.
+**Caminho mais rápido: o diretório de plugins.** Desde 16 de novembro de 2026, o MCPEmails está no diretório de plugins do ChatGPT como **Any Mailbox**. No ChatGPT, abra **Plugins**, procure Any Mailbox, clique em **Install plugin** e depois em **Connect**, e entre no MCPEmails. Poder instalar um plugin depende do seu plano do ChatGPT, espaço de trabalho, função e região. Se não conseguir instalar, adicione um servidor MCP personalizado com os passos abaixo.
 
 Um plano pago do ChatGPT pode adicionar um servidor MCP personalizado em chatgpt.com no navegador; o app para celular não consegue. A página de ajuda da OpenAI lista Business e Enterprise/Edu, em que um administrador ou proprietário o adiciona para o espaço de trabalho, e ferramentas de leitura e busca apenas no Pro; Go e Plus não são mencionados.
 

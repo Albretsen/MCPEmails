@@ -39,7 +39,7 @@
     },
     {
       "h": "Choisissez les boîtes et les accès, puis utilisez-le avec @",
-      "p": "L'écran de consentement demande l'étendue des accès de ChatGPT : Lecture seule, Standard, Accès complet ou Personnalisé pour choisir les autorisations une à une. Choisissez Toutes les boîtes ou Boîtes spécifiques, puis cliquez sur <b>Autoriser l'accès</b>. De retour dans ChatGPT, tapez <b>@</b> dans une conversation et choisissez Any Mailbox, ou posez simplement votre question sur vos e-mails : ChatGPT utilise les plugins installés quand ils correspondent à la demande."
+      "p": "L'écran de consentement demande l'étendue des accès de ChatGPT : Lecture seule, Standard, Accès complet ou Personnalisé pour choisir les autorisations une à une. Choisissez Toutes les boîtes ou Boîtes spécifiques, puis cliquez sur <b>Autoriser l'accès</b>. De retour dans ChatGPT, tapez <b>@</b> dans une conversation et choisissez Any Mailbox, ou posez simplement votre question sur vos e-mails : ChatGPT utilise les plugins installés quand ils correspondent à la demande. Si vous commencez un prompt dans ChatGPT par \"Any Mailbox\", ChatGPT affiche le plugin dans la conversation et utilise le contexte utile pour accomplir la tâche. La première fois, ChatGPT vous demande de le connecter, pour que vous sachiez quelles données peuvent être partagées."
     }
   ],
   "listingLink": "Any Mailbox dans l'annuaire de plugins de ChatGPT",

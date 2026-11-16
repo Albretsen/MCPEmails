@@ -39,7 +39,7 @@
     },
     {
       "h": "Escolha caixas e acesso, e use com @",
-      "p": "A tela de consentimento pergunta quanto acesso o ChatGPT recebe: Somente leitura, Padrão, Acesso total ou Personalizado para escolher as permissões uma a uma. Escolha Todas as caixas de entrada ou Caixas de entrada específicas e clique em <b>Permitir acesso</b>. De volta ao ChatGPT, digite <b>@</b> em um chat e escolha Any Mailbox, ou simplesmente pergunte sobre seus e-mails: o ChatGPT usa os plugins instalados quando eles combinam com o pedido."
+      "p": "A tela de consentimento pergunta quanto acesso o ChatGPT recebe: Somente leitura, Padrão, Acesso total ou Personalizado para escolher as permissões uma a uma. Escolha Todas as caixas de entrada ou Caixas de entrada específicas e clique em <b>Permitir acesso</b>. De volta ao ChatGPT, digite <b>@</b> em um chat e escolha Any Mailbox, ou simplesmente pergunte sobre seus e-mails: o ChatGPT usa os plugins instalados quando eles combinam com o pedido. Se você começar um prompt no ChatGPT com \"Any Mailbox\", o ChatGPT mostra o plugin no chat e usa o contexto relevante para fazer a tarefa. Na primeira vez, o ChatGPT pede que você conecte, para que você saiba quais dados podem ser compartilhados."
     }
   ],
   "listingLink": "Any Mailbox no diretório de plugins do ChatGPT",

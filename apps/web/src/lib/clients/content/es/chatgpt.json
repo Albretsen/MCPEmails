@@ -39,7 +39,7 @@
     },
     {
       "h": "Elige buzones y acceso, y úsalo con @",
-      "p": "La pantalla de consentimiento pregunta cuánto acceso tendrá ChatGPT: Solo lectura, Estándar, Acceso completo o Personalizado para elegir los permisos uno a uno. Elige Todas las bandejas o Bandejas específicas y haz clic en <b>Permitir acceso</b>. De vuelta en ChatGPT, escribe <b>@</b> en un chat y elige Any Mailbox, o simplemente pregunta por tu correo: ChatGPT usa los plugins instalados cuando encajan con la petición."
+      "p": "La pantalla de consentimiento pregunta cuánto acceso tendrá ChatGPT: Solo lectura, Estándar, Acceso completo o Personalizado para elegir los permisos uno a uno. Elige Todas las bandejas o Bandejas específicas y haz clic en <b>Permitir acceso</b>. De vuelta en ChatGPT, escribe <b>@</b> en un chat y elige Any Mailbox, o simplemente pregunta por tu correo: ChatGPT usa los plugins instalados cuando encajan con la petición. Si empiezas un prompt en ChatGPT con \"Any Mailbox\", ChatGPT muestra el plugin en el chat y usa el contexto relevante para hacer la tarea. La primera vez que lo uses, ChatGPT te pedirá que lo conectes, para que sepas qué datos se pueden compartir."
     }
   ],
   "listingLink": "Any Mailbox en el directorio de plugins de ChatGPT",

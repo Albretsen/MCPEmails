@@ -18,7 +18,7 @@ const post = {
   coverAlt: 'Yahoo Mail connected to ChatGPT and Claude through MCPEmails',
   authorId: 'asgeir',
   publishedAt: '2026-10-29T09:00:00.000Z',
-  updatedAt: '2026-11-17T09:00:00.000Z',
+  updatedAt: '2026-11-16T21:30:00.000Z',
   tags: ['ChatGPT', 'Claude', 'Yahoo', 'Tutorial'],
   featured: false,
   content: `ChatGPT cannot read Yahoo Mail on its own, and neither can Claude. ChatGPT's email plugins cover Gmail, Outlook and iCloud Mail. Claude's cover Gmail and work Microsoft 365 accounts. To connect Yahoo Mail to either one, you put an MCP server in front of the mailbox. With MCPEmails that takes a Yahoo app password and one URL, and the same Yahoo inbox then works in ChatGPT, Claude and other AI apps.
@@ -67,7 +67,7 @@ An AOL address is a separate account with its own app password. Connect it as AO
 
 ## Step 3a: Add it to ChatGPT
 
-**Quickest route: the plugin directory.** Since 17 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
+**Quickest route: the plugin directory.** Since 16 November 2026, MCPEmails is in the ChatGPT plugin directory as **Any Mailbox**. In ChatGPT, open **Plugins**, search for Any Mailbox, click **Install plugin**, then **Connect**, and sign in to MCPEmails. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region. If you cannot install it, add a custom MCP server with the steps below.
 
 1. On chatgpt.com, open **Plugins**, then **Personal**, and click **Add**.
 2. Choose **Add custom MCP server** and name it MCPEmails.

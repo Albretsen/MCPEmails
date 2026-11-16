@@ -61,7 +61,7 @@
 import { CHATGPT_DIRECTORY_LISTING_URL } from '../connect/chatgpt.mjs';
 
 /** Date of the last substantive edit to this page. Feeds the visible "Updated" line, JSON-LD dateModified and the sitemap. */
-export const PAGE_UPDATED = '2026-11-17';
+export const PAGE_UPDATED = '2026-11-16';
 
 /** First published (under the old slug, /email-mcp-servers-compared). */
 export const DATE_PUBLISHED = '2026-09-08';
@@ -90,7 +90,7 @@ export function formatDate(iso) {
  * a comment: a comparison a reader cannot check is an advertisement.
  */
 const SOURCE_ITEMS = [
-  { label: 'MCPEmails in the ChatGPT plugin directory, as Any Mailbox', url: CHATGPT_DIRECTORY_LISTING_URL, checkedOn: '2026-11-17' },
+  { label: 'MCPEmails in the ChatGPT plugin directory, as Any Mailbox', url: CHATGPT_DIRECTORY_LISTING_URL, checkedOn: '2026-11-16' },
   { label: 'Mailbox MCP pricing, plan limits and directory listings', url: 'https://mailbox-mcp.com/pricing/', checkedOn: '2026-10-20' },
   { label: 'Mailbox MCP security: storage, permission levels, send confirmation', url: 'https://mailbox-mcp.com/security/', checkedOn: '2026-10-20' },
   { label: 'Mailbox MCP privacy policy: server location', url: 'https://mailbox-mcp.com/privacy/', checkedOn: '2026-10-20' },
