@@ -252,7 +252,7 @@ import {
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
 import { handleWebIngress, isWebIngress } from "./web-ingress.ts";
-import { clientLabel } from "./client-label.ts";
+import { clientLabel, firstUseClientLabel, onboardingClientFor } from "./client-label.ts";
 import {
   cardEnvelopeIn,
   stampDiagnostics,
@@ -4723,7 +4723,9 @@ async function freeCapRefusalWording(
 /** Records the first server-confirmed successful MCP tool call per workspace.
  * It is an aggregate funnel marker, never analytics request data. The client
  * is a fixed label (client-label.ts), never the User-Agent itself. */
-async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
+async function markFirstProductUse(apiKey: ApiKeyRow, inboxId: string | null, toolName: string, userAgent: string | null): Promise<void> {
+  const workspaceId = apiKey.workspace_id;
+  const apiKeyId = apiKey.id;
   // A call with no resolved inbox only counts when the workspace has a
   // mailbox at all. Without this, an `inbox_list` that answered an empty list
   // to a workspace that never connected anything wrote the activation marker
@@ -4744,11 +4746,18 @@ async function markFirstProductUse(workspaceId: string, apiKeyId: string, inboxI
   // PGRST116 on exactly the keys we are trying to detect, and the discarded error
   // left every OAuth connection recorded as analytics_first_tool_path "api_key".
   // .limit(1) keeps it to a single indexed row; this runs on every tool call.
-  const { data: oauthToken } = await supabase.from("oauth_refresh_tokens").select("id").eq("api_key_id", apiKeyId).limit(1).maybeSingle();
+  // The handshake name is read beside it: ChatGPT's User-Agent
+  // (`openai-mcp/...`) and Codex's do not say which client they are, the
+  // `initialize` clientInfo.name does (firstUseClientLabel). A failed lookup
+  // (undefined) falls back to the User-Agent label.
+  const [{ data: oauthToken }, handshakeName] = await Promise.all([
+    supabase.from("oauth_refresh_tokens").select("id").eq("api_key_id", apiKeyId).limit(1).maybeSingle(),
+    latestInitializeClientName(apiKey),
+  ]);
   const occurredAt = new Date().toISOString();
-  const client = clientLabel(userAgent);
+  const client = firstUseClientLabel(userAgent, handshakeName ?? null, apiKey.name);
   const { data: claimed, error } = await supabase.from("workspaces")
-    .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: client, analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt, onboarding_technical_activated_at: occurredAt, onboarding_client: client, onboarding_stage: "technical_activation" })
+    .update({ analytics_first_tool_name: toolName, analytics_first_tool_provider: provider, analytics_first_tool_client: client, analytics_first_tool_path: oauthToken ? "oauth" : "api_key", analytics_first_tool_used_at: occurredAt, onboarding_technical_activated_at: occurredAt, onboarding_client: onboardingClientFor(client), onboarding_stage: "technical_activation" })
     .eq("id", workspaceId)
     .is("analytics_first_tool_used_at", null)
     .select("id");
@@ -36294,7 +36303,7 @@ async function handleToolsCall(
   // read the columns that say so: skipping here is what takes the four marker
   // round trips off every call but the first few. See firstUseAlreadyRecorded.
   if ((logStatus as string) === "success" && !firstUseAlreadyRecorded(ctx.firstUse, resolvedInboxId, dispatchName)) {
-    postResponseWrites.push(["first_product_use", () => markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent)]);
+    postResponseWrites.push(["first_product_use", () => markFirstProductUse(apiKey, resolvedInboxId, dispatchName, ctx.userAgent)]);
   }
   await settleAfterResponse(postResponseWrites, (write, error) => {
     console.error("[mcp-server] tools/call: post_response_write_failed", {
