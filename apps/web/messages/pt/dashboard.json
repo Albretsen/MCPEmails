@@ -1295,9 +1295,10 @@
       "causeInterrupted": "Uma execução foi interrompida antes de terminar.",
       "causeUnknown": "Abra o histórico de execuções para ver o que aconteceu."
     },
-    "approvalBadge": "Precisa de aprovação",
+    "approvalBadge": "Cada encaminhamento espera sua aprovação",
     "enabledOn": "Ativada",
     "enabledOff": "Desativada",
+    "nextRun": "Próxima verificação {time}",
     "rowRuns": "Histórico de execuções",
     "rowEdit": "Editar",
     "rowDelete": "Excluir",

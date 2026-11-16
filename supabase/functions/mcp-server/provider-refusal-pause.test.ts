@@ -18,12 +18,13 @@ import {
   isProviderPolicyRefusal,
   parseGateAnswer,
   recordProviderRefusal,
+  refusalMessageKey,
   REFUSAL_PAUSE_MS,
   REFUSAL_PAUSE_THRESHOLD,
   REFUSAL_WINDOW_MS,
   SENDS_PAUSED_ERROR_CODE,
 } from "./outbound-brakes.ts";
-import { SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
+import { isContentRefusal, SmtpContentRefusedError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import { GraphSendRefusedError } from "./outlook-graph.ts";
 
 const SOURCE = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
@@ -131,4 +132,78 @@ Deno.test("every send path counts provider refusals and the pause notifies the o
       .test(SOURCE),
     "the operator is told once, when the pause starts",
   );
+});
+
+// 2026-11-12: Rackspace and Infomaniak refuse spam at the end of DATA. That
+// used to be a bare Error ("delivery status unknown"), so the agent resent the
+// same draft three times and the three refusals of one message paused the inbox.
+Deno.test("a spam 5xx after DATA is a not-sent, non-retryable content refusal", () => {
+  for (
+    const text of [
+      "5.7.1 Your message has been rejected because you have been detected sending high likelyhood spam.",
+      "5.2.0 Spam message rejected",
+      "5.7.1 Message rejected due to content restrictions",
+    ]
+  ) {
+    assert(isContentRefusal({ code: 550, text }), text);
+    assert(!isContentRefusal({ code: 451, text }), `a 4xx is temporary: ${text}`);
+  }
+  for (
+    const text of [
+      "5.7.1 Service unavailable; Client host [1.2.3.4] blocked using Spamhaus",
+      "5.7.1 Your IP address is listed as a spam source",
+      "5.1.1 User unknown",
+      "5.3.4 Message size exceeds fixed limit",
+    ]
+  ) {
+    assert(!isContentRefusal({ code: 550, text }), text);
+  }
+  const err = new SmtpContentRefusedError("SMTP: expected 250, got 550 5.2.0 Spam message rejected");
+  assert(err instanceof SmtpNotSentError);
+  assertEquals(err.retryable, false, "no relay retry, no deferred retry");
+  assert(isProviderPolicyRefusal(err), "it still counts towards the pause");
+});
+
+Deno.test("the same message refused again counts once", async () => {
+  const draft = await refusalMessageKey(["draft", "INBOX.Drafts:42"]);
+  assert(draft !== null && /^[0-9a-f]{64}$/.test(draft));
+  assertEquals(await refusalMessageKey(["draft", "INBOX.Drafts:42"]), draft);
+  assert(await refusalMessageKey(["draft", "INBOX.Drafts:43"]) !== draft);
+  assertEquals(await refusalMessageKey([]), null);
+  assertEquals(await refusalMessageKey([null, undefined, ""]), null);
+
+  const calls: Record<string, unknown>[] = [];
+  const db: BrakeDb = {
+    rpc(_fn, args) {
+      calls.push(args);
+      return Promise.resolve({ data: { paused: false, newly_tripped: false, duplicate: true }, error: null });
+    },
+  };
+  await recordProviderRefusal(db, {
+    workspaceId: "w",
+    inboxId: "i",
+    error: new SmtpContentRefusedError("SMTP: expected 250, got 550 5.2.0 Spam message rejected"),
+    messageKeyParts: ["draft", "INBOX.Drafts:42"],
+  });
+  assertEquals(calls[0].p_message_key, draft);
+});
+
+Deno.test("every send path keys its refusals and answers a content refusal plainly", () => {
+  const sites = [
+    ["executeSendEmail", '"send"', 'contentRefusedResult("email_send"'],
+    ["executeReplyToEmail", '"reply"', 'contentRefusedResult("email_reply"'],
+    ["executeForwardEmail", '"forward"', 'contentRefusedResult("email_forward"'],
+    ["executeSendDraft", '"draft"', 'contentRefusedResult("draft_send"'],
+  ];
+  for (const [handler, key, result] of sites) {
+    const start = SOURCE.indexOf(`async function ${handler}(`);
+    const body = SOURCE.slice(start, SOURCE.indexOf("\nasync function ", start + 1));
+    assert(body.includes(key), `${handler} passes a message key`);
+    assert(body.includes(result), `${handler} returns the content-refused result`);
+    assert(
+      body.indexOf("instanceof SmtpContentRefusedError") < body.indexOf("instanceof SmtpNotSentError)"),
+      `${handler} checks the content refusal before the generic not-sent branch ("retrying is safe")`,
+    );
+  }
+  assert(SOURCE.includes('["scheduled", String(row.id)]'), "scheduled sends key by row");
 });

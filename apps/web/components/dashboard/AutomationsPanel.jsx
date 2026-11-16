@@ -161,6 +161,22 @@ function formatTimestamp(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toLocaleString();
 }
 
+/**
+ * When the scheduler should next pick the rule up: the last start plus the
+ * interval, or "now" when that moment has already passed (it is due and runs
+ * on the next scheduler tick). Same day shows the time only.
+ */
+export function formatNextRun(lastStartedAt, intervalMinutes, now = new Date()) {
+  if (!intervalMinutes) return null;
+  const last = lastStartedAt ? new Date(lastStartedAt) : null;
+  if (!last || Number.isNaN(last.getTime())) return null;
+  const next = new Date(Math.max(last.getTime() + intervalMinutes * 60_000, now.getTime()));
+  const sameDay = next.toDateString() === now.toDateString();
+  return sameDay
+    ? next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : next.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 function inboxLabel(row) {
   return row?.inboxes?.display_name || row?.inboxes?.email_address || null;
 }
@@ -437,6 +453,9 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
   const lastRunAt = formatTimestamp(lastRun?.started_at);
   const running = Boolean(rule.running_since);
   const health = automationHealth(rule);
+  const nextRunAt = rule.enabled && !running && health.state !== 'auto_disabled'
+    ? formatNextRun(lastRun?.started_at, rule.interval_minutes)
+    : null;
 
   return (
     <tr>
@@ -459,19 +478,23 @@ function RuleRow({ rule, t, canManage, busy, onToggle, onEdit, onRuns, onDelete 
       <td>{cadence ? t(`automations.cadence.${cadence.key}`) : `${rule.interval_minutes}`}</td>
       <td>{describeAction(rule.action, t)}</td>
       <td>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: canManage && !busy ? 'pointer' : 'default' }}>
-          <input
-            type="checkbox"
-            checked={Boolean(rule.enabled)}
-            onChange={onToggle}
-            disabled={!canManage || busy}
-            style={{ accentColor: 'var(--brand)' }}
-            aria-label={rule.enabled ? t('automations.enabledOn') : t('automations.enabledOff')}
-          />
-          <span className="sub" style={{ fontSize: 12.5 }}>
-            {rule.enabled ? t('automations.enabledOn') : t('automations.enabledOff')}
-          </span>
-        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+          <label className="switch-row" style={{ cursor: canManage && !busy ? 'pointer' : 'default' }}>
+            <input
+              type="checkbox"
+              role="switch"
+              className="switch"
+              checked={Boolean(rule.enabled)}
+              onChange={onToggle}
+              disabled={!canManage || busy}
+              aria-label={rule.enabled ? t('automations.enabledOn') : t('automations.enabledOff')}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: rule.enabled ? 'var(--fg-1)' : 'var(--fg-3)' }}>
+              {rule.enabled ? t('automations.enabledOn') : t('automations.enabledOff')}
+            </span>
+          </label>
+          {nextRunAt ? <span className="sub" style={{ fontSize: 12 }}>{t('automations.nextRun', { time: nextRunAt })}</span> : null}
+        </div>
       </td>
       <td>
         {running ? (
@@ -507,7 +530,10 @@ function describeAction(action, t) {
     return (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {t('automations.actionSummary.forward', { count: Array.isArray(action.to) ? action.to.length : 0 })}
-        <Badge tone="amber">{t('automations.approvalBadge')}</Badge>
+        <span className="badge b-amber">
+          <Icon name="shield" size={12} />
+          {t('automations.approvalBadge')}
+        </span>
       </span>
     );
   }

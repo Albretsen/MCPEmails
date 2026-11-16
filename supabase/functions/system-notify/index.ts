@@ -363,6 +363,16 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
   // the operator email was noise (one per rule, so a dead mailbox with 48
   // rules sent 48 of them) and nobody acted on it.
   if (eventType === "outbound.brake_tripped") {
+    // The operator reads these in Norway; a bare UTC stamp next to the mail
+    // client's local time read as "paused until right now".
+    const osloTime = (value: unknown) => {
+      const ms = typeof value === "string" ? Date.parse(value) : NaN;
+      if (!Number.isFinite(ms)) return "unknown";
+      const oslo = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Europe/Oslo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+      }).format(new Date(ms));
+      return `${oslo} Oslo (${new Date(ms).toISOString().slice(11, 16)} UTC)`;
+    };
     // An outbound abuse brake in mcp-server (outbound-brakes.ts) just tripped
     // for an inbox. Ids only: the payload never carries content or addresses.
     const text = (value: unknown) => (typeof value === "string" && value.length > 0 ? value : "unknown");
@@ -379,7 +389,7 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
         "",
         `workspace_id: ${text(payload.workspace_id)}`,
         `inbox_id: ${text(payload.inbox_id)}`,
-        `until: ${text(payload.until)}`,
+        `until: ${osloTime(payload.until)}`,
         "",
         "To stop every send from the workspace, set workspaces.sends_frozen_at.",
       ].join("\n"),

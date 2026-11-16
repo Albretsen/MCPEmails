@@ -117,6 +117,8 @@ export function sentCardForError(code: string | null | undefined, text = ""): Se
     case "sender_identity_unsupported_provider":
     case "sender_identity_refused":
       return no("This inbox cannot send from the address that was asked for.");
+    case "provider_content_refused":
+      return no("Your mail provider refused it as spam. Change the wording before sending it again.");
     case "transport_not_configured":
       return no("This inbox has no outgoing mail server set up.");
     case "quota_exceeded":

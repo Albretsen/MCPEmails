@@ -88,7 +88,7 @@ This is the real trade-off, and I won't dress it up. With a hosted server, your 
 
 ## What it costs in dollars
 
-MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier comes with usage analytics, the help center and email support. [Personal](/pricing) adds inboxes, a higher burst limit, longer analytics history and priority email support; Pro adds more inboxes again, a higher burst limit still, years of analytics history and webhooks for new mail; Business includes a block of mailboxes with a per-mailbox price above it, members with roles and a separate workspace per client. Current prices are on the [pricing page](/pricing). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Count the hours properly.
+MCPEmails is free to start: one connected inbox, unlimited API keys, and no credit card. The Free tier comes with usage analytics, the help center and email support. [Personal](/pricing) adds inboxes, a higher burst limit, longer analytics history and priority email support; Pro adds more inboxes again, a higher burst limit still, years of analytics history and webhooks for new mail; Business is for a team and billed per person, with private mailboxes for each person, shared company-wide mailboxes (a block included, with a per-mailbox price above it), roles and a separate workspace per client. Current prices are on the [pricing page](/pricing). Self-hosting is $0 in subscription plus whatever your VPS and your hours cost. Count the hours properly.
 
 ## So which should you pick?
 

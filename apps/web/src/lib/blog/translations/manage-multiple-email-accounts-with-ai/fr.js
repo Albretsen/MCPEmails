@@ -93,7 +93,7 @@ Les boîtes connectées sont ce sur quoi les forfaits sont tarifés :
 - **Free.** Une boîte connectée.
 - **Personal.** Quelques boîtes pour une seule personne, une limite de débit en rafale plus élevée, support prioritaire par e-mail.
 - **Pro.** Plus de boîtes pour une personne qui gère une activité professionnelle, une limite de débit en rafale plus élevée encore, un historique analytique plus long, des webhooks pour les nouveaux messages.
-- **Business.** Un lot de boîtes incluses avec un tarif par boîte au-delà, membres illimités avec rôles sans surcoût, des administrateurs qui valident les envois retenus, un espace de travail distinct par client ou par activité.
+- **Business.** Pour une équipe, facturé par personne. Chacun connecte ses propres boîtes en privé, les adresses partagées sont communes à toute l'entreprise (un lot inclus, avec un tarif par boîte au-delà), avec des rôles, des administrateurs qui valident les envois retenus, un espace de travail distinct par client ou par activité.
 
 Une routine multi-boîtes représente un appel par boîte, donc votre nombre de boîtes détermine le volume autant que vos habitudes. Les tarifs et le nombre de boîtes à jour sont sur la page [tarifs](/pricing).
 

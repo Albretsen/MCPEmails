@@ -262,8 +262,8 @@ import { stampToolSurface } from "./card-tool-surface.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
-  APPROVAL_TTL_MS,
   approvalLapsedBeforeDecision,
+  approvalTtlMsForHours,
   approvalReviewUrl,
   buildApprovalSummary,
   buildHeldSendEnvelope,
@@ -415,7 +415,7 @@ import {
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
 import { purgedRoleFromFlags } from "./triage-forbidden-destinations.ts";
-import { sendViaSmtp, SmtpAuthError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
+import { sendViaSmtp, SmtpAuthError, SmtpContentRefusedError, SmtpNotSentError, SmtpSenderRefusedError } from "./smtp-client.ts";
 import {
   attachmentFilenameFor,
   buildRelayForwardMime,
@@ -1286,6 +1286,38 @@ function senderRefusedResult(operation: string, inboxId: string, fromAddress: st
     } as ToolErrorResult["result"],
     logStatus: "error",
     logErrorCode: "sender_identity_refused",
+  };
+}
+
+const CONTENT_REFUSED_ERROR_CODE = "provider_content_refused";
+
+/**
+ * The sentence for {@link SmtpContentRefusedError}: the user's mail provider
+ * refused the message as spam. Shared by the tool results and the batch
+ * forward's per-message line.
+ *
+ * It says plainly not to resend the same message, because that is what agents
+ * did with the old "delivery status unknown" text, and each resend is another
+ * refusal towards the inbox's send pause (outbound-brakes.ts).
+ */
+function contentRefusedText(reason: string): string {
+  return `Not sent: the mail server refused this message as spam, so nothing was sent and there is ` +
+    `nothing to check in Sent. Reason given: ${reason}. Do not send the same message again: it ` +
+    `will be refused the same way, and repeated refusals pause sending from this inbox for an ` +
+    `hour. Tell the user. They can reword it (fewer links, no attachments, plainer wording), ` +
+    `send it from their mail provider's own app, or ask the provider why it was flagged.`;
+}
+
+function contentRefusedResult(operation: string, inboxId: string, reason: string): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: ${CONTENT_REFUSED_ERROR_CODE}`, { inbox_id: inboxId, error: reason });
+  return {
+    result: {
+      content: [{ type: "text", text: contentRefusedText(reason) }],
+      isError: true,
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+    } as ToolErrorResult["result"],
+    logStatus: "error",
+    logErrorCode: CONTENT_REFUSED_ERROR_CODE,
   };
 }
 
@@ -2246,7 +2278,8 @@ async function claimOutboundIdempotency(
       idempotencyDigest(`${operation}:${stableJson(request)}`),
     ]);
     const now = new Date().toISOString();
-    // Expiry is fixed at 24h; clear an old record before claiming a key again.
+    // Expiry is 24h, or a held send's approval deadline when that is later
+    // (stretchIdempotencyToApproval); clear an old record before claiming a key again.
     await supabase.from("outbound_idempotency")
       .delete()
       .eq("api_key_id", apiKey.id)
@@ -2426,6 +2459,53 @@ async function completeOutboundIdempotency(
     return;
   }
   if (error) console.error("[mcp-server] idempotency_complete_failed", { operation, error: error.message });
+  if (approvalId && !error) {
+    await stretchIdempotencyToApproval(apiKeyId, operation, claim.keyDigest, claim.requestDigest, approvalId);
+  }
+}
+
+/**
+ * A held send's idempotency record lives as long as its approval does.
+ *
+ * The record is written with a 24h expiry. When the workspace's approval window
+ * is longer, a retry with the same key on day 2 would otherwise find no record,
+ * run the call again and queue a SECOND approval for the same message, and a
+ * reviewer approving both would send it twice. So the record's expiry is moved
+ * to the approval's deadline. Never shortened. A failure is logged and
+ * tolerated: the send is held either way, and the cost is that one duplicate
+ * request.
+ */
+async function stretchIdempotencyToApproval(
+  apiKeyId: string,
+  operation: string,
+  keyDigest: string,
+  requestDigest: string,
+  approvalId: string,
+): Promise<void> {
+  try {
+    const { data, error } = await supabase.from("send_approvals")
+      .select("expires_at")
+      .eq("id", approvalId)
+      .maybeSingle();
+    const approvalExpiry = (data as { expires_at?: string | null } | null)?.expires_at;
+    if (error || !approvalExpiry) {
+      if (error) console.error("[mcp-server] idempotency_stretch_failed", { operation, error: error.message });
+      return;
+    }
+    const { error: updateError } = await supabase.from("outbound_idempotency")
+      .update({ expires_at: approvalExpiry })
+      .eq("api_key_id", apiKeyId)
+      .eq("operation", operation)
+      .eq("key_digest", keyDigest)
+      .eq("request_digest", requestDigest)
+      .lt("expires_at", approvalExpiry);
+    if (updateError) console.error("[mcp-server] idempotency_stretch_failed", { operation, error: updateError.message });
+  } catch (err) {
+    console.error("[mcp-server] idempotency_stretch_failed", {
+      operation,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /** Records the final delivery outcome of an approval-dispatched request. */
@@ -18672,6 +18752,16 @@ function classifyForwardFailure(err: unknown, provider: string, fromAddress: str
     };
   }
 
+  if (err instanceof SmtpContentRefusedError) {
+    return {
+      status: "not_sent",
+      error: contentRefusedText(message),
+      ledgerCode: CONTENT_REFUSED_ERROR_CODE,
+      // Judged per message: the next one in the batch may pass the filter.
+      fatal: false,
+    };
+  }
+
   if (err instanceof SmtpNotSentError) {
     return {
       status: "not_sent",
@@ -19119,7 +19209,9 @@ async function executeForwardEmail(
     try {
       return await forwardRelayMessage(senderInbox, id, fwdParams);
     } catch (err) {
-      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+      await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, [
+        "forward", id, ...addressList(fwdParams.to), ...addressList(fwdParams.cc), ...addressList(fwdParams.bcc),
+      ]);
       throw err;
     }
   };
@@ -19248,6 +19340,10 @@ async function executeForwardEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_forward", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_forward", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -19605,7 +19701,7 @@ async function executeReplyToEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, ["reply", messageId, body]);
 
     if (message === "message_not_found") {
       return {
@@ -19673,6 +19769,10 @@ async function executeReplyToEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_reply", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_reply", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -20045,6 +20145,37 @@ type RecipientRuleVerdict =
   | { hold: true; outside: number };
 
 /**
+ * How long a held send in this workspace stays decidable, in ms
+ * (`workspaces.approval_window_hours`, set on the Approvals page). Any read
+ * failure is the 24h default: an unreadable setting never lengthens a window,
+ * and it must not stop the send from being held.
+ */
+async function workspaceApprovalTtlMs(
+  workspaceId: string,
+  db: InboxQueryClient = supabase as unknown as InboxQueryClient,
+): Promise<number> {
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data, error } = await (db as any)
+      .from("workspaces")
+      .select("approval_window_hours")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp-server] approval_window_read_failed", { workspace_id: workspaceId, error: error.message });
+      return approvalTtlMsForHours(null);
+    }
+    return approvalTtlMsForHours((data as Record<string, unknown> | null)?.approval_window_hours);
+  } catch (err) {
+    console.error("[mcp-server] approval_window_read_failed", {
+      workspace_id: workspaceId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return approvalTtlMsForHours(null);
+  }
+}
+
+/**
  * `workspaces.allowed_recipient_domains`, normalised (null = any recipient).
  * `ok: false` when it could not be read: the caller refuses the send rather
  * than guess, since guessing "no rule" could send outside a company's list.
@@ -20169,9 +20300,19 @@ async function notifyBrakeTripped(input: Parameters<typeof brakeTrippedEvent>[0]
  * third within an hour pauses it). Called from every send path's failure
  * branch with the raw error; anything that is not a policy refusal is ignored.
  */
-async function noteProviderRefusal(workspaceId: string, inboxId: string, err: unknown): Promise<void> {
+async function noteProviderRefusal(
+  workspaceId: string,
+  inboxId: string,
+  err: unknown,
+  messageKeyParts: readonly (string | null | undefined)[],
+): Promise<void> {
   if (INTROSPECTION_ONLY) return;
-  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, { workspaceId, inboxId, error: err });
+  const outcome = await recordProviderRefusal(supabase as unknown as BrakeDb, {
+    workspaceId,
+    inboxId,
+    error: err,
+    messageKeyParts,
+  });
   if (outcome?.newlyTripped) {
     await notifyBrakeTripped({ workspaceId, inboxId, brake: "provider_refusal_pause", retryAt: outcome.retryAt });
   }
@@ -20360,9 +20501,10 @@ async function queueSendApproval(
     await resolveApprovalSummaryFields(inbox, operation, payload),
     operation,
   );
-  // A pending request stays decidable for 24h and is then dead: the tools
-  // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
-  const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
+  // A pending request stays decidable for the workspace's approval window
+  // (24h unless an owner chose longer) and is then dead: the tools refuse it,
+  // the decide paths refuse it, and the dispatcher re-checks it.
+  const expiresAt = new Date(Date.now() + await workspaceApprovalTtlMs(apiKey.workspace_id)).toISOString();
   // `select("*")` rather than `select("id")`: the caller turns this row into the
   // review card's envelope (see `buildHeldSendEnvelope`), and returning it from
   // the statement that wrote it is both cheaper and less failure-prone than a
@@ -20949,7 +21091,10 @@ async function executeSendEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, senderInbox.id, err, [
+      "send", sendParams.subject, sendParams.textBody, sendParams.htmlBody,
+      ...addressList(sendParams.to), ...addressList(sendParams.cc), ...addressList(sendParams.bcc),
+    ]);
 
     if (message === "quota_exceeded") {
       return {
@@ -20980,6 +21125,10 @@ async function executeSendEmail(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("email_send", inboxId, senderInbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("email_send", inboxId, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -32328,7 +32477,7 @@ async function executeSendDraft(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // Counted only when the provider refused it as spam or against policy.
-    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err);
+    await noteProviderRefusal(apiKey.workspace_id, inbox.id, err, ["draft", draftId]);
     if (message === "draft_not_found") {
       return {
         result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
@@ -32384,6 +32533,10 @@ async function executeSendDraft(
     // The server will not let this login send as the From address.
     if (err instanceof SmtpSenderRefusedError) {
       return senderRefusedResult("draft_send", inbox.id, inbox.email_address, message);
+    }
+    // Refused as spam after DATA: not sent, and resending will not help.
+    if (err instanceof SmtpContentRefusedError) {
+      return contentRefusedResult("draft_send", inbox.id, message);
     }
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
@@ -36421,7 +36574,12 @@ interface ScheduledDispatchDeps {
     alreadyCounted: boolean,
   ): Promise<BrakeDecision>;
   /** Count a provider spam/policy refusal from a scheduled send. Optional, as above. */
-  noteRefusal?(workspaceId: string, inboxId: string, err: unknown): Promise<void>;
+  noteRefusal?(
+    workspaceId: string,
+    inboxId: string,
+    err: unknown,
+    messageKeyParts: readonly (string | null | undefined)[],
+  ): Promise<void>;
   /**
    * Inbox visibility (inbox-visibility.ts): may the person who scheduled the
    * row still use its inbox? Optional so a test's deps can leave it out;
@@ -36507,7 +36665,7 @@ async function reholdApprovedSendForRecipientRule(
       decided_by: null,
       decided_via: null,
       dispatch_scheduled_send_id: null,
-      expires_at: new Date(Date.now() + APPROVAL_TTL_MS).toISOString(),
+      expires_at: new Date(Date.now() + await workspaceApprovalTtlMs(String(row.workspace_id), db)).toISOString(),
     })
     .eq("id", approvalId)
     .eq("workspace_id", row.workspace_id)
@@ -36595,7 +36753,7 @@ async function holdScheduledSendForRecipientRule(
       payload: { v: 1, data: await encryptForStorage(JSON.stringify(stored)) },
       payload_encrypted: true,
       summary: await sealApprovalSummary(summary, encryptForStorage),
-      expires_at: new Date(Date.now() + APPROVAL_TTL_MS).toISOString(),
+      expires_at: new Date(Date.now() + await workspaceApprovalTtlMs(String(row.workspace_id), db)).toISOString(),
       send_at: typeof row.send_at === "string" ? row.send_at : new Date().toISOString(),
       requested_by: typeof row.created_by === "string" ? row.created_by : null,
       hold_reason: RECIPIENT_RULE_HOLD_REASON,
@@ -37257,7 +37415,7 @@ async function handleScheduledDispatch(
       try {
         sendResult = await deps.sendViaProvider(inbox, sendParams);
       } catch (sendErr) {
-        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr);
+        await deps.noteRefusal?.(String(row.workspace_id), inbox.id, sendErr, ["scheduled", String(row.id)]);
         throw sendErr;
       }
       if (approvedScheduleId !== null) {

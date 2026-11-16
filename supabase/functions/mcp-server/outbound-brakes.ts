@@ -259,6 +259,7 @@ export function isProviderPolicyRefusal(error: unknown): boolean {
   const name = error instanceof Error ? error.name : "";
   const message = error instanceof Error ? error.message : error;
   if (name === "SmtpSenderRefusedError") return false;
+  if (name === "SmtpContentRefusedError") return true;
   if (message === "quota_exceeded") return true;
   if (name === "GraphSendRefusedError") {
     const code = (error as { code?: unknown }).code;
@@ -266,6 +267,21 @@ export function isProviderPolicyRefusal(error: unknown): boolean {
   }
   if (NOT_ABUSE_RE.test(message) || ORIGIN_REFUSAL_RE.test(message)) return false;
   return POLICY_REFUSAL_RE.test(message);
+}
+
+/**
+ * What identifies one message for the refusal count, as a SHA-256 hex digest:
+ * a draft id, a forwarded message id plus its recipients, or a subject, body
+ * and recipients. The same message refused again inside the window counts
+ * once (outbound_send_refusal with p_message_key). Null when nothing
+ * identifies it, which counts every refusal as before.
+ */
+export async function refusalMessageKey(
+  parts: readonly (string | null | undefined)[],
+): Promise<string | null> {
+  const present = parts.filter((p): p is string => typeof p === "string" && p.length > 0);
+  if (present.length === 0) return null;
+  return await sha256Hex(`mcpemails-refusal-message-v1\n${present.join("\n")}`);
 }
 
 export interface RefusalOutcome {
@@ -280,7 +296,13 @@ export interface RefusalOutcome {
  */
 export async function recordProviderRefusal(
   db: BrakeDb,
-  input: { workspaceId: string; inboxId: string; error: unknown },
+  input: {
+    workspaceId: string;
+    inboxId: string;
+    error: unknown;
+    /** What identifies the message (see refusalMessageKey). */
+    messageKeyParts?: readonly (string | null | undefined)[];
+  },
 ): Promise<RefusalOutcome | null> {
   if (!isProviderPolicyRefusal(input.error)) return null;
   try {
@@ -290,6 +312,7 @@ export async function recordProviderRefusal(
       p_threshold: REFUSAL_PAUSE_THRESHOLD,
       p_window_ms: REFUSAL_WINDOW_MS,
       p_pause_ms: REFUSAL_PAUSE_MS,
+      p_message_key: await refusalMessageKey(input.messageKeyParts ?? []),
     });
     if (error || !data || typeof data !== "object") {
       console.error("[mcp-server] outbound_refusal_record_failed", {
@@ -307,6 +330,7 @@ export async function recordProviderRefusal(
     console.warn("[mcp-server] outbound_provider_refusal", {
       workspace_id: input.workspaceId,
       inbox_id: input.inboxId,
+      duplicate: answer.duplicate === true,
       ...outcome,
     });
     return outcome;

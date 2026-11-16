@@ -37,6 +37,8 @@ import { euroizeAmounts } from './eur-prices.ts';
 import {
   BUSINESS_EXTRA_INBOX_MONTHLY_CENTS,
   BUSINESS_EXTRA_INBOX_YEARLY_CENTS,
+  BUSINESS_SEAT_MONTHLY_CENTS,
+  BUSINESS_SEAT_YEARLY_CENTS,
   PLANS,
 } from './plans.ts';
 import { rows, entries } from '../compare/email-mcp-servers.mjs';
@@ -58,6 +60,11 @@ for (const plan of Object.values(PLANS)) {
 SOLD_CENTS.add(BUSINESS_EXTRA_INBOX_MONTHLY_CENTS);
 SOLD_CENTS.add(BUSINESS_EXTRA_INBOX_YEARLY_CENTS);
 SOLD_CENTS.add(Math.round(BUSINESS_EXTRA_INBOX_YEARLY_CENTS / 12));
+// Business billed per person (business-seats.ts): the static copy (README,
+// llms.txt, the blog, the self-hosting table) quotes the per-person price.
+SOLD_CENTS.add(BUSINESS_SEAT_MONTHLY_CENTS);
+SOLD_CENTS.add(BUSINESS_SEAT_YEARLY_CENTS);
+SOLD_CENTS.add(Math.round(BUSINESS_SEAT_YEARLY_CENTS / 12));
 
 /**
  * Amounts that are not prices of ours, by file NAME (in any locale) and exact

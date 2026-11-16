@@ -1295,9 +1295,10 @@
       "causeInterrupted": "Une exécution a été interrompue avant la fin.",
       "causeUnknown": "Ouvrez le journal d'exécution pour voir ce qui s'est passé."
     },
-    "approvalBadge": "Approbation requise",
+    "approvalBadge": "Chaque transfert attend votre accord",
     "enabledOn": "Active",
     "enabledOff": "Inactive",
+    "nextRun": "Prochaine vérification {time}",
     "rowRuns": "Journal",
     "rowEdit": "Modifier",
     "rowDelete": "Supprimer",

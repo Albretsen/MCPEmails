@@ -32,7 +32,7 @@ class FakeResend {
 
 mock.module('resend', { namedExports: { Resend: FakeResend } });
 
-const { createResend, filterRecipients, SKIPPED_ID_PREFIX } = await import('./resend.ts');
+const { createResend, filterRecipients, isPlausibleAddress, INVALID_RECIPIENT_ID_PREFIX, SKIPPED_ID_PREFIX } = await import('./resend.ts');
 const { appEnv, isAllowlistedAddress, mayUseThisDeployment, recipientAllowlist } = await import('../env/app-env.ts');
 
 const STAGING = { APP_ENV: 'staging', EMAIL_RECIPIENT_ALLOWLIST: 'owner@example.com, @tests.example' };
@@ -147,6 +147,57 @@ test('filterRecipients leaves cc/bcc absent when the payload had none', () => {
 });
 
 // The factory only protects staging if nothing goes around it.
+test('isPlausibleAddress refuses typo endings, keeps real addresses', () => {
+  for (const ok of [
+    'a@me.com',
+    'First Last <a.b+tag@mail.example.co.uk>',
+    'a@tests.example',
+    'a@xn--bcher-kva.xn--p1ai',
+    '  a@gmail.com  ',
+  ]) assert.equal(isPlausibleAddress(ok), true, ok);
+  for (const bad of ['a@me.com.x', 'a@localhost', 'a@me.c', 'a@me..com', 'a@-me.com', 'me.com', 'a b@me.com', '', null, 'Name <a@me.com.x>']) {
+    assert.equal(isPlausibleAddress(bad), false, String(bad));
+  }
+});
+
+test('production: an invalid only recipient never reaches Resend and never alerts', async () => {
+  sent.length = 0;
+  const reports: unknown[] = [];
+  const client = createResend('re_key', {}, async (f) => void reports.push(f)) as unknown as FakeResend;
+  const result = (await client.emails.send({ from: 'a@b.co', to: 'typo@me.com.x', subject: 's' })) as {
+    data: unknown;
+    error: { name: string; message: string } | null;
+  };
+  assert.equal(sent.length, 0);
+  assert.equal(result.data, null);
+  assert.equal(result.error?.name, 'invalid_recipient');
+  assert.match(result.error!.message, /^[a-z0-9_.:\- ]+$/i);
+  await new Promise((r) => setImmediate(r));
+  assert.equal(reports.length, 0);
+});
+
+test('production: invalid cc is dropped, the rest is sent', async () => {
+  sent.length = 0;
+  const client = createResend('re_key', {}) as unknown as FakeResend;
+  await client.emails.send({ from: 'a@b.co', to: ['ok@gmail.com', 'bad@me.com.x'], cc: 'bad@x', subject: 's' });
+  assert.deepEqual(sent[0].payload, { from: 'a@b.co', to: ['ok@gmail.com'], cc: [], subject: 's' });
+});
+
+test('production batch keeps positions when one email has an invalid recipient', async () => {
+  sent.length = 0;
+  const client = createResend('re_key', {}) as unknown as FakeResend;
+  const result = (await client.batch.send([
+    { from: 'a@b.co', to: 'one@gmail.com', subject: '1' },
+    { from: 'a@b.co', to: 'two@me.com.x', subject: '2' },
+    { from: 'a@b.co', to: 'three@gmail.com', subject: '3' },
+  ])) as { data: { data: Array<{ id: string }> } };
+  assert.equal((sent[0].payload as unknown[]).length, 2);
+  const ids = result.data.data.map((d) => d.id);
+  assert.equal(ids[0], 'real-0');
+  assert.ok(ids[1].startsWith(INVALID_RECIPIENT_ID_PREFIX));
+  assert.equal(ids[2], 'real-1');
+});
+
 test('no file in apps/web constructs a Resend client outside the factory', () => {
   const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
   const factory = path.join(webRoot, 'src/lib/email/resend.ts');

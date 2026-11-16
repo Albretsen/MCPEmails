@@ -44,13 +44,32 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    // DATE PLACEHOLDER: set to the day this lands on main (the Any Mailbox
-    // launch PR merges only once OpenAI approves the listing).
-    date: '2026-11-12',
+    date: '2026-11-17',
     kind: 'added',
     title: 'MCPEmails in the ChatGPT plugin directory',
     body:
-      'MCPEmails can now be installed from the ChatGPT plugin directory, where it is listed as Any Mailbox. Click Install plugin, sign in to MCPEmails and choose which mailboxes ChatGPT can reach, with nothing to paste. The custom MCP server on chatgpt.com keeps working as before.',
+      'MCPEmails is now in the ChatGPT plugin directory as Any Mailbox, so ChatGPT and Codex users can add it from Plugins without setting up a custom connector.',
+  },
+  {
+    date: '2026-11-14',
+    kind: 'added',
+    title: 'Choose how long held sends wait for approval',
+    body:
+      "On the Approvals page, an owner or admin can now give held sends 1, 3, 7 or 14 days to be approved, and each pending send shows when it expires.",
+  },
+  {
+    date: '2026-11-12',
+    kind: 'fixed',
+    title: 'Clear answer when your mail provider flags a message as spam',
+    body:
+      "When your mail provider refuses a message as spam, your AI is now told it was not sent and to reword it rather than send it again, and the sent card says so. Before, it could read the refusal as an unclear delivery and retry the same message.",
+  },
+  {
+    date: '2026-11-11',
+    kind: 'added',
+    title: 'Private and company-wide mailboxes for teams',
+    body:
+      "In a team workspace each person's mailboxes are now private to them and their AI, and an owner or admin can make a mailbox company-wide for everyone. Admins can export a per-person audit log as CSV and hold sends to recipients outside the company's domains for approval.",
   },
   {
     date: '2026-11-11',

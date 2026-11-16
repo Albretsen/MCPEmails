@@ -100,7 +100,7 @@ Connected inboxes are what plans are priced on:
 - **Free.** One connected inbox.
 - **Personal.** A few inboxes for one person, a higher burst rate limit, priority email support.
 - **Pro.** More inboxes for one person running a business, a higher burst rate limit still, longer analytics history, webhooks for new mail.
-- **Business.** A block of included mailboxes with a per-mailbox price above it, unlimited members with roles at no extra cost, admins who approve held sends, a separate workspace per client or business.
+- **Business.** For a team, billed per person: each person connects their own mailboxes privately, shared addresses are company-wide (a block included, with a per-mailbox price above it), roles, admins who approve held sends, a separate workspace per client or business.
 
 A cross-inbox routine is one call per mailbox, so your mailbox count drives volume as much as your habits do. Current prices and inbox counts are on [pricing](/pricing).
 

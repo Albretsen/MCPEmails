@@ -116,7 +116,7 @@ Plans are priced by connected inboxes. API keys are unlimited on every tier, and
 - **Free.** No card, forever. One connected inbox, usage analytics, the help center and email support.
 - **Personal.** More inboxes for one person, a higher burst rate, longer analytics history, priority email support.
 - **Pro.** For one person running a business: more inboxes again, a higher burst rate still, years of analytics history, and webhooks for new mail.
-- **Business.** Everything in Pro, plus a block of included mailboxes with a per-mailbox price above it, unlimited members with roles, admins who approve held sends, and a separate workspace per client or business.
+- **Business.** Everything in Pro, for a team billed per person: each person's own mailboxes stay private, shared mailboxes are company-wide (a block included, with a per-mailbox price above it), roles, admins who approve held sends, an audit log with CSV export, and a separate workspace per client or business.
 
 Current prices and inbox counts are on the [pricing page](/pricing).
 

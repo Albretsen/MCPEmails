@@ -59,7 +59,7 @@ test('workspaceAuditRow: column names, target capped, details default', () => {
     workspace_id: 'w', actor_user_id: 'u', kind: 'member_left', target: null, details: {},
   });
   assert.equal((workspaceAuditRow({ workspaceId: 'w', actorUserId: null, kind: 'invite_sent', target: 'x'.repeat(400) }).target as string).length, 320);
-  assert.equal(WORKSPACE_AUDIT_KINDS.length, 8);
+  assert.equal(WORKSPACE_AUDIT_KINDS.length, 9, 'mirrors the workspace_audit_events kind CHECK (migration 20261114110000)');
 });
 
 test('recordWorkspaceAuditEvent never throws: an error, a throw, a factory that throws', async () => {

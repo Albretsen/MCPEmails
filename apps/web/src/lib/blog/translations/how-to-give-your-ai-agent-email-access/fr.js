@@ -109,7 +109,7 @@ Les forfaits sont facturés au nombre de boîtes connectées. Les clés API sont
 - **Gratuit.** Pour toujours, sans carte. Une boîte connectée, des analyses d'utilisation, le centre d'aide et le support par e-mail.
 - **Personal.** Plus de boîtes pour une seule personne, une limite de pointe plus élevée, un historique d'analyses plus long, le support prioritaire par e-mail.
 - **Pro.** Pour une personne qui gère une activité professionnelle : encore plus de boîtes, une limite de pointe plus élevée encore, des années d'historique d'analyses et les webhooks pour les nouveaux messages.
-- **Business.** Tout ce que contient Pro, plus un lot de boîtes incluses avec un tarif par boîte au-delà, des membres illimités avec rôles, des administrateurs qui valident les envois retenus et un espace de travail distinct par client ou activité.
+- **Business.** Tout ce que contient Pro, pour une équipe facturée par personne. Les boîtes de chacun restent privées, les boîtes partagées sont communes à toute l'entreprise (un lot inclus, avec un tarif par boîte au-delà), avec des rôles, des administrateurs qui valident les envois retenus, un journal d'audit exportable en CSV et un espace de travail distinct par client ou activité.
 
 Les tarifs et le nombre de boîtes à jour sont sur la [page des tarifs](/pricing).
 

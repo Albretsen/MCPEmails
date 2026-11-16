@@ -21,6 +21,7 @@ export const WORKSPACE_AUDIT_KINDS = [
   'role_changed',
   'inbox_visibility_changed',
   'recipient_rule_changed',
+  'approval_window_changed',
 ] as const;
 
 export type WorkspaceAuditKind = (typeof WORKSPACE_AUDIT_KINDS)[number];

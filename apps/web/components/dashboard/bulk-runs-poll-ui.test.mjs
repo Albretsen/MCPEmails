@@ -109,7 +109,7 @@ test('a run that finishes drops the panel back to the idle cadence', async (t) =
   const { view, gets } = await renderPanel(t, ['running', 'completed']);
   await advance(t, 5_000);
   assert.equal(gets(), 2);
-  assert.match(view.container.textContent, /completed/);
+  assert.match(view.container.textContent, /Completed/);
   await advance(t, 5_000);
   assert.equal(gets(), 2, 'no fast poll after the run completed');
   await advance(t, 55_000);

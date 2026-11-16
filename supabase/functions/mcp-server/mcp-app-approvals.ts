@@ -63,17 +63,34 @@ import { openApprovalSummary, sealApprovalSummary } from "./approval-summary.ts"
 export const CARD_SCHEMA_VERSION = "review-card-v1";
 
 /**
- * How long a queued send stays decidable. After this, no human and no tool can
- * turn it into a delivery: the decide paths refuse it, the tools here retire
- * the row, and the scheduled-send dispatcher re-checks it before running the
- * original operation.
+ * The DEFAULT time a queued send stays decidable. After its window, no human
+ * and no tool can turn it into a delivery: the decide paths refuse it, the
+ * tools here retire the row, and the scheduled-send dispatcher re-checks it
+ * before running the original operation.
  *
- * 24h is chosen to match the `outbound_idempotency` retention window, so a
- * caller retrying with the same `idempotency_key` after an approval lapses
- * always finds either a live approval or a clean slate — never a dead record
- * it cannot get past.
+ * A workspace may choose a longer window on the Approvals page
+ * (`workspaces.approval_window_hours`, migration 20261114110000); see
+ * `approvalTtlMsForHours`. 24h matches the `outbound_idempotency` retention
+ * window, and a longer approval stretches its idempotency record to the same
+ * deadline, so a caller retrying with the same `idempotency_key` always finds
+ * either a live approval or a clean slate, never a dead record it cannot get
+ * past.
  */
 export const APPROVAL_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** The windows a workspace may pick, in hours. Mirrors the DB CHECK. */
+export const APPROVAL_WINDOW_HOURS = [24, 72, 168, 336] as const;
+
+/**
+ * The approval TTL for a stored `approval_window_hours`. Anything that is not
+ * one of the allowed windows (a missing column, null, garbage) is the 24h
+ * default: an unreadable setting must never lengthen the window.
+ */
+export function approvalTtlMsForHours(hours: unknown): number {
+  return typeof hours === "number" && (APPROVAL_WINDOW_HOURS as readonly number[]).includes(hours)
+    ? hours * 60 * 60 * 1000
+    : APPROVAL_TTL_MS;
+}
 
 /** Contract §2: each body is clipped at 64 KB and the clip is flagged. */
 const BODY_CLIP_BYTES = 64 * 1024;
@@ -535,7 +552,7 @@ async function loadPendingApproval(
           outcome: "expired",
           headline: "This request expired before it was decided.",
           detail:
-            "Pending sends stay decidable for 24 hours. Nothing was sent. Ask the agent to compose it again if it is still wanted.",
+            "It was not decided within the workspace's approval window. Nothing was sent. Ask the agent to compose it again if it is still wanted.",
           affected_count: 0,
           dashboard_url: `${deps.appUrl}/dashboard/approvals`,
           error_code: null,

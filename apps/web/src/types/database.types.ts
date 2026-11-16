@@ -2011,6 +2011,36 @@ export type Database = {
           },
         ]
       }
+      client_events: {
+        Row: {
+          browser: string | null
+          created_at: string
+          detail: Json
+          id: number
+          kind: string
+          path: string
+          signed_in: boolean
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          detail?: Json
+          id?: never
+          kind: string
+          path: string
+          signed_in?: boolean
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          detail?: Json
+          id?: never
+          kind?: string
+          path?: string
+          signed_in?: boolean
+        }
+        Relationships: []
+      }
       deleted_account_tally: {
         Row: {
           deleted_at: string
@@ -6253,6 +6283,7 @@ export type Database = {
           analytics_first_tool_used_at: string | null
           annual_switch_dismiss_count: number
           annual_switch_dismissed_at: string | null
+          approval_window_hours: number
           bulk_undo_hidden: boolean
           card_diagnostics: boolean
           chat_checkout_link_enabled: boolean
@@ -6325,6 +6356,7 @@ export type Database = {
           analytics_first_tool_used_at?: string | null
           annual_switch_dismiss_count?: number
           annual_switch_dismissed_at?: string | null
+          approval_window_hours?: number
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -6397,6 +6429,7 @@ export type Database = {
           analytics_first_tool_used_at?: string | null
           annual_switch_dismiss_count?: number
           annual_switch_dismissed_at?: string | null
+          approval_window_hours?: number
           bulk_undo_hidden?: boolean
           card_diagnostics?: boolean
           chat_checkout_link_enabled?: boolean
@@ -7643,20 +7676,33 @@ export type Database = {
         }
         Returns: Json
       }
-      outbound_send_refusal: {
-        Args: {
-          p_inbox_id: string
-          p_pause_ms: number
-          p_threshold: number
-          p_window_ms: number
-          p_workspace_id: string
-        }
-        Returns: Json
-      }
+      outbound_send_refusal:
+        | {
+            Args: {
+              p_inbox_id: string
+              p_pause_ms: number
+              p_threshold: number
+              p_window_ms: number
+              p_workspace_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_inbox_id: string
+              p_message_key: string
+              p_pause_ms: number
+              p_threshold: number
+              p_window_ms: number
+              p_workspace_id: string
+            }
+            Returns: Json
+          }
       purge_activity_log_batch: {
         Args: { p_limit?: number; p_min_days?: number }
         Returns: number
       }
+      purge_client_events: { Args: never; Returns: number }
       purge_deleted_accounts: { Args: never; Returns: Json }
       purge_disconnected_inboxes: { Args: never; Returns: Json }
       purge_operational_history: { Args: never; Returns: Json }

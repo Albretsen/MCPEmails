@@ -22,8 +22,8 @@
 // Block types: { p }, { table: { head, rows } }, { ol: [{ label, text }] },
 // { h3 }.
 
-export const DPA_VERSION = '2026-11-01';
-export const DPA_EFFECTIVE = 'Effective 1 November 2026';
+export const DPA_VERSION = '2026-11-16';
+export const DPA_EFFECTIVE = 'Effective 16 November 2026';
 export const DPA_PDF_PATH = `/legal/mcpemails-dpa-${DPA_VERSION}.pdf`;
 
 export const DPA_DOCUMENT = {
@@ -242,6 +242,10 @@ export const DPA_DOCUMENT = {
               text: 'Each subprocessor is bound by a written data processing agreement with duties no weaker than this DPA. MCPEmails remains fully liable to the Customer for its subprocessors.',
             },
             {
+              label: 'Transfer safeguards.',
+              text: 'Supabase and Vercel receive data outside the EEA. Their data processing agreements incorporate the EU Standard Contractual Clauses and, for data subject to the UK GDPR, the UK Information Commissioner\'s International Data Transfer Addendum (version B1.0) to those clauses: Supabase in Schedule 2, paragraph 2 of its agreement, and Vercel in Schedules 3 and 5 of its agreement. Section 6 sets out the transfers in full.',
+            },
+            {
               label: 'Changes.',
               text: 'MCPEmails will email the account owner at least 30 days before adding or replacing a subprocessor, and will update this list. The Customer may object on reasonable data protection grounds within that period. If the objection cannot be resolved, the Customer may end the service before the change and get a pro-rata refund of prepaid fees for the unused period.',
             },
@@ -260,7 +264,7 @@ export const DPA_DOCUMENT = {
           ol: [
             {
               label: 'Mechanism.',
-              text: 'Transfers to Supabase Pte. Ltd. and Vercel Inc. are covered by the Standard Contractual Clauses adopted by Commission Implementing Decision (EU) 2021/914 (Module Three, processor to processor), incorporated in each subprocessor\'s data processing agreement. Where a recipient is certified under the EU-US Data Privacy Framework, that also applies.',
+              text: 'Transfers to Supabase Pte. Ltd. and Vercel Inc. are covered by the Standard Contractual Clauses adopted by Commission Implementing Decision (EU) 2021/914 (Module Three, processor to processor), incorporated in each subprocessor\'s data processing agreement. Where a recipient is certified under the EU-US Data Privacy Framework, that also applies. For data subject to the UK GDPR, the same clauses apply together with the UK Information Commissioner\'s International Data Transfer Addendum (version B1.0), which both subprocessors\' agreements incorporate. The United Kingdom treats Norway, as part of the EEA, as adequate, so these addenda cover the onward transfers outside the EEA.',
             },
             {
               label: 'Supplementary measures.',
