@@ -57,7 +57,7 @@ Jedes verbundene Postfach ist jetzt verfügbar. Details stehen in der [Anleitung
 
 ## In ChatGPT hinzufügen
 
-**Am schnellsten: das Plugin-Verzeichnis.** Seit dem 17. November 2026 ist MCPEmails im Plugin-Verzeichnis von ChatGPT als **Any Mailbox** gelistet. Öffnen Sie in ChatGPT **Plugins**, suchen Sie nach Any Mailbox, klicken Sie auf **Install plugin** und dann auf **Connect**, und melden Sie sich bei MCPEmails an. Ob sich ein Plugin installieren lässt, hängt von Ihrem ChatGPT-Tarif, Workspace, Ihrer Rolle und Region ab. Können Sie es nicht installieren, fügen Sie mit den folgenden Schritten einen benutzerdefinierten MCP-Server hinzu.
+**Am schnellsten: das Plugin-Verzeichnis.** Seit dem 16. November 2026 ist MCPEmails im Plugin-Verzeichnis von ChatGPT als **Any Mailbox** gelistet. Öffnen Sie in ChatGPT **Plugins**, suchen Sie nach Any Mailbox, klicken Sie auf **Install plugin** und dann auf **Connect**, und melden Sie sich bei MCPEmails an. Ob sich ein Plugin installieren lässt, hängt von Ihrem ChatGPT-Tarif, Workspace, Ihrer Rolle und Region ab. Können Sie es nicht installieren, fügen Sie mit den folgenden Schritten einen benutzerdefinierten MCP-Server hinzu.
 
 Ein kostenpflichtiger ChatGPT-Tarif kann auf chatgpt.com im Browser einen benutzerdefinierten MCP-Server hinzufügen; in der Mobil-App geht das nicht. Die Hilfeseite von OpenAI führt Business und Enterprise/Edu auf, wo ein Admin oder Owner ihn für den Workspace hinzufügt, und nur Lese- und Abruf-Tools in Pro; Go und Plus werden nicht erwähnt.
 

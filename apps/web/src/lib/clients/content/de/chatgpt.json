@@ -39,7 +39,7 @@
     },
     {
       "h": "Postfächer und Zugriff wählen, dann mit @ nutzen",
-      "p": "Der Zustimmungsbildschirm fragt, wie viel Zugriff ChatGPT bekommt: Nur-Lese-Zugriff, Standard, Vollzugriff oder Benutzerdefiniert, um Berechtigungen einzeln zu wählen. Wählen Sie Alle Postfächer oder Bestimmte Postfächer und klicken Sie auf <b>Zugriff erlauben</b>. Zurück in ChatGPT tippen Sie im Chat <b>@</b> und wählen Any Mailbox, oder fragen einfach nach Ihren E-Mails: ChatGPT nutzt installierte Plugins, wenn sie zur Anfrage passen."
+      "p": "Der Zustimmungsbildschirm fragt, wie viel Zugriff ChatGPT bekommt: Nur-Lese-Zugriff, Standard, Vollzugriff oder Benutzerdefiniert, um Berechtigungen einzeln zu wählen. Wählen Sie Alle Postfächer oder Bestimmte Postfächer und klicken Sie auf <b>Zugriff erlauben</b>. Zurück in ChatGPT tippen Sie im Chat <b>@</b> und wählen Any Mailbox, oder fragen einfach nach Ihren E-Mails: ChatGPT nutzt installierte Plugins, wenn sie zur Anfrage passen. Beginnen Sie einen Prompt in ChatGPT mit \"Any Mailbox\", zeigt ChatGPT das Plugin im Chat an und nutzt den passenden Kontext für die Aufgabe. Beim ersten Mal fordert ChatGPT Sie zum Verbinden auf, damit Sie sehen, welche Daten geteilt werden können."
     }
   ],
   "listingLink": "Any Mailbox im Plugin-Verzeichnis von ChatGPT",

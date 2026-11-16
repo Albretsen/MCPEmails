@@ -39,7 +39,7 @@
     },
     {
       "h": "Velg postkasser og tilgang, og bruk den med @",
-      "p": "Samtykkeskjermen spør hvor mye tilgang ChatGPT skal få: Skrivebeskyttet, Standard, Full tilgang eller Tilpasset for å velge rettigheter én og én. Velg Alle innbokser eller Bestemte innbokser, og klikk <b>Gi tilgang</b>. Tilbake i ChatGPT skriver du <b>@</b> i en samtale og velger Any Mailbox, eller spør rett og slett om e-posten din: ChatGPT bruker installerte plugins når de passer til spørsmålet."
+      "p": "Samtykkeskjermen spør hvor mye tilgang ChatGPT skal få: Skrivebeskyttet, Standard, Full tilgang eller Tilpasset for å velge rettigheter én og én. Velg Alle innbokser eller Bestemte innbokser, og klikk <b>Gi tilgang</b>. Tilbake i ChatGPT skriver du <b>@</b> i en samtale og velger Any Mailbox, eller spør rett og slett om e-posten din: ChatGPT bruker installerte plugins når de passer til spørsmålet. Starter du en ledetekst i ChatGPT med \"Any Mailbox\", viser ChatGPT pluginen i samtalen og bruker relevant kontekst til å gjøre oppgaven. Første gang du bruker den, ber ChatGPT deg koble til, så du vet hvilke data som kan deles."
     }
   ],
   "listingLink": "Any Mailbox i pluginkatalogen i ChatGPT",

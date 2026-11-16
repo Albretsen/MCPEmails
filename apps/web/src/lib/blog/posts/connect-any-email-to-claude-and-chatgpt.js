@@ -91,7 +91,7 @@ const post = {
   coverAlt: 'Yahoo, IMAP, custom-domain and several other mailboxes connected to Claude and ChatGPT',
   authorId: 'asgeir',
   publishedAt: '2026-11-11T09:00:00.000Z',
-  updatedAt: '2026-11-17T09:00:00.000Z',
+  updatedAt: '2026-11-16T21:30:00.000Z',
   tags: ['Claude', 'ChatGPT', 'Connectors', 'Comparison'],
   featured: false,
   content: `Claude and ChatGPT both have email connectors built in, and both stop at the big providers. If your mail is on Yahoo, AOL, GMX, a company domain at IONOS, OVH or a cPanel host, or spread over several accounts, you need something else. This guide lists every option as of November 2026: the built-in connectors and exactly where they end, the hosted MCP services that fill the gap (MCPEmails is one of them, and we name the others), the local and self-hosted routes, and the automation platforms. Every claim about another product was read on its own page on 11 November 2026; the sources are at the end.

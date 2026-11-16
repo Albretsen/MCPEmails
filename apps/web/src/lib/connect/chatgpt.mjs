@@ -60,7 +60,7 @@ export const CHATGPT_DIRECTORY_LISTING_PLACEHOLDER_MARK = 'ANY_MAILBOX_LISTING_'
 
 /**
  * The Any Mailbox listing in the ChatGPT plugin directory (published
- * 2026-11-17). The one place it is written down: /connect/<provider>,
+ * 2026-11-16). The one place it is written down: /connect/<provider>,
  * /docs/chatgpt, the home FAQ, the JSON-LD alternateName and llms.txt
  * (generated, `npm run gen:llms`) all read it from here. Until OpenAI's
  * listing URL is known it is a placeholder, and the listing test fails on

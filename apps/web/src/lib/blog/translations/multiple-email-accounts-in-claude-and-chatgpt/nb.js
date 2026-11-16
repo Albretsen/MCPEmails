@@ -57,7 +57,7 @@ Alle postkassene du har koblet til, er nå tilgjengelige. [Claude-guiden](/blog/
 
 ## Legg den til i ChatGPT
 
-**Raskeste vei: pluginkatalogen.** Siden 17. november 2026 finnes MCPEmails i pluginkatalogen i ChatGPT som **Any Mailbox**. I ChatGPT åpner du **Plugins**, søker etter Any Mailbox, klikker **Install plugin** og deretter **Connect**, og logger inn hos MCPEmails. Om en plugin kan installeres, avhenger av ChatGPT-abonnement, arbeidsområde, rolle og region. Kan du ikke installere den, legger du til en egendefinert MCP-server med stegene under.
+**Raskeste vei: pluginkatalogen.** Siden 16. november 2026 finnes MCPEmails i pluginkatalogen i ChatGPT som **Any Mailbox**. I ChatGPT åpner du **Plugins**, søker etter Any Mailbox, klikker **Install plugin** og deretter **Connect**, og logger inn hos MCPEmails. Om en plugin kan installeres, avhenger av ChatGPT-abonnement, arbeidsområde, rolle og region. Kan du ikke installere den, legger du til en egendefinert MCP-server med stegene under.
 
 Et betalt ChatGPT-abonnement kan legge til en egen MCP-server på chatgpt.com i en nettleser; mobilappen kan ikke legge til en. OpenAIs hjelpeside lister Business og Enterprise/Edu, der en administrator eller eier legger den til for arbeidsområdet, og lese- og henteverktøy bare på Pro; Go og Plus nevnes ikke.
 

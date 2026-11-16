@@ -44,7 +44,7 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
-    date: '2026-11-17',
+    date: '2026-11-16',
     kind: 'added',
     title: 'MCPEmails in the ChatGPT plugin directory',
     body:

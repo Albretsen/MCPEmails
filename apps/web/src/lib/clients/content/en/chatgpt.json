@@ -39,7 +39,7 @@
     },
     {
       "h": "Choose mailboxes and access, then use it with @",
-      "p": "The consent screen asks how much access ChatGPT gets: Read-only, Standard, Full access, or Custom to pick permissions one by one. Choose All inboxes or Specific inboxes, then click <b>Allow access</b>. Back in ChatGPT, type <b>@</b> in a chat and pick Any Mailbox, or just ask about your mail: ChatGPT uses installed plugins when they fit the request."
+      "p": "The consent screen asks how much access ChatGPT gets: Read-only, Standard, Full access, or Custom to pick permissions one by one. Choose All inboxes or Specific inboxes, then click <b>Allow access</b>. Back in ChatGPT, type <b>@</b> in a chat and pick Any Mailbox, or just ask about your mail: ChatGPT uses installed plugins when they fit the request. When you start a ChatGPT prompt with \"Any Mailbox\", ChatGPT surfaces the plugin in your chat and uses relevant context to do the task. The first time you use it, ChatGPT asks you to connect, so you know what data may be shared."
     }
   ],
   "listingLink": "Any Mailbox in the ChatGPT plugin directory",
