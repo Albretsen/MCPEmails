@@ -30,15 +30,62 @@
  *   - used by typing @ in a chat and picking MCPEmails, once per message
  *   - mail fetched live, never stored
  *
- * WHEN THE CHATGPT APP DIRECTORY LISTS US. Set CHATGPT_DIRECTORY_LISTING_URL to
- * the listing's URL. The block then shows the `directory*` copy (install the
- * app from the directory) instead of the custom-server steps, links to the
- * listing, and the FAQ answer switches to `directoryFaqA`. Every locale already
- * carries those keys. Re-read them against the live listing before flipping it.
+ * THE CHATGPT PLUGIN DIRECTORY. MCPEmails is listed there as "Any Mailbox"
+ * (OpenAI renamed the app directory to the plugin directory on 2026-07-09;
+ * help.openai.com/en/articles/20001256, read 2026-11-11: Plugins in the
+ * sidebar, Install plugin, then Connect, then @ in a chat; the directory is
+ * visible on every ChatGPT plan, but whether a given plugin can be installed
+ * "depends on your plan, workspace, role, region". We have not checked which
+ * plans can install Any Mailbox, so copy never names plans for it). The same
+ * directory serves ChatGPT and Codex. With CHATGPT_DIRECTORY_LISTING_URL set, the
+ * block shows the `directory*` copy (install the plugin) instead of the
+ * custom-server steps, links to the listing, and the FAQ answer switches to
+ * `directoryFaqA`. A null URL brings the custom-server steps back. Re-read the
+ * copy against the live listing when the URL is set.
  */
 
-/** Null until OpenAI approves the listing. See the header comment. */
-export const CHATGPT_DIRECTORY_LISTING_URL = null;
+/**
+ * The name the ChatGPT plugin directory shows. OpenAI does not allow "MCP" in
+ * a plugin's name, so the listing is not called MCPEmails. The developer shown
+ * is MCPEmails.
+ */
+export const CHATGPT_APP_NAME = 'Any Mailbox';
+
+/**
+ * The marker in the placeholder listing URL. Written in two halves so that
+ * replacing the placeholder URL with one sed leaves this alone, and
+ * src/lib/connect/chatgpt-listing.test.mjs keeps failing until it is replaced.
+ */
+export const CHATGPT_DIRECTORY_LISTING_PLACEHOLDER_MARK = 'ANY_MAILBOX_LISTING_' + 'URL_TBD';
+
+/**
+ * The Any Mailbox listing in the ChatGPT plugin directory (published
+ * 2026-11-17). The one place it is written down: /connect/<provider>,
+ * /docs/chatgpt, the home FAQ, the JSON-LD alternateName and llms.txt
+ * (generated, `npm run gen:llms`) all read it from here. Until OpenAI's
+ * listing URL is known it is a placeholder, and the listing test fails on
+ * purpose. It is OpenAI's page, so it carries no UTM of ours: installs that
+ * start there are attributed as `connector_chatgpt` by
+ * connectorSourceFromAuthorize in src/lib/acquisition-context.mjs.
+ */
+export const CHATGPT_DIRECTORY_LISTING_URL = 'https://chatgpt.com/plugins/plugin_asdk_app_6ace084f569081919174189f44ccc61e';
+
+/** The token copy uses where the listing URL goes (home FAQ). */
+export const LISTING_URL_TOKEN = '{listingUrl}';
+
+/**
+ * Split copy on the listing token, for a renderer that turns the token into a
+ * link: `['before ', 'after']` for one token. Text with no token comes back as
+ * a single part.
+ */
+export function splitOnListingUrl(text) {
+  return String(text).split(LISTING_URL_TOKEN);
+}
+
+/** The same copy as plain text, with the URL written out (JSON-LD, meta). */
+export function fillListingUrl(text, listingUrl = CHATGPT_DIRECTORY_LISTING_URL) {
+  return String(text).replaceAll(LISTING_URL_TOKEN, listingUrl ?? '');
+}
 
 export const CHATGPT_LOCALES = Object.freeze(['en', 'es', 'fr', 'nb', 'zh', 'de', 'pt', 'ja']);
 export const CHATGPT_BLOG_SLUG = 'connect-chatgpt-to-email';

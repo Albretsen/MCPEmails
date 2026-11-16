@@ -40,6 +40,8 @@ Outlook 通过使用 Microsoft 登录连接，而不是应用专用密码：选�
 
 ## 第 2 步：在 ChatGPT 中添加连接器
 
+**最快的方式：插件目录。** 自 2026 年 11 月 17 日起，MCPEmails 以 **Any Mailbox** 的名称上架 ChatGPT 插件目录。在 ChatGPT 中打开 **Plugins**，搜索 Any Mailbox，点击 **Install plugin**（安装插件），再点击 **Connect**，然后登录 MCPEmails。能否安装插件取决于你的 ChatGPT 套餐、工作区、角色和地区。如果无法安装，请按以下步骤添加自定义 MCP 服务器。
+
 1. 在 chatgpt.com 上依次打开 **Plugins** 和 **Personal**，点击右上角的 **Add**。
 2. 选择 **Add custom MCP server**，命名为 MCPEmails。
 3. 在 **Connection** 下粘贴这个 URL：

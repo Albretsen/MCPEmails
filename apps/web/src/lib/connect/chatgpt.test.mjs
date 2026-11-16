@@ -56,8 +56,9 @@ test('the copy covers every routed locale', () => {
   assert.deepEqual([...CHATGPT_LOCALES].sort(), [...routing.locales].sort());
 });
 
-test('the flag is off: OpenAI has not listed the app yet', () => {
-  assert.equal(CHATGPT_DIRECTORY_LISTING_URL, null);
+test('the flag is on: the Any Mailbox listing in the ChatGPT plugin directory', () => {
+  // chatgpt-listing.test.mjs is what refuses the placeholder; here only the shape.
+  assert.match(CHATGPT_DIRECTORY_LISTING_URL, /^https:\/\/(chatgpt\.com|openai\.com)\//);
 });
 
 test('every supported provider gets the block; the limited ones do not', () => {
@@ -116,7 +117,8 @@ test('the claims match how ChatGPT adds a custom MCP server today, in every loca
 });
 
 test('the rendered block stays short enough not to bury the setup steps', () => {
-  const en = chatgptSection(copy('en'), 'AOL Mail');
+  // The custom-server variant is the longer of the two.
+  const en = chatgptSection(copy('en'), 'AOL Mail', null);
   const words = [en.title, en.sub, ...en.steps, en.docs.label, en.blogLabel]
     .map(stripTags)
     .join(' ')
@@ -128,7 +130,8 @@ test('the rendered block stays short enough not to bury the setup steps', () => 
 test('the provider name is filled in, and the directory variant swaps the steps', async () => {
   for (const locale of CHATGPT_LOCALES) {
     const c = await getChatgptCopy(locale);
-    const s = chatgptSection(c, 'AOL Mail');
+    // Custom-server variant (a null listing URL).
+    const s = chatgptSection(c, 'AOL Mail', null);
     assert.ok(s.title.includes('AOL Mail'), locale);
     assert.ok(s.steps[0].includes('AOL Mail'), locale);
     assert.equal(s.steps.length, 4, locale);
@@ -136,15 +139,18 @@ test('the provider name is filled in, and the directory variant swaps the steps'
     assert.equal(s.docs.href, '/docs/chatgpt');
     for (const v of [s.title, s.sub, ...s.steps]) assert.ok(!v.includes('{provider}'), locale);
 
-    const listed = chatgptSection(c, 'AOL Mail', 'https://chatgpt.com/apps/example');
+    // Directory variant: the default now that the listing URL is set.
+    const listed = chatgptSection(c, 'AOL Mail');
     assert.deepEqual(listed.steps, c.directorySteps.map((x) => x.replaceAll('{provider}', 'AOL Mail')));
-    assert.deepEqual(listed.listing, { href: 'https://chatgpt.com/apps/example', label: c.directoryLink });
+    assert.deepEqual(listed.listing, { href: CHATGPT_DIRECTORY_LISTING_URL, label: c.directoryLink });
     assert.deepEqual(listed.steps.flatMap(urlsIn), [], `${locale}: directory steps need no URL`);
+    assert.ok(listed.steps.some((x) => x.includes('Any Mailbox')), `${locale}: a directory step names Any Mailbox`);
+    for (const v of [listed.sub, ...listed.steps]) assert.ok(!v.includes('{provider}'), locale);
 
-    const faq = chatgptFaq(c, 'AOL Mail');
+    const faq = chatgptFaq(c, 'AOL Mail', null);
     assert.ok(faq.q.includes('AOL Mail') && faq.a.includes('AOL Mail'), locale);
-    assert.equal(chatgptFaq(c, 'AOL Mail', 'https://chatgpt.com/apps/example').a,
-      c.directoryFaqA.replaceAll('{provider}', 'AOL Mail'));
+    assert.equal(faq.a, c.faqA.replaceAll('{provider}', 'AOL Mail'));
+    assert.equal(chatgptFaq(c, 'AOL Mail').a, c.directoryFaqA.replaceAll('{provider}', 'AOL Mail'));
   }
   // An unknown locale falls back to English rather than throwing.
   assert.deepEqual(await getChatgptCopy('xx'), copy('en'));

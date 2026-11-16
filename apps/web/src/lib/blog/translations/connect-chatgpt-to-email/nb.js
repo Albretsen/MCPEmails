@@ -42,6 +42,8 @@ Koble til mer enn én postkasse hvis planen din tillater det. ChatGPT finner dem
 
 ## Steg 2: Legg til koblingen i ChatGPT
 
+**Raskeste vei: pluginkatalogen.** Siden 17. november 2026 finnes MCPEmails i pluginkatalogen i ChatGPT som **Any Mailbox**. I ChatGPT åpner du **Plugins**, søker etter Any Mailbox, klikker **Install plugin** og deretter **Connect**, og logger inn hos MCPEmails. Om en plugin kan installeres, avhenger av ChatGPT-abonnement, arbeidsområde, rolle og region. Kan du ikke installere den, legger du til en egendefinert MCP-server med stegene under.
+
 1. På chatgpt.com åpner du **Plugins**, deretter **Personal**, og klikker **Add** øverst til høyre.
 2. Velg **Add custom MCP server** og kall den MCPEmails.
 3. Lim inn denne URL-en under **Connection**:

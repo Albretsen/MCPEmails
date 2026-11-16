@@ -202,11 +202,11 @@
       "manual": "Sett det opp manuelt",
       "continue": "Jeg har lagt det til",
       "chatgpt": {
-        "step1": "På chatgpt.com åpner du Plugins og klikker Add øverst til høyre.",
-        "step2": "Velg Add custom MCP server, kall den MCPEmails og lim inn URL-en under som Server URL.",
-        "step3": "Huk av for I understand and want to continue, klikk Create as a plugin, så Connect MCPEmails, og gi tilgang.",
-        "step4": "Skriv @MCPEmails i en chat for å bruke den.",
-        "note": "Egne MCP-servere krever et betalt abonnement, i en nettleser på chatgpt.com: OpenAI lister Business og Enterprise/Edu, med bare lesetilgang på Pro."
+        "step1": "I ChatGPT åpner du Plugins i sidepanelet og søker etter Any Mailbox, fra MCPEmails.",
+        "step2": "Klikk Install plugin og deretter Connect.",
+        "step3": "Logg inn hos MCPEmails og gi tilgang.",
+        "step4": "Skriv @ i en chat og velg Any Mailbox for å bruke den.",
+        "note": "Finner du ikke Any Mailbox i kontoen eller arbeidsområdet? Legg til en egen MCP-server i stedet: på chatgpt.com åpner du Plugins, klikker Add, velger Add custom MCP server, limer inn URL-en over som Server URL og velger OAuth. OpenAI lister egne MCP-servere for Business og Enterprise/Edu, med bare lesetilgang på Pro."
       },
       "key": {
         "creating": "Lager en API-nøkkel for {client}",
@@ -290,7 +290,7 @@
     "noHandshake": {
       "title": "{client} har ikke koblet til ennå",
       "claude": "Last inn claude.ai på nytt og start en ny chat. I Claude Desktop avslutter du appen helt og åpner den igjen.",
-      "chatgpt": "Åpne en ny chat på chatgpt.com, skriv @ og velg MCPEmails.",
+      "chatgpt": "Åpne en ny chat i ChatGPT, skriv @ og velg Any Mailbox (eller MCPEmails, hvis du la den til som egen MCP-server).",
       "editor": "Last inn {client}-vinduet på nytt og sjekk at MCPEmails står som tilkoblet i MCP-listen. Hvis ikke, lim inn URL-en på nytt.",
       "cli": "Avslutt og start {client} på nytt, og sjekk at MCPEmails står på listen og er tilkoblet.",
       "api": "Send forespørselen på nytt og sjekk at Authorization-headeren har nøkkelen din."
@@ -298,7 +298,7 @@
     "noCall": {
       "title": "{client} er koblet til, men har ikke brukt MCPEmails ennå",
       "claude": "Slå på MCPEmails i denne chatten (+ > Connectors) eller start en ny chat, og lim inn prompten på nytt.",
-      "chatgpt": "Skriv @ i chatten og velg MCPEmails, og lim inn prompten på nytt.",
+      "chatgpt": "Skriv @ i chatten og velg Any Mailbox (eller MCPEmails for en egen MCP-server), og lim inn prompten på nytt.",
       "other": "Start en ny chat og lim inn prompten på nytt. Den nevner MCPEmails, så {client} vet hva den skal bruke."
     },
     "reconnect": {

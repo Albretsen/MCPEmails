@@ -55,6 +55,8 @@ Claude 的 Free 方案允许一个自定义连接器，Pro 和 Max 不限数量�
 
 ## 添加到 ChatGPT
 
+**最快的方式：插件目录。** 自 2026 年 11 月 17 日起，MCPEmails 以 **Any Mailbox** 的名称上架 ChatGPT 插件目录。在 ChatGPT 中打开 **Plugins**，搜索 Any Mailbox，点击 **Install plugin**（安装插件），再点击 **Connect**，然后登录 MCPEmails。能否安装插件取决于你的 ChatGPT 套餐、工作区、角色和地区。如果无法安装，请按以下步骤添加自定义 MCP 服务器。
+
 ChatGPT 付费方案可以在浏览器中的 chatgpt.com 上添加自定义 MCP 服务器；移动端应用无法添加。OpenAI 的帮助页面列出的是 Business 和 Enterprise/Edu（由管理员或所有者为工作区添加）以及仅限读取和获取工具的 Pro；未提及 Go 或 Plus。
 
 1. 依次打开 **Plugins** 和 **Personal**，点击右上角的 **Add**，然后选择 **Add custom MCP server**。

@@ -25,12 +25,12 @@
       "step4": "Logg inn med MCPEmails for å autorisere. Ingen API-nøkkel nødvendig. På Team og Enterprise legger en Owner den til under Organization settings → Connectors, og deretter klikker medlemmene «Connect» under Customize → Connectors."
     },
     "chatgpt": {
-      "step1": "På chatgpt.com åpner du Plugins → Personal, klikker «Add» øverst til høyre og så «Add custom MCP server». Dette går ikke i mobilappen.",
-      "step2": "Gi den navnet MCPEmails og lim inn URL-en over under «Connection».",
-      "step3": "Velg OAuth, huk av for «I understand and want to continue», og klikk «Create as a plugin».",
-      "step4": "Logg inn med MCPEmails for å autorisere. Ingen API-nøkkel nødvendig.",
-      "step5": "I en samtale skriver du @ og velger MCPEmails. Valget gjelder bare den meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
-      "note": "OpenAI lister egendefinerte MCP-servere for Business- og Enterprise/Edu-arbeidsområder, med bare lesetilgang på Pro, på chatgpt.com. På Business og Enterprise må kanskje en administrator eller eier legge den til."
+      "step1": "I ChatGPT åpner du «Plugins» i sidepanelet og søker etter Any Mailbox, fra MCPEmails.",
+      "step2": "Klikk «Install plugin» og deretter «Connect».",
+      "step3": "Logg inn hos MCPEmails og velg hvilke innbokser og hvor mye tilgang ChatGPT får. Ingen API-nøkkel nødvendig.",
+      "step4": "I en samtale skriver du @ og velger Any Mailbox. Valget gjelder bare den meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din.",
+      "step5": "Finner du ikke Any Mailbox i kontoen eller arbeidsområdet? På chatgpt.com åpner du Plugins → Personal, klikker «Add» og så «Add custom MCP server», limer inn URL-en over under «Connection», velger OAuth og klikker «Create as a plugin».",
+      "note": "Om en plugin kan installeres, avhenger av ChatGPT-abonnement, arbeidsområde, rolle og region; på Business og Enterprise må kanskje en administrator tillate den først. OpenAI lister egendefinerte MCP-servere for Business- og Enterprise/Edu-arbeidsområder, med bare lesetilgang på Pro, på chatgpt.com."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "I Claude klikker du + i meldingsfeltet, åpner Connectors og sjekker at MCPEmails er slått på for samtalen. Ellers svarer Claude uten e-posten din.",
-      "chatgpt": "I ChatGPT skriver du @ i meldingsfeltet og velger MCPEmails. Valget gjelder bare den meldingen, så nevn MCPEmails med @ igjen når et oppfølgingsspørsmål trenger e-posten din."
+      "chatgpt": "I ChatGPT skriver du @ i meldingsfeltet og velger Any Mailbox (eller MCPEmails for en egen MCP-server). Valget gjelder bare den meldingen, så nevn den med @ igjen når et oppfølgingsspørsmål trenger e-posten din."
     },
     "itWorksTitle": "Det virker",
     "itWorksDesc": "AI-appen din gjorde nettopp sitt første kall til MCPEmails. Fortsett i samme samtale.",

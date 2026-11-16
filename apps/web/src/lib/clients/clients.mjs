@@ -39,6 +39,7 @@
  * and shared with install-links.mjs.
  */
 export { MCP_URL } from './mcp-url.mjs';
+import { CHATGPT_DIRECTORY_LISTING_URL } from '../connect/chatgpt.mjs';
 
 export const CLIENT_CATEGORIES = [
   { id: 'assistant', label: 'AI assistants', anchor: 'assistants' },
@@ -91,7 +92,7 @@ export const ALL_CLIENTS = [
   {
     slug: 'chatgpt',
     name: 'ChatGPT',
-    surface: 'ChatGPT plugins, custom MCP server on chatgpt.com',
+    surface: 'ChatGPT, through the Any Mailbox plugin or a custom MCP server on chatgpt.com',
     category: 'assistant',
     logo: 'chatgpt',
     color: '#000000',
@@ -99,6 +100,9 @@ export const ALL_CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
+    // The Any Mailbox listing in the ChatGPT plugin directory (null hides the
+    // link and the page's directory steps; src/lib/connect/chatgpt.mjs).
+    listingUrl: CHATGPT_DIRECTORY_LISTING_URL,
     post: { key: 'chatgpt', href: '/blog/connect-chatgpt-to-email' },
     locales: ['en', 'nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'],
   },

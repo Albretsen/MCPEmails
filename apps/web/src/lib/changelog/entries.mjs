@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-17',
+    kind: 'added',
+    title: 'MCPEmails in the ChatGPT plugin directory',
+    body:
+      'MCPEmails is now in the ChatGPT plugin directory as Any Mailbox, so ChatGPT and Codex users can add it from Plugins without setting up a custom connector.',
+  },
+  {
     date: '2026-11-14',
     kind: 'added',
     title: 'Choose how long held sends wait for approval',

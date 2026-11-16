@@ -42,6 +42,8 @@ Connectez plusieurs boîtes si votre forfait le permet. ChatGPT les découvre av
 
 ## Étape 2 : Ajouter le connecteur dans ChatGPT
 
+**Le plus simple : l'annuaire de plugins.** Depuis le 17 novembre 2026, MCPEmails figure dans l'annuaire de plugins de ChatGPT sous le nom **Any Mailbox**. Dans ChatGPT, ouvrez **Plugins**, cherchez Any Mailbox, cliquez sur **Install plugin**, puis sur **Connect**, et connectez-vous à MCPEmails. La possibilité d'installer un plugin dépend de votre offre ChatGPT, de votre espace de travail, de votre rôle et de votre région. Si vous ne pouvez pas l'installer, ajoutez un serveur MCP personnalisé avec les étapes ci-dessous.
+
 1. Sur chatgpt.com, ouvrez **Plugins**, puis **Personal**, et cliquez sur **Add** en haut à droite.
 2. Choisissez **Add custom MCP server** et nommez-le MCPEmails.
 3. Sous **Connection**, collez cette URL :

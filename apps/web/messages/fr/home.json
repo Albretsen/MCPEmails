@@ -265,6 +265,10 @@
         "a": "Ajoutez un connecteur personnalisé dans les réglages de votre client, collez https://mcpemails.com/api/mcp comme URL du serveur et validez la connexion. Les clients compatibles OAuth n'ont pas besoin de clé API. La même URL fonctionne dans Cursor, VS Code et les autres clients MCP."
       },
       {
+        "q": "MCPEmails est-il dans l'annuaire de plugins de ChatGPT ?",
+        "a": "Oui. Il y figure sous le nom Any Mailbox, par MCPEmails : {listingUrl}. Cliquez sur Install plugin, connectez-vous à MCPEmails et choisissez les boîtes auxquelles ChatGPT peut accéder. C'est le même serveur que le serveur MCP personnalisé : un seul des deux suffit."
+      },
+      {
         "q": "Utilisez-vous des outils d’analyse ?",
         "a": "Nous utilisons une analytique produit respectueuse de la vie privée et sans cookie pour comprendre le site et la configuration. Nous ne collectons jamais le contenu ou les adresses des e-mails, les clés API, les jetons OAuth ou les données de requêtes MCP."
       },

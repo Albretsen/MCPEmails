@@ -337,7 +337,7 @@ const MCP_CLIENTS = [
     color: '#000000',
     logo: 'chatgpt',
     oauth: true,
-    guide: 'https://help.openai.com/en/articles/12584461',
+    guide: 'https://help.openai.com/en/articles/20001256',
     stepKeys: ['clients.chatgpt.step1', 'clients.chatgpt.step2', 'clients.chatgpt.step3', 'clients.chatgpt.step4', 'clients.chatgpt.step5'],
     noteKey: 'clients.chatgpt.note',
   },

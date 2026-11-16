@@ -202,11 +202,11 @@
       "manual": "手动设置",
       "continue": "我已添加",
       "chatgpt": {
-        "step1": "在 chatgpt.com 上打开 Plugins，点击右上角的 Add。",
-        "step2": "选择 Add custom MCP server，命名为 MCPEmails，并把下面的 URL 粘贴为 Server URL。",
-        "step3": "勾选 I understand and want to continue，点击 Create as a plugin，然后点击 Connect MCPEmails 并允许访问。",
-        "step4": "在对话中输入 @MCPEmails 即可使用。",
-        "note": "自定义 MCP 服务器需要付费方案，并在浏览器中打开 chatgpt.com 添加：OpenAI 列出的是 Business 和 Enterprise/Edu，Pro 仅限只读访问。"
+        "step1": "在 ChatGPT 侧边栏打开 Plugins，搜索 MCPEmails 发布的 Any Mailbox。",
+        "step2": "点击 Install plugin（安装插件），再点击 Connect。",
+        "step3": "登录 MCPEmails 并允许访问。",
+        "step4": "在对话中输入 @ 并选择 Any Mailbox 即可使用。",
+        "note": "如果你的账户或工作区里没有 Any Mailbox，可以改为添加自定义 MCP 服务器：在 chatgpt.com 上打开 Plugins，点击 Add，选择 Add custom MCP server，把上方的 URL 粘贴为 Server URL，并选择 OAuth。OpenAI 列出的自定义 MCP 服务器支持范围是 Business 和 Enterprise/Edu，Pro 仅限只读访问。"
       },
       "key": {
         "creating": "正在为 {client} 创建 API 密钥",
@@ -290,7 +290,7 @@
     "noHandshake": {
       "title": "{client} 尚未连接",
       "claude": "刷新 claude.ai 并开始新对话。如果使用 Claude Desktop，请完全退出应用后重新打开。",
-      "chatgpt": "在 chatgpt.com 上开始新对话，输入 @ 并选择 MCPEmails。",
+      "chatgpt": "在 ChatGPT 中开始新对话，输入 @ 并选择 Any Mailbox（如果你添加的是自定义 MCP 服务器，则选择 MCPEmails）。",
       "editor": "重新加载 {client} 窗口，检查 MCPEmails 在 MCP 列表中显示为已连接。如果没有，请重新粘贴 URL。",
       "cli": "退出并重新启动 {client}，然后检查 MCPEmails 已列出并已连接。",
       "api": "重新发送请求，并检查 Authorization 请求头中带有你的密钥。"
@@ -298,7 +298,7 @@
     "noCall": {
       "title": "{client} 已连接，但还没有使用 MCPEmails",
       "claude": "在此对话中开启 MCPEmails（+ > Connectors），或开始新对话，然后重新粘贴提示词。",
-      "chatgpt": "在对话中输入 @ 并选择 MCPEmails，然后重新粘贴提示词。",
+      "chatgpt": "在对话中输入 @ 并选择 Any Mailbox（自定义 MCP 服务器则选 MCPEmails），然后重新粘贴提示词。",
       "other": "开始新对话并重新粘贴提示词。提示词中提到了 MCPEmails，{client} 就知道要使用它。"
     },
     "reconnect": {

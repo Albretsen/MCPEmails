@@ -75,7 +75,7 @@
     },
     {
       "q": "Kann ChatGPT sich mit Yahoo Mail verbinden?",
-      "a": "Ja, indem Sie MCPEmails als benutzerdefinierten MCP-Server hinzufügen. Öffnen Sie auf chatgpt.com mit einem kostenpflichtigen Tarif (OpenAI nennt Business und Enterprise/Edu, mit reinem Lesezugriff in Pro) Plugins, Personal, Add, Add custom MCP server, fügen Sie die MCPEmails-URL ein, wählen Sie OAuth und melden Sie sich an. Tippen Sie dann im Chat @ und wählen Sie MCPEmails, um das hier verbundene Yahoo-Postfach zu nutzen. Dasselbe App-Passwort gilt auch für Claude."
+      "a": "Ja. Öffnen Sie in ChatGPT Plugins, suchen Sie Any Mailbox (das Plugin von MCPEmails) im Plugin-Verzeichnis, klicken Sie auf Install plugin und dann auf Connect, und melden Sie sich bei MCPEmails an. Tippen Sie dann im Chat @ und wählen Sie Any Mailbox, um das hier verbundene Yahoo-Postfach zu nutzen. Ist Any Mailbox in Ihrem Konto nicht verfügbar, fügen Sie MCPEmails stattdessen auf chatgpt.com als benutzerdefinierten MCP-Server hinzu (OpenAI nennt Business und Enterprise/Edu, mit reinem Lesezugriff in Pro): Plugins, Personal, Add, Add custom MCP server, MCPEmails-URL einfügen, OAuth wählen und anmelden. Dasselbe App-Passwort gilt auch für Claude."
     },
     {
       "q": "Wie lauten die IMAP- und SMTP-Einstellungen für Yahoo Mail?",

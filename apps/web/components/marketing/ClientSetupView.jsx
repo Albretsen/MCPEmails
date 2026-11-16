@@ -198,6 +198,13 @@ export default function ClientSetupView({ locale, client, content, preferred = n
             ))}
           </div>
 
+          {/* The client's listing in its own directory (ChatGPT: Any Mailbox), when there is one. */}
+          {client.listingUrl && content.listingLink && (
+            <p className="how-guide-link">
+              <a href={client.listingUrl} target="_blank" rel="noopener noreferrer">{content.listingLink}</a>
+            </p>
+          )}
+
           {config && (
             <div style={{ maxWidth: 820, marginTop: 28 }}>
               <CodeBlock label={configLabel} code={config} />
@@ -222,6 +229,32 @@ export default function ClientSetupView({ locale, client, content, preferred = n
           </p>
         </div>
       </section>
+
+      {/*
+        A second way in, after the main one. On ChatGPT: the custom MCP server
+        on chatgpt.com, for anyone the Any Mailbox plugin does not reach.
+        Rendered only when the content carries `fallback`.
+      */}
+      {content.fallback?.steps?.length > 0 && (
+        <section className="section" id="fallback">
+          <div className="container">
+            <div className="section-head">
+              <div className="eye-label">{content.fallback.eyebrow}</div>
+              <h2>{content.fallback.title}</h2>
+              <p className="sub"><RichText>{content.fallback.sub}</RichText></p>
+            </div>
+            <div className="how-steps">
+              {content.fallback.steps.map((s, i) => (
+                <div className="step" key={i}>
+                  <span className="num">{String(i + 1).padStart(2, '0')}</span>
+                  <h3>{s.h}</h3>
+                  <p><RichText>{s.p}</RichText></p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/*
         The part only we can write: what goes wrong in this specific client.

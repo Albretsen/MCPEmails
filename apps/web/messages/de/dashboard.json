@@ -25,12 +25,12 @@
       "step4": "Melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig. Bei Team und Enterprise fügt ein Owner ihn unter „Organization settings“ → „Connectors“ hinzu, danach klicken Mitglieder unter „Customize“ → „Connectors“ auf „Connect“."
     },
     "chatgpt": {
-      "step1": "Öffnen Sie auf chatgpt.com „Plugins“ → „Persönlich“, klicken Sie oben rechts auf „Hinzufügen“ und dann auf „Benutzerdefinierten MCP-Server hinzufügen“. In der mobilen App geht das nicht.",
-      "step2": "Geben Sie als Namen MCPEmails ein und fügen Sie die obige URL unter „Verbindung“ ein.",
-      "step3": "Wählen Sie OAuth, setzen Sie das Häkchen bei „Ich verstehe und möchte fortfahren“ und klicken Sie auf „Als Plugin erstellen“.",
-      "step4": "Melden Sie sich zur Autorisierung bei MCPEmails an. Kein API-Schlüssel nötig.",
-      "step5": "Tippen Sie im Chat @ und wählen Sie MCPEmails. Die Auswahl gilt für diese eine Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.",
-      "note": "OpenAI führt benutzerdefinierte MCP-Server für Business- und Enterprise/Edu-Workspaces auf, mit reinem Lesezugriff in Pro, auf chatgpt.com. Bei Business und Enterprise muss das eventuell ein Admin oder Owner übernehmen."
+      "step1": "Öffnen Sie in ChatGPT „Plugins“ in der Seitenleiste und suchen Sie nach Any Mailbox, von MCPEmails.",
+      "step2": "Klicken Sie auf „Install plugin“ und dann auf „Connect“.",
+      "step3": "Melden Sie sich bei MCPEmails an und wählen Sie, welche Postfächer ChatGPT mit wie viel Zugriff erreicht. Kein API-Schlüssel nötig.",
+      "step4": "Tippen Sie im Chat @ und wählen Sie Any Mailbox. Die Auswahl gilt für diese eine Nachricht, erwähnen Sie es also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht.",
+      "step5": "Kein Any Mailbox in Ihrem Konto oder Workspace? Öffnen Sie auf chatgpt.com „Plugins“ → „Persönlich“, klicken Sie auf „Hinzufügen“ und dann auf „Benutzerdefinierten MCP-Server hinzufügen“, fügen Sie die obige URL unter „Verbindung“ ein, wählen Sie OAuth und klicken Sie auf „Als Plugin erstellen“.",
+      "note": "Ob sich ein Plugin installieren lässt, hängt von Ihrem ChatGPT-Tarif, Workspace, Ihrer Rolle und Region ab; bei Business und Enterprise muss es eventuell erst ein Admin freigeben. OpenAI führt benutzerdefinierte MCP-Server für Business- und Enterprise/Edu-Workspaces auf, mit reinem Lesezugriff in Pro, auf chatgpt.com."
     },
     "cursor": {
       "step1": "Bearbeiten Sie ~/.cursor/mcp.json (global) oder .cursor/mcp.json (Projekt).",
@@ -117,7 +117,7 @@
     },
     "clientToggle": {
       "claude": "Klicken Sie in Claude im Eingabefeld auf +, öffnen Sie Konnektoren und prüfen Sie, ob MCPEmails für den Chat eingeschaltet ist. Sonst antwortet Claude ohne Ihre E-Mails.",
-      "chatgpt": "Tippen Sie in ChatGPT @ ins Eingabefeld und wählen Sie MCPEmails. Die Auswahl gilt nur für diese Nachricht, erwähnen Sie MCPEmails also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht."
+      "chatgpt": "Tippen Sie in ChatGPT @ ins Eingabefeld und wählen Sie Any Mailbox (oder MCPEmails beim eigenen MCP-Server). Die Auswahl gilt nur für diese Nachricht, erwähnen Sie es also erneut mit @, wenn eine Folgefrage Ihre E-Mails braucht."
     },
     "itWorksTitle": "Es funktioniert",
     "itWorksDesc": "Ihre KI-App hat gerade ihren ersten Aufruf an MCPEmails gemacht. Machen Sie im selben Chat weiter.",

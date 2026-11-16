@@ -202,11 +202,11 @@
       "manual": "Configurarlo a mano",
       "continue": "Ya lo añadí",
       "chatgpt": {
-        "step1": "En chatgpt.com, abre Plugins y haz clic en Add, arriba a la derecha.",
-        "step2": "Elige Add custom MCP server, llámalo MCPEmails y pega la URL de abajo como Server URL.",
-        "step3": "Marca I understand and want to continue, haz clic en Create as a plugin, luego en Connect MCPEmails y permite el acceso.",
-        "step4": "En un chat, escribe @MCPEmails para usarlo.",
-        "note": "Los servidores MCP personalizados requieren un plan de pago, en un navegador en chatgpt.com: OpenAI nombra Business y Enterprise/Edu, con acceso de solo lectura en Pro."
+        "step1": "En ChatGPT, abre Plugins en la barra lateral y busca Any Mailbox, de MCPEmails.",
+        "step2": "Haz clic en Install plugin y luego en Connect.",
+        "step3": "Inicia sesión en MCPEmails y permite el acceso.",
+        "step4": "En un chat, escribe @ y elige Any Mailbox para usarlo.",
+        "note": "¿No aparece Any Mailbox en tu cuenta o espacio de trabajo? Añade un servidor MCP personalizado: en chatgpt.com, abre Plugins, haz clic en Add, elige Add custom MCP server, pega la URL de arriba como Server URL y elige OAuth. OpenAI ofrece los servidores MCP personalizados para Business y Enterprise/Edu, con acceso de solo lectura en Pro."
       },
       "key": {
         "creating": "Creando una clave API para {client}",
@@ -290,7 +290,7 @@
     "noHandshake": {
       "title": "{client} todavía no se ha conectado",
       "claude": "Recarga claude.ai y abre un chat nuevo. En Claude Desktop, cierra la app del todo y vuelve a abrirla.",
-      "chatgpt": "Abre un chat nuevo en chatgpt.com, escribe @ y elige MCPEmails.",
+      "chatgpt": "Abre un chat nuevo en ChatGPT, escribe @ y elige Any Mailbox (o MCPEmails, si lo añadiste como servidor MCP personalizado).",
       "editor": "Recarga la ventana de {client} y comprueba que MCPEmails aparece como conectado en su lista MCP. Si no, vuelve a pegar la URL.",
       "cli": "Cierra y vuelve a abrir {client}, y comprueba que MCPEmails aparece en la lista y conectado.",
       "api": "Vuelve a enviar la petición y comprueba que la cabecera Authorization lleva tu clave."
@@ -298,7 +298,7 @@
     "noCall": {
       "title": "{client} está conectado pero aún no ha usado MCPEmails",
       "claude": "Activa MCPEmails en este chat (+ > Connectors) o abre un chat nuevo, y vuelve a pegar el prompt.",
-      "chatgpt": "En el chat, escribe @ y elige MCPEmails, y vuelve a pegar el prompt.",
+      "chatgpt": "En el chat, escribe @ y elige Any Mailbox (o MCPEmails, para un servidor MCP personalizado), y vuelve a pegar el prompt.",
       "other": "Abre un chat nuevo y vuelve a pegar el prompt. Menciona MCPEmails, así {client} sabe qué usar."
     },
     "reconnect": {

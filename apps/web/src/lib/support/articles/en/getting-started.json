@@ -188,17 +188,17 @@
     {
       "id": "connect-chatgpt",
       "title": "Connect ChatGPT",
-      "summary": "Add https://mcpemails.com/api/mcp as a custom MCP server on chatgpt.com, then sign in.",
-      "keywords": "chatgpt openai developer mode connector plugin apps custom mcp server oauth setup",
+      "summary": "Install Any Mailbox, the MCPEmails plugin, from the ChatGPT plugin directory and sign in. A custom MCP server is the fallback.",
+      "keywords": "chatgpt openai developer mode connector plugin apps custom mcp server oauth setup any mailbox plugin directory install",
       "steps": [
-        "On chatgpt.com, open Plugins, then Personal, choose Add, then Add custom MCP server.",
-        "Name it MCPEmails, paste https://mcpemails.com/api/mcp under Connection and choose OAuth.",
-        "Tick I understand and want to continue, then choose Create as a plugin.",
+        "In ChatGPT, open Plugins in the sidebar and search for Any Mailbox, by MCPEmails.",
+        "Click Install plugin, then Connect.",
         "Sign in to MCPEmails and pick which inboxes it may use.",
-        "In a chat, type @ and pick MCPEmails. Pick it again when a follow-up needs your mail."
+        "In a chat, type @ and pick Any Mailbox. Pick it again when a follow-up needs your mail."
       ],
       "body": [
-        "This works in a browser on chatgpt.com on a paid plan; the mobile app cannot add one. OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu, where an admin or owner adds it for the workspace, and read-only access on Pro."
+        "Any Mailbox is the name MCPEmails has in the ChatGPT plugin directory. Whether a plugin can be installed depends on your ChatGPT plan, workspace, role and region.",
+        "If Any Mailbox is not available to you, add a custom MCP server instead: on chatgpt.com, open Plugins, then Personal, choose Add, then Add custom MCP server, paste https://mcpemails.com/api/mcp under Connection, choose OAuth, tick I understand and want to continue and choose Create as a plugin. This works in a browser on chatgpt.com, not in the mobile app. OpenAI's help page lists custom MCP servers for Business and Enterprise/Edu, where an admin or owner adds it for the workspace, and read-only access on Pro."
       ],
       "links": [
         {
