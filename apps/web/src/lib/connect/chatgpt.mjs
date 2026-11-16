@@ -68,7 +68,7 @@ export const CHATGPT_DIRECTORY_LISTING_PLACEHOLDER_MARK = 'ANY_MAILBOX_LISTING_'
  * start there are attributed as `connector_chatgpt` by
  * connectorSourceFromAuthorize in src/lib/acquisition-context.mjs.
  */
-export const CHATGPT_DIRECTORY_LISTING_URL = 'https://chatgpt.com/plugins/ANY_MAILBOX_LISTING_URL_TBD';
+export const CHATGPT_DIRECTORY_LISTING_URL = 'https://chatgpt.com/plugins/plugin_asdk_app_6ace084f569081919174189f44ccc61e';
 
 /** The token copy uses where the listing URL goes (home FAQ). */
 export const LISTING_URL_TOKEN = '{listingUrl}';
