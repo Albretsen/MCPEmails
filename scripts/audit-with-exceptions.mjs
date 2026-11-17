@@ -41,6 +41,17 @@ export const EXCEPTIONS = [
       '(eslint-config-next and vite-plugin-singlefile, via micromatch), which globs our own ' +
       'file patterns and never sees outside input. `npm audit --omit=dev` is clean.',
   },
+  {
+    // picomatch: ReDoS on single-branch repeated extglobs such as +(*), in
+    // every release through 4.0.7, the newest, so there is nothing to upgrade to.
+    id: 'GHSA-fc5q-39xc-vjpf',
+    expires: '2026-12-17',
+    reason:
+      'No patched picomatch release exists. The only production path is next-intl\'s message ' +
+      'extractor file watcher (@parcel/watcher), which matches our own source globs; the rest ' +
+      'is build and test tooling (vite, vitest, eslint, vite-plugin-singlefile). No path passes ' +
+      'a user-supplied glob to picomatch.',
+  },
 ];
 
 const FAILING = new Set(['high', 'critical']);
