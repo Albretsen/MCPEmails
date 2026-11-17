@@ -1057,7 +1057,14 @@ export function ConnectModal({
   // whether the cap was known up front (prop) or learned from a 402 (state).
   // The server's numbers win when present: they were counted at the moment of
   // the refusal, the prop's were counted at page load.
-  const showLimitPanel = atInboxLimit || serverLimit !== null;
+  //
+  // Step 3 is only reached by a connect that just succeeded in this modal. The
+  // parent adds that inbox to its list in onConnect, so on Free (cap 1) the
+  // prop flips to true while the user is on "Now connect your AI app". That is
+  // not an attempt to add a second inbox, and the panel must not replace the
+  // next step: about half of Free first connects saw it in November 2026.
+  const propAtLimit = atInboxLimit && step !== 3;
+  const showLimitPanel = propAtLimit || serverLimit !== null;
 
   // Record the panel being shown, once per modal-open. Both routes into it are
   // counted (the prop's up-front gate and the 402 fallback) because both put
@@ -1066,7 +1073,7 @@ export function ConnectModal({
   // `plan_limit` failure of its own to join against. A reconnect never reaches
   // the panel and is excluded at the source rather than relied on to be
   // impossible.
-  useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached: serverLimit !== null, entryPoint });
+  useInboxPaywallView({ isReconnect, atInboxLimit: propAtLimit, serverLimitReached: serverLimit !== null, entryPoint });
 
   const limitPlanName = serverLimit?.planName ?? planName;
   const limitInboxCount = serverLimit?.inboxCount ?? inboxCount;

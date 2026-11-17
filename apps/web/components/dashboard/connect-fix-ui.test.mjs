@@ -10,7 +10,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 
 installDom();
@@ -239,6 +239,39 @@ test('first inbox connected: "Now connect your AI app", and the guide opens with
   await waitFor(() => view.container.textContent.includes('Now connect Claude'), { message: 'the client from onboarding' });
   await flush(async () => { buttonNamed(view, fixCopy.done.openGuide).click(); });
   assert.deepEqual(opened, ['claude']);
+});
+
+test('first inbox on Free: the parent reaching the cap does not swap "Now connect your AI app" for the upgrade panel', async (t) => {
+  // App.jsx appends the new inbox in onConnect, so a Free workspace (cap 1)
+  // is at its cap the moment its first inbox connects, while this modal is
+  // still open on the next-step screen. Reproduced on staging 2026-11-17.
+  stubFetch(t, () => ({ status: 200, body: { ok: true } }));
+  function Parent() {
+    const [count, setCount] = useState(0);
+    return createElement(ConnectModal, {
+      reconnect: null,
+      onClose: () => {},
+      onConnect: () => setCount((n) => n + 1),
+      preselect: { card: 'generic' },
+      atInboxLimit: count >= 1,
+      planName: 'Free',
+      inboxCount: count,
+      maxInboxes: 1,
+      stripePrices: null,
+      businessShaped: false,
+      onAdminConsentLink: () => {},
+      showNextStepAfterConnect: true,
+    });
+  }
+  const view = await mount(createElement(AppLocaleProvider, null, createElement(ToastProvider, null, createElement(Parent))));
+  t.after(() => view.unmount());
+  await openGenericForm(view);
+  await fill(view, { email: 'me@firm.example', imapHost: 'imap.firm.example', smtpHost: 'smtp.firm.example', password: 'Password1!' });
+  await submit(view);
+  await waitFor(() => view.container.textContent.includes(fixCopy.done.title), { message: 'the next-step screen' });
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(q(view, '#cm-title')?.textContent, fixCopy.done.title);
+  assert.equal(view.container.textContent.includes(chrome.connect.titleLimitReached), false);
 });
 
 test('not a first inbox: success closes as before', async (t) => {
