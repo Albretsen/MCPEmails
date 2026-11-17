@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-17',
+    kind: 'fixed',
+    title: 'Next step after your first inbox',
+    body:
+      'After you connect your first inbox, the dashboard now shows how to connect your AI app. Before, that step was sometimes replaced by an offer to add another inbox.',
+  },
+  {
     date: '2026-11-16',
     kind: 'added',
     title: 'MCPEmails in the ChatGPT plugin directory',
