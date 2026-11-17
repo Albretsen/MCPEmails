@@ -370,6 +370,8 @@ jobs:
           supabase/functions/system-notify/index.ts
           supabase/functions/outlook-token-refresh/index.ts
           supabase/functions/synthetic-monitor/index.ts
+      - name: Test system-notify
+        run: deno test --node-modules-dir=none --allow-read supabase/functions/system-notify/
 
   build:
     name: Build Check

@@ -140,9 +140,10 @@ Deno.test("a held send goes to the approval queue (held, never dropped)", () => 
       `${handler} queues the send for approval while the inbox is held`,
     );
     assert(/brake\.hold \? brakeHeldInbox\(/.test(body), `${handler} still holds on the fan-out brake`);
+    assert(/brakeHeldInbox\([^)]*brake\.holdKey\)/.test(body), `${handler} passes the held-send key`);
   }
   assert(
-    /function brakeHeldInbox\(inbox: InboxRow, retryAt: string \| null\): InboxRow \{\s*return \{ \.\.\.inbox, send_approval_required: true, brakeHold: \{ reason: "fanout", retryAt \} \};/
+    /function brakeHeldInbox\(inbox: InboxRow, retryAt: string \| null, holdKey: string \| null = null\): InboxRow \{\s*return \{ \.\.\.inbox, send_approval_required: true, brakeHold: \{ reason: "fanout", retryAt, holdKey \} \};/
       .test(SOURCE),
     "holding reuses the existing approval gate (send_approval_required)",
   );

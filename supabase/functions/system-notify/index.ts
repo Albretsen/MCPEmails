@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { BRAKE_ALERT_REPEAT_ERROR, type BrakeAlertDb, isRepeatBrakeAlert } from "./brake-alert.ts";
 import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
 import { renderEmailSendFailedEmail } from "./email-send-failed.ts";
 import { renderEurLaunchEmail } from "./eur-launch.ts";
@@ -392,6 +393,7 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
         `until: ${osloTime(payload.until)}`,
         "",
         "To stop every send from the workspace, set workspaces.sends_frozen_at.",
+        "Further trips for this inbox in the next 24 hours are recorded in system_events but not emailed.",
       ].join("\n"),
     };
   }
@@ -627,6 +629,16 @@ Deno.serve(async (request) => {
   // written (growth analytics read it); only the notification is skipped.
   if (MUTED_EVENT_TYPES.has(eventType)) {
     await markProcessed("failed", "muted");
+    return json(200, { event_id: eventId, status: "muted" });
+  }
+
+  // One send-brake email per inbox and brake per 24 hours (brake-alert.ts).
+  // The event row stays: it is the record of every trip.
+  if (
+    eventType === "outbound.brake_tripped" &&
+    await isRepeatBrakeAlert(supabase as unknown as BrakeAlertDb, eventId, payload)
+  ) {
+    await markProcessed("failed", BRAKE_ALERT_REPEAT_ERROR);
     return json(200, { event_id: eventId, status: "muted" });
   }
 
