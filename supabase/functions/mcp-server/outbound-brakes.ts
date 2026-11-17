@@ -75,7 +75,17 @@ export type BrakeRefusalCode =
 export type BrakeDecision =
   | { kind: "allow" }
   | { kind: "refuse"; code: BrakeRefusalCode; retryAt: string | null }
-  | { kind: "hold"; retryAt: string | null; newlyTripped: boolean };
+  | {
+    kind: "hold";
+    retryAt: string | null;
+    newlyTripped: boolean;
+    /**
+     * Identifies this exact send (content plus recipients) so a repeat of it
+     * reuses the pending approval instead of queueing another (heldSendKey).
+     * Set by checkOutboundBrakes; absent from a bare gate answer.
+     */
+    holdKey?: string | null;
+  };
 
 /** The slice of the Supabase client the brakes use. */
 export interface BrakeDb {
@@ -141,6 +151,23 @@ export function normalizeRecipient(value: string): string {
 export async function recipientHashes(recipients: readonly string[]): Promise<string[]> {
   const distinct = [...new Set(recipients.map(normalizeRecipient).filter((r) => r.length > 0))];
   return await Promise.all(distinct.map((r) => sha256Hex(`mcpemails-outbound-recipient-v1\n${r}`)));
+}
+
+/**
+ * The key of one held send: its content hash plus its recipient set. An agent
+ * that retries a held send (same message, same people) gets the same key, so
+ * queueSendApproval hands back the request already pending instead of queueing
+ * a second copy that a reviewer could approve alongside the first. On
+ * 2026-11-16 four hourly retries of one held send were all approved together
+ * and 57 people got the same message twice. Null when there is nothing to key.
+ */
+export async function heldSendKey(
+  hash: string | null,
+  recipientHashList: readonly string[],
+): Promise<string | null> {
+  if (hash === null || recipientHashList.length === 0) return null;
+  const recipients = [...new Set(recipientHashList)].sort().join("\n");
+  return await sha256Hex(`mcpemails-held-send-v1\n${hash}\n${recipients}`);
 }
 
 /** A string array out of an unknown argument (to/cc/bcc), ignoring anything else. */
@@ -214,6 +241,7 @@ export async function checkOutboundBrakes(
         retry_at: decision.retryAt,
       });
     }
+    if (decision.kind === "hold") return { ...decision, holdKey: await heldSendKey(hash, recipients) };
     return decision;
   } catch (err) {
     console.error("[mcp-server] outbound_brake_gate_threw", {

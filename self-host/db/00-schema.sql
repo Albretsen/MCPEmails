@@ -1221,6 +1221,13 @@ ALTER TABLE public.send_approvals
   ADD COLUMN IF NOT EXISTS hold_reason  text CHECK (hold_reason IS NULL OR hold_reason IN ('recipient_rule')),
   ADD COLUMN IF NOT EXISTS requested_by uuid REFERENCES public.users(id) ON DELETE SET NULL;
 
+-- Fan-out brake: one held copy per send (hosted migration 20261117120000).
+ALTER TABLE public.send_approvals
+  ADD COLUMN IF NOT EXISTS dedupe_key text CHECK (dedupe_key IS NULL OR dedupe_key ~ '^[0-9a-f]{64}$');
+CREATE INDEX IF NOT EXISTS send_approvals_pending_dedupe_idx
+  ON public.send_approvals (inbox_id, dedupe_key)
+  WHERE status = 'pending' AND dedupe_key IS NOT NULL;
+
 -- Single-use approval dispatch (hosted migration 20261016160400). The
 -- dispatcher binds an approval to the one scheduled_sends row allowed to send
 -- it, and refuses (defers) every approved send while this column is missing.

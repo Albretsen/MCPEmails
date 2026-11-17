@@ -19167,7 +19167,7 @@ async function executeForwardEmail(
     const approval = await queueSendApproval(
       rule.hold
         ? recipientRuleHeldInbox(senderInbox, rule.outside)
-        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
+        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt, brake.holdKey) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -19626,7 +19626,7 @@ async function executeReplyToEmail(
     const approval = await queueSendApproval(
       rule.hold
         ? recipientRuleHeldInbox(senderInbox, rule.outside)
-        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox,
+        : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt, brake.holdKey) : senderInbox,
       apiKey,
       { ...args, inbox_id: inbox.id },
       undefined,
@@ -20073,7 +20073,7 @@ function sendDecidedByHuman(apiKey: ApiKeyRow): boolean {
 type OutboundBrakeVerdict =
   | { refusal: ReturnType<typeof brakeRefusalResult> }
   | { hold: false }
-  | { hold: true; retryAt: string | null };
+  | { hold: true; retryAt: string | null; holdKey: string | null };
 
 async function outboundBrakeGate(input: {
   tool: string;
@@ -20108,7 +20108,7 @@ async function outboundBrakeGate(input: {
         retryAt: decision.retryAt,
       });
     }
-    return { hold: true, retryAt: decision.retryAt };
+    return { hold: true, retryAt: decision.retryAt, holdKey: decision.holdKey ?? null };
   }
   return { hold: false };
 }
@@ -20122,6 +20122,10 @@ type BrakeHold =
     reason: "fanout";
     /** When the same message stops being held (ISO), or null when unknown. */
     retryAt: string | null;
+    /** outbound-brakes.ts#heldSendKey: a repeat of this send reuses its approval. */
+    holdKey?: string | null;
+    /** Set when a repeat found its approval already pending: nothing new was queued. */
+    alreadyPending?: boolean;
   }
   | {
     reason: typeof RECIPIENT_RULE_HOLD_REASON;
@@ -20134,8 +20138,8 @@ type BrakeHold =
  * this send. `brakeHold` is not a column: it rides on the object so the held
  * result can say the brake held it, not the inbox's review setting.
  */
-function brakeHeldInbox(inbox: InboxRow, retryAt: string | null): InboxRow {
-  return { ...inbox, send_approval_required: true, brakeHold: { reason: "fanout", retryAt } };
+function brakeHeldInbox(inbox: InboxRow, retryAt: string | null, holdKey: string | null = null): InboxRow {
+  return { ...inbox, send_approval_required: true, brakeHold: { reason: "fanout", retryAt, holdKey } };
 }
 
 /**
@@ -20500,6 +20504,23 @@ async function queueSendApproval(
   operation = "email_send",
 ): Promise<QueuedApproval | null> {
   if (!sendWillBeHeld(inbox, apiKey)) return null;
+  // A fan-out hold of a send that is already waiting (an agent retrying the
+  // same message to the same people) returns that request: one held copy, so
+  // a reviewer cannot approve the same mail twice. Immediate sends only.
+  const holdKey = inbox.brakeHold?.reason === "fanout" && !sendAt ? inbox.brakeHold.holdKey ?? null : null;
+  if (holdKey && inbox.brakeHold?.reason === "fanout") {
+    const pending = await findPendingHeldSend(inbox.id, operation, holdKey);
+    if (pending) {
+      console.info("[mcp-server] fanout_hold_reused", { inbox_id: inbox.id, approval_id: pending.id });
+      return {
+        id: pending.id as string,
+        row: pending,
+        reviewUrl: approvalReviewUrl(APP_URL, pending.id as string),
+        reviewMode: await readSendReviewMode(inbox.id),
+        brakeHold: { ...inbox.brakeHold, alreadyPending: true },
+      };
+    }
+  }
   const ciphertext = await encryptForStorage(JSON.stringify(payload));
   // Resolved before the insert, never after: the summary is what a reviewer
   // sees, so a row must not exist in a state where it is blank. It is also the
@@ -20553,8 +20574,11 @@ async function queueSendApproval(
       // insert fails and nothing is sent, rather than queueing a hold the
       // inbox owner could approve themselves.
       ...(inbox.brakeHold?.reason === RECIPIENT_RULE_HOLD_REASON ? { hold_reason: RECIPIENT_RULE_HOLD_REASON } : {}),
+      // Migration 20261117120000. Droppable: without it a repeat queues a
+      // second copy, as before.
+      ...(holdKey ? { dedupe_key: holdKey } : {}),
     },
-    [...PENDING_APPROVAL_COLUMNS, "requested_by"],
+    [...PENDING_APPROVAL_COLUMNS, "requested_by", "dedupe_key"],
     (row) => supabase.from("send_approvals").insert(row).select("*").maybeSingle(),
   );
   if (error || !data) {
@@ -20570,6 +20594,42 @@ async function queueSendApproval(
     reviewMode: await readSendReviewMode(inbox.id),
     ...(inbox.brakeHold ? { brakeHold: inbox.brakeHold } : {}),
   };
+}
+
+/**
+ * The pending, still-decidable approval for one held send (same inbox,
+ * operation and heldSendKey), or null. Any read failure is null: the caller
+ * then queues a new request, which is the behaviour before this existed.
+ */
+async function findPendingHeldSend(
+  inboxId: string,
+  operation: string,
+  holdKey: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const { data, error } = await supabase
+      .from("send_approvals")
+      .select("*")
+      .eq("inbox_id", inboxId)
+      .eq("operation", operation)
+      .eq("status", "pending")
+      .eq("dedupe_key", holdKey)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp-server] fanout_hold_lookup_failed", { inbox_id: inboxId, error: error.message });
+      return null;
+    }
+    return (data as Record<string, unknown> | null) ?? null;
+  } catch (err) {
+    console.error("[mcp-server] fanout_hold_lookup_threw", {
+      inbox_id: inboxId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 /**
@@ -20647,7 +20707,13 @@ function brakeHeldPayload(
       message: recipientRuleHeldMessage(noun, hold.outside, approval.reviewUrl),
     };
   }
-  const when = hold.retryAt ? ` after ${hold.retryAt}` : " in an hour";
+  // Never "send it again later": a retry of the same message to the same
+  // people trips the brake again, and every retry used to queue another copy
+  // for the reviewer to approve. A repeat now returns this same request.
+  const opening = hold.alreadyPending
+    ? `This ${noun} has not been sent. The same message to the same recipients is already waiting ` +
+      `for approval, so nothing new was queued. `
+    : `This ${noun} has not been sent. `;
   return {
     status: "pending_approval",
     approval_id: approval.id,
@@ -20655,12 +20721,15 @@ function brakeHeldPayload(
     ...extra,
     hold_reason: hold.reason,
     retry_at: hold.retryAt,
+    ...(hold.alreadyPending ? { already_pending: true } : {}),
     review_url: approval.reviewUrl,
     message:
-      `This ${noun} has not been sent. MCPEmails held it because the same message already went to ` +
+      opening +
+      `MCPEmails held it because the same message already went to ` +
       `many recipients from this inbox within the last hour. This is an automatic safety hold, ` +
       `not the inbox's review setting, and it applies only to this message: other email from the ` +
-      `inbox sends normally. Approve it at ${approval.reviewUrl} (sign-in required), or send it again${when}.`,
+      `inbox sends normally. A person can approve it at ${approval.reviewUrl} (sign-in required). ` +
+      `Do not send it again: a repeat of this message returns this same request.`,
   };
 }
 
@@ -21048,7 +21117,7 @@ async function executeSendEmail(
   if ("refusal" in rule) return rule.refusal;
   const gatedSender = rule.hold
     ? recipientRuleHeldInbox(senderInbox, rule.outside)
-    : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt) : senderInbox;
+    : brake.hold ? brakeHeldInbox(senderInbox, brake.retryAt, brake.holdKey) : senderInbox;
 
   try {
     // `heldSendSnapshot` (not an object literal) because this payload carries a
@@ -32416,7 +32485,7 @@ async function executeSendDraft(
   if ("refusal" in rule) return rule.refusal;
   const heldInbox = rule.hold
     ? recipientRuleHeldInbox(inbox, rule.outside)
-    : brake.hold ? brakeHeldInbox(inbox, brake.retryAt) : inbox;
+    : brake.hold ? brakeHeldInbox(inbox, brake.retryAt, brake.holdKey) : inbox;
 
   let approvalRecord: Record<string, unknown> = {};
   if (sendWillBeHeld(heldInbox, apiKey)) {

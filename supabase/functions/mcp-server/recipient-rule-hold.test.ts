@@ -330,7 +330,8 @@ Deno.test("queueSendApproval writes hold_reason only for the rule, and never let
   const body = SOURCE.slice(start, SOURCE.indexOf("\n}\n", start));
   assert(/inbox\.brakeHold\?\.reason === RECIPIENT_RULE_HOLD_REASON \? \{ hold_reason: RECIPIENT_RULE_HOLD_REASON \} : \{\}/.test(body));
   assert(/requested_by: apiKey\.created_by \?\? null/.test(body));
-  assert(/\[\.\.\.PENDING_APPROVAL_COLUMNS, "requested_by"\]/.test(body), "requested_by may be dropped, hold_reason may not");
+  // dedupe_key (2026-11-17) may be dropped too; hold_reason still may not.
+  assert(/\[\.\.\.PENDING_APPROVAL_COLUMNS, "requested_by", "dedupe_key"\]/.test(body), "requested_by may be dropped, hold_reason may not");
 });
 
 Deno.test("every activity_log write that has the key passes its creator as user_id", () => {
