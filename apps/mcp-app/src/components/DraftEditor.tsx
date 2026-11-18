@@ -80,8 +80,12 @@ export interface DraftPatch {
 export interface DraftActions {
   /** Resolves true when the server stored the change. */
   save: (patch: DraftPatch) => Promise<boolean>;
-  /** A non-null patch means save first, and send only if that save worked. */
-  send: (patch: DraftPatch | null) => void | Promise<void>;
+  /**
+   * A non-null patch means save first, and send only if that save worked.
+   * `onSaved` runs once that save is stored, before the send itself: the
+   * files it carried are on the draft from then on (see `dropCarriedFiles`).
+   */
+  send: (patch: DraftPatch | null, onSaved?: () => void) => void | Promise<void>;
   /**
    * The person checked their Sent folder after a send whose answer was lost and
    * wants Send back. See `sendDoubt`. Optional so a host of this component that
@@ -1751,10 +1755,11 @@ export function DraftEditor(props: Props) {
     }
     const next = readyToWrite();
     if (!next) return;
-    const p = { ...patchFrom(next), ...fileEditsPatch(filesRef.current) };
+    const sentFiles = filesRef.current;
+    const p = { ...patchFrom(next), ...fileEditsPatch(sentFiles) };
     sent.current = { version, edit: next };
     void Promise.resolve(
-      actions.send(Object.keys(p).length > 0 ? p : null),
+      actions.send(Object.keys(p).length > 0 ? p : null, () => dropCarriedFiles(sentFiles)),
     ).finally(() => {
       if (sent.current?.edit === next) sent.current = null;
     });
@@ -2019,6 +2024,25 @@ export function DraftEditor(props: Props) {
     setFileNote(said.length > 0 ? said.join(" ") : null);
   };
 
+  /**
+   * The file changes a stored save carried are on the draft now, so they stop
+   * being edits. By id, not by name: a draft can hold two files with one name,
+   * and the one left must not inherit the removal. Run by Save AND by the save
+   * that Send makes first: until 2026-11-18 only Save did, so a file attached
+   * and then sent showed twice while the send ran (the stored chip, and the
+   * dashed "not saved yet" chip for the same file).
+   */
+  const dropCarriedFiles = (carried: FileEdits) => {
+    const went = new Set([...carried.added, ...carried.removed].map((f) => f.id));
+    const cur = filesRef.current;
+    setFiles({
+      removed: cur.removed.filter((r) => !went.has(r.id)),
+      added: cur.added.filter((f) => !went.has(f.id)),
+    });
+    // A note about an earlier pick (too large) is stale once saved.
+    setFileNote(null);
+  };
+
   /** Save: also what "Try again" in a failure notice runs. */
   const onSave = () => {
     if (!canEdit || !verified || pendingNow.current || confirmNow.current !== null) return;
@@ -2030,17 +2054,7 @@ export function DraftEditor(props: Props) {
     sent.current = { version, edit: next };
     void actions.save(p).then((ok) => {
       if (ok) {
-        // The file changes this save carried are on the draft now, so they
-        // stop being edits. By id, not by name: a draft can hold two files
-        // with one name, and the one left must not inherit the removal.
-        const went = new Set([...sentFiles.added, ...sentFiles.removed].map((f) => f.id));
-        const cur = filesRef.current;
-        setFiles({
-          removed: cur.removed.filter((r) => !went.has(r.id)),
-          added: cur.added.filter((f) => !went.has(f.id)),
-        });
-        // A note about an earlier pick (too large) is stale once saved.
-        setFileNote(null);
+        dropCarriedFiles(sentFiles);
         // Saved on purpose, so they are no longer "put back" edits.
         restoredKeys.current = [];
         setRestored(false);

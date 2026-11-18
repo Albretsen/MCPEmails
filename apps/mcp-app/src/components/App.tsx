@@ -1614,7 +1614,7 @@ export function App(props: { bridge: HostBridge }) {
           actions={{
             save,
             allowSend: () => setSendDoubt(false),
-            send: async (patch) => {
+            send: async (patch, onSaved) => {
               // Unsaved changes are written first and the send is abandoned if
               // that write fails, so a send never puts the stored draft on the
               // wire when the user is looking at a newer one.
@@ -1637,6 +1637,7 @@ export function App(props: { bridge: HostBridge }) {
                 }
                 tellSaved(saved.env!.draft!, patch);
                 claim();
+                onSaved?.();
                 // No "the save followed an older id" stop here any more: the
                 // server refuses such a save as `draft_changed` (contract §8),
                 // so a stored save never carries `resolved_from`.

@@ -275,7 +275,7 @@ async function main() {
       contents:
         'import "./src/main";\n' +
         'export { getState, setState, disarmResultWatchdog } from "./src/store";\n' +
-        'export { keyEndsAddress, ADDR_NOTE_MS } from "./src/components/DraftEditor";\n' +
+        'export { keyEndsAddress, ADDR_NOTE_MS, setSendUndoMs } from "./src/components/DraftEditor";\n' +
         'export { SUGGEST_DEBOUNCE_MS } from "./src/components/Recipients";\n' +
         'export { localContactSource, contactSearchSource, parseNamedAddress, matchesQuery } from "./src/contacts";\n' +
         'export { humanSize, rebaseFileEdits, fileEditsPatch, CARD_UPLOAD_MAX_BYTES } from "./src/attachments";\n' +
@@ -934,6 +934,32 @@ async function main() {
     await settle();
     expectJson("then it is a stored file", fileChips(c), [{ name: "hi.txt", size: "5 bytes", removed: false, added: false }]);
     expect("nothing unsaved", unsaved(c), false);
+    await c.done();
+  }
+
+  group("F2b. a file attached and then sent shows once while the send runs");
+  {
+    // 2026-11-18: Send's own save stored the file, but the card kept it as an
+    // unsaved addition too, so the chip showed twice (solid and dashed) until
+    // the send answered.
+    const c = await editor({ attachments: [] });
+    c.mod.setSendUndoMs(50);
+    pickFiles(c, [new c.w.File(["hello"], "hi.txt", { type: "text/plain" })]);
+    await after(80);
+    expectJson("picked: one dashed chip", fileChips(c).map((f) => [f.name, f.added]), [["hi.txt", true]]);
+    let saved = null;
+    c.tools.draft_editor_save = (args) => {
+      saved = args;
+      return draftResult({ attachments: [{ filename: "hi.txt", size_bytes: 5, mime_type: "text/plain" }] });
+    };
+    let answer;
+    c.tools.draft = () => new Promise((r) => { answer = r; });
+    c.press(c.btn(/^Send$/));
+    await after(200);
+    await settle();
+    expectJson("the save carried the file", saved?.add_attachments?.map((f) => f.filename), ["hi.txt"]);
+    expect("the send is under way", typeof answer, "function");
+    expectJson("while sending: one stored chip, no dashed copy", fileChips(c).map((f) => [f.name, f.added]), [["hi.txt", false]]);
     await c.done();
   }
 
