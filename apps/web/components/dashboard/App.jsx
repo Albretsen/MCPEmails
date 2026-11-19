@@ -1176,7 +1176,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
    * @param {object|null} [transport] - Present only when the route reports that
    *   the settings it connected on are not the ones that were submitted.
    */
-  const onConnect = ({ label, provider, address, connectionMethod, transport, keepOpen = false }) => {
+  const onConnect = ({ label, provider, address, connectionMethod, transport, savedHost = null, keepOpen = false }) => {
     // This used to say 'app_password' unconditionally, which is wrong for the
     // generic IMAP connector: 'imap' is the largest provider bucket on this
     // event, so the connection-method split was wrong for most of the rows it
@@ -1223,7 +1223,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     // The settings are stated, not apologised for: nothing went wrong, and the
     // only person who needs the sentence is the one who would otherwise find a
     // different number on the Inboxes page later and have to work out why.
-    if (transport) {
+    if (savedHost) {
+      // The typed server name failed the certificate check and we connected
+      // with the name the certificate is for. The Inboxes page will show it,
+      // so say why once.
+      toast({ message: tr('app.inboxConnectedHost', { label, host: savedHost }), variant: 'success', duration: 10000 });
+    } else if (transport) {
       // A receive-only or send-only connection has one half, and its other
       // port comes back null; reciting "SMTP null" would be worse than nothing.
       const hasImapPort = transport.imapPort != null;

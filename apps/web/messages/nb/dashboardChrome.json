@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "Tilkoblingssjekken mislyktes. Prøv igjen.",
     "connectionHealthy": "Tilkoblingen er i orden.",
     "inboxConnectedSuccess": "{label} koblet til.",
+    "inboxConnectedHost": "{label} koblet til via {host}, navnet på serverens sertifikat.",
     "inboxConnectedAdjusted": "{label} koblet til. Serveren din godtok IMAP {imapPort} ({imapSecurity}) og SMTP {smtpPort} ({smtpSecurity}), så det er det vi lagret.",
     "inboxConnectedAdjustedImap": "{label} koblet til. Serveren din godtok IMAP {imapPort} ({imapSecurity}), så det er det vi lagret.",
     "inboxConnectedAdjustedSmtp": "{label} koblet til. Serveren din godtok SMTP {smtpPort} ({smtpSecurity}), så det er det vi lagret.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "Fikk ikke kontakt med serveren.",
     "errorTimeoutShort": "Serveren svarte ikke i tide.",
     "errorSecurityShort": "Sikkerhetsmodusen passer ikke med porten.",
+    "errorCertNameShort": "Servernavnet stemmer ikke med sertifikatet.",
     "errorLoginTakenShort": "Denne postkasseinnloggingen er allerede koblet til.",
     "errorInboxOtherProviderShort": "Den adressen er allerede koblet til med en annen metode. Fjern den innboksen først for å bytte.",
     "errorInboxOwnedByOtherShort": "Noen andre i arbeidsområdet har allerede koblet til denne adressen som en privat innboks.",
@@ -490,6 +492,10 @@
         "check": "Sjekk servernavnet på innstillingssiden til leverandøren din, og test på nytt.",
         "blocked": "E-postserveren din godtar ikke tilkoblinger fra serverne våre. Det er vanlig for e-postservere i skoler og bedrifter.",
         "blockedNext": "Be IT om å tillate tilgang utenfra, eller koble til en annen adresse."
+      },
+      "certName": {
+        "for": "Sertifikatet gjelder {certHost}, ikke {host}.",
+        "next": "Spør leverandøren om navnet på e-postserveren, og test igjen."
       },
       "tls": {
         "tried": "Vi prøvde port {tlsPort} med TLS og port {starttlsPort} med STARTTLS, og den sikre tilkoblingen feilet på begge.",

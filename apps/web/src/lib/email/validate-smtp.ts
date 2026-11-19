@@ -3,6 +3,7 @@ import * as tls from 'tls';
 import type { ConnectionPhase, MailSecurity } from './validate-imap.ts';
 import { sanitizeAuthDiagnostic } from './connection-config.ts';
 import { legacyTlsOptions } from './legacy-tls.ts';
+import { certFromNameMismatch, certNameMessage, type CertNameSource } from './cert-host-alias.ts';
 
 export const SMTP_VALIDATION_TIMEOUT_MS = 10_000;
 export type SmtpValidationResult =
@@ -26,6 +27,8 @@ export type SmtpValidationResult =
        * Never contains the credential, the address or the SASL token.
        */
       detail?: string;
+      /** The presented certificate, when it names another host (cert-host-alias.ts). */
+      cert?: CertNameSource;
     };
 
 export interface SmtpCredential {
@@ -299,6 +302,8 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
       if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: 'Nothing is listening for outgoing mail on that server. Check the SMTP host.', phase };
       // Not retryable on another port: DNS has no answer regardless of port.
       if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') return { ok: false, code: 'HOST_NOT_FOUND', message: SMTP_HOST_NOT_FOUND_MESSAGE, phase };
+      const cert = certFromNameMismatch(caught);
+      if (cert) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: certNameMessage(cred.host, cert), phase: 'tls', cert };
       if (phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT')) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'The outgoing server would not start an encrypted session on any standard submission port. If your provider gave you a non-standard port, enter it in the SMTP port field.', phase };
       return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The outgoing server answered with something that is not SMTP. Check that the host is the SMTP host rather than a webmail or website address.', phase };
     }

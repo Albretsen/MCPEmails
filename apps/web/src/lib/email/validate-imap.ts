@@ -1,4 +1,5 @@
 import * as net from 'net';
+import { certFromNameMismatch, certNameMessage, type CertNameSource } from './cert-host-alias.ts';
 import * as tls from 'tls';
 import { sanitizeAuthDiagnostic } from './connection-config.ts';
 import { legacyTlsOptions } from './legacy-tls.ts';
@@ -35,6 +36,11 @@ export type ImapValidationResult =
        * contains the credential or the address, and is safe to persist.
        */
       detail?: string;
+      /**
+       * The certificate the server presented, when the only problem was that it
+       * names a different host (see cert-host-alias.ts). Public data.
+       */
+      cert?: CertNameSource;
     };
 
 export interface ImapCredential {
@@ -482,6 +488,10 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
       // "that server name does not exist" is the only useful thing to say.
       if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') return { ok: false, code: 'HOST_NOT_FOUND', message: IMAP_VALIDATION_MESSAGES.HOST_NOT_FOUND, phase };
       const tlsError = phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT');
+      // A certificate for another name: the server is fine, the name typed is
+      // an alias. The route can retry with the certificate's name.
+      const cert = certFromNameMismatch(caught);
+      if (cert) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: certNameMessage(cred.host, cert), phase: 'tls', cert };
       return tlsError
         ? { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: IMAP_VALIDATION_MESSAGES.TLS_HANDSHAKE_FAILED, phase }
         : { ok: false, code: 'IMAP_PROTOCOL_ERROR', message: IMAP_VALIDATION_MESSAGES.IMAP_PROTOCOL_ERROR, phase };

@@ -98,6 +98,13 @@ export default async function RootLayout({ children }) {
           must keep reporting when the React bundle fails, and `script-src
           'self'` covers it without a nonce. async, so it never blocks paint.
         */}
+        {/*
+          Keeps React working when Chrome or Edge translates the page (see
+          public/dom-guard.js). Synchronous on purpose: it must patch the DOM
+          before React's first insert. About 1 KB, same origin, cached.
+        */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/dom-guard.js" />
         <script src="/ce.js" async />
       </head>
       <body>

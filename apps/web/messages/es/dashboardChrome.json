@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "La comprobación de la conexión falló. Inténtalo de nuevo.",
     "connectionHealthy": "La conexión está en buen estado.",
     "inboxConnectedSuccess": "{label} conectada correctamente.",
+    "inboxConnectedHost": "{label} conectada a través de {host}, el nombre del certificado de tu servidor.",
     "inboxConnectedAdjusted": "{label} conectada. Tu servidor aceptó IMAP {imapPort} ({imapSecurity}) y SMTP {smtpPort} ({smtpSecurity}), así que es lo que hemos guardado.",
     "inboxConnectedAdjustedImap": "{label} conectada. Tu servidor aceptó IMAP {imapPort} ({imapSecurity}), así que es lo que hemos guardado.",
     "inboxConnectedAdjustedSmtp": "{label} conectada. Tu servidor aceptó SMTP {smtpPort} ({smtpSecurity}), así que es lo que hemos guardado.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "No se pudo contactar con ese servidor.",
     "errorTimeoutShort": "El servidor no respondió a tiempo.",
     "errorSecurityShort": "El modo de seguridad no coincide con el puerto.",
+    "errorCertNameShort": "El nombre del servidor no coincide con su certificado.",
     "errorLoginTakenShort": "Ese usuario de buzón ya está conectado.",
     "errorInboxOtherProviderShort": "Esa dirección ya está conectada con otro método. Elimina primero esa bandeja para cambiarlo.",
     "errorInboxOwnedByOtherShort": "Otra persona de este espacio de trabajo ya conectó esta dirección como buzón privado.",
@@ -490,6 +492,10 @@
         "check": "Revisa el nombre del servidor en la página de configuración de tu proveedor y prueba de nuevo.",
         "blocked": "Tu servidor de correo no acepta conexiones desde nuestros servidores. Es habitual en servidores de correo de centros educativos y empresas.",
         "blockedNext": "Pide a tu equipo de TI que permita el acceso desde fuera, o conecta otra dirección."
+      },
+      "certName": {
+        "for": "El certificado es para {certHost}, no para {host}.",
+        "next": "Pide a tu proveedor el nombre del servidor de correo y vuelve a probar."
       },
       "tls": {
         "tried": "Probamos el puerto {tlsPort} con TLS y el puerto {starttlsPort} con STARTTLS, y la conexión segura falló en ambos.",

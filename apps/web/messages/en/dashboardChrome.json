@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "Connection check failed. Please try again.",
     "connectionHealthy": "Connection is healthy.",
     "inboxConnectedSuccess": "{label} connected successfully.",
+    "inboxConnectedHost": "{label} connected via {host}, the name on your server's certificate.",
     "inboxConnectedAdjusted": "{label} connected. Your server accepted IMAP {imapPort} ({imapSecurity}) and SMTP {smtpPort} ({smtpSecurity}), so those are what we saved.",
     "inboxConnectedAdjustedImap": "{label} connected. Your server accepted IMAP {imapPort} ({imapSecurity}), so that is what we saved.",
     "inboxConnectedAdjustedSmtp": "{label} connected. Your server accepted SMTP {smtpPort} ({smtpSecurity}), so that is what we saved.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "Could not reach that server.",
     "errorTimeoutShort": "The server did not answer in time.",
     "errorSecurityShort": "The security mode does not match the port.",
+    "errorCertNameShort": "The server name does not match its certificate.",
     "errorLoginTakenShort": "That mailbox login is already connected.",
     "errorInboxOtherProviderShort": "That address is already connected with a different method. Remove that inbox first to switch.",
     "errorInboxOwnedByOtherShort": "Someone else in this workspace has already connected this address as a private mailbox.",
@@ -490,6 +492,10 @@
         "check": "Check the server name on your provider's settings page, then test again.",
         "blocked": "Your mail server does not accept connections from our servers. This is common with school and company mail servers.",
         "blockedNext": "Ask your IT team to allow access from outside, or connect a different address."
+      },
+      "certName": {
+        "for": "The certificate is for {certHost}, not {host}.",
+        "next": "Ask your provider for the mail server name, then test again."
       },
       "tls": {
         "tried": "We tried port {tlsPort} with TLS and port {starttlsPort} with STARTTLS, and the secure connection failed on both.",
