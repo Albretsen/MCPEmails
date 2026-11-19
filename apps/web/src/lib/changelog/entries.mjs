@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-19',
+    kind: 'improved',
+    title: 'Add files to a draft straight from the draft card',
+    body:
+      "When you want a file on a draft, your AI can now ask for it in the draft card, where it shows as a button that opens your file picker. The file goes straight onto the draft, so your AI no longer has to copy it into the chat first.",
+  },
+  {
     date: '2026-11-17',
     kind: 'fixed',
     title: 'Next step after your first inbox',

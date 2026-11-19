@@ -259,6 +259,7 @@ import {
 } from "./card-diagnostics.ts";
 import { readFlagWithOneRetry } from "./flag-read-retry.ts";
 import { stampToolSurface } from "./card-tool-surface.ts";
+import { FILES_TO_ATTACH_PROPERTY, stampFilesWanted } from "./files-to-attach.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
@@ -6899,6 +6900,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         attachments: ATTACHMENTS_PROPERTY,
         files: UPLOADED_FILES_PROPERTY,
+        files_to_attach: FILES_TO_ATTACH_PROPERTY,
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -6954,6 +6956,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         attachments: ATTACHMENTS_PROPERTY,
         files: UPLOADED_FILES_PROPERTY,
+        files_to_attach: FILES_TO_ATTACH_PROPERTY,
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -7027,6 +7030,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         },
         attachments: DRAFT_UPDATE_ATTACHMENTS_PROPERTY,
         files: UPLOADED_FILES_PROPERTY,
+        files_to_attach: FILES_TO_ATTACH_PROPERTY,
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -9620,7 +9624,12 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       // directly, never from code") as a Suspicious Instruction on every
       // draft, so it is a statement of fact. (SERVER_INSTRUCTIONS has no
       // bytes left for the imperative.)
-      "attachments[].data takes a file's base64 inline. The draft card " +
+      "attachments[].data takes a file's base64 inline, which suits small files. " +
+      // 2026-11-19: models warned users that attaching a file would flood the
+      // conversation, because nothing said the card can take it directly.
+      "The card has an Attach file button: a file the user adds there (up to " +
+      "5 MB) never enters this conversation, and files_to_attach names the " +
+      "files to ask for. The draft card " +
       "appears only for a direct call to this tool, not one made from code. " +
       "Any inbox signature is embedded on create and on an update that passes body " +
       "(include_signature: false to skip) and 'send' transmits the stored " +
@@ -36467,6 +36476,13 @@ async function handleToolsCall(
       (toolResult.result as { structuredContent?: unknown } | undefined)?.structuredContent,
       toolName,
     );
+    // The files the model asked the user to add in the card (files-to-attach.ts).
+    const filesNote = stampFilesWanted(
+      toolResult.result as { structuredContent?: unknown; isError?: unknown } | undefined,
+      toolName,
+      params?.["arguments"],
+    );
+    if (filesNote) appendResultNote(toolResult, filesNote);
   }
 
   return toolResult;
