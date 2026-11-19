@@ -128,3 +128,33 @@ export function readAsBase64(file: Blob): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * The files an agent asked for (`files_wanted`), as the draft held them then:
+ * `base` is how many files it had when it asked. Null when nothing was asked.
+ */
+export interface FileSlots {
+  names: string[];
+  base: number;
+}
+
+/** The slots a draft envelope opens, or null when it asks for no files. */
+export function fileSlotsFrom(d: { files_wanted?: unknown; attachments?: unknown[] }): FileSlots | null {
+  if (!Array.isArray(d.files_wanted)) return null;
+  const names = d.files_wanted.filter((n): n is string => typeof n === "string" && n.trim() !== "").slice(0, 5);
+  if (names.length === 0) return null;
+  return { names, base: Array.isArray(d.attachments) ? d.attachments.length : 0 };
+}
+
+/**
+ * The names still waiting for a file. Filled in order, by count: every file
+ * the draft gained since the agent asked fills the next slot, whichever
+ * button or "Attach file" added it. The card cannot know which file a name
+ * meant, and the person can see what they attached; a count stays right
+ * across saves and needs no state of its own.
+ */
+export function openFileSlots(slots: FileSlots | null, stored: number, edits: FileEdits): string[] {
+  if (!slots) return [];
+  const now = stored - edits.removed.length + edits.added.length;
+  return slots.names.slice(Math.max(0, now - slots.base));
+}

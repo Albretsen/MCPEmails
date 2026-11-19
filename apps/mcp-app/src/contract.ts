@@ -296,6 +296,14 @@ export interface DraftEditorData {
    * `draft_editor_save` (`add_attachments`, `remove_attachments`; attachments.ts).
    */
   attachments?: Attachment[];
+  /**
+   * Files the agent asked the person to add, by a short name ("signed
+   * contract"). Only on the result of an agent's create, reply or update
+   * (server: files-to-attach.ts); each shows as an Attach button until that
+   * many files have been added (attachments.ts#openFileSlots). Agent-written
+   * text, rendered as text.
+   */
+  files_wanted?: string[];
   signature?: DraftSignature | null;
   in_reply_to?: InReplyTo | null;
   /**

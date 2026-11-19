@@ -1238,6 +1238,9 @@ body {
 .chip.att[data-removed="true"] > .name,
 .chip.att[data-removed="true"] > .att-size { text-decoration: line-through; color: var(--fg-3); }
 .chip.att[data-new="true"] { border-style: dashed; }
+/* A file the agent asked for (files_wanted): a dashed button. */
+.chip.att-wanted { border-style: dashed; background: transparent; cursor: pointer; font-family: inherit; }
+.chip.att-wanted:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
 .chip-x.att-undo { font-size: var(--fs-sm); text-decoration: underline; margin-right: 0; }
 
 .chip-x:focus-visible {

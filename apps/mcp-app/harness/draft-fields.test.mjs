@@ -1008,6 +1008,37 @@ async function main() {
     await r.done();
   }
 
+  group("F6. files the agent asked for are Attach buttons, gone as files arrive, kept through a save");
+  {
+    // 2026-11-19 (files-to-attach.ts): the agent names files the person adds
+    // in the card, instead of writing them out as base64 in the chat.
+    const wanted = (c) => [...c.root.querySelectorAll(".att-list .att-wanted .name")].map((n) => n.textContent);
+    const c = await editor({ attachments: [], files_wanted: ["signed contract", "invoice"] });
+    expectJson("both asked-for files are offered", wanted(c), ["signed contract", "invoice"]);
+    let opened = 0;
+    const input = c.root.querySelector('.att-list input[type="file"]');
+    input.click = () => { opened++; };
+    c.press(c.root.querySelector(".att-list .att-wanted"));
+    expect("a slot opens the file picker", opened, 1);
+    pickFiles(c, [new c.w.File(["pdf"], "contract.pdf", { type: "application/pdf" })]);
+    await after(80);
+    expectJson("the first slot is filled", wanted(c), ["invoice"]);
+    c.tools.draft_editor_save = () => draftResult({ attachments: [{ filename: "contract.pdf", size_bytes: 3, mime_type: "application/pdf" }] });
+    c.press(c.btn(/^Save$/));
+    await settle();
+    await settle();
+    expectJson("after Save the open slot stays", wanted(c), ["invoice"]);
+    pickFiles(c, [new c.w.File(["x"], "inv.pdf", { type: "application/pdf" })]);
+    await after(80);
+    expectJson("then none is left", wanted(c), []);
+    await c.done();
+    const r = await boot();
+    r.push({ ...draftEnvelope({ attachments: [], files_wanted: ["signed contract"] }), actor: { can_edit: false } });
+    await settle();
+    expectJson("read only: no slots", wanted(r), []);
+    await r.done();
+  }
+
   group("F5. a removal follows its file when the assistant rewrites the draft");
   {
     const c = await editor({ attachments: FILES });

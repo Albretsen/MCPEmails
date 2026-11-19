@@ -40,9 +40,12 @@ import {
   CARD_UPLOAD_MAX_BYTES,
   type FileEdits,
   fileEditsPatch,
+  type FileSlots,
+  fileSlotsFrom,
   hasFileEdits,
   humanSize,
   NO_FILE_EDITS,
+  openFileSlots,
   readAsBase64,
   rebaseFileEdits,
   type RemovedFile,
@@ -972,6 +975,11 @@ export function DraftEditor(props: Props) {
   };
   /** A sentence about the last file picked, when it could not be attached. */
   const [fileNote, setFileNote] = useState<string | null>(null);
+  /**
+   * Files the agent asked for. Set by an envelope that carries `files_wanted`
+   * and kept through the saves after it, whose envelopes do not.
+   */
+  const [fileSlots, setFileSlots] = useState<FileSlots | null>(() => fileSlotsFrom(d));
   useEffect(() => {
     const away = () => {
       setShowMore(false);
@@ -1203,6 +1211,8 @@ export function DraftEditor(props: Props) {
     // A removal names a file by its place in the list, and the list may have
     // moved: follow each file to its new place, or drop it when it is gone.
     setFiles(rebaseFileEdits(filesRef.current, d.attachments ?? []));
+    const slots = fileSlotsFrom(d);
+    if (slots) setFileSlots(slots);
     // A boundary pinned into the old body may describe nothing in the new one.
     // Dropped rather than re-validated.
     setSigPin(null);
@@ -2678,6 +2688,7 @@ export function DraftEditor(props: Props) {
         onDropAdded={dropAdded}
         onPick={(picked) => void pickFiles(picked)}
         note={fileNote}
+        wanted={openFileSlots(fileSlots, (d.attachments ?? []).length, files)}
       />
 
 
