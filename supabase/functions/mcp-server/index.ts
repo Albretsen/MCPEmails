@@ -503,6 +503,14 @@ import {
   selectAttachment,
 } from "./attachment-reference.ts";
 import {
+  issueUploadSlot,
+  parseUploadSlotRequest,
+  purgeExpiredUploads,
+  resolveUploadedAttachment,
+  supabaseUploadStore,
+  UploadSlotError,
+} from "./attachment-uploads.ts";
+import {
   carriedAttachmentsOf,
   type CarriedAttachments,
   createUploadedFileFetcher,
@@ -934,6 +942,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     },
   },
 });
+
+/** Upload slots for `draft` 'upload_link' and `attachments[].upload_id` (attachment-uploads.ts). */
+const uploadStore = supabaseUploadStore(supabase, supabaseUrl, supabaseServiceKey);
 
 // The relay registry (relay-registry.ts): hosts that learned to need the mail
 // relay, and a count of every connection it carried for /admin/growth. All
@@ -5629,10 +5640,15 @@ const ATTACHMENTS_PROPERTY = {
           "Which attachment of source_message_id to take, as reported by " +
           "email_read. Omit it (or `filename`) when that message has exactly one.",
       },
+      upload_id: {
+        type: "string",
+        description: "A file uploaded through the draft tool's 'upload_link'.",
+      },
     },
     anyOf: [
       { required: ["filename", "mime_type", "data"] },
       { required: ["source_message_id"] },
+      { required: ["upload_id"] },
     ],
     additionalProperties: false,
   },
@@ -7123,6 +7139,31 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["draft_id"],
+      additionalProperties: false,
+    },
+  },
+
+  // Last resort for a file the user has on their device (attachment-uploads.ts):
+  // the draft card's Attach file button is the first choice, and this is for a
+  // host with no card or a file over the card's 5 MB.
+  {
+    name: "draft_upload_link",
+    title: "File Upload Link",
+    description:
+      "Get a link where the user uploads one file for an email, so its bytes never pass " +
+      "through the conversation. Returns upload_id, page_url for the user's browser, put_url " +
+      "for a shell (curl -T <file> \"<put_url>\"), and expires_at (2 hours). Once uploaded, " +
+      "pass { upload_id } in attachments. For when the draft card is not shown or the file " +
+      "is over the card's 5 MB; where the card is shown, its Attach file button is simpler.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filename: { type: "string", description: "Filename the recipient sees, e.g. \"contract.pdf\"." },
+        mime_type: { type: "string", description: "MIME type, e.g. 'application/pdf'." },
+        size_bytes: { type: "integer", minimum: 0, description: "File size, when known. A hint for the upload page; the file is accepted at any size up to 10 MB." },
+      },
+      required: ["filename"],
       additionalProperties: false,
     },
   },
@@ -9144,6 +9185,8 @@ const TOOL_ANNOTATIONS: Record<
   folder_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
   email_search_and_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
   draft_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+  // Creates a storage slot; touches no mailbox and reaches nobody.
+  draft_upload_link: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   // Soft delete, but destructive from the caller's point of view: the rule stops
   // existing as far as every other action is concerned.
   automation_delete: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
@@ -9710,6 +9753,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
         legacy: "draft_delete",
         scope: "manage:drafts",
         hint: "discard draft_id without sending",
+      },
+      upload_link: {
+        legacy: "draft_upload_link",
+        scope: "manage:drafts",
+        hint: "a link the user uploads one file to, for attachments: [{ upload_id }]; for when the card is not shown or the file is over 5 MB",
       },
     },
   },
@@ -10588,6 +10636,10 @@ function buildPerOperationTool(legacy: ToolDefinition, action?: ConsolidatedActi
   const required = Array.isArray(listed.required)
     ? listed.required.map((key) => renames[key as string] ?? key)
     : undefined;
+  // `attachments[].upload_id` is not shown here: ChatGPT hands files over
+  // through `files` (openai/fileParams), and its reviewed schemas stay as they
+  // were. A per-operation call that passes one is still accepted.
+  if (properties.attachments) properties.attachments = withoutUploadIdShape(properties.attachments);
   const { altScopes: _legacyAltScopes, ...rest } = legacy;
   const altScopes = action ? action.altScopes : legacy.altScopes;
   return {
@@ -10643,7 +10695,24 @@ const PER_OPERATION_UNLISTED: ReadonlySet<string> = new Set([
   // other client.
   "subscriptions_scan",
   "subscriptions_cleanup",
+  // New 2026-11-19 and not submitted to OpenAI: ChatGPT already takes the
+  // user's files through `files` (openai/fileParams).
+  "draft_upload_link",
 ]);
+
+/** The `attachments` schema without its `{ upload_id }` shape. */
+function withoutUploadIdShape(schema: unknown): unknown {
+  const items = (schema as { items?: Record<string, unknown> }).items;
+  if (!items || typeof items !== "object" || !("properties" in items)) return schema;
+  const { upload_id: _uploadId, ...itemProperties } = items.properties as Record<string, unknown>;
+  const anyOf = Array.isArray(items.anyOf)
+    ? (items.anyOf as { required?: string[] }[]).filter((branch) => !branch.required?.includes("upload_id"))
+    : items.anyOf;
+  return {
+    ...(schema as Record<string, unknown>),
+    items: { ...items, properties: itemProperties, ...(anyOf ? { anyOf } : {}) },
+  };
+}
 
 /** Every per-operation tool, listed or not, in listing order. */
 const PER_OPERATION_TOOLS: ToolDefinition[] = [];
@@ -16707,6 +16776,27 @@ async function resolveAttachmentSpecs(
   for (const spec of specs) {
     if (spec.kind === "inline") {
       attachments.push(spec.attachment);
+      continue;
+    }
+    if (spec.kind === "upload") {
+      // Same workspace as the inbox the file goes out from: a slot is the
+      // workspace's, like the key that issued it.
+      const uploaded = await preTransmission("source", () =>
+        resolveUploadedAttachment(uploadStore, {
+          workspaceId: inbox.workspace_id,
+          uploadId: spec.upload_id,
+          budgetBytes: SEND_MAX_ATTACHMENT_BYTES - totalBytes,
+        }))
+        .catch((err: unknown) => {
+          const located = `attachments[${spec.position}] (upload_id ${spec.upload_id}): ` +
+            (err instanceof Error ? err.message : String(err));
+          throw err instanceof PreTransmissionError && err.cause instanceof UploadSlotError &&
+              err.cause.code === "attachment_too_large"
+            ? new MessageBuildError(located, { cause: err })
+            : new TargetUnresolvedError(located, { cause: err });
+        });
+      totalBytes += uploaded.size_bytes;
+      attachments.push({ filename: uploaded.filename, mime_type: uploaded.mime_type, data: uploaded.data });
       continue;
     }
     // "source" rather than "compose": a referenced file is read out of the
@@ -32093,6 +32183,58 @@ async function executeBodylessDraftUpdate(
 }
 
 /**
+ * `draft` action 'upload_link': a slot the user (page_url) or a shell
+ * (put_url) fills, for `attachments: [{ upload_id }]`. attachment-uploads.ts.
+ */
+async function executeDraftUploadLink(
+  rawArgs: unknown,
+  apiKey: ApiKeyRow,
+): Promise<{
+  result: { content: { type: string; text: string }[]; structuredContent?: Record<string, unknown>; isError?: boolean };
+  logStatus: "success" | "error";
+  logErrorCode: string | null;
+}> {
+  const fail = (text: string, code: string) => ({
+    result: { content: [{ type: "text", text }], isError: true as const },
+    logStatus: "error" as const,
+    logErrorCode: code,
+  });
+  if (typeof rawArgs !== "object" || rawArgs === null || Array.isArray(rawArgs)) {
+    return fail("draft_upload_link: arguments must be an object with filename.", "-32602");
+  }
+  const parsed = parseUploadSlotRequest("draft_upload_link", rawArgs as Record<string, unknown>);
+  if (!parsed.ok) return fail(parsed.message, "-32602");
+  let slot;
+  try {
+    slot = await issueUploadSlot(uploadStore, {
+      workspaceId: apiKey.workspace_id,
+      apiKeyId: apiKey.id,
+      inboxId: null,
+      request: parsed.request,
+      appUrl: APP_URL,
+    });
+  } catch (err) {
+    if (err instanceof UploadSlotError) return fail(`draft_upload_link: ${err.message}`, err.code);
+    throw err;
+  }
+  // Housekeeping, never in the caller's way.
+  purgeExpiredUploads(uploadStore).catch(() => {});
+  const structured = {
+    upload_id: slot.upload_id,
+    page_url: slot.page_url,
+    put_url: slot.put_url,
+    expires_at: slot.expires_at,
+    filename: parsed.request.filename,
+  };
+  const text =
+    `Upload slot ready for ${parsed.request.filename}. Give the user page_url to open in a browser and drop the file, ` +
+    `or with a shell run: curl -T <file> "<put_url>". Then pass attachments: [{ "upload_id": "${slot.upload_id}" }] ` +
+    `on the draft or email. The slot takes one file and expires at ${slot.expires_at}.\n` +
+    JSON.stringify(structured);
+  return { result: { content: [{ type: "text", text }], structuredContent: structured }, logStatus: "success", logErrorCode: null };
+}
+
+/**
  * The full read of one draft a held send records and an approved send checks
  * (draft-send-snapshot.ts): body and attachment metadata included, which the
  * header-only `readDraftForSummary` does not carry. The editor's readers, so
@@ -35097,6 +35239,7 @@ async function runExecutor(
   if (dispatchName === "draft_update") return await executeUpdateDraft(rawArgs, apiKey);
   if (dispatchName === "draft_send") return await executeSendDraft(rawArgs, apiKey);
   if (dispatchName === "draft_delete") return await executeDeleteDraft(rawArgs, apiKey);
+  if (dispatchName === "draft_upload_link") return await executeDraftUploadLink(rawArgs, apiKey);
   if (dispatchName === "contact_search") return await executeSearchContacts(rawArgs, apiKey);
   if (dispatchName === "schedule_create") return await executeScheduleSend(rawArgs, apiKey);
   if (dispatchName === "schedule_list") return await executeListScheduled(rawArgs, apiKey);
