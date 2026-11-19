@@ -103,7 +103,9 @@
       if (/^\/u\//.test(href)) return ['buy', 'chat_link'];
       if (/^mailto:/i.test(href)) return ['contact', 'mailto'];
       if (/\/(?:dashboard\/)?help\b|\/support\b/.test(href)) return ['contact', 'help'];
-      if (el.tagName === 'BUTTON' && /^\/dashboard/.test(path())) {
+      // Sidebar buttons only show the current plan ("Acme, Personal plan" on
+      // the workspace switcher); opening that menu is not a buy click.
+      if (el.tagName === 'BUTTON' && /^\/dashboard/.test(path()) && !el.closest('#dashboard-sidebar')) {
         var text = String(el.textContent || '').replace(/\s+/g, ' ').slice(0, 80);
         var plan = planFromText(text);
         if (plan && !/compare|see plans|cancel|downgrade|manage/i.test(text)) return ['buy', plan];
