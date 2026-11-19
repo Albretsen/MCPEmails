@@ -100,18 +100,17 @@ Deno.test("another workspace's slot answers exactly like a missing one", async (
   assertEquals(other.message.replace(ID, "X"), missing.message.replace("44444444-4444-4444-8444-444444444444", "X"));
 });
 
-Deno.test("refusals: not uploaded, expired, wrong size, over budget, not an id", async () => {
+Deno.test("refusals: not uploaded, expired, over budget, not an id (a wrong size is accepted)", async () => {
   const code = async (fn: () => Promise<unknown>) => (await assertRejects(fn, UploadSlotError)).code;
   const a = await issued(4);
   assertEquals(
     await code(() => resolveUploadedAttachment(a.store, { workspaceId: WS, uploadId: ID, budgetBytes: 100, now: NOW })),
     "upload_pending",
   );
+  // A size other than the declared one is accepted: the declaration is a hint.
   a.objects.set(`${WS}/${ID}`, new Uint8Array([1, 2, 3]));
-  assertEquals(
-    await code(() => resolveUploadedAttachment(a.store, { workspaceId: WS, uploadId: ID, budgetBytes: 100, now: NOW })),
-    "upload_size_mismatch",
-  );
+  const got = await resolveUploadedAttachment(a.store, { workspaceId: WS, uploadId: ID, budgetBytes: 100, now: NOW });
+  assertEquals(typeof got, "object");
   const b = await issued();
   b.objects.set(`${WS}/${ID}`, new Uint8Array(50));
   assertEquals(

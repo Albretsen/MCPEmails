@@ -423,7 +423,7 @@ async function retry(input: PrepareInput, entries: unknown[], now: Date): Promis
   try {
     for (const fileId of fileIds) {
       const row = await loadUsableSlot(input.store, input.workspaceId, claims.f[fileId], now);
-      await confirmUploadedSize(input.store, row);
+      await confirmUploadedSize(input.store, row, { exact: true });
     }
   } catch (err) {
     if (err instanceof UploadSlotError) {

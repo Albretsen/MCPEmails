@@ -250,12 +250,17 @@ async function usableSlot(
 }
 
 /**
- * Has the file arrived, and is it the size that was declared? Used by the
- * files extension before it runs a tool, and by `resolveUploadedAttachment`.
+ * Has the file arrived, and is it within the limit? Used by the files
+ * extension before it runs a tool, and by `resolveUploadedAttachment`.
+ *
+ * `exact` (the files extension): the host declared the file's real size, so a
+ * different size is a different file and is refused. Otherwise the declared
+ * size is a hint (see below).
  */
 export async function confirmUploadedSize(
   store: UploadStore,
   row: UploadSlotRow,
+  opts: { exact?: boolean } = {},
 ): Promise<number> {
   const size = await store.objectSize(row.storage_path);
   if (size === null) {
@@ -267,12 +272,15 @@ export async function confirmUploadedSize(
   if (size > UPLOAD_MAX_BYTES) {
     throw new UploadSlotError("attachment_too_large", `upload_id ${row.id}: the file is ${size} bytes, over the ${UPLOAD_MAX_BYTES}-byte limit.`);
   }
-  if (row.declared_size_bytes !== null && size !== row.declared_size_bytes) {
+  if (opts.exact === true && row.declared_size_bytes !== null && size !== row.declared_size_bytes) {
     throw new UploadSlotError(
       "upload_size_mismatch",
-      `upload_id ${row.id}: ${size} bytes arrived but ${row.declared_size_bytes} were declared, so the upload is incomplete or a different file.`,
+      `upload_id ${row.id}: ${size} bytes arrived but ${row.declared_size_bytes} were declared, so it is a different file.`,
     );
   }
+  // Otherwise the declared size is a hint, never a gate (2026-11-19): a model often
+  // guesses a user's file size, and a signed upload is all or nothing, so a
+  // different size is never a half-written file.
   return size;
 }
 

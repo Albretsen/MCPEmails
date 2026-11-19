@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { humanBytes } from './copy.mjs';
 import { parseUploadFragment, UPLOAD_MAX_BYTES } from './target.mjs';
 
 /**
@@ -47,10 +46,6 @@ export default function UploadClient({ copy, supabaseOrigin }) {
     setNote(null);
     if (file.size > UPLOAD_MAX_BYTES) {
       setNote(copy.tooBig);
-      return;
-    }
-    if (target.size !== null && file.size !== target.size) {
-      setNote(copy.sizeMismatch.replace('{actual}', humanBytes(file.size)).replace('{expected}', humanBytes(target.size)));
       return;
     }
     if (target.expiresAt && Date.parse(target.expiresAt) <= Date.now()) {

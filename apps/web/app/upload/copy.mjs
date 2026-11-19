@@ -33,7 +33,6 @@ const COPY = {
     errorTitle: 'The upload did not finish',
     errorBody: 'Check your connection and try again.',
     tooBig: 'This file is over 10 MB, the limit for one email.',
-    sizeMismatch: 'This file is {actual}, but your AI app expected {expected}. Choose the file it named.',
   },
   nb: {
     metaTitle: 'Last opp en fil',
@@ -54,7 +53,6 @@ const COPY = {
     errorTitle: 'Opplastingen ble ikke fullført',
     errorBody: 'Sjekk tilkoblingen og prøv igjen.',
     tooBig: 'Filen er over 10 MB, som er grensen for én e-post.',
-    sizeMismatch: 'Filen er {actual}, men AI-appen ventet {expected}. Velg filen den nevnte.',
   },
   es: {
     metaTitle: 'Subir un archivo',
@@ -75,7 +73,6 @@ const COPY = {
     errorTitle: 'La subida no se completó',
     errorBody: 'Comprueba tu conexión y vuelve a intentarlo.',
     tooBig: 'Este archivo supera los 10 MB, el límite para un correo.',
-    sizeMismatch: 'Este archivo ocupa {actual}, pero tu app de IA esperaba {expected}. Elige el archivo que indicó.',
   },
   fr: {
     metaTitle: 'Envoyer un fichier',
@@ -96,7 +93,6 @@ const COPY = {
     errorTitle: 'L\'envoi n\'a pas abouti',
     errorBody: 'Vérifiez votre connexion et réessayez.',
     tooBig: 'Ce fichier dépasse 10 Mo, la limite pour un e-mail.',
-    sizeMismatch: 'Ce fichier fait {actual}, mais votre app d\'IA attendait {expected}. Choisissez le fichier indiqué.',
   },
   de: {
     metaTitle: 'Datei hochladen',
@@ -117,7 +113,6 @@ const COPY = {
     errorTitle: 'Der Upload wurde nicht abgeschlossen',
     errorBody: 'Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
     tooBig: 'Diese Datei ist größer als 10 MB, das Limit für eine E-Mail.',
-    sizeMismatch: 'Diese Datei hat {actual}, Ihre KI-App hat aber {expected} erwartet. Wählen Sie die genannte Datei.',
   },
 };
 

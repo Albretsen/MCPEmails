@@ -7161,7 +7161,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       properties: {
         filename: { type: "string", description: "Filename the recipient sees, e.g. \"contract.pdf\"." },
         mime_type: { type: "string", description: "MIME type, e.g. 'application/pdf'." },
-        size_bytes: { type: "integer", minimum: 0, description: "File size, when known; checked on arrival." },
+        size_bytes: { type: "integer", minimum: 0, description: "File size, when known. A hint for the upload page; the file is accepted at any size up to 10 MB." },
       },
       required: ["filename"],
       additionalProperties: false,
