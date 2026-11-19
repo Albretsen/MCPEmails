@@ -348,4 +348,5 @@ export const ROUTES = [
   ['app/u/[token]/route.ts', 'arn1', '~8', 'Stripe API x1-2 (chat checkout link, same trade as checkout)'],
   ['app/upgrade/done/page.js', 'arn1', '2', 'Stripe API x1'],
   ['app/upgrade/expired/page.js', 'iad1', '0', '-'],
+  ['app/upload/page.js', 'iad1', '0', '-'],
 ];
