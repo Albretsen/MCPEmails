@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "接続を確認できませんでした。もう一度お試しください。",
     "connectionHealthy": "接続は正常です。",
     "inboxConnectedSuccess": "{label}を接続しました。",
+    "inboxConnectedHost": "{label}を{host}（サーバー証明書に記載された名前）で接続しました。",
     "inboxConnectedAdjusted": "{label}を接続しました。サーバーがIMAP {imapPort} ({imapSecurity}) とSMTP {smtpPort} ({smtpSecurity}) を受け付けたため、その設定で保存しました。",
     "inboxConnectedAdjustedImap": "{label}を接続しました。サーバーがIMAP {imapPort} ({imapSecurity}) を受け付けたため、その設定で保存しました。",
     "inboxConnectedAdjustedSmtp": "{label}を接続しました。サーバーがSMTP {smtpPort} ({smtpSecurity}) を受け付けたため、その設定で保存しました。",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "サーバーに接続できませんでした。",
     "errorTimeoutShort": "サーバーが時間内に応答しませんでした。",
     "errorSecurityShort": "セキュリティモードがポートと一致していません。",
+    "errorCertNameShort": "サーバー名が証明書と一致しません。",
     "errorLoginTakenShort": "このメールボックスのログインはすでに接続されています。",
     "errorInboxOtherProviderShort": "このアドレスは別の方法ですでに接続されています。切り替えるには、先にその受信トレイを削除してください。",
     "errorInboxOwnedByOtherShort": "このワークスペースの別の人が、このアドレスを非公開受信トレイとしてすでに接続しています。",
@@ -490,6 +492,10 @@
         "check": "プロバイダーの設定ページでサーバー名を確認してから、もう一度テストしてください。",
         "blocked": "お使いのメールサーバーは、当社のサーバーからの接続を受け付けていません。学校や会社のメールサーバーでよくあるケースです。",
         "blockedNext": "外部からのアクセスを許可するようIT部門に依頼するか、別のアドレスを接続してください。"
+      },
+      "certName": {
+        "for": "証明書は{host}ではなく{certHost}向けです。",
+        "next": "プロバイダーにメールサーバー名を確認してから、もう一度テストしてください。"
       },
       "tls": {
         "tried": "ポート{tlsPort} (TLS) とポート{starttlsPort} (STARTTLS) を試しましたが、どちらも安全な接続に失敗しました。",

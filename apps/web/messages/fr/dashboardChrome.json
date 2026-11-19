@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "La vérification de la connexion a échoué. Veuillez réessayer.",
     "connectionHealthy": "La connexion est saine.",
     "inboxConnectedSuccess": "{label} connecté avec succès.",
+    "inboxConnectedHost": "{label} connecté via {host}, le nom figurant sur le certificat de votre serveur.",
     "inboxConnectedAdjusted": "{label} connecté. Votre serveur a accepté IMAP {imapPort} ({imapSecurity}) et SMTP {smtpPort} ({smtpSecurity}) : c’est ce que nous avons enregistré.",
     "inboxConnectedAdjustedImap": "{label} connecté. Votre serveur a accepté IMAP {imapPort} ({imapSecurity}) : c’est ce que nous avons enregistré.",
     "inboxConnectedAdjustedSmtp": "{label} connecté. Votre serveur a accepté SMTP {smtpPort} ({smtpSecurity}) : c’est ce que nous avons enregistré.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "Impossible de joindre ce serveur.",
     "errorTimeoutShort": "Le serveur n’a pas répondu à temps.",
     "errorSecurityShort": "Le mode de sécurité ne correspond pas au port.",
+    "errorCertNameShort": "Le nom du serveur ne correspond pas à son certificat.",
     "errorLoginTakenShort": "Cet identifiant de boîte mail est déjà connecté.",
     "errorInboxOtherProviderShort": "Cette adresse est déjà connectée par une autre méthode. Supprimez d'abord cette boîte pour changer.",
     "errorInboxOwnedByOtherShort": "Une autre personne de cet espace de travail a déjà connecté cette adresse comme boîte privée.",
@@ -490,6 +492,10 @@
         "check": "Vérifiez le nom du serveur sur la page de paramètres de votre fournisseur, puis testez à nouveau.",
         "blocked": "Votre serveur de messagerie n’accepte pas les connexions venant de nos serveurs. C’est fréquent avec les serveurs des écoles et des entreprises.",
         "blockedNext": "Demandez à votre service informatique d’autoriser l’accès depuis l’extérieur, ou connectez une autre adresse."
+      },
+      "certName": {
+        "for": "Le certificat est émis pour {certHost}, pas pour {host}.",
+        "next": "Demandez à votre fournisseur le nom du serveur de messagerie, puis testez à nouveau."
       },
       "tls": {
         "tried": "Nous avons essayé le port {tlsPort} en TLS et le port {starttlsPort} en STARTTLS, et la connexion sécurisée a échoué sur les deux.",

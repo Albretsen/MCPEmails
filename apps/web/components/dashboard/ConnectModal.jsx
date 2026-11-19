@@ -1655,6 +1655,7 @@ export function ConnectModal({
     smtpHost: isGeneric ? form.smtpHost : null,
     relayFailed: context?.relayFailed === true,
     imapOk: context?.imapOk === true,
+    certHost: context?.certHost ?? null,
     connectionMode: isGeneric ? connectionMode : null,
     providerLabel: appPasswordProvider,
   });
@@ -2023,15 +2024,19 @@ export function ConnectModal({
           code === 'auth_failed' && AUTH_REASON_HEADLINE_KEYS[data.auth_reason]
             ? data.auth_reason
             : null;
+        // The certificate names another server: say that, not "security mode".
+        const certHost = typeof data.cert_host === 'string' ? data.cert_host : null;
         const headline = reason
           ? tr(AUTH_REASON_HEADLINE_KEYS[reason], { provider: appPasswordProvider })
-          : tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed');
+          : certHost
+            ? tr('connect.errorCertNameShort')
+            : tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed');
         const details = [];
         // The route's own sentence is English-only (it is the validator's
         // message, not a catalogue key). When we have a classified reason the
         // disclosure already carries a localised sentence that says more, so
         // the untranslated one is dropped rather than stacked on top of it.
-        if (!reason && typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
+        if (!reason && !certHost && typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
         if (count >= 2) details.push(tr('connect.errorRepeatHint'));
         const detail = details.length > 0 ? details.join(' ') : null;
 
@@ -2056,6 +2061,7 @@ export function ConnectModal({
           host: typeof data.host === 'string' ? data.host : null,
           relayFailed: data.relay_failed === true,
           imapOk: data.imap_ok === true,
+          certHost,
         };
         setFailureContext(context);
         // The row the panel will show, decided here as well so the password
@@ -2097,7 +2103,7 @@ export function ConnectModal({
 
         // A transport failure is fixed by a port (already on screen) or by a
         // security mode (not), so open the section holding the second one.
-        if (isGeneric && TRANSPORT_ERROR_CODES.has(code)) setAdvancedOpen(true);
+        if (isGeneric && TRANSPORT_ERROR_CODES.has(code) && !certHost) setAdvancedOpen(true);
         // A rejected password whose advice is "clear the Username field" has to
         // have that field on screen, and it lives in the same section.
         if (reason === 'password_rejected' && isGeneric && form.username.trim()) setAdvancedOpen(true);
@@ -2165,6 +2171,11 @@ export function ConnectModal({
        * ordinary path the numbers are the ones the user submitted, and reciting
        * them back is noise on top of a success.
        */
+      // The server name we saved, when the route replaced the typed one with
+      // the name on the server's certificate.
+      const savedHost = data?.host_adjusted === true
+        ? (typeof data.imap_host === 'string' ? data.imap_host : typeof data.smtp_host === 'string' ? data.smtp_host : null)
+        : null;
       const transport =
         data?.transport_adjusted === true
           ? {
@@ -2202,6 +2213,7 @@ export function ConnectModal({
         label: optimisticLabel,
         connectionMethod,
         transport,
+        savedHost,
         keepOpen,
       });
       if (keepOpen) {
