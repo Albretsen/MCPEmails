@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-11-19',
+    kind: 'added',
+    title: 'Upload links for large or local files',
+    body:
+      "When the draft card is not available, or a file is larger than the card takes, your AI can now give you a link to upload the file in your browser. It goes straight onto your email without being copied into the chat.",
+  },
+  {
+    date: '2026-11-19',
     kind: 'improved',
     title: 'Add files to a draft straight from the draft card',
     body:
