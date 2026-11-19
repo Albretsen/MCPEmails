@@ -337,7 +337,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const aliasGuard = alias ? await guardMailHost(alias, { protocol: 'imap', port: imapPort }) : null;
       if (alias && aliasGuard?.ok) {
         const retry = await detectImap(alias, aliasGuard.address);
-        if (retry.detection.result.ok) {
+        // Adopted when the new name got us past TLS: a success, or a login the
+        // server itself refused. Then the password is the problem, and the
+        // panel should say that rather than repeat the certificate error.
+        if (retry.detection.result.ok || retry.detection.result.code === 'AUTH_FAILED') {
           ({ detection: imapDetection, route: imapRoute, relayAlsoFailed: imapRelayAlsoFailed } = retry);
           // The outgoing server is almost always the same machine under the
           // same typed name; it gets the same name, guarded on its own port.
@@ -351,6 +354,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
           imapHost = alias;
           imapHostCorrected = true;
+          imapCert = null;
         }
       }
     }
@@ -493,10 +497,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const aliasGuard = alias ? await guardMailHost(alias, { protocol: 'smtp', port: smtpPort }) : null;
       if (alias && aliasGuard?.ok) {
         const retry = await detectSmtp(alias, aliasGuard.address);
-        if (retry.detection.result.ok) {
+        if (retry.detection.result.ok || retry.detection.result.code === 'AUTH_FAILED') {
           ({ detection: smtpDetection, route: smtpRoute, relayAlsoFailed: smtpRelayAlsoFailed } = retry);
           smtpHost = alias;
           smtpHostCorrected = true;
+          smtpCert = null;
         }
       }
     }
