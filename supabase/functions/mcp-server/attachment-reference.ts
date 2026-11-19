@@ -72,6 +72,12 @@ export type AttachmentSpec =
     kind: "reference";
     position: number;
     reference: AttachmentReferenceInput;
+  }
+  | {
+    /** A file the user or a shell uploaded through `draft` 'upload_link' (attachment-uploads.ts). */
+    kind: "upload";
+    position: number;
+    upload_id: string;
   };
 
 export interface AttachmentSpecs {
@@ -80,6 +86,7 @@ export interface AttachmentSpecs {
   specs: AttachmentSpec[];
   /** Summed decoded size of the inline entries only; references are unknown here. */
   inlineBytes: number;
+  /** Entries whose bytes the server fetches: references and uploads. */
   referenceCount: number;
 }
 
@@ -240,7 +247,8 @@ const BOTH_SHAPES =
   "{ filename, mime_type, data } with data base64-encoded, or a reference to a " +
   "file already in this inbox { source_message_id, attachment_index } " +
   "(attachment_index or filename may be omitted when the source message has " +
-  "exactly one attachment). A reference never carries data.";
+  "exactly one attachment), or { upload_id } from the draft tool's " +
+  "'upload_link' action. A reference never carries data.";
 
 /**
  * Classify every entry of a caller's `attachments` array.
@@ -292,6 +300,31 @@ export function parseAttachmentInputs(
 
     const hasReference = entry["source_message_id"] !== undefined;
     const hasData = entry["data"] !== undefined;
+    const hasUpload = entry["upload_id"] !== undefined;
+
+    if (hasUpload) {
+      if (hasReference || hasData) {
+        return {
+          ok: false,
+          code: "-32602",
+          message:
+            `${tool}: attachments[${position}] carries upload_id together with ` +
+            `${hasData ? "data" : "source_message_id"}, so which file to attach is ` +
+            `ambiguous. Send one or the other. ${BOTH_SHAPES}`,
+        };
+      }
+      const uploadId = entry["upload_id"];
+      if (typeof uploadId !== "string" || uploadId.trim() === "") {
+        return {
+          ok: false,
+          code: "-32602",
+          message: `${tool}: attachments[${position}].upload_id must be the upload_id 'upload_link' returned.`,
+        };
+      }
+      specs.push({ kind: "upload", position, upload_id: uploadId.trim() });
+      referenceCount++;
+      continue;
+    }
 
     if (hasReference && hasData) {
       return {
