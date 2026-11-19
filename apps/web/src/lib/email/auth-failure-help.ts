@@ -1132,6 +1132,8 @@ export interface ConnectFixInput {
   relayFailed?: boolean;
   /** The route's `imap_ok`: the IMAP half passed before SMTP failed. */
   imapOk?: boolean;
+  /** The route's `cert_host`: the certificate names this server, not the typed one. */
+  certHost?: string | null;
   /** 'both', 'imap' or 'smtp' (generic form only). */
   connectionMode?: string | null;
   /** Provider name for sentences that carry one when the table has none. */
@@ -1361,6 +1363,21 @@ export function connectFix(input: ConnectFixInput): ConnectFix | null {
 
   // ── TLS: say which two transports were tried, and what to change ─────────
   if (code === 'tls_handshake_failed' || TLS_PHASES.has(phase)) {
+    // The certificate is for another name, and we could not prove that name
+    // reaches the same server (otherwise the route would have used it).
+    const certHost = normalizeHost(input.certHost);
+    if (certHost) {
+      return {
+        ...base,
+        row: 'tls_cert_name',
+        provider: null,
+        steps: [
+          { key: 'connect.fix.certName.for', values: { certHost, host } },
+          { key: 'connect.fix.certName.next' },
+        ],
+        links: [],
+      };
+    }
     return {
       ...base,
       row: 'tls',
@@ -1395,6 +1412,8 @@ export function connectFailureContext(input: {
   viaRelay?: boolean;
   relayAlsoFailed?: boolean;
   imapOk?: boolean;
+  /** The name the server's certificate is for, when it named another host. */
+  certHost?: string | null;
 }): Record<string, string | boolean> {
   const out: Record<string, string | boolean> = {
     via_relay: Boolean(input.viaRelay),
@@ -1404,5 +1423,7 @@ export function connectFailureContext(input: {
   if (host && host.length <= 253 && /^[a-z0-9.-]+$/.test(host)) out.host = host;
   if (typeof input.phase === 'string' && SAFE_FAILURE_PHASES.has(input.phase)) out.phase = input.phase;
   if (typeof input.imapOk === 'boolean') out.imap_ok = input.imapOk;
+  const certHost = normalizeHost(input.certHost);
+  if (certHost && certHost.length <= 253 && /^[a-z0-9*.-]+$/.test(certHost)) out.cert_host = certHost;
   return out;
 }

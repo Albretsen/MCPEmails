@@ -46,6 +46,20 @@ export const ENTRIES = [
   {
     date: '2026-11-19',
     kind: 'improved',
+    title: 'Mail servers on shared hosting connect on their own',
+    body:
+      "When your mail server's security certificate carries your host's server name instead of your own domain, MCPEmails now finds that name and connects with it. Before, the connection failed with a security error on every attempt.",
+  },
+  {
+    date: '2026-11-19',
+    kind: 'fixed',
+    title: 'The dashboard works while your browser translates it',
+    body:
+      'The dashboard now keeps working when Chrome or Edge translates the page. Before, a failed inbox connection on a translated page could show an error page.',
+  },
+  {
+    date: '2026-11-19',
+    kind: 'improved',
     title: 'Add files to a draft straight from the draft card',
     body:
       "When you want a file on a draft, your AI can now ask for it in the draft card, where it shows as a button that opens your file picker. The file goes straight onto the draft, so your AI no longer has to copy it into the chat first.",

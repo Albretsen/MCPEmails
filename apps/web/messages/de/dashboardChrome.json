@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "Verbindungsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "connectionHealthy": "Die Verbindung funktioniert.",
     "inboxConnectedSuccess": "{label} erfolgreich verbunden.",
+    "inboxConnectedHost": "{label} über {host} verbunden, den Namen im Zertifikat Ihres Servers.",
     "inboxConnectedAdjusted": "{label} verbunden. Ihr Server hat IMAP {imapPort} ({imapSecurity}) und SMTP {smtpPort} ({smtpSecurity}) akzeptiert, daher haben wir diese Werte gespeichert.",
     "inboxConnectedAdjustedImap": "{label} verbunden. Ihr Server hat IMAP {imapPort} ({imapSecurity}) akzeptiert, daher haben wir diesen Wert gespeichert.",
     "inboxConnectedAdjustedSmtp": "{label} verbunden. Ihr Server hat SMTP {smtpPort} ({smtpSecurity}) akzeptiert, daher haben wir diesen Wert gespeichert.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "Der Server war nicht erreichbar.",
     "errorTimeoutShort": "Der Server hat nicht rechtzeitig geantwortet.",
     "errorSecurityShort": "Der Sicherheitsmodus passt nicht zum Port.",
+    "errorCertNameShort": "Der Servername passt nicht zu seinem Zertifikat.",
     "errorLoginTakenShort": "Dieser Postfach-Login ist bereits verbunden.",
     "errorInboxOtherProviderShort": "Diese Adresse ist bereits über eine andere Methode verbunden. Entfernen Sie dieses Postfach zuerst, um zu wechseln.",
     "errorInboxOwnedByOtherShort": "Eine andere Person in diesem Workspace hat diese Adresse bereits als privates Postfach verbunden.",
@@ -490,6 +492,10 @@
         "check": "Prüfen Sie den Servernamen auf der Einstellungsseite Ihres Anbieters und testen Sie erneut.",
         "blocked": "Ihr Mailserver nimmt keine Verbindungen von unseren Servern an. Das ist bei Mailservern von Schulen und Unternehmen häufig.",
         "blockedNext": "Bitten Sie Ihre IT, den Zugriff von außen zu erlauben, oder verbinden Sie eine andere Adresse."
+      },
+      "certName": {
+        "for": "Das Zertifikat gilt für {certHost}, nicht für {host}.",
+        "next": "Fragen Sie Ihren Anbieter nach dem Namen des Mailservers und testen Sie erneut."
       },
       "tls": {
         "tried": "Wir haben Port {tlsPort} mit TLS und Port {starttlsPort} mit STARTTLS versucht, und die sichere Verbindung ist bei beiden fehlgeschlagen.",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { SupportHelpLink } from '../components/support/SupportHelpLink';
 
 /**
@@ -16,7 +17,18 @@ import { SupportHelpLink } from '../components/support/SupportHelpLink';
  * CSS is inherited from the root layout (theme.css, colors_and_type.css,
  * marketing.css), so the `.auth-shell` / `.auth-card` classes are available.
  */
-export default function ErrorPage({ reset }) {
+export default function ErrorPage({ error, reset }) {
+  // A crash caught here never reaches window.onerror, so public/ce.js never saw
+  // it and nobody knew. Hand it to ce.js once (kind "error", "boundary:...").
+  useEffect(() => {
+    try {
+      const name = error?.name || 'Error';
+      const message = error?.message || '';
+      window.dispatchEvent(new ErrorEvent('error', { message: `boundary:${name}: ${message}`.slice(0, 400) }));
+    } catch {
+      // Reporting must never break the error page.
+    }
+  }, [error]);
   return (
     <div className="auth-shell">
       <div className="auth-wrap">
