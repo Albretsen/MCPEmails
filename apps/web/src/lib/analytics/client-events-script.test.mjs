@@ -35,11 +35,15 @@ function makeBrowser(pathname = '/dashboard/inboxes', { hydrated = true } = {}) 
   vm.runInNewContext(SOURCE, context);
   const events = () => sent.map((s) => s.body.e[0]);
   const runTimers = () => { while (timers.length) timers.shift().fn(); };
-  const el = (tag, attrs = {}, text = '') => ({
+  // `inside` names the ancestor selectors this element sits in, e.g. the sidebar.
+  const el = (tag, attrs = {}, text = '', inside = []) => ({
     tagName: tag,
     textContent: text,
     getAttribute: (n) => attrs[n] ?? null,
-    closest() { return this; },
+    closest(sel) {
+      if (sel === 'a,button') return this;
+      return sel.split(',').some((s) => inside.includes(s.trim())) ? {} : null;
+    },
   });
   const click = (target) => listeners.document.click.forEach((fn) => fn({ target }));
   const fire = (type, ev) => (listeners.window[type] ?? []).forEach((fn) => fn(ev));
@@ -75,6 +79,16 @@ test('classifies buy links, signup redirects, plan buttons and contact links', (
   b.click(b.el('A', { href: '/docs' }));
   const got = b.events().map((e) => `${e.k}:${e.t}`);
   assert.deepEqual(got, ['buy:personal', 'buy:pro', 'buy:business', 'contact:mailto', 'contact:help']);
+});
+
+test('the sidebar workspace switcher showing the plan is not a buy click', () => {
+  const b = makeBrowser('/dashboard');
+  b.click(b.el('BUTTON', {}, 'A Acme Personal plan', ['#dashboard-sidebar']));
+  b.click(b.el('BUTTON', {}, 'Acme Pro plan · Member', ['#dashboard-sidebar']));
+  b.runTimers();
+  assert.ok(!b.events().some((e) => e.k === 'buy' || e.k === 'buy_stalled'), JSON.stringify(b.events()));
+  b.click(b.el('BUTTON', {}, 'Upgrade to Personal'));
+  assert.equal(b.events().filter((e) => e.k === 'buy').length, 1);
 });
 
 test('reports a buy click that did not leave the page, and not one that did', () => {
