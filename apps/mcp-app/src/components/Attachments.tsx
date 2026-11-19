@@ -14,6 +14,8 @@ import { TextLink } from "./ui";
  *   - a removed file STAYS in its place, struck through, with "Undo" where its
  *     remove button was, until Save. So nothing moves under the pointer, and
  *     the second click of a double-click lands on Undo, the safe choice;
+ *   - files the agent asked for (`files_wanted`, 2026-11-19) are dashed
+ *     "+ name" buttons that open the same picker, gone as files arrive;
  *   - "Attach file" opens the system file picker; a file picked is a dashed
  *     chip until Save. It shows only its size, like a stored file: Send saves
  *     first, so it goes out either way, and a "not saved" mark read as "will
@@ -39,6 +41,8 @@ export function AttachmentList(props: {
   onPick: (files: File[]) => void;
   /** A sentence about the last pick (too large, unreadable), or null. */
   note: string | null;
+  /** Files the agent asked the person to add, still waiting (attachments.ts#openFileSlots). */
+  wanted?: string[];
 }) {
   const { items, edits, canEdit } = props;
   const picker = useRef<HTMLInputElement>(null);
@@ -86,6 +90,19 @@ export function AttachmentList(props: {
                 </button>
               )}
             </span>
+          ))}
+          {canEdit && (props.wanted ?? []).map((w, i) => (
+            <button
+              type="button"
+              class="chip att att-wanted"
+              role="listitem"
+              key={`w-${i}-${w}`}
+              title={`Attach ${w} from your device`}
+              onClick={() => picker.current?.click()}
+            >
+              <span aria-hidden="true">+</span>
+              <span class="name">{w}</span>
+            </button>
           ))}
           {canEdit && (
             <TextLink title="Attach a file to this draft" onClick={() => picker.current?.click()}>
