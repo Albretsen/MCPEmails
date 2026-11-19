@@ -75,6 +75,7 @@
     "connectionCheckFailedRetry": "A verificação da conexão falhou. Tente novamente.",
     "connectionHealthy": "A conexão está funcionando.",
     "inboxConnectedSuccess": "{label} conectada com sucesso.",
+    "inboxConnectedHost": "{label} conectada via {host}, o nome no certificado do seu servidor.",
     "inboxConnectedAdjusted": "{label} conectada. Seu servidor aceitou IMAP {imapPort} ({imapSecurity}) e SMTP {smtpPort} ({smtpSecurity}), então foi isso que salvamos.",
     "inboxConnectedAdjustedImap": "{label} conectada. Seu servidor aceitou IMAP {imapPort} ({imapSecurity}), então foi isso que salvamos.",
     "inboxConnectedAdjustedSmtp": "{label} conectada. Seu servidor aceitou SMTP {smtpPort} ({smtpSecurity}), então foi isso que salvamos.",
@@ -192,6 +193,7 @@
     "errorUnreachableShort": "Não foi possível acessar esse servidor.",
     "errorTimeoutShort": "O servidor não respondeu a tempo.",
     "errorSecurityShort": "O modo de segurança não corresponde à porta.",
+    "errorCertNameShort": "O nome do servidor não corresponde ao certificado.",
     "errorLoginTakenShort": "Esse login de caixa de correio já está conectado.",
     "errorInboxOtherProviderShort": "Esse endereço já está conectado por outro método. Remova essa caixa de entrada primeiro para trocar.",
     "errorInboxOwnedByOtherShort": "Outra pessoa deste espaço de trabalho já conectou este endereço como caixa de entrada privada.",
@@ -490,6 +492,10 @@
         "check": "Confira o nome do servidor na página de configurações do seu provedor e teste de novo.",
         "blocked": "Seu servidor de e-mail não aceita conexões dos nossos servidores. Isso é comum em servidores de e-mail de escolas e empresas.",
         "blockedNext": "Peça à sua equipe de TI para liberar o acesso externo, ou conecte outro endereço."
+      },
+      "certName": {
+        "for": "O certificado é para {certHost}, não para {host}.",
+        "next": "Peça ao seu provedor o nome do servidor de e-mail e teste novamente."
       },
       "tls": {
         "tried": "Tentamos a porta {tlsPort} com TLS e a porta {starttlsPort} com STARTTLS, e a conexão segura falhou nas duas.",

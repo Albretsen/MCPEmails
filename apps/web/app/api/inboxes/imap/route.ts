@@ -15,6 +15,7 @@ import { normalizeSecurity, parseConnectionMode, usesImap, usesSmtp, type Connec
 import { mailRelayConfigFromEnv } from '@/lib/email/mail-relay';
 import { detectWithRelay, refreshLearnedRelayHosts } from '@/lib/email/relay-fallback';
 import { guardMailHost } from '@/lib/email/host-guard';
+import { certificateNames, displayCertHost, findCertHostAlias, type CertNameSource } from '@/lib/email/cert-host-alias';
 import { connectFailureContext } from '@/lib/email/auth-failure-help';
 import { findConflictingInbox } from '@/lib/email/imap-login-collision';
 import { explainAuthFailure } from '@/lib/email/auth-failure';
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // shows `error` under "What to check").
     return NextResponse.json({ error: imapGuard.message, error_code: imapGuard.code }, { status: 422 });
   }
-  const smtpGuard = withSmtp ? await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort }) : null;
+  let smtpGuard = withSmtp ? await guardMailHost(smtpHost, { protocol: 'smtp', port: smtpPort }) : null;
   if (smtpGuard && !smtpGuard.ok) {
     return NextResponse.json({ error: smtpGuard.message, error_code: smtpGuard.code }, { status: 422 });
   }
@@ -294,21 +295,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   let resolvedImapPort: number | null = null;
   let resolvedImapSecurity = imapSecurity;
   let imapAdjusted = false;
+  let imapHostCorrected = false;
+  let smtpHostCorrected = false;
   if (withImap) {
-    const { detection: imapDetection, route: imapRoute, relayAlsoFailed: imapRelayAlsoFailed } = await detectWithRelay<ImapValidationResult>({
+    // The certificate from a failure that was only about its name; see below.
+    let imapCert: CertNameSource | null = null;
+    const detectImap = (host: string, address: string | undefined) => detectWithRelay<ImapValidationResult>({
       protocol: 'imap',
-      host: imapHost,
+      host,
       requested: { port: imapPort, security: imapSecurity },
       relay,
       db,
       authReasonOf: (result) =>
         !result.ok && result.code === 'AUTH_FAILED'
-          ? explainAuthFailure({ detail: result.detail, email, host: imapHost, secret: appPassword, usernameProvided: Boolean(username) }).reason
+          ? explainAuthFailure({ detail: result.detail, email, host, secret: appPassword, usernameProvided: Boolean(username) }).reason
           : null,
       attempt: (candidate, timeoutMs, tunnel) =>
         validateImapCredential({
-          host: imapHost,
-          pinnedAddress: tunnel ? undefined : imapGuard?.address,
+          host,
+          pinnedAddress: tunnel ? undefined : address,
           port: candidate.port,
           email,
           username: username || undefined,
@@ -316,8 +321,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           security: candidate.security,
           timeoutMs,
           tunnel,
+        }).then((result) => {
+          if (!result.ok && result.cert) imapCert = result.cert;
+          return result;
         }),
     });
+    let { detection: imapDetection, route: imapRoute, relayAlsoFailed: imapRelayAlsoFailed } = await detectImap(imapHost, imapGuard?.address);
+    // The certificate names another host: `mail.example.pl` typed, a shared
+    // server whose certificate says `s28.host.pl`. No port fixes that, and the
+    // user rarely knows the real name. When the certificate is valid for a name
+    // that resolves to the same machine, retry once with that name (full
+    // certificate validation, see cert-host-alias.ts) and save it.
+    if (!imapDetection.result.ok && imapCert && imapGuard?.ok) {
+      const alias = await findCertHostAlias({ host: imapHost, address: imapGuard.address, cert: imapCert });
+      const aliasGuard = alias ? await guardMailHost(alias, { protocol: 'imap', port: imapPort }) : null;
+      if (alias && aliasGuard?.ok) {
+        const retry = await detectImap(alias, aliasGuard.address);
+        // Adopted when the new name got us past TLS: a success, or a login the
+        // server itself refused. Then the password is the problem, and the
+        // panel should say that rather than repeat the certificate error.
+        if (retry.detection.result.ok || retry.detection.result.code === 'AUTH_FAILED') {
+          ({ detection: imapDetection, route: imapRoute, relayAlsoFailed: imapRelayAlsoFailed } = retry);
+          // The outgoing server is almost always the same machine under the
+          // same typed name; it gets the same name, guarded on its own port.
+          if (withSmtp && smtpHost === imapHost) {
+            const smtpAliasGuard = await guardMailHost(alias, { protocol: 'smtp', port: smtpPort });
+            if (smtpAliasGuard.ok) {
+              smtpHost = alias;
+              smtpGuard = smtpAliasGuard;
+              smtpHostCorrected = true;
+            }
+          }
+          imapHost = alias;
+          imapHostCorrected = true;
+          imapCert = null;
+        }
+      }
+    }
     const validation = imapDetection.result;
     // Persist what worked, not what was asked for: leaving the user's guess on
     // the row would send every later sync back to the port that failed.
@@ -354,7 +394,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // name, the phase that failed and whether the relay retry was tried
         // too. Server configuration the user typed, never the address or the
         // password (see connectFailureContext).
-        ...connectFailureContext({ host: imapHost, phase: validation.phase, viaRelay: Boolean(imapRoute), relayAlsoFailed: imapRelayAlsoFailed }),
+        ...connectFailureContext({ host: imapHost, phase: validation.phase, viaRelay: Boolean(imapRoute), relayAlsoFailed: imapRelayAlsoFailed, certHost: imapCert ? displayCertHost(certificateNames(imapCert)) : null }),
       };
       // A rejected login is 72.9% of every connection failure here, and until now
       // every one of them produced the same "check your password". Which of the
@@ -419,20 +459,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Relayed exactly like IMAP above; a host checked through the relay is
     // checked, and then stored, on 587 with STARTTLS whatever was submitted,
     // because the relay cannot carry 465 (relay-fallback.ts, RELAYED_TRANSPORTS).
-    const { detection: smtpDetection, route: smtpRoute, relayAlsoFailed: smtpRelayAlsoFailed } = await detectWithRelay<SmtpValidationResult>({
+    let smtpCert: CertNameSource | null = null;
+    const detectSmtp = (host: string, address: string | undefined) => detectWithRelay<SmtpValidationResult>({
       protocol: 'smtp',
-      host: smtpHost,
+      host,
       requested: { port: smtpPort, security: smtpSecurity },
       relay,
       db,
       authReasonOf: (result) =>
         !result.ok && result.code === 'AUTH_FAILED'
-          ? explainAuthFailure({ detail: result.detail, email, host: smtpHost, secret: appPassword, usernameProvided: Boolean(username) }).reason
+          ? explainAuthFailure({ detail: result.detail, email, host, secret: appPassword, usernameProvided: Boolean(username) }).reason
           : null,
       attempt: (candidate, timeoutMs, tunnel) =>
         validateSmtpCredential({
-          host: smtpHost,
-          pinnedAddress: tunnel ? undefined : smtpGuard?.address,
+          host,
+          pinnedAddress: tunnel ? undefined : address,
           port: candidate.port,
           email,
           username: username || undefined,
@@ -443,8 +484,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           // than a retry-sized one.
           timeoutMs: tunnel ? Math.max(timeoutMs, 15_000) : timeoutMs,
           tunnel,
+        }).then((result) => {
+          if (!result.ok && result.cert) smtpCert = result.cert;
+          return result;
         }),
     });
+    let { detection: smtpDetection, route: smtpRoute, relayAlsoFailed: smtpRelayAlsoFailed } = await detectSmtp(smtpHost, smtpGuard?.address);
+    // Same certificate-name retry as IMAP above, for an outgoing host typed on
+    // its own (or a send-only connection).
+    if (!smtpDetection.result.ok && smtpCert && smtpGuard?.ok) {
+      const alias = await findCertHostAlias({ host: smtpHost, address: smtpGuard.address, cert: smtpCert });
+      const aliasGuard = alias ? await guardMailHost(alias, { protocol: 'smtp', port: smtpPort }) : null;
+      if (alias && aliasGuard?.ok) {
+        const retry = await detectSmtp(alias, aliasGuard.address);
+        if (retry.detection.result.ok || retry.detection.result.code === 'AUTH_FAILED') {
+          ({ detection: smtpDetection, route: smtpRoute, relayAlsoFailed: smtpRelayAlsoFailed } = retry);
+          smtpHost = alias;
+          smtpHostCorrected = true;
+          smtpCert = null;
+        }
+      }
+    }
     const smtpValidation = smtpDetection.result;
     resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : smtpPort;
     resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
@@ -498,6 +558,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             relayAlsoFailed: smtpRelayAlsoFailed,
             // Only true when this connection carried IMAP and it just passed.
             imapOk: withImap,
+            certHost: smtpCert ? displayCertHost(certificateNames(smtpCert)) : null,
           }),
         },
         { status: 422 },
@@ -608,5 +669,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     imap_security: resolvedImapSecurity,
     smtp_port: resolvedSmtpPort,
     smtp_security: resolvedSmtpSecurity,
+    // The server name we saved, when it is not the one typed: the certificate
+    // was issued to another name for the same machine (cert-host-alias.ts).
+    host_adjusted: imapHostCorrected || smtpHostCorrected,
+    imap_host: withImap ? imapHost : null,
+    smtp_host: withSmtp ? smtpHost : null,
   });
 }

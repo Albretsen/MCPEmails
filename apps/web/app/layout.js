@@ -91,6 +91,13 @@ export default async function RootLayout({ children }) {
           page and nothing else.
         */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        {/*
+          Keeps React working when Chrome or Edge translates the page (see
+          public/dom-guard.js). Synchronous on purpose: it must patch the DOM
+          before React's first insert. About 1 KB, same origin, cached.
+        */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/dom-guard.js" />
       </head>
       <body>
         {/*

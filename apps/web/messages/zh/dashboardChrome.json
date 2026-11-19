@@ -73,6 +73,7 @@
     "connectionCheckFailedRetry": "连接检查失败，请重试。",
     "connectionHealthy": "连接状态正常。",
     "inboxConnectedSuccess": "{label} 已成功连接。",
+    "inboxConnectedHost": "{label} 已通过 {host}（服务器证书上的名称）连接。",
     "inboxConnectedAdjusted": "{label} 已连接。你的服务器接受了 IMAP {imapPort}（{imapSecurity}）和 SMTP {smtpPort}（{smtpSecurity}），我们保存的就是这些。",
     "inboxConnectedAdjustedImap": "{label} 已连接。你的服务器接受了 IMAP {imapPort}（{imapSecurity}），我们保存的就是这个。",
     "inboxConnectedAdjustedSmtp": "{label} 已连接。你的服务器接受了 SMTP {smtpPort}（{smtpSecurity}），我们保存的就是这个。",
@@ -190,6 +191,7 @@
     "errorUnreachableShort": "无法连接到该服务器。",
     "errorTimeoutShort": "服务器未能及时响应。",
     "errorSecurityShort": "安全模式与端口不匹配。",
+    "errorCertNameShort": "服务器名称与其证书不匹配。",
     "errorLoginTakenShort": "该邮箱登录名已连接。",
     "errorInboxOtherProviderShort": "该地址已通过其他方式连接。请先移除该收件箱再切换。",
     "errorProtocolShort": "邮件服务器返回了意外的响应。",
@@ -486,6 +488,10 @@
         "check": "请在服务商的设置页面核对服务器名称，然后重新测试。",
         "blocked": "你的邮件服务器不接受来自我们服务器的连接。学校和公司的邮件服务器常有这种情况。",
         "blockedNext": "请让 IT 部门允许外部访问，或连接其他地址。"
+      },
+      "certName": {
+        "for": "该证书属于 {certHost}，而不是 {host}。",
+        "next": "请向服务商确认邮件服务器名称，然后再次测试。"
       },
       "tls": {
         "tried": "我们尝试了使用 TLS 的端口 {tlsPort} 和使用 STARTTLS 的端口 {starttlsPort}，两者的安全连接都失败了。",
