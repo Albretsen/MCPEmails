@@ -198,7 +198,7 @@ Deno.test("the write tools advertise their writes and nothing else", () => {
     "archive",
   ]);
   assertEquals(advertisedActions("folder"), ["create", "rename", "delete"]);
-  assertEquals(advertisedActions("draft"), ["create", "reply", "update", "send", "delete"]);
+  assertEquals(advertisedActions("draft"), ["create", "reply", "update", "send", "delete", "upload_link"]);
   assertEquals(advertisedActions("schedule"), ["create", "cancel"]);
   assertEquals(advertisedActions("automation"), [
     "create",
@@ -1132,7 +1132,7 @@ Deno.test("draft: the description, the update hint and draft_list say what is tr
   // draft with an empty subject); the hint says so.
   assert(/create = a new draft; body required, subject optional/.test(action), action);
   assert(!/subject and body required|create: subject/.test(action), action);
-  assert(/Required: reply: body\./.test(action), action);
+  assert(/Required: reply: body; upload_link: filename\./.test(action), action);
   assert(
     /update = change only the fields you pass on draft_id, keeping every omitted one \(body included\); send = /
       .test(action),

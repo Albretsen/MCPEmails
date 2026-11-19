@@ -2711,6 +2711,26 @@ AS $$
 $$;
 
 -- ============================================================
+-- Upload slots for email attachments (20261119120000_attachment_uploads).
+-- The self-host stack has no Storage service, so 'upload_link' answers
+-- "uploads are unavailable"; the table exists so the lookups stay valid.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.attachment_uploads (
+  id                  uuid PRIMARY KEY,
+  workspace_id        uuid NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
+  api_key_id          uuid REFERENCES public.api_keys(id) ON DELETE SET NULL,
+  inbox_id            uuid REFERENCES public.inboxes(id) ON DELETE SET NULL,
+  filename            text NOT NULL,
+  mime_type           text NOT NULL,
+  declared_size_bytes bigint,
+  storage_path        text NOT NULL UNIQUE,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  expires_at          timestamptz NOT NULL DEFAULT now() + interval '2 hours',
+  consumed_at         timestamptz
+);
+CREATE INDEX IF NOT EXISTS attachment_uploads_expires_idx ON public.attachment_uploads (expires_at);
+
+-- ============================================================
 -- Seed: one operator user + one workspace (fixed UUIDs).
 -- Single-tenant self-host: every inbox and API key you provision
 -- belongs to this workspace. plan='pro' + grandfathered keeps the
