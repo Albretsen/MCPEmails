@@ -286,6 +286,28 @@ test('not a first inbox: success closes as before', async (t) => {
   assert.equal(view.container.textContent.includes(fixCopy.done.title), false);
 });
 
+test('connected under the certificate\'s name: the saved host reaches the parent; otherwise none', async (t) => {
+  stubFetch(t, () => ({ status: 200, body: { success: true, host_adjusted: true, imap_host: 's28.kylos.example', smtp_host: 's28.kylos.example' } }));
+  const connected = [];
+  const { view } = await render(t, { showNextStepAfterConnect: false, onConnect: (row) => connected.push(row) });
+  await openGenericForm(view);
+  await fill(view, { email: 'me@firm.example', imapHost: 'mail.firm.example', smtpHost: 'mail.firm.example', password: 'Password1!' });
+  await submit(view);
+  await waitFor(() => connected.length === 1, { message: 'onConnect' });
+  assert.equal(connected[0].savedHost, 's28.kylos.example');
+});
+
+test('a plain success carries no saved host', async (t) => {
+  stubFetch(t, () => ({ status: 200, body: { success: true, host_adjusted: false, imap_host: 'imap.firm.example', smtp_host: 'smtp.firm.example' } }));
+  const connected = [];
+  const { view } = await render(t, { showNextStepAfterConnect: false, onConnect: (row) => connected.push(row) });
+  await openGenericForm(view);
+  await fill(view, { email: 'me@firm.example', imapHost: 'imap.firm.example', smtpHost: 'smtp.firm.example', password: 'Password1!' });
+  await submit(view);
+  await waitFor(() => connected.length === 1, { message: 'onConnect' });
+  assert.equal(connected[0].savedHost, null);
+});
+
 test('back from Microsoft with outlook_cancelled: a clear panel on the Outlook card', async (t) => {
   stubFetch(t, () => ({ status: 200, body: {} }));
   const { view } = await render(t, { preselect: null, returnNotice: 'outlook_cancelled' });
