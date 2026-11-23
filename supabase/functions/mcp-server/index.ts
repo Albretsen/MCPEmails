@@ -21069,6 +21069,11 @@ async function executeSendEmail(
       htmlBody: sendParams.htmlBody,
       attachments: sendParams.attachments,
       replyTo: sendParams.replyTo,
+      // The Send As choice must survive the hold: the dispatcher re-runs this
+      // handler over the snapshot, and without `from` it sends as the inbox.
+      from: senderInbox.email_address.toLowerCase() !== inbox.email_address.toLowerCase()
+        ? senderInbox.email_address
+        : undefined,
     }));
     if (approval) return {
       result: await heldSendResult(approval, apiKey, senderInbox.id, "email"),

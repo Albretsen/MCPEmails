@@ -1792,3 +1792,11 @@ Deno.test("an edit built on a revision that moved underneath it writes nothing",
   assertEquals(store.send_approvals[0].summary.subject, "Someone else's", "the other edit stands");
   assert(!String(store.send_approvals[0].payload.data).includes("Mine"), "this edit was not written");
 });
+
+Deno.test("approval_review shows a held send's Send As address (MCPE-FNV9WC)", async () => {
+  const store = freshStore({
+    payload: { v: 1, data: CIPHER_PREFIX + JSON.stringify({ ...SNAPSHOT, from: "alias@example.org" }) },
+  });
+  const result = await runApprovalReview(makeDeps(store), caller, { approval_id: APPROVAL_ID });
+  assertEquals(envelopeOf(result).outbound.identity.email_address, "alias@example.org", "send as identity");
+});

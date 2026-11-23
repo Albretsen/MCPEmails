@@ -424,3 +424,19 @@ Deno.test("applySignatureOnce: anything short of the signature is signed as befo
   // No signature configured: nothing to detect, nothing appended.
   assertEquals(textCarriesOwnSignature("Hi.\n\n-- \nAsgeir", { signature_enabled: true }), false);
 });
+
+Deno.test("a held send keeps its Send As address, and omits it when there is none", () => {
+  const base = {
+    inbox_id: "inbox-1",
+    to: ["someone@example.com"],
+    cc: [],
+    bcc: [],
+    subject: "Subject",
+    textBody: "Hello",
+    attachments: [],
+  };
+  // MCPE-FNV9WC: the dispatcher re-runs email_send over this snapshot, so a
+  // missing `from` sent the approved message from the inbox's own address.
+  assertEquals(heldSendSnapshot({ ...base, from: "alias@example.org" })["from"], "alias@example.org");
+  assert(!("from" in heldSendSnapshot(base)));
+});
