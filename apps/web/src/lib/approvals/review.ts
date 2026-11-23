@@ -396,7 +396,13 @@ export async function loadApprovalForReview(
     send_at: approval.send_at ?? null,
     identity: {
       inbox_id: inbox.id ?? approval.inbox_id ?? null,
-      email_address: neutralizeNullable(inbox.email_address ?? null),
+      // The Send As address when the request names one (payload is null for
+      // a viewer, who then sees the inbox's own address).
+      email_address: neutralizeNullable(
+        (typeof payload?.from === 'string' && payload.from.trim() ? payload.from.trim() : null) ??
+          inbox.email_address ??
+          null,
+      ),
       display_name: neutralizeNullable(inbox.display_name ?? null),
       provider: inbox.provider ?? null,
       service: inbox.service ?? null,

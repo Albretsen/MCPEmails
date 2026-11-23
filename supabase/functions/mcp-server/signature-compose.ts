@@ -594,6 +594,13 @@ export interface HeldSendSnapshotInput {
   htmlBody?: string;
   attachments: Array<{ filename: string; mime_type: string; data: string }>;
   replyTo?: string;
+  /**
+   * The Send As address, when the caller chose one other than the inbox's own.
+   * The dispatcher re-runs email_send over this snapshot, so a snapshot without
+   * it sent an approved message from the inbox's primary address (MCPE-FNV9WC,
+   * 2026-11-23). It is re-verified against the inbox's identities at dispatch.
+   */
+  from?: string;
 }
 
 /**
@@ -637,6 +644,7 @@ export function heldSendSnapshot(
     ...(input.htmlBody ? { html_body: input.htmlBody } : {}),
     ...(input.attachments.length ? { attachments: input.attachments } : {}),
     ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+    ...(input.from ? { from: input.from } : {}),
     include_signature: false,
   };
 }
