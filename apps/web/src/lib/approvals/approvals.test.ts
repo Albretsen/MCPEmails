@@ -440,3 +440,20 @@ test('privacy review: the owner of a private inbox decides its sends with role m
   assert.notEqual(company, 'not_found');
   if (company !== 'not_found') assert.equal(company.canDecide, false);
 });
+
+// ---------------------------------------------------------------------------
+// Send As on the review page (MCPE-FNV9WC, 2026-11-23)
+// ---------------------------------------------------------------------------
+
+test('review: a held send with a Send As address shows that address, not the inbox', async () => {
+  const sendAs = approval({
+    payload: { v: 1, data: encryptToken(JSON.stringify({ to: ['a@example.com'], body: 'x', from: 'alias@example.org' })) },
+  });
+  const review = await loadApprovalForReview(db(sendAs, 'owner'), ID, USER);
+  if (review === 'not_found') throw new Error('not found');
+  assert.equal(review.identity.email_address, 'alias@example.org');
+
+  const plain = await loadApprovalForReview(db(approval(), 'owner'), ID, USER);
+  if (plain === 'not_found') throw new Error('not found');
+  assert.equal(plain.identity.email_address, 'box@example.com');
+});

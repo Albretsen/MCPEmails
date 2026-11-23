@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-23',
+    kind: 'fixed',
+    title: 'Approved emails keep your chosen sender address',
+    body:
+      "When review before sending is on, an email your AI writes from one of your other sender addresses now goes out from that address once you approve it, and the review card and page show it. Before, it was sent from the mailbox's main address.",
+  },
+  {
     date: '2026-11-19',
     kind: 'added',
     title: 'Upload links for large or local files',
