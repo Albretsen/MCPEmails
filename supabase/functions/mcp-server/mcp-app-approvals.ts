@@ -761,6 +761,12 @@ export function summaryFromSnapshot(
   }, typeof prev.forward_carries_original === "boolean" ? "email_forward" : undefined);
 }
 
+/** The `from` (Send As) address a held request will send as, if it names one. */
+export function heldSenderAddress(snapshot: Record<string, unknown> | null | undefined): string | null {
+  const from = snapshot?.from;
+  return typeof from === "string" && from.trim() ? from.trim() : null;
+}
+
 async function buildOutboundEnvelope(
   deps: ApprovalDeps,
   caller: ApprovalCaller,
@@ -869,7 +875,9 @@ async function buildOutboundEnvelope(
       review_url: approvalReviewUrl(deps.appUrl, row.id),
       identity: {
         inbox_id: inboxRow.id ?? row.inbox_id,
-        email_address: neutralizeMaybe(inboxRow.email_address ?? null),
+        // The Send As address when the request names one (email_send stores
+        // it since 2026-11-23; reply and forward keep their raw arguments).
+        email_address: neutralizeMaybe(heldSenderAddress(snapshot) ?? inboxRow.email_address ?? null),
         display_name: neutralizeMaybe(inboxRow.display_name ?? null),
         provider: inboxRow.provider ?? null,
         service: inboxRow.service ?? null,
