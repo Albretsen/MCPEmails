@@ -1,6 +1,8 @@
 # MCPEmails
 
-**Give your AI agent an inbox.** A hosted [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude, Cursor, or any MCP‑compatible client read, search, send, organize, and schedule email through your existing mailboxes — without ever storing your mail.
+**Give your AI agent an inbox.** A hosted email [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude, ChatGPT, Cursor or any MCP‑compatible client read, search, send, organize and schedule email through your existing mailboxes, without ever storing your mail.
+
+**Works with** Gmail and Google Workspace, Outlook and Microsoft 365, Fastmail, iCloud, Yahoo, Zoho and any IMAP/SMTP mailbox, several of them behind one MCP URL. Open source (AGPL‑3.0) with a [self‑host](#self-hosting) Docker stack.
 
 [![Glama quality grade](https://glama.ai/mcp/servers/Albretsen/MCPEmails/badge)](https://glama.ai/mcp/servers/Albretsen/MCPEmails)
 [![npm version](https://img.shields.io/npm/v/mcpemails)](https://www.npmjs.com/package/mcpemails)
@@ -55,6 +57,8 @@ Permissions are scoped per key, so you can hand an agent `read:email` only, or g
 **One click (OAuth):** [Add to Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=MCPEmails&connectorUrl=https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp), [Add to Cursor](https://cursor.com/install-mcp?name=mcpemails&config=eyJ1cmwiOiJodHRwczovL21jcGVtYWlscy5jb20vYXBpL21jcCJ9) or [Install in VS Code](https://insiders.vscode.dev/redirect/mcp/install?name=mcpemails&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcpemails.com%2Fapi%2Fmcp%22%7D). Each opens the client with the server filled in; sign in (or create an account) and connect your inbox when it asks. Claude Free allows one custom connector.
 
 **Claude Code:** `claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp`
+
+**ChatGPT:** install **Any Mailbox** (our ChatGPT listing) from the [ChatGPT plugin directory](https://chatgpt.com/plugins/plugin_asdk_app_6ace084f569081919174189f44ccc61e), or add `https://mcpemails.com/api/mcp` as a custom connector. Steps: [mcpemails.com/docs/chatgpt](https://mcpemails.com/docs/chatgpt).
 
 **Other OAuth clients:** add a remote MCP server pointing at `https://mcpemails.com/api/mcp` and approve the consent screen. Pick the scopes the agent should have.
 
