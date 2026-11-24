@@ -11,6 +11,7 @@
     "connectYahoo": "Connect Yahoo",
     "connectZoho": "Connect Zoho",
     "connectYandex": "Connect Yandex",
+    "connectGoogleWorkspace": "Connect Google Workspace",
     "vsNative": "vs native connectors"
   }
 }

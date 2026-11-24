@@ -8,6 +8,7 @@
     "eyebrow": "MCPEmails 博客",
     "title": "关于智能体、邮件与 MCP 的笔记",
     "lead": "关于如何将 Gmail、Outlook、Fastmail 和任意 IMAP 邮箱连接到 Claude、Cursor 及兼容 MCP 客户端的指南、深度解析与实践笔记。",
+    "latest": "最新指南",
     "filterAria": "按主题筛选文章",
     "all": "全部",
     "empty": "暂无标记为“{tag}”的文章。",
@@ -19,6 +20,7 @@
     "toc": "本页目录",
     "writtenBy": "作者",
     "back": "← 返回所有文章",
+    "related": "相关指南",
     "minRead": "{minutes} 分钟阅读",
     "cta": {
       "title": "为你的智能体接入收件箱",

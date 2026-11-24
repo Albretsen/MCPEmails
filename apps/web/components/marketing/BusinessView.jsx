@@ -3,6 +3,7 @@ import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { providerLocales } from '@/lib/connect/providers.mjs';
 
 /**
  * /for/business, rendered on the server.
@@ -182,7 +183,10 @@ export default function BusinessView({ copy, locale }) {
             <Link className="btn btn-secondary" href="/connect/imap">{providers.ctaImap}</Link>
             <Link className="btn btn-secondary" href="/connect/gmail">{providers.ctaGmail}</Link>
             <Link className="btn btn-secondary" href="/connect/office365">{providers.ctaMicrosoft}</Link>
-            <Link className="btn btn-secondary" href="/connect/ionos">{providers.ctaIonos}</Link>
+            {/* IONOS has no pt or ja page; the locale-aware Link would 404 there. */}
+            {providerLocales('ionos').includes(locale) && (
+              <Link className="btn btn-secondary" href="/connect/ionos">{providers.ctaIonos}</Link>
+            )}
           </div>
           <p className="how-guide-link">
             <Link href="/docs/providers">{providers.ctaMatrix}</Link>

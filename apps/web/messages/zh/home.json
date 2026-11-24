@@ -318,6 +318,8 @@
     "linkReadOnly": "只读访问",
     "linkApiGuide": "开发者指南",
     "linkClients": "MCP 客户端设置",
+    "linkWhatIsMcp": "什么是 MCP 邮件服务器？",
+    "linkAnyEmail": "将任意邮箱连接到 Claude 和 ChatGPT",
     "linkSettingsLookup": "查询 IMAP 和 SMTP 设置",
     "linkPrivacy": "隐私",
     "linkTerms": "条款",

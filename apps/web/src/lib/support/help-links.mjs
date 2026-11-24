@@ -4,6 +4,8 @@
  * browser bundle.
  */
 
+import { FOOTER_PROVIDERS } from '../connect/footer-providers.mjs';
+
 /** The address shown as the email way in. */
 export const SUPPORT_EMAIL = 'support@mcpemails.com';
 
@@ -16,6 +18,11 @@ export function helpHref(locale, href) {
   if (typeof href !== 'string' || !href.startsWith('/')) return href;
   if (href === '/dashboard' || href.startsWith('/dashboard/') || href.startsWith('/api/')) return href;
   if (!locale || locale === 'en') return href;
+  // A provider page missing in this locale (Yandex has no pt or ja page) is
+  // linked at its English URL rather than a locale-prefixed 404.
+  const provider = /^\/connect\/([^/?#]+)$/.exec(href);
+  const known = provider && FOOTER_PROVIDERS.find((p) => p.slug === provider[1]);
+  if (known && !known.locales.includes(locale)) return href;
   return href === '/' ? `/${locale}` : `/${locale}${href}`;
 }
 

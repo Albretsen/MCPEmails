@@ -15,6 +15,9 @@ function fmtDate(iso, locale) {
   });
 }
 
+/** How many of the newest posts the "Latest guides" row links. */
+const LATEST_COUNT = 4;
+
 function PostCard({ post, t, locale, tagLabels }) {
   // A post with no translation in this locale lives at its English URL only
   // (the localized one 308s there), so link straight to it. next-intl's Link
@@ -65,6 +68,15 @@ export default function BlogIndexClient({ posts, tagLabels = {} }) {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
   }, [posts]);
 
+  // The newest posts by publication date. The grid is in relevance order
+  // (posts.js RELEVANCE_ORDER), which can leave a new post far down the page;
+  // this row links the newest ones from the top of the index so crawlers and
+  // readers reach them first.
+  const latest = useMemo(
+    () => [...posts].sort((a, b) => (b.publishedAt > a.publishedAt ? 1 : b.publishedAt < a.publishedAt ? -1 : 0)).slice(0, LATEST_COUNT),
+    [posts],
+  );
+
   const [active, setActive] = useState('All');
   const filtered = useMemo(
     () => (active === 'All' ? posts : posts.filter((p) => p.tags.includes(active))),
@@ -81,6 +93,16 @@ export default function BlogIndexClient({ posts, tagLabels = {} }) {
           <div className="eye-label">{t('index.eyebrow')}</div>
           <h1 className="blog-index-h1">{t('index.title')}</h1>
           <p className="blog-index-lead">{t('index.lead')}</p>
+
+          <nav className="blog-latest" aria-label={t('index.latest')}>
+            <span className="blog-latest-label">{t('index.latest')}:</span>
+            {latest.map((p) => {
+              const PostLink = p.canonicalLocale === locale ? Link : NextLink;
+              return (
+                <PostLink key={p.slug} href={`/blog/${p.slug}`} className="blog-latest-link">{p.title}</PostLink>
+              );
+            })}
+          </nav>
 
           {/* Tag filter */}
           <div className="blog-filter" role="tablist" aria-label={t('index.filterAria')}>
@@ -132,6 +154,17 @@ export default function BlogIndexClient({ posts, tagLabels = {} }) {
           border-bottom: 1px solid var(--border-1);
         }
         .blog-index-head .container { max-width: 1120px; }
+        .blog-latest {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px 16px;
+          margin: 16px 0 20px;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .blog-latest-label { color: var(--fg-3); font-weight: 600; }
+        .blog-latest-link { color: var(--cobalt-600); text-decoration: none; }
+        .blog-latest-link:hover { text-decoration: underline; }
         .blog-index-h1 {
           font-size: clamp(30px, 4.5vw, 44px);
           font-weight: 800;

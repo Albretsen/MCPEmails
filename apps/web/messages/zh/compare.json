@@ -11,6 +11,7 @@
     "connectYahoo": "连接 Yahoo",
     "connectZoho": "连接 Zoho",
     "connectYandex": "连接 Yandex",
+    "connectGoogleWorkspace": "连接 Google Workspace",
     "vsNative": "对比原生连接器"
   }
 }

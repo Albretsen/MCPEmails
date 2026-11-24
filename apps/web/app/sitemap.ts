@@ -74,11 +74,33 @@ const MARKETING_PAGES: {
   { path: '/cancel', lastModified: '2026-10-20', changeFrequency: 'yearly', priority: 0.3 },
 ];
 
+/** The later of two ISO dates (YYYY-MM-DD...); ISO strings compare as dates. */
+const later = (a: string, b: string) => (b > a ? b : a);
+
+/** A provider page's lastmod: the later of its probe and its last copy edit. */
+function providerLastModified(p: ReturnType<typeof releasedProviders>[number]): string {
+  const probed = p.evidence.verifiedOn;
+  const edited = (p as { contentUpdatedOn?: string }).contentUpdatedOn;
+  return edited && edited > probed ? edited : probed;
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
+  // The two hubs list their children, so their content changes whenever a
+  // child is added: the blog index with each post, the /connect hub with each
+  // provider wave. A hand-kept date left /blog at 2026-08-02 with posts
+  // published every week since.
+  const indexPosts = getAllPosts().filter((post) => !post.noindex);
+  const newestPost = indexPosts.reduce(
+    (acc, post) => later(acc, new Date(post.updatedAt ?? post.publishedAt).toISOString().slice(0, 10)),
+    '1970-01-01',
+  );
+  const newestProvider = releasedProviders().reduce((acc, p) => later(acc, providerLastModified(p)), '1970-01-01');
+  const derived: Record<string, string> = { '/blog': newestPost, '/connect': newestProvider };
+
   const staticEntries: MetadataRoute.Sitemap = MARKETING_PAGES.map(
     ({ path, lastModified, changeFrequency, priority }) => ({
       url: localePath('en', path),
-      lastModified: new Date(`${lastModified}T00:00:00.000Z`),
+      lastModified: new Date(`${derived[path] ? later(lastModified, derived[path]) : lastModified}T00:00:00.000Z`),
       changeFrequency,
       priority,
       alternates: { languages: languageAlternates(path) },
@@ -104,12 +126,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   };
   const providerEntries: MetadataRoute.Sitemap = releasedProviders().map((p) => {
     const path = `/connect/${p.slug}`;
-    // The later of the probe date and the last substantive copy change. ISO
-    // dates compare correctly as strings. Outlook and Microsoft 365 were
-    // rewritten for the Graph connector launch long after their IMAP probe.
-    const probed = p.evidence.verifiedOn;
-    const edited = (p as { contentUpdatedOn?: string }).contentUpdatedOn;
-    const lastModified = edited && edited > probed ? edited : probed;
+    // The later of the probe date and the last substantive copy change.
+    // Outlook and Microsoft 365 were rewritten for the Graph connector launch
+    // long after their IMAP probe.
+    const lastModified = providerLastModified(p);
     return {
       url: localePath('en', path),
       lastModified: new Date(`${lastModified}T00:00:00.000Z`),

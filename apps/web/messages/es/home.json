@@ -318,6 +318,8 @@
     "linkReadOnly": "Acceso de solo lectura",
     "linkApiGuide": "Guía para desarrolladores",
     "linkClients": "Configuración de clientes MCP",
+    "linkWhatIsMcp": "¿Qué es un servidor MCP de correo?",
+    "linkAnyEmail": "Conecta cualquier correo a Claude y ChatGPT",
     "linkSettingsLookup": "Buscador de configuración IMAP y SMTP",
     "linkPrivacy": "Privacidad",
     "linkTerms": "Términos",

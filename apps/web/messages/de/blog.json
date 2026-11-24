@@ -8,6 +8,7 @@
     "eyebrow": "Der MCPEmails Blog",
     "title": "Notizen zu Agenten, E-Mail & MCP",
     "lead": "Anleitungen, Hintergründe und Praxisnotizen dazu, wie Sie Gmail, Outlook, Fastmail und jedes IMAP-Postfach mit Claude, Cursor und MCP-kompatiblen Clients verbinden.",
+    "latest": "Neueste Anleitungen",
     "filterAria": "Beiträge nach Thema filtern",
     "all": "Alle",
     "empty": "Noch keine Beiträge mit dem Tag „{tag}“.",
@@ -19,6 +20,7 @@
     "toc": "Auf dieser Seite",
     "writtenBy": "Geschrieben von",
     "back": "← Zurück zu allen Beiträgen",
+    "related": "Verwandte Anleitungen",
     "minRead": "{minutes} Min. Lesezeit",
     "cta": {
       "title": "Geben Sie Ihrem Agenten ein Postfach",

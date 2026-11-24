@@ -7,6 +7,7 @@ import { getAllPosts, getPost, getPostLocales, getLocalizedPost, getAuthor } fro
 import { renderMarkdown, readingTime } from '@/lib/blog/markdown';
 import { localizeHref } from '@/lib/blog/links.mjs';
 import { tagLabelMap } from '@/lib/blog/tag-labels.mjs';
+import { relatedPostSlugs } from '@/lib/blog/related.mjs';
 import { withReadingLangEscaped } from '@/i18n/reading-lang.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
 import { requireLocale } from '@/i18n/require-locale';
@@ -159,6 +160,13 @@ export default async function BlogPostPage({ params }) {
     author,
     // The locales this post is really translated into, for the language switcher.
     locales: post.locales,
+    // "Related guides" (src/lib/blog/related.mjs). `href` is localized only
+    // where the post is translated; otherwise the English URL, never a 308.
+    related: relatedPostSlugs(post, getAllPosts()).map((relatedSlug) => {
+      const r = getLocalizedPost(relatedSlug, locale);
+      const href = r.translated && locale !== 'en' ? `/${locale}/blog/${relatedSlug}` : `/blog/${relatedSlug}`;
+      return { slug: relatedSlug, title: r.title, href };
+    }),
   };
 
   return (

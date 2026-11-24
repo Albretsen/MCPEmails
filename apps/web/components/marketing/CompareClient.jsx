@@ -244,21 +244,28 @@ export default function CompareClient({ c, checkedOn, isEnglish, locale, guideIn
             <div>
               <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>{c.guide.h}</h2>
               <p style={{ margin: '0 0 10px', color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>{c.guide.p}</p>
-              <Link
-                href={GUIDE_PATH}
-                locale={guideInLocale ? locale : 'en'}
-                style={{
+              {(() => {
+                // next-intl's `locale` prop always emits the prefix, so
+                // locale="en" rendered /en/blog/..., a 308. A locale without
+                // the guide links the unprefixed English URL with a plain <a>.
+                const style = {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
                   fontSize: 14,
                   fontWeight: 500,
                   color: 'var(--cobalt-600)',
-                }}
-              >
-                {c.guide.link}
-                <MIcon name="arrow" size={13} color="var(--cobalt-600)" />
-              </Link>
+                };
+                const body = (
+                  <>
+                    {c.guide.link}
+                    <MIcon name="arrow" size={13} color="var(--cobalt-600)" />
+                  </>
+                );
+                return guideInLocale
+                  ? <Link href={GUIDE_PATH} style={style}>{body}</Link>
+                  : <a href={GUIDE_PATH} style={style}>{body}</a>;
+              })()}
             </div>
           </div>
         </div>

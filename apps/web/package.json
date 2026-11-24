@@ -68,6 +68,8 @@
     "test:acquisition": "node --test components/analytics/acquisition-capture.test.mjs",
     "test:connect-release": "node --test src/lib/connect/release.test.mjs",
     "test:connect-client-guides": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs src/lib/connect/client-guides.test.mjs",
+    "test:blog-related": "node --test src/lib/blog/related.test.mjs",
+    "test:footer-providers": "node --test src/lib/connect/footer-providers.test.mjs",
     "test:connect-dataset": "node --test src/lib/connect/provider-dataset.test.mjs",
     "test:connect-translations": "node --test src/lib/connect/translation-parity.test.mjs",
     "test:connect-intent": "node --test src/lib/connect/intent.test.mjs",

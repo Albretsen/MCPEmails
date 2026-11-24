@@ -14,6 +14,33 @@ import { clientGuideLinksFor } from '@/lib/connect/client-guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 import { requireLocale } from '@/i18n/require-locale';
+import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
+
+/**
+ * Flags the content links whose target has no page in `locale`, so the view
+ * links the unprefixed English URL instead of a locale-prefixed one. Without
+ * it /de/connect/outlook linked /de/blog/connect-outlook-microsoft-365-ai-agent-mcp
+ * (a 308, the post has no de translation) and /zh/connect/ovh linked
+ * /zh/tools/email-settings-lookup (a 404, zh is frozen).
+ */
+function markEnglishOnlyLinks(content, locale) {
+  if (locale === 'en') return content;
+  const blogMissing = (href) => {
+    const m = /^\/blog\/([^/#?]+)/.exec(href ?? '');
+    if (!m) return false;
+    const post = getPost(m[1]);
+    return Boolean(post) && !getPostLocales(post).includes(locale);
+  };
+  const out = { ...content };
+  if (content.guide?.href && blogMissing(content.guide.href)) {
+    out.guide = { ...content.guide, englishOnly: true };
+  }
+  const lookup = content.settingsTop?.lookup;
+  if (lookup?.href === LOOKUP_PATH && !LOOKUP_LOCALES.includes(locale)) {
+    out.settingsTop = { ...content.settingsTop, lookup: { ...lookup, englishOnly: true } };
+  }
+  return out;
+}
 
 /**
  * One landing page per email provider, at /connect/<slug>.
@@ -70,8 +97,9 @@ export default async function ConnectProviderPage({ params }) {
   // generic page, where "Generic IMAP" is translated (lib/connect/display-name).
   const provider = localizeProvider(registered, locale);
 
-  const content = await getProviderContent(locale, slug);
-  if (!content) notFound();
+  const loaded = await getProviderContent(locale, slug);
+  if (!loaded) notFound();
+  const content = markEnglishOnlyLinks(loaded, locale);
 
   const t = await getTranslations({ locale, namespace: 'connect' });
   // Business, hosting, cPanel and self-hosted pages carry a block saying every
