@@ -1,10 +1,10 @@
 const translation = {
   title: 'Kann Claude meine E-Mails lesen und senden?',
   description:
-    'Ja, bei Gmail und Microsoft 365 über die Konnektoren von Claude. Für Yahoo, iCloud, Outlook.com, IMAP und mehrere Anbieter brauchen Sie einen MCP-Server.',
+    'Ja, bei Gmail und Outlook über die Konnektoren von Claude. Für Yahoo, iCloud, IMAP und mehrere Anbieter zugleich brauchen Sie einen MCP-Server.',
   coverAlt:
     'Claude liest und sendet E-Mails aus Postfächern bei Gmail, Microsoft 365, Yahoo, iCloud und IMAP',
-  content: `**Ja, Claude kann Ihre E-Mails lesen und E-Mails senden, aber nur aus einem Postfach, das Sie mit Claude verbunden haben.** Claude hat zwei eigene E-Mail-Konnektoren, einen für Gmail und einen für geschäftliche Microsoft 365-Konten. Der Gmail-Konnektor liest, durchsucht und sendet und fragt standardmäßig vor jedem Versand nach Ihrer Zustimmung. Der Microsoft 365-Konnektor liest und durchsucht und kann erst senden, wenn ein Administrator seine Schreib-Tools einschaltet. Für Yahoo, iCloud, eine private Adresse bei Outlook.com, ein Firmenpostfach bei einem IMAP-Host oder mehrere Anbieter hinter einer Verbindung brauchen Sie einen MCP-Server wie MCPEmails.
+  content: `**Ja, Claude kann Ihre E-Mails lesen und E-Mails senden, aber nur aus einem Postfach, das Sie mit Claude verbunden haben.** Gmail und Outlook verbinden Sie über die eigenen Konnektoren von Claude: Gmail für ein Google-Konto, Microsoft 365 für ein geschäftliches Konto oder, in den Tarifen Free, Pro, Max und Ultra, eine private Adresse bei Outlook.com. Beide lesen und durchsuchen, und Claude fragt standardmäßig vor jedem Versand nach Ihrer Zustimmung; ein geschäftliches Microsoft 365-Konto kann erst senden, wenn ein Administrator die Schreib-Tools einschaltet. Für Yahoo, iCloud, ein Firmenpostfach bei einem IMAP-Host oder mehrere Anbieter hinter einer Verbindung brauchen Sie einen MCP-Server wie MCPEmails.
 
 Diese Seite klärt, welcher Fall auf Sie zutrifft. Die Angaben zu den Produkten von Anthropic und Google stammen von deren eigenen Seiten, gelesen im Oktober 2026. Diese Produkte ändern sich oft, deshalb verlinkt jeder Abschnitt die Seite, auf die er sich stützt.
 

@@ -1,10 +1,10 @@
 const translation = {
   title: '¿Puede Claude leer y enviar tu correo? Buzón por buzón',
   description:
-    'Sí, en Gmail y en cuentas de trabajo de Microsoft 365 con los conectores de Claude. Yahoo, iCloud, Outlook.com, IMAP y varios proveedores necesitan MCP.',
+    'Sí, en Gmail y Outlook con los conectores de Claude. Yahoo, iCloud, IMAP y varios proveedores a la vez necesitan un servidor MCP.',
   coverAlt:
     'Claude leyendo y enviando correo desde buzones de Gmail, Microsoft 365, Yahoo, iCloud e IMAP',
-  content: `**Sí, Claude puede leer tu correo y enviar emails, pero solo desde un buzón que le hayas conectado.** Claude tiene dos conectores de correo propios, uno para Gmail y otro para cuentas de trabajo de Microsoft 365. El de Gmail lee, busca y envía, y por defecto te pide aprobación antes de cada envío. El de Microsoft 365 lee y busca, y solo puede enviar después de que un administrador active sus herramientas de escritura. Yahoo, iCloud, una dirección personal de Outlook.com, un buzón de empresa en un servidor IMAP o varios proveedores detrás de una sola conexión necesitan un servidor MCP como MCPEmails.
+  content: `**Sí, Claude puede leer tu correo y enviar emails, pero solo desde un buzón que le hayas conectado.** Gmail y Outlook se conectan con los conectores propios de Claude: Gmail para una cuenta de Google, y Microsoft 365 para una cuenta de trabajo o, en los planes Free, Pro, Max y Ultra, una dirección personal de Outlook.com. Ambos leen y buscan, y por defecto Claude te pide aprobación antes de cada envío; una cuenta de trabajo de Microsoft 365 solo puede enviar después de que un administrador active las herramientas de escritura. Yahoo, iCloud, un buzón de empresa en un servidor IMAP o varios proveedores detrás de una sola conexión necesitan un servidor MCP como MCPEmails.
 
 Esta página te ayuda a saber en qué caso estás. Los datos sobre los productos de Anthropic y Google se consultaron en sus propias páginas en octubre de 2026. Esos productos cambian a menudo, así que cada sección enlaza la página en la que se apoya.
 

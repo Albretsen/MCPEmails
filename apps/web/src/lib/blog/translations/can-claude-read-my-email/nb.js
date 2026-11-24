@@ -1,10 +1,10 @@
 const translation = {
   title: 'Kan Claude lese og sende e-post? Postkasse for postkasse',
   description:
-    'Ja, for Gmail og Microsoft 365-jobbkontoer, med Claudes egne koblinger. Yahoo, iCloud, Outlook.com, IMAP og flere leverandører samtidig krever en MCP-server.',
+    'Ja, for Gmail og Outlook, med Claudes egne koblinger. Yahoo, iCloud, IMAP og flere leverandører samtidig krever en MCP-server.',
   coverAlt:
     'Claude leser og sender e-post fra Gmail, Microsoft 365, Yahoo, iCloud og IMAP-postkasser',
-  content: `**Ja, Claude kan lese e-posten din og sende e-post, men bare fra en postkasse du har koblet til.** Claude har to egne e-postkoblinger (connectors), én for Gmail og én for Microsoft 365-jobbkontoer. Gmail-koblingen leser, søker og sender, og ber som standard om godkjenningen din før hver sending. Microsoft 365-koblingen leser og søker, og kan bare sende etter at en administrator har slått på skriveverktøyene. Yahoo, iCloud, en personlig Outlook.com-adresse, en firmapostkasse hos en IMAP-leverandør eller flere leverandører bak én tilkobling krever en MCP-server, for eksempel MCPEmails.
+  content: `**Ja, Claude kan lese e-posten din og sende e-post, men bare fra en postkasse du har koblet til.** Gmail og Outlook kobles til med Claudes egne koblinger (connectors): Gmail for en Google-konto, og Microsoft 365 for en jobbkonto eller, på Free, Pro, Max og Ultra, en personlig Outlook.com-adresse. Begge leser og søker, og Claude ber som standard om godkjenningen din før hver sending; en Microsoft 365-jobbkonto kan bare sende etter at en administrator har slått på skriveverktøyene. Yahoo, iCloud, en firmapostkasse hos en IMAP-leverandør eller flere leverandører bak én tilkobling krever en MCP-server, for eksempel MCPEmails.
 
 Denne siden hjelper deg å finne ut hvilket tilfelle som gjelder deg. Fakta om produktene til Anthropic og Google er hentet fra selskapenes egne sider i oktober 2026. Produktene endrer seg ofte, så hver del lenker til siden den bygger på.
 
