@@ -41,7 +41,7 @@
 //         The chat checkout link (/u/[token]) runs the same checkout core plus
 //         the link lookup, and its success page (/upgrade/done) makes two
 //         reads for one Stripe call, so both follow checkout to arn1. The
-//         expired page touches nothing and stays on the iad1 default.
+//         expired page touches nothing and follows the arn1 catch-all.
 //
 //   iad1  app/api/automations/preview: a proxy to the Supabase edge function,
 //         which runs in the Supabase region nearest its caller. From arn1
@@ -74,11 +74,16 @@
 //         is the database saving they would have had (8, 11, 8 and 3 round
 //         trips).
 //
-//   iad1  app/[locale] (marketing), robots, sitemap and app/.well-known. None
-//         but the home page touches the database (2 round trips, +230 ms),
-//         about half of marketing visits enter at a US edge (-100 ms each),
-//         and the discovery documents are fetched by MCP clients hosted in
-//         the US. Left where they are.
+//   iad1  robots, sitemap and app/.well-known. Crawlers and the MCP clients
+//         that fetch the discovery documents are mostly hosted in the US.
+//
+//   arn1  app/[locale] (marketing), since 2026-11-24, through the app/**
+//         catch-all. Germany is now the top visitor country and the US second,
+//         so a function next to the European edges saves about 100 ms for
+//         most visitors and costs about 100 ms for a US one; the home page
+//         also saves its 2 database round trips (about 230 ms). The other
+//         zero-database leftovers (data/imap-providers, opengraph-image,
+//         upgrade/expired, upload) moved with the catch-all.
 //
 // Not in this table because they have no source file a pattern can name: the
 // proxy (proxy.ts), which runs before routing at the edge location nearest
@@ -144,41 +149,41 @@ export const ROUTES = [
   ['app/.well-known/openai-apps-challenge/route.ts', 'iad1', '0', '-'],
   ['app/.well-known/openid-configuration/route.ts', 'iad1', '0', '-'],
   ['app/.well-known/security.txt/route.ts', 'iad1', '0', '-'],
-  ['app/[locale]/about/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/best-email-mcp-servers/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/blog/[slug]/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/blog/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/changelog/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/connect/[provider]/[client]/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/connect/[provider]/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/connect/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/developers/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/[client]/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/api/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/claude-email-arabic/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/clients/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/microsoft-365-admin-consent/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/(catalogue)/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/(catalogue)/providers/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/providers/data/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/docs/read-only-access/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/email-mcp-servers-compared/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/for/business/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/for/founders/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/help/page.js', 'iad1', '1-4 (session, ticket context)', '-'],
-  ['app/[locale]/native-connectors-vs-mcp/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/page.tsx', 'iad1', '2', 'Stripe prices (cached 1h)'],
-  ['app/[locale]/pricing/page.js', 'iad1', '0', 'Stripe prices (cached 1h)'],
-  ['app/[locale]/privacy/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/security/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/self-hosting/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/status/page.js', 'iad1', '0 (snapshot cached 5 min)', '-'],
-  ['app/[locale]/terms/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/tools/email-settings-lookup/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/cancel/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/withdrawal/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/dpa/page.js', 'iad1', '0', '-'],
-  ['app/[locale]/billing/feedback/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/about/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/best-email-mcp-servers/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/blog/[slug]/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/blog/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/changelog/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/connect/[provider]/[client]/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/connect/[provider]/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/connect/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/developers/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/[client]/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/api/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/claude-email-arabic/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/clients/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/microsoft-365-admin-consent/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/(catalogue)/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/(catalogue)/providers/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/providers/data/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/docs/read-only-access/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/email-mcp-servers-compared/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/for/business/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/for/founders/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/help/page.js', 'arn1', '1-4 (session, ticket context)', '-'],
+  ['app/[locale]/native-connectors-vs-mcp/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/page.tsx', 'arn1', '2', 'Stripe prices (cached 1h)'],
+  ['app/[locale]/pricing/page.js', 'arn1', '0', 'Stripe prices (cached 1h)'],
+  ['app/[locale]/privacy/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/security/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/self-hosting/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/status/page.js', 'arn1', '0 (snapshot cached 5 min)', '-'],
+  ['app/[locale]/terms/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/tools/email-settings-lookup/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/cancel/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/withdrawal/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/dpa/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/billing/feedback/page.js', 'arn1', '0', '-'],
   ['app/admin/growth/dunning/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/first-30-days/page.tsx', 'arn1', '2+', '-'],
   ['app/admin/growth/inbox-alerts/page.tsx', 'arn1', '1', '-'],
@@ -336,18 +341,18 @@ export const ROUTES = [
   ['app/auth/sso/route.ts', 'arn1', '2', '-'],
   ['app/authorize/page.js', 'arn1', '8', 'CIMD fetch (client-hosted, memoised)'],
   ['app/dashboard/[[...section]]/page.js', 'arn1', '5 serial stages', '-'],
-  ['app/data/imap-providers.csv/route.ts', 'iad1', '0', '-'],
-  ['app/data/imap-providers.json/route.ts', 'iad1', '0', '-'],
+  ['app/data/imap-providers.csv/route.ts', 'arn1', '0', '-'],
+  ['app/data/imap-providers.json/route.ts', 'arn1', '0', '-'],
   ['app/invite/[token]/page.js', 'arn1', '4', '-'],
   ['app/onboarding/page.tsx', 'arn1', '4 serial (auth, workspace, member, variant); then a redirect to /dashboard?setup=1', '-'],
   ['app/onboarding/back-to-chat/page.js', 'arn1', '1 (auth)', '-'],
-  ['app/opengraph-image.tsx', 'iad1', '0', 'prerendered at build; static'],
+  ['app/opengraph-image.tsx', 'arn1', '0', 'prerendered at build; static'],
   ['app/r/[code]/route.ts', 'arn1', '2', '-'],
   ['app/robots.ts', 'iad1', '0', '-'],
   ['app/signup/page.js', 'arn1', '0', '-'],
   ['app/sitemap.ts', 'iad1', '0', '-'],
   ['app/u/[token]/route.ts', 'arn1', '~8', 'Stripe API x1-2 (chat checkout link, same trade as checkout)'],
   ['app/upgrade/done/page.js', 'arn1', '2', 'Stripe API x1'],
-  ['app/upgrade/expired/page.js', 'iad1', '0', '-'],
-  ['app/upload/page.js', 'iad1', '0', '-'],
+  ['app/upgrade/expired/page.js', 'arn1', '0', '-'],
+  ['app/upload/page.js', 'arn1', '0', '-'],
 ];
