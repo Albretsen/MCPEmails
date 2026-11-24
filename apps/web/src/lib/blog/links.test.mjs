@@ -112,9 +112,11 @@ test('every internal blog link resolves to a page that exists in its locale', ()
     if (!locales.includes(locale)) return false;
     const blog = path.match(/^\/blog\/([^/]+)$/);
     if (blog) return slugs.includes(blog[1]);
+    // A static page beside /connect/[provider] (/connect/custom-domain) wins
+    // over the dynamic segment, so it is checked first.
+    if (routes.has(path)) return true;
     const provider = path.match(/^\/connect\/([^/]+)$/);
     if (provider) return Boolean(getProvider(provider[1]));
-    if (routes.has(path)) return true;
     const client = path.match(/^\/docs\/([^/]+)$/);
     return Boolean(client && getClient(client[1]));
   };

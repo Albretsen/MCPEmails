@@ -23,7 +23,7 @@
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "Ihr Postfach-Passwort, kein OAuth",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Claude kann Hostinger nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP mit Ihrem Postfach-Passwort anbindet. Danach lesen, suchen, senden und sortieren Claude, Cursor oder jeder MCP-Client diese E-Mails. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
+    "answer": "Claude kann Hostinger nicht von sich aus erreichen. MCPEmails ist ein gehosteter MCP-Server, der das Postfach per IMAP über imap.hostinger.com auf Port 993 und SMTP über smtp.hostinger.com auf 465 anbindet, mit Ihrer vollständigen Adresse und dem Postfach-Passwort. Danach lesen, suchen, senden und sortieren Claude, Cursor oder jeder MCP-Client diese E-Mails. Die Tarife Business und Enterprise Email laufen auf Titan und nutzen stattdessen imap.titan.email und smtp.titan.email; welche Server gelten, zeigt das hPanel unter E-Mails, Verwalten, Connect Apps & Devices. Die Einrichtung dauert ein paar Minuten, ein Postfach ist kostenlos."
   },
   "method": {
     "title": "So verbindet sich Hostinger: IMAP und Ihr Postfach-Passwort",
@@ -36,7 +36,7 @@
     },
     {
       "h": "Postfach-Passwort bei Hostinger festlegen",
-      "p": "Öffnen Sie im hPanel E-Mails, wählen Sie die Adresse und legen Sie ihr Passwort fest oder setzen Sie es zurück. Mit diesem Passwort meldet sich MCPEmails an."
+      "p": "Öffnen Sie im hPanel E-Mails, klicken Sie neben der Domain auf Verwalten und legen Sie das Passwort der Adresse fest oder setzen Sie es zurück. Mit diesem Passwort meldet sich MCPEmails an. Connect Apps & Devices in derselben Seitenleiste zeigt die Servernamen für die Plattform, auf der das Postfach liegt."
     },
     {
       "h": "In MCPEmails einfügen",

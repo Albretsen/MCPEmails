@@ -29,6 +29,8 @@ const ENGLISH_ONLY = new Set([
   '/docs/providers/data',
   // Arabic copy, served under the English route only.
   '/docs/claude-email-arabic',
+  // The own-domain email hub (app/[locale]/connect/custom-domain).
+  '/connect/custom-domain',
 ]);
 
 /**

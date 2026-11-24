@@ -55,7 +55,7 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null, clientGuides = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null, clientGuides = null, hubLink = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   // Only providers whose page exists in this locale: next-intl's Link adds the
   // locale prefix, so a provider missing here would be a link to a 404.
@@ -239,6 +239,17 @@ export default async function ConnectProviderView({ locale, provider, content, m
             <p className="how-guide-link" style={{ marginTop: 16 }}>
               {content.seeAlso.intro}{' '}
               <Link href={content.seeAlso.href}>{content.seeAlso.label}</Link>
+            </p>
+          )}
+          {/*
+            Web host, cPanel and generic IMAP pages point at the own-domain
+            hub, /connect/custom-domain, which links back to each of them.
+            English only, like the hub (see its content.mjs).
+          */}
+          {hubLink && (
+            <p className="how-guide-link" style={{ marginTop: 16 }}>
+              {hubLink.intro}{' '}
+              <Link href={hubLink.href}>{hubLink.label}</Link>
             </p>
           )}
 

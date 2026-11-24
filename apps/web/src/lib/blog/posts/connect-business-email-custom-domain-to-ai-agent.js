@@ -77,7 +77,7 @@ IONOS gives **every address its own email password**, set in the control panel u
 
 ### cPanel and shared web hosts
 
-There is no cPanel mail service, only your hosting company's server, so the panel is the only authority on its name. Open **Email Accounts**, click **Connect Devices**, and copy the values from **Mail Client Manual Settings**, using the secure SSL/TLS column. The username is the full email address, never your cPanel login, and the credential is the mailbox password. No app password, no OAuth. Plesk works the same way.
+There is no cPanel mail service, only your hosting company's server, so the panel is the only authority on its name. Open **Email Accounts**, click **Connect Devices**, and copy the values from **Mail Client Manual Settings**, using the secure SSL/TLS column. The username is the full email address, never your cPanel login, and the credential is the mailbox password. No app password, no OAuth. Plesk works the same way. The [own-domain email guide](/connect/custom-domain) has the server names, ports and panel paths for cPanel, Hostinger, SiteGround, Namecheap Private Email, GoDaddy Professional Email and Plesk, and the fix for a certificate that names your host's server instead of your domain.
 
 ## When nothing is detected and you supply the settings yourself
 

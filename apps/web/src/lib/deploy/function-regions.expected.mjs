@@ -156,6 +156,7 @@ export const ROUTES = [
   ['app/[locale]/changelog/page.js', 'arn1', '0', '-'],
   ['app/[locale]/connect/[provider]/[client]/page.js', 'arn1', '0', '-'],
   ['app/[locale]/connect/[provider]/page.js', 'arn1', '0', '-'],
+  ['app/[locale]/connect/custom-domain/page.js', 'arn1', '0', '-'],
   ['app/[locale]/connect/page.js', 'arn1', '0', '-'],
   ['app/[locale]/developers/page.js', 'arn1', '0', '-'],
   ['app/[locale]/docs/[client]/page.js', 'arn1', '0', '-'],

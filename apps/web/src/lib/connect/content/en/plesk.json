@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk Mail to Claude: IMAP Settings and MCP Access",
-    "description": "Plesk mailboxes connect to Claude over IMAP 993. Use the domain itself, not mail.domain.com: IMAP has no SNI, so the mail subdomain gets the wrong certificate."
+    "description": "Plesk mailboxes connect to Claude over IMAP 993. Use the domain itself, not mail.domain.com: unless a certificate is assigned to the mail domain, the mail subdomain gets the server's default one."
   },
   "hero": {
     "eyebrow": "Plesk + AI",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP and SMTP cannot do SNI, so mail.yourdomain.com gets the server's default certificate",
-      "p": "HTTPS picks the right certificate because the browser announces the hostname during the handshake. The mail protocols do not work that way: the daemon has no reliable way to know which name you dialled, so it serves one certificate per connection regardless. In a stock Plesk install that means only the domain itself and the server hostname are properly secured, and <code>mail.example.com</code> presents whatever the server-wide default is. The name mismatch that follows is not a misconfiguration on your side, it is how the protocol works."
+      "h": "Mail uses the server's default certificate until you assign one per domain, so mail.yourdomain.com often fails",
+      "p": "Plesk can serve a different certificate per domain on IMAP and SMTP, because mail clients announce the name they dialled during the TLS handshake (SNI), the same way browsers do. It only does so for a domain whose certificate has been assigned to mail, which needs Postfix and Dovecot on Linux or MailEnable 10.20 or later on Windows. Until then every mail connection gets the server-wide default certificate, so <code>mail.example.com</code> fails the name check while the domain itself or the server hostname may pass. The mismatch is a missing assignment in the panel, not an attack, and not something to click past."
     },
     {
       "h": "The fix is one checkbox at issue time, and it is easy to miss",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Why does Plesk mail give a certificate name mismatch?",
-      "a": "Because the mail protocols do not support SNI the way HTTPS does, so the server presents one certificate per connection. By default that covers the domain and the server hostname, not mail.yourdomain.com. Issue a certificate with the option to assign it to the mail domain, then select it under the domain's Mail Settings for mail TLS."
+      "a": "Because no certificate has been assigned to mail for your domain, so the server presents its server-wide default certificate, which covers the server hostname rather than mail.yourdomain.com. Plesk supports a certificate per domain for mail (SNI) on Postfix with Dovecot and on MailEnable 10.20 or later. Issue a certificate with the option to assign it to the mail domain, then select it under the domain's Mail Settings for mail TLS, or connect with the name the current certificate covers."
     },
     {
       "q": "Where do I find email settings in Plesk?",
