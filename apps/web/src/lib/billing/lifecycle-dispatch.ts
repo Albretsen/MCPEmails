@@ -48,6 +48,7 @@ import { checkPassNoticeFreshness } from '@/lib/billing/pass-notice-freshness';
 import { primaryWorkspaceId, recordPassEvent } from '@/lib/analytics/billing-funnel';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { isSuppressed } from '@/lib/email/lifecycle';
+import { capEmailArm, capEmailArmsEnabled, type CapEmailArm } from '@/lib/email/cap-email-arm';
 import { lifecycleMode, type LifecycleMode } from '@/lib/billing/lifecycle-mode';
 import {
   BATCH_SIZE,
@@ -300,6 +301,32 @@ async function dispatchOne(
     return;
   }
 
+  // Usage notices: which version (cap-email-arm.ts). Decided here, at send
+  // time, so consent, an unsubscribe and the owner's countries are read fresh.
+  // The arm is written to the row's stored payload as `cap_arm` for the
+  // read-out; the unsubscribe token is injected into the in-memory payload
+  // only, never stored.
+  if (isUsageTemplate(row.template)) {
+    const decided = await resolveCapArm(db, row, ownerId);
+    // A failed read must not quietly become `control`: that would put
+    // non-random rows into the holdout. Leave the row; the lease expires and
+    // the next tick asks again.
+    if (decided === 'retry') return;
+    const stored = row.payload ?? {};
+    row.payload = {
+      ...stored,
+      capArm: decided.arm,
+      ...(decided.arm === 'promote' && decided.token ? { unsubscribeToken: decided.token } : {}),
+    };
+    const { error: armError } = await db
+      .from('billing_email_sends')
+      .update({ payload: { ...stored, cap_arm: decided.arm } as Database['public']['Tables']['billing_email_sends']['Update']['payload'] })
+      .eq('id', row.id);
+    if (armError) {
+      console.error(`[lifecycle-dispatch] row ${row.id}: could not record cap_arm:`, { error: armError.message });
+    }
+  }
+
   if (lifecycle !== 'on') {
     // queue_only: everything above ran for real against real Stripe data, and
     // this is where a customer would have received something. Compose it
@@ -354,6 +381,47 @@ async function dispatchOne(
       .eq('id', row.id);
     result.failed += 1;
   }
+}
+
+/**
+ * The arm for a usage notice. The switch off, or a row without a workspace or
+ * owner, gives `control`. A failed read gives 'retry' (the caller leaves the
+ * row for the next tick), so the holdout only ever holds hashed workspaces.
+ * The read-out must count rows with `sent_at` set: in queue_only mode the arm
+ * is recorded on rows that were not sent.
+ */
+export async function resolveCapArm(
+  db: Db,
+  row: Pick<QueueRow, 'workspace_id'>,
+  ownerId: string | null,
+): Promise<{ arm: CapEmailArm; token: string | null } | 'retry'> {
+  const enabled = capEmailArmsEnabled();
+  if (!enabled || !row.workspace_id || !ownerId) return { arm: 'control', token: null };
+
+  const { data: owner, error: ownerError } = await db
+    .from('users')
+    .select('marketing_consent_at, unsubscribed_at, unsubscribed_categories, unsubscribe_token')
+    .eq('id', ownerId)
+    .maybeSingle();
+  if (ownerError) return 'retry';
+  if (!owner) return { arm: 'notice', token: null };
+
+  const { data: owned, error: ownedError } = await db
+    .from('workspaces')
+    .select('acquisition_country')
+    .eq('owner_id', ownerId);
+  if (ownedError) return 'retry';
+
+  const arm = capEmailArm({
+    workspaceId: row.workspace_id,
+    consented: Boolean(owner.marketing_consent_at),
+    unsubscribed:
+      Boolean(owner.unsubscribed_at) || (owner.unsubscribed_categories ?? []).includes('lifecycle'),
+    ownerCountries: (owned ?? []).map((w) => w.acquisition_country),
+    hasUnsubscribeToken: Boolean(owner.unsubscribe_token),
+    enabled,
+  });
+  return { arm, token: owner.unsubscribe_token ?? null };
 }
 
 /**

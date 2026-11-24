@@ -23,8 +23,14 @@
  *   at all, so these rows carry `workspace_id` and `period_start` instead of
  *   `stripe_customer_id`, and the Resend Idempotency-Key is built from those.
  *   "Your service is about to stop" is account status, so they are not
- *   suppressible and carry no unsubscribe header. The upgrade line in each is
- *   secondary to the numbers, which is what keeps them out of marketing.
+ *   suppressible. Since 2026-11-24 each is composed in one of three arms
+ *   (src/lib/email/cap-email-arm.ts): `control` (20%, the original copy, where
+ *   the upgrade line is secondary to the numbers), `notice` (Europe, unknown
+ *   and everyone without consent outside the US: facts, then both options as
+ *   facts, no button, no unsubscribe) and `promote` (consented owners and
+ *   known-US owners: facts first, then a Checkout button, the yearly price,
+ *   and a one-click opt-out from upgrade offers, after which they get
+ *   `notice`). The subject is the account fact in every arm.
  *
  * TRANSACTIONAL, PLAN ENDING (plan_ending_5d)
  *   The customer scheduled their subscription to stop; it stops in 4 to 6
@@ -106,6 +112,7 @@ import { createResend } from '@/lib/email/resend';
 import { FREE_ACTION_ALLOWANCE, PERSONAL_PASS_3M, PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, lifecycleReplyTo, unsubscribeUrl } from '@/lib/email/lifecycle';
+import type { CapEmailArm } from '@/lib/email/cap-email-arm';
 import { CANCEL_PATH, POSTAL_ADDRESS_LINE, WITHDRAWAL_PATH } from '@/lib/email/legal';
 import { CANCEL_REASONS, CANCEL_REASON_EMAIL_LABELS } from '@/lib/billing/cancel-reasons';
 import { issueFeedbackToken } from '@/lib/billing/feedback-token';
@@ -443,6 +450,12 @@ export type LifecyclePayload = {
    */
   unsubscribeToken?: string | null;
   /**
+   * Usage notices only: which version to compose (src/lib/email/cap-email-arm.ts).
+   * Decided and injected by the dispatcher at send time. Absent or 'control'
+   * composes the pre-2026-11-24 email unchanged.
+   */
+  capArm?: CapEmailArm | null;
+  /**
    * True when the user carries the 2026-08-19 repricing grandfather
    * (`user_usage_entitlements.unlimited_inboxes`). They keep unlimited inboxes
    * on Free forever, so the "your agent loses inboxes 2 and 3" line is FALSE
@@ -551,8 +564,14 @@ export interface ComposedLifecycleEmail {
   body: string;
   htmlBody: string;
   category: BillingCategory;
-  /** Present on marketing templates only. */
+  /** Present on marketing templates, and on the `promote` arm of the usage notices. */
   unsubscribeUrl?: string;
+  /**
+   * True on the `promote` arm of the usage notices (cap-email-arm.ts): a
+   * transactional template carrying an upgrade offer, so it gets the one-click
+   * List-Unsubscribe header too.
+   */
+  promotional?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -790,6 +809,12 @@ export interface ShellOptions {
   afterCta?: string;
   footerNote: string;
   unsubscribe?: string | null;
+  /** Plain text: why this reader gets the email. Defaults to the win-back reason. */
+  unsubscribeReason?: string;
+  /** Plain text: the link label. Defaults to "Unsubscribe from these". */
+  unsubscribeLabel?: string;
+  /** Plain text after the link. Defaults to the win-back promise. */
+  unsubscribeAfter?: string;
 }
 
 export function shell(options: ShellOptions): string {
@@ -808,9 +833,9 @@ export function shell(options: ShellOptions): string {
 
   const unsub = options.unsubscribe
     ? `<p style="margin:12px 0 0;font-size:12px;color:#94a3b8;line-height:1.6;">
-                You are getting this because you had an MCPEmails subscription.
-                <a href="${options.unsubscribe}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe from these</a>
-                and you will not hear from us again. Billing and account notices are not affected.
+                ${escapeHtml(options.unsubscribeReason ?? 'You are getting this because you had an MCPEmails subscription.')}
+                <a href="${options.unsubscribe}" style="color:#94a3b8;text-decoration:underline;">${escapeHtml(options.unsubscribeLabel ?? 'Unsubscribe from these')}</a>
+                ${escapeHtml(options.unsubscribeAfter ?? 'and you will not hear from us again. Billing and account notices are not affected.')}
               </p>`
     : '';
 
@@ -1388,6 +1413,253 @@ function composePlanEnding(
       ctaLabel: 'Keep my plan',
       // The pause link and the closing line sit under the button.
       afterCta: (pauseUrl ? pLink(pauseText, pauseUrl) : '') + p(nothingToDo),
+      footerNote: SUPPORT_FOOTER,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Usage notices, 2026-11-24 versions (src/lib/email/cap-email-arm.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Straight to Stripe Checkout for Personal. The start route bounces a signed-out
+ * reader through /login and back, and a link scanner creates nothing (see
+ * app/api/stripe/checkout/start/route.ts). `from` and `arm` are not read by
+ * the plan path of that route today; they only make the click identifiable in
+ * request logs. Attribution is billing_email_sends.payload.cap_arm.
+ */
+export function capCheckoutUrl(
+  base: string,
+  interval: 'month' | 'year',
+  template: UsageTemplate,
+  arm: 'promote' | 'notice',
+): string {
+  return `${base}/api/stripe/checkout/start?plan=personal&interval=${interval}&from=${template}&arm=${arm}`;
+}
+
+/** "$86.40 a year, 20% less than monthly", from the catalogue, or null without a yearly price. */
+function personalYearlyLine(): { price: string; saving: number | null } | null {
+  const yearly = PLANS.personal.yearlyPriceCents;
+  if (!yearly) return null;
+  const monthlyYear = PLANS.personal.monthlyPriceCents * 12;
+  const saving = monthlyYear > yearly ? Math.round((1 - yearly / monthlyYear) * 100) : null;
+  return { price: dollars(yearly), saving: saving && saving > 0 ? saving : null };
+}
+
+/** A sentence followed by a link with a readable label, never a raw URL. */
+function pLabelLink(text: string, label: string, url: string, small = false): string {
+  const size = small ? '14px' : '15px';
+  const color = small ? '#475569' : '#334155';
+  return `<p style="margin:0 0 14px;font-size:${size};color:${color};line-height:1.6;">${escapeHtml(text)} <a href="${escapeHtml(url)}" style="color:#2563eb;font-weight:600;text-decoration:underline;">${escapeHtml(label)}</a></p>`;
+}
+
+/** Short checklist of what Personal changes. Facts from the catalogue only. */
+function personalBullets(grandfathered: boolean): string[] {
+  const inboxes = PLANS.personal.limits.maxInboxes;
+  // A grandfathered Free owner already has unlimited inboxes, so "up to 3"
+  // would read as a downgrade.
+  const inboxLine = grandfathered || !Number.isFinite(inboxes) ? [] : [`Up to ${inboxes} inboxes`];
+  return ['No monthly cap on email actions', ...inboxLine, 'Cancel any time from the billing page'];
+}
+
+function bulletList(items: string[]): string {
+  const rows = items
+    .map(
+      (item) => `<tr>
+                  <td style="padding:0 10px 8px 0;font-size:15px;color:#16a34a;vertical-align:top;">&#10003;</td>
+                  <td style="padding:0 0 8px;font-size:15px;color:#334155;line-height:1.5;">${escapeHtml(item)}</td>
+                </tr>`,
+    )
+    .join('');
+  return `<table cellpadding="0" cellspacing="0" style="margin:0 0 22px;">${rows}</table>`;
+}
+
+const CAP_UNSUB_REASON = 'You are getting this because your Free workspace is close to or at its monthly allowance.';
+// The link sets the 'lifecycle' category, which also covers win-backs and
+// tips, so the label names all of it.
+const CAP_UNSUB_LABEL = 'Unsubscribe from offers and tips';
+const CAP_UNSUB_AFTER = 'Allowance and billing notices still arrive, without offers.';
+
+/**
+ * The `promote` and `notice` versions of the three usage notices.
+ *
+ * Both keep the transactional shape: the subject is the account fact (never an
+ * offer) and the numbers come first. That ordering is what keeps a CAN-SPAM
+ * primary purpose transactional (16 CFR 316.3(a)(2)) for the US owners who get
+ * `promote` without having ticked the consent box.
+ *
+ *   promote  primary button = Personal monthly, straight to Checkout; yearly
+ *            and "or just wait" right under it; List-Unsubscribe plus a footer
+ *            opt-out ('lifecycle'), after which the owner gets `notice`.
+ *   notice   no button, no selling copy: "Your options" states both choices
+ *            as facts, the paid one as a plain labelled link to Checkout.
+ */
+function composeCapArmEmail(
+  template: UsageTemplate,
+  usage: UsageFacts,
+  payload: LifecyclePayload,
+  base: string,
+  category: BillingCategory,
+): ComposedLifecycleEmail {
+  const unsub =
+    payload.capArm === 'promote' && payload.unsubscribeToken
+      ? unsubscribeUrl(payload.unsubscribeToken, 'lifecycle')
+      : null;
+  // No working opt-out means no offer: fall back to the notice.
+  const arm: 'promote' | 'notice' = unsub ? 'promote' : 'notice';
+
+  const monthly = personalMonthlyPrice();
+  const yearly = personalYearlyLine();
+  const monthUrl = capCheckoutUrl(base, 'month', template, arm);
+  const yearUrl = capCheckoutUrl(base, 'year', template, arm);
+  const usageUrl = `${base}/dashboard/usage`;
+  const automationsUrl = `${base}/dashboard/automations`;
+  const counted = `${usage.used} of ${usage.cap} email actions`;
+  const ruleName = payload.rule_name?.trim() || 'Unnamed automation';
+
+  // ── The account facts, identical in both arms ──────────────────────────
+  let subject: string;
+  let title: string;
+  let lead: string;
+  let factRows: Array<[string, string]>;
+  let after: string; // what happens if they do nothing
+  if (template === 'usage_warning_80') {
+    subject = `${counted} used this month`;
+    title = subject;
+    lead = `${counted} have been used on your Free workspace this month. At ${usage.cap}, email actions are refused until the count resets on ${usage.resetsOn}, and any automations pause until then.`;
+    factRows = [
+      ['Used', `${usage.used} of ${usage.cap}`],
+      ['Resets on', usage.resetsOn],
+    ];
+    after = `If you do nothing, everything keeps working until ${usage.cap}, and the count resets on ${usage.resetsOn}. Nothing is deleted.`;
+  } else if (template === 'usage_limit_reached') {
+    subject = `${counted} used, paused until ${usage.resetsOn}`;
+    title = subject;
+    lead = `All ${usage.cap} email actions on your Free workspace are used for this month, so email actions are refused until the count resets on ${usage.resetsOn}. Retrying will not help before then.`;
+    factRows = [
+      ['Used', `${usage.used} of ${usage.cap}`],
+      ['Resets on', usage.resetsOn],
+    ];
+    after = `If you wait, email actions and any paused automations resume on ${usage.resetsOn} on their own. The inbox list, the dashboard and your data are not affected, and nothing is deleted.`;
+  } else {
+    subject = `Automation "${ruleName}" paused until ${usage.resetsOn}`;
+    title = `Automation paused until ${usage.resetsOn}`;
+    lead = `The automation "${ruleName}", and any other automation in this workspace, is paused because the workspace reached its monthly allowance (${counted}). They resume automatically on ${usage.resetsOn}.`;
+    factRows = [
+      ['Automation', ruleName],
+      ['Used', `${usage.used} of ${usage.cap}`],
+      ['Resumes on', usage.resetsOn],
+    ];
+    after = `If you wait, they resume on ${usage.resetsOn} on their own. Your rules, their settings and everything they already did are unchanged.`;
+  }
+
+  const secondary =
+    template === 'automation_paused_limit'
+      ? { text: 'The rule is on the automations page:', label: 'Open automations', url: automationsUrl }
+      : { text: 'The count and the reset date are on the usage page:', label: 'Open usage', url: usageUrl };
+
+  const yearlyText = yearly
+    ? `Prefer to pay yearly? ${yearly.price} a year${yearly.saving ? `, ${yearly.saving}% less than monthly` : ''}.`
+    : null;
+
+  const footer = ['', SUPPORT_FOOTER_TEXT, '', 'MCPEmails', base, '', POSTAL_ADDRESS_LINE];
+
+  if (arm === 'promote') {
+    const heading =
+      template === 'usage_warning_80' ? `Skip the pause at ${usage.cap}` : 'Keep going today';
+    const pitch =
+      template === 'usage_warning_80'
+        ? `Personal removes the monthly cap for ${monthly} a month, so nothing pauses at ${usage.cap}.`
+        : `Personal removes the monthly cap for ${monthly} a month.`;
+    const ctaLabel = `Upgrade to Personal, ${monthly} a month`;
+    const bullets = personalBullets(payload.grandfathered === true);
+
+    const body = [
+      lead,
+      '',
+      `Used: ${usage.used} of ${usage.cap}. Resets on ${usage.resetsOn}.`,
+      '',
+      heading.toUpperCase(),
+      pitch,
+      ...bullets.map((b) => `- ${b}`),
+      '',
+      `${ctaLabel}:`,
+      monthUrl,
+      ...(yearlyText ? ['', yearlyText, yearUrl] : []),
+      '',
+      after,
+      '',
+      secondary.text,
+      secondary.url,
+      ...footer,
+      '',
+      `${CAP_UNSUB_REASON} ${CAP_UNSUB_LABEL}: ${unsub} ${CAP_UNSUB_AFTER}`,
+    ].join('\n');
+
+    return {
+      subject,
+      category,
+      body,
+      unsubscribeUrl: unsub!,
+      promotional: true,
+      htmlBody: shell({
+        title,
+        html: p(lead) + facts(factRows) + h(heading) + p(pitch) + bulletList(bullets),
+        ctaUrl: escapeHtml(monthUrl),
+        ctaLabel,
+        afterCta:
+          (yearlyText ? pLabelLink(yearlyText, 'Pay yearly', yearUrl, true) : '') +
+          p(after) +
+          pLabelLink(secondary.text, secondary.label, secondary.url, true),
+        footerNote: SUPPORT_FOOTER,
+        unsubscribe: escapeHtml(unsub!),
+        unsubscribeReason: CAP_UNSUB_REASON,
+        unsubscribeLabel: CAP_UNSUB_LABEL,
+        unsubscribeAfter: CAP_UNSUB_AFTER,
+      }),
+    };
+  }
+
+  // ── notice ─────────────────────────────────────────────────────────────
+  const waitOption =
+    template === 'usage_warning_80'
+      ? `Do nothing: everything keeps working until ${usage.cap}, and the count resets on ${usage.resetsOn}.`
+      : `Wait: ${template === 'automation_paused_limit' ? 'automations resume' : 'email actions resume'} on ${usage.resetsOn} on their own.`;
+  const paidOption = `Or remove the monthly cap now with Personal, ${monthly} a month:`;
+  const keeps = 'The inbox list, the dashboard and your data are not affected. Nothing is deleted.';
+
+  const body = [
+    lead,
+    '',
+    `Used: ${usage.used} of ${usage.cap}. Resets on ${usage.resetsOn}.`,
+    '',
+    'YOUR OPTIONS',
+    waitOption,
+    paidOption,
+    monthUrl,
+    '',
+    keeps,
+    '',
+    secondary.text,
+    secondary.url,
+    ...footer,
+  ].join('\n');
+
+  return {
+    subject,
+    category,
+    body,
+    htmlBody: shell({
+      title,
+      html:
+        p(lead) +
+        facts(factRows) +
+        h('Your options') +
+        p(waitOption) +
+        pLabelLink(paidOption, 'Switch to Personal', monthUrl) +
+        p(keeps) +
+        pLabelLink(secondary.text, secondary.label, secondary.url, true),
       footerNote: SUPPORT_FOOTER,
     }),
   };
@@ -2224,6 +2496,12 @@ export function composeBillingEmail(
       const automationsUrl = `${base}/dashboard/automations`;
       const upgradeUrl = usageUpgradeUrl(base);
       const upgradeLine = `Personal removes the monthly cap for ${personalMonthlyPrice()} a month.`;
+
+      // The 2026-11-24 versions (cap-email-arm.ts). Absent or 'control' falls
+      // through to the original copy below, unchanged, for the holdout.
+      if (payload.capArm === 'promote' || payload.capArm === 'notice') {
+        return composeCapArmEmail(template, usage, payload, base, category);
+      }
       const counted = `${usage.used} of ${usage.cap} email actions`;
 
       if (template === 'usage_warning_80') {
@@ -2553,7 +2831,7 @@ export async function sendBillingLifecycleEmail(
     // notice would advertise an opt-out from a message the customer is not
     // permitted to opt out of, and some clients surface it as a one-tap button.
     const headers: Record<string, string> = {};
-    if (category === 'marketing' && composed.unsubscribeUrl) {
+    if ((category === 'marketing' || composed.promotional) && composed.unsubscribeUrl) {
       headers['List-Unsubscribe'] = `<${composed.unsubscribeUrl}>`;
       headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
     }
