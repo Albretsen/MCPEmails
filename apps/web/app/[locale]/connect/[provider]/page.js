@@ -14,6 +14,7 @@ import { clientGuideLinksFor } from '@/lib/connect/client-guides.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 import { requireLocale } from '@/i18n/require-locale';
+import { hubLinkFor } from '../custom-domain/content.mjs';
 import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
 
 /**
@@ -143,7 +144,7 @@ export default async function ConnectProviderPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} moreGuides={moreGuides} chatgpt={chatgpt} clientGuides={clientGuides} />
+      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} guides={guides} moreGuides={moreGuides} chatgpt={chatgpt} clientGuides={clientGuides} hubLink={hubLinkFor(locale, registered)} />
     </>
   );
 }

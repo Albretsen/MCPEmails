@@ -15,6 +15,7 @@ import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 import { PATH as COMPARE_PATH, PAGE_UPDATED as COMPARE_UPDATED } from '@/lib/compare/email-mcp-servers.mjs';
 import { DATE_MODIFIED as NATIVE_MODIFIED } from '@/lib/compare/native-connectors.mjs';
 import { PATH as ARABIC_GUIDE_PATH, DATE_MODIFIED as ARABIC_GUIDE_MODIFIED } from './[locale]/docs/claude-email-arabic/content.mjs';
+import { PATH as CUSTOM_DOMAIN_PATH, DATE_MODIFIED as CUSTOM_DOMAIN_MODIFIED, LOCALES as CUSTOM_DOMAIN_LOCALES } from './[locale]/connect/custom-domain/content.mjs';
 import { PATH as LOOKUP_PATH, DATE_MODIFIED as LOOKUP_MODIFIED, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
 
 /**
@@ -205,6 +206,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         locales: clientGuideLocales(provider, client),
       })),
     ).filter((e) => e.locales.length > 0),
+    // The own-domain email hub, English only (see its content.mjs).
+    { path: CUSTOM_DOMAIN_PATH, lastModified: CUSTOM_DOMAIN_MODIFIED, priority: 0.8, locales: CUSTOM_DOMAIN_LOCALES },
   ].map(({ path, lastModified, priority, locales }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),

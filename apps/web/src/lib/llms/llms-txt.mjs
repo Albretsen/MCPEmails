@@ -82,6 +82,7 @@ ${clientSection()}
 - [Connect Yahoo Mail to Claude (and any AI)](https://mcpemails.com/connect/yahoo): App-password setup for Yahoo Mail.
 - [Connect Zoho Mail to Claude (and any AI)](https://mcpemails.com/connect/zoho): IMAP-access and app-password setup for Zoho Mail.
 - [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
+- [Connect your own-domain email to Claude and ChatGPT](https://mcpemails.com/connect/custom-domain): IMAP server names, ports and passwords for mailboxes on your own domain at cPanel, Hostinger, SiteGround, Namecheap, GoDaddy and Plesk, and fixes for certificate name errors.
 
 ## Step-by-step for one assistant
 - [Connect Yahoo Mail to Claude](https://mcpemails.com/connect/yahoo/claude): Yahoo app password, then MCPEmails as a custom connector in claude.ai or Claude Desktop.

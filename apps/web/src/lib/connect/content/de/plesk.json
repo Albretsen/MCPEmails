@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk E-Mail mit Claude verbinden: IMAP und MCP-Zugriff",
-    "description": "Plesk-Postfächer mit Claude, ChatGPT und Cursor verbinden, per IMAP auf 993. Die Domain selbst eintragen, nicht mail.domain.de: IMAP kennt kein SNI, die mail-Subdomain bekommt das falsche Zertifikat."
+    "description": "Plesk-Postfächer mit Claude, ChatGPT und Cursor verbinden, per IMAP auf 993. Die Domain selbst eintragen, nicht mail.domain.de: Ohne ein der Mail-Domain zugewiesenes Zertifikat bekommt die mail-Subdomain das Standardzertifikat des Servers."
   },
   "hero": {
     "eyebrow": "Plesk + KI",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP und SMTP können kein SNI, mail.ihredomain.de bekommt also das Standardzertifikat des Servers",
-      "p": "HTTPS wählt das richtige Zertifikat, weil der Browser den Hostnamen beim Handshake mitteilt. Die Mailprotokolle arbeiten nicht so: Der Dienst hat keinen verlässlichen Weg zu erfahren, welchen Namen Sie gewählt haben, und liefert bei jeder Verbindung dasselbe Zertifikat aus. In einer Standard-Plesk-Installation heißt das, dass nur die Domain selbst und der Server-Hostname sauber abgesichert sind, und <code>mail.example.com</code> zeigt, was auch immer das serverweite Standardzertifikat ist. Die Namensabweichung, die daraus folgt, ist keine Fehlkonfiguration auf Ihrer Seite, sondern liegt am Protokoll."
+      "h": "Mail nutzt das Standardzertifikat des Servers, bis Sie pro Domain eines zuweisen, deshalb scheitert mail.ihredomain.de oft",
+      "p": "Plesk kann für IMAP und SMTP pro Domain ein eigenes Zertifikat ausliefern, weil Mailprogramme den gewählten Namen beim TLS-Handshake mitteilen (SNI), genau wie Browser. Das geschieht aber nur für eine Domain, deren Zertifikat der Mail zugewiesen wurde, und setzt unter Linux Postfix und Dovecot voraus, unter Windows MailEnable 10.20 oder neuer. Bis dahin bekommt jede Mailverbindung das serverweite Standardzertifikat, also fällt <code>mail.example.com</code> bei der Namensprüfung durch, während die Domain selbst oder der Server-Hostname durchgehen können. Die Abweichung ist eine fehlende Zuweisung im Panel, kein Angriff, und nichts, was man wegklicken sollte."
     },
     {
       "h": "Die Lösung ist ein Häkchen beim Ausstellen, und es ist leicht zu übersehen",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Warum meldet Plesk-Mail eine Namensabweichung beim Zertifikat?",
-      "a": "Weil die Mailprotokolle SNI nicht so unterstützen wie HTTPS, der Server also ein Zertifikat pro Verbindung ausliefert. Standardmäßig deckt das die Domain und den Server-Hostnamen ab, nicht mail.ihredomain.de. Stellen Sie ein Zertifikat mit der Option aus, es der Mail-Domain zuzuweisen, und wählen Sie es dann in den Mail Settings der Domain für Mail-TLS aus."
+      "a": "Weil Ihrer Domain für Mail kein Zertifikat zugewiesen ist und der Server deshalb sein serverweites Standardzertifikat zeigt, das den Server-Hostnamen abdeckt, nicht mail.ihredomain.de. Plesk unterstützt ein Zertifikat pro Domain für Mail (SNI) mit Postfix und Dovecot sowie mit MailEnable ab 10.20. Stellen Sie ein Zertifikat mit der Option aus, es der Mail-Domain zuzuweisen, und wählen Sie es dann in den Mail Settings der Domain für Mail-TLS aus, oder verbinden Sie sich mit dem Namen, den das aktuelle Zertifikat abdeckt."
     },
     {
       "q": "Wo finde ich die E-Mail-Einstellungen in Plesk?",
