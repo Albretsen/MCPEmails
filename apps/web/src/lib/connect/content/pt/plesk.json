@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "E-mail do Plesk no Claude: configurações IMAP e acesso MCP",
-    "description": "Caixas de correio do Plesk se conectam ao Claude via IMAP 993. Use o próprio domínio, não mail.dominio.com: o IMAP não tem SNI, então o subdomínio mail recebe o certificado errado."
+    "description": "Caixas de correio do Plesk se conectam ao Claude via IMAP 993. Use o próprio domínio, não mail.dominio.com: sem um certificado atribuído ao domínio de e-mail, o subdomínio mail recebe o padrão do servidor."
   },
   "hero": {
     "eyebrow": "Plesk + IA",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP e SMTP não fazem SNI, então mail.seudominio.com.br recebe o certificado padrão do servidor",
-      "p": "O HTTPS escolhe o certificado certo porque o navegador anuncia o hostname durante o handshake. Os protocolos de e-mail não funcionam assim: o daemon não tem como saber com segurança qual nome você digitou, então entrega um certificado por conexão, seja qual for o nome. Em uma instalação padrão do Plesk, isso significa que só o próprio domínio e o hostname do servidor ficam devidamente protegidos, e <code>mail.example.com</code> apresenta o que quer que seja o padrão do servidor. A divergência de nome que vem em seguida não é um erro de configuração seu, é como o protocolo funciona."
+      "h": "O e-mail usa o certificado padrão do servidor até você atribuir um por domínio, por isso mail.seudominio.com.br costuma falhar",
+      "p": "O Plesk pode entregar um certificado diferente por domínio no IMAP e no SMTP, porque os clientes de e-mail informam o nome ao qual se conectam durante o handshake TLS (SNI), como os navegadores. Ele só faz isso para um domínio cujo certificado foi atribuído ao e-mail, e exige Postfix e Dovecot no Linux ou MailEnable 10.20 ou mais recente no Windows. Até lá, toda conexão de e-mail recebe o certificado padrão do servidor, então <code>mail.example.com</code> falha na verificação do nome enquanto o próprio domínio ou o hostname do servidor podem passar. A divergência é uma atribuição que falta no painel, não um ataque, e não algo para simplesmente ignorar."
     },
     {
       "h": "A correção é uma caixa de seleção na hora de emitir, e é fácil deixar passar",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Por que o e-mail do Plesk dá divergência de nome no certificado?",
-      "a": "Porque os protocolos de e-mail não suportam SNI como o HTTPS, então o servidor apresenta um certificado por conexão. Por padrão, esse certificado cobre o domínio e o hostname do servidor, não mail.seudominio.com.br. Emita um certificado com a opção de atribuí-lo ao domínio de e-mail e depois selecione-o em Mail Settings do domínio para o TLS do e-mail."
+      "a": "Porque o seu domínio não tem um certificado atribuído ao e-mail, então o servidor apresenta o certificado padrão dele, que cobre o hostname do servidor e não mail.seudominio.com.br. O Plesk suporta um certificado por domínio para e-mail (SNI) com Postfix e Dovecot e com MailEnable 10.20 ou mais recente. Emita um certificado com a opção de atribuí-lo ao domínio de e-mail e depois selecione-o em Mail Settings do domínio para o TLS do e-mail, ou conecte-se com o nome que o certificado atual cobre."
     },
     {
       "q": "Onde encontro as configurações de e-mail no Plesk?",

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk-e-post til Claude: IMAP-innstillinger og MCP-tilgang",
-    "description": "Plesk-postkasser kobles til Claude via IMAP 993. Bruk selve domenet, ikke mail.domain.com: IMAP har ikke SNI, så mail-underdomenet får feil sertifikat."
+    "description": "Plesk-postkasser kobles til Claude via IMAP 993. Bruk selve domenet, ikke mail.domain.com: uten et sertifikat tildelt e-postdomenet får mail-underdomenet serverens standardsertifikat."
   },
   "hero": {
     "eyebrow": "Plesk + AI",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP og SMTP kan ikke gjøre SNI, så mail.yourdomain.com får serverens standardsertifikat",
-      "p": "HTTPS velger riktig sertifikat fordi nettleseren oppgir vertsnavnet under håndtrykket. E-postprotokollene virker ikke slik: tjenesten har ingen pålitelig måte å vite hvilket navn du ringte på, så den leverer ett sertifikat per tilkobling uansett. I en standard Plesk-installasjon betyr det at bare selve domenet og serverens vertsnavn er ordentlig sikret, og <code>mail.example.com</code> viser det som er serverens standard. Navnemismatchen som følger, er ikke en feilkonfigurasjon på din side, det er slik protokollen virker."
+      "h": "E-post bruker serverens standardsertifikat til du tildeler ett per domene, så mail.yourdomain.com feiler ofte",
+      "p": "Plesk kan levere et eget sertifikat per domene for IMAP og SMTP, fordi e-postklienter oppgir navnet de koblet til under TLS-håndtrykket (SNI), akkurat som nettlesere. Det skjer bare for et domene der sertifikatet er tildelt e-post, og krever Postfix og Dovecot på Linux eller MailEnable 10.20 eller nyere på Windows. Inntil da får hver e-posttilkobling serverens standardsertifikat, så <code>mail.example.com</code> feiler navnesjekken mens selve domenet eller serverens vertsnavn kan gå gjennom. Avviket er en manglende tildeling i panelet, ikke et angrep, og ikke noe du skal klikke deg forbi."
     },
     {
       "h": "Løsningen er én avkrysningsboks når sertifikatet utstedes, og den er lett å overse",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Hvorfor gir Plesk-e-post en navnemismatch på sertifikatet?",
-      "a": "Fordi e-postprotokollene ikke støtter SNI slik HTTPS gjør, så serveren viser ett sertifikat per tilkobling. Som standard dekker det domenet og serverens vertsnavn, ikke mail.yourdomain.com. Utsted et sertifikat med alternativet for å tildele det til e-postdomenet, og velg det så under domenets Mail Settings for TLS for e-post."
+      "a": "Fordi domenet ditt ikke har fått tildelt et sertifikat for e-post, så serveren viser sitt serverbrede standardsertifikat, som dekker serverens vertsnavn og ikke mail.yourdomain.com. Plesk støtter et sertifikat per domene for e-post (SNI) med Postfix og Dovecot og med MailEnable 10.20 eller nyere. Utsted et sertifikat med alternativet for å tildele det til e-postdomenet, og velg det så under domenets Mail Settings for TLS for e-post, eller koble til med navnet det nåværende sertifikatet dekker."
     },
     {
       "q": "Hvor finner jeg e-postinnstillingene i Plesk?",

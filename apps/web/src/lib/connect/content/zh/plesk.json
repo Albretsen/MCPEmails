@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "将 Plesk 邮箱接入 Claude：IMAP 设置与 MCP 访问",
-    "description": "Plesk 邮箱通过 IMAP 993 连接到 Claude。请使用域名本身而不是 mail.domain.com：IMAP 不支持 SNI，mail 子域名会拿到错误的证书。"
+    "description": "Plesk 邮箱通过 IMAP 993 连接到 Claude。请使用域名本身而不是 mail.domain.com：在为邮件域名分配证书之前，mail 子域名拿到的是服务器默认证书。"
   },
   "hero": {
     "eyebrow": "Plesk + AI",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP 和 SMTP 无法使用 SNI，所以 mail.yourdomain.com 拿到的是服务器默认证书",
-      "p": "HTTPS 能选中正确的证书，是因为浏览器在握手时会告知主机名。邮件协议不是这样工作的：守护进程无法可靠地知道你拨入的是哪个名称，所以每个连接都只提供一个证书。在默认的 Plesk 安装中，这意味着只有域名本身和服务器主机名受到正确保护，而 <code>mail.example.com</code> 呈现的是服务器范围的默认证书。随之而来的名称不匹配并不是你这边配置错误，而是协议本身的工作方式。"
+      "h": "在为域名分配证书之前，邮件使用服务器默认证书，所以 mail.yourdomain.com 经常校验失败",
+      "p": "Plesk 可以在 IMAP 和 SMTP 上为每个域名提供不同的证书，因为邮件客户端和浏览器一样，会在 TLS 握手时告知所连接的名称（SNI）。但只有证书已分配给邮件的域名才会这样，并且需要 Linux 上的 Postfix 和 Dovecot，或 Windows 上的 MailEnable 10.20 及以上版本。在此之前，每个邮件连接拿到的都是服务器范围的默认证书，所以 <code>mail.example.com</code> 无法通过名称校验，而域名本身或服务器主机名可能可以通过。这种不匹配是面板里缺少分配，不是攻击，也不应该直接点过去忽略。"
     },
     {
       "h": "修复只需在签发时勾选一个复选框，却很容易漏掉",
@@ -77,7 +77,7 @@
     },
     {
       "q": "为什么 Plesk 邮箱会出现证书名称不匹配？",
-      "a": "因为邮件协议不像 HTTPS 那样支持 SNI，所以服务器每个连接只提供一个证书。默认情况下它覆盖域名和服务器主机名，而不覆盖 mail.yourdomain.com。签发证书时选择将其分配给邮件域名的选项，然后在该域名的 Mail Settings 中将其选为邮件 TLS 证书。"
+      "a": "因为你的域名还没有为邮件分配证书，所以服务器提供的是服务器范围的默认证书，它覆盖服务器主机名，而不覆盖 mail.yourdomain.com。Plesk 在 Postfix 加 Dovecot 以及 MailEnable 10.20 及以上版本上支持为每个域名的邮件提供单独证书（SNI）。签发证书时选择将其分配给邮件域名的选项，然后在该域名的 Mail Settings 中将其选为邮件 TLS 证书，或者使用当前证书覆盖的名称进行连接。"
     },
     {
       "q": "在 Plesk 中哪里可以找到邮箱设置？",

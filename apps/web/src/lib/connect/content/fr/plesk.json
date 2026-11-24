@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Messagerie Plesk vers Claude : paramètres IMAP et MCP",
-    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com : sans SNI en IMAP, ce sous-domaine a le mauvais certificat."
+    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com : sans certificat attribué au domaine de messagerie, ce sous-domaine reçoit celui du serveur."
   },
   "hero": {
     "eyebrow": "Plesk + IA",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "IMAP et SMTP ne gèrent pas le SNI : mail.votredomaine.com reçoit le certificat par défaut du serveur",
-      "p": "Le HTTPS choisit le bon certificat parce que le navigateur annonce le nom d'hôte pendant la négociation. Les protocoles de messagerie ne fonctionnent pas ainsi : le démon n'a aucun moyen fiable de savoir quel nom vous avez composé, il sert donc un seul certificat par connexion, quoi qu'il arrive. Dans une installation Plesk standard, seuls le domaine lui-même et le nom d'hôte du serveur sont correctement sécurisés, et <code>mail.example.com</code> présente le certificat par défaut du serveur, quel qu'il soit. L'erreur de nom qui en découle n'est pas une mauvaise configuration de votre part, c'est le fonctionnement du protocole."
+      "h": "La messagerie utilise le certificat par défaut du serveur tant qu'aucun n'est attribué au domaine : mail.votredomaine.com échoue souvent",
+      "p": "Plesk peut servir un certificat différent par domaine en IMAP et SMTP, car les clients de messagerie annoncent le nom demandé pendant la négociation TLS (SNI), comme les navigateurs. Il ne le fait que pour un domaine dont le certificat a été attribué à la messagerie, avec Postfix et Dovecot sous Linux ou MailEnable 10.20 ou ultérieur sous Windows. D'ici là, chaque connexion de messagerie reçoit le certificat par défaut du serveur : <code>mail.example.com</code> échoue au contrôle du nom alors que le domaine lui-même ou le nom d'hôte du serveur peuvent passer. L'erreur vient d'une attribution manquante dans le panneau, pas d'une attaque, et il ne faut pas l'ignorer."
     },
     {
       "h": "La correction tient en une case à cocher au moment de l'émission, et elle passe facilement inaperçue",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Pourquoi la messagerie Plesk signale-t-elle une erreur de nom de certificat ?",
-      "a": "Parce que les protocoles de messagerie ne prennent pas en charge le SNI comme le fait le HTTPS : le serveur présente un seul certificat par connexion. Par défaut, celui-ci couvre le domaine et le nom d'hôte du serveur, pas mail.votredomaine.com. Émettez un certificat avec l'option qui l'attribue au domaine de messagerie, puis sélectionnez-le dans les Mail Settings du domaine pour le TLS de la messagerie."
+      "a": "Parce qu'aucun certificat n'est attribué à la messagerie de votre domaine : le serveur présente alors son certificat par défaut, qui couvre le nom d'hôte du serveur et non mail.votredomaine.com. Plesk prend en charge un certificat par domaine pour la messagerie (SNI) avec Postfix et Dovecot et avec MailEnable 10.20 ou ultérieur. Émettez un certificat avec l'option qui l'attribue au domaine de messagerie, puis sélectionnez-le dans les Mail Settings du domaine pour le TLS de la messagerie, ou connectez-vous avec le nom que couvre le certificat actuel."
     },
     {
       "q": "Où trouver les paramètres de messagerie dans Plesk ?",
