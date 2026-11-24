@@ -20,5 +20,6 @@
     "Inicia sesión en MCPEmails y elige a qué bandejas puede acceder ChatGPT. En un chat, escribe <b>@</b> y elige Any Mailbox."
   ],
   "directoryLink": "Any Mailbox en el directorio de plugins de ChatGPT",
-  "directoryFaqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. Instala Any Mailbox desde el directorio de plugins de ChatGPT e inicia sesión en MCPEmails. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena."
+  "directoryFaqA": "Sí, en cuanto {provider} esté conectado a MCPEmails. Instala Any Mailbox desde el directorio de plugins de ChatGPT e inicia sesión en MCPEmails. ChatGPT solo obtiene el acceso que apruebas, y tu correo se lee en directo, nunca se almacena.",
+  "listedLine": "MCPEmails aparece en el directorio de plugins de ChatGPT como Any Mailbox."
 }

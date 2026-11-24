@@ -1,0 +1,261 @@
+{
+  "ui": {
+    "faqTitle": "Questions",
+    "parentLink": "{short}: settings, limits and troubleshooting",
+    "relatedTitle": "Related guides",
+    "providerPageIntro": "Step-by-step for your assistant:",
+    "ctaPrimary": "Connect for free",
+    "ctaNote": "One inbox free, forever. No card required.",
+    "breadcrumb": "Connect"
+  },
+  "clients": {
+    "claude": {
+      "eyebrow": "{short} + Claude",
+      "stepsTitle": "How to connect {provider} to Claude",
+      "steps": [
+        {
+          "h": "Open Connectors in Claude",
+          "p": "In claude.ai or Claude Desktop, open <b>Customize</b>, then <b>Connectors</b>. Click <b>+ Add</b>, then <b>Add custom connector</b>."
+        },
+        {
+          "h": "Add MCPEmails",
+          "p": "Name it MCPEmails, paste <code>https://mcpemails.com/api/mcp</code> as the URL and click <b>Continue</b>. Keep the detected sign-in settings and click <b>Add</b>."
+        },
+        {
+          "h": "Sign in and turn it on",
+          "p": "Sign in with MCPEmails and approve the access you want Claude to have. In a chat, click <b>+</b>, choose <b>Connectors</b> and turn MCPEmails on. Then ask Claude about your mail."
+        }
+      ],
+      "note": "Claude's Free plan allows one custom connector; Pro and Max allow as many as you need. On Team and Enterprise, an Owner adds MCPEmails under Organization settings, Connectors, and members click Connect.",
+      "docsLink": "Full Claude setup guide"
+    },
+    "chatgpt": {
+      "eyebrow": "{short} + ChatGPT",
+      "stepsTitle": "How to connect {provider} to ChatGPT",
+      "steps": [
+        {
+          "h": "Install Any Mailbox in ChatGPT",
+          "p": "In ChatGPT, open <b>Plugins</b>, find <b>Any Mailbox</b> in the plugin directory and click <b>Install plugin</b>, then <b>Connect</b>. Any Mailbox is the MCPEmails plugin."
+        },
+        {
+          "h": "Sign in to MCPEmails",
+          "p": "Sign in with the MCPEmails account you connected the mailbox to, and choose which mailboxes ChatGPT can reach."
+        },
+        {
+          "h": "Use it in a chat",
+          "p": "Type <b>@</b> in a chat and pick Any Mailbox, then ask about your mail. Pick it again when a follow-up needs your mail."
+        }
+      ],
+      "note": "If Any Mailbox cannot be installed in your account, add MCPEmails as a custom MCP server on chatgpt.com instead: Plugins, Personal, Add, Add custom MCP server, paste https://mcpemails.com/api/mcp and choose OAuth. OpenAI lists Business and Enterprise/Edu for this, with read-only access on Pro.",
+      "docsLink": "Full ChatGPT setup guide"
+    }
+  },
+  "providers": {
+    "yahoo": {
+      "name": "Yahoo Mail",
+      "prep": [
+        {
+          "h": "Create a Yahoo app password",
+          "p": "In Yahoo Account Security, under <b>External connections</b>, create an app password and copy it. If the option is missing, turn on two-step verification first. Your normal Yahoo password will not work."
+        },
+        {
+          "h": "Connect Yahoo Mail to MCPEmails",
+          "p": "Sign up at mcpemails.com, no card needed. Under Dashboard, Inboxes, add your full Yahoo address and the app password."
+        }
+      ],
+      "short": "Yahoo Mail"
+    },
+    "icloud": {
+      "name": "iCloud Mail",
+      "prep": [
+        {
+          "h": "Create an Apple app-specific password",
+          "p": "At account.apple.com, open <b>Sign-In and Security</b>, then <b>App-Specific Passwords</b>, and create one. Two-factor authentication must be on. Your Apple Account password will not work."
+        },
+        {
+          "h": "Connect iCloud Mail to MCPEmails",
+          "p": "Sign up at mcpemails.com, no card needed. Under Dashboard, Inboxes, add your iCloud address and the app-specific password."
+        }
+      ],
+      "short": "iCloud Mail"
+    },
+    "imap": {
+      "name": "your IMAP mailbox",
+      "prep": [
+        {
+          "h": "Find your mail settings",
+          "p": "You need your address, your password (or an app password if your provider requires one) and your IMAP and SMTP hosts, which your provider or hosting panel lists."
+        },
+        {
+          "h": "Connect the mailbox to MCPEmails",
+          "p": "Sign up at mcpemails.com, no card needed. Under Dashboard, Inboxes, choose IMAP / SMTP and type your address: MCPEmails fills in hosts and ports for the providers it recognises. Add the password and connect."
+        }
+      ],
+      "short": "IMAP"
+    }
+  },
+  "pages": {
+    "yahoo": {
+      "claude": {
+        "meta": {
+          "title": "Connect Yahoo Mail to Claude",
+          "description": "Connect Yahoo Mail to Claude in five steps: a Yahoo app password, MCPEmails, and a custom connector in claude.ai or Claude Desktop. One inbox free."
+        },
+        "h1": "Connect Yahoo Mail to Claude",
+        "answer": "Claude has no built-in Yahoo Mail connector. Connect your Yahoo inbox to MCPEmails with a Yahoo app password, then add MCPEmails to Claude as a custom connector with the URL https://mcpemails.com/api/mcp. Claude can then read, search, draft, send and organize your Yahoo mail.",
+        "faq": [
+          {
+            "q": "Does Claude have a Yahoo Mail connector?",
+            "a": "No. Claude's built-in connectors cover Gmail and Microsoft 365, not Yahoo. A custom connector pointing at an MCP server such as MCPEmails is how Claude reaches a Yahoo inbox."
+          },
+          {
+            "q": "Why is my Yahoo password rejected?",
+            "a": "Yahoo does not accept your account password from outside apps. Create an app password under External connections on the Yahoo Account Security page and use that. If the option is missing, turn on two-step verification first."
+          },
+          {
+            "q": "Does it work in Claude Desktop and on the free Claude plan?",
+            "a": "Yes. claude.ai and Claude Desktop share the same connectors, so adding MCPEmails in one makes it available in the other. Claude's Free plan allows one custom connector."
+          },
+          {
+            "q": "Is my Yahoo mail stored?",
+            "a": "No. Messages are fetched live from Yahoo for each request. The app password is stored encrypted, and deleting it in Yahoo Account Security ends access at once."
+          }
+        ]
+      },
+      "chatgpt": {
+        "meta": {
+          "title": "Connect Yahoo Mail to ChatGPT",
+          "description": "Connect Yahoo Mail to ChatGPT with Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, and a Yahoo app password. One inbox free."
+        },
+        "h1": "Connect Yahoo Mail to ChatGPT",
+        "answer": "Connect your Yahoo inbox to MCPEmails with a Yahoo app password, then install Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, and sign in. Type @ in a chat, pick Any Mailbox, and ChatGPT can read, search, draft, send and organize your Yahoo mail.",
+        "faq": [
+          {
+            "q": "Can ChatGPT read Yahoo Mail?",
+            "a": "Yes, through a plugin. Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, connects ChatGPT to a Yahoo inbox you have connected to MCPEmails with a Yahoo app password."
+          },
+          {
+            "q": "Why is my Yahoo password rejected?",
+            "a": "Yahoo does not accept your account password from outside apps. Create an app password under External connections on the Yahoo Account Security page and use that. If the option is missing, turn on two-step verification first."
+          },
+          {
+            "q": "Can I use the same Yahoo inbox in Claude?",
+            "a": "Yes. The inbox you connect to MCPEmails works in ChatGPT, Claude, Cursor and other MCP clients without connecting it again."
+          },
+          {
+            "q": "Is my Yahoo mail stored?",
+            "a": "No. Messages are fetched live from Yahoo for each request. The app password is stored encrypted, and deleting it in Yahoo Account Security ends access at once."
+          }
+        ]
+      }
+    },
+    "icloud": {
+      "claude": {
+        "meta": {
+          "title": "Connect iCloud Mail to Claude",
+          "description": "Connect iCloud Mail to Claude in five steps: an Apple app-specific password, MCPEmails, and a custom connector in claude.ai or Claude Desktop. No Mac needed."
+        },
+        "h1": "Connect iCloud Mail to Claude",
+        "answer": "Claude has no built-in iCloud connector and Apple offers no OAuth for iCloud Mail. Connect your iCloud inbox to MCPEmails with an Apple app-specific password, then add MCPEmails to Claude as a custom connector with the URL https://mcpemails.com/api/mcp. Claude can then read, search, draft, send and organize the mail you see in Apple Mail.",
+        "faq": [
+          {
+            "q": "Does Claude work with iCloud Mail?",
+            "a": "Yes, through a custom connector. Claude's built-in connectors do not include iCloud. MCPEmails connects the mailbox over IMAP with an Apple app-specific password and gives Claude read, search, draft, send, schedule and organize access."
+          },
+          {
+            "q": "Does it work with an iCloud+ custom domain address?",
+            "a": "Yes. A custom domain address is an alias on your iCloud account, so its mail arrives in the same inbox. Sign in with your iCloud account and the app-specific password. To send from the custom address, add it as a Send As address and confirm the code emailed to it."
+          },
+          {
+            "q": "Does my Mac need to be on?",
+            "a": "No. MCPEmails is hosted and connects to Apple's mail servers directly, so Claude reaches your iCloud mail from any device. Folders kept only On My Mac are not included."
+          },
+          {
+            "q": "Can Claude use iCloud and my other inboxes together?",
+            "a": "Yes. One MCPEmails connector holds iCloud next to Gmail, Outlook, Yahoo or a work IMAP mailbox. The free plan connects one inbox; Personal connects three and Pro up to ten."
+          }
+        ]
+      },
+      "chatgpt": {
+        "meta": {
+          "title": "Connect iCloud Mail to ChatGPT",
+          "description": "Use iCloud Mail in ChatGPT through Any Mailbox, the MCPEmails plugin, with custom domain addresses and your other inboxes in the same plugin. One inbox free."
+        },
+        "h1": "Connect iCloud Mail to ChatGPT",
+        "answer": "Connect your iCloud inbox to MCPEmails with an Apple app-specific password, then install Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, and sign in. ChatGPT can then read, search, draft, send and organize your iCloud mail, including mail to an iCloud+ custom domain, and the same inbox works in Claude.",
+        "faq": [
+          {
+            "q": "ChatGPT has its own iCloud plugin. When does MCPEmails fit?",
+            "a": "OpenAI's iCloud Mail plugin connects an iCloud mailbox to ChatGPT. MCPEmails fits when you also use Claude or another MCP client, use an iCloud+ custom domain address, or want iCloud next to Gmail, Outlook, Yahoo or work inboxes behind one plugin. It also saves drafts to your iCloud Drafts folder, schedules sends, and moves, flags and archives mail."
+          },
+          {
+            "q": "Does it work with an iCloud+ custom domain address?",
+            "a": "Yes. A custom domain address is an alias on your iCloud account, so its mail arrives in the same inbox. To send from it, add it as a Send As address in MCPEmails and confirm the code emailed to it."
+          },
+          {
+            "q": "Why is my Apple password rejected?",
+            "a": "iCloud never accepts the Apple Account password from a mail app. Create an app-specific password at account.apple.com under Sign-In and Security. That option appears only when two-factor authentication is on."
+          },
+          {
+            "q": "Is my iCloud mail stored?",
+            "a": "No. Messages are fetched live from Apple for each request. The app-specific password is stored encrypted, and revoking it in your Apple Account ends access at once."
+          }
+        ]
+      }
+    },
+    "imap": {
+      "claude": {
+        "meta": {
+          "title": "Connect Any IMAP Mailbox to Claude",
+          "description": "Connect any IMAP mailbox to Claude: add it to MCPEmails with your host and password, then add a custom connector in claude.ai or Claude Desktop. One inbox free."
+        },
+        "h1": "Connect any IMAP mailbox to Claude",
+        "answer": "Claude has no IMAP client of its own. Connect your mailbox to MCPEmails with your address, IMAP and SMTP hosts and password, then add MCPEmails to Claude as a custom connector with the URL https://mcpemails.com/api/mcp. Claude can then read, search, draft, send and organize that mail, whoever hosts it.",
+        "faq": [
+          {
+            "q": "Does Claude support IMAP?",
+            "a": "Not directly. Claude reaches mail through connectors, and its built-in ones cover Gmail and Microsoft 365. A custom connector pointing at MCPEmails gives Claude any mailbox that speaks IMAP and SMTP on the standard ports."
+          },
+          {
+            "q": "Which ports does it use?",
+            "a": "IMAP on 993 or 143 and SMTP on 465 or 587. MCPEmails tries the standard transport and falls back to the other one on its own."
+          },
+          {
+            "q": "Can I connect several company mailboxes?",
+            "a": "Yes. One connector holds every mailbox you add, such as info@, sales@ and your own. The free plan connects one inbox; Personal connects three and Pro up to ten."
+          },
+          {
+            "q": "Is my mail stored?",
+            "a": "No. Messages are fetched live from your server for each request. The password is stored encrypted, and changing it at your provider ends access."
+          }
+        ]
+      },
+      "chatgpt": {
+        "meta": {
+          "title": "Connect Any IMAP Mailbox to ChatGPT",
+          "description": "Connect any IMAP mailbox to ChatGPT with Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory. Bring host and password. One inbox free."
+        },
+        "h1": "Connect any IMAP mailbox to ChatGPT",
+        "answer": "Connect your mailbox to MCPEmails with your address, IMAP and SMTP hosts and password, then install Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, and sign in. Type @ in a chat, pick Any Mailbox, and ChatGPT can read, search, draft, send and organize that mail.",
+        "faq": [
+          {
+            "q": "Can ChatGPT connect to an IMAP mailbox?",
+            "a": "Yes, through a plugin. Any Mailbox, the MCPEmails plugin in the ChatGPT plugin directory, connects ChatGPT to any mailbox that speaks IMAP and SMTP on the standard ports, once you have connected it to MCPEmails."
+          },
+          {
+            "q": "Which ports does it use?",
+            "a": "IMAP on 993 or 143 and SMTP on 465 or 587. MCPEmails tries the standard transport and falls back to the other one on its own."
+          },
+          {
+            "q": "Can I connect several company mailboxes?",
+            "a": "Yes. One plugin reaches every mailbox you add, such as info@, sales@ and your own, and you choose which ones ChatGPT can use. The free plan connects one inbox; Personal connects three and Pro up to ten."
+          },
+          {
+            "q": "Is my mail stored?",
+            "a": "No. Messages are fetched live from your server for each request. The password is stored encrypted, and changing it at your provider ends access."
+          }
+        ]
+      }
+    }
+  }
+}

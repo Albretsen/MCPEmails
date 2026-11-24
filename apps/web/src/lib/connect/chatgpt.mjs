@@ -125,6 +125,10 @@ export function chatgptSection(copy, providerName, listingUrl = CHATGPT_DIRECTOR
     sub: fill(viaDirectory ? copy.directorySub : copy.sub, providerName),
     steps: (viaDirectory ? copy.directorySteps : copy.steps).map((s) => fill(s, providerName)),
     listing: viaDirectory ? { href: listingUrl, label: copy.directoryLink } : null,
+    // One line near the top of the page saying the listing exists, linked to
+    // it. AI answers recommend products "listed in ChatGPT's directory"; the
+    // steps further down say how to install, this line says that we are.
+    listed: viaDirectory && copy.listedLine ? { href: listingUrl, label: copy.listedLine } : null,
     docs: { href: CHATGPT_DOCS_PATH, label: copy.docsLink },
     blogLabel: copy.blogLink,
   };

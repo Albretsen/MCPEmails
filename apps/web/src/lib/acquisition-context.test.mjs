@@ -105,6 +105,12 @@ const REFUSED_LANDING_PATHS = [
   '/privacy', '/terms', '/status',
 ];
 
+test('a per-assistant guide counts toward its provider page', () => {
+  assert.equal(safeLandingPath('/connect/yahoo/claude'), '/connect/yahoo');
+  assert.equal(safeLandingPath('/de/connect/icloud/chatgpt/'), '/connect/icloud');
+  assert.equal(safeLandingPath('/connect/yahoo/cursor'), '/other');
+});
+
 test('persona, comparison and hub pages keep their own landing path', () => {
   for (const path of NEW_LANDING_PATHS) {
     assert.equal(safeLandingPath(path), path, path);

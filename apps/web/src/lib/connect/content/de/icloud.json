@@ -18,11 +18,11 @@
     "eyebrow": "iCloud Mail + KI",
     "titleLine1": "Claude mit iCloud verbinden:",
     "titleLine2": "das Postfach aus Apple Mail, per MCP in Claude, Cursor und ChatGPT",
-    "lead": "Geben Sie Claude oder ChatGPT das iCloud-Postfach, das Sie in Apple Mail lesen. E-Mails lesen, suchen, beantworten, senden, planen und sortieren, mit einem App-spezifischen Passwort von Apple. MCPEmails läuft gehostet, Ihr Mac kann also aus bleiben, und dasselbe Postfach funktioniert in jedem MCP-Client.",
+    "lead": "Geben Sie Claude, ChatGPT oder jedem MCP-Client das iCloud-Postfach, das Sie in Apple Mail lesen, auch mit Adressen auf einer eigenen iCloud+ Domain, neben Gmail, Outlook oder Postfächern der Arbeit in einem Connector. E-Mails lesen, suchen, entwerfen, senden, planen und sortieren, mit einem App-spezifischen Passwort von Apple. MCPEmails läuft gehostet, Ihr Mac kann also aus bleiben.",
     "meta0": "1 Postfach dauerhaft kostenlos",
     "meta1": "App-spezifisches Passwort, kein OAuth",
     "meta2": "E-Mails live abgerufen, nie gespeichert",
-    "answer": "Apple bietet für iCloud Mail kein OAuth an, deshalb kann Claude sich nicht direkt damit verbinden, und Apple Mail selbst lässt sich nicht anbinden, weil es nur ein Anzeigeprogramm ist. MCPEmails verbindet Ihr iCloud-Postfach per IMAP mit einem App-spezifischen Passwort von Apple. Danach lesen, suchen, senden und sortieren Claude, ChatGPT oder Cursor dieselben E-Mails, die Sie in Apple Mail sehen. Die Einrichtung dauert etwa zwei Minuten, ein Postfach ist dauerhaft kostenlos."
+    "answer": "Apple bietet für iCloud Mail kein OAuth an, und Claude hat keinen eingebauten iCloud-Connector. MCPEmails verbindet Ihr iCloud-Postfach per IMAP mit einem App-spezifischen Passwort von Apple und stellt es Claude, ChatGPT, Cursor oder jedem MCP-Client über einen Connector bereit, der auch Ihre anderen Postfächer enthalten kann. E-Mails an eine eigene iCloud+ Domain landen im selben Postfach. Die Einrichtung dauert etwa zwei Minuten, ein Postfach ist dauerhaft kostenlos."
   },
   "method": {
     "title": "So verbindet sich iCloud: mit einem App-spezifischen Passwort",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Kann man Claude mit iCloud verbinden?",
-      "a": "Ja, über einen MCP-Server. Claude selbst hat keinen iCloud-Konnektor, und Apple bietet für iCloud Mail keine OAuth-Schnittstelle an. MCPEmails verbindet das Postfach per IMAP mit einem App-spezifischen Passwort von Apple. Danach kann Claude E-Mails lesen, suchen, senden, beantworten, planen und sortieren, und dieselbe Verbindung funktioniert in ChatGPT und Cursor."
+      "a": "Ja, über einen Custom Connector. Claude hat keinen eingebauten iCloud-Connector, und Apple bietet für iCloud Mail keine OAuth-Schnittstelle. Verbinden Sie das Postfach per IMAP mit einem App-spezifischen Passwort mit MCPEmails, fügen Sie MCPEmails in Claude als Custom Connector hinzu, und Claude kann diese E-Mails lesen, durchsuchen, entwerfen, senden, planen und sortieren. Dieselbe Verbindung funktioniert in ChatGPT und Cursor."
     },
     {
       "q": "Kann man Apple Mail mit Claude verbinden?",
@@ -95,8 +95,8 @@
       "a": "Nein. Nachrichten werden bei jeder Anfrage live per IMAP von Apple abgerufen und an Ihren KI-Client übergeben. Zugangsdaten liegen verschlüsselt, Nachrichteninhalte werden nicht aufbewahrt. Widerrufen Sie das App-spezifische Passwort in Ihrem Apple Account, endet die Verbindung bei Apple sofort."
     },
     {
-      "q": "Erreicht es auch iCloud-Kalender, Kontakte, Notizen oder Drive?",
-      "a": "Nein. MCPEmails verarbeitet nur E-Mails: Ihr iCloud-Postfach und seine Ordner, per IMAP und SMTP. Kalender, Kontakte, Notizen, Erinnerungen und iCloud Drive werden nicht verbunden, und das App-spezifische Passwort wird nur für E-Mail verwendet."
+      "q": "Was ist der Unterschied zum iCloud-Mail-Plugin von ChatGPT?",
+      "a": "Das iCloud-Mail-Plugin von OpenAI verbindet ein iCloud-Postfach mit ChatGPT. MCPEmails verbindet es einmal für Claude, ChatGPT, Cursor und andere MCP-Clients, funktioniert mit Adressen auf einer eigenen iCloud+ Domain und hält iCloud neben Gmail, Outlook, Yahoo oder Postfächern der Arbeit in einem Connector. Es speichert Entwürfe in Ihrem iCloud-Ordner Entwürfe, plant Sendungen und verschiebt, markiert und archiviert E-Mails. Es verarbeitet nur E-Mails, nicht Kalender, Kontakte oder iCloud Drive."
     }
   ],
   "ctaBand": {

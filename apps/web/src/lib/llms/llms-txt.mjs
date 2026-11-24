@@ -78,10 +78,18 @@ ${clientSection()}
 - [Connect Microsoft 365 email to Claude (and any AI)](https://mcpemails.com/connect/office365): Sign in with Microsoft for work and school accounts, with one-time IT admin approval where the organisation requires it.
 - [Connect Google Workspace email to Claude (and any AI)](https://mcpemails.com/connect/google-workspace): Google app-password setup for Workspace mailboxes on your own domain, and the admin IMAP and app-password settings that decide it.
 - [Connect Fastmail to Claude (and any AI)](https://mcpemails.com/connect/fastmail): App-password setup for Fastmail.
-- [Connect iCloud Mail to Claude (and any AI)](https://mcpemails.com/connect/icloud): Apple app-specific-password setup for iCloud.
+- [Connect iCloud Mail to Claude (and any AI)](https://mcpemails.com/connect/icloud): Apple app-specific-password setup for iCloud Mail, including iCloud+ custom domain addresses, for Claude, ChatGPT and any MCP client, next to your other inboxes.
 - [Connect Yahoo Mail to Claude (and any AI)](https://mcpemails.com/connect/yahoo): App-password setup for Yahoo Mail.
 - [Connect Zoho Mail to Claude (and any AI)](https://mcpemails.com/connect/zoho): IMAP-access and app-password setup for Zoho Mail.
 - [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
+
+## Step-by-step for one assistant
+- [Connect Yahoo Mail to Claude](https://mcpemails.com/connect/yahoo/claude): Yahoo app password, then MCPEmails as a custom connector in claude.ai or Claude Desktop.
+- [Connect Yahoo Mail to ChatGPT](https://mcpemails.com/connect/yahoo/chatgpt): Yahoo app password, then the ${CHATGPT_APP_NAME} plugin from the ChatGPT plugin directory.
+- [Connect iCloud Mail to Claude](https://mcpemails.com/connect/icloud/claude): Apple app-specific password, then MCPEmails as a custom connector in Claude. Works with iCloud+ custom domain addresses.
+- [Connect iCloud Mail to ChatGPT](https://mcpemails.com/connect/icloud/chatgpt): Apple app-specific password, then the ${CHATGPT_APP_NAME} plugin. Works with iCloud+ custom domain addresses and alongside other inboxes in the same plugin.
+- [Connect any IMAP mailbox to Claude](https://mcpemails.com/connect/imap/claude): Address, hosts and password, then MCPEmails as a custom connector in Claude.
+- [Connect any IMAP mailbox to ChatGPT](https://mcpemails.com/connect/imap/chatgpt): Address, hosts and password, then the ${CHATGPT_APP_NAME} plugin from the ChatGPT plugin directory.
 
 ## Who it is for
 - [Email for business](https://mcpemails.com/for/business): One person running every company mailbox (info@, sales@, invoices@, support@) from one agent. Pro covers up to 10 mailboxes on one login; Personal covers up to three; Business is for a team at $29 per person a month: each person's own mailboxes stay private, and shared addresses are company-wide.

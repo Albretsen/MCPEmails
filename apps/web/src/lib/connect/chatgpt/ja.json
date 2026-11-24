@@ -20,5 +20,6 @@
     "MCPEmailsにログインし、ChatGPTがアクセスできる受信トレイを選びます。チャットで<b>@</b>と入力してAny Mailboxを選びます。"
   ],
   "directoryLink": "ChatGPTのプラグインディレクトリにあるAny Mailbox",
-  "directoryFaqA": "はい。{provider}をMCPEmailsに接続すれば読めます。ChatGPTのプラグインディレクトリからAny Mailboxをインストールし、MCPEmailsにログインします。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。"
+  "directoryFaqA": "はい。{provider}をMCPEmailsに接続すれば読めます。ChatGPTのプラグインディレクトリからAny Mailboxをインストールし、MCPEmailsにログインします。ChatGPTに与えられるのはあなたが承認したアクセスだけで、メールはその都度取得され、保存されることはありません。",
+  "listedLine": "MCPEmailsはChatGPTのプラグインディレクトリにAny Mailboxとして掲載されています。"
 }

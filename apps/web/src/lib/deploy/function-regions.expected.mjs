@@ -149,6 +149,7 @@ export const ROUTES = [
   ['app/[locale]/blog/[slug]/page.js', 'iad1', '0', '-'],
   ['app/[locale]/blog/page.js', 'iad1', '0', '-'],
   ['app/[locale]/changelog/page.js', 'iad1', '0', '-'],
+  ['app/[locale]/connect/[provider]/[client]/page.js', 'iad1', '0', '-'],
   ['app/[locale]/connect/[provider]/page.js', 'iad1', '0', '-'],
   ['app/[locale]/connect/page.js', 'iad1', '0', '-'],
   ['app/[locale]/developers/page.js', 'iad1', '0', '-'],

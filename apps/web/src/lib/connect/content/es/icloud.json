@@ -18,11 +18,11 @@
     "eyebrow": "iCloud Mail + IA",
     "titleLine1": "El servidor MCP de iCloud",
     "titleLine2": "para Claude, Cursor y ChatGPT",
-    "lead": "Dale a Claude o ChatGPT la bandeja de iCloud que lees en Apple Mail. Lee, busca, envía, responde, programa y organiza correo con una contraseña específica de aplicación de Apple. Es un servicio alojado, así que tu Mac puede estar apagado, y la misma bandeja funciona en todos los clientes MCP.",
+    "lead": "Dale a Claude, ChatGPT o cualquier cliente MCP la bandeja de iCloud que lees en Apple Mail, incluidas las direcciones con dominio propio de iCloud+, junto a Gmail, Outlook o tus bandejas del trabajo en un solo conector. Lee, busca, redacta borradores, envía, programa y organiza el correo con una contraseña específica de app de Apple. Funciona alojado, así que tu Mac puede estar apagado.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña específica de aplicación, sin OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Apple no ofrece OAuth para iCloud Mail, así que Claude no puede conectarse directamente. MCPEmails conecta tu bandeja de iCloud por IMAP con una contraseña específica de aplicación de Apple, lo que permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar ese correo. La configuración lleva unos dos minutos y una bandeja es gratis."
+    "answer": "Apple no ofrece OAuth para iCloud Mail y Claude no tiene un conector de iCloud integrado. MCPEmails conecta tu bandeja de iCloud por IMAP con una contraseña específica de app de Apple y la pone a disposición de Claude, ChatGPT, Cursor o cualquier cliente MCP a través de un solo conector que también puede reunir tus otras bandejas. El correo enviado a un dominio propio de iCloud+ llega a la misma bandeja. La configuración lleva unos dos minutos y una bandeja es gratis."
   },
   "method": {
     "title": "Cómo se conecta iCloud: una contraseña específica de aplicación",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "¿Funciona Claude con iCloud Mail?",
-      "a": "No por sí solo. Claude no tiene un conector integrado para iCloud y Apple no publica ninguna interfaz OAuth para iCloud Mail. Conectar un servidor MCP como MCPEmails al buzón por IMAP, con una contraseña específica de aplicación de Apple, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
+      "a": "Sí, mediante un conector personalizado. Claude no tiene un conector de iCloud integrado y Apple no publica una interfaz OAuth para iCloud Mail. Conecta la bandeja a MCPEmails por IMAP con una contraseña específica de app de Apple, añade MCPEmails a Claude como conector personalizado y Claude podrá leer, buscar, redactar, enviar, programar y organizar ese correo. La misma conexión funciona en ChatGPT y Cursor."
     },
     {
       "q": "¿Puede Claude conectarse a Apple Mail?",
@@ -95,8 +95,8 @@
       "a": "No. Los mensajes se obtienen en vivo de Apple por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Revocar la contraseña específica de aplicación en tu cuenta de Apple corta la conexión en el lado de Apple de inmediato."
     },
     {
-      "q": "¿Llega a Calendario, Contactos, Notas o iCloud Drive?",
-      "a": "No. MCPEmails solo gestiona el correo: tu bandeja de iCloud y sus carpetas, por IMAP y SMTP. Calendario, Contactos, Notas, Recordatorios e iCloud Drive no se conectan, y la contraseña de aplicación solo se usa para el correo."
+      "q": "¿En qué se diferencia del plugin de iCloud Mail de ChatGPT?",
+      "a": "El plugin de iCloud Mail de OpenAI conecta una bandeja de iCloud a ChatGPT. MCPEmails la conecta una vez para Claude, ChatGPT, Cursor y otros clientes MCP, funciona con direcciones con dominio propio de iCloud+ y reúne iCloud con Gmail, Outlook, Yahoo o bandejas del trabajo en un solo conector. Guarda borradores en la carpeta Borradores de iCloud, programa envíos y mueve, marca y archiva correo. Solo gestiona correo, no Calendario, Contactos ni iCloud Drive."
     }
   ],
   "ctaBand": {

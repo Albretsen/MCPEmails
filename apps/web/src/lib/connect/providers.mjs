@@ -116,7 +116,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.mail.me.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mail.me.com", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["ATOKEN", "ATOKEN2", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY XAPPLEPUSHSERVICE IMAP4 IMAP4rev1 SASL-IR AUTH=ATOKEN AUTH=PLAIN AUTH=ATOKEN2 AUTH=XOAUTH2] (2632B238-1e86c56f9b73) p00-iscream-60-percent-84d6", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "28319744"},
-    contentUpdatedOn: "2026-11-10",
+    contentUpdatedOn: "2026-11-24",
     locales: ["en", "nb", "es", "fr", "zh", "de", "pt", "ja"],
   },
   {
