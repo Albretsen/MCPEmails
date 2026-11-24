@@ -5,9 +5,9 @@
  * and measure it against the old email.
  *
  * THE ARMS.
- *   control  20% of workspaces (salted hash of the workspace id, stable across
- *            the 80% and 100% emails): the pre-2026-11-24 email, unchanged.
- *            The read-out compares paid conversion of capped workspaces per arm.
+ *   control  the pre-2026-11-24 email, unchanged. Only with the kill switch
+ *            off, or a row without a workspace or owner. No holdout: owner
+ *            decision 2026-11-24, everyone eligible gets the new email.
  *   promote  the upgrade is the primary button and goes straight to Stripe
  *            Checkout; the yearly price is offered next to it; the footer
  *            carries a working opt-out from upgrade offers. Only for owners who
@@ -43,18 +43,9 @@
  * KILL SWITCH. CAP_EMAIL_ARMS=off sends everyone the control email.
  */
 
-import { createHash } from 'node:crypto';
 import { sanitizedCountry } from '@/lib/acquisition-country.mjs';
 
 export type CapEmailArm = 'control' | 'promote' | 'notice';
-
-export const CAP_EMAIL_HOLDOUT_PERCENT = 20;
-
-/** Stable 20% control group per workspace. Pure. */
-export function isCapEmailControl(workspaceId: string): boolean {
-  const digest = createHash('sha256').update(`cap_email:v1:${workspaceId}`).digest();
-  return digest.readUInt32BE(0) % 100 < CAP_EMAIL_HOLDOUT_PERCENT;
-}
 
 /** True only when at least one country is known and every known one is US. Pure. */
 export function knownUnitedStates(countries: ReadonlyArray<string | null | undefined>): boolean {
@@ -79,7 +70,6 @@ export interface CapEmailArmInput {
 /** The arm for one email. Pure. */
 export function capEmailArm(input: CapEmailArmInput): CapEmailArm {
   if (!input.enabled) return 'control';
-  if (isCapEmailControl(input.workspaceId)) return 'control';
   // A promotional email whose opt-out we cannot honour is not sent as one.
   if (input.unsubscribed || !input.hasUnsubscribeToken) return 'notice';
   if (input.consented) return 'promote';

@@ -308,9 +308,8 @@ async function dispatchOne(
   // only, never stored.
   if (isUsageTemplate(row.template)) {
     const decided = await resolveCapArm(db, row, ownerId);
-    // A failed read must not quietly become `control`: that would put
-    // non-random rows into the holdout. Leave the row; the lease expires and
-    // the next tick asks again.
+    // A failed read must not quietly send the old email. Leave the row; the
+    // lease expires and the next tick asks again.
     if (decided === 'retry') return;
     const stored = row.payload ?? {};
     row.payload = {
@@ -386,7 +385,7 @@ async function dispatchOne(
 /**
  * The arm for a usage notice. The switch off, or a row without a workspace or
  * owner, gives `control`. A failed read gives 'retry' (the caller leaves the
- * row for the next tick), so the holdout only ever holds hashed workspaces.
+ * row for the next tick) rather than sending the old email.
  * The read-out must count rows with `sent_at` set: in queue_only mode the arm
  * is recorded on rows that were not sent.
  */

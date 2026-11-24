@@ -24,8 +24,8 @@
  *   `stripe_customer_id`, and the Resend Idempotency-Key is built from those.
  *   "Your service is about to stop" is account status, so they are not
  *   suppressible. Since 2026-11-24 each is composed in one of three arms
- *   (src/lib/email/cap-email-arm.ts): `control` (20%, the original copy, where
- *   the upgrade line is secondary to the numbers), `notice` (Europe, unknown
+ *   (src/lib/email/cap-email-arm.ts): `control` (kill switch only, the original
+ *   copy, where the upgrade line is secondary to the numbers), `notice` (Europe, unknown
  *   and everyone without consent outside the US: facts, then both options as
  *   facts, no button, no unsubscribe) and `promote` (consented owners and
  *   known-US owners: facts first, then a Checkout button, the yearly price,
@@ -2498,7 +2498,7 @@ export function composeBillingEmail(
       const upgradeLine = `Personal removes the monthly cap for ${personalMonthlyPrice()} a month.`;
 
       // The 2026-11-24 versions (cap-email-arm.ts). Absent or 'control' falls
-      // through to the original copy below, unchanged, for the holdout.
+      // through to the original copy below, unchanged (kill switch).
       if (payload.capArm === 'promote' || payload.capArm === 'notice') {
         return composeCapArmEmail(template, usage, payload, base, category);
       }

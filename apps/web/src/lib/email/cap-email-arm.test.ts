@@ -2,32 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
-import {
-  CAP_EMAIL_HOLDOUT_PERCENT,
-  capEmailArm,
-  capEmailArmsEnabled,
-  isCapEmailControl,
-  knownUnitedStates,
-} from './cap-email-arm.ts';
+import { capEmailArm, capEmailArmsEnabled, knownUnitedStates } from './cap-email-arm.ts';
 import {
   capCheckoutUrl,
   composeBillingEmail,
   type LifecyclePayload,
 } from './billing-lifecycle.ts';
 
-/** A workspace id that is NOT in the 20% control group. */
-function treatedId(): string {
-  for (;;) {
-    const id = randomUUID();
-    if (!isCapEmailControl(id)) return id;
-  }
-}
-function controlId(): string {
-  for (;;) {
-    const id = randomUUID();
-    if (isCapEmailControl(id)) return id;
-  }
-}
+const treatedId = () => randomUUID();
 
 const base = {
   consented: false,
@@ -37,17 +19,10 @@ const base = {
   enabled: true,
 };
 
-test('control group is stable and close to 20%', () => {
-  const id = randomUUID();
-  assert.equal(isCapEmailControl(id), isCapEmailControl(id));
-  let n = 0;
-  for (let i = 0; i < 20000; i++) if (isCapEmailControl(randomUUID())) n++;
-  const pct = (n / 20000) * 100;
-  assert.ok(Math.abs(pct - CAP_EMAIL_HOLDOUT_PERCENT) < 1.5, `control share ${pct}`);
-});
-
-test('control wins over every other rule, and the kill switch sends control to all', () => {
-  assert.equal(capEmailArm({ ...base, workspaceId: controlId(), consented: true }), 'control');
+test('there is no holdout: every workspace gets a new arm, and the kill switch sends control to all', () => {
+  for (let i = 0; i < 2000; i++) {
+    assert.notEqual(capEmailArm({ ...base, workspaceId: randomUUID() }), 'control');
+  }
   assert.equal(capEmailArm({ ...base, workspaceId: treatedId(), consented: true, enabled: false }), 'control');
 });
 
