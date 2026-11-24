@@ -17,13 +17,9 @@ import { TITLE_MAX, DESCRIPTION_MAX } from '../src/lib/seo/title.mjs';
 const base = (process.argv.slice(2).find((a) => !a.startsWith('--')) || 'https://mcpemails.com').replace(/\/$/, '');
 const CONCURRENCY = 8;
 
-const decode = (s) =>
-  s
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;|&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+// One pass, so "&amp;lt;" decodes to "&lt;" and not on to "<".
+const ENTITIES = { '&amp;': '&', '&quot;': '"', '&#x27;': "'", '&#39;': "'", '&lt;': '<', '&gt;': '>' };
+const decode = (s) => s.replace(/&(?:amp|quot|#x27|#39|lt|gt);/g, (m) => ENTITIES[m]);
 
 const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
 const urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].replace(/^https?:\/\/[^/]+/, base));
