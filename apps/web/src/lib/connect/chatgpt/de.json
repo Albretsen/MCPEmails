@@ -20,5 +20,6 @@
     "Melden Sie sich bei MCPEmails an und wählen Sie, welche Postfächer ChatGPT erreichen darf. Tippen Sie im Chat <b>@</b> und wählen Sie Any Mailbox."
   ],
   "directoryLink": "Any Mailbox im Plugin-Verzeichnis von ChatGPT",
-  "directoryFaqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Installieren Sie Any Mailbox aus dem Plugin-Verzeichnis von ChatGPT und melden Sie sich bei MCPEmails an. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert."
+  "directoryFaqA": "Ja, sobald {provider} mit MCPEmails verbunden ist. Installieren Sie Any Mailbox aus dem Plugin-Verzeichnis von ChatGPT und melden Sie sich bei MCPEmails an. ChatGPT erhält nur den Zugriff, den Sie freigeben, und Ihre E-Mails werden live abgerufen und nie gespeichert.",
+  "listedLine": "MCPEmails ist im Plugin-Verzeichnis von ChatGPT als Any Mailbox gelistet."
 }

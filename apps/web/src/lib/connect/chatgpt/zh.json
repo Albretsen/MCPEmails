@@ -20,5 +20,6 @@
     "登录 MCPEmails，选择 ChatGPT 可以访问的收件箱。在对话中输入 <b>@</b> 并选择 Any Mailbox。"
   ],
   "directoryLink": "ChatGPT 插件目录中的 Any Mailbox",
-  "directoryFaqA": "可以，只要先将 {provider} 连接到 MCPEmails。从 ChatGPT 插件目录安装 Any Mailbox 并登录 MCPEmails。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。"
+  "directoryFaqA": "可以，只要先将 {provider} 连接到 MCPEmails。从 ChatGPT 插件目录安装 Any Mailbox 并登录 MCPEmails。ChatGPT 只获得你批准的权限，邮件实时读取，从不存储。",
+  "listedLine": "MCPEmails 已在 ChatGPT 插件目录中上架，名称为 Any Mailbox。"
 }

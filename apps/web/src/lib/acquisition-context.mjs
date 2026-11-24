@@ -175,6 +175,11 @@ export function safeLandingPath(pathname) {
   if (path === '/') return '/';
   if (/^\/blog\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
   if (/^\/connect\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
+  // Per-assistant guides (/connect/yahoo/claude) count toward their provider
+  // page: the stored shape stays /connect/<slug>, which the database CHECK
+  // constraint already accepts.
+  const guide = path.match(/^(\/connect\/[a-z0-9-]+)\/(?:claude|chatgpt)\/?$/);
+  if (guide) return guide[1];
   if (/^\/docs(?:\/[a-z0-9-]+)*\/?$/.test(path)) return path.replace(/\/$/, '');
   if (/^\/for\/[a-z0-9-]+\/?$/.test(path)) return path.replace(/\/$/, '');
   const bare = path.replace(/\/$/, '');

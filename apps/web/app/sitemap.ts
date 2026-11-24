@@ -2,6 +2,13 @@ import { MetadataRoute } from 'next';
 import { localePath, languageAlternates, languageAlternatesFor } from '@/i18n/seo';
 import { releasedProviders } from '@/lib/connect/release.mjs';
 import { CLIENTS } from '@/lib/clients/clients.mjs';
+import {
+  CLIENT_GUIDE_PROVIDERS,
+  CLIENT_GUIDE_CLIENTS,
+  CLIENT_GUIDES_UPDATED,
+  clientGuidePath,
+  clientGuideLocales,
+} from '@/lib/connect/client-guides.mjs';
 import { clientHubLocales } from '@/lib/clients/content.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
@@ -168,6 +175,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/docs/providers/data', lastModified: '2026-10-20', priority: 0.7, locales: ['en'] },
     // The free IMAP/SMTP settings lookup. No zh content file (zh is frozen).
     { path: LOOKUP_PATH, lastModified: LOOKUP_MODIFIED, priority: 0.7, locales: LOOKUP_LOCALES },
+    // One guide per assistant under the top provider pages
+    // (/connect/yahoo/claude ...), in the locales each one exists in.
+    ...CLIENT_GUIDE_PROVIDERS.flatMap((provider) =>
+      CLIENT_GUIDE_CLIENTS.map((client) => ({
+        path: clientGuidePath(provider, client),
+        lastModified: CLIENT_GUIDES_UPDATED,
+        priority: 0.8,
+        locales: clientGuideLocales(provider, client),
+      })),
+    ).filter((e) => e.locales.length > 0),
   ].map(({ path, lastModified, priority, locales }) => ({
     url: localePath('en', path),
     lastModified: new Date(`${lastModified}T00:00:00.000Z`),

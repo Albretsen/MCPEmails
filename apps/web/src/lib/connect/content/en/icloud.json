@@ -18,11 +18,11 @@
     "eyebrow": "iCloud Mail + AI",
     "titleLine1": "The iCloud MCP server",
     "titleLine2": "for Claude, Cursor and ChatGPT",
-    "lead": "Give Claude or ChatGPT the iCloud inbox you read in Apple Mail. Read, search, send, reply, schedule and organize mail with an Apple app-specific password. It runs hosted, so your Mac can stay off, and the same inbox works in every MCP client.",
+    "lead": "Give Claude, ChatGPT or any MCP client the iCloud inbox you read in Apple Mail, including iCloud+ custom domain addresses, next to your Gmail, Outlook or work inboxes in one connector. Read, search, draft, send, schedule and organize mail with an Apple app-specific password. It runs hosted, so your Mac can stay off.",
     "meta0": "1 inbox free, forever",
     "meta1": "App-specific password, no OAuth",
     "meta2": "Email fetched live, never stored",
-    "answer": "Apple does not offer OAuth for iCloud Mail, so Claude cannot connect to it directly. MCPEmails connects your iCloud inbox over IMAP using an Apple app-specific password, which lets Claude, Cursor or any MCP client read, search, send and organize that mail. Setup takes about two minutes and one inbox is free."
+    "answer": "Apple offers no OAuth for iCloud Mail, and Claude has no built-in iCloud connector. MCPEmails connects your iCloud inbox over IMAP with an Apple app-specific password and serves it to Claude, ChatGPT, Cursor or any MCP client through one connector that can also hold your other inboxes. Mail sent to an iCloud+ custom domain arrives in the same inbox. Setup takes about two minutes and one inbox is free."
   },
   "method": {
     "title": "How iCloud connects: an app-specific password",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Does Claude work with iCloud Mail?",
-      "a": "Not on its own. Claude has no built-in iCloud connector and Apple publishes no OAuth interface for iCloud Mail. Connecting an MCP server such as MCPEmails to the mailbox over IMAP, using an Apple app-specific password, gives Claude read, search, send, reply, schedule and organize access, and the same connection works from Cursor and ChatGPT."
+      "a": "Yes, through a custom connector. Claude has no built-in iCloud connector and Apple publishes no OAuth interface for iCloud Mail. Connect the mailbox to MCPEmails over IMAP with an Apple app-specific password, add MCPEmails to Claude as a custom connector, and Claude can read, search, draft, send, schedule and organize that mail. The same connection works from ChatGPT and Cursor."
     },
     {
       "q": "Can Claude connect to Apple Mail?",
@@ -95,8 +95,8 @@
       "a": "No. Messages are fetched live from Apple over IMAP for each request and handed to your AI client. Credentials are encrypted at rest and message bodies are not retained. Revoking the app-specific password in your Apple Account ends the connection at Apple's end straight away."
     },
     {
-      "q": "Does it reach iCloud Calendar, Contacts, Notes or Drive?",
-      "a": "No. MCPEmails handles mail only: your iCloud inbox and its folders, over IMAP and SMTP. Calendar, Contacts, Notes, Reminders and iCloud Drive are not connected, and the app-specific password is used for mail and nothing else."
+      "q": "How is this different from ChatGPT's iCloud Mail plugin?",
+      "a": "OpenAI's iCloud Mail plugin connects an iCloud mailbox to ChatGPT. MCPEmails connects it once for Claude, ChatGPT, Cursor and other MCP clients, works with iCloud+ custom domain addresses, and holds iCloud next to Gmail, Outlook, Yahoo or work inboxes in one connector. It saves drafts to your iCloud Drafts folder, schedules sends, and moves, flags and archives mail. It handles mail only, not Calendar, Contacts or iCloud Drive."
     }
   ],
   "ctaBand": {

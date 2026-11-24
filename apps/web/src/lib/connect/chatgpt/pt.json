@@ -20,5 +20,6 @@
     "Entre no MCPEmails e escolha quais caixas de entrada o ChatGPT pode acessar. Em um chat, digite <b>@</b> e escolha Any Mailbox."
   ],
   "directoryLink": "Any Mailbox no diretório de plugins do ChatGPT",
-  "directoryFaqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. Instale o Any Mailbox pelo diretório de plugins do ChatGPT e entre no MCPEmails. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados."
+  "directoryFaqA": "Sim, depois que o {provider} estiver conectado ao MCPEmails. Instale o Any Mailbox pelo diretório de plugins do ChatGPT e entre no MCPEmails. O ChatGPT recebe só o acesso que você aprovar, e seus e-mails são buscados em tempo real, nunca armazenados.",
+  "listedLine": "O MCPEmails está listado no diretório de plugins do ChatGPT como Any Mailbox."
 }

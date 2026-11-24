@@ -20,5 +20,6 @@
     "Sign in to MCPEmails and choose which mailboxes ChatGPT can reach. In a chat, type <b>@</b> and pick Any Mailbox."
   ],
   "directoryLink": "Any Mailbox in the ChatGPT plugin directory",
-  "directoryFaqA": "Yes, once {provider} is connected to MCPEmails. Install Any Mailbox from the ChatGPT plugin directory and sign in to MCPEmails. ChatGPT gets only the access you approve, and your mail is fetched live, never stored."
+  "directoryFaqA": "Yes, once {provider} is connected to MCPEmails. Install Any Mailbox from the ChatGPT plugin directory and sign in to MCPEmails. ChatGPT gets only the access you approve, and your mail is fetched live, never stored.",
+  "listedLine": "MCPEmails is listed in the ChatGPT plugin directory as Any Mailbox."
 }

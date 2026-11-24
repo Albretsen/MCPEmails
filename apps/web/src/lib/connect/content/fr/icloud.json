@@ -18,11 +18,11 @@
     "eyebrow": "iCloud Mail + IA",
     "titleLine1": "Le serveur MCP iCloud",
     "titleLine2": "pour Claude, Cursor et ChatGPT",
-    "lead": "Donnez à Claude ou ChatGPT la boîte iCloud que vous lisez dans Apple Mail. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe pour app Apple. Le service est hébergé : votre Mac peut rester éteint, et la même boîte fonctionne dans tous les clients MCP.",
+    "lead": "Donnez à Claude, ChatGPT ou à tout client MCP la boîte iCloud que vous lisez dans Apple Mail, y compris les adresses sur un domaine personnalisé iCloud+, à côté de Gmail, Outlook ou de vos boîtes professionnelles dans un seul connecteur. Lisez, cherchez, rédigez des brouillons, envoyez, planifiez et rangez vos e-mails avec un mot de passe pour app Apple. Le service est hébergé, votre Mac peut donc rester éteint.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Mot de passe pour app, sans OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Apple ne propose pas OAuth pour iCloud Mail : Claude ne peut donc pas s'y connecter directement. MCPEmails connecte votre boîte iCloud en IMAP avec un mot de passe pour app Apple, ce qui permet à Claude, Cursor ou tout client MCP de lire, rechercher, envoyer et organiser ce courrier. La configuration prend environ deux minutes et une boîte est gratuite."
+    "answer": "Apple ne propose pas d'OAuth pour iCloud Mail et Claude n'a pas de connecteur iCloud intégré. MCPEmails connecte votre boîte iCloud en IMAP avec un mot de passe pour app Apple et la met à disposition de Claude, ChatGPT, Cursor ou de tout client MCP via un seul connecteur qui peut aussi réunir vos autres boîtes. Les e-mails envoyés à un domaine personnalisé iCloud+ arrivent dans la même boîte. La configuration prend environ deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment iCloud se connecte : un mot de passe pour app",
@@ -72,7 +72,7 @@
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec iCloud Mail ?",
-      "a": "Pas seul. Claude n'a pas de connecteur iCloud intégré et Apple ne publie aucune interface OAuth pour iCloud Mail. Connecter un serveur MCP comme MCPEmails à la boîte en IMAP, avec un mot de passe pour app Apple, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor et ChatGPT."
+      "a": "Oui, avec un connecteur personnalisé. Claude n'a pas de connecteur iCloud intégré et Apple ne publie pas d'interface OAuth pour iCloud Mail. Connectez la boîte à MCPEmails en IMAP avec un mot de passe pour app Apple, ajoutez MCPEmails à Claude comme connecteur personnalisé, et Claude peut lire, chercher, rédiger, envoyer, planifier et ranger ces e-mails. La même connexion fonctionne dans ChatGPT et Cursor."
     },
     {
       "q": "Claude peut-il se connecter à Apple Mail ?",
@@ -95,8 +95,8 @@
       "a": "Non. Les messages sont récupérés en direct chez Apple en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Révoquer le mot de passe pour app dans votre compte Apple met immédiatement fin à la connexion du côté d'Apple."
     },
     {
-      "q": "Est-ce que cela couvre Calendrier, Contacts, Notes ou iCloud Drive ?",
-      "a": "Non. MCPEmails ne gère que le courrier : votre boîte iCloud et ses dossiers, en IMAP et SMTP. Calendrier, Contacts, Notes, Rappels et iCloud Drive ne sont pas connectés, et le mot de passe pour app ne sert qu'au courrier."
+      "q": "Quelle différence avec le plugin iCloud Mail de ChatGPT ?",
+      "a": "Le plugin iCloud Mail d'OpenAI connecte une boîte iCloud à ChatGPT. MCPEmails la connecte une fois pour Claude, ChatGPT, Cursor et les autres clients MCP, fonctionne avec les adresses sur un domaine personnalisé iCloud+ et réunit iCloud avec Gmail, Outlook, Yahoo ou des boîtes professionnelles dans un seul connecteur. Il enregistre les brouillons dans le dossier Brouillons d'iCloud, planifie les envois et déplace, signale et archive les e-mails. Il ne gère que les e-mails, pas Calendrier, Contacts ni iCloud Drive."
     }
   ],
   "ctaBand": {

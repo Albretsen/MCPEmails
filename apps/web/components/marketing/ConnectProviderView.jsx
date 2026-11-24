@@ -55,7 +55,7 @@ export function nameGrammar(name) {
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null, guides = null, moreGuides = [], chatgpt = null, clientGuides = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   // Only providers whose page exists in this locale: next-intl's Link adds the
   // locale prefix, so a provider missing here would be a link to a 404.
@@ -195,6 +195,26 @@ export default async function ConnectProviderView({ locale, provider, content, m
           */}
           {content.hero.answer && (
             <p className="providers-sub">{content.hero.answer}</p>
+          )}
+          {gpt?.listed && (
+            <p className="how-guide-link connect-chatgpt-listed">
+              <a href={gpt.listed.href} rel="noopener">{gpt.listed.label}</a>
+            </p>
+          )}
+          {/*
+            One page per assistant for the providers that earn the most
+            (lib/connect/client-guides). Anchors are those pages' H1s.
+          */}
+          {clientGuides?.links?.length > 0 && (
+            <p className="how-guide-link connect-client-guides">
+              {clientGuides.intro}{' '}
+              {clientGuides.links.map((g, i) => (
+                <span key={g.client}>
+                  {i > 0 && ' · '}
+                  <Link href={g.href}>{g.label}</Link>
+                </span>
+              ))}
+            </p>
           )}
           <div className="connect-callout">
             <MIcon name="lock" size={20} color="var(--cobalt-600)" />
