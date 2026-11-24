@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk Mail to Claude: IMAP Settings and MCP Access",
-    "description": "Plesk mailboxes connect to Claude over IMAP 993. Use the domain itself, not mail.domain.com: unless a certificate is assigned to the mail domain, the mail subdomain gets the server's default one."
+    "description": "Plesk mailboxes connect to Claude over IMAP 993. Use the domain itself, not mail.domain.com, which serves the default certificate unless one is assigned."
   },
   "hero": {
     "eyebrow": "Plesk + AI",

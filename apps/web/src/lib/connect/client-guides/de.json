@@ -99,7 +99,7 @@
       "claude": {
         "meta": {
           "title": "Yahoo Mail mit Claude verbinden",
-          "description": "Yahoo Mail in fünf Schritten mit Claude verbinden: Yahoo App-Passwort, MCPEmails und ein Custom Connector in claude.ai oder Claude Desktop. Ein Postfach kostenlos."
+          "description": "Yahoo Mail in fünf Schritten mit Claude verbinden: Yahoo App-Passwort, MCPEmails und ein Custom Connector in claude.ai oder Claude Desktop."
         },
         "h1": "Yahoo Mail mit Claude verbinden",
         "answer": "Claude hat keinen eingebauten Connector für Yahoo Mail. Verbinden Sie Ihr Yahoo-Postfach mit einem Yahoo App-Passwort mit MCPEmails und fügen Sie MCPEmails dann in Claude als Custom Connector mit der URL https://mcpemails.com/api/mcp hinzu. Danach kann Claude Ihre Yahoo-E-Mails lesen, durchsuchen, entwerfen, senden und sortieren.",
@@ -233,7 +233,7 @@
       "chatgpt": {
         "meta": {
           "title": "Beliebiges IMAP-Postfach mit ChatGPT verbinden",
-          "description": "Jedes IMAP-Postfach mit ChatGPT verbinden: über Any Mailbox, das MCPEmails-Plugin im Plugin-Verzeichnis von ChatGPT. Server und Passwort genügen. Ein Postfach kostenlos."
+          "description": "Jedes IMAP-Postfach mit ChatGPT verbinden: über Any Mailbox, das MCPEmails-Plugin im Plugin-Verzeichnis von ChatGPT. Server und Passwort genügen."
         },
         "h1": "Beliebiges IMAP-Postfach mit ChatGPT verbinden",
         "answer": "Verbinden Sie Ihr Postfach mit Adresse, IMAP- und SMTP-Server und Passwort mit MCPEmails, installieren Sie dann Any Mailbox, das MCPEmails-Plugin im Plugin-Verzeichnis von ChatGPT, und melden Sie sich an. Tippen Sie im Chat @, wählen Sie Any Mailbox, und ChatGPT kann diese E-Mails lesen, durchsuchen, entwerfen, senden und sortieren.",

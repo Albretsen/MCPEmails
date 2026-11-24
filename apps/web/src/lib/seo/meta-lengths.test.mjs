@@ -117,6 +117,21 @@ function collect() {
     }
   }
 
+  // Per-assistant guides under a provider page: client-guides/<locale>.json.
+  // The guide copy is nested by provider and client, so walk for `meta`.
+  const guides = join(web, 'src/lib/connect/client-guides');
+  for (const f of readdirSync(guides)) {
+    if (!f.endsWith('.json')) continue;
+    const walkGuide = (node, path) => {
+      if (!node || typeof node !== 'object') return;
+      for (const [k, v] of Object.entries(node)) {
+        if (k === 'meta') add(`client-guides/${f}:${path.join('.')}`, v);
+        else walkGuide(v, [...path, k]);
+      }
+    };
+    walkGuide(JSON.parse(readFileSync(join(guides, f), 'utf8')), []);
+  }
+
   // The /docs/clients hub, whose title carries the client count.
   for (const locale of LOCALES) add(`clients/ui ${locale}`, clientUi(locale).meta);
 
