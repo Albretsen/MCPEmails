@@ -320,6 +320,25 @@ Deno.test("PLAIN keeps its two-step retry for servers without SASL-IR (Yandex)",
   ]);
 });
 
+Deno.test("PLAIN answers a '+' after the inline token with the token (SurgeMail, no SASL-IR)", async () => {
+  // SurgeMail 8.2 lists no AUTH= and no SASL-IR, ignores the inline token,
+  // answers "+ " and waits. Before 2026-11-24 this was a timeout.
+  const token = btoa("\u0000me@example.lv\u0000pw");
+  const conn: ScriptedConn = new ScriptedConn((chunk): string | undefined => {
+    if (chunk.endsWith("CAPABILITY\r\n")) {
+      return `* CAPABILITY IMAP4 IMAP4REV1 IDLE SURGEMAIL UNAUTHENTICATE\r\n${tagOf(chunk)} OK Capability completed\r\n`;
+    }
+    if (chunk.endsWith(` AUTHENTICATE PLAIN ${token}\r\n`)) return "+ \r\n";
+    if (chunk === `${token}\r\n`) return `${tagOf(conn.written[1])} OK Logged in\r\n`;
+    return undefined;
+  });
+  const result = await loginOn(conn, "* OK IMAP (C) mail.example.lv (Version 8.2b-3)", "me@example.lv", "pw");
+  assertEquals(result.mechanism, "PLAIN");
+  assertEquals(result.resp.status, "OK");
+  const [a, b] = conn.written.map(tagOf);
+  assertEquals(conn.written, [`${a} CAPABILITY\r\n`, `${b} AUTHENTICATE PLAIN ${token}\r\n`, `${token}\r\n`]);
+});
+
 Deno.test("CRAM-MD5 against the RFC 2195 transcript when LOGIN is disabled", async () => {
   const conn: ScriptedConn = new ScriptedConn((chunk): string | undefined => {
     if (chunk.endsWith("CAPABILITY\r\n")) {

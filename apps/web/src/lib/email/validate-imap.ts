@@ -218,6 +218,13 @@ function readContinuation(socket: net.Socket): Promise<void> {
  * exchange is retried on the same connection: send `AUTHENTICATE PLAIN`, wait
  * for the continuation, then send the token on its own line. A `NO` is a genuine
  * credential rejection and is never retried.
+ *
+ * A server that does not implement SASL-IR may instead ignore the inline
+ * response and answer with a "+" continuation, then wait for it on its own
+ * line. SurgeMail 8.2 does this (probed 2026-11-24 with a made-up account: no
+ * answer in 30s to the inline form, a tagged NO in 0.5s to the two-step one).
+ * Reading only for the tagged line turned that wait into a timeout, so a "+"
+ * is answered with the same token.
  */
 async function authenticatePlain(
   socket: net.Socket,
@@ -227,7 +234,12 @@ async function authenticatePlain(
   const token = Buffer.from(`\x00${username}\x00${password}`, 'utf8').toString('base64');
 
   await socketWrite(socket, `A0001 AUTHENTICATE PLAIN ${token}\r\n`);
-  const inline = await readTaggedResponse(socket, 'A0001');
+  const first = await readContinuationOrTagged(socket, 'A0001');
+  if ('continuation' in first) {
+    await socketWrite(socket, `${token}\r\n`);
+    return { ...(await readTaggedResponse(socket, 'A0001')), token };
+  }
+  const inline = first;
   if (inline.status !== 'BAD') return { ...inline, token };
 
   await socketWrite(socket, 'A0002 AUTHENTICATE PLAIN\r\n');
