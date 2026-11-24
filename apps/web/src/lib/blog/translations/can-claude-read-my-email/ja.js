@@ -1,10 +1,10 @@
 const translation = {
   title: 'Claudeでメールを読む・送信することはできる？メールボックス別に解説',
   description:
-    'GmailとMicrosoft 365の職場アカウントなら、Claude純正のコネクタで可能です。Yahoo、iCloud、Outlook.com、IMAPのメールボックスや複数のプロバイダーをまとめて使うには、MCPサーバーが必要です。',
+    'GmailとOutlookなら、Claude純正のコネクタで可能です。Yahoo、iCloud、IMAPのメールボックスや複数のプロバイダーをまとめて使うには、MCPサーバーが必要です。',
   coverAlt:
     'Gmail、Microsoft 365、Yahoo、iCloud、IMAPのメールボックスでメールを読み、送信するClaude',
-  content: `**はい、Claudeはメールを読むことも送信することもできます。ただし、Claudeに接続したメールボックスに限られます。** Claudeには純正のメールコネクタが2つあり、1つはGmail用、もう1つはMicrosoft 365の職場アカウント用です。Gmailコネクタはメールの読み取り、検索、送信ができ、初期設定では送信のたびに承認を求めます。Microsoft 365コネクタは読み取りと検索ができ、送信は管理者が書き込みツールを有効にしてからになります。Yahoo、iCloud、個人用のOutlook.comアドレス、IMAPホスト上の会社のメールボックス、または複数のプロバイダーを1つの接続でまとめて使う場合は、MCPEmailsのようなMCPサーバーが必要です。
+  content: `**はい、Claudeはメールを読むことも送信することもできます。ただし、Claudeに接続したメールボックスに限られます。** GmailとOutlookはClaude純正のコネクタで接続できます。GoogleアカウントはGmailコネクタ、職場アカウントと、Free、Pro、Max、Ultraプランでの個人用Outlook.comアドレスはMicrosoft 365コネクタです。どちらも読み取りと検索ができ、初期設定では送信のたびに承認を求めます。職場のMicrosoft 365アカウントは、管理者が書き込みツールを有効にするまで送信できません。Yahoo、iCloud、IMAPホスト上の会社のメールボックス、または複数のプロバイダーを1つの接続でまとめて使う場合は、MCPEmailsのようなMCPサーバーが必要です。
 
 このページでは、あなたがどのケースに当てはまるかを整理します。AnthropicとGoogleの製品に関する情報は、2026年10月に各社のページで確認したものです。これらの製品は頻繁に変わるため、各セクションに根拠となるページへのリンクを載せています。
 

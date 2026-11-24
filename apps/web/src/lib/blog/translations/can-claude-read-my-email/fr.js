@@ -1,10 +1,10 @@
 const translation = {
   title: 'Claude peut-il lire et envoyer mes e-mails ? Boîte par boîte',
   description:
-    "Oui pour Gmail et Microsoft 365 pro, via les connecteurs de Claude. Yahoo, iCloud, Outlook.com, IMAP et plusieurs boîtes passent par un serveur MCP.",
+    "Oui pour Gmail et Outlook, via les connecteurs de Claude. Yahoo, iCloud, IMAP et plusieurs boîtes à la fois passent par un serveur MCP.",
   coverAlt:
     'Claude qui lit et envoie des e-mails depuis des boîtes Gmail, Microsoft 365, Yahoo, iCloud et IMAP',
-  content: `**Oui, Claude peut lire vos e-mails et en envoyer, mais uniquement depuis une boîte que vous lui avez connectée.** Claude dispose de deux connecteurs e-mail intégrés : l'un pour Gmail, l'autre pour les comptes Microsoft 365 professionnels. Le connecteur Gmail lit, recherche et envoie, et demande par défaut votre accord avant chaque envoi. Le connecteur Microsoft 365 lit et recherche, et ne peut envoyer qu'une fois ses outils d'écriture activés par un administrateur. Pour Yahoo, iCloud, une adresse Outlook.com personnelle, une boîte d'entreprise chez un hébergeur IMAP ou plusieurs fournisseurs derrière une seule connexion, il faut un serveur MCP comme MCPEmails.
+  content: `**Oui, Claude peut lire vos e-mails et en envoyer, mais uniquement depuis une boîte que vous lui avez connectée.** Gmail et Outlook passent par les connecteurs intégrés de Claude : Gmail pour un compte Google, et Microsoft 365 pour un compte professionnel ou, avec les formules Free, Pro, Max et Ultra, une adresse Outlook.com personnelle. Les deux lisent et recherchent, et Claude demande par défaut votre accord avant chaque envoi ; un compte Microsoft 365 professionnel ne peut envoyer qu'une fois les outils d'écriture activés par un administrateur. Pour Yahoo, iCloud, une boîte d'entreprise chez un hébergeur IMAP ou plusieurs fournisseurs derrière une seule connexion, il faut un serveur MCP comme MCPEmails.
 
 Cette page vous aide à savoir dans quel cas vous êtes. Les informations sur les produits d'Anthropic et de Google ont été relevées sur leurs propres pages en octobre 2026. Ces produits évoluent souvent : chaque section renvoie donc vers la page sur laquelle elle s'appuie.
 

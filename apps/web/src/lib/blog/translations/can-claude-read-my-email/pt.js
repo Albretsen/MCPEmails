@@ -1,10 +1,10 @@
 const translation = {
   title: 'O Claude pode ler e enviar meus e-mails? Caixa por caixa',
   description:
-    'Sim, no Gmail e no Microsoft 365 corporativo, com os conectores do Claude. Yahoo, iCloud, Outlook.com, IMAP e vários provedores juntos exigem um servidor MCP.',
+    'Sim, no Gmail e no Outlook, com os conectores do Claude. Yahoo, iCloud, IMAP e vários provedores juntos exigem um servidor MCP.',
   coverAlt:
     'Claude lendo e enviando e-mails de caixas do Gmail, Microsoft 365, Yahoo, iCloud e IMAP',
-  content: `**Sim, o Claude pode ler e enviar seus e-mails, mas só de uma caixa de correio que você conectou a ele.** O Claude tem dois conectores de e-mail próprios: um para o Gmail e outro para contas corporativas do Microsoft 365. O conector do Gmail lê, pesquisa e envia, e por padrão pede sua aprovação antes de cada envio. O conector do Microsoft 365 lê e pesquisa, e só envia depois que um administrador ativa as ferramentas de escrita. Yahoo, iCloud, um endereço pessoal do Outlook.com, uma caixa da empresa em um servidor IMAP ou vários provedores em uma só conexão precisam de um servidor MCP como o MCPEmails.
+  content: `**Sim, o Claude pode ler e enviar seus e-mails, mas só de uma caixa de correio que você conectou a ele.** Gmail e Outlook se conectam pelos conectores próprios do Claude: o do Gmail para uma conta Google, e o do Microsoft 365 para uma conta corporativa ou, nos planos Free, Pro, Max e Ultra, um endereço pessoal do Outlook.com. Os dois leem e pesquisam, e por padrão o Claude pede sua aprovação antes de cada envio; uma conta corporativa do Microsoft 365 só envia depois que um administrador ativa as ferramentas de escrita. Yahoo, iCloud, uma caixa da empresa em um servidor IMAP ou vários provedores em uma só conexão precisam de um servidor MCP como o MCPEmails.
 
 Esta página mostra em qual caso você se encaixa. As informações sobre os produtos da Anthropic e do Google foram lidas nas páginas oficiais de cada um em outubro de 2026. Esses produtos mudam com frequência, então cada seção traz o link da página em que se baseia.
 
