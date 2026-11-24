@@ -8,6 +8,7 @@
     "eyebrow": "O blog do MCPEmails",
     "title": "Notas sobre agentes, e-mail e MCP",
     "lead": "Guias, análises em profundidade e notas de campo sobre como conectar Gmail, Outlook, Fastmail e qualquer caixa de entrada IMAP ao Claude, ao Cursor e a clientes compatíveis com MCP.",
+    "latest": "Guias mais recentes",
     "filterAria": "Filtrar posts por tema",
     "all": "Todos",
     "empty": "Ainda não há posts com a tag “{tag}”.",
@@ -19,6 +20,7 @@
     "toc": "Nesta página",
     "writtenBy": "Escrito por",
     "back": "← Voltar para todos os posts",
+    "related": "Guias relacionados",
     "minRead": "{minutes} min de leitura",
     "cta": {
       "title": "Dê uma caixa de entrada ao seu agente",

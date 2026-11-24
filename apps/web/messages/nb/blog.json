@@ -8,6 +8,7 @@
     "eyebrow": "MCPEmails-bloggen",
     "title": "Notater om agenter, e-post og MCP",
     "lead": "Veiledninger, dypdykk og feltnotater om å koble Gmail, Outlook, Fastmail og en hvilken som helst IMAP-innboks til Claude, Cursor og MCP-kompatible klienter.",
+    "latest": "Nyeste veiledninger",
     "filterAria": "Filtrer innlegg etter tema",
     "all": "Alle",
     "empty": "Ingen innlegg merket «{tag}» ennå.",
@@ -19,6 +20,7 @@
     "toc": "På denne siden",
     "writtenBy": "Skrevet av",
     "back": "← Tilbake til alle innlegg",
+    "related": "Relaterte veiledninger",
     "minRead": "{minutes} min lesing",
     "cta": {
       "title": "Gi agenten din en innboks",

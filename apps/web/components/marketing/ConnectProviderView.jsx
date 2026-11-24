@@ -136,7 +136,9 @@ export default async function ConnectProviderView({ locale, provider, content, m
         {settingsTop?.lookup?.href && (
           <p className="how-guide-link" style={{ marginTop: 12 }}>
             {settingsTop.lookup.intro}{' '}
-            <Link href={settingsTop.lookup.href}>{settingsTop.lookup.label}</Link>
+            {settingsTop.lookup.englishOnly
+              ? <a href={settingsTop.lookup.href}>{settingsTop.lookup.label}</a>
+              : <Link href={settingsTop.lookup.href}>{settingsTop.lookup.label}</Link>}
           </p>
         )}
       </div>
@@ -310,7 +312,9 @@ export default async function ConnectProviderView({ locale, provider, content, m
           {content.guide?.href && (
             <p className="how-guide-link">
               {content.guide.intro}{' '}
-              <Link href={content.guide.href}>{content.guide.label}</Link>
+              {content.guide.englishOnly
+                ? <a href={content.guide.href}>{content.guide.label}</a>
+                : <Link href={content.guide.href}>{content.guide.label}</Link>}
             </p>
           )}
           {/*

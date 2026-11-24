@@ -1,5 +1,6 @@
 import { providerLocales } from '../connect/providers.mjs';
 import { clientLocales, getClient } from '../clients/clients.mjs';
+import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '../tools/email-settings-lookup.mjs';
 
 /**
  * Locale-aware hrefs for the internal links written inside blog posts.
@@ -22,7 +23,13 @@ const LOCALES = ['nb', 'es', 'fr', 'zh', 'de', 'pt', 'ja'];
 const UNLOCALIZED = /^\/(?:signup|login|dashboard|authorize|auth|api|forgot-password|reset-password|\.well-known)(?:\/|$)/;
 
 /** Marketing pages published in English only. */
-const ENGLISH_ONLY = new Set(['/best-email-mcp-servers', '/email-mcp-servers-compared']);
+const ENGLISH_ONLY = new Set([
+  '/best-email-mcp-servers',
+  '/email-mcp-servers-compared',
+  '/docs/providers/data',
+  // Arabic copy, served under the English route only.
+  '/docs/claude-email-arabic',
+]);
 
 /**
  * Locales a marketing path exists in, or null when the path is not a localized
@@ -34,6 +41,7 @@ export function pathLocales(path, { postLocales }) {
   // Static files (/llms.txt, /blog/cover-x.svg) are not pages.
   if (/\.[a-z0-9]+$/i.test(path)) return null;
   if (ENGLISH_ONLY.has(path)) return ['en'];
+  if (path === LOOKUP_PATH) return LOOKUP_LOCALES;
   const blog = path.match(/^\/blog\/([^/]+)$/);
   if (blog) return postLocales(blog[1]);
   const provider = path.match(/^\/connect\/([^/]+)$/);

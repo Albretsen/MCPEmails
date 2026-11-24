@@ -144,7 +144,7 @@ export default async function ClaudeEmailArabicPage({ params }) {
           </section>
         </main>
 
-        <Footer />
+        <Footer locales={LOCALES} />
       </div>
     </>
   );

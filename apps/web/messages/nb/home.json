@@ -318,6 +318,8 @@
     "linkReadOnly": "Skrivebeskyttet tilgang",
     "linkApiGuide": "Utviklerguide",
     "linkClients": "Oppsett av MCP-klienter",
+    "linkWhatIsMcp": "Hva er en MCP-e-postserver?",
+    "linkAnyEmail": "Koble hvilken som helst e-post til Claude og ChatGPT",
     "linkSettingsLookup": "Finn IMAP- og SMTP-innstillinger",
     "linkPrivacy": "Personvern",
     "linkTerms": "Vilkår",

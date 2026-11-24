@@ -11,6 +11,7 @@
     "connectYahoo": "Yahooを接続",
     "connectZoho": "Zohoを接続",
     "connectYandex": "Yandexを接続",
+    "connectGoogleWorkspace": "Google Workspaceを接続",
     "vsNative": "ネイティブコネクタとの比較"
   }
 }

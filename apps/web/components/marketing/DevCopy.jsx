@@ -7,7 +7,9 @@ import { Link } from '@/i18n/navigation';
  *
  * Inline markup in a copy string: `code`, **bold** and [label](/path), and
  * nothing else. A path starting with "/" goes through the locale-aware Link, so
- * a French reader stays on /fr/...; anything else is an external link.
+ * a French reader stays on /fr/...; a path starting with "~/" is a page that
+ * does not exist in the reader's locale (zh has no n8n guide), linked at its
+ * unprefixed English URL; anything else is an external link.
  */
 export function Inline({ text }) {
   return text.split(/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/).map((part, i) => {
@@ -20,6 +22,7 @@ export function Inline({ text }) {
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
     if (link) {
       const [, label, href] = link;
+      if (href.startsWith('~/')) return <a key={i} href={href.slice(1)}>{label}</a>;
       return href.startsWith('/')
         ? <Link key={i} href={href}>{label}</Link>
         : <a key={i} href={href} rel="noopener" target="_blank">{label}</a>;

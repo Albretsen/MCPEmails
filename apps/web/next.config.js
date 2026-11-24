@@ -245,6 +245,15 @@ const nextConfig = {
         headers: [{ key: 'x-vercel-enable-rewrite-caching', value: '0' }],
       },
       {
+        // The Arabic guide is served under the English route, so the root
+        // layout's <html lang> says "en" (its nav and footer are English) and
+        // the Arabic is marked on <main lang="ar" dir="rtl">. This header is
+        // the document-level signal crawlers that read Content-Language (Bing)
+        // get instead; the sitemap and hreflang already declare it as ar.
+        source: '/docs/claude-email-arabic',
+        headers: [{ key: 'Content-Language', value: 'ar' }],
+      },
+      {
         source: '/(.*)',
         headers: [
           {

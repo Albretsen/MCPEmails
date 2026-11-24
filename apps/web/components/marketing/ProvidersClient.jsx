@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
+import { footerProviders } from '@/lib/connect/footer-providers.mjs';
 
 // Rich-text tag handlers shared across this page (inline code + bold).
 const RICH = {
@@ -409,6 +410,9 @@ export default function ProvidersClient() {
   const t = useTranslations('docs');
   const th = useTranslations('home');
   const locale = useLocale();
+  // Provider pages that exist in this locale. A row whose page does not (Yandex
+  // on /pt and /ja) links the English URL with a plain <a>, not a 404.
+  const linkable = new Set(footerProviders(locale).map((p) => `/connect/${p.slug}`));
   // Group rows by section for the section-head rows
   const sections = [];
   const seen = {};
@@ -476,9 +480,11 @@ export default function ProvidersClient() {
                         those links back here. The pair is what makes this the
                         hub rather than another leaf.
                       */}
-                      {row.href
+                      {row.href && linkable.has(row.href)
                         ? <Link href={row.href}>{providerLabel(t, row)}</Link>
-                        : providerLabel(t, row)}
+                        : row.href
+                          ? <a href={row.href}>{providerLabel(t, row)}</a>
+                          : providerLabel(t, row)}
                     </td>
                     <td className="tbl-val" style={{ fontSize: 13 }}>
                       {t(`providers.connection.auth.${row.auth}`)}

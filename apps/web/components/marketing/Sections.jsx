@@ -21,6 +21,7 @@ import { usePreferredClient } from './PreferredClient';
 import { languageSwitcherLinks } from '@/i18n/language-switcher.mjs';
 import { languageTag } from '@/i18n/locale-policy.mjs';
 import { CHATGPT_DIRECTORY_LISTING_URL, splitOnListingUrl } from '@/lib/connect/chatgpt.mjs';
+import { footerProviders, footerGuides } from '@/lib/connect/footer-providers.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1528,6 +1529,9 @@ export function Footer({ locales } = {}) {
             {locale !== 'zh' && (
               <Link href="/tools/email-settings-lookup">{t('footer.linkSettingsLookup')}</Link>
             )}
+            {footerGuides(locale).map((g) => (g.localized
+              ? <Link key={g.slug} href={g.href}>{t(g.key)}</Link>
+              : <a key={g.slug} href={g.href}>{t(g.key)}</a>))}
             <Link href="/blog">Blog</Link>
             <Link href="/changelog">Changelog</Link>
           </div>
@@ -1542,14 +1546,11 @@ export function Footer({ locales } = {}) {
               name.
             */}
             <Link href="/connect">{tc('links.connectAll')}</Link>
-            <Link href="/connect/imap">{tc('links.connectImap')}</Link>
-            <Link href="/connect/gmail">{tc('links.connectGmail')}</Link>
-            <Link href="/connect/outlook">{tc('links.connectOutlook')}</Link>
-            <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>
-            <Link href="/connect/icloud">{tc('links.connectIcloud')}</Link>
-            <Link href="/connect/yahoo">{tc('links.connectYahoo')}</Link>
-            <Link href="/connect/zoho">{tc('links.connectZoho')}</Link>
-            <Link href="/connect/yandex">{tc('links.connectYandex')}</Link>
+            {/* Only providers whose page exists in this locale (Yandex has no
+                pt or ja page). See src/lib/connect/footer-providers.mjs. */}
+            {footerProviders(locale).map((p) => (
+              <Link key={p.slug} href={`/connect/${p.slug}`}>{tc(p.key)}</Link>
+            ))}
             <Link href="/native-connectors-vs-mcp">{tc('links.vsNative')}</Link>
             {isEnglish && (
               <Link href="/best-email-mcp-servers">Best email MCP servers</Link>

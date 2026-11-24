@@ -186,6 +186,17 @@ export default function BlogPostClient({ post }) {
                 </div>
               </div>
 
+              {post.related?.length > 0 && (
+                <nav className="blog-related" aria-label={t('post.related')}>
+                  <div className="blog-authorcard-eyebrow">{t('post.related')}</div>
+                  <ul>
+                    {post.related.map((r) => (
+                      <li key={r.slug}><a href={r.href}>{r.title}</a></li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
+
               <div className="blog-backrow">
                 <Link href="/blog" className="blog-back">{t('post.back')}</Link>
               </div>
@@ -375,6 +386,10 @@ export default function BlogPostClient({ post }) {
         .blog-authorcard-link:hover { color: var(--cobalt-700); text-decoration: underline; }
 
         .blog-backrow { margin-top: 40px; }
+        .blog-related { margin-top: 40px; }
+        .blog-related ul { margin: 8px 0 0; padding-left: 18px; }
+        .blog-related li { margin: 6px 0; line-height: 1.5; }
+        .blog-related a { color: var(--cobalt-600); }
         .blog-back { font-size: 14px; font-weight: 600; color: var(--cobalt-600); text-decoration: none; }
         .blog-back:hover { text-decoration: underline; }
 

@@ -177,7 +177,8 @@ export default function ProviderDatasetView() {
         </div>
       </section>
 
-      <Footer />
+      {/* English only: the switcher sends other locales to their home page. */}
+      <Footer locales={['en']} />
     </div>
   );
 }

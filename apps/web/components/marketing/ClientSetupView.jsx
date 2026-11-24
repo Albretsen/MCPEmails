@@ -11,6 +11,10 @@ import { clientUi, fill } from '@/lib/clients/ui.mjs';
 import { docsPageInstallAction } from '@/lib/clients/install-links.mjs';
 import DocsInstallCta from './DocsInstallCta';
 import ConnectFolds, { ConnectFold } from './ConnectFolds';
+import { ARABIC_GUIDE_PATH } from '@/lib/acquisition-browser-language.mjs';
+
+/** "Setup guide in Arabic", the link text for /docs/claude-email-arabic. */
+const ARABIC_GUIDE_LABEL = 'دليل إعداد Claude بالعربية';
 
 /**
  * A per-client setup page, rendered on the server.
@@ -227,6 +231,17 @@ export default function ClientSetupView({ locale, client, content, preferred = n
           <p className="how-guide-link">
             {ui.providers.intro} <Link href="/docs/providers">{ui.providers.label}</Link>
           </p>
+          {/*
+            The Arabic Claude guide exists under the English route only, so a
+            plain <a> to the unprefixed path. Its label is written in Arabic on
+            every locale, like a language-switcher option, because it is for
+            readers of Arabic.
+          */}
+          {client.slug === 'claude' && (
+            <p className="how-guide-link">
+              <a href={ARABIC_GUIDE_PATH} lang="ar" dir="rtl" hrefLang="ar">{ARABIC_GUIDE_LABEL}</a>
+            </p>
+          )}
         </div>
       </section>
 

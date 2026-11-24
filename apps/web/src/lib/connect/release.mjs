@@ -140,7 +140,7 @@ export function releasedProviderParams(now = new Date()) {
  * Pinned entries still pass the release gate and never include the page itself.
  */
 export const PINNED_RELATED = {
-  gmail: ['outlook', 'office365'],
+  gmail: ['google-workspace', 'outlook', 'office365'],
   outlook: ['office365', 'gmail'],
   office365: ['outlook', 'gmail'],
   'google-workspace': ['gmail', 'office365'],

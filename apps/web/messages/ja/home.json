@@ -318,6 +318,8 @@
     "linkReadOnly": "読み取り専用アクセス",
     "linkApiGuide": "開発者ガイド",
     "linkClients": "MCPクライアントの設定",
+    "linkWhatIsMcp": "MCPメールサーバーとは",
+    "linkAnyEmail": "あらゆるメールをClaudeとChatGPTに接続",
     "linkSettingsLookup": "IMAPとSMTPの設定検索",
     "linkPrivacy": "プライバシー",
     "linkTerms": "利用規約",

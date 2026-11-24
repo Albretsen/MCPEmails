@@ -8,6 +8,7 @@
     "eyebrow": "The MCPEmails blog",
     "title": "Notes on agents, email & MCP",
     "lead": "Guides, deep-dives, and field notes on connecting Gmail, Outlook, Fastmail, and any IMAP inbox to Claude, Cursor, and MCP-compatible clients.",
+    "latest": "Latest guides",
     "filterAria": "Filter posts by topic",
     "all": "All",
     "empty": "No posts tagged “{tag}” yet.",
@@ -19,6 +20,7 @@
     "toc": "On this page",
     "writtenBy": "Written by",
     "back": "← Back to all posts",
+    "related": "Related guides",
     "minRead": "{minutes} min read",
     "cta": {
       "title": "Give your agent an inbox",
