@@ -1,7 +1,7 @@
 const translation = {
-  title: 'E-Mail in unter 2 Minuten mit einem KI-Agenten verbinden (Gmail, Outlook, iCloud, Fastmail und IMAP)',
+  title: 'E-Mail in 2 Minuten mit einem KI-Agenten verbinden',
   description:
-    'Verbinden Sie Ihre E-Mail in unter 2 Minuten mit einem KI-Agenten. Schritt-für-Schritt-Einrichtung für Gmail, Outlook, iCloud, Fastmail und jedes IMAP-Postfach über MCP: Keine E-Mail wird je gespeichert.',
+    'Verbinden Sie Ihre E-Mail in unter 2 Minuten mit einem KI-Agenten: Einrichtung für Gmail, Outlook, iCloud, Fastmail und IMAP über MCP. Nichts wird gespeichert.',
   coverAlt:
     'E-Mail in unter 2 Minuten mit einem KI-Agenten verbinden: Gmail, Outlook, iCloud, Fastmail und IMAP über MCP',
   content: `Sie verbinden Ihre E-Mail in zwei Schritten mit einem KI-Agenten: Postfach im Dashboard von MCPEmails verbinden, dann Ihren Agenten auf eine einzige Endpunkt-URL ausrichten. Mit einem OAuth-fähigen Client wie claude.ai war es das. Kein Code, kein SDK, und Ihre E-Mails werden nirgends gespeichert: Jeder Lese- und Sendevorgang geht live an Ihren Anbieter und wird verworfen, sobald der Agent die Daten hat.

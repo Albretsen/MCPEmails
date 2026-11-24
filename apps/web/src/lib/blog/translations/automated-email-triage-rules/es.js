@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Reglas automáticas de triaje de correo que funcionan sin un modelo de por medio',
+  title: 'Reglas automáticas de triaje de correo sin modelo de IA',
   description:
-    'Cómo funcionan las automatizaciones de MCPEmails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
+    'Automatizaciones de MCPEmails: una búsqueda guardada y una acción fija, con cadencia y sin modelo que lea tu correo. Previsualiza, activa y revisa el registro.',
   coverAlt:
     'Reglas de triaje de correo desatendidas en MCPEmails: una búsqueda guardada más una acción fija según un calendario',
   content: `Cada mañana le pides a tu agente que despeje el ruido: archivar las notificaciones de compilación, marcar los recibos como leídos, reenviar las facturas a tu contable. Funciona. También cuesta una llamada al modelo cada vez, y el martes hace algo ligeramente distinto de lo que hizo el lunes.

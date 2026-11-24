@@ -11,8 +11,8 @@
     "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Perplexity: configuração de conector MCP personalizado",
-    "description": "Adicione uma caixa de entrada real ao Perplexity com um conector remoto personalizado. Cole uma URL, escolha OAuth e faça login. Sem chave de API. Pro, Max e Enterprise."
+    "title": "Conecte o e-mail ao Perplexity: conector MCP personalizado",
+    "description": "Adicione uma caixa real ao Perplexity com um conector remoto personalizado. Cole uma URL, escolha OAuth e faça login, sem chave de API. Pro, Max e Enterprise."
   },
   "hero": {
     "eyebrow": "Perplexity + e-mail",

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Locaweb-e-post i Claude: email-ssl.com.br for IMAP og SMTP",
-    "description": "Koble en Locaweb-postkasse (Email Locaweb) til Claude eller enhver MCP-klient på email-ssl.com.br:993. Én vert for IMAP og SMTP over SSL/TLS, med postkassepassordet og avsenderen som SMTP-innlogging."
+    "description": "Koble en Locaweb-postkasse til Claude eller enhver MCP-klient på email-ssl.com.br:993. Én vert for IMAP og SMTP over SSL/TLS, med postkassepassordet."
   },
   "hero": {
     "eyebrow": "Locaweb + AI",

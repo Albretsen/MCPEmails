@@ -1,5 +1,5 @@
 const translation = {
-  title: 'Er det trygt å gi en AI-agent tilgang til e-posten din? Dette bør du vite',
+  title: 'Er det trygt å gi en AI-agent tilgang til e-posten din?',
   description: 'Er det trygt å gi en AI-agent e-posttilgang? Det kommer an på arkitekturen. Her er de reelle risikoene og sjekklisten som gjør det trygt.',
   coverAlt: 'Er det trygt å gi en AI-agent e-posttilgang? Risikoer og sikkerhetstiltak forklart (MCPEmails)',
   content: `Det kan være det, men tryggheten ligger i arkitekturen, ikke i markedsføringen. Å gi en AI-agent e-posttilgang er trygt når tjenesten henter posten din i sanntid i stedet for å kopiere den, krypterer påloggingsdataene dine skikkelig, kjører på minimale tilganger og lar deg kutte tilgangen med ett klikk. Det er risikabelt når noen av disse fire tingene mangler. Trikset er å vite hvilke spørsmål du skal stille før du kobler til en innboks.

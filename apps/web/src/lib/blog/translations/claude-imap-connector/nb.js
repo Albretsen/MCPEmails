@@ -1,5 +1,5 @@
 const translation = {
-  title: 'Claude IMAP-kobling: Koble en hvilken som helst IMAP-innboks til Claude',
+  title: 'Claude IMAP-kobling: koble enhver IMAP-innboks til Claude',
   description:
     'Sett opp en Claude IMAP-kobling med IMAP/SMTP, app-passord og TLS. Få sikkerhetsråd, forstå begrensninger og løs vanlige tilkoblingsfeil.',
   coverAlt: 'Claude koblet til en IMAP- og SMTP-postkasse gjennom MCPEmails',

@@ -2,7 +2,9 @@
   "_sources": [
     "https://developers.google.com/gmail/api/guides",
     "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
-    "https://support.google.com/a/answer/7281227"
+    "https://support.google.com/a/answer/7281227",
+    "https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server",
+    "https://claude.com/connectors/gmail"
   ],
   "auth": {
     "method": "app-password",
@@ -45,8 +47,8 @@
   ],
   "gotchas": [
     {
-      "h": "Google publica su propio servidor MCP de Gmail, y solo para Gmail es el camino más corto",
-      "p": "Google anunció soporte oficial de MCP para sus servicios, incluido un servidor MCP de Workspace que cubre Gmail junto con Drive, Calendar y Chat. No vamos a fingir lo contrario. Si Gmail es el único buzón al que quieres que acceda un asistente, y tu cliente se comunica con el servidor de Google, úsalo. La razón para conectar Gmail a MCPEmails es que el mismo servidor también reúne tu buzón de iCloud, Fastmail, Zoho, Yahoo o IMAP de empresa, los expone todos a través de <b>una sola</b> URL MCP y se comporta igual en Claude, Cursor y ChatGPT. Un conector por proveedor, cada uno con su propia autenticación y sus propios nombres de herramienta, es justo lo que esto evita."
+      "h": "Gmail ya tiene un conector oficial y un servidor MCP. ¿Para qué usar MCPEmails?",
+      "p": "Claude tiene un conector de Gmail integrado, creado por Google, que lee, busca y envía desde una cuenta de Google, y ChatGPT tiene su propia app de Gmail. El servidor MCP de Gmail de Google en <code>gmailmcp.googleapis.com</code> está pensado para desarrolladores: lo activas en tu propio proyecto de Google Cloud con tu propio cliente OAuth. Si lo único que necesitas es una cuenta de Gmail dentro de Claude o ChatGPT, usa el conector integrado. MCPEmails es para todo lo demás: varias cuentas de Gmail, o Gmail junto a buzones de Outlook, iCloud, Yahoo o IMAP de empresa, en <b>una sola</b> URL MCP que se comporta igual en Claude, ChatGPT y Cursor."
     },
     {
       "h": "Enviar desde otra dirección requiere una dirección de envío verificada",

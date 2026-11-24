@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Cursor verbinden: MCP-Server-Setup per mcp.json",
-    "description": "Fügen Sie Cursor mit vier Zeilen in mcp.json ein echtes Postfach hinzu. Cursor fragt nach der OAuth-Anmeldung, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "description": "Fügen Sie Cursor mit vier Zeilen in mcp.json ein echtes Postfach hinzu. Anmeldung per OAuth, kein API-Schlüssel, dann E-Mails lesen, suchen, senden und planen."
   },
   "hero": {
     "eyebrow": "Cursor + E-Mail",

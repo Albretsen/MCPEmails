@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Varias cuentas de correo en Claude Cowork, incluido Outlook personal',
+  title: 'Varias cuentas en Claude Cowork, Outlook personal incluido',
   description:
-    'Claude Cowork llega a una sola cuenta de Google con su conector de Gmail y a la única cuenta de Microsoft con la que inicias sesión con su conector de Microsoft 365. Cómo dar a una tarea de Cowork varias bandejas de entrada, del trabajo y personales.',
+    'Claude Cowork solo llega a una cuenta de Google y a una de Microsoft con sus conectores. Cómo darle a Cowork varias bandejas, de trabajo y personales.',
   coverAlt:
     'Cuentas de correo del trabajo y personales, como Gmail y Outlook.com, conectadas a una misma tarea de Claude Cowork',
   content: `**Claude Cowork usa los mismos conectores que el chat de Claude, así que tiene los mismos límites de correo: una cuenta de Google con el conector de Gmail, y una cuenta de Microsoft con el conector de Microsoft 365, que acepta una cuenta personal de Outlook.com solo en los planes Free, Pro, Max y Ultra.** Un segundo Gmail, una dirección personal de Outlook.com o Hotmail en un plan Team o Enterprise, un buzón de empresa en un servidor IMAP o el envío con adjuntos necesitan un conector personalizado. Con un servidor MCP como MCPEmails, un solo conector personalizado da a una tarea de Cowork todos los buzones que conectes, cada uno por su nombre.

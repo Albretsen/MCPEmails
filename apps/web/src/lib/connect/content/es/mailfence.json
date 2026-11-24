@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Mailfence a Claude: IMAP es una función de pago",
-    "description": "El IMAP de Mailfence (imap.mailfence.com:993) se conecta a Claude y clientes MCP solo en planes de pago. Las cuentas gratuitas son webmail y los alias no inician sesión."
+    "description": "El IMAP de Mailfence (imap.mailfence.com:993) se conecta a Claude solo en planes de pago. Las cuentas gratuitas son webmail y los alias no inician sesión."
   },
   "hero": {
     "eyebrow": "Mailfence + IA",

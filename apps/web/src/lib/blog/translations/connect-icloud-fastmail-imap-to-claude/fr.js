@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Comment connecter iCloud, Fastmail ou n’importe quelle boîte IMAP à Claude',
+  title: 'Connecter iCloud, Fastmail ou IMAP à Claude',
   description:
-    'Connectez iCloud, Fastmail ou n’importe quelle boîte IMAP à Claude avec un mot de passe d’application. Configuration pas à pas, l’endpoint MCP et ce que l’IMAP permet là où Gmail bloque.',
+    'Connectez iCloud, Fastmail ou toute boîte IMAP à Claude avec un mot de passe d’application : configuration pas à pas, l’endpoint MCP et ce que permet l’IMAP.',
   coverAlt: 'Connecter iCloud, Fastmail et n’importe quelle boîte IMAP à Claude via MCP',
   content: `Connecter iCloud, Fastmail ou n’importe quelle boîte IMAP à Claude demande une seule chose dont Outlook se passe : un **mot de passe d’application**. Vous le générez dans votre fournisseur de messagerie, vous le collez une fois dans MCPEmails, et Claude peut lire, rechercher et envoyer via cette boîte. Pas de chorégraphie OAuth, aucun réglage de serveur SMTP à mémoriser.
 

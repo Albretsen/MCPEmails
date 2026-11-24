@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo gestionar varias cuentas de correo con un solo agente de IA',
+  title: 'Gestiona varias cuentas de correo con un solo agente de IA',
   description:
-    'Gestiona los buzones de trabajo, personales y de tu negocio paralelo con un solo agente de IA: cómo descubre los buzones, cómo acotar una solicitud, nombres de remitente que siguen siendo correctos y revisión de envíos por buzón.',
+    'Gestiona tus buzones de trabajo, personales y de negocio con un agente de IA: cómo los descubre, cómo acotar cada solicitud y la revisión de envíos por buzón.',
   coverAlt:
     'Un agente de IA conectado a cuentas de correo de trabajo, personales y de negocio paralelo con MCPEmails',
   content: `Casi nadie tiene un solo buzón. Tienes una dirección de trabajo, una personal y al menos una más para un negocio paralelo o para un dominio que todavía conservas. Cada pregunta que cruza dos cuentas se convierte en una búsqueda manual en dos sitios.

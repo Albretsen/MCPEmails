@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de OCN en Claude: IMAP y la contraseña de correo aparte",
-    "description": "Conecta un buzón de OCN (ocn.ne.jp) a Claude o a cualquier cliente MCP en imap.ocn.ne.jp:993. Inicia sesión con la OCN メールパスワード de tu certificado de socio, no con la contraseña de conexión de OCN."
+    "title": "Correo de OCN en Claude: IMAP y su contraseña aparte",
+    "description": "Conecta OCN (ocn.ne.jp) a Claude o clientes MCP en imap.ocn.ne.jp:993 con la OCN メールパスワード de tu certificado de socio, no la contraseña de conexión."
   },
   "hero": {
     "eyebrow": "OCN + IA",

@@ -9,7 +9,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Grok : connecteur MCP personnalisé",
-    "description": "Ajoutez une vraie boîte à Grok comme connecteur MCP personnalisé. Collez une URL sur grok.com, connectez-vous via OAuth, puis lisez, cherchez, envoyez et planifiez. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à Grok comme connecteur MCP personnalisé : collez une URL sur grok.com, connectez-vous via OAuth, puis lisez et envoyez."
   },
   "hero": {
     "eyebrow": "Grok + e-mail",

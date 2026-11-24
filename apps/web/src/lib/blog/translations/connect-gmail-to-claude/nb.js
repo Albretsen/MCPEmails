@@ -1,7 +1,7 @@
 const translation = {
   title: 'Slik kobler du Gmail til Claude: innebygd kobling eller MCP',
   description:
-    'Koble Gmail til Claude over MCP på cirka to minutter: et Google-apppassord, én endepunkt-URL, ingen API-nøkkel, ingen kode. Claude leser, søker og sender e-posten din live, og e-posten din lagres aldri.',
+    'Koble Gmail til Claude over MCP på cirka to minutter: et Google-apppassord og én URL, ingen kode. Claude leser og sender, og e-post lagres aldri.',
   coverAlt: 'Slik kobler du Gmail til Claude på to minutter over MCP: et Google-apppassord, én endepunkt-URL, ingen e-post lagret',
   content: `Claude har sin egen Gmail-kobling. Vil du bare ha én Gmail-konto inne i Claude, slår du den på i Claudes connector-innstillinger, og så er du ferdig. MCPEmails passer når du trenger mer: Outlook, iCloud, Yahoo eller en hvilken som helst IMAP-postkasse ved siden av Gmail, flere innbokser i samme samtale, eller den samme innboksen i ChatGPT, Cursor og andre MCP-apper. Resten av denne veiledningen setter det opp.
 

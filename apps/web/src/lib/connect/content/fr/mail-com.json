@@ -17,7 +17,7 @@
   },
   "meta": {
     "title": "Connecter Mail.com à Claude, Cursor et aux clients MCP",
-    "description": "Connectez mail.com à Claude, Cursor, ChatGPT et tout client MCP en IMAP via imap.mail.com:993. POP3/IMAP est une fonction mail.com Premium, désactivée par défaut."
+    "description": "Connectez mail.com à Claude, Cursor, ChatGPT et tout client MCP via imap.mail.com:993. POP3/IMAP est une fonction Premium, désactivée par défaut."
   },
   "hero": {
     "eyebrow": "Mail.com + IA",

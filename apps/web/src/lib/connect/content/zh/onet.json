@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "将 Onet Poczta 连接到 Claude 与任意 MCP 客户端",
-    "description": "通过 IMAP（imap.poczta.onet.pl:993）将 Onet Poczta 连接到 Claude、Cursor 及任意 MCP 客户端。在 Konto Główne 中解除 IMAP 和 SMTP 的封锁，开启两步验证后改用 hasło do aplikacji，并留意 Onet 自 2026 年 5 月 5 日起对邮件程序仅限 IMAP 的规定。"
+    "description": "通过 IMAP（imap.poczta.onet.pl:993）将 Onet Poczta 连接到 Claude、Cursor 及任意 MCP 客户端。先在 Konto Główne 中解除 IMAP 和 SMTP 的封锁，开启两步验证后改用 hasło do aplikacji。"
   },
   "hero": {
     "eyebrow": "Onet Poczta + AI",

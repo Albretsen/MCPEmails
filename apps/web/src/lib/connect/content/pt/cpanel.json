@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP para cPanel: conecte o e-mail do cPanel ao Claude",
-    "description": "Servidor MCP para e-mail no cPanel. Conecte várias caixas de correio da empresa no seu domínio (contato@, vendas@) ao Claude e ao ChatGPT via IMAP, em qualquer hospedagem com cPanel."
+    "title": "Servidor MCP para cPanel: e-mail do cPanel no Claude",
+    "description": "Servidor MCP para e-mail no cPanel. Conecte várias caixas da empresa no seu domínio (contato@, vendas@) ao Claude e ao ChatGPT via IMAP, em qualquer cPanel."
   },
   "hero": {
     "eyebrow": "cPanel + IA",

@@ -3,6 +3,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'Run the same MCP email server that powers mcpemails.com on your own machine. Open source under AGPL-3.0.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/self-hosting'),
     openGraph: {

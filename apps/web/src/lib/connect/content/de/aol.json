@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "AOL Mail mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "AOL Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.aol.com:993 mit einem AOL-App-Passwort. Ihr AOL-Passwort allein funktioniert nicht."
+    "description": "AOL Mail per IMAP über imap.aol.com:993 mit Claude, Cursor und jedem MCP-Client verbinden. Sie brauchen ein AOL-App-Passwort, Ihr AOL-Passwort reicht nicht."
   },
   "hero": {
     "eyebrow": "AOL Mail + KI",

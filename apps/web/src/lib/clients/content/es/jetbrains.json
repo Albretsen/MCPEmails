@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a JetBrains AI Assistant: MCP",
-    "description": "Añade una bandeja real a AI Assistant en IntelliJ, PyCharm o WebStorm. Streamable HTTP y una clave de API limitada en un encabezado Authorization. Una bandeja gratis."
+    "description": "Añade una bandeja real a AI Assistant en IntelliJ, PyCharm o WebStorm: Streamable HTTP y una clave de API limitada en el encabezado Authorization."
   },
   "hero": {
     "eyebrow": "JetBrains + correo",

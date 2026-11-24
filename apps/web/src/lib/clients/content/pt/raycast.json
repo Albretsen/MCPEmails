@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecte o e-mail ao Raycast AI: configuração do servidor MCP",
-    "description": "Adicione uma caixa de entrada real ao Raycast AI. Instale o MCP Server, defina o transporte como HTTP, cole uma URL e faça login. Sem chave de API. Uma caixa de entrada grátis."
+    "description": "Adicione uma caixa real ao Raycast AI. Instale o MCP Server, defina o transporte como HTTP, cole uma URL e faça login. Sem chave de API. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Raycast + e-mail",

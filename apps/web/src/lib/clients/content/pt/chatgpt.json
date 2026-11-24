@@ -7,8 +7,8 @@
     "apps/web/app/authorize/page.js + apps/web/components/auth/AuthorizeApp.jsx + apps/web/messages/*/auth.json (authorize.*: the consent screen labels)"
   ],
   "meta": {
-    "title": "Conectar e-mail ao ChatGPT: configuração do plugin Any Mailbox",
-    "description": "Dê ao ChatGPT uma caixa de entrada real: instale o Any Mailbox pelo diretório de plugins do ChatGPT, entre no MCPEmails e escolha suas caixas. OAuth, sem chave de API. Uma caixa de entrada grátis."
+    "title": "Conectar e-mail ao ChatGPT: plugin Any Mailbox",
+    "description": "Dê ao ChatGPT uma caixa real: instale o plugin Any Mailbox, entre no MCPEmails e escolha suas caixas. OAuth, sem chave de API. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-mail",

@@ -15,7 +15,7 @@
   ],
   "meta": {
     "title": "Koble e-post til OpenAI Codex: oppsett av MCP-server",
-    "description": "Legg en innboks til i OpenAI Codex med codex mcp add --url. Codex oppdager OAuth og åpner nettleseren, ingen API-nøkkel. Fungerer i CLI-en, IDE-utvidelsen og skrivebordsappen."
+    "description": "Legg en innboks til i OpenAI Codex med codex mcp add --url. Codex oppdager OAuth og åpner nettleseren, ingen API-nøkkel. Virker i CLI, IDE og skrivebordsapp."
   },
   "hero": {
     "eyebrow": "Codex + e-post",

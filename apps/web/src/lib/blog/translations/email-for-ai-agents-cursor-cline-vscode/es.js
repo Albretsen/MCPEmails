@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Configurar el correo para agentes de IA en Cursor, Cline y VS Code',
-  description: 'Da acceso al correo a tu agente de programación en Cursor, Cline y VS Code. Cursor usa OAuth; Cline y los clientes propios usan una API key con permisos por MCP.',
+  title: 'Correo para agentes de IA en Cursor, Cline y VS Code',
+  description: 'Da acceso al correo a tu agente de programación en Cursor, Cline y VS Code. Cursor usa OAuth; Cline y otros clientes usan una API key con permisos por MCP.',
   coverAlt: 'Configurar el acceso al correo para agentes de programación con IA en Cursor, Cline y VS Code mediante MCP',
   content: `Aquí va la versión corta. Para darle a un agente de programación de tu editor acceso a una bandeja de entrada real, apúntalo a un único endpoint MCP: \`https://www.mcpemails.com/api/mcp\`. Cursor habla OAuth, así que pegas esa URL e inicias sesión. Cline, la configuración MCP en bruto de VS Code y cualquier script propio no hacen el baile de OAuth, así que se autentican con una clave de API con permisos limitados, enviada en una cabecera \`Authorization: Bearer\`. El mismo endpoint, las mismas herramientas, dos formas de entrar.
 

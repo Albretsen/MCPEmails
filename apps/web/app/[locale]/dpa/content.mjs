@@ -525,7 +525,7 @@ const nb = {
   meta: {
     title: 'Databehandleravtale',
     description:
-      'Databehandleravtalen for MCPEmails (GDPR artikkel 28, med vedlegg for POPIA): hva vi behandler, underleverandører, overføringer, varsling av brudd og lagringstid.',
+      'Databehandleravtalen for MCPEmails (GDPR artikkel 28, med vedlegg for POPIA): hva vi behandler, underleverandører, overføringer, bruddvarsling og lagringstid.',
   },
   eyebrow: 'Juridisk',
   notice:
@@ -537,7 +537,7 @@ const es = {
   meta: {
     title: 'Acuerdo de tratamiento de datos',
     description:
-      'El acuerdo de tratamiento de datos de MCPEmails (artículo 28 del RGPD, con un anexo sobre POPIA): qué tratamos, subencargados, transferencias, aviso de brechas y conservación.',
+      'El acuerdo de tratamiento de datos de MCPEmails (art. 28 del RGPD, con anexo POPIA): qué tratamos, subencargados, transferencias, brechas y conservación.',
   },
   eyebrow: 'Legal',
   notice:
@@ -549,7 +549,7 @@ const fr = {
   meta: {
     title: 'Accord de traitement des données',
     description:
-      "L'accord de traitement des données de MCPEmails (article 28 du RGPD, avec une annexe POPIA) : données traitées, sous-traitants ultérieurs, transferts, notification des violations et conservation.",
+      "L'accord de traitement des données MCPEmails (article 28 du RGPD, annexe POPIA) : données traitées, sous-traitants, transferts, violations, conservation.",
   },
   eyebrow: 'Mentions légales',
   notice:
@@ -561,7 +561,7 @@ const de = {
   meta: {
     title: 'Auftragsverarbeitungsvertrag',
     description:
-      'Der Auftragsverarbeitungsvertrag von MCPEmails (Art. 28 DSGVO, mit einem Anhang zu POPIA): was wir verarbeiten, Unterauftragsverarbeiter, Übermittlungen, Meldung von Datenpannen und Speicherdauer.',
+      'Der Auftragsverarbeitungsvertrag von MCPEmails (Art. 28 DSGVO): was wir verarbeiten, Unterauftragsverarbeiter, Übermittlungen, Datenpannen und Speicherdauer.',
   },
   eyebrow: 'Rechtliches',
   notice:
@@ -584,7 +584,7 @@ const pt = {
   meta: {
     title: 'Acordo de processamento de dados',
     description:
-      'O acordo de processamento de dados da MCPEmails (artigo 28 do GDPR, com um anexo sobre a POPIA): o que processamos, suboperadores, transferências, aviso de incidentes e retenção.',
+      'O acordo de processamento de dados da MCPEmails (artigo 28 do GDPR, com anexo POPIA): o que processamos, suboperadores, transferências, incidentes e retenção.',
   },
   eyebrow: 'Jurídico',
   notice:

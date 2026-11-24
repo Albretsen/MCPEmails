@@ -2,9 +2,9 @@ import { MS_GRANT, MS_ASSIGN, CLAUDE_M365 } from './links.mjs';
 
 const fr = {
   meta: {
-    title: 'Approbation administrateur requise pour Outlook ou Microsoft 365 ? Approuver MCPEmails',
+    title: 'Microsoft 365 : approbation administrateur pour MCPEmails',
     description:
-      'Pourquoi Microsoft affiche « Need admin approval » quand vous connectez une boîte Outlook ou Microsoft 365 professionnelle à Claude ou ChatGPT, le lien à envoyer à votre administrateur informatique, et les autorisations exactes qu\'il approuve.',
+      'Pourquoi Microsoft affiche « Need admin approval » en connectant Outlook ou Microsoft 365 à Claude ou ChatGPT, et le lien à envoyer à votre administrateur.',
   },
   breadcrumb: 'Approbation administrateur Microsoft 365',
   eyebrow: 'Docs',

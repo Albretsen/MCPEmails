@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Cline : serveur MCP distant",
-    "description": "Ajoutez une vraie boîte à Cline comme serveur distant Streamable HTTP avec une clé API limitée. Lisez, cherchez, envoyez et planifiez depuis VS Code. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à Cline comme serveur distant Streamable HTTP avec une clé API limitée. Lisez, cherchez et envoyez depuis VS Code."
   },
   "hero": {
     "eyebrow": "Cline + e-mail",

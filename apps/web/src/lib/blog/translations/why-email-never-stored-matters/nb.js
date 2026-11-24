@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Hvorfor «e-post lagres aldri» er avgjørende når du kobler AI til innboksen',
+  title: 'Hvorfor «e-post lagres aldri» betyr noe når AI får innboksen',
   description:
-    'E-post lagres aldri betyr at MCPEmails henter posten din live og kaster den, og beholder et kryptert token per innboks. Se hvorfor det slår verktøy som kopierer hele innboksen.',
+    'E-post lagres aldri: MCPEmails henter posten din live og beholder bare et kryptert token per innboks. Se hvorfor det slår verktøy som kopierer hele innboksen.',
   coverAlt: 'E-post hentet live og kastet kontra en andre kopi lagret i en leverandørs database',
   content: `Når du kobler en AI-agent til innboksen din, er det aller viktigste spørsmålet hvor e-posten din havner. Med MCPEmails er svaret: ingen steder. Hvert verktøykall henter posten din live fra Gmail, Microsoft Graph eller IMAP-serveren din, gir den til agenten og kaster den. Det vi beholder per innboks, er et kryptert token slik at neste kall kan skje, pluss de få opplysningene en funksjon du slår på trenger, for eksempel en planlagt melding som venter på å bli sendt.
 

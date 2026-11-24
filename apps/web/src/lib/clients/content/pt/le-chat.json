@@ -15,7 +15,7 @@
     "apps/web/src/lib/clients/content/en/raycast.json (shared server facts: limits, scopes, approval, storage)"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Le Chat da Mistral: configuração do conector MCP",
+    "title": "Conecte o e-mail ao Le Chat da Mistral: conector MCP",
     "description": "Adicione uma caixa de entrada real ao Le Chat da Mistral com um Custom MCP Connector. Cole uma URL e faça login. Sem chave de API. Uma caixa de entrada grátis."
   },
   "hero": {

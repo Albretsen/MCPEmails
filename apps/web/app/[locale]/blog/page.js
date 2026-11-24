@@ -6,6 +6,7 @@ import { readingTime } from '@/lib/blog/markdown';
 import { blogPostCanonicalLocale } from '@/lib/blog/seo.mjs';
 import BlogIndexClient from '../../../components/marketing/BlogIndexClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }) {
   const title = t('meta.title');
   const description = t('meta.description');
   return {
-    title,
+    title: pageTitle(title),
     description,
     // The index chrome is localized in every locale, so all locales are
     // legitimate alternates here (unlike individual posts).

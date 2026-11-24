@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Servidor MCP de cyber_Folks: conecta tus buzones a Claude",
-    "description": "Servidor MCP para el correo alojado en cyber_Folks. Conecta los buzones de tu dominio (biuro@, kontakt@) a Claude, ChatGPT y Cursor por IMAP en tu servidor sNN.cyber-folks.pl, puerto 993, con la contraseña del buzón."
+    "description": "Servidor MCP para el correo de cyber_Folks. Conecta los buzones de tu dominio a Claude, ChatGPT y Cursor por IMAP en tu servidor sNN.cyber-folks.pl, puerto 993."
   },
   "hero": {
     "eyebrow": "Correo cyber_Folks + IA",

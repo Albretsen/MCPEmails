@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmail leverer sin egen MCP-server, og den er god",
-      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. MCPEmails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
+      "h": "Fastmail har allerede en offisiell MCP-server. Hvorfor bruke MCPEmails?",
+      "p": "Det stemmer: i april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>. Du logger inn med OAuth og gir lese-, skrive- eller sendetilgang til e-post, kontakter og kalendere. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien, og det sier vi rett ut. Fastmails egen hjelpeside nevner to begrensninger: vedlegg kan ikke leses gjennom MCP-serveren deres, og Claude kan ikke legge til mer enn én Fastmail-konto. MCPEmails kobler til Fastmail over IMAP med et app-passord og samler den bak <b>én</b> MCP-URL sammen med de andre Fastmail-kontoene dine og postkassene dine hos iCloud, Gmail, Yahoo eller på jobbens IMAP, med de samme verktøyene for alle, også lesing av vedlegg."
     },
     {
       "h": "Fastmail Basic-kontoer kan ikke bruke IMAP i det hele tatt",

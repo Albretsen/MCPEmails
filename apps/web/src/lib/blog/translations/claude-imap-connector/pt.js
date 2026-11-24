@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Conector IMAP para o Claude: como conectar qualquer e-mail IMAP ao Claude',
+  title: 'Conector IMAP para o Claude: conecte qualquer e-mail IMAP',
   description:
-    'Configure um conector IMAP para o Claude com qualquer caixa de e-mail que tenha IMAP/SMTP: servidores, senhas de app, portas TLS, segurança, limitações e solução de problemas.',
+    'Configure um conector IMAP para o Claude com qualquer caixa que tenha IMAP/SMTP: servidores, senhas de app, portas TLS, segurança e solução de problemas.',
   coverAlt: 'Claude conectado a uma caixa de e-mail IMAP e SMTP por meio do MCPEmails',
   content: `Um **conector IMAP para o Claude** permite que o Claude trabalhe com caixas de e-mail que não têm integração nativa com o Claude: Fastmail, iCloud Mail, Yahoo, Zoho, Yandex, um e-mail no seu próprio domínio ou praticamente qualquer provedor que ofereça IMAP e SMTP.
 

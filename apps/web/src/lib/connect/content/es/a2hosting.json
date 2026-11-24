@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo de A2 Hosting a Claude y clientes MCP",
-    "description": "Los buzones de A2 Hosting (ahora hosting.com) se conectan a Claude por IMAP en el 993. Usa el nombre completo del servidor, como mi3-ss78.a2hosting.com, sin avisos SSL."
+    "description": "Los buzones de A2 Hosting (ahora hosting.com) se conectan a Claude por IMAP en el 993. Usa el nombre completo del servidor, como mi3-ss78.a2hosting.com."
   },
   "hero": {
     "eyebrow": "A2 Hosting + IA",

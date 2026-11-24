@@ -8,8 +8,8 @@
     "Production oauth_clients rows: Grok registers itself by RFC 7591 with redirect URI https://grok.com/connectors-oauth-exchange-code/ and completes the token exchange (checked 2026-10-24)"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Grok: configuração de conector MCP personalizado",
-    "description": "Adicione uma caixa de entrada real ao Grok como conector MCP personalizado. Cole uma URL no grok.com, faça login com OAuth e leia, pesquise, envie e agende e-mails. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao Grok: conector MCP personalizado",
+    "description": "Adicione uma caixa real ao Grok como conector MCP personalizado. Cole uma URL no grok.com, faça login com OAuth e leia e envie e-mails. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Grok + e-mail",

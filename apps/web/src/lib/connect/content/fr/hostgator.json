@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "HostGator dans Claude : les réglages IMAP qui marchent",
-    "description": "Le certificat wildcard de HostGator couvre gator1234.hostgator.com, pas votre domaine. Utilisez le nom du serveur en IMAP 993 et connectez la boîte à Claude, gratuitement."
+    "description": "Le certificat wildcard de HostGator couvre gator1234.hostgator.com, pas votre domaine. Utilisez ce nom en IMAP 993 pour connecter la boîte à Claude."
   },
   "hero": {
     "eyebrow": "HostGator + IA",

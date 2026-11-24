@@ -12,7 +12,7 @@
   ],
   "meta": {
     "title": "Conecte o e-mail ao n8n: MCP Client Tool para o AI Agent",
-    "description": "Conecte o e-mail a um AI Agent do n8n com o node MCP Client Tool: HTTP Streamable, Bearer Auth e uma chave de API com escopo. Leia, pesquise, rascunhe e envie e-mails."
+    "description": "Conecte o e-mail a um AI Agent do n8n com o node MCP Client Tool: HTTP Streamable, Bearer Auth e chave de API com escopo. Leia, pesquise e envie e-mails."
   },
   "hero": {
     "eyebrow": "n8n + e-mail",

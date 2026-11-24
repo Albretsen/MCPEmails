@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Dokumentasjon for e-post-MCP-server: Gmail, Outlook, IMAP og OAuth",
+    "title": "Dokumentasjon for e-post-MCP: Gmail, Outlook, IMAP, OAuth",
     "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
   },
   "hero": {
@@ -527,8 +527,8 @@
   },
   "providers": {
     "meta": {
-      "title": "E-postleverandører for AI-agenter (Gmail, Outlook, iCloud, Yahoo, Zoho)",
-      "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som skal til for å koble til hver enkelt: OAuth eller app-passord, IMAP- og SMTP-verter og porter, TLS eller STARTTLS, hva som vanligvis feiler, og hva agenten kan gjøre når tilkoblingen er på plass. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 og generisk IMAP."
+      "title": "E-postleverandører for AI-agenter: Gmail, Outlook, iCloud",
+      "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som trengs per leverandør: OAuth eller app-passord, IMAP- og SMTP-verter og porter."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

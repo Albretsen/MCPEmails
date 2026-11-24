@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Infomaniak MCP-Server: Infomaniak Mail mit Claude verbinden",
-    "description": "Infomaniak Mail mit Claude, ChatGPT und Cursor verbinden: mail.infomaniak.com:993, mit einem Passwort aus dem Tab Geräte der Adresse, nicht dem Manager-Passwort. Jedes Firmenpostfach einzeln."
+    "description": "Infomaniak Mail mit Claude und ChatGPT verbinden: mail.infomaniak.com:993, mit dem Passwort aus dem Tab Geräte der Adresse, nicht dem Manager-Passwort."
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + KI",

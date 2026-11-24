@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Conecte o e-mail ao Gemini CLI: configuração MCP com httpUrl",
-    "description": "Adicione uma caixa de entrada real ao Gemini CLI. Uma entrada no settings.json usando httpUrl, e o CLI descobre o OAuth e abre o fluxo no navegador. Uma caixa de entrada grátis."
+    "description": "Adicione uma caixa real ao Gemini CLI. Uma entrada no settings.json com httpUrl, e o CLI descobre o OAuth e abre o fluxo no navegador. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Gemini CLI + e-mail",

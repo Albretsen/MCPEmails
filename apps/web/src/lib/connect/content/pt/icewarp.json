@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "IceWarp no Claude: portas do serviço IMAP e acesso MCP",
-    "description": "Conecte uma caixa de correio do IceWarp ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Onde fica o serviço IMAP no console de administração, e a armadilha do Mailbox Type."
+    "description": "Conecte uma caixa do IceWarp ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Onde fica o serviço IMAP no console de admin e a armadilha do Mailbox Type."
   },
   "hero": {
     "eyebrow": "IceWarp + IA",

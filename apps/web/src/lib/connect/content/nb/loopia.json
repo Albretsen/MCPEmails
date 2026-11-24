@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Loopia-e-post til Claude og MCP-klienter",
-    "description": "Koble Loopia-e-post til Claude, Cursor og enhver MCP-klient over IMAP på mailcluster.loopia.se:993, én felles vert for alle domener. Én innboks gratis for alltid."
+    "description": "Koble Loopia-e-post til Claude, Cursor og enhver MCP-klient over IMAP på mailcluster.loopia.se:993, én felles vert for alle domener. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Loopia-e-post + AI",

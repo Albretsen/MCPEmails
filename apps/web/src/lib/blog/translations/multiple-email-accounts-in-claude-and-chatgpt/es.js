@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Varias cuentas de correo en Claude y ChatGPT: todos los buzones, un solo conector',
+  title: 'Varias cuentas de correo en Claude y ChatGPT con un conector',
   description:
-    'Cómo tener varias cuentas de correo a la vez en Claude y ChatGPT, incluidos los buzones de empresa en IONOS, Zoho, Namecheap, Google Workspace o tu propio servidor, con un solo conector MCP que funciona en los dos.',
+    'Cómo usar varias cuentas de correo a la vez en Claude y ChatGPT, incluidos buzones de IONOS, Zoho, Google Workspace o tu servidor, con un solo conector MCP.',
   coverAlt:
     'Varias cuentas de correo de trabajo y personales conectadas a Claude y ChatGPT a través de un solo conector MCP',
   content: `Quieres hacer una sola pregunta y que se responda con todos los buzones que llevas: tu propia dirección, info@, ventas@, la bandeja de facturas y quizá un Gmail personal. Esta guía explica cómo tener varias cuentas de correo en Claude y ChatGPT al mismo tiempo, qué cubren ya los conectores integrados y en qué casos necesitas un servidor MCP.

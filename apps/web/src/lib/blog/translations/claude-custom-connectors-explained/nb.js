@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Claude custom connectors forklart: abonnementer, oppsett, OAuth og sikkerhet',
+  title: 'Claude custom connectors forklart: oppsett og sikkerhet',
   description:
-    'Hva egendefinerte koblinger i Claude er, hvilke abonnementer og apper som støtter dem, hvordan du legger til en ekstern MCP-server med URL, innlogging, administratorkontroll og sikkerhetsråd.',
+    'Hva egendefinerte koblinger i Claude er, hvilke abonnementer som støtter dem, og hvordan du legger til en ekstern MCP-server med URL og innlogging.',
   coverAlt: 'Claude custom connectors forklart: en ekstern MCP-server lagt til i Claude med URL',
   content: `**Claude custom connectors**, eller egendefinerte koblinger, lar deg legge til en hvilken som helst ekstern [Model Context Protocol](https://modelcontextprotocol.io)-server i Claude ved å lime inn URL-en til serveren. Når koblingen er lagt til, kan Claude kalle verktøyene til serveren i samtalene dine: lese en database, opprette en sak, eller, som i eksempelet på slutten av denne guiden, lese og sende e-posten din.
 

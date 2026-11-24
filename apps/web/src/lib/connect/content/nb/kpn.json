@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "KPN Mail: IMAP-innstillinger og MCP-tilgang for Claude",
-    "description": "Koble en KPN-, Planet-, Het Net- eller XS4ALL-postkasse til Claude og enhver MCP-klient på imap.kpnmail.nl:993. Alle eldre KPN-domener deler én vert og ett passord."
+    "description": "Koble en KPN-, Planet-, Het Net- eller XS4ALL-postkasse til Claude og MCP-klienter på imap.kpnmail.nl:993. Alle eldre KPN-domener deler én vert og ett passord."
   },
   "hero": {
     "eyebrow": "KPN Mail + AI",

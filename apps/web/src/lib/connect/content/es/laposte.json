@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Ajustes IMAP de La Poste.net y acceso MCP para Claude",
-    "description": "Conecta un buzón laposte.net a Claude, Cursor y cualquier cliente MCP en imap.laposte.net:993. Solo puertos cifrados desde 2023 y un límite de 15 MB para el correo saliente."
+    "description": "Conecta laposte.net a Claude, Cursor y clientes MCP en imap.laposte.net:993. Solo puertos cifrados desde 2023 y un límite de 15 MB para el correo saliente."
   },
   "hero": {
     "eyebrow": "laposte.net + IA",

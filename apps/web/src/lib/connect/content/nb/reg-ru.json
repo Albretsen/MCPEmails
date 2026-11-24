@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "REG.RU MCP-server: koble e-post på REG.RU-hosting til Claude",
-    "description": "MCP-server for e-post på REG.RU-hosting. Koble postkassene på domenet ditt (info@, zakaz@) til Claude, ChatGPT og Cursor via IMAP på mail.hosting.reg.ru:993 med postkassepassordet."
+    "description": "MCP-server for e-post på REG.RU-hosting. Koble domenepostkassene til Claude, ChatGPT og Cursor via IMAP på mail.hosting.reg.ru:993 med postkassepassordet."
   },
   "hero": {
     "eyebrow": "REG.RU-e-post + AI",

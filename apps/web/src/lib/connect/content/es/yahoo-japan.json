@@ -10,8 +10,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Yahoo! JAPAN Mail en Claude: IMAP sin contraseña de aplicación",
-    "description": "Conecta Yahoo! JAPAN Mail (yahoo.co.jp) a Claude o a cualquier cliente MCP en imap.mail.yahoo.co.jp:993. Activa antes el acceso IMAP y SMTP y usa la contraseña de tu Yahoo! JAPAN ID."
+    "title": "Yahoo! JAPAN Mail en Claude: IMAP sin contraseña de app",
+    "description": "Conecta Yahoo! JAPAN Mail (yahoo.co.jp) a Claude en imap.mail.yahoo.co.jp:993. Activa antes IMAP y SMTP y usa la contraseña de tu Yahoo! JAPAN ID."
   },
   "hero": {
     "eyebrow": "Yahoo! JAPAN Mail + IA",

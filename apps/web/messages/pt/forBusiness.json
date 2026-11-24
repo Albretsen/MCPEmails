@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "E-mail com IA para empresas: todas as caixas da empresa em um só agente",
-    "description": "Uma pessoa, todas as caixas de e-mail da empresa. Conecte info@, sales@ e invoices@ por IMAP, Gmail, Microsoft 365 ou qualquer host de e-mail e trabalhe em todas a partir do Claude ou de qualquer cliente MCP."
+    "title": "E-mail com IA para empresas: todas as caixas em um só agente",
+    "description": "Uma pessoa, todas as caixas da empresa. Conecte info@, sales@ e invoices@ por IMAP, Gmail ou Microsoft 365 e trabalhe nelas pelo Claude ou qualquer cliente MCP."
   },
   "hero": {
     "eyebrow": "Para quem cuida do e-mail da empresa",

@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Connect Email to Claude Code: One Command MCP Setup",
-    "description": "Add a real inbox to the Claude Code CLI with claude mcp add. OAuth in the terminal, no API key, then read, search, send and schedule mail from your shell. One inbox free."
+    "description": "Add a real inbox to the Claude Code CLI with claude mcp add. OAuth in the terminal, no API key, then read, search, send and schedule mail from your shell."
   },
   "hero": {
     "eyebrow": "Claude Code + email",

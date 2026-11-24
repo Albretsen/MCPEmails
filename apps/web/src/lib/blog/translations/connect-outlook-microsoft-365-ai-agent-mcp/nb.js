@@ -1,7 +1,7 @@
 const translation = {
   title: 'Koble Outlook og Microsoft 365 til AI-agenten din via MCP',
   description:
-    'Koble Outlook.com eller Microsoft 365 til AI-agenten din over MCP. Logg inn med Microsoft, uten app-passord, med Microsoft Graph under panseret. Jobbkontoer kan trenge én godkjenning fra IT-ansvarlig.',
+    'Koble Outlook.com eller Microsoft 365 til AI-agenten din over MCP. Logg inn med Microsoft, uten app-passord. Jobbkontoer kan trenge én godkjenning fra IT.',
   coverAlt: 'Kobler Outlook og Microsoft 365 til en AI-agent over MCP',
   content: `For å koble en Outlook- eller Microsoft 365-postkasse til AI-agenten din legger du til innboksen i MCPEmails-dashbordet med **Logg inn med Microsoft**, og peker deretter agenten mot ett MCP-endepunkt. Det er ikke noe app-passord, ingen IMAP- eller SMTP-innstillinger, ingen Azure-portal og ingen egen Graph-server. En personlig Outlook.com-konto kobles til på et par minutter. En jobb- eller skolekonto i Microsoft 365 trenger ofte ett ekstra steg først: en IT-ansvarlig godkjenner appen én gang for hele organisasjonen.
 

@@ -80,8 +80,8 @@
   },
   "hub": {
     "meta": {
-      "title": "Conecte qualquer provedor de e-mail ao Claude e a clientes MCP",
-      "description": "Configurações de IMAP e SMTP de {count} provedores de e-mail, cada uma verificada em uma conexão real, e como dar ao Claude, Cursor ou ChatGPT acesso a essa caixa de e-mail."
+      "title": "Conecte qualquer provedor de e-mail ao Claude e clientes MCP",
+      "description": "Configurações de IMAP e SMTP de {count} provedores de e-mail, verificadas em uma conexão real, e como dar ao Claude, Cursor ou ChatGPT acesso à sua caixa."
     },
     "breadcrumb": "Provedores de e-mail",
     "eyebrow": "Todos os provedores",

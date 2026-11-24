@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo de CenturyLink a Claude por IMAP",
-    "description": "Conecta el correo de CenturyLink a Claude y clientes MCP por IMAP en mail.centurylink.net:993, SMTP en el 587. Los buzones sin uso en un año se desactivan y se borran."
+    "description": "Conecta CenturyLink a Claude y clientes MCP por IMAP en mail.centurylink.net:993, SMTP en el 587. Los buzones sin uso en un año se desactivan y se borran."
   },
   "hero": {
     "eyebrow": "CenturyLink + IA",

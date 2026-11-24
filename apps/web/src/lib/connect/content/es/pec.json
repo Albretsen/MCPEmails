@@ -16,7 +16,7 @@
   },
   "meta": {
     "title": "Conecta un buzón PEC (Aruba PEC, Legalmail, Poste) a Claude",
-    "description": "Conecta el correo certificado italiano (PEC) a Claude, Cursor y cualquier cliente MCP por IMAP: Aruba PEC en imaps.pec.aruba.it:993, Legalmail en mbox.cert.legalmail.it:993, Poste en mail.postecert.it:993 o mail.postecertifica.it:993. La regla de contraseña de cada proveedor y lo que ve el agente."
+    "description": "Conecta tu PEC italiana a Claude y cualquier cliente MCP por IMAP: servidores de Aruba PEC, Legalmail y Poste, regla de contraseña y lo que ve el agente."
   },
   "hero": {
     "eyebrow": "PEC + IA",

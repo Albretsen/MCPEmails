@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de KingHost en Claude: IMAP y el interruptor SMTPi para enviar",
-    "description": "Conecta un buzón de KingHost a Claude o a cualquier cliente MCP en imap.kinghost.net:993. El envío desde fuera de Brasil pasa por smtpi.kinghost.net, que antes hay que activar en el panel de KingHost."
+    "title": "Correo de KingHost en Claude: IMAP y el interruptor SMTPi",
+    "description": "Conecta KingHost a Claude o clientes MCP en imap.kinghost.net:993. Desde fuera de Brasil, el envío va por smtpi.kinghost.net, que hay que activar en el panel."
   },
   "hero": {
     "eyebrow": "KingHost + IA",

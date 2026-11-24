@@ -1,8 +1,8 @@
 const post = {
   slug: 'automated-email-triage-rules',
-  title: 'Automated Email Triage Rules That Run Without a Model in the Loop',
+  title: 'Automated Email Triage Rules Without a Model in the Loop',
   description:
-    'How MCPEmails automations work: a stored search plus one fixed action, on a cadence, with no model interpreting your mail. Preview, create, enable, read the run log.',
+    'MCPEmails automations: a stored search plus one fixed action on a cadence, with no model reading your mail. Preview, create, enable and read the run log.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
   coverAlt:
     'Unattended email triage rules in MCPEmails: a stored search plus one fixed action on a schedule',

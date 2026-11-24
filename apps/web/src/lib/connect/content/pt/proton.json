@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Proton Mail e Claude: por que o Bridge impede a conexão",
-    "description": "O Proton Mail não tem IMAP remoto. O IMAP só existe dentro do Proton Mail Bridge, um app pago de desktop que serve em localhost, então nenhum servidor MCP hospedado consegue alcançá-lo."
+    "description": "O Proton Mail não tem IMAP remoto. O IMAP só existe no Proton Mail Bridge, um app pago de desktop em localhost, então nenhum servidor MCP hospedado o alcança."
   },
   "hero": {
     "eyebrow": "Proton Mail + IA",

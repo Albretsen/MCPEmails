@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Conectores personalizados do Claude: planos, configuração, OAuth e segurança',
+  title: 'Conectores personalizados no Claude: planos e segurança',
   description:
-    'O que são os conectores personalizados do Claude, quais planos e apps têm suporte, como adicionar um servidor MCP remoto pela URL, opções de login, controles de administrador e dicas de segurança.',
+    'O que são os conectores personalizados do Claude, quais planos têm suporte, como adicionar um servidor MCP pela URL, controles de admin e dicas de segurança.',
   coverAlt: 'Conectores personalizados do Claude: um servidor MCP remoto adicionado ao Claude pela URL',
   content: `Os **conectores personalizados do Claude** permitem adicionar qualquer servidor remoto do [Model Context Protocol](https://modelcontextprotocol.io) ao Claude colando a URL dele. Depois de adicionar um, o Claude pode chamar as ferramentas desse servidor nos seus chats: consultar um banco de dados, abrir um chamado ou, no exemplo prático no fim deste guia, ler e enviar seus e-mails.
 

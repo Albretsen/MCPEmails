@@ -1,7 +1,7 @@
 const translation = {
   title: 'Comment connecter Gmail à Claude : connecteur intégré ou MCP',
   description:
-    'Connectez Gmail à Claude via MCP en environ deux minutes : un mot de passe d\'application Google, une URL d\'endpoint, aucune clé API, aucun code. Claude lit, recherche et envoie vos e-mails en direct, et vos e-mails ne sont jamais stockés.',
+    'Connectez Gmail à Claude via MCP en deux minutes : un mot de passe d\'application Google, une URL, sans code. Claude lit et envoie en direct, rien n\'est stocké.',
   coverAlt: 'Comment connecter Gmail à Claude en deux minutes via MCP : un mot de passe d\'application Google, une URL d\'endpoint, aucun e-mail stocké',
   content: `Claude a son propre connecteur Gmail. Si vous voulez seulement un compte Gmail dans Claude, activez-le dans les paramètres de connecteurs de Claude, et c'est fini. MCPEmails sert quand il vous en faut plus : Outlook, iCloud, Yahoo ou n'importe quelle boîte IMAP à côté de Gmail, plusieurs boîtes dans la même conversation, ou la même boîte dans ChatGPT, Cursor et d'autres applications MCP. La suite de ce guide explique comment le mettre en place.
 

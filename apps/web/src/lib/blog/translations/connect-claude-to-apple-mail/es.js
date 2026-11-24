@@ -3,9 +3,9 @@
 // MCPEmails dashboard and consent screen. Claude's own labels stay in English,
 // as in the other es posts.
 const translation = {
-  title: 'Conectar Claude con Apple Mail: iCloud, Gmail, Outlook y Yahoo',
+  title: 'Claude con Apple Mail: iCloud, Gmail, Outlook y Yahoo',
   description:
-    'Conecta Claude con las cuentas de Apple Mail (iCloud, Gmail, Outlook.com, Yahoo, IMAP) para leer, buscar, redactar y enviar correo desde cualquier dispositivo, incluido el iPhone.',
+    'Conecta Claude con tus cuentas de Apple Mail (iCloud, Gmail, Outlook.com, Yahoo, IMAP) para leer, buscar y enviar correo, incluso desde el iPhone.',
   coverAlt: 'Las cuentas de iCloud, Gmail, Outlook y Yahoo de Apple Mail conectadas a Claude a través de MCP',
   content: `Para conectar Claude con Apple Mail no se conecta la app Mail, sino las cuentas de correo que aparecen en ella. Apple Mail es un cliente: sincroniza una cuenta de iCloud, Gmail, Outlook.com, Yahoo u otra cuenta IMAP desde los servidores de ese proveedor. MCPEmails conecta Claude a esas mismas cuentas desde el lado del servidor, así que Claude ve la misma bandeja de entrada, las mismas carpetas, los mismos borradores y el mismo correo enviado que Apple Mail, y funciona desde claude.ai, Claude Desktop y la app de Claude en tu iPhone. No hace falta que tu Mac esté encendido.
 

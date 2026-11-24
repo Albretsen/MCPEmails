@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Koble e-post til Cursor: MCP-server i mcp.json",
-    "description": "Gi Cursor en ekte innboks med fire linjer i mcp.json. Cursor ber om OAuth-innlogging, ingen API-nøkkel, så lese, søke, sende og planlegge e-post. Én innboks gratis."
+    "description": "Gi Cursor en ekte innboks med fire linjer i mcp.json. Cursor ber om OAuth-innlogging, ingen API-nøkkel. Les, søk og send e-post. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Cursor + e-post",

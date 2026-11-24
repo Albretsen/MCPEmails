@@ -1,7 +1,7 @@
 const translation = {
-  title: 'O que é senha de app? Onde criar uma em cada provedor de e-mail',
+  title: 'O que é senha de app? Onde criar em cada provedor de e-mail',
   description:
-    'O que é uma senha de app, por que apps de e-mail e conectores de IA precisam de uma, onde criá-la no Gmail, iCloud, Yahoo, AOL, Fastmail e Zoho, e como revogá-la.',
+    'O que é uma senha de app, por que apps de e-mail e conectores de IA precisam dela, onde criá-la no Gmail, iCloud, Yahoo, AOL, Fastmail e Zoho e como revogá-la.',
   coverAlt: 'Uma senha de app conectando uma caixa de entrada a um agente de IA pelo MCPEmails',
   content: `Uma **senha de app** é uma senha separada que o seu provedor de e-mail gera para um único app, para que esse app possa entrar na sua caixa de correio sem a senha real da sua conta. Você a cria nas configurações de segurança da conta, cola uma vez no app de e-mail ou no conector e a exclui quando quiser cortar o acesso daquele app. Sua senha normal, e todos os outros apps, continuam funcionando.
 

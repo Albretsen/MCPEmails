@@ -5,8 +5,8 @@
     "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao VS Code: configuração MCP do agente do Copilot",
-    "description": "Adicione uma caixa de entrada real ao modo agente do GitHub Copilot no VS Code. Rode MCP: Add Server, escolha HTTP e autorize com OAuth. Sem chave de API. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao VS Code: MCP no agente do Copilot",
+    "description": "Adicione uma caixa ao modo agente do GitHub Copilot no VS Code. Rode MCP: Add Server, escolha HTTP e autorize com OAuth, sem chave de API. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "VS Code + e-mail",

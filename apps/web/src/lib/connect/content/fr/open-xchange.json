@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Open-Xchange et Claude : connecter le serveur IMAP",
-    "description": "Open-Xchange App Suite est une interface de groupware, pas un serveur IMAP. Connectez le serveur Dovecot qui se trouve derrière à Claude, Cursor et ChatGPT en IMAP."
+    "description": "Open-Xchange App Suite est une interface groupware, pas un serveur IMAP. Connectez le Dovecot qui est derrière à Claude, Cursor et ChatGPT en IMAP."
   },
   "hero": {
     "eyebrow": "Open-Xchange + IA",

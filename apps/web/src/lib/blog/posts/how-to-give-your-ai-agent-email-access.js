@@ -1,6 +1,6 @@
 const post = {
   slug: 'how-to-give-your-ai-agent-email-access',
-  title: 'How to Give Your AI Agent Access to Email (The Complete 2026 Guide)',
+  title: 'How to Give Your AI Agent Access to Email',
   description:
     'Give your AI agent read and send access to a real inbox over MCP: Gmail, Outlook, iCloud, Fastmail, or IMAP. How it works, the tools, security, and setup.',
   cover: '/blog/cover-how-to-give-your-ai-agent-email-access.svg',

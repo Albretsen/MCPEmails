@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Mehrere E-Mail-Konten in Claude Cowork, auch privates Outlook',
+  title: 'Mehrere E-Mail-Konten in Claude Cowork nutzen',
   description:
-    'Claude Cowork erreicht über seinen Gmail-Konnektor ein Google-Konto und über seinen Microsoft 365-Konnektor das eine Microsoft-Konto, mit dem Sie sich anmelden. So geben Sie einer Cowork-Aufgabe mehrere Postfächer, geschäftlich und privat.',
+    'Claude Cowork erreicht je ein Google- und ein Microsoft-Konto. So geben Sie einer Cowork-Aufgabe mehrere Postfächer, geschäftlich und privat.',
   coverAlt:
     'Geschäftliche und private E-Mail-Konten, darunter Gmail und Outlook.com, verbunden mit einer Aufgabe in Claude Cowork',
   content: `**Claude Cowork nutzt dieselben Konnektoren wie der Chat in Claude und hat deshalb dieselben Grenzen bei E-Mails: ein Google-Konto über den Gmail-Konnektor und ein Microsoft-Konto über den Microsoft 365-Konnektor, der ein privates Outlook.com-Konto nur in den Tarifen Free, Pro, Max und Ultra annimmt.** Für ein zweites Gmail-Konto, eine private Adresse bei Outlook.com oder Hotmail in einem Team- oder Enterprise-Tarif, ein Firmenpostfach bei einem IMAP-Host oder den Versand mit Anhängen brauchen Sie einen benutzerdefinierten Konnektor. Mit einem MCP-Server wie MCPEmails gibt ein einziger benutzerdefinierter Konnektor einer Cowork-Aufgabe jedes Postfach, das Sie verbinden, jeweils mit Namen.

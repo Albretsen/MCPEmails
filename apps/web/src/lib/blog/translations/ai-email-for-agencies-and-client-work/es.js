@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Correo con IA para agencias: un agente en todos los buzones de tus clientes',
+  title: 'Correo con IA para agencias: un agente para tus clientes',
   description:
-    'Cómo una agencia o un profesional independiente da a un agente de IA acceso a varios buzones de clientes sin mezclarlos: un espacio de trabajo por cliente, claves acotadas, solo lectura primero y una aprobación humana en cada envío.',
+    'Cómo una agencia da a un agente de IA acceso a varios buzones de clientes sin mezclarlos: un espacio por cliente, claves acotadas y aprobación en cada envío.',
   coverAlt:
     'Un agente de IA trabajando sobre buzones de clientes separados con acceso acotado, MCPEmails',
   content: `Si gestionas el correo de más de un cliente, vives con una regla: nada del cliente A puede aparecer en un hilo del cliente B. Un agente de IA no cambia la regla, solo hace que sea más fácil romperla. Un único agente con una única credencial que alcanza todos los buzones que administras está a un descuido de citar la factura equivocada a la persona equivocada.

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Dovecot IMAP til Claude og enhver MCP-klient",
-    "description": "Koble din egen Dovecot-server til Claude, Cursor og ChatGPT over IMAP. Hvilken inet_listener som betjener 993, ssl_cert-linjene som teller, og hvorfor port 143 avviser pålogging."
+    "description": "Koble din egen Dovecot-server til Claude, Cursor og ChatGPT over IMAP: hvilken inet_listener som betjener 993, og hvorfor port 143 avviser pålogging."
   },
   "hero": {
     "eyebrow": "Dovecot + AI",

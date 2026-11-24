@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Zed : MCP dans l'Agent Panel",
-    "description": "Ajoutez une vraie boîte à l'Agent Panel de Zed comme context server. Une URL, OAuth, sans clé API. Lisez, cherchez, envoyez et planifiez vos e-mails. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à l'Agent Panel de Zed comme context server. Une URL, OAuth, sans clé API : lisez, cherchez et envoyez vos e-mails."
   },
   "hero": {
     "eyebrow": "Zed + e-mail",

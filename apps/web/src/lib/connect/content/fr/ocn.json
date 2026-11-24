@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "OCN Mail dans Claude : IMAP et le mot de passe mail distinct",
-    "description": "Connectez une boîte OCN (ocn.ne.jp) à Claude ou tout client MCP sur imap.ocn.ne.jp:993. Connectez-vous avec le OCN メールパスワード de votre certificat d'adhésion, pas avec le mot de passe de connexion OCN."
+    "description": "Connectez OCN (ocn.ne.jp) à Claude ou tout client MCP sur imap.ocn.ne.jp:993 avec le OCN メールパスワード du certificat d'adhésion, pas celui de connexion."
   },
   "hero": {
     "eyebrow": "OCN + IA",

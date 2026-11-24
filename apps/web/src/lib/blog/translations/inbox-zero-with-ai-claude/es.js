@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo llegar al inbox zero con IA (usando Claude y tu bandeja de entrada real)',
+  title: 'Inbox zero con IA: Claude en tu bandeja de entrada real',
   description:
-    'Llega al inbox zero con IA: deja que Claude clasifique, archive, etiquete y redacte respuestas en tu bandeja real de Gmail, Outlook o IMAP a través de MCP. Una rutina repetible, los prompts exactos y por qué no se almacena nada.',
+    'Llega al inbox zero con IA: Claude clasifica, archiva, etiqueta y redacta respuestas en tu Gmail, Outlook o IMAP por MCP. Con una rutina y los prompts exactos.',
   coverAlt: 'Llega al inbox zero con IA: Claude clasifica, archiva y redacta respuestas en tu bandeja real a través de MCP',
   content: `El inbox zero siempre ha tenido el mismo problema: alcanzarlo te cuesta una hora que no tienes, y mañana vuelves a tener cincuenta sin leer. Un agente de IA cambia las cuentas. En lugar de ordenar tú los mensajes uno a uno, le dices a Claude qué significa "gestionado" y se ocupa de toda la bandeja a la vez: clasifica, archiva, etiqueta y redacta respuestas sobre tu correo *real*, en directo.
 

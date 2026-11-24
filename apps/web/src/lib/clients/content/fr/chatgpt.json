@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à ChatGPT : le plugin Any Mailbox",
-    "description": "Donnez une vraie boîte à ChatGPT : installez Any Mailbox depuis l'annuaire de plugins de ChatGPT, connectez-vous à MCPEmails, choisissez vos boîtes. OAuth, sans clé API. 1 boîte gratuite."
+    "description": "Donnez une vraie boîte à ChatGPT : installez Any Mailbox depuis l'annuaire de plugins, connectez-vous à MCPEmails et choisissez vos boîtes. Sans clé API."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-mail",

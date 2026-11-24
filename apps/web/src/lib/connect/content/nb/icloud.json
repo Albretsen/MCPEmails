@@ -105,7 +105,7 @@
   },
   "guide": {
     "intro": "Kobler du også til Fastmail eller en annen IMAP-vert?",
-    "label": "Slik kobler du iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude",
+    "label": "Koble iCloud, Fastmail eller IMAP-innboks til Claude",
     "href": "/blog/connect-icloud-fastmail-imap-to-claude"
   }
 }

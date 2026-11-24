@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "GreenGeeks IMAP-innstillinger og Claude MCP-oppsett",
-    "description": "GreenGeeks viser den faktiske e-postverten din under cPanel, Email Accounts, Connect Devices. Koble postkassen til Claude over IMAP 993. Én innboks gratis, for alltid."
+    "description": "GreenGeeks viser den faktiske e-postverten under cPanel, Email Accounts, Connect Devices. Koble postkassen til Claude over IMAP 993. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "GreenGeeks + AI",

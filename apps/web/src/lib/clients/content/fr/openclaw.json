@@ -17,7 +17,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à OpenClaw : serveur MCP distant",
-    "description": "Donnez une vraie boîte à votre agent OpenClaw. Ajoutez un serveur MCP Streamable HTTP avec OAuth, connectez-vous une fois, puis lisez, cherchez, rédigez et envoyez."
+    "description": "Donnez une vraie boîte à votre agent OpenClaw : ajoutez un serveur MCP Streamable HTTP avec OAuth, connectez-vous une fois, puis lisez et envoyez."
   },
   "hero": {
     "eyebrow": "OpenClaw + e-mail",

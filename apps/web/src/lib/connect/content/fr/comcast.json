@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Connecter l'e-mail Comcast Xfinity à Claude en IMAP",
-    "description": "Connectez l'e-mail Comcast Xfinity à Claude et tout client MCP en IMAP sur imap.comcast.net:993. Third Party Access Security doit être coché, sinon chaque connexion échoue."
+    "description": "Connectez Comcast Xfinity à Claude et tout client MCP en IMAP sur imap.comcast.net:993. Cochez Third Party Access Security, sinon la connexion échoue."
   },
   "hero": {
     "eyebrow": "Comcast Xfinity + IA",

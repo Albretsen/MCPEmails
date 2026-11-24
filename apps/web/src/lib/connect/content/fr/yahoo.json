@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "MCP Yahoo Mail : connectez Yahoo Mail à Claude et ChatGPT",
-    "description": "Connectez Yahoo Mail à Claude ou ChatGPT avec un mot de passe d'application Yahoo, en IMAP port 993. Votre mot de passe de compte ne marche pas. Une boîte gratuite."
+    "description": "Connectez Yahoo Mail à Claude ou ChatGPT en IMAP (port 993) avec un mot de passe d'application Yahoo, pas celui du compte. Une boîte gratuite."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",

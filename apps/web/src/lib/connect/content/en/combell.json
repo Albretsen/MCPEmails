@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Combell MCP Server: Connect Combell Mail to Claude",
-    "description": "MCP server for Combell Basic mailboxes. Connect the mailboxes on your domain (info@, facturatie@) to Claude, ChatGPT and Cursor over IMAP at imap.mailprotect.be:993 with the mailbox password."
+    "description": "MCP server for Combell Basic mailboxes. Connect info@ and facturatie@ on your domain to Claude, ChatGPT and Cursor over IMAP at imap.mailprotect.be:993."
   },
   "hero": {
     "eyebrow": "Combell email + AI",

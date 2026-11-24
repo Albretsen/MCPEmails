@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Como dar ao seu agente de IA acesso ao e-mail (o guia completo de 2026)',
+  title: 'Como dar ao seu agente de IA acesso ao e-mail (guia de 2026)',
   description:
-    'Dê ao seu agente de IA acesso de leitura e envio a uma caixa de entrada real via MCP: Gmail, Outlook, iCloud, Fastmail ou IMAP. Como funciona, as ferramentas, a segurança e a configuração.',
+    'Dê ao seu agente de IA acesso de leitura e envio a uma caixa real via MCP: Gmail, Outlook, iCloud, Fastmail ou IMAP. Funcionamento, ferramentas e segurança.',
   coverAlt: 'Como dar ao seu agente de IA acesso ao e-mail via MCP, com o MCPEmails',
   content: `Para dar a um agente de IA acesso ao e-mail, você conecta sua caixa de entrada a um servidor MCP e aponta o agente para uma única URL de endpoint. O agente então recebe um pequeno conjunto de ferramentas para ler, pesquisar e enviar e-mails. A parte difícil não é o agente: é fazer isso sem vazar sua senha em um prompt, em um log ou em um banco vetorial. Essa última milha é o assunto deste guia.
 

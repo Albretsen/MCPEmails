@@ -2,7 +2,7 @@ const post = {
   slug: 'manage-multiple-email-accounts-with-ai',
   title: 'How to Manage Multiple Email Accounts With One AI Agent',
   description:
-    'Run work, personal, and side-business mailboxes through one AI agent: how it discovers inboxes, how to scope a request, sender names that stay correct, and per-inbox send review.',
+    'Run work, personal and side-business mailboxes through one AI agent: inbox discovery, scoped requests, correct sender names and per-inbox send review.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'One AI agent connected to work, personal, and side-business email accounts with MCPEmails',

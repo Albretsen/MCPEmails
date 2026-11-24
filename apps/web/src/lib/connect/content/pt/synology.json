@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Synology MailPlus no Claude: IMAP direto do seu NAS",
-    "description": "Conecte uma caixa de correio do Synology MailPlus ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Redirecionamento de porta, CGNAT e como atribuir o certificado do DSM ao MailPlus."
+    "description": "Conecte uma caixa do Synology MailPlus ao Claude, ao Cursor e ao ChatGPT via IMAP na 993. Redirecionamento de porta, CGNAT e o certificado do DSM no MailPlus."
   },
   "hero": {
     "eyebrow": "Synology MailPlus + IA",

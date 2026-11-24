@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Connect Email to Zed: Agent Panel MCP Setup",
-    "description": "Add a real inbox to the Zed Agent Panel as a context server. Paste one URL, authorize with OAuth, no API key. Read, search, send and schedule mail. One inbox free."
+    "description": "Add a real inbox to the Zed Agent Panel as a context server. Paste one URL, authorize with OAuth, no API key. Read, search, send and schedule mail."
   },
   "hero": {
     "eyebrow": "Zed + email",

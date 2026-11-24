@@ -1,6 +1,6 @@
 const translation = {
   title: 'De beste måtene å la Claude styre innboksen din på i 2026',
-  description: 'En gjennomgang av de beste måtene å la Claude styre innboksen din på i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
+  description: 'De beste måtene å la Claude styre innboksen din i 2026: native integrasjoner, egne MCP-servere, kopier-og-lim-inn, nettleserutvidelser og hostet MCP.',
   coverAlt: 'De beste måtene å la Claude styre innboksen din på i 2026 (MCPEmails)',
   content: `Hvis du vil at Claude faktisk skal lese, sortere og svare på e-posten din, har du fem reelle alternativer i 2026: en hostet MCP-e-postserver, en egen MCP-server du kjører selv, å kopiere og lime inn tråder i chatten, en nettleserutvidelse, eller en native klientintegrasjon. For de fleste er en hostet MCP-server det riktige valget, fordi den fungerer på sekunder og aldri lagrer e-posten din. Resten har hver sin nisje, og et par av dem er dårligere enn de ser ut.
 

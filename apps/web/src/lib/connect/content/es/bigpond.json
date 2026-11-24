@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo Telstra BigPond a Claude por IMAP",
-    "description": "Conecta el correo Telstra BigPond a Claude y a cualquier cliente MCP por IMAP en imap.telstra.com:993. Las direcciones bigpond usan ya servidores de Telstra Mail."
+    "description": "Conecta Telstra BigPond a Claude y a cualquier cliente MCP por IMAP en imap.telstra.com:993. Las direcciones bigpond ya usan servidores de Telstra Mail."
   },
   "hero": {
     "eyebrow": "Telstra BigPond + IA",

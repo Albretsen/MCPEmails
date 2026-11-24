@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "freenet Mail in Claude: der IMAP-Schalter, den Sie brauchen",
-    "description": "freenet.de Mail per IMAP über mx.freenet.de:993 mit Claude und jedem MCP-Client verbinden. Der Client-Zugriff liegt hinter einem Haken, den freenet lieber aus lässt."
+    "description": "freenet.de Mail per IMAP über mx.freenet.de:993 mit Claude und jedem MCP-Client verbinden. Der Client-Zugriff liegt hinter einem Haken, der meist aus ist."
   },
   "hero": {
     "eyebrow": "freenet Mail + KI",

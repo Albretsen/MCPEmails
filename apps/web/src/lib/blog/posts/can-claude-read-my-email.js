@@ -42,9 +42,9 @@
 // sources before editing the Gmail or Microsoft 365 sections.
 const post = {
   slug: 'can-claude-read-my-email',
-  title: 'Can Claude Read My Email and Send Emails? Mailbox by Mailbox',
+  title: 'Can Claude Read My Email and Send Emails? Yes',
   description:
-    'Yes, for Gmail and work Microsoft 365 accounts, with Claude\'s own connectors. Yahoo, iCloud, Outlook.com, IMAP mailboxes and several providers at once need an MCP server.',
+    'Yes. Claude reads and sends Gmail and Outlook mail through its own connectors. Yahoo, iCloud, IMAP and several inboxes at once need an MCP server.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'Claude reading and sending email from Gmail, Microsoft 365, Yahoo, iCloud and IMAP mailboxes',
@@ -53,7 +53,7 @@ const post = {
   updatedAt: '2026-11-11T09:00:00.000Z',
   tags: ['Claude', 'Gmail', 'Outlook', 'MCP'],
   featured: false,
-  content: `**Yes, Claude can read your email and send emails, but only from a mailbox you have connected to it.** Claude has two email connectors of its own, one for Gmail and one for work Microsoft 365 accounts. The Gmail connector reads, searches and sends, and asks for your approval before each send by default. The Microsoft 365 connector reads and searches, and can send only after an administrator turns on its write tools. Yahoo, iCloud, a personal Outlook.com address, a company mailbox on an IMAP host, or several providers behind one connection need an MCP server such as MCPEmails.
+  content: `**Yes, Claude can read your email and send emails from any mailbox you connect to it.** Gmail and Outlook connect through Claude's own connectors: Gmail for a Google account, and Microsoft 365 for a work account or, on the Free, Pro, Max and Ultra plans, a personal Outlook.com address. Both read and search, and Claude asks for your approval before each send by default; a work Microsoft 365 account can send only after an administrator turns on the write tools. Yahoo, iCloud, a company mailbox on an IMAP host, or several providers behind one connection need an MCP server such as MCPEmails.
 
 This page sorts out which case you are in. The facts about Anthropic's and Google's products were read on their own pages in October 2026. Those products change often, so each section links the page it rests on.
 

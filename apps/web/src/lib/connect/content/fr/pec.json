@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez une boîte PEC (Aruba PEC, Legalmail, Poste) à Claude",
-    "description": "Connectez la messagerie certifiée italienne (PEC) à Claude, Cursor et tout client MCP via IMAP : Aruba PEC sur imaps.pec.aruba.it:993, Legalmail sur mbox.cert.legalmail.it:993, Poste sur mail.postecert.it:993 ou mail.postecertifica.it:993. La règle de mot de passe de chaque fournisseur, et ce que voit l'agent."
+    "title": "Boîte PEC (Aruba PEC, Legalmail, Poste) dans Claude",
+    "description": "Connectez la messagerie certifiée italienne (PEC) à Claude via IMAP : Aruba PEC, Legalmail et Poste, avec le serveur et la règle de mot de passe de chacun."
   },
   "hero": {
     "eyebrow": "PEC + IA",

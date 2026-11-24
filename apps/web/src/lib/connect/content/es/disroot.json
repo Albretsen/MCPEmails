@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo de Disroot a Claude y clientes MCP",
-    "description": "Conecta el correo de Disroot a Claude, Cursor y cualquier cliente MCP por IMAP en disroot.org:993, con la contraseña de tu cuenta: no hay contraseñas de aplicación."
+    "description": "Conecta Disroot a Claude, Cursor y cualquier cliente MCP por IMAP en disroot.org:993 con la contraseña de tu cuenta: no hay contraseñas de aplicación."
   },
   "hero": {
     "eyebrow": "Disroot + IA",

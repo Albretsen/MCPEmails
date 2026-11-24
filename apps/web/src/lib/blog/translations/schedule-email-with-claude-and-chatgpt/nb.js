@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik planlegger du e-post med Claude eller ChatGPT (send senere)',
+  title: 'Planlegg e-post med Claude eller ChatGPT (send senere)',
   description:
-    'Planlegg en e-post fra Claude eller ChatGPT som sendes senere fra din egen Gmail, Outlook, iCloud eller IMAP-postkasse: oppsett, tidssoner, avbryting og begrensninger.',
+    'Planlegg en e-post fra Claude eller ChatGPT som sendes senere fra din egen Gmail, Outlook, iCloud eller IMAP-postkasse: oppsett, tidssoner og avbryting.',
   coverAlt:
     'Claude og ChatGPT planlegger en e-post som sendes senere fra en tilkoblet postkasse med MCPEmails',
   content: `For å planlegge en e-post med Claude eller ChatGPT trenger assistenten et e-postverktøy som kan holde på en melding og sende den senere. MCPEmails har et slikt verktøy. Koble til postkassen din, legg til MCPEmails som kobling, og si når: «Send dette til Dana mandag kl. 09.00, norsk tid.» Meldingen venter i en kø på MCPEmails-serveren og går ut fra din egen adresse på det tidspunktet, uansett om samtalen, appen eller datamaskinen din fortsatt er åpen.

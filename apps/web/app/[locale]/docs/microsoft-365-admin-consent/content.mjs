@@ -48,9 +48,9 @@ export const EVIDENCE_LINKS = [
 
 const en = {
   meta: {
-    title: 'Need admin approval for Outlook or Microsoft 365? Approve MCPEmails',
+    title: 'Need Admin Approval for Microsoft 365? Approve MCPEmails',
     description:
-      'Why Microsoft shows "Need admin approval" when you connect a work Outlook or Microsoft 365 mailbox to Claude or ChatGPT, the link to send your IT admin, and exactly which permissions the admin approves.',
+      'Why Microsoft shows "Need admin approval" when you connect a work Outlook or Microsoft 365 mailbox to Claude or ChatGPT, and the link to send your IT admin.',
   },
   breadcrumb: 'Microsoft 365 admin approval',
   eyebrow: 'Docs',

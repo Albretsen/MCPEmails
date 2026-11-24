@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Beliebiges IMAP-Postfach mit Claude, ChatGPT und Cursor verbinden",
-    "description": "Jedes IMAP-Postfach Ihres Unternehmens mit Claude, Cursor und jedem MCP-Client verbinden. Host und Passwort genügen: IMAP auf 993 oder 143, SMTP auf 465 oder 587, automatisch erkannt."
+    "title": "IMAP-Postfach mit Claude, ChatGPT und Cursor verbinden",
+    "description": "Jedes IMAP-Postfach mit Claude, Cursor und MCP-Clients verbinden. Host und Passwort genügen: IMAP 993 oder 143 und SMTP 465 oder 587 werden automatisch erkannt."
   },
   "hero": {
     "eyebrow": "IMAP + KI",
@@ -110,7 +110,7 @@
   },
   "guide": {
     "intro": "Lieber eine Anleitung mit Screenshots?",
-    "label": "Claude IMAP-Konnektor: jedes IMAP-Postfach mit Claude verbinden",
+    "label": "Claude IMAP-Konnektor: jedes IMAP-Postfach verbinden",
     "href": "/blog/claude-imap-connector"
   },
   "seeAlso": {

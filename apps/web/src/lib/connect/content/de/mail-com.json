@@ -17,7 +17,7 @@
   },
   "meta": {
     "title": "Mail.com mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "mail.com mit Claude, Cursor, ChatGPT und jedem MCP-Client verbinden, per IMAP über imap.mail.com:993. POP3/IMAP ist bei mail.com eine Premium-Funktion und standardmäßig aus."
+    "description": "mail.com per IMAP über imap.mail.com:993 mit Claude, Cursor und ChatGPT verbinden. POP3/IMAP ist bei mail.com eine Premium-Funktion und standardmäßig aus."
   },
   "hero": {
     "eyebrow": "Mail.com + KI",

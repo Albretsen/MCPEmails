@@ -5,8 +5,8 @@
     "https://docs.devin.ai/desktop/cascade/mcp"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Windsurf: configuração do servidor MCP no Cascade",
-    "description": "Adicione uma caixa de entrada real ao Cascade no Windsurf. Uma entrada no mcp_config.json usando serverUrl, depois autorize com OAuth. Sem chave de API. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao Windsurf: servidor MCP no Cascade",
+    "description": "Adicione uma caixa real ao Cascade no Windsurf. Uma entrada no mcp_config.json com serverUrl, depois autorize com OAuth. Sem chave de API. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Windsurf + e-mail",

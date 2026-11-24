@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Flere e-postkontoer i Claude og ChatGPT: alle postkassene, én kobling',
+  title: 'Flere e-postkontoer i Claude og ChatGPT med én kobling',
   description:
-    'Slik får du flere e-postkontoer inn i Claude og ChatGPT samtidig, også firmapostkasser hos IONOS, Zoho, Namecheap, Google Workspace eller på din egen server, med én MCP-kobling som fungerer i begge.',
+    'Slik får du flere e-postkontoer inn i Claude og ChatGPT samtidig, også firmapostkasser hos IONOS, Zoho eller Google Workspace, med én MCP-kobling.',
   coverAlt:
     'Flere e-postkontoer for jobb og privat koblet til Claude og ChatGPT gjennom én MCP-kobling',
   content: `Du vil stille ett spørsmål og få svar på tvers av alle postkassene du har ansvar for: din egen adresse, post@, salg@, fakturainnboksen, kanskje en privat Gmail. Denne guiden viser hvordan du får flere e-postkontoer inn i Claude og ChatGPT samtidig, hva de innebygde koblingene allerede dekker, og hvor du trenger en MCP-server i stedet.

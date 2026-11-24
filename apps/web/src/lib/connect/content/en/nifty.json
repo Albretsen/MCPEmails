@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "@nifty Mail in Claude: IMAP After the Connection Permission",
-    "description": "Connect an @nifty mailbox to Claude or any MCP client at imap.nifty.com:993. Set メールソフト接続許可（IMAP） to 許可中 and use the dedicated mail password, not your @nifty ID password."
+    "description": "Connect an @nifty mailbox to Claude or any MCP client at imap.nifty.com:993. Set メールソフト接続許可（IMAP） to 許可中 and use the dedicated mail password."
   },
   "hero": {
     "eyebrow": "@nifty + AI",

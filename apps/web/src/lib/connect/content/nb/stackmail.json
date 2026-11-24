@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "StackMail MCP-server: koble 20i-e-post til Claude",
-    "description": "MCP-server for 20i StackMail. Koble postkassene på domenet ditt (hello@, accounts@) til Claude, ChatGPT og Cursor via IMAP på imap.stackmail.com:993 med postkassepassordet, uansett hvilken 20i-forhandler som hoster deg."
+    "description": "MCP-server for 20i StackMail. Koble domenepostkassene til Claude, ChatGPT og Cursor via IMAP på imap.stackmail.com:993, uansett hvilken 20i-forhandler du har."
   },
   "hero": {
     "eyebrow": "StackMail-e-post + AI",

@@ -4,6 +4,7 @@ import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { eurDisplayEnabled } from '@/lib/stripe/eur-launch';
 import { routing } from '@/i18n/routing';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, homeJsonLd } from '@/i18n/seo';
 import HomeClient from '../../components/marketing/HomeClient';
 import { fillListingUrl } from '@/lib/connect/chatgpt.mjs';
@@ -23,10 +24,7 @@ export async function generateMetadata({
   const description = t('description');
 
   return {
-    // Absolute on purpose: the homepage title text is frozen until 2026-11-01
-    // for an SEO test, so it keeps the old suffix while the layout template
-    // now says "MCPEmails". Switch back to plain `title` after the test.
-    title: { absolute: `${title} · mcpemails` },
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, ''),
     openGraph: {

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "ScalaHosting Email to Claude: SPanel and cPanel IMAP",
-    "description": "ScalaHosting runs SPanel on some plans and cPanel on others. Find your settings under Connect device, then give Claude the mailbox over IMAP 993. One inbox free."
+    "description": "ScalaHosting runs SPanel on some plans and cPanel on others. Find your settings under Connect device, then give Claude the mailbox over IMAP 993."
   },
   "hero": {
     "eyebrow": "ScalaHosting + AI",

@@ -11,6 +11,9 @@ import { relatedPostSlugs } from '@/lib/blog/related.mjs';
 import { withReadingLangEscaped } from '@/i18n/reading-lang.mjs';
 import BlogPostClient from '../../../../components/marketing/BlogPostClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
+
+const SNIPPET_TEST_FROZEN = new Set(['connect-claude-to-email', 'connect-chatgpt-to-email']);
 
 /**
  * Pre-render each post in the locales it is translated into. Any other locale
@@ -52,7 +55,9 @@ export async function generateMetadata({ params }) {
   const path = `/blog/${slug}`;
   const { canonical, languages, canonicalLocale } = buildAlternates(post, locale, path);
   return {
-    title: post.title,
+    // The two guide posts in the snippet CTR test keep their rendered title
+    // (suffix included) until the wave 2 read-out window closes on 2026-11-27.
+    title: SNIPPET_TEST_FROZEN.has(slug) ? post.title : pageTitle(post.title),
     description: post.description,
     authors: [{ name: author.name }],
     // Posts flagged `noindex` (e.g. previews of not-yet-shipped features) stay

@@ -9,6 +9,7 @@ import { cancelCopy } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/help.css';
 import '../../../styles/contract-forms.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * "Cancel contracts here": the public cancellation and withdrawal form.
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = cancelCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

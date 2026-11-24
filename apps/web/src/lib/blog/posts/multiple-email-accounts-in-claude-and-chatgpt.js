@@ -18,9 +18,9 @@
 // on /pricing, and a repricing must not leave this post wrong.
 const post = {
   slug: 'multiple-email-accounts-in-claude-and-chatgpt',
-  title: 'Multiple Email Accounts in Claude and ChatGPT: Every Mailbox, One Connector',
+  title: 'Multiple Email Accounts in Claude and ChatGPT',
   description:
-    'How to put several email accounts into Claude and ChatGPT at once, including company mailboxes on IONOS, Zoho, Namecheap, Google Workspace or your own server, with one MCP connector that works in both.',
+    'Put several email accounts into Claude and ChatGPT at once, including company mailboxes on IONOS, Zoho or Google Workspace, with one MCP connector.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'Several work and personal email accounts connected to Claude and ChatGPT through one MCP connector',

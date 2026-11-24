@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Posteo mit Claude, Cursor & MCP verbinden (IMAP)",
-    "description": "Posteo mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über posteo.de:993. Mit zusätzlichem Postfachschutz ist für jedes Mailprogramm ein App-Passwort Pflicht."
+    "description": "Posteo per IMAP über posteo.de:993 mit Claude, Cursor und jedem MCP-Client verbinden. Mit zusätzlichem Postfachschutz ist ein App-Passwort Pflicht."
   },
   "hero": {
     "eyebrow": "Posteo + KI",

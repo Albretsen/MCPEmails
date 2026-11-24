@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Terra Mail Brasil en Claude: IMAP con un plan de pago",
-    "description": "Conecta un buzón terra.com.br a Claude o a cualquier cliente MCP en imap.terra.com.br:993. Terra retiró su nivel gratuito, así que se requiere un plan de pago activo."
+    "description": "Conecta terra.com.br a Claude o a cualquier cliente MCP en imap.terra.com.br:993. Terra retiró su nivel gratuito, así que necesitas un plan de pago activo."
   },
   "hero": {
     "eyebrow": "Terra Mail + IA",

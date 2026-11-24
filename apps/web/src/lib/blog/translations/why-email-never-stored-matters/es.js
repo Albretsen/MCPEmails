@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Por qué importa que «el correo nunca se almacene» al conectar la IA a tu bandeja',
+  title: 'Por qué importa que «el correo nunca se almacene»',
   description:
-    'Que el correo nunca se almacene significa que MCPEmails obtiene tu correo en vivo y lo descarta, guardando un token cifrado por bandeja. Mira por qué supera a las herramientas que copian toda tu bandeja.',
+    'Que el correo nunca se almacene significa que MCPEmails lo lee en vivo y lo descarta, guardando un token cifrado por bandeja. Por qué es mejor que copiarla.',
   coverAlt: 'Correo obtenido en vivo y descartado frente a una segunda copia almacenada en la base de datos de un proveedor',
   content: `Cuando conectas un agente de IA a tu bandeja de entrada, la pregunta más importante de todas es dónde acaba tu correo. Con MCPEmails la respuesta es: en ningún sitio. Cada llamada a una herramienta obtiene tu correo en vivo desde Gmail, Microsoft Graph o tu servidor IMAP, se lo entrega al agente y lo desecha. Lo que conservamos por bandeja es un token cifrado, para que la siguiente llamada pueda producirse, además de los pocos datos que necesita una función que actives, como un mensaje programado que espera a enviarse.
 

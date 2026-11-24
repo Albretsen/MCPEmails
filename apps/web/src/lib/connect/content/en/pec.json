@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect a PEC Mailbox (Aruba PEC, Legalmail, Poste) to Claude",
-    "description": "Connect Italian certified email (PEC) to Claude, Cursor and any MCP client over IMAP: Aruba PEC at imaps.pec.aruba.it:993, Legalmail at mbox.cert.legalmail.it:993, Poste at mail.postecert.it:993 or mail.postecertifica.it:993. Each provider's password rule, and what the agent sees."
+    "title": "Connect PEC Mail (Aruba PEC, Legalmail, Poste) to Claude",
+    "description": "Connect Italian certified email (PEC) to Claude, Cursor and any MCP client over IMAP: Aruba PEC, Legalmail and Poste, with each provider's host and password."
   },
   "hero": {
     "eyebrow": "PEC + AI",

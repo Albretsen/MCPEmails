@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Spark Xtra Mail et Claude : sans mot de passe d'application",
-    "description": "Connectez Spark Xtra Mail à Claude et à tout client MCP en IMAP sur imap.xtra.co.nz:993. Votre mot de passe Xtra suffit : Spark n'émet aucun mot de passe d'application."
+    "description": "Connectez Spark Xtra Mail à Claude et tout client MCP en IMAP sur imap.xtra.co.nz:993. Votre mot de passe Xtra suffit, sans mot de passe d'application."
   },
   "hero": {
     "eyebrow": "Spark Xtra Mail + IA",

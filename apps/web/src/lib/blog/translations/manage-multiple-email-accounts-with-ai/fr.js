@@ -1,7 +1,7 @@
 const translation = {
   title: 'Gérer plusieurs comptes e-mail avec un seul agent IA',
   description:
-    'Faites passer vos boîtes professionnelle, personnelle et secondaire par un seul agent IA : comment il découvre les boîtes, comment cadrer une demande, des noms d\'expéditeur toujours justes et la validation des envois boîte par boîte.',
+    'Vos boîtes pro, perso et secondaire dans un seul agent IA : découverte des boîtes, demandes bien cadrées, bon nom d\'expéditeur et validation des envois.',
   coverAlt:
     'Un agent IA connecté aux comptes e-mail professionnel, personnel et secondaire avec MCPEmails',
   content: `Presque personne n'a une seule boîte aux lettres. Vous avez une adresse professionnelle, une adresse personnelle et au moins une autre pour une activité secondaire ou pour un domaine que vous possédez toujours. Chaque question qui traverse deux comptes devient une recherche manuelle à deux endroits.

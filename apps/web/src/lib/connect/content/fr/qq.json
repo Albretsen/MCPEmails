@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connecter QQ Mail à Claude avec un code d'autorisation",
-    "description": "Connectez QQ Mail et Foxmail à Claude, Cursor ou tout client MCP en IMAP via imap.qq.com:993. Il faut un code d'autorisation de 16 caractères, pas le mot de passe QQ."
+    "description": "Connectez QQ Mail et Foxmail à Claude ou tout client MCP via imap.qq.com:993, avec un code d'autorisation de 16 caractères, pas le mot de passe QQ."
   },
   "hero": {
     "eyebrow": "QQ Mail + IA",

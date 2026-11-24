@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta Dovecot IMAP a Claude y cualquier cliente MCP",
-    "description": "Conecta tu servidor Dovecot a Claude, Cursor y ChatGPT por IMAP. Qué inet_listener sirve el 993, qué líneas ssl_cert importan y por qué el 143 rechaza inicios de sesión."
+    "description": "Conecta Dovecot a Claude, Cursor y ChatGPT por IMAP. Qué inet_listener sirve el 993, qué líneas ssl_cert importan y por qué el 143 rechaza inicios de sesión."
   },
   "hero": {
     "eyebrow": "Dovecot + IA",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "E-Mail-MCP-Server: Gmail, Outlook, IMAP & Claude",
-    "description": "Gehosteter E-Mail-MCP-Server für Claude, ChatGPT und Cursor. Verbinden Sie Gmail, Outlook oder jedes IMAP-Postfach, auch mehrere gleichzeitig. E-Mails werden live abgerufen und nie gespeichert."
+    "description": "Gehosteter E-Mail-MCP-Server für Claude, ChatGPT und Cursor. Verbinden Sie Gmail, Outlook oder jedes IMAP-Postfach. Live abgerufen, nie gespeichert."
   },
   "nav": {
     "features": "Funktionen",

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk E-Mail mit Claude verbinden: IMAP und MCP-Zugriff",
-    "description": "Plesk-Postfächer mit Claude, ChatGPT und Cursor verbinden, per IMAP auf 993. Die Domain selbst eintragen, nicht mail.domain.de: Ohne ein der Mail-Domain zugewiesenes Zertifikat bekommt die mail-Subdomain das Standardzertifikat des Servers."
+    "description": "Plesk-Postfächer per IMAP auf 993 mit Claude und ChatGPT verbinden. Die Domain selbst eintragen, nicht mail.domain.de: dort kommt das falsche Zertifikat."
   },
   "hero": {
     "eyebrow": "Plesk + KI",

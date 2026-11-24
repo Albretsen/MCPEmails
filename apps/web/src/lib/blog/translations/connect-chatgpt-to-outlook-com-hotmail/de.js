@@ -1,7 +1,7 @@
 const translation = {
-  title: 'ChatGPT mit Hotmail und Outlook.com verbinden (private Microsoft-Konten)',
+  title: 'ChatGPT mit Hotmail und Outlook.com verbinden',
   description:
-    'Das Outlook-Plugin von ChatGPT ist für Arbeits- und Schulkonten gebaut. So verbinden Sie ein privates Postfach bei Hotmail, Outlook.com, Live oder MSN mit ChatGPT: Anmeldung bei Microsoft plus eine MCP-URL.',
+    'Das Outlook-Plugin von ChatGPT ist für Arbeitskonten gebaut. So verbinden Sie Hotmail, Outlook.com, Live oder MSN: Anmeldung bei Microsoft plus eine MCP-URL.',
   coverAlt: 'ChatGPT über MCPEmails mit einem privaten Postfach bei Outlook.com oder Hotmail verbunden',
   content: `Um ChatGPT mit einer privaten Adresse bei Outlook.com, Hotmail, Live oder MSN zu verbinden, fügen Sie das Postfach mit **Mit Microsoft verbinden** zu MCPEmails hinzu und tragen dann eine URL als benutzerdefinierten MCP-Server in ChatGPT ein. Das eigene Outlook-Plugin von ChatGPT ist um Arbeits- und Schulkonten bei Microsoft herum gebaut, und wer es mit einer privaten Adresse versucht, berichtet von der Meldung, dass sich nur Geschäfts- oder Bildungskonten verbinden lassen. Ein benutzerdefinierter MCP-Server hat diese Grenze nicht.
 

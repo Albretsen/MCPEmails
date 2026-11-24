@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit JetBrains AI Assistant verbinden: MCP-Setup",
-    "description": "Fügen Sie AI Assistant in IntelliJ, PyCharm oder WebStorm ein echtes Postfach hinzu. Streamable HTTP plus ein API-Schlüssel mit Scopes im Authorization-Header. Ein Postfach kostenlos."
+    "description": "Fügen Sie AI Assistant in IntelliJ, PyCharm oder WebStorm ein echtes Postfach hinzu: Streamable HTTP plus ein API-Schlüssel mit Scopes im Authorization-Header."
   },
   "hero": {
     "eyebrow": "JetBrains + E-Mail",

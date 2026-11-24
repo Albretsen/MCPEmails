@@ -1,8 +1,8 @@
 const post = {
   slug: 'hosted-vs-self-hosted-gmail-mcp-server',
-  title: 'Hosted vs. Self-Hosted Gmail MCP Server: Pros, Cons, and Costs',
+  title: 'Hosted vs. Self-Hosted Gmail MCP Server',
   description:
-    'Hosted vs. self-hosted Gmail MCP server, compared: free DIY repos give you full control but you own OAuth, encryption, and uptime. A hosted server costs minutes.',
+    'Hosted vs. self-hosted Gmail MCP server: DIY repos give you full control, but you own OAuth, encryption and uptime. A hosted server takes minutes.',
   cover: '/blog/cover-hosted-vs-self-hosted-gmail-mcp-server.svg',
   coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison (MCPEmails)',
   authorId: 'asgeir',

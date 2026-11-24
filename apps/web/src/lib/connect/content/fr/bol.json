@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "BOL Mail vers Claude : IMAP sur imap.bol.com.br",
-    "description": "Connectez une boîte BOL à Claude ou tout client MCP sur imap.bol.com.br:993 avec votre mot de passe BOL. Le courrier sortant passe par smtps.bol.com.br sur le port 465, ce qui n'est pas le réglage de son jumeau UOL."
+    "description": "Connectez BOL à Claude ou tout client MCP sur imap.bol.com.br:993 avec votre mot de passe BOL. L'envoi passe par smtps.bol.com.br sur 465, pas comme UOL."
   },
   "hero": {
     "eyebrow": "BOL Mail + IA",

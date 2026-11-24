@@ -11,7 +11,7 @@
   },
   "meta": {
     "title": "Correo de Free.fr en Claude: ajustes IMAP que funcionan",
-    "description": "Conecta un buzón de Free.fr a Claude y a cualquier cliente MCP por IMAP en imap.free.fr:993 con la contraseña de tu cuenta de Free. Sin contraseña de aplicación."
+    "description": "Conecta Free.fr a Claude y a cualquier cliente MCP por IMAP en imap.free.fr:993 con la contraseña de tu cuenta de Free. Sin contraseña de aplicación."
   },
   "hero": {
     "eyebrow": "Free.fr Mail + IA",

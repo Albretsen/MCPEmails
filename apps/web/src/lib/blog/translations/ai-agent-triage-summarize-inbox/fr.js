@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Comment faire trier et résumer votre boîte de réception par votre agent IA',
+  title: 'Trier et résumer votre boîte avec un agent IA',
   description:
-    'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
+    'Guide pratique du tri de boîte par un agent IA : des prompts à copier pour lister les non-lus, résumer, prioriser et vérifier la boîte à intervalle régulier.',
   coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP, par MCPEmails',
   content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` (d’abord avec \`action: list\` et \`unread: true\` pour récupérer les nouveautés, puis avec \`action: read\` pour la poignée de messages qui semblent importants), et enfin une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
 

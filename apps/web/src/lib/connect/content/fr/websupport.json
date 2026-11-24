@@ -13,8 +13,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Serveur MCP Websupport : connectez le mail Websupport à Claude",
-    "description": "Serveur MCP pour le mail Websupport. Connectez les boîtes de votre domaine (info@, fakturacia@) à Claude, ChatGPT et Cursor en IMAP sur imap.m1.websupport.sk:993, après avoir autorisé le pays de connexion dans GEO ochrana."
+    "title": "Serveur MCP Websupport : connectez votre mail à Claude",
+    "description": "Serveur MCP pour le mail Websupport. Connectez votre domaine à Claude en IMAP sur imap.m1.websupport.sk:993, une fois le pays autorisé dans GEO ochrana."
   },
   "hero": {
     "eyebrow": "Mail Websupport + IA",

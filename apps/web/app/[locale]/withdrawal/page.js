@@ -8,6 +8,7 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 import { withdrawalCopy } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/contract-forms.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The statutory withdrawal notice and the model withdrawal form, for
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = withdrawalCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

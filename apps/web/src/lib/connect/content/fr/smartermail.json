@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "SmarterMail vers Claude : liaisons IMAP et blocages IDS",
-    "description": "Connectez une boîte SmarterMail à Claude, Cursor et ChatGPT via IMAP sur le 993. Où les liaisons fixent le chiffrement des ports, et comment l'IDS bloque un client."
+    "description": "Connectez SmarterMail à Claude, Cursor et ChatGPT en IMAP sur le 993. Où les liaisons fixent le chiffrement des ports, et comment l'IDS bloque un client."
   },
   "hero": {
     "eyebrow": "SmarterMail + IA",

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "@nifty Mail i Claude: IMAP etter tilkoblingstillatelsen",
-    "description": "Koble en @nifty-postkasse til Claude eller enhver MCP-klient på imap.nifty.com:993. Sett メールソフト接続許可（IMAP） til 許可中 og bruk det egne e-postpassordet, ikke passordet til @nifty ID."
+    "description": "Koble en @nifty-postkasse til Claude eller MCP-klienter på imap.nifty.com:993. Sett メールソフト接続許可（IMAP） til 許可中 og bruk det egne e-postpassordet."
   },
   "hero": {
     "eyebrow": "@nifty + AI",

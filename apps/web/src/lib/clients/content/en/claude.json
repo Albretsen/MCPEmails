@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Connect Email to Claude: Gmail, Outlook, IMAP MCP Setup",
-    "description": "Add a real inbox to claude.ai and Claude Desktop as a custom connector. Paste one URL, authorize with OAuth, and Claude can read, search, send and schedule mail. One inbox free."
+    "description": "Add a real inbox to claude.ai and Claude Desktop as a custom connector. Paste one URL, authorize with OAuth, then read, search, send and schedule mail."
   },
   "hero": {
     "eyebrow": "Claude + email",

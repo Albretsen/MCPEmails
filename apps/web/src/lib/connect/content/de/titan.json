@@ -16,7 +16,7 @@
   },
   "meta": {
     "title": "Titan Email mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "Titan Email mit Claude, Cursor, ChatGPT und jedem MCP-Client verbinden, per IMAP über imap.titan.email:993. Zuerst Enable Titan on other apps einschalten. Ein Postfach dauerhaft kostenlos."
+    "description": "Titan Email per IMAP über imap.titan.email:993 mit Claude, Cursor, ChatGPT und jedem MCP-Client verbinden. Zuerst Enable Titan on other apps einschalten."
   },
   "hero": {
     "eyebrow": "Titan Email + KI",

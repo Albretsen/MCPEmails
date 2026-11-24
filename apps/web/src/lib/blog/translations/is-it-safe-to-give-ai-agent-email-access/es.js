@@ -1,5 +1,5 @@
 const translation = {
-  title: '¿Es seguro dar acceso a tu correo a un agente de IA? Lo que debes saber',
+  title: '¿Es seguro dar acceso a tu correo a un agente de IA?',
   description: '¿Es seguro dar acceso al correo a un agente de IA? Depende de la arquitectura. Estos son los riesgos reales y la checklist que lo hace seguro.',
   coverAlt: '¿Es seguro dar acceso al correo a un agente de IA? Riesgos y salvaguardas explicados (MCPEmails)',
   content: `Puede serlo, pero la seguridad vive en la arquitectura, no en el marketing. Dar a un agente de IA acceso al correo es seguro cuando el servicio obtiene tu correo en vivo en lugar de copiarlo, cifra tus credenciales como es debido, funciona con permisos mínimos y te deja cortar el acceso con un clic. Es arriesgado cuando falta cualquiera de esas cuatro cosas. El truco está en saber qué preguntas hacer antes de conectar una bandeja de entrada.

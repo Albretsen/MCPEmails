@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Dokumentation zum MCP-E-Mail-Server: Gmail, Outlook, IMAP & OAuth",
-    "description": "Richten Sie MCPEmails mit Gmail, Outlook oder IMAP ein, verbinden Sie Claude und andere MCP-Clients per OAuth oder API-Schlüssel, und nutzen Sie die vollständige Referenz der E-Mail-Tools."
+    "title": "MCP-E-Mail-Server Doku: Gmail, Outlook, IMAP & OAuth",
+    "description": "MCPEmails mit Gmail, Outlook oder IMAP einrichten, Claude und andere MCP-Clients per OAuth oder API-Schlüssel verbinden, plus die Referenz der E-Mail-Tools."
   },
   "hero": {
     "eyebrow": "Dokumentation",
@@ -527,8 +527,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Kompatibilität von E-Mail-Anbietern für KI-Agenten (Gmail, Outlook, iCloud, Yahoo, Zoho)",
-      "description": "Welche E-Mail-Anbieter mit einem KI-Agenten über MCP funktionieren und was zum Verbinden nötig ist: OAuth oder App-Passwort, IMAP- und SMTP-Hosts und -Ports, TLS oder STARTTLS, typische Fehlerquellen und was der Agent nach der Verbindung tun kann. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 und generisches IMAP."
+      "title": "E-Mail-Anbieter für KI-Agenten: Gmail, Outlook, iCloud",
+      "description": "Welche E-Mail-Anbieter über MCP mit KI-Agenten funktionieren und was Sie brauchen: OAuth oder App-Passwort, IMAP- und SMTP-Hosts, Ports, TLS, typische Fehler."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Conecta Gazeta.pl Poczta a Claude y a cualquier cliente MCP",
-    "description": "Conecta un buzón de Gazeta.pl a Claude, Cursor y cualquier cliente MCP por IMAP en imap.gazeta.pl:993 y SMTP en smtp.gazeta.pl:465 con tu contraseña de Gazeta.pl y login@gazeta.pl como nombre de usuario."
+    "description": "Conecta Gazeta.pl a Claude y cualquier cliente MCP por IMAP en imap.gazeta.pl:993 y SMTP en smtp.gazeta.pl:465, con login@gazeta.pl como usuario."
   },
   "hero": {
     "eyebrow": "Gazeta.pl Poczta + IA",

@@ -17,7 +17,7 @@
   },
   "meta": {
     "title": "Claude mit GMX verbinden: IMAP, App-Passwort, Fehler beheben",
-    "description": "Claude, ChatGPT oder Cursor mit GMX verbinden: POP3/IMAP bei GMX einschalten, imap.gmx.net:993, bei 2FA ein App-Passwort. Plus Hilfe, wenn GMX die Anmeldung ablehnt."
+    "description": "Claude, ChatGPT oder Cursor mit GMX verbinden: POP3/IMAP einschalten, imap.gmx.net:993, bei 2FA ein App-Passwort. Plus Hilfe bei abgelehnter Anmeldung."
   },
   "hero": {
     "eyebrow": "GMX + KI",

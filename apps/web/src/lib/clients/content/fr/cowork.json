@@ -10,7 +10,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Claude Cowork : connecteur personnalisé",
-    "description": "Donnez une vraie boîte à Claude Cowork. Ajoutez une URL sous Customize, Connectors, connectez-vous via OAuth, et Cowork lit, cherche, rédige et envoie. 1 boîte gratuite."
+    "description": "Donnez une vraie boîte à Claude Cowork : ajoutez une URL sous Customize, Connectors, connectez-vous via OAuth, et Cowork lit, rédige et envoie."
   },
   "hero": {
     "eyebrow": "Claude Cowork + e-mail",

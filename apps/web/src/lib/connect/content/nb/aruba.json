@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Aruba MCP-server: koble Aruba-e-post til Claude",
-    "description": "MCP-server for Aruba-e-post. Koble postkassene på Aruba-domenet ditt (info@, amministrazione@) til Claude og ChatGPT over IMAP på imaps.aruba.it:993 med postkassepassordet."
+    "description": "MCP-server for Aruba-e-post. Koble postkassene på Aruba-domenet ditt til Claude og ChatGPT over IMAP på imaps.aruba.it:993 med postkassepassordet."
   },
   "hero": {
     "eyebrow": "Aruba-e-post + AI",

@@ -10,6 +10,7 @@ import {
 import { stripTags } from '../../../../../components/marketing/RichText';
 import ConnectClientGuideView from '../../../../../components/marketing/ConnectClientGuideView';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * One guide per assistant under a provider page: /connect/<provider>/claude
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }) {
   const path = clientGuidePath(provider, client);
   const { title, description } = guide.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, path, clientGuideLocales(provider, client)),
     openGraph: {

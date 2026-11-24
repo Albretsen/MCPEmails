@@ -17,8 +17,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Google Workspace Email to Claude, ChatGPT & MCP Clients",
-    "description": "Connect Google Workspace mailboxes on your own domain to Claude, ChatGPT, Cursor and any MCP client. App password over IMAP, admin settings that decide it, and every company mailbox on one agent."
+    "title": "Connect Google Workspace Email to Claude & MCP Clients",
+    "description": "Connect Google Workspace mailboxes on your own domain to Claude, ChatGPT, Cursor and any MCP client with an app password over IMAP, plus the admin settings."
   },
   "hero": {
     "eyebrow": "Google Workspace + AI",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "mailcow mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "Eine mailcow-Mailbox mit Claude, Cursor und ChatGPT verbinden, per IMAP auf 993. Warum acme-mailcow nur MAILCOW_HOSTNAME zertifiziert und was SKIP_LETS_ENCRYPT kaputt macht."
+    "description": "Eine mailcow-Mailbox per IMAP auf 993 mit Claude und ChatGPT verbinden. Warum acme-mailcow nur MAILCOW_HOSTNAME zertifiziert und was SKIP_LETS_ENCRYPT bricht."
   },
   "hero": {
     "eyebrow": "mailcow + KI",

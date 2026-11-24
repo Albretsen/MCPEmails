@@ -10,8 +10,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Vodafone and Arcor Email in Claude: The Separate IMAP Password",
-    "description": "Connect a Vodafone, Arcor or Kabel Deutschland mailbox to Claude and any MCP client at imap.vodafonemail.de:993. Needs the separate E-Mail-/IMAP-Passwort, not your MeinVodafone password."
+    "title": "Vodafone and Arcor Email in Claude: Separate IMAP Password",
+    "description": "Connect a Vodafone, Arcor or Kabel Deutschland mailbox to Claude and any MCP client at imap.vodafonemail.de:993 with the separate E-Mail-/IMAP-Passwort."
   },
   "hero": {
     "eyebrow": "Vodafone + AI",

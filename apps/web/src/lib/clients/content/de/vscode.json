@@ -5,8 +5,8 @@
     "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
   ],
   "meta": {
-    "title": "E-Mail mit VS Code verbinden: MCP-Setup für den Copilot-Agentenmodus",
-    "description": "Fügen Sie dem Agentenmodus von GitHub Copilot in VS Code ein echtes Postfach hinzu. MCP: Add Server ausführen, HTTP wählen, per OAuth autorisieren. Kein API-Schlüssel. Ein Postfach kostenlos."
+    "title": "E-Mail mit VS Code verbinden: MCP für Copilot-Agenten",
+    "description": "Fügen Sie dem Agentenmodus von GitHub Copilot in VS Code ein Postfach hinzu: MCP: Add Server ausführen, HTTP wählen, per OAuth autorisieren. Kein API-Schlüssel."
   },
   "hero": {
     "eyebrow": "VS Code + E-Mail",

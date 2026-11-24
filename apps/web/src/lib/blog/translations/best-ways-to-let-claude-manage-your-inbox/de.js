@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Die besten Wege, Claude Ihr Postfach verwalten zu lassen (2026)',
+  title: 'Claude Ihr Postfach verwalten lassen: die besten Wege',
   description:
-    'Ein nüchterner Vergleich der Wege, Claude 2026 Ihr Postfach verwalten zu lassen: native Integrationen, selbst betriebene MCP-Server, Kopieren und Einfügen, Browser-Erweiterungen und gehostetes MCP.',
+    'Ein nüchterner Vergleich der Wege, Claude Ihr Postfach verwalten zu lassen: native Integrationen, eigene MCP-Server, Browser-Erweiterungen und gehostetes MCP.',
   coverAlt: 'Die besten Wege, Claude 2026 Ihr Postfach verwalten zu lassen, mit MCPEmails',
   content: `Wenn Claude Ihre E-Mails wirklich lesen, sortieren und beantworten soll, haben Sie 2026 fünf echte Optionen: einen gehosteten MCP-E-Mail-Server, einen MCP-Server, den Sie selbst betreiben, das Kopieren von Verläufen in den Chat, eine Browser-Erweiterung oder eine native Integration im E-Mail-Programm. Für die meisten ist ein gehosteter MCP-Server die richtige Wahl, weil er in Sekunden läuft und Ihre E-Mails nie speichert. Die anderen haben jeweils ihre Nische, und ein paar sind schlechter, als sie aussehen.
 

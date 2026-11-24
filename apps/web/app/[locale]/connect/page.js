@@ -9,6 +9,7 @@ import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { MIcon } from '../../../components/MarketingPrimitives';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The hub for the provider landing pages.
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }) {
   const title = t('meta.title', { count });
   const description = t('meta.description', { count });
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/connect'),
     openGraph: {

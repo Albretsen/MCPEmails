@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Claude: MCP para Gmail, Outlook e IMAP",
-    "description": "Añade una bandeja real a claude.ai y Claude Desktop como conector personalizado. Pega una URL, autoriza con OAuth y Claude lee, busca, envía y programa correo. Una bandeja gratis."
+    "description": "Añade una bandeja real a claude.ai y Claude Desktop como conector personalizado. Pega una URL, autoriza con OAuth y Claude lee, busca y envía correo."
   },
   "hero": {
     "eyebrow": "Claude + correo",

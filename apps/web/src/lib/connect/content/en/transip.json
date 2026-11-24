@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "TransIP MCP Server: Connect TransIP Mail to Claude",
-    "description": "MCP server for TransIP email hosting. Connect the mailboxes on your domain (info@, facturen@) to Claude, ChatGPT and Cursor over IMAP at imap.transip.email:993 with the mailbox password."
+    "description": "MCP server for TransIP email hosting. Connect info@ and facturen@ on your domain to Claude, ChatGPT and Cursor over IMAP at imap.transip.email:993."
   },
   "hero": {
     "eyebrow": "TransIP email + AI",

@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik når du Inbox Zero med AI (med Claude og din ekte innboks)',
+  title: 'Slik når du Inbox Zero med AI og Claude',
   description:
-    'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast på tvers av din ekte Gmail-, Outlook- eller IMAP-innboks over MCP. En rutine du kan gjenta, de eksakte promptene, og hvorfor ingenting lagres.',
+    'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast i din ekte Gmail-, Outlook- eller IMAP-innboks, med prompter du kan gjenta.',
   coverAlt: 'Nå inbox zero med AI: Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
   content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang: sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
 

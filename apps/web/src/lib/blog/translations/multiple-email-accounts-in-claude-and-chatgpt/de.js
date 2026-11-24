@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Mehrere E-Mail-Konten in Claude und ChatGPT: alle Postfächer, ein Konnektor',
+  title: 'Mehrere E-Mail-Konten in Claude und ChatGPT nutzen',
   description:
-    'So nutzen Sie mehrere E-Mail-Konten gleichzeitig in Claude und ChatGPT, auch Firmenpostfächer bei IONOS, Zoho, Namecheap, Google Workspace oder auf Ihrem eigenen Server, mit einem MCP-Konnektor, der in beiden funktioniert.',
+    'Mehrere E-Mail-Konten gleichzeitig in Claude und ChatGPT nutzen, auch Firmenpostfächer bei IONOS, Zoho oder Google Workspace, mit einem MCP-Konnektor für beide.',
   coverAlt:
     'Mehrere berufliche und private E-Mail-Konten über einen MCP-Konnektor mit Claude und ChatGPT verbunden',
   content: `Sie möchten eine Frage stellen und die Antwort aus allen Postfächern bekommen, die Sie betreuen: Ihre eigene Adresse, info@, vertrieb@, das Rechnungspostfach, vielleicht ein privates Gmail. Diese Anleitung zeigt, wie Sie mehrere E-Mail-Konten gleichzeitig in Claude und ChatGPT nutzen, was die integrierten Konnektoren bereits abdecken und wo Sie stattdessen einen MCP-Server brauchen.

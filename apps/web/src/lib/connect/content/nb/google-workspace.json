@@ -17,8 +17,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Google Workspace-e-post til Claude, ChatGPT og MCP-klienter",
-    "description": "Koble Google Workspace-postkasser på ditt eget domene til Claude, ChatGPT, Cursor og enhver MCP-klient. App-passord over IMAP, administratorinnstillingene som avgjør det, og alle firmapostkassene på én agent."
+    "title": "Koble Google Workspace-e-post til Claude og ChatGPT",
+    "description": "Koble Google Workspace-postkasser på eget domene til Claude, ChatGPT og Cursor. App-passord over IMAP, og administratorinnstillingene som avgjør det."
   },
   "hero": {
     "eyebrow": "Google Workspace + AI",

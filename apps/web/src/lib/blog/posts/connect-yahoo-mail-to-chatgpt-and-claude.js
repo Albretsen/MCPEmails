@@ -13,7 +13,7 @@ const post = {
   slug: 'connect-yahoo-mail-to-chatgpt-and-claude',
   title: 'How to Connect Yahoo Mail to ChatGPT and Claude',
   description:
-    'ChatGPT and Claude have no Yahoo Mail connector. Connect Yahoo Mail to both with a Yahoo app password and one MCP URL, so the AI can read, search, send and organize your mail.',
+    'ChatGPT and Claude have no Yahoo Mail connector. Connect Yahoo Mail to both with a Yahoo app password and one MCP URL to read, search and send mail.',
   cover: '/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg',
   coverAlt: 'Yahoo Mail connected to ChatGPT and Claude through MCPEmails',
   authorId: 'asgeir',

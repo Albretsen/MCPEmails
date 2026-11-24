@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Hetzner MCP-Server: Hetzner E-Mail mit Claude verbinden",
-    "description": "MCP-Server für E-Mail bei Hetzner Webhosting. Mehrere Firmenpostfächer (info@, vertrieb@) per IMAP über mail.your-server.de:993 mit Claude und ChatGPT verbinden."
+    "description": "MCP-Server für E-Mail bei Hetzner Webhosting. Firmenpostfächer (info@, vertrieb@) per IMAP über mail.your-server.de:993 mit Claude und ChatGPT verbinden."
   },
   "hero": {
     "eyebrow": "Hetzner E-Mail + KI",

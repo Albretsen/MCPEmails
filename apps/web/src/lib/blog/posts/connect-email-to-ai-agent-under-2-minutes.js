@@ -1,11 +1,11 @@
 const post = {
   slug: 'connect-email-to-ai-agent-under-2-minutes',
   title: {
-    en: 'How to Connect Your Email to an AI Agent in Under 2 Minutes (Gmail, Outlook, iCloud, Fastmail & IMAP)',
-    es: 'Cómo conectar un agente de IA a tu bandeja de entrada de correo real',
+    en: 'Connect Your Email to an AI Agent in 2 Minutes',
+    es: 'Cómo conectar un agente de IA a tu bandeja de entrada real',
   },
   description: {
-    en: 'Connect your email to an AI agent in under 2 minutes. Step-by-step setup for Gmail, Outlook, iCloud, Fastmail, and any IMAP inbox over MCP: no email ever stored.',
+    en: 'Connect your email to an AI agent in under 2 minutes: step-by-step setup for Gmail, Outlook, iCloud, Fastmail and any IMAP inbox over MCP. Nothing stored.',
     es: 'Conecta un agente de IA a tu bandeja de entrada real en menos de 2 minutos: Gmail, Outlook, iCloud, Fastmail e IMAP, sin almacenar nunca tu correo.',
   },
   cover: '/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg',

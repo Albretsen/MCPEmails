@@ -35,7 +35,7 @@ const COPY = {
     meta: {
       title: 'Endringslogg',
       description:
-        'Alt som er lansert i MCPEmails, nyeste først: nye funksjoner, rettelser hos e-postleverandører og endringer i pris og fakturering, med datoen hver enkelt gikk live.',
+        'Alt som er lansert i MCPEmails, nyeste først: nye funksjoner, rettelser hos e-postleverandører og endringer i pris, med datoen hver enkelt gikk live.',
     },
     eyebrow: 'Endringslogg',
     title: 'Dette er lansert',
@@ -47,7 +47,7 @@ const COPY = {
     meta: {
       title: 'Novedades',
       description:
-        'Todo lo que se ha publicado en MCPEmails, lo más reciente primero: nuevas funciones, correcciones por proveedor y cambios de precio y facturación, con la fecha en que se activó cada uno.',
+        'Todo lo publicado en MCPEmails, lo más reciente primero: nuevas funciones, correcciones por proveedor y cambios de facturación, con la fecha de cada uno.',
     },
     eyebrow: 'Novedades',
     title: 'Lo que hemos publicado',
@@ -59,7 +59,7 @@ const COPY = {
     meta: {
       title: 'Journal des versions',
       description:
-        'Tout ce qui a été livré dans MCPEmails, du plus récent au plus ancien : nouvelles fonctions, correctifs par fournisseur et changements de tarif et de facturation, avec la date de mise en ligne.',
+        'Tout ce qui a été livré dans MCPEmails, du plus récent au plus ancien : nouvelles fonctions, correctifs par fournisseur et autres changements, datés.',
     },
     eyebrow: 'Journal des versions',
     title: 'Ce qui a été livré',
@@ -83,7 +83,7 @@ const COPY = {
     meta: {
       title: 'Changelog',
       description:
-        'Alles, was in MCPEmails veröffentlicht wurde, das Neueste zuerst: neue Funktionen, Korrekturen für einzelne Anbieter sowie Änderungen an Preisen und Abrechnung, jeweils mit dem Datum, an dem sie live gingen.',
+        'Alles, was in MCPEmails veröffentlicht wurde, das Neueste zuerst: neue Funktionen, Korrekturen für Anbieter und Änderungen, jeweils mit dem Datum des Starts.',
     },
     eyebrow: 'Changelog',
     title: 'Was neu ist',
@@ -95,7 +95,7 @@ const COPY = {
     meta: {
       title: 'Novidades',
       description:
-        'Tudo o que já foi lançado no MCPEmails, do mais recente ao mais antigo: novos recursos, correções por provedor e mudanças de preço e cobrança, com a data em que cada uma entrou no ar.',
+        'Tudo o que já foi lançado no MCPEmails, do mais recente ao mais antigo: novos recursos, correções por provedor e mudanças de cobrança, com a data de cada uma.',
     },
     eyebrow: 'Novidades',
     title: 'O que já foi lançado',

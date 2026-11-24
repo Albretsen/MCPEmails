@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP',
-  description: 'Crea un autorrespondedor de correo con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad usando scopes, límites y guardarraíles.',
+  title: 'Cómo crear un autorrespondedor de correo con un agente MCP',
+  description: 'Crea un autorrespondedor con un agente de IA conectado por MCP: sondea el correo sin leer, redacta y responde con seguridad con scopes, límites y guardarraíles.',
   coverAlt: 'Cómo crear un autorrespondedor de correo con un agente conectado por MCP (MCPEmails)',
   content: `Un autorrespondedor de correo construido sobre MCPEmails es un bucle. Tu agente **sondea** el correo sin leer según una programación con \`email_read\` (acción \`list\`), o se despierta con un webhook de correo nuevo en Pro y Business, lee cada mensaje con \`email_read\` (acción \`read\`), redacta una respuesta y llama a \`email_compose\` (acción \`reply\`). Este artículo recorre la construcción completa: el bucle de sondeo, los permisos (scopes) que necesitas, cómo sobrevivir a los límites de tasa y las salvaguardas que evitan que un agente bombardee a tus contactos con respuestas alucinadas.
 

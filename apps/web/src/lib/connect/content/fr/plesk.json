@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Messagerie Plesk vers Claude : paramètres IMAP et MCP",
-    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com : sans SNI en IMAP, ce sous-domaine a le mauvais certificat."
+    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com : sans SNI en IMAP, son certificat est le mauvais."
   },
   "hero": {
     "eyebrow": "Plesk + IA",

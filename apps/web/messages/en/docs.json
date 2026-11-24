@@ -527,8 +527,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)",
-      "description": "Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP."
+      "title": "Email Provider Compatibility for AI Agents: Gmail, Outlook",
+      "description": "Which email providers work with an AI agent over MCP: OAuth or app password, IMAP and SMTP hosts and ports, TLS, and fixes for Gmail, Outlook, iCloud and more."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

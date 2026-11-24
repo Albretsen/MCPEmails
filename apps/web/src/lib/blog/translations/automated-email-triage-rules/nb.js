@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Automatiske triageregler for e-post som kjører uten en modell i løkka',
+  title: 'Automatiske triageregler for e-post uten en modell i løkka',
   description:
-    'Slik fungerer automasjoner i MCPEmails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
+    'Automasjoner i MCPEmails: et lagret søk pluss én fast handling på et intervall, uten at en modell tolker e-posten. Forhåndsvis, aktiver, les loggen.',
   coverAlt:
     'Uovervåkede triageregler for e-post i MCPEmails: et lagret søk pluss én fast handling på et fast intervall',
   content: `Hver morgen ber du agenten rydde bort støyen: arkiver byggevarslene, marker kvitteringene som lest, videresend fakturaene til regnskapsføreren. Det virker. Det koster også et modellkall hver gang, og tirsdag gjør det noe litt annet enn det gjorde mandag.

@@ -6,8 +6,8 @@
     "apps/web/messages/en/docs.json"
   ],
   "meta": {
-    "title": "API do servidor MCP de e-mail: curl, JSON-RPC e autenticação Bearer",
-    "description": "Chame o servidor MCP do MCPEmails direto por HTTP. Um endpoint Streamable HTTP, JSON-RPC 2.0, uma chave bearer com escopo e o catálogo completo de ferramentas. Uma caixa de entrada grátis."
+    "title": "API do servidor MCP de e-mail: curl, JSON-RPC e Bearer",
+    "description": "Chame o servidor MCP do MCPEmails direto por HTTP: endpoint Streamable HTTP, JSON-RPC 2.0, chave bearer com escopo e catálogo de ferramentas. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "HTTP + e-mail",

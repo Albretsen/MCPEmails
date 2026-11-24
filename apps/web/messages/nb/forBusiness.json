@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI-e-post for bedrifter: alle firmaets postkasser i én agent",
-    "description": "Én person, alle firmaets postkasser. Koble til post@, salg@ og faktura@ over IMAP, Gmail, Microsoft 365 eller hvilken som helst e-postvert, og jobb i alle fra Claude eller en annen MCP-klient."
+    "description": "Én person, alle firmaets postkasser. Koble til post@, salg@ og faktura@ over IMAP, Gmail eller Microsoft 365, og jobb i alle fra Claude eller en MCP-klient."
   },
   "hero": {
     "eyebrow": "For den som tar seg av firmaets e-post",

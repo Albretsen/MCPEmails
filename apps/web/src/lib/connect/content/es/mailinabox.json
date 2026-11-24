@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta Mail-in-a-Box a Claude y clientes MCP",
-    "description": "Conecta un buzón de Mail-in-a-Box a Claude, Cursor y ChatGPT por IMAP en box.yourdomain.com:993. El envío va por el 465, y fail2ban explica los bloqueos tras fallos repetidos."
+    "description": "Conecta Mail-in-a-Box a Claude, Cursor y ChatGPT por IMAP en box.yourdomain.com:993. El envío va por el 465, y fail2ban bloquea tras fallos repetidos."
   },
   "hero": {
     "eyebrow": "Mail-in-a-Box + IA",

@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Koble e-post til Warp: oppsett av MCP-server for agenter",
-    "description": "Gi Warp-agenter en ekte innboks. Settings, Agents, MCP servers: legg til en Streamable HTTP-server via URL og fullfør OAuth. Ingen API-nøkkel. Én innboks gratis."
+    "description": "Gi Warp-agenter en ekte innboks. Under Settings, Agents, MCP servers legger du til en Streamable HTTP-server via URL og fullfører OAuth. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Warp + e-post",

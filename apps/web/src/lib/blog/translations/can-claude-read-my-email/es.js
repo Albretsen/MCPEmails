@@ -1,7 +1,7 @@
 const translation = {
-  title: '¿Puede Claude leer tu correo y enviar emails? Buzón por buzón',
+  title: '¿Puede Claude leer y enviar tu correo? Buzón por buzón',
   description:
-    'Sí, en Gmail y en cuentas de trabajo de Microsoft 365, con los conectores propios de Claude. Yahoo, iCloud, Outlook.com, los buzones IMAP y varios proveedores a la vez necesitan un servidor MCP.',
+    'Sí, en Gmail y en cuentas de trabajo de Microsoft 365 con los conectores de Claude. Yahoo, iCloud, Outlook.com, IMAP y varios proveedores necesitan MCP.',
   coverAlt:
     'Claude leyendo y enviando correo desde buzones de Gmail, Microsoft 365, Yahoo, iCloud e IMAP',
   content: `**Sí, Claude puede leer tu correo y enviar emails, pero solo desde un buzón que le hayas conectado.** Claude tiene dos conectores de correo propios, uno para Gmail y otro para cuentas de trabajo de Microsoft 365. El de Gmail lee, busca y envía, y por defecto te pide aprobación antes de cada envío. El de Microsoft 365 lee y busca, y solo puede enviar después de que un administrador active sus herramientas de escritura. Yahoo, iCloud, una dirección personal de Outlook.com, un buzón de empresa en un servidor IMAP o varios proveedores detrás de una sola conexión necesitan un servidor MCP como MCPEmails.

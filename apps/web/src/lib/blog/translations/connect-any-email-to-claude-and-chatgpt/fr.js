@@ -1,7 +1,7 @@
 const translation = {
-  title: "Comment connecter n'importe quel compte e-mail à Claude ou ChatGPT (Yahoo, IMAP, domaine personnalisé, plusieurs boîtes)",
+  title: "Connecter n'importe quel e-mail à Claude ou ChatGPT",
   description:
-    "Toutes les façons de donner une vraie boîte mail à Claude ou ChatGPT en novembre 2026 : ce que couvrent les connecteurs intégrés Gmail, Outlook et iCloud, où ils s'arrêtent, et comment connecter Yahoo, un domaine personnalisé, GMX ou plusieurs boîtes avec un serveur MCP, une application de bureau ou un outil d'automatisation.",
+    "Donner une vraie boîte mail à Claude ou ChatGPT : les limites des connecteurs intégrés, et comment connecter Yahoo, GMX, un domaine perso ou plusieurs boîtes.",
   coverAlt: 'Yahoo, IMAP, domaine personnalisé et plusieurs autres boîtes connectées à Claude et ChatGPT',
   content: `Claude et ChatGPT ont tous deux des connecteurs e-mail intégrés, et tous deux s'arrêtent aux grands fournisseurs. Si votre messagerie est chez Yahoo, AOL, GMX, sur un domaine d'entreprise hébergé chez IONOS, OVH ou un hébergeur cPanel, ou répartie sur plusieurs comptes, il vous faut autre chose. Ce guide recense toutes les options en novembre 2026 : les connecteurs intégrés et l'endroit exact où ils s'arrêtent, les services MCP hébergés qui comblent le vide (MCPEmails en fait partie, et nous nommons les autres), les voies locales et auto-hébergées, et les plateformes d'automatisation. Chaque affirmation sur un autre produit a été lue sur sa propre page le 11 novembre 2026 ; les sources sont à la fin.
 

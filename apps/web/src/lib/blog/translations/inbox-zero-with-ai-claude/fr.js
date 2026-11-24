@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Comment atteindre l\'inbox zero avec l\'IA (avec Claude et votre vraie boîte mail)',
+  title: 'Atteindre l\'inbox zero avec l\'IA et Claude',
   description:
-    'Atteignez l\'inbox zero avec l\'IA : laissez Claude trier, archiver, étiqueter et rédiger des réponses dans votre vraie boîte Gmail, Outlook ou IMAP via MCP. Une routine reproductible, les prompts exacts et pourquoi rien n\'est stocké.',
+    'Atteignez l\'inbox zero avec l\'IA : Claude trie, archive, étiquette et rédige des réponses dans votre boîte Gmail, Outlook ou IMAP via MCP. Rien n\'est stocké.',
   coverAlt: 'Atteignez l\'inbox zero avec l\'IA : Claude trie, archive et rédige des réponses dans votre vraie boîte mail via MCP',
   content: `L'inbox zero a toujours eu le même problème : y parvenir vous coûte une heure que vous n'avez pas, et demain vous voilà revenu à cinquante non lus. Un agent IA change le calcul. Au lieu de trier vous-même les messages un par un, vous dites à Claude ce que signifie « traité » et il s'occupe de toute la boîte d'un coup, en triant, archivant, étiquetant et rédigeant des réponses sur votre *vrai* courrier, en direct.
 

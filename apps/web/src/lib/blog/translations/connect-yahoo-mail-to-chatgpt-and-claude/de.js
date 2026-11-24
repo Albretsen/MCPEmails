@@ -1,7 +1,7 @@
 const translation = {
   title: 'Yahoo Mail mit ChatGPT und Claude verbinden',
   description:
-    'ChatGPT und Claude haben keinen Yahoo-Mail-Konnektor. So verbinden Sie Yahoo Mail mit beiden: ein Yahoo-App-Passwort und eine MCP-URL, danach kann die KI Ihre E-Mails lesen, durchsuchen, senden und ordnen.',
+    'ChatGPT und Claude haben keinen Yahoo-Mail-Konnektor. So verbinden Sie Yahoo Mail mit beiden: App-Passwort und MCP-URL, dann lesen, suchen und senden.',
   coverAlt: 'Yahoo Mail über MCPEmails mit ChatGPT und Claude verbunden',
   content: `ChatGPT kann Yahoo Mail nicht von sich aus lesen, und Claude auch nicht. Die E-Mail-Plugins von ChatGPT decken Gmail, Outlook und iCloud Mail ab, die Konnektoren von Claude Gmail und geschäftliche Microsoft 365-Konten. Um Yahoo Mail mit einem der beiden zu verbinden, stellen Sie einen MCP-Server vor das Postfach. Mit MCPEmails brauchen Sie dafür ein Yahoo-App-Passwort und eine URL, und dasselbe Yahoo-Postfach funktioniert danach in ChatGPT, Claude und anderen KI-Apps.
 

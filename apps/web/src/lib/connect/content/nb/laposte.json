@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "La Poste.net: IMAP-innstillinger og MCP-tilgang for Claude",
-    "description": "Koble en laposte.net-postkasse til Claude, Cursor og enhver MCP-klient på imap.laposte.net:993. Kun krypterte porter siden 2023, og 15 MB grense på utgående e-post."
+    "description": "Koble en laposte.net-postkasse til Claude, Cursor og MCP-klienter på imap.laposte.net:993. Kun krypterte porter siden 2023, og 15 MB grense på utgående e-post."
   },
   "hero": {
     "eyebrow": "laposte.net + AI",

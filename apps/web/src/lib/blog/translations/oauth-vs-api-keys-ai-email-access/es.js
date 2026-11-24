@@ -1,6 +1,6 @@
 const translation = {
-  title: 'OAuth o claves de API para el acceso de la IA al email: ¿cuál usar?',
-  description: 'OAuth o claves de API para el acceso de la IA al email: usa OAuth en claude.ai, Claude Desktop y Cursor; usa una clave de API con alcance en Cline, JetBrains y scripts.',
+  title: 'OAuth o claves de API para que la IA acceda al email',
+  description: 'OAuth o claves de API para el acceso de la IA al email: OAuth en claude.ai, Claude Desktop y Cursor; una clave de API con alcance en Cline, JetBrains y scripts.',
   coverAlt: 'OAuth frente a claves de API para conectar agentes de IA al email (MCPEmails)',
   content: `Cuando conectas un agente de IA a tu correo a través de MCPEmails, te autenticas de una de dos formas: con OAuth o con una clave de API. Usa OAuth si tu cliente lo admite (claude.ai, Claude Desktop, Cursor), y una clave de API con alcance si no lo admite (Cline, JetBrains, scripts, cURL). Ambos llegan al mismo endpoint y exponen las mismas herramientas. La diferencia está en quién gestiona el secreto y con qué facilidad puedes cortar el acceso.
 

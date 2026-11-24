@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble CenturyLink-e-post til Claude over IMAP",
-    "description": "Koble CenturyLink-e-post til Claude og enhver MCP-klient over IMAP på mail.centurylink.net:993, SMTP på 587. Postkasser som ikke brukes på et år, deaktiveres og tømmes."
+    "description": "Koble CenturyLink-e-post til Claude og enhver MCP-klient over IMAP på mail.centurylink.net:993. Postkasser som ikke brukes på et år, deaktiveres og tømmes."
   },
   "hero": {
     "eyebrow": "CenturyLink + AI",

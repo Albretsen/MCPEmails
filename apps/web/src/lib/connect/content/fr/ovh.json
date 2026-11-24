@@ -3,7 +3,8 @@
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
-    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted",
+    "https://www.ovhcloud.com/en/public-cloud/mcp-server/"
   ],
   "auth": {
     "method": "mail-password",
@@ -87,6 +88,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "OVHcloud a déjà un serveur MCP. Pourquoi utiliser MCPEmails ?",
+      "p": "Le serveur MCP d'OVHcloud gère votre compte et vos services OVHcloud, comme les instances, le stockage, le réseau et les bases de données. Il ne lit pas et n'envoie pas le courrier de vos boîtes. Pour cela, il faut un serveur MCP de messagerie : MCPEmails se connecte à chaque boîte OVH en IMAP et SMTP avec le mot de passe de la boîte et les place toutes, info@, sales@ et les autres, derrière <b>une seule</b> URL MCP pour Claude, ChatGPT et Cursor."
+    },
     {
       "h": "OVH propose trois produits de messagerie sur trois schémas de serveurs, et tomber sur le mauvais est la première cause d'échec",
       "p": "C'est le problème propre à OVH. <b>MX Plan</b>, la boîte fournie avec les domaines et l'hébergement web, est documenté sur <code>ssl0.ovh.net</code> (OVH mentionne aussi <code>imap.mail.ovh.net</code> et <code>smtp.mail.ovh.net</code>), IMAP sur 993 en SSL/TLS et SMTP sur 465 en SSL/TLS. <b>Email Pro</b> répond sur <code>pro</code> suivi du numéro de votre serveur puis de <code>.mail.ovh.net</code>, IMAP 993 en SSL et SMTP sur <b>587 en STARTTLS</b>. <b>Hosted Exchange</b> répond sur <code>ex</code> suivi du numéro de votre serveur puis de <code>.mail.ovh.net</code>, là encore IMAP 993 et SMTP 587 en STARTTLS. Les trois ne sont interchangeables dans aucun sens. Pointer une boîte Exchange ou Email Pro vers <code>ssl0.ovh.net</code> échoue, et MX Plan sur le port 587 en STARTTLS n'est pas la configuration documentée par OVH."

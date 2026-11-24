@@ -8,6 +8,7 @@ import { Inline, CodeBlock } from '../../../components/marketing/DevCopy';
 import { CODE } from '../docs/api/content.mjs';
 import { developersCopy } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The developer landing page: what MCPEmails is to someone wiring scripts,
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = developersCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

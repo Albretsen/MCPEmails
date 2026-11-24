@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "ScalaHosting-e-post til Claude: IMAP i SPanel og cPanel",
-    "description": "ScalaHosting kjører SPanel på noen abonnement og cPanel på andre. Finn innstillingene under Connect device, og gi Claude postkassen via IMAP 993. Én innboks gratis."
+    "description": "ScalaHosting kjører SPanel på noen abonnement og cPanel på andre. Finn innstillingene under Connect device, og gi Claude postkassen via IMAP 993."
   },
   "hero": {
     "eyebrow": "ScalaHosting + AI",

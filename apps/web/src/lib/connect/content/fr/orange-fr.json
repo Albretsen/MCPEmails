@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Paramètres IMAP Mail Orange et accès MCP pour Claude",
-    "description": "Connectez une boîte Orange.fr à Claude et à tout client MCP via imap.orange.fr:993. L'accès POP/IMAP doit d'abord être activé, avec le mot de passe dédié Orange."
+    "description": "Connectez Orange.fr à Claude et tout client MCP via imap.orange.fr:993. Activez d'abord l'accès POP/IMAP, puis utilisez le mot de passe dédié Orange."
   },
   "hero": {
     "eyebrow": "Orange + IA",

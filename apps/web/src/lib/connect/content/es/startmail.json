@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "StartMail en Claude: la contraseña de dispositivo",
-    "description": "Conecta StartMail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.startmail.com:993. Tu contraseña de cuenta nunca sirve: usa una de dispositivo de confianza."
+    "description": "Conecta StartMail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.startmail.com:993. Usa una contraseña de dispositivo de confianza, no la tuya."
   },
   "hero": {
     "eyebrow": "StartMail + IA",
