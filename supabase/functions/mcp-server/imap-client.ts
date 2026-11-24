@@ -1236,7 +1236,18 @@ export class ImapClient {
     const token = btoa(`\x00${username}\x00${password}`);
     const tag = this.nextTag();
     await this.write(`${tag} AUTHENTICATE PLAIN ${token}${CRLF}`);
-    let resp = await this.readTagged(tag);
+    // A server without SASL-IR may ignore the inline token, answer "+" and
+    // wait for it on its own line. SurgeMail 8.2 does (probed 2026-11-24: no
+    // answer in 30s to the inline form, a tagged NO in 0.5s to the two-step
+    // one), and waiting only for the tagged line turned that into a timeout.
+    const first = await this.readLiteralContinuation(tag);
+    let resp: { status: "OK" | "NO" | "BAD"; text: string };
+    if (first === null) {
+      await this.write(`${token}${CRLF}`);
+      resp = await this.readTagged(tag);
+    } else {
+      resp = first;
+    }
 
     // A tagged BAD rejects the command rather than the credentials: the server
     // does not implement RFC 4959 (SASL-IR) and will not take the initial

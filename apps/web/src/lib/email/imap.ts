@@ -994,7 +994,16 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
         const payload = buildPlainAuthToken(username, password);
         await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
 
-        let authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+        // A server without SASL-IR may ignore the inline token, answer "+" and
+        // wait for it on its own line (SurgeMail 8.2, 2026-11-24). Send it.
+        const firstReply = await readContinuationOrTagged(reader, authTag);
+        let authResult: TaggedResponse;
+        if ('continuation' in firstReply) {
+          await socketWrite(socket, `${payload}\r\n`);
+          authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+        } else {
+          authResult = firstReply;
+        }
 
         // A tagged BAD rejects the command, not the credentials: the server does
         // not implement RFC 4959 (SASL-IR) and will not accept the initial

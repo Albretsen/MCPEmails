@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-24',
+    kind: 'fixed',
+    title: 'Mail servers that ask for your sign-in in two steps now connect',
+    body:
+      'Some mail servers, such as SurgeMail, ask for the username and password again after the sign-in starts. Connecting these mailboxes now works. Before, the connection timed out with a message that the server never answered.',
+  },
+  {
     date: '2026-11-23',
     kind: 'fixed',
     title: 'Approved emails keep your chosen sender address',

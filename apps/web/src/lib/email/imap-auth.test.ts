@@ -155,6 +155,23 @@ test('validator keeps the PLAIN two-step retry for servers without SASL-IR', asy
   ]);
 });
 
+test('validator answers a "+" after an inline PLAIN with the token (SurgeMail, no SASL-IR)', async () => {
+  // SurgeMail 8.2 lists no AUTH= and no SASL-IR, ignores the inline token,
+  // answers "+ " and waits. Before 2026-11-24 this was a 10s timeout.
+  const token = Buffer.from('\x00me@example.lv\x00pw', 'utf8').toString('base64');
+  const { result, received } = await transcript(null, 'me@example.lv', 'pw', (line) => {
+    if (line === 'C0001 CAPABILITY') {
+      return '* CAPABILITY IMAP4 IMAP4REV1 NAMESPACE QUOTA UIDPLUS IDLE SORT SPECIAL-USE SURGEMAIL UNAUTHENTICATE\r\nC0001 OK Capability completed\r\n';
+    }
+    if (line.startsWith('A0001 ')) return '+ \r\n';
+    if (line === token) return 'A0001 NO [ALERT] me@example.lv password wrong or not a valid user \r\n';
+    return undefined;
+  });
+  assert.equal(result.mechanism, 'PLAIN');
+  assert.equal(result.status, 'NO');
+  assert.deepEqual(received, ['C0001 CAPABILITY', `A0001 AUTHENTICATE PLAIN ${token}`, token]);
+});
+
 test('validator runs the RFC 2195 CRAM-MD5 transcript when LOGIN is disabled', async () => {
   const { result, received } = await transcript(null, 'tim', 'tanstaaftanstaaf', (line) => {
     if (line === 'C0001 CAPABILITY') return '* CAPABILITY IMAP4rev1 LOGINDISABLED AUTH=CRAM-MD5\r\nC0001 OK done\r\n';
