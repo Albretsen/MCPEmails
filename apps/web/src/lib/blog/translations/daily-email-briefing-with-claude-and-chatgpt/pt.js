@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Resumo diário de e-mails com Claude e ChatGPT: sua caixa de entrada resumida no horário certo',
+  title: 'Resumo diário de e-mails com Claude e ChatGPT',
   description:
-    'Três formas de receber um resumo diário da sua caixa de entrada: uma tarefa agendada no Claude, uma tarefa agendada no ChatGPT ou um resumo matinal que o MCPEmails coloca na sua caixa sem nenhum chat aberto. Configuração, prompts e limites.',
+    'Três formas de receber um resumo diário da caixa: tarefa agendada no Claude, tarefa agendada no ChatGPT ou um resumo matinal do MCPEmails, sem chat aberto.',
   coverAlt:
     'Um resumo diário de e-mails do Claude e do ChatGPT com as novas mensagens das caixas conectadas',
   content: `**Você pode receber um resumo diário dos seus e-mails no Claude ou no ChatGPT dando duas coisas ao assistente: acesso à sua caixa de correio e um horário.** Os dois assistentes já rodam tarefas agendadas. As do Claude executam um prompt a cada hora, diariamente, semanalmente ou em dias úteis, e as do ChatGPT rodam em um horário definido em todos os planos. Aponte a tarefa para a sua caixa por meio de um conector, e toda manhã o resumo estará esperando por você.

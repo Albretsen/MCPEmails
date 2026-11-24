@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "cyber_Folks MCP Server: Connect Your Mailboxes to Claude",
-    "description": "MCP server for mail hosted at cyber_Folks. Connect the mailboxes on your domain (biuro@, kontakt@) to Claude, ChatGPT and Cursor over IMAP on your sNN.cyber-folks.pl server, port 993, with the mailbox password."
+    "description": "MCP server for mail hosted at cyber_Folks. Connect biuro@ and kontakt@ to Claude, ChatGPT and Cursor over IMAP on your sNN.cyber-folks.pl server, port 993."
   },
   "hero": {
     "eyebrow": "cyber_Folks email + AI",

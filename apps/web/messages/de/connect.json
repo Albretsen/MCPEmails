@@ -81,7 +81,7 @@
   "hub": {
     "meta": {
       "title": "Jeden E-Mail-Anbieter mit Claude & MCP-Clients verbinden",
-      "description": "IMAP- und SMTP-Einstellungen für {count} E-Mail-Anbieter, jeweils über eine Live-Verbindung geprüft, und wie Sie Claude, Cursor oder ChatGPT Zugriff auf dieses Postfach geben."
+      "description": "IMAP- und SMTP-Einstellungen für {count} E-Mail-Anbieter, live geprüft, und wie Sie Claude, Cursor oder ChatGPT Zugriff auf Ihr Postfach geben."
     },
     "breadcrumb": "E-Mail-Anbieter",
     "eyebrow": "Alle Anbieter",

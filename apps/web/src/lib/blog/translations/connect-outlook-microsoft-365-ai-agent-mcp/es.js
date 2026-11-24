@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo conectar Outlook y Microsoft 365 a tu agente de IA con MCP',
+  title: 'Conecta Outlook y Microsoft 365 a tu agente de IA con MCP',
   description:
-    'Conecta Outlook.com o Microsoft 365 a tu agente de IA por MCP. Inicia sesión con Microsoft, sin contraseña de aplicación, con Microsoft Graph por debajo. Las cuentas de trabajo pueden necesitar una aprobación única del administrador de TI.',
+    'Conecta Outlook.com o Microsoft 365 a tu agente de IA por MCP con tu cuenta Microsoft y sin contraseña de app. Las de trabajo pueden pedir aprobación de TI.',
   coverAlt: 'Conexión de Outlook y Microsoft 365 a un agente de IA mediante MCP',
   content: `Para conectar un buzón de Outlook o Microsoft 365 a tu agente de IA, añades la bandeja en el panel de MCPEmails con **Iniciar sesión con Microsoft** y luego apuntas tu agente a un único endpoint MCP. No hay contraseña de aplicación, ni ajustes de IMAP o SMTP, ni portal de Azure, ni un servidor de Graph propio. Una cuenta personal de Outlook.com se conecta en un par de minutos. Una cuenta de trabajo o educativa de Microsoft 365 suele necesitar antes un paso extra: un administrador de TI aprueba la aplicación una sola vez para toda la organización.
 

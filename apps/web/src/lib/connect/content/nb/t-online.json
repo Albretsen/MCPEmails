@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "T-Online-e-post i Claude: det separate e-postpassordet",
-    "description": "Koble en T-Online-postkasse til Claude og MCP-klienter på secureimap.t-online.de:993. Krever det separate Passwort für E-Mail-Programme, ikke Telekom-innloggingen."
+    "description": "Koble en T-Online-postkasse til Claude og MCP-klienter på secureimap.t-online.de:993. Krever eget Passwort für E-Mail-Programme, ikke Telekom-innloggingen."
   },
   "hero": {
     "eyebrow": "T-Online + AI",

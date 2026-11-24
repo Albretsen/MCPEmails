@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Servidor MCP para Namecheap: Private Email no Claude",
-    "description": "Servidor MCP para e-mail da Namecheap. Conecte várias caixas de correio da empresa (contato@, vendas@) ao Claude e ao ChatGPT via IMAP em mail.privateemail.com:993."
+    "description": "Servidor MCP para e-mail da Namecheap. Conecte várias caixas da empresa (contato@, vendas@) ao Claude e ao ChatGPT via IMAP em mail.privateemail.com:993."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + IA",

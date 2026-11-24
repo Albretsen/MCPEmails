@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Héberger MCPEmails vous-même",
-    "description": "Exécutez le même serveur d'e-mails MCP qui propulse mcpemails.com sur votre propre machine. Open source sous AGPL-3.0, identifiants chiffrés avec une clé que vous seul détenez, e-mails récupérés en direct et jamais stockés."
+    "description": "Exécutez chez vous le serveur d'e-mails MCP de mcpemails.com. Open source sous AGPL-3.0, identifiants chiffrés avec votre propre clé, e-mails jamais stockés."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",

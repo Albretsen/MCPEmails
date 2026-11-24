@@ -1,7 +1,7 @@
 const translation = {
-  title: '¿Qué es un servidor de correo MCP? Una explicación en lenguaje claro',
+  title: '¿Qué es un servidor de correo MCP? Explicado en claro',
   description:
-    'Un servidor de correo MCP es una herramienta que permite a un agente de IA leer y enviar correo mediante verbos limpios en vez de IMAP y contraseñas. Esto es lo que significa.',
+    'Un servidor de correo MCP permite a un agente de IA leer y enviar correo con verbos sencillos en lugar de IMAP y contraseñas. Esto es lo que significa.',
   coverAlt: 'Qué es un servidor de correo MCP: una explicación en lenguaje claro de MCPEmails',
   content: `Un servidor de correo MCP es un pequeño servicio que da a un agente de IA como Claude o Cursor acceso en vivo para leer y enviar correo de una bandeja de entrada real, usando el Model Context Protocol. En lugar de entregar a tu agente una contraseña de correo y una biblioteca de IMAP, le entrega una lista corta de acciones: lista mis mensajes, lee este, busca aquello, envía una respuesta. El agente llama a esas acciones como a cualquier otra herramienta, y el servidor hace el trabajo engorroso del proveedor entre bastidores.
 

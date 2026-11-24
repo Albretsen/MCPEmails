@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Open-Source-E-Mail-MCP-Server selbst hosten",
-    "description": "Betreiben Sie den Open-Source-Server von MCPEmails für IMAP und SMTP auf Ihrer eigenen Infrastruktur. Behalten Sie Ihren Schlüssel, rufen Sie E-Mails live ab, und speichern Sie nie Postfachinhalte."
+    "description": "Betreiben Sie den Open-Source-Server von MCPEmails für IMAP und SMTP selbst. Eigener Schlüssel, Live-Abruf, keine gespeicherten Postfachinhalte."
   },
   "hero": {
     "eyebrow": "Open Source, AGPL-3.0",

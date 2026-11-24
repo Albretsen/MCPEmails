@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Correo de MDaemon a Claude: IMAP, MCP y Screening",
-    "description": "Conecta un buzón de MDaemon a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde están los campos de puerto y por qué Location Screening bloquea a un cliente alojado."
+    "description": "Conecta MDaemon a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde están los campos de puerto y por qué Location Screening bloquea a un cliente alojado."
   },
   "hero": {
     "eyebrow": "MDaemon + IA",

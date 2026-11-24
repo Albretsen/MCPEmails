@@ -1,7 +1,7 @@
 const translation = {
   title: 'Mehrere E-Mail-Konten mit einem KI-Agenten verwalten',
   description:
-    'Arbeits-, Privat- und Nebengeschäfts-Postfächer über einen KI-Agenten: wie er die Postfächer findet, wie Sie eine Anfrage eingrenzen, Absendernamen, die korrekt bleiben, und die Prüfung vor dem Senden pro Postfach.',
+    'Arbeits-, Privat- und Nebenpostfächer über einen KI-Agenten: wie Sie eine Anfrage eingrenzen, korrekte Absendernamen und die Prüfung vor dem Senden.',
   coverAlt:
     'Ein KI-Agent, der mit MCPEmails mit Arbeits-, Privat- und Nebengeschäfts-E-Mail-Konten verbunden ist',
   content: `Fast niemand hat nur ein Postfach. Sie haben eine Arbeitsadresse, eine private Adresse und mindestens eine weitere für ein Nebengeschäft oder eine Domain, die Sie noch besitzen. Jede Frage, die zwei Konten berührt, wird zur manuellen Suche an zwei Orten.

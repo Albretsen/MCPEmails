@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Hospede seu próprio servidor MCP de e-mail open source",
-    "description": "Rode o servidor open source do MCPEmails para IMAP e SMTP na sua própria infraestrutura. Fique com a sua chave de criptografia, busque e-mails em tempo real e nunca armazene o conteúdo da caixa de correio."
+    "description": "Rode o servidor open source do MCPEmails para IMAP e SMTP na sua infraestrutura. Fique com sua chave de criptografia e nunca armazene o conteúdo da caixa."
   },
   "hero": {
     "eyebrow": "Open source, AGPL-3.0",

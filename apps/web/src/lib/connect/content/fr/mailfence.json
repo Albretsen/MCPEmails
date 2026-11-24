@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Mailfence et Claude : l'IMAP est réservé aux offres payantes",
-    "description": "L'IMAP Mailfence sur imap.mailfence.com:993 se connecte à Claude et à tout client MCP, mais seulement en offre payante. Le gratuit est webmail, les alias refusés."
+    "description": "L'IMAP Mailfence (imap.mailfence.com:993) se connecte à Claude et tout client MCP, en offre payante seulement. Le gratuit est webmail, alias refusés."
   },
   "hero": {
     "eyebrow": "Mailfence + IA",

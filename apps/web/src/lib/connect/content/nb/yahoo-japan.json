@@ -11,7 +11,7 @@
   },
   "meta": {
     "title": "Yahoo! JAPAN Mail i Claude: IMAP uten app-passord",
-    "description": "Koble Yahoo! JAPAN Mail (yahoo.co.jp) til Claude eller enhver MCP-klient på imap.mail.yahoo.co.jp:993. Slå på IMAP- og SMTP-tilgang først, og bruk så passordet til Yahoo! JAPAN ID-en din."
+    "description": "Koble Yahoo! JAPAN Mail (yahoo.co.jp) til Claude på imap.mail.yahoo.co.jp:993. Slå på IMAP- og SMTP-tilgang først, og bruk så passordet til Yahoo! JAPAN ID-en."
   },
   "hero": {
     "eyebrow": "Yahoo! JAPAN Mail + AI",

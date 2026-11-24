@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik kobler du iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude',
+  title: 'Koble iCloud, Fastmail eller IMAP-innboks til Claude',
   description:
-    'Koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude med et app-spesifikt passord. Steg-for-steg-oppsett, MCP-endepunktet, og hva IMAP får til som Gmail ikke gjør.',
+    'Koble iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude med et app-spesifikt passord. Steg-for-steg-oppsett og MCP-endepunktet.',
   coverAlt: 'Koble iCloud, Fastmail og en hvilken som helst IMAP-innboks til Claude over MCP',
   content: `Å koble iCloud, Fastmail eller en hvilken som helst IMAP-postkasse til Claude krever én ting Outlook ikke trenger: et **app-spesifikt passord**. Du genererer det inne hos e-postleverandøren din, limer det inn i MCPEmails én gang, og Claude kan lese, søke og sende gjennom den innboksen. Ingen OAuth-dans, ingen SMTP-serverinnstillinger å pugge.
 

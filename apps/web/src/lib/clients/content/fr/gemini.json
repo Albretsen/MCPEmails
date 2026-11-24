@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à l'app Gemini : app MCP personnalisée",
-    "description": "Ajoutez une vraie boîte à l'app Gemini comme app personnalisée. Collez une URL de serveur MCP dans Connected Apps et connectez-vous. Sans clé API. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à l'app Gemini comme app personnalisée : collez une URL de serveur MCP dans Connected Apps et connectez-vous. Sans clé API."
   },
   "hero": {
     "eyebrow": "Gemini + e-mail",

@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik gir du AI-agenten din tilgang til e-post (den komplette 2026-guiden)',
+  title: 'Slik gir du AI-agenten din tilgang til e-post (2026-guide)',
   description:
-    'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP: Gmail, Outlook, iCloud, Fastmail eller IMAP. Slik fungerer det: verktøyene, sikkerheten og oppsettet.',
+    'Gi AI-agenten din lese- og sendetilgang til en ekte innboks over MCP: Gmail, Outlook, iCloud, Fastmail eller IMAP. Verktøyene, sikkerheten og oppsettet.',
   coverAlt: 'Slik gir du AI-agenten din tilgang til e-post over MCP (MCPEmails)',
   content: `For å gi en AI-agent tilgang til e-post kobler du innboksen din til en MCP-server og peker agenten mot én endepunkt-URL. Agenten får da et lite sett med verktøy for å lese, søke og sende e-post. Det vanskelige er ikke agenten, men å gjøre dette uten å lekke passordet ditt inn i en prompt, en logg eller et vektorlager. Den siste biten er det denne guiden handler om.
 

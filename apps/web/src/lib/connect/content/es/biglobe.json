@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de BIGLOBE en Claude: un solo servidor para IMAP y SMTP",
-    "description": "Conecta un buzón de BIGLOBE a Claude o a cualquier cliente MCP en mail.biglobe.ne.jp:993. Un solo servidor atiende IMAP y SMTP con SSL, con tu dirección y tu contraseña de BIGLOBE."
+    "title": "Correo de BIGLOBE en Claude: un servidor IMAP y SMTP",
+    "description": "Conecta BIGLOBE a Claude o a cualquier cliente MCP en mail.biglobe.ne.jp:993. Un solo servidor para IMAP y SMTP con SSL, con tu dirección y contraseña."
   },
   "hero": {
     "eyebrow": "BIGLOBE + IA",

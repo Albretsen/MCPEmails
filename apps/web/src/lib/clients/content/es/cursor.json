@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Cursor: servidor MCP en mcp.json",
-    "description": "Añade una bandeja real a Cursor con cuatro líneas en mcp.json. Cursor pide el inicio de sesión OAuth, sin clave de API; lee, busca, envía y programa correo. Una bandeja gratis."
+    "description": "Añade una bandeja real a Cursor con cuatro líneas en mcp.json. Cursor pide iniciar sesión con OAuth, sin clave de API. Lee, busca y envía correo."
   },
   "hero": {
     "eyebrow": "Cursor + correo",

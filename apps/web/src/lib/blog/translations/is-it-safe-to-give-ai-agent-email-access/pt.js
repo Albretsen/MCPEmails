@@ -1,5 +1,5 @@
 const translation = {
-  title: 'É seguro dar a um agente de IA acesso ao seu e-mail? O que você precisa saber',
+  title: 'É seguro dar a um agente de IA acesso ao seu e-mail?',
   description:
     'É seguro dar a um agente de IA acesso ao e-mail? Depende da arquitetura. Veja os riscos reais e a lista de verificação que torna a conexão segura.',
   coverAlt: 'É seguro dar a um agente de IA acesso ao e-mail: riscos e proteções explicados, com o MCPEmails',

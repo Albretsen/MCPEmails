@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "MCP-server for e-post: Gmail, Outlook og IMAP",
-    "description": "Vertsbasert MCP-server for e-post til Claude, ChatGPT og Cursor. Koble til Gmail, Outlook eller IMAP, flere postkasser samtidig. E-post hentes direkte, lagres aldri."
+    "description": "Vertsbasert MCP-server for e-post til Claude, ChatGPT og Cursor. Koble til Gmail, Outlook eller IMAP, flere postkasser samtidig. E-post lagres aldri."
   },
   "nav": {
     "features": "Funksjoner",

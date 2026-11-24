@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, docsJsonLd } from '@/i18n/seo';
 import DocsClient from '../../../../components/marketing/DocsClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'Get started with MCPEmails in minutes. Quick-start guide, tool reference, and example responses for Gmail, Outlook and IMAP agents.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/docs'),
     openGraph: {

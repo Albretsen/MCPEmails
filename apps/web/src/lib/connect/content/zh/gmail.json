@@ -2,7 +2,9 @@
   "_sources": [
     "https://developers.google.com/gmail/api/guides",
     "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
-    "https://support.google.com/a/answer/7281227"
+    "https://support.google.com/a/answer/7281227",
+    "https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server",
+    "https://claude.com/connectors/gmail"
   ],
   "auth": {
     "method": "app-password",
@@ -45,8 +47,8 @@
   ],
   "gotchas": [
     {
-      "h": "Google 发布了自己的 Gmail MCP 服务器，如果只用 Gmail，那是更短的路径",
-      "p": "Google 宣布为其服务提供官方 MCP 支持，其中包括一个覆盖 Gmail 以及 Drive、Calendar 和 Chat 的 Workspace MCP 服务器。我们不会假装没有这回事。如果 Gmail 是你唯一想让助手接触的邮箱，而且你的客户端能连接 Google 的服务器，那就用它。把 MCPEmails 指向 Gmail 的理由在于，同一台服务器还能容纳你的 iCloud、Fastmail、Zoho、Yahoo 或公司 IMAP 邮箱，通过<b>一个</b> MCP URL 提供所有这些邮箱，并且在 Claude、Cursor 和 ChatGPT 中表现一致。它要避免的，正是每家服务商一个连接器、各自有各自的认证和工具名称的局面。"
+      "h": "Gmail 已经有官方连接器和 MCP 服务器，为什么还要用 MCPEmails？",
+      "p": "Claude 内置了由 Google 开发的 Gmail 连接器，可以在一个 Google 账户中读取、搜索和发送邮件，ChatGPT 也有自己的 Gmail 应用。Google 的 Gmail MCP 服务器 <code>gmailmcp.googleapis.com</code> 面向开发者：你需要在自己的 Google Cloud 项目中用自己的 OAuth 客户端启用它。如果你只需要在 Claude 或 ChatGPT 中使用一个 Gmail 账户，就用内置连接器。MCPEmails 适用于其他情况：多个 Gmail 账户，或者 Gmail 加上 Outlook、iCloud、Yahoo 或公司 IMAP 邮箱，全部通过<b>一个</b> MCP URL 提供，在 Claude、ChatGPT 和 Cursor 中表现一致。"
     },
     {
       "h": "从其他地址发信需要先验证发件地址",

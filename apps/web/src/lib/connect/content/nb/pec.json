@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble en PEC-postkasse (Aruba PEC, Legalmail, Poste) til Claude",
-    "description": "Koble italiensk sertifisert e-post (PEC) til Claude, Cursor og enhver MCP-klient over IMAP: Aruba PEC på imaps.pec.aruba.it:993, Legalmail på mbox.cert.legalmail.it:993, Poste på mail.postecert.it:993 eller mail.postecertifica.it:993. Passordregelen hos hver leverandør, og hva agenten ser."
+    "title": "Koble PEC-postkasse (Aruba PEC, Legalmail, Poste) til Claude",
+    "description": "Koble italiensk sertifisert e-post (PEC) til Claude og MCP-klienter over IMAP: Aruba PEC, Legalmail og Poste, med passordregelen hos hver leverandør."
   },
   "hero": {
     "eyebrow": "PEC + AI",

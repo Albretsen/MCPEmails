@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de Locaweb en Claude: email-ssl.com.br para IMAP y SMTP",
-    "description": "Conecta un buzón de Locaweb (Email Locaweb) a Claude o a cualquier cliente MCP en email-ssl.com.br:993. Un solo servidor para IMAP y SMTP con SSL/TLS, con la contraseña del buzón y el remitente como usuario SMTP."
+    "title": "Correo de Locaweb en Claude: email-ssl.com.br",
+    "description": "Conecta Locaweb a Claude o a cualquier cliente MCP en email-ssl.com.br:993. Un solo servidor para IMAP y SMTP con SSL/TLS y la contraseña del buzón."
   },
   "hero": {
     "eyebrow": "Locaweb + IA",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Servidor MCP de e-mail: Gmail, Outlook, IMAP e Claude",
-    "description": "Servidor MCP de e-mail hospedado para Claude, ChatGPT e Cursor. Conecte Gmail, Outlook ou qualquer caixa de correio IMAP, várias ao mesmo tempo. O e-mail é buscado ao vivo e nunca armazenado."
+    "description": "Servidor MCP de e-mail hospedado para Claude, ChatGPT e Cursor. Conecte Gmail, Outlook ou qualquer caixa IMAP. O e-mail é buscado ao vivo e nunca armazenado."
   },
   "nav": {
     "features": "Recursos",

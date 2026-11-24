@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Serveur MCP Arsys : connectez le mail Arsys à Claude",
-    "description": "Serveur MCP pour le mail Arsys. Connectez les boîtes de votre domaine (info@, facturacion@) à Claude, ChatGPT et Cursor en IMAP sur imap.serviciodecorreo.es:993 avec le mot de passe de la boîte."
+    "description": "Serveur MCP pour le mail Arsys. Connectez votre domaine à Claude, ChatGPT et Cursor en IMAP sur imap.serviciodecorreo.es:993 avec leur mot de passe."
   },
   "hero": {
     "eyebrow": "Mail Arsys + IA",

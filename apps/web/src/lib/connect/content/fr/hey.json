@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "HEY et l'IA : pas d'IMAP, et ce qui marche à la place",
-    "description": "HEY n'accepte aucune connexion IMAP, POP ou SMTP : MCPEmails ne peut donc pas connecter une boîte HEY. Pourquoi 37signals l'a voulu ainsi, et les deux voies qui marchent."
+    "description": "HEY n'accepte aucune connexion IMAP, POP ou SMTP : MCPEmails ne peut pas connecter une boîte HEY. Pourquoi 37signals l'a voulu, et les deux voies qui marchent."
   },
   "hero": {
     "eyebrow": "HEY + IA",

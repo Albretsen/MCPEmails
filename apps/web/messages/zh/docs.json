@@ -501,7 +501,7 @@
   "providers": {
     "meta": {
       "title": "面向 AI 代理的邮箱服务商兼容性对照表",
-      "description": "哪些邮箱服务商可以通过 MCP 与 AI 代理配合使用，以及逐个连接时需要什么：OAuth 还是专用应用密码、IMAP 与 SMTP 主机和端口、TLS 还是 STARTTLS、常见的失败原因，以及连接后代理能做什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365 与通用 IMAP。"
+      "description": "哪些邮箱服务商可通过 MCP 与 AI 代理配合使用，以及连接所需的一切：OAuth 或应用密码、IMAP 与 SMTP 主机和端口、TLS 或 STARTTLS、常见失败原因。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Outlook 与通用 IMAP。"
     },
     "labels": {
       "gmailImap": "Gmail（IMAP）",

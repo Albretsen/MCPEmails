@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik kobler du enhver e-postkonto til Claude eller ChatGPT (Yahoo, IMAP, eget domene, flere postkasser)',
+  title: 'Koble enhver e-postkonto til Claude eller ChatGPT',
   description:
-    'Alle måtene å gi Claude eller ChatGPT en ekte postkasse per november 2026: hva de innebygde koblingene for Gmail, Outlook og iCloud dekker, hvor de stopper, og hvordan du kobler til Yahoo, et eget domene, GMX eller flere postkasser med en MCP-server, en skrivebordsapp eller et automatiseringsverktøy.',
+    'Alle måtene å gi Claude eller ChatGPT en ekte postkasse: hva de innebygde koblingene dekker, og hvordan du kobler til Yahoo, eget domene eller flere postkasser.',
   coverAlt: 'Yahoo, IMAP, eget domene og flere andre postkasser koblet til Claude og ChatGPT',
   content: `Både Claude og ChatGPT har innebygde e-postkoblinger, og begge stopper ved de store leverandørene. Ligger e-posten din hos Yahoo, AOL, GMX, på et firmadomene hos IONOS, OVH eller et cPanel-webhotell, eller fordelt på flere kontoer, trenger du noe annet. Denne guiden lister opp alle alternativene per november 2026: de innebygde koblingene og nøyaktig hvor de slutter, de driftede MCP-tjenestene som fyller gapet (MCPEmails er én av dem, og vi nevner de andre), de lokale og selvdriftede veiene, og automatiseringsplattformene. Alle påstander om andre produkter ble lest på produktets egen side 11. november 2026; kildene står nederst.
 

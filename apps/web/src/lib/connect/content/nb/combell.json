@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Combell MCP-server: koble Combell-e-post til Claude",
-    "description": "MCP-server for Combell Basic-postkasser. Koble postkassene på domenet ditt (info@, facturatie@) til Claude, ChatGPT og Cursor via IMAP på imap.mailprotect.be:993 med postkassepassordet."
+    "description": "MCP-server for Combell Basic-postkasser. Koble domenepostkassene til Claude, ChatGPT og Cursor via IMAP på imap.mailprotect.be:993 med postkassepassordet."
   },
   "hero": {
     "eyebrow": "Combell-e-post + AI",

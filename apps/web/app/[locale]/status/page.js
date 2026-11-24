@@ -7,6 +7,7 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 import StatusView, { StatusBanner } from '../../../components/marketing/StatusView';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/status.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The public status page.
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }) {
   const content = await getStatusContent(locale);
   const { title, description } = content.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/status'),
     openGraph: {

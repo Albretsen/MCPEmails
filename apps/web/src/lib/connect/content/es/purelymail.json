@@ -17,7 +17,7 @@
   },
   "meta": {
     "title": "Conecta Purelymail a Claude, Cursor y clientes MCP",
-    "description": "Conecta Purelymail a Claude, Cursor, ChatGPT y cualquier cliente MCP por IMAP en imap.purelymail.com:993 con la contraseña del buzón. 1 bandeja gratis, para siempre."
+    "description": "Conecta Purelymail a Claude, Cursor, ChatGPT y clientes MCP por IMAP en imap.purelymail.com:993 con la contraseña del buzón. 1 bandeja gratis, siempre."
   },
   "hero": {
     "eyebrow": "Purelymail + IA",

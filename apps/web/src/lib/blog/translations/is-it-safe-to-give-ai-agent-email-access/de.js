@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Ist es sicher, einem KI-Agenten Zugriff auf Ihre E-Mails zu geben?',
+  title: 'Ist E-Mail-Zugriff für KI-Agenten sicher?',
   description:
-    'Ist es sicher, einem KI-Agenten Zugriff auf E-Mails zu geben? Es hängt von der Architektur ab. Hier sind die echten Risiken und die Checkliste, die den Zugriff sicher macht.',
+    'Ist es sicher, einem KI-Agenten Zugriff auf E-Mails zu geben? Es hängt von der Architektur ab. Die echten Risiken und eine Checkliste für sicheren Zugriff.',
   coverAlt: 'Ist es sicher, einem KI-Agenten E-Mail-Zugriff zu geben? Risiken und Schutzmaßnahmen erklärt, mit MCPEmails',
   content: `Es kann sicher sein, aber die Sicherheit steckt in der Architektur, nicht im Marketing. Einem KI-Agenten Zugriff auf E-Mails zu geben ist sicher, wenn der Dienst Ihre E-Mails live abruft, statt sie zu kopieren, Ihre Zugangsdaten sauber verschlüsselt, mit minimalen Berechtigungen arbeitet und Sie den Zugriff mit einem Klick beenden können. Riskant wird es, sobald einer dieser vier Punkte fehlt. Die Kunst ist, die richtigen Fragen zu stellen, bevor Sie ein Postfach verbinden.
 

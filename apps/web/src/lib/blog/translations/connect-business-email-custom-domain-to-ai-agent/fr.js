@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Connecter une messagerie professionnelle sur votre domaine à votre agent IA (IMAP)',
+  title: 'Connecter l\'e-mail de votre domaine à un agent IA',
   description:
-    'Guide de configuration pour vous@votreentreprise.com : identifier qui héberge vraiment vos e-mails, connecter Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS ou cPanel, et corriger le nom de l\'expéditeur avant que votre agent ne réponde.',
+    'Pour vous@votreentreprise.com : trouvez qui héberge vos e-mails, connectez Google Workspace, Zoho, IONOS ou cPanel, et corrigez le nom d\'expéditeur.',
   coverAlt:
     'Connecter une messagerie professionnelle sur domaine propre à un agent IA avec MCPEmails',
   content: `> **Sous Microsoft 365 ?** Si votre boîte professionnelle se révèle être un tenant Microsoft, ce guide vous aidera à le confirmer. Connectez-la avec **Outlook** et la connexion Microsoft plutôt qu'en IMAP ; votre administrateur informatique devra peut-être d'abord approuver l'application une seule fois pour toute l'organisation. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) détaille les étapes.

@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Como conectar o Claude ao Hotmail e ao Outlook.com (contas pessoais)',
+  title: 'Como conectar o Claude ao Hotmail e ao Outlook.com pessoal',
   description:
-    'O conector do Microsoft 365 no Claude agora aceita uma conta pessoal da Microsoft nos planos Free, Pro, Max e Ultra. Quando isso basta, e como conectar o Hotmail, Outlook.com, Live ou MSN ao Claude com anexos, várias caixas ou um plano Team por uma URL de conector personalizado.',
+    'O conector do Microsoft 365 no Claude aceita contas pessoais. Quando isso basta, e como conectar Hotmail ou Outlook.com com anexos, várias caixas ou plano Team.',
   coverAlt: 'Claude conectado a uma caixa de entrada pessoal do Outlook.com ou Hotmail pelo MCPEmails',
   content: `Há dois jeitos de conectar o Claude a um endereço pessoal do Outlook.com, Hotmail, Live ou MSN. O conector do Microsoft 365 do próprio Claude aceita uma conta pessoal da Microsoft nos planos Free, Pro, Max e Ultra, sem nenhum administrador envolvido. O outro caminho é o MCPEmails: adicione a caixa com **Conectar com a Microsoft** e depois adicione uma URL ao Claude como conector personalizado. O segundo caminho cobre o que o conector nativo deixa de fora: anexos, várias caixas atrás de uma só conexão, os planos Team e Enterprise, e a mesma caixa no ChatGPT ou em qualquer outro cliente MCP. Um endereço antigo do hotmail.com funciona do mesmo jeito que um novo do outlook.com nos dois.
 

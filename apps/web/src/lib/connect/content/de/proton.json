@@ -13,8 +13,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Proton Mail und Claude: Warum Bridge die Verbindung verhindert",
-    "description": "Proton Mail hat kein IMAP im Internet. IMAP gibt es nur in Proton Mail Bridge, einer kostenpflichtigen Desktop-App auf localhost. Kein gehosteter MCP-Server kommt dorthin. Was stattdessen geht."
+    "title": "Proton Mail und Claude: warum Bridge im Weg steht",
+    "description": "Proton Mail hat kein IMAP im Internet, nur in Proton Mail Bridge auf localhost. Kein gehosteter MCP-Server kommt dorthin. Was stattdessen geht."
   },
   "hero": {
     "eyebrow": "Proton Mail + KI",

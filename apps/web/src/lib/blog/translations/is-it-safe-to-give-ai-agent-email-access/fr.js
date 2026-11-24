@@ -1,5 +1,5 @@
 const translation = {
-  title: 'Est-il prudent de donner à un agent IA l’accès à vos e-mails ? Ce qu’il faut savoir',
+  title: 'Donner à un agent IA l’accès à vos e-mails : est-ce sûr ?',
   description: 'Donner l’accès à vos e-mails à un agent IA est-il prudent ? Cela dépend de l’architecture. Voici les risques réels et la checklist qui sécurise tout.',
   coverAlt: 'Est-il prudent de donner à un agent IA l’accès aux e-mails : risques et protections expliqués par MCPEmails',
   content: `Cela peut l’être, mais la sécurité tient à l’architecture, pas au discours marketing. Donner l’accès à vos e-mails à un agent IA est prudent quand le service récupère vos messages en direct au lieu de les copier, chiffre correctement vos identifiants, fonctionne avec des permissions minimales et vous laisse couper l’accès en un clic. Ça devient risqué dès que l’un de ces quatre points manque. L’astuce, c’est de savoir quelles questions poser avant de connecter une boîte mail.

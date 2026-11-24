@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Servidor MCP para Bluehost: conecte o e-mail ao Claude",
-    "description": "Servidor MCP para e-mail da Bluehost. Conecte várias caixas de correio da empresa no seu domínio (contato@, vendas@) ao Claude e ao ChatGPT via IMAP na porta 993."
+    "description": "Servidor MCP para e-mail da Bluehost. Conecte várias caixas da empresa no seu domínio (contato@, vendas@) ao Claude e ao ChatGPT via IMAP na porta 993."
   },
   "hero": {
     "eyebrow": "Bluehost + IA",

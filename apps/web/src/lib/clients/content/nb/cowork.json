@@ -9,8 +9,8 @@
     "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
   ],
   "meta": {
-    "title": "Koble e-post til Claude Cowork: oppsett av egendefinert kobling",
-    "description": "Gi Claude Cowork en ekte innboks. Legg til én URL under Customize, Connectors, logg inn med OAuth, og Cowork kan lese, søke i, skrive utkast til og sende e-post. Én innboks gratis."
+    "title": "Koble e-post til Claude Cowork med egendefinert kobling",
+    "description": "Gi Claude Cowork en ekte innboks. Legg til én URL under Customize, Connectors, logg inn med OAuth, og Cowork kan lese, søke og sende e-post. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Claude Cowork + e-post",

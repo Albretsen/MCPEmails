@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "E-mail Tsohost et Claude après le passage à 123 Reg",
-    "description": "Les boîtes Tsohost se connectent toujours à Claude en IMAP sur le port 993. La marque est passée chez 123 Reg : lisez votre vrai serveur dans cPanel, sous Connect Devices."
+    "description": "Les boîtes Tsohost se connectent à Claude en IMAP sur le port 993. La marque est passée chez 123 Reg : lisez votre serveur dans cPanel, Connect Devices."
   },
   "hero": {
     "eyebrow": "Tsohost + IA",

@@ -13,8 +13,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Libero Mail y Virgilio Mail a Claude y a cualquier cliente MCP",
-    "description": "Conecta Libero Mail o Virgilio Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imapmail.libero.it:993 o in.virgilio.it:993. Tu contraseña de la cuenta funciona hasta que activas Password Sicura; a partir de ahí, una contraseña de aplicación de 16 caracteres."
+    "title": "Conecta Libero Mail y Virgilio Mail a Claude y clientes MCP",
+    "description": "Conecta Libero o Virgilio Mail a Claude por IMAP en imapmail.libero.it:993 o in.virgilio.it:993. Con Password Sicura activada, usa una contraseña de aplicación."
   },
   "hero": {
     "eyebrow": "Libero Mail + IA",

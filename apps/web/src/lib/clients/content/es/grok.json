@@ -9,7 +9,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Grok: conector MCP personalizado",
-    "description": "Añade una bandeja real a Grok como conector MCP personalizado. Pega una URL en grok.com, inicia sesión con OAuth y lee, busca, envía y programa correo. Una bandeja gratis."
+    "description": "Añade una bandeja real a Grok como conector MCP. Pega una URL en grok.com, inicia sesión con OAuth y lee, busca y envía correo. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Grok + correo",

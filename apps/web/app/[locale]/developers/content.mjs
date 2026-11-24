@@ -28,7 +28,7 @@ const en = {
   meta: {
     title: 'Email API for AI agents, on the inboxes you already have',
     description:
-      'Give scripts, n8n workflows and your own AI agents a real Gmail, Outlook or IMAP mailbox over one HTTPS endpoint. MCP and signed webhooks on the same key, scoped keys, idempotent sends and a flat plan price.',
+      'Give scripts, n8n workflows and your own AI agents a real Gmail, Outlook or IMAP mailbox over one HTTPS endpoint, with MCP and signed webhooks on the same key.',
   },
   breadcrumb: 'Developers',
   hero: {
@@ -116,7 +116,7 @@ const nb = {
   meta: {
     title: 'E-post-API for AI-agenter, på innboksene du allerede har',
     description:
-      'Gi skript, n8n-arbeidsflyter og dine egne AI-agenter en ekte Gmail-, Outlook- eller IMAP-postboks over ett HTTPS-endepunkt. MCP og signerte webhooks på samme nøkkel, avgrensede nøkler, idempotente sendinger og en fast planpris.',
+      'Gi skript, n8n og egne AI-agenter en ekte Gmail-, Outlook- eller IMAP-postboks over ett HTTPS-endepunkt. MCP og signerte webhooks på samme nøkkel.',
   },
   breadcrumb: 'Utviklere',
   hero: {
@@ -202,9 +202,9 @@ const nb = {
 
 const es = {
   meta: {
-    title: 'API de correo para agentes de IA, en los buzones que ya tienes',
+    title: 'API de correo para agentes de IA en tus buzones actuales',
     description:
-      'Da a tus scripts, flujos de n8n y agentes de IA un buzón real de Gmail, Outlook o IMAP a través de un único endpoint HTTPS. MCP y webhooks firmados con la misma clave, claves con ámbitos, envíos idempotentes y un precio de plan fijo.',
+      'Da a tus scripts, flujos de n8n y agentes de IA un buzón real de Gmail, Outlook o IMAP con un único endpoint HTTPS: MCP, webhooks firmados y precio fijo.',
   },
   breadcrumb: 'Desarrolladores',
   hero: {
@@ -292,7 +292,7 @@ const fr = {
   meta: {
     title: 'API e-mail pour agents IA, sur les boîtes que vous avez déjà',
     description:
-      'Donnez à vos scripts, workflows n8n et agents IA une vraie boîte Gmail, Outlook ou IMAP via un seul endpoint HTTPS. MCP et webhooks signés sur la même clé, clés à portées limitées, envois idempotents et un tarif de formule fixe.',
+      'Donnez à vos scripts, workflows n8n et agents IA une vraie boîte Gmail, Outlook ou IMAP via un endpoint HTTPS. MCP et webhooks signés sur la même clé.',
   },
   breadcrumb: 'Développeurs',
   hero: {
@@ -378,9 +378,9 @@ const fr = {
 
 const de = {
   meta: {
-    title: 'E-Mail-API für KI-Agenten, auf den Postfächern, die Sie schon haben',
+    title: 'E-Mail-API für KI-Agenten auf Ihren eigenen Postfächern',
     description:
-      'Geben Sie Skripten, n8n-Workflows und eigenen KI-Agenten ein echtes Gmail-, Outlook- oder IMAP-Postfach über einen HTTPS-Endpunkt. MCP und signierte Webhooks mit demselben Schlüssel, eingeschränkte Schlüssel, idempotente Sendungen und ein fester Tarifpreis.',
+      'Geben Sie Skripten, n8n und eigenen KI-Agenten ein echtes Gmail-, Outlook- oder IMAP-Postfach per HTTPS. MCP und signierte Webhooks mit demselben Schlüssel.',
   },
   breadcrumb: 'Entwickler',
   hero: {
@@ -466,9 +466,9 @@ const de = {
 
 const pt = {
   meta: {
-    title: 'API de e-mail para agentes de IA, nas caixas de entrada que você já tem',
+    title: 'API de e-mail para agentes de IA nas caixas que você já tem',
     description:
-      'Dê aos seus scripts, fluxos do n8n e agentes de IA uma caixa de correio real do Gmail, Outlook ou IMAP por um único endpoint HTTPS. MCP e webhooks assinados na mesma chave, chaves com escopos, envios idempotentes e um preço de plano fixo.',
+      'Dê a scripts, fluxos do n8n e agentes de IA uma caixa real do Gmail, Outlook ou IMAP por um endpoint HTTPS. MCP e webhooks assinados na mesma chave.',
   },
   breadcrumb: 'Desenvolvedores',
   hero: {

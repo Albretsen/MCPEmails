@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Spark Xtra Mail til Claude: intet app-passord nødvendig",
-    "description": "Koble Spark Xtra Mail til Claude og enhver MCP-klient via IMAP på imap.xtra.co.nz:993. Xtra-passordet ditt virker: Spark utsteder ingen app-passord for klienter."
+    "description": "Koble Spark Xtra Mail til Claude og MCP-klienter via IMAP på imap.xtra.co.nz:993. Xtra-passordet ditt virker: Spark utsteder ingen app-passord for klienter."
   },
   "hero": {
     "eyebrow": "Spark Xtra Mail + AI",

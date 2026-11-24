@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Conecta Runbox a Claude con una App Password",
-    "description": "Conecta Runbox a Claude, Cursor y cualquier cliente MCP por IMAP en mail.runbox.com:993. Con la 2FA de Runbox activada, solo una App Password autentica un cliente."
+    "description": "Conecta Runbox a Claude, Cursor y cualquier cliente MCP por IMAP en mail.runbox.com:993. Con la 2FA de Runbox activa, solo una App Password autentica."
   },
   "hero": {
     "eyebrow": "Runbox + IA",

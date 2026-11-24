@@ -16,8 +16,8 @@
     "apps/web/app/authorize/page.js (no scope param: full scope menu offered)"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao OpenClaw: configuração de servidor MCP remoto",
-    "description": "Dê ao seu agente OpenClaw uma caixa de entrada real. Adicione um servidor MCP Streamable HTTP com OAuth, faça login uma vez e leia, pesquise, rascunhe e envie e-mails."
+    "title": "Conecte o e-mail ao OpenClaw: servidor MCP remoto",
+    "description": "Dê ao seu agente OpenClaw uma caixa real. Adicione um servidor MCP Streamable HTTP com OAuth, faça login uma vez e leia, pesquise, rascunhe e envie e-mails."
   },
   "hero": {
     "eyebrow": "OpenClaw + e-mail",

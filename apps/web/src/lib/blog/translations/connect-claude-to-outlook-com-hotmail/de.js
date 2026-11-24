@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Claude mit Hotmail und Outlook.com verbinden (private Microsoft-Konten)',
+  title: 'Claude mit Hotmail und Outlook.com verbinden',
   description:
-    'Der Microsoft 365-Konnektor von Claude nimmt in den Tarifen Free, Pro, Max und Ultra jetzt auch ein privates Microsoft-Konto an. Wann das reicht, und wie Sie Hotmail, Outlook.com, Live oder MSN mit Anhängen, mehreren Postfächern oder im Team-Tarif über eine einzige URL für einen benutzerdefinierten Konnektor mit Claude verbinden.',
+    'Der Microsoft 365-Konnektor von Claude nimmt jetzt private Konten an. Wann das reicht, und wie Sie Hotmail oder Outlook.com per Custom-Connector-URL verbinden.',
   coverAlt: 'Claude über MCPEmails mit einem privaten Postfach bei Outlook.com oder Hotmail verbunden',
   content: `Es gibt zwei Wege, Claude mit einer privaten Adresse bei Outlook.com, Hotmail, Live oder MSN zu verbinden. Der eigene Microsoft 365-Konnektor von Claude nimmt in den Tarifen Free, Pro, Max und Ultra ein privates Microsoft-Konto an, ganz ohne Administrator. Der andere Weg ist MCPEmails: Sie fügen das Postfach mit **Mit Microsoft verbinden** hinzu und tragen dann eine einzige URL als benutzerdefinierten Konnektor in Claude ein. Der zweite Weg deckt ab, was der eingebaute Konnektor auslässt: Anhänge, mehrere Postfächer hinter einer Verbindung, die Tarife Team und Enterprise sowie dasselbe Postfach in ChatGPT oder jedem anderen MCP-Client. Eine alte hotmail.com-Adresse funktioniert auf beiden Wegen genauso wie eine neue outlook.com-Adresse. Alle Einstellungen auf einen Blick finden Sie auf der Seite [Outlook mit Claude verbinden](/connect/outlook).
 

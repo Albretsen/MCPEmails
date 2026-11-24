@@ -1,7 +1,7 @@
 const translation = {
-  title: 'So verbinden Sie jedes E-Mail-Konto mit Claude oder ChatGPT (Yahoo, IMAP, eigene Domain, mehrere Postfächer)',
+  title: 'Jedes E-Mail-Konto mit Claude oder ChatGPT verbinden',
   description:
-    'Alle Wege, Claude oder ChatGPT ein echtes Postfach zu geben, Stand November 2026: was die integrierten Konnektoren für Gmail, Outlook und iCloud abdecken, wo sie enden, und wie Sie Yahoo, eine eigene Domain, GMX oder mehrere Postfächer über einen MCP-Server, eine Desktop-App oder ein Automatisierungstool verbinden.',
+    'Alle Wege, Claude oder ChatGPT ein Postfach zu geben: was die Konnektoren für Gmail, Outlook und iCloud abdecken und wie Yahoo, GMX oder eigene Domains klappen.',
   coverAlt: 'Yahoo, IMAP, eigene Domain und mehrere weitere Postfächer mit Claude und ChatGPT verbunden',
   content: `Claude und ChatGPT bringen beide eigene E-Mail-Konnektoren mit, und beide hören bei den großen Anbietern auf. Liegt Ihre Post bei Yahoo, AOL, GMX, auf einer Firmendomain bei IONOS, OVH oder einem cPanel-Hoster, oder verteilt über mehrere Konten, brauchen Sie etwas anderes. Diese Anleitung listet jede Option mit Stand November 2026: die integrierten Konnektoren und genau die Stelle, an der sie enden, die gehosteten MCP-Dienste, die die Lücke füllen (MCPEmails ist einer davon, und wir nennen die anderen), die lokalen und selbst betriebenen Wege und die Automatisierungsplattformen. Jede Aussage über ein anderes Produkt wurde am 11. November 2026 auf dessen eigener Seite gelesen; die Quellen stehen am Ende.
 

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect Microsoft 365 Email to Claude and ChatGPT",
-    "description": "Connect a work or school Microsoft 365 mailbox to Claude, ChatGPT, Cursor or any MCP client. Sign in with Microsoft; many organisations need an IT admin to approve the app once first."
+    "description": "Connect a work or school Microsoft 365 mailbox to Claude, ChatGPT, Cursor or any MCP client. Sign in with Microsoft; many organisations need IT admin approval."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + AI",

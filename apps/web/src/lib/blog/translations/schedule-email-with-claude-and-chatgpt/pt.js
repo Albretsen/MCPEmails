@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Como agendar um e-mail com o Claude ou o ChatGPT (enviar mais tarde)',
+  title: 'Como agendar um e-mail com o Claude ou o ChatGPT',
   description:
-    'Agende um e-mail no Claude ou no ChatGPT para sair mais tarde da sua própria caixa do Gmail, Outlook, iCloud ou IMAP: configuração, fusos horários, cancelamento e limites.',
+    'Agende um e-mail no Claude ou no ChatGPT para sair depois da sua caixa do Gmail, Outlook, iCloud ou IMAP: configuração, fusos horários, cancelamento e limites.',
   coverAlt:
     'Claude e ChatGPT agendando um e-mail para envio posterior a partir de uma caixa conectada com o MCPEmails',
   content: `Para agendar um e-mail com o Claude ou o ChatGPT, o assistente precisa de uma ferramenta de e-mail capaz de guardar uma mensagem e enviá-la depois. O MCPEmails tem uma. Conecte sua caixa de correio, adicione o MCPEmails como conector e diga quando: "Envie isto para a Dana na segunda às 9:00, horário de Oslo." A mensagem espera em uma fila no servidor do MCPEmails e sai do seu próprio endereço nesse horário, com o chat, o app ou o computador ainda abertos ou não.

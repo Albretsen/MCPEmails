@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Sicherheit für KI-E-Mail-Agenten: OAuth, Verschlüsselung, Datenschutz",
-    "description": "So schützt MCPEmails den KI-Zugriff auf Ihre E-Mails: Live-Abruf statt Speicherung, verschlüsselte Zugangsdaten, begrenzte und widerrufbare Berechtigungen, Schutz vor Prompt-Injection und offener Quellcode."
+    "title": "Sicherheit für KI-E-Mail-Agenten: OAuth und Datenschutz",
+    "description": "So schützt MCPEmails den KI-Zugriff auf Ihre E-Mails: Live-Abruf statt Speicherung, verschlüsselte Zugangsdaten, widerrufbare Berechtigungen, offener Quellcode."
   },
   "hero": {
     "eyebrow": "Sicherheit & Vertrauen",

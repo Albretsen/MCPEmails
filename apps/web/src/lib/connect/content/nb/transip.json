@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "TransIP MCP-server: koble TransIP-e-post til Claude",
-    "description": "MCP-server for TransIP e-posthosting. Koble postkassene på domenet ditt (info@, facturen@) til Claude, ChatGPT og Cursor via IMAP på imap.transip.email:993 med postkassepassordet."
+    "description": "MCP-server for TransIP e-posthosting. Koble postkassene på domenet ditt til Claude, ChatGPT og Cursor via IMAP på imap.transip.email:993 med postkassepassordet."
   },
   "hero": {
     "eyebrow": "TransIP-e-post + AI",

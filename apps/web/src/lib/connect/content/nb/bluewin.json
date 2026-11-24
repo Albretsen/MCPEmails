@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Koble Bluewin-e-post (Swisscom) til Claude via IMAP",
-    "description": "Koble Bluewin-e-post til Claude og enhver MCP-klient over IMAP på imaps.bluewin.ch:993. Swisscom krever det egne e-postpassordet i klienter, ikke påloggingen din."
+    "description": "Koble Bluewin-e-post til Claude og enhver MCP-klient over IMAP på imaps.bluewin.ch:993. Swisscom krever det egne e-postpassordet, ikke påloggingen din."
   },
   "hero": {
     "eyebrow": "Bluewin + AI",

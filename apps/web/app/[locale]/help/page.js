@@ -9,6 +9,7 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 import HelpCenter from '../../../components/support/HelpCenter';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/help.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /help: the help center (components/support/HelpCenter.jsx) with marketing
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }) {
   const content = await getHelpContent(locale);
   const { title, description } = content.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/help'),
     openGraph: {

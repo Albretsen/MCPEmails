@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Was ist ein App-Passwort? So erstellen Sie es bei GMX, WEB.DE, T-Online, iCloud und Gmail',
+  title: 'App-Passwort erstellen: GMX, WEB.DE, T-Online, iCloud',
   description:
-    'App-Passwort erklärt: warum Mailprogramme und KI-Konnektoren eines brauchen, wo Sie es bei GMX, WEB.DE, T-Online, iCloud, Gmail, Yahoo, Fastmail und Zoho erstellen, und wie Sie es wieder löschen.',
+    'App-Passwort erklärt: warum Mailprogramme und KI-Konnektoren eines brauchen, wo Sie es bei GMX, WEB.DE, T-Online, iCloud und Gmail erstellen und wieder löschen.',
   coverAlt: 'Ein App-Passwort verbindet über MCPEmails ein E-Mail-Postfach mit einem KI-Agenten',
   content: `Ein **App-Passwort** ist ein zweites Passwort, das Ihr E-Mail-Anbieter für genau eine App erzeugt. Mit ihm meldet sich diese App an Ihrem Postfach an, ohne Ihr eigentliches Kontopasswort zu kennen. Sie erstellen es in den Sicherheitseinstellungen Ihres Kontos, tragen es einmal in das Mailprogramm oder den Konnektor ein und löschen es, sobald diese eine App keinen Zugriff mehr haben soll. Ihr normales Passwort und alle anderen Apps laufen unverändert weiter.
 

@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Résumé quotidien de vos e-mails avec Claude et ChatGPT : un point sur votre boîte chaque jour',
+  title: 'Résumé quotidien de vos e-mails avec Claude et ChatGPT',
   description:
-    "Trois façons d'obtenir chaque jour un résumé de votre boîte : une tâche programmée dans Claude, une tâche programmée dans ChatGPT, ou un brief du matin que MCPEmails dépose dans votre boîte sans aucune conversation ouverte. Configuration, prompts et limites.",
+    "Trois façons d'avoir un résumé quotidien de votre boîte : une tâche programmée dans Claude ou ChatGPT, ou un brief du matin envoyé par MCPEmails.",
   coverAlt:
     'Un résumé quotidien des e-mails par Claude et ChatGPT, qui récapitule les nouveaux messages de plusieurs boîtes connectées',
   content: `**Pour recevoir chaque jour un résumé de vos e-mails par Claude ou ChatGPT, il suffit de donner deux choses à l'assistant : l'accès à votre boîte et un horaire.** Les deux assistants exécutent désormais des tâches programmées. Celles de Claude lancent un prompt toutes les heures, chaque jour, chaque semaine ou en semaine, et celles de ChatGPT s'exécutent à l'heure choisie, sur toutes les formules. Reliez la tâche à votre boîte par un connecteur, et le résumé vous attend chaque matin.

@@ -2,7 +2,9 @@
   "_sources": [
     "https://developers.google.com/gmail/api/guides",
     "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
-    "https://support.google.com/a/answer/7281227"
+    "https://support.google.com/a/answer/7281227",
+    "https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server",
+    "https://claude.com/connectors/gmail"
   ],
   "auth": {
     "method": "app-password",
@@ -45,8 +47,8 @@
   ],
   "gotchas": [
     {
-      "h": "Googleは独自のGmail MCPサーバーを公開しており、Gmailだけなら近道はそちらです",
-      "p": "GoogleはGmailをDrive、カレンダー、Chatと一緒にカバーするWorkspace MCPサーバーを含め、自社サービスの公式MCPサポートを発表しました。これを隠すつもりはありません。アシスタントに触らせたいメールボックスがGmailだけで、お使いのクライアントがGoogleのサーバーと通信できるなら、そちらを使ってください。代わりにMCPEmailsをGmailにつなぐ理由は、同じサーバーがiCloud、Fastmail、Zoho、Yahoo、会社のIMAPメールボックスも保持し、そのすべてを<b>1つ</b>のMCP URLで公開し、Claude、Cursor、ChatGPTで同じように振る舞う点にあります。プロバイダーごとに別々のコネクタを持ち、それぞれに認証とツール名があるという状態を、これで避けられます。"
+      "h": "Gmailにはすでに公式のコネクタとMCPサーバーがあります。なぜMCPEmailsを使うのですか？",
+      "p": "ClaudeにはGoogleが作った組み込みのGmailコネクタがあり、1つのGoogleアカウントでメールの読み取り、検索、送信ができます。ChatGPTにも独自のGmailアプリがあります。GoogleのGmail MCPサーバー<code>gmailmcp.googleapis.com</code>は開発者向けで、自分のGoogle Cloudプロジェクトで自分のOAuthクライアントを使って有効にします。ClaudeやChatGPTで使うGmailアカウントが1つだけなら、組み込みのコネクタを使ってください。MCPEmailsはそれ以外の場合のためのものです。複数のGmailアカウント、あるいはGmailとOutlook、iCloud、Yahoo、会社のIMAPメールボックスを<b>1つ</b>のMCP URLにまとめ、Claude、ChatGPT、Cursorで同じように動作します。"
     },
     {
       "h": "別のアドレスから送るには、確認済みのSend Asアドレスが必要です",

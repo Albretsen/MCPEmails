@@ -11,7 +11,7 @@
     "https://www.perplexity.ai/help-center/en/articles/14818152-connecting-perplexity-with-morningstar"
   ],
   "meta": {
-    "title": "Koble e-post til Perplexity: oppsett av egendefinert MCP-kobling",
+    "title": "Koble e-post til Perplexity med egendefinert MCP-kobling",
     "description": "Gi Perplexity en ekte innboks med en egendefinert ekstern kobling. Lim inn én URL, velg OAuth og logg inn. Ingen API-nøkkel. Pro, Max og Enterprise."
   },
   "hero": {

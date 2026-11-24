@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Frontier passe par Yahoo : connectez-le à Claude",
-    "description": "Frontier a confié sa messagerie à Yahoo en mars 2024. Connectez une boîte frontier.com à Claude en IMAP sur imap.frontier.com:993 avec un mot de passe d'application Yahoo."
+    "description": "Frontier a confié sa messagerie à Yahoo en 2024. Connectez une boîte frontier.com à Claude via imap.frontier.com:993 avec un mot de passe d'application Yahoo."
   },
   "hero": {
     "eyebrow": "Frontier Mail + IA",

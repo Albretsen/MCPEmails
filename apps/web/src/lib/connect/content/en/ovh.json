@@ -3,7 +3,8 @@
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
-    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted",
+    "https://www.ovhcloud.com/en/public-cloud/mcp-server/"
   ],
   "auth": {
     "method": "mail-password",
@@ -18,7 +19,7 @@
   },
   "hero": {
     "eyebrow": "OVH + AI",
-    "titleLine1": "MCP server for OVH mail:",
+    "titleLine1": "The OVH MCP server for your mail:",
     "titleLine2": "every company mailbox, in Claude and ChatGPT",
     "lead": "Running info@, sales@, support@ and invoices@ on your own domain at OVH? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same mailboxes in every MCP client, not just one.",
     "meta0": "First mailbox free, plans for the rest",
@@ -87,6 +88,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "OVHcloud already has an MCP server. Why use MCPEmails?",
+      "p": "OVHcloud's own MCP server manages your OVHcloud account and services, such as instances, storage, network and databases. It does not read or send the mail in your mailboxes. For that you need an email MCP server: MCPEmails logs in to each OVH mailbox over IMAP and SMTP with the mailbox password and puts all of them, info@, sales@ and the rest, behind <b>one</b> MCP URL for Claude, ChatGPT and Cursor."
+    },
     {
       "h": "OVH runs three mail products on three host patterns, and landing on the wrong one is the top failure here",
       "p": "This is the OVH problem. <b>MX Plan</b>, the mailbox bundled with domains and web hosting, is documented at <code>ssl0.ovh.net</code> (OVH also lists <code>imap.mail.ovh.net</code> and <code>smtp.mail.ovh.net</code>), IMAP on 993 with SSL/TLS and SMTP on 465 with SSL/TLS. <b>Email Pro</b> answers on <code>pro</code> plus your server number plus <code>.mail.ovh.net</code>, IMAP 993 with SSL and SMTP on <b>587 with STARTTLS</b>. <b>Hosted Exchange</b> answers on <code>ex</code> plus your server number plus <code>.mail.ovh.net</code>, again IMAP 993 and SMTP 587 with STARTTLS. The three are not interchangeable in either direction. Pointing an Exchange or Email Pro mailbox at <code>ssl0.ovh.net</code> fails, and MX Plan on port 587 with STARTTLS is not where OVH documents it."

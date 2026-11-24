@@ -7,6 +7,7 @@ import { fetchStripePrices } from '@/lib/stripe/getPrices';
 import { withBusinessSeatPrices } from '@/lib/stripe/business-seat-display';
 import { businessSeatPricingOn } from '@/lib/stripe/business-seats';
 import { businessSeatNumbers, withBusinessSeatStory } from '@/lib/billing/business-seat-copy';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * Persona page for the operator who runs a company's mailboxes: one person,
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }) {
   const copy = await getBusinessCopy(locale);
   const { title, description } = copy.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, BUSINESS_PATH),
     openGraph: {

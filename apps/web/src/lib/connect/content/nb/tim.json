@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble TIM Mail (tim.it, alice.it, tin.it) til Claude og enhver MCP-klient",
-    "description": "Koble TIM Mail, Alice Mail eller tin.it til Claude, Cursor og enhver MCP-klient over IMAP på imap.tim.it:143 med STARTTLS. Virker på en postkasse knyttet til en aktiv TIM-linje; en postkasse uten en slik linje tillater TIM i e-postprogrammer bare fra sitt eget nett."
+    "title": "Koble TIM Mail (tim.it, alice.it, tin.it) til Claude",
+    "description": "Koble TIM Mail, Alice Mail eller tin.it til Claude og MCP-klienter over IMAP på imap.tim.it:143 med STARTTLS. Krever at postkassen hører til en aktiv TIM-linje."
   },
   "hero": {
     "eyebrow": "TIM Mail + AI",

@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Warp: servidor MCP para agentes",
-    "description": "Añade una bandeja real a los agentes de Warp. Settings, Agents, MCP servers: un servidor Streamable HTTP por URL y OAuth en el navegador. Sin clave de API. Una bandeja gratis."
+    "description": "Añade una bandeja real a los agentes de Warp en Settings, Agents, MCP servers: un servidor Streamable HTTP por URL y OAuth en el navegador."
   },
   "hero": {
     "eyebrow": "Warp + correo",

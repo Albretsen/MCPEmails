@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmailには公式のMCPサーバーがあり、よくできています",
-      "p": "Fastmailは2026年4月に公式MCPサーバー<code>https://api.fastmail.com/mcp</code>を公開しました。OAuthで認証し、読み取り専用、書き込み、送信のいずれかのアクセスを選べ、メール、カレンダー、連絡先に対応しています。アシスタントに使わせたいのがFastmailだけなら、それが最も直接的な方法です。これははっきりお伝えします。MCPEmailsが応えるのは別のニーズです。Fastmailアカウントと、iCloud、Zoho、Yahoo、GMX、会社のIMAPメールボックスを<b>1つ</b>のMCP URLにまとめ、すべてに同じツールを使えるようにします。エージェントは複数のメールボックスを横断して検索でき、設定するサーバーも5つではなく1つで済みます。ここでは自社をよく見せることより、役に立つ情報をお伝えすることを優先しています。"
+      "h": "Fastmailにはすでに公式MCPサーバーがあります。なぜMCPEmailsを使うのですか？",
+      "p": "確かにあります。Fastmailは2026年4月に公式MCPサーバー<code>https://api.fastmail.com/mcp</code>を公開しました。OAuthでサインインし、メール、連絡先、カレンダーへの読み取り、書き込み、送信のアクセスを許可します。アシスタントに使わせたいのがFastmailだけなら、それが最も直接的な方法です。これははっきりお伝えします。Fastmail自身のヘルプページは2つの制限を挙げています。MCPサーバー経由では添付ファイルを読めないこと、そしてClaudeに追加できるFastmailアカウントは1つまでであることです。MCPEmailsはアプリ パスワードを使ってIMAPでFastmailに接続し、ほかのFastmailアカウントや、iCloud、Gmail、Yahoo、会社のIMAPメールボックスと一緒に<b>1つ</b>のMCP URLにまとめます。すべてに同じツールが使え、添付ファイルの読み取りにも対応しています。"
     },
     {
       "h": "FastmailのBasicアカウントはIMAPをまったく使えません",

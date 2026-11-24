@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta Hostinger a Claude, Cursor y clientes MCP",
-    "description": "Conecta Hostinger Email a Claude, Cursor y cualquier cliente MCP por IMAP en imap.hostinger.com:993. Business Email, basado en Titan, usa servidores completamente distintos."
+    "description": "Conecta Hostinger Email a Claude, Cursor y clientes MCP por IMAP en imap.hostinger.com:993. Business Email, basado en Titan, usa otros servidores."
   },
   "hero": {
     "eyebrow": "Hostinger + IA",

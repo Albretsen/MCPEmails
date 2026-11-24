@@ -1,6 +1,6 @@
 const post = {
   slug: 'extract-email-attachments-for-ai',
-  title: 'How AI Agents Can Read Email Attachments Without Storing Them',
+  title: 'How AI Agents Read Email Attachments Without Storing Them',
   description:
     'Use MCPEmails to extract text from PDF, CSV, JSON, HTML, and text email attachments so an AI agent can summarize what matters without keeping the file.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',

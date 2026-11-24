@@ -1,7 +1,7 @@
 const translation = {
   title: 'ClaudeをHotmail・Outlook.comに接続する方法（個人用Microsoftアカウント）',
   description:
-    'ClaudeのMicrosoft 365コネクタは、Free、Pro、Max、Ultraの各プランで個人用Microsoftアカウントを受け付けるようになりました。それで足りるのはどんな場合か、そして添付ファイル、複数のメールボックス、Teamプランで使うために、Hotmail、Outlook.com、Live、MSNをカスタムコネクタのURL1つでClaudeに接続する方法を説明します。',
+    'ClaudeのMicrosoft 365コネクタが個人用Microsoftアカウントに対応しました。それで足りる場合と、Hotmail、Outlook.com、Live、MSNをカスタムコネクタのURL1つでClaudeに接続し、添付ファイルや複数のメールボックスを使う方法を説明します。',
   coverAlt: 'MCPEmailsを通じて個人用のOutlook.comまたはHotmailの受信トレイに接続したClaude',
   content: `個人用のOutlook.com、Hotmail、Live、MSNのアドレスをClaudeに接続する方法は2つあります。Claude独自のMicrosoft 365コネクタは、Free、Pro、Max、Ultraの各プランで個人用Microsoftアカウントを受け付け、管理者の関与は不要です。もう1つの経路がMCPEmailsです。**Microsoftで接続**でメールボックスを追加し、URLを1つカスタムコネクタとしてClaudeに追加します。2つ目の経路は、組み込みコネクタがカバーしない部分を補います。添付ファイル、1つの接続にまとめた複数のメールボックス、TeamプランとEnterpriseプラン、そしてChatGPTやほかのMCPクライアントでの同じ受信トレイの利用です。昔からあるhotmail.comのアドレスも、新しいoutlook.comのアドレスと同じように、どちらの経路でも使えます。
 

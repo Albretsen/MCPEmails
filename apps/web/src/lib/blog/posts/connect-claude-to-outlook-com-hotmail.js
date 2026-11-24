@@ -1,8 +1,8 @@
 const post = {
   slug: 'connect-claude-to-outlook-com-hotmail',
-  title: 'Connect Claude to Hotmail and Outlook.com (Personal Accounts)',
+  title: 'Connect Claude to Hotmail and Outlook.com',
   description:
-    "Claude's Microsoft 365 connector now takes a personal Microsoft account on Free, Pro, Max and Ultra. When that is enough, and how to connect Hotmail, Outlook.com, Live or MSN to Claude with attachments, several mailboxes or a Team plan through one custom connector URL.",
+    "Claude now connects a personal Microsoft account. When that is enough, and how to add Hotmail or Outlook.com with attachments or several inboxes.",
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Claude connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',

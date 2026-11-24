@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Connectez Onet Poczta à Claude et à tout client MCP",
-    "description": "Connectez Onet Poczta à Claude, Cursor et tout client MCP via IMAP sur imap.poczta.onet.pl:993. Débloquez IMAP et SMTP sous Konto Główne, utilisez un hasło do aplikacji avec la vérification en deux étapes, et notez la règle IMAP uniquement d'Onet pour les programmes de messagerie depuis le 5 mai 2026."
+    "description": "Connectez Onet Poczta à Claude et tout client MCP via imap.poczta.onet.pl:993. Débloquez IMAP et SMTP sous Konto Główne et utilisez un hasło do aplikacji."
   },
   "hero": {
     "eyebrow": "Onet Poczta + IA",

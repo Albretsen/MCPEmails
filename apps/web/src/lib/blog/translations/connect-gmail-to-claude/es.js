@@ -1,9 +1,9 @@
 const translation = {
-  title: 'Cómo conectar Claude con Gmail: conector propio o MCP',
+  title: 'Cómo conectar Gmail a Claude: 2 formas',
   description:
-    'Claude ya trae un conector de Gmail para una cuenta. Te contamos cuándo basta y cómo conectar Claude con Gmail por MCP en dos minutos si además usas Outlook, IMAP, varias bandejas u otras apps de IA.',
+    'Para conectar Gmail a Claude, activa el conector de Gmail en Customize, Connectors. Si además usas Outlook, IMAP o varias bandejas, conéctalo por MCP.',
   coverAlt: 'Cómo conectar Gmail con Claude en dos minutos a través de MCP: una contraseña de aplicación de Google, una URL de endpoint, sin correo almacenado',
-  content: `¿Cómo conectar Claude con Gmail? Si solo quieres una cuenta de Gmail dentro de Claude, lo más rápido es el conector de Gmail que Claude ya trae: actívalo en los ajustes de conectores de Claude y listo. MCPEmails tiene sentido cuando necesitas algo más: Outlook, iCloud, Yahoo o cualquier buzón IMAP junto a Gmail, varias bandejas en la misma conversación, o la misma bandeja en ChatGPT, Cursor y otras apps compatibles con MCP. El resto de esta guía explica cómo configurarlo.
+  content: `Para conectar Gmail a Claude, abre **Customize → Connectors** en Claude, activa el conector de Gmail que Claude ya trae e inicia sesión con tu cuenta de Google. Si solo quieres una cuenta de Gmail dentro de Claude, con eso basta. MCPEmails tiene sentido cuando necesitas algo más: Outlook, iCloud, Yahoo o cualquier buzón IMAP junto a Gmail, varias bandejas en la misma conversación, o la misma bandeja en ChatGPT, Cursor y otras apps compatibles con MCP. El resto de esta guía explica cómo configurarlo.
 
 Para conectar Claude con Gmail a través de MCPEmails, haces dos cosas: conectas tu bandeja de Gmail una vez en el panel de MCPEmails con una contraseña de aplicación de Google y, después, pegas una única URL de endpoint en los ajustes de conectores de Claude y apruebas un inicio de sesión. Eso es todo: sin código, sin SDK, sin clave de API. Tarda unos dos minutos, y Claude nunca almacena tu correo: cada lectura y cada envío va a Gmail en directo y se descarta en cuanto Claude lo tiene.
 

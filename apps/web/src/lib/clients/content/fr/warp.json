@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Warp : serveur MCP pour agents",
-    "description": "Ajoutez une vraie boîte aux agents Warp. Settings, Agents, MCP servers : un serveur Streamable HTTP par URL et OAuth dans le navigateur. Sans clé API. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte aux agents Warp : Settings, Agents, MCP servers, un serveur Streamable HTTP par URL et OAuth dans le navigateur."
   },
   "hero": {
     "eyebrow": "Warp + e-mail",

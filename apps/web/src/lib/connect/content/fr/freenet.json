@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "freenet Mail dans Claude : l'option IMAP à activer",
-    "description": "Connectez freenet.de à Claude et tout client MCP via IMAP sur mx.freenet.de:993. L'accès client est désactivé par une case que freenet conseille de laisser décochée."
+    "description": "Connectez freenet.de à Claude et tout client MCP via IMAP sur mx.freenet.de:993. L'accès client dépend d'une case que freenet conseille de ne pas cocher."
   },
   "hero": {
     "eyebrow": "freenet Mail + IA",

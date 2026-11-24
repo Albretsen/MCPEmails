@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Zed verbinden: MCP-Setup im Agent Panel",
-    "description": "Fügen Sie dem Zed Agent Panel ein echtes Postfach als Context Server hinzu. Eine URL einfügen, per OAuth autorisieren, kein API-Schlüssel. E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "description": "Fügen Sie dem Zed Agent Panel ein Postfach als Context Server hinzu. URL einfügen, per OAuth autorisieren, kein API-Schlüssel. E-Mails lesen, suchen, senden."
   },
   "hero": {
     "eyebrow": "Zed + E-Mail",

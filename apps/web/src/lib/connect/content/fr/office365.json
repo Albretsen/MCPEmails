@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connecter la messagerie Microsoft 365 à Claude et ChatGPT",
-    "description": "Connectez une boîte Microsoft 365 professionnelle ou scolaire à Claude, ChatGPT, Cursor ou tout client MCP. Connexion avec Microsoft ; beaucoup d'organisations exigent d'abord qu'un administrateur informatique approuve l'application une fois."
+    "description": "Connectez une boîte Microsoft 365 pro ou scolaire à Claude, ChatGPT, Cursor ou tout client MCP. Connexion Microsoft, souvent après accord d'un admin."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + IA",

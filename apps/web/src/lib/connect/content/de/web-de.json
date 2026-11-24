@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Claude mit WEB.DE verbinden: IMAP, App-Passwort, Fehler beheben",
-    "description": "WEB.DE in Claude oder ChatGPT nutzen: POP3/IMAP einschalten, imap.web.de:993, bei 2FA ein App-Passwort. Plus Hilfe bei abgelehnter Anmeldung. Ein Postfach kostenlos."
+    "title": "Claude mit WEB.DE verbinden: IMAP, App-Passwort, Fehler",
+    "description": "WEB.DE in Claude oder ChatGPT nutzen: POP3/IMAP einschalten, imap.web.de:993, bei 2FA ein App-Passwort. Plus Hilfe bei abgelehnter Anmeldung."
   },
   "hero": {
     "eyebrow": "WEB.DE + KI",

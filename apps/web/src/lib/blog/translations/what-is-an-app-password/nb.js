@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Hva er et app-passord? Slik lager du et hos hver e-postleverandør',
+  title: 'Hva er et app-passord? Slik lager du et hos hver leverandør',
   description:
-    'Hva et app-passord er, hvorfor e-postapper og AI-koblinger trenger det, hvor du lager det hos Gmail, iCloud, Yahoo, AOL, Fastmail og Zoho, og hvordan du tilbakekaller det.',
+    'Hva et app-passord er, hvorfor e-postapper og AI-koblinger trenger det, og hvor du lager det hos Gmail, iCloud, Yahoo, AOL, Fastmail og Zoho.',
   coverAlt: 'Et app-passord som kobler en e-postinnboks til en AI-agent gjennom MCPEmails',
   content: `Et **app-passord** er et eget passord som e-postleverandøren lager for én bestemt app, slik at appen kan logge inn på postkassen uten det vanlige kontopassordet ditt. Du lager det i sikkerhetsinnstillingene for kontoen, limer det inn i e-postprogrammet eller koblingen én gang, og sletter det når du vil stenge ute akkurat den appen. Det vanlige passordet ditt og alle andre apper fortsetter å virke.
 

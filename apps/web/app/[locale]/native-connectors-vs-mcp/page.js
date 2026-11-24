@@ -5,6 +5,7 @@ import * as N from '@/lib/compare/native-connectors.mjs';
 import CompareClient from '../../../components/marketing/CompareClient';
 import { requireLocale } from '@/i18n/require-locale';
 import { getPost, getPostLocales } from '@/lib/blog/posts';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /** Whether the roundup guide the page links to is translated into `locale`. */
 function guideInLocale(locale) {
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }) {
   if (!c) return {};
   const { title, description } = c.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, N.PATH),
     openGraph: {

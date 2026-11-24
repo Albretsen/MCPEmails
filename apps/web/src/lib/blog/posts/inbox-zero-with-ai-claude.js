@@ -1,8 +1,8 @@
 const post = {
   slug: 'inbox-zero-with-ai-claude',
-  title: 'How to Reach Inbox Zero with AI (Using Claude and Your Real Inbox)',
+  title: 'How to Reach Inbox Zero with AI and Claude',
   description:
-    'Reach inbox zero with AI: let Claude triage, archive, label, and draft replies across your real Gmail, Outlook or IMAP inbox over MCP. A repeatable routine, the exact prompts, and why nothing is stored.',
+    'Reach inbox zero with AI: Claude triages, archives, labels and drafts replies in your real Gmail, Outlook or IMAP inbox over MCP, with the exact prompts.',
   cover: '/blog/cover-inbox-zero-with-ai-claude.svg',
   coverAlt:
     'Reach inbox zero with AI: Claude triages, archives, and drafts replies across your real inbox over MCP',

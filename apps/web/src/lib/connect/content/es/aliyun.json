@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Ajustes IMAP de Alibaba Mail (Aliyun) para Claude",
-    "description": "Conecta Alibaba Mail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.aliyun.com:993. Sirve la contraseña del buzón, salvo con contraseña de seguridad activa."
+    "description": "Conecta Alibaba Mail a Claude, Cursor o clientes MCP por IMAP en imap.aliyun.com:993. Sirve la contraseña del buzón, salvo con contraseña de seguridad activa."
   },
   "hero": {
     "eyebrow": "Alibaba Mail + IA",

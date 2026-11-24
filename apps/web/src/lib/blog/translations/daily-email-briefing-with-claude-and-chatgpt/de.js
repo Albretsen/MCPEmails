@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Tägliche E-Mail-Übersicht mit Claude und ChatGPT: Posteingang nach Zeitplan zusammenfassen',
+  title: 'Tägliche E-Mail-Übersicht mit Claude und ChatGPT',
   description:
-    'Drei Wege zu einer täglichen Zusammenfassung Ihres Posteingangs: eine geplante Aufgabe in Claude, eine geplante Aufgabe in ChatGPT oder eine Morgenübersicht, die MCPEmails ganz ohne Chat in Ihr Postfach legt. Einrichtung, Prompts und Grenzen.',
+    'Drei Wege zur täglichen Posteingangs-Zusammenfassung: geplante Aufgabe in Claude oder ChatGPT oder eine Morgenübersicht von MCPEmails. Einrichtung und Prompts.',
   coverAlt:
     'Eine tägliche E-Mail-Übersicht von Claude und ChatGPT fasst neue E-Mails aus verbundenen Postfächern zusammen',
   content: `**Eine tägliche E-Mail-Übersicht von Claude oder ChatGPT bekommen Sie, wenn Sie dem Assistenten zwei Dinge geben: Zugriff auf Ihr Postfach und einen Zeitplan.** Beide Assistenten führen inzwischen geplante Aufgaben aus. Claude führt einen Prompt stündlich, täglich, wöchentlich oder an Werktagen aus, ChatGPT zu einer festen Uhrzeit, und das in jedem Tarif. Verbinden Sie die Aufgabe über einen Konnektor mit Ihrem Postfach, und jeden Morgen wartet die Zusammenfassung auf Sie.

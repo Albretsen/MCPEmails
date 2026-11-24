@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Koble Comcast Xfinity-e-post til Claude via IMAP",
-    "description": "Koble Comcast Xfinity-e-post til Claude og enhver MCP-klient over IMAP på imap.comcast.net:993. Third Party Access Security må være på, ellers feiler alle pålogginger."
+    "description": "Koble Comcast Xfinity-e-post til Claude og enhver MCP-klient over IMAP på imap.comcast.net:993. Third Party Access Security må være på, ellers feiler pålogging."
   },
   "hero": {
     "eyebrow": "Comcast Xfinity + AI",

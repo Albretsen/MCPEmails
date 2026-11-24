@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Correo con IA para empresas: todos los buzones en un solo agente",
-    "description": "Una sola persona, todos los buzones de la empresa. Conecta info@, ventas@ y facturas@ por IMAP, Gmail, Microsoft 365 o cualquier proveedor, y gestiónalos desde Claude o cualquier cliente MCP."
+    "title": "Correo con IA para empresas: todos los buzones, un agente",
+    "description": "Una sola persona, todos los buzones de la empresa. Conecta info@, ventas@ y facturas@ por IMAP, Gmail o Microsoft 365 y gestiónalos desde Claude."
   },
   "hero": {
     "eyebrow": "Para quien lleva el correo de la empresa",

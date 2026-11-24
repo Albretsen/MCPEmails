@@ -9,8 +9,8 @@
     "https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities (Tool permissions labels; web connectors on Claude, Cowork, Claude Desktop and Claude Mobile)"
   ],
   "meta": {
-    "title": "E-Mail mit Claude Cowork verbinden: Custom Connector einrichten",
-    "description": "Geben Sie Claude Cowork ein echtes Postfach. Eine URL unter Customize, Connectors hinzufügen, per OAuth anmelden, und Cowork kann E-Mails lesen, suchen, entwerfen und senden. Ein Postfach kostenlos."
+    "title": "E-Mail mit Claude Cowork verbinden: Custom Connector",
+    "description": "Geben Sie Claude Cowork ein echtes Postfach: URL unter Customize, Connectors hinzufügen, per OAuth anmelden, dann E-Mails lesen, suchen, entwerfen und senden."
   },
   "hero": {
     "eyebrow": "Claude Cowork + E-Mail",

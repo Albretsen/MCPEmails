@@ -6,9 +6,9 @@ import { MS_GRANT, MS_ASSIGN, CLAUDE_M365 } from './links.mjs';
 
 const nb = {
   meta: {
-    title: 'Need admin approval for Outlook eller Microsoft 365? Godkjenn MCPEmails',
+    title: 'Need admin approval i Microsoft 365? Godkjenn MCPEmails',
     description:
-      'Hvorfor Microsoft viser "Need admin approval" når du kobler en Outlook- eller Microsoft 365-postkasse fra jobben til Claude eller ChatGPT, lenken du sender til IT-ansvarlig, og nøyaktig hvilke tillatelser administratoren godkjenner.',
+      'Hvorfor Microsoft viser "Need admin approval" når du kobler en Outlook- eller Microsoft 365-jobbpostkasse til Claude eller ChatGPT, og lenken du sender til IT.',
   },
   breadcrumb: 'Godkjenning fra administrator i Microsoft 365',
   eyebrow: 'Dokumentasjon',

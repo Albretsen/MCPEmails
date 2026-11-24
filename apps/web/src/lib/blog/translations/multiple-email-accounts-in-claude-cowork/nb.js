@@ -1,7 +1,7 @@
 const translation = {
   title: 'Flere e-postkontoer i Claude Cowork, også personlig Outlook',
   description:
-    'Claude Cowork når én Google-konto gjennom Gmail-koblingen og den ene Microsoft-kontoen du logger på med gjennom Microsoft 365-koblingen. Slik gir du én Cowork-oppgave flere innbokser, både jobb og privat.',
+    'Claude Cowork når én Google-konto og én Microsoft-konto gjennom de innebygde koblingene. Slik gir du én Cowork-oppgave flere innbokser, både jobb og privat.',
   coverAlt:
     'E-postkontoer for jobb og privat, blant annet Gmail og Outlook.com, koblet til én oppgave i Claude Cowork',
   content: `**Claude Cowork bruker de samme koblingene som Claude-chatten, så den har de samme begrensningene for e-post: én Google-konto gjennom Gmail-koblingen, og én Microsoft-konto gjennom Microsoft 365-koblingen, som bare godtar en personlig Outlook.com-konto på Free, Pro, Max og Ultra.** En Gmail-konto til, en personlig Outlook.com- eller Hotmail-adresse på et Team- eller Enterprise-abonnement, en firmapostkasse hos en IMAP-leverandør eller sending med vedlegg krever en egendefinert kobling. Med en MCP-server som MCPEmails gir én egendefinert kobling en Cowork-oppgave tilgang til alle postkassene du kobler til, hver med sitt navn.

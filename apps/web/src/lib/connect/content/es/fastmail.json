@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmail tiene su propio servidor MCP, y es bueno",
-      "p": "En abril de 2026 Fastmail lanzó un servidor MCP propio en <code>https://api.fastmail.com/mcp</code>, autenticado con OAuth, que ofrece acceso de solo lectura, de escritura o de envío y cubre correo, calendario y contactos. Si Fastmail es el único buzón al que quieres que llegue un asistente, esa es la vía más directa disponible y lo decimos sin rodeos. MCPEmails responde a otra pregunta: <b>una sola</b> URL MCP que reúne tu cuenta de Fastmail y tu buzón de iCloud, Zoho, Yahoo, GMX o IMAP de empresa a la vez, con las mismas herramientas en todos, para que un agente pueda buscar entre buzones y tú configures un servidor en lugar de cinco. Aquí importa más serte útil que quedar bien nosotros."
+      "h": "Fastmail ya tiene un servidor MCP oficial. ¿Para qué usar MCPEmails?",
+      "p": "Lo tiene: en abril de 2026 Fastmail lanzó un servidor MCP propio en <code>https://api.fastmail.com/mcp</code>. Inicias sesión con OAuth y concedes acceso de lectura, escritura o envío al correo, los contactos y los calendarios. Si Fastmail es el único buzón al que quieres que llegue un asistente, esa es la vía más directa, y lo decimos sin rodeos. La propia página de ayuda de Fastmail señala dos límites: los adjuntos no se pueden leer a través de su servidor MCP y Claude no puede añadir más de una cuenta de Fastmail. MCPEmails conecta Fastmail por IMAP con una contraseña de aplicación y lo reúne en <b>una sola</b> URL MCP junto con tus otras cuentas de Fastmail y tus buzones de iCloud, Gmail, Yahoo o IMAP de empresa, con las mismas herramientas para todos, incluida la lectura de adjuntos."
     },
     {
       "h": "Las cuentas Fastmail Basic no pueden usar IMAP en absoluto",

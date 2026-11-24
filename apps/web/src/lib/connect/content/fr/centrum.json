@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez Centrum.cz, Atlas.cz et Volný.cz à Claude et à tout client MCP",
-    "description": "Connectez une boîte Centrum.cz, Atlas.cz ou Volný.cz à Claude, Cursor et tout client MCP via IMAP sur imap.centrum.cz:993. L'envoi exige la boîte agrandie gratuite (navýšená schránka) ; avec la double authentification, un mot de passe d'application."
+    "title": "Connectez Centrum.cz, Atlas.cz et Volný.cz à Claude",
+    "description": "Connectez Centrum.cz, Atlas.cz ou Volný.cz à Claude via IMAP sur imap.centrum.cz:993. L'envoi exige la boîte agrandie gratuite (navýšená schránka)."
   },
   "hero": {
     "eyebrow": "Centrum.cz + IA",

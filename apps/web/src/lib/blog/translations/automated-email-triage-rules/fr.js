@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Des règles de tri automatique du courrier qui tournent sans modèle dans la boucle',
+  title: 'Règles de tri automatique des e-mails, sans modèle',
   description:
-    'Comment fonctionnent les automatisations de MCPEmails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
+    'Les automatisations MCPEmails : une recherche enregistrée et une action fixe, selon une cadence, sans modèle qui lit vos e-mails. Aperçu, activation, journal.',
   coverAlt:
     'Règles de tri du courrier sans supervision dans MCPEmails : une recherche enregistrée plus une action fixe selon un calendrier',
   content: `Chaque matin, vous demandez à votre agent de dégager le bruit : classer les notifications de build, marquer les reçus comme lus, transférer les factures à votre comptable. Cela fonctionne. Cela coûte aussi un appel au modèle à chaque fois, et le mardi le résultat diffère légèrement de celui du lundi.

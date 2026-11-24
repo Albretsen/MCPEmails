@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "REG.RU MCP Server: Connect REG.RU Hosting Mail to Claude",
-    "description": "MCP server for mail on REG.RU hosting. Connect the mailboxes on your domain (info@, zakaz@) to Claude, ChatGPT and Cursor over IMAP at mail.hosting.reg.ru:993 with the mailbox password."
+    "description": "MCP server for mail on REG.RU hosting. Connect your domain's mailboxes to Claude and ChatGPT over IMAP at mail.hosting.reg.ru:993 with the mailbox password."
   },
   "hero": {
     "eyebrow": "REG.RU email + AI",

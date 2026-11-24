@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import {
   metaAlternatesFor,
@@ -11,6 +11,7 @@ import {
 import * as C from '@/lib/compare/email-mcp-servers.mjs';
 import EmailMcpServersView from '../../../components/marketing/EmailMcpServersView';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /best-email-mcp-servers: the ranked field of MCP email servers.
@@ -39,8 +40,8 @@ import { requireLocale } from '@/i18n/require-locale';
  * of places a claim can drift from its source without multiplying the number of
  * people re-checking them. Same mechanism the provider pages use
  * (metaAlternatesFor + a narrow generateStaticParams), so hreflang advertises
- * only the locale that exists and the others 404 rather than serving an
- * untranslated page under a translated URL.
+ * only the locale that exists, and the other locales redirect to the English
+ * page rather than serving an untranslated page under a translated URL.
  */
 const LOCALES = ['en'];
 
@@ -54,7 +55,7 @@ export async function generateMetadata({ params }) {
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = C.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, C.PATH, LOCALES),
     openGraph: {
@@ -77,7 +78,10 @@ export async function generateMetadata({ params }) {
 export default async function BestEmailMcpServersPage({ params }) {
   const { locale } = await params;
   requireLocale(locale);
-  if (!LOCALES.includes(locale)) notFound();
+  // Google kept trying /es, /fr and /nb/best-email-mcp-servers (reached via the
+  // old localized /email-mcp-servers-compared URLs), which 404ed. The page is
+  // English only, so a localized URL is a permanent redirect to it.
+  if (!LOCALES.includes(locale)) permanentRedirect(C.PATH);
   setRequestLocale(locale);
 
   const url = localePath(locale, C.PATH);

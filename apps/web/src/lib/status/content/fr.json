@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Statut",
-    "description": "Disponibilité en direct du point d'accès MCPEmails, mesurée par un contrôle automatique exécuté toutes les cinq minutes en production. Des chiffres réels enregistrés, sans marketing."
+    "description": "Disponibilité en direct du point d'accès MCPEmails, mesurée toutes les cinq minutes en production par un contrôle automatique. Des chiffres réels."
   },
   "hero": {
     "eyebrow": "Statut",

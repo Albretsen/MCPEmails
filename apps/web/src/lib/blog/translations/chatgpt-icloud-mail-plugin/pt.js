@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Plugin do iCloud Mail no ChatGPT: configuração, limites e outras contas',
+  title: 'Plugin do iCloud Mail no ChatGPT: configuração e limites',
   description:
-    'Como conectar o iCloud Mail ao ChatGPT com o novo plugin da OpenAI, o que ele alcança e o que não alcança, por que suas outras contas do Apple Mail não aparecem e como usar o iCloud também no Claude.',
+    'Como conectar o iCloud Mail ao ChatGPT com o plugin da OpenAI, o que ele alcança, por que outras contas do Apple Mail somem e como usar o iCloud no Claude.',
   coverAlt: 'iCloud Mail conectado ao ChatGPT e ao Claude',
   content: `Em 27 de outubro de 2026, a OpenAI adicionou ao ChatGPT um plugin do iCloud Mail e um plugin do iCloud Calendar. O plugin de Mail permite que o ChatGPT pesquise, leia, rascunhe e envie e-mails em uma caixa do iCloud, usando uma senha específica de app da Apple. Ele cobre só o iCloud: contas do Gmail, do Outlook ou do trabalho que você adicionou ao app Mail do iPhone ou do Mac ficam fora de alcance, e o Claude não tem opção própria para o iCloud.
 

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Poste.io til Claude: Dovecot IMAP i en container",
-    "description": "Koble en Poste.io-postkasse til Claude, Cursor og ChatGPT via IMAP på 993. Containerens vertsnavn er e-postverten, og en reverse proxy kan skjule et dårlig sertifikat."
+    "description": "Koble en Poste.io-postkasse til Claude, Cursor og ChatGPT via IMAP på 993. Containerens vertsnavn er e-postverten, og en proxy kan skjule et dårlig sertifikat."
   },
   "hero": {
     "eyebrow": "Poste.io + AI",

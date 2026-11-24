@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Correo de @nifty en Claude: IMAP tras el permiso de conexión",
-    "description": "Conecta un buzón de @nifty a Claude o a cualquier cliente MCP en imap.nifty.com:993. Pon メールソフト接続許可（IMAP） en 許可中 y usa la contraseña de correo específica, no la de tu @nifty ID."
+    "description": "Conecta @nifty a Claude o clientes MCP en imap.nifty.com:993. Pon メールソフト接続許可（IMAP） en 許可中 y usa la contraseña de correo, no la de tu @nifty ID."
   },
   "hero": {
     "eyebrow": "@nifty + IA",

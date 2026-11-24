@@ -3,7 +3,8 @@
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
-    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted",
+    "https://www.ovhcloud.com/en/public-cloud/mcp-server/"
   ],
   "auth": {
     "method": "mail-password",
@@ -87,6 +88,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "OVHcloud har allerede en MCP-server. Hvorfor bruke MCPEmails?",
+      "p": "OVHclouds egen MCP-server administrerer OVHcloud-kontoen og tjenestene dine, som instanser, lagring, nettverk og databaser. Den leser ikke og sender ikke e-posten i postkassene dine. Til det trenger du en MCP-server for e-post: MCPEmails logger inn på hver OVH-postkasse over IMAP og SMTP med passordet til postkassen og samler alle sammen, info@, sales@ og resten, bak <b>én</b> MCP-URL for Claude, ChatGPT og Cursor."
+    },
     {
       "h": "OVH kjører tre e-postprodukter på tre vertsmønstre, og å havne på feil ett er den vanligste feilen her",
       "p": "Dette er OVH-problemet. <b>MX Plan</b>, postkassen som følger med domener og webhotell, er dokumentert på <code>ssl0.ovh.net</code> (OVH oppgir også <code>imap.mail.ovh.net</code> og <code>smtp.mail.ovh.net</code>), IMAP på 993 med SSL/TLS og SMTP på 465 med SSL/TLS. <b>Email Pro</b> svarer på <code>pro</code> pluss servernummeret ditt pluss <code>.mail.ovh.net</code>, IMAP 993 med SSL og SMTP på <b>587 med STARTTLS</b>. <b>Hosted Exchange</b> svarer på <code>ex</code> pluss servernummeret ditt pluss <code>.mail.ovh.net</code>, igjen IMAP 993 og SMTP 587 med STARTTLS. De tre er ikke utskiftbare i noen retning. Å peke en Exchange- eller Email Pro-postkasse mot <code>ssl0.ovh.net</code> feiler, og MX Plan på port 587 med STARTTLS er ikke der OVH dokumenterer den."

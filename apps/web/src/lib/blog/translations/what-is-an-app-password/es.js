@@ -1,7 +1,7 @@
 const translation = {
-  title: '¿Qué es una contraseña de aplicación? Dónde crearla en cada proveedor de correo',
+  title: '¿Qué es una contraseña de aplicación? Dónde crearla',
   description:
-    'Qué es una contraseña de aplicación, por qué la piden los clientes de correo y los conectores de IA, dónde crearla en Gmail, iCloud, Yahoo, AOL, Fastmail y Zoho, y cómo revocarla.',
+    'Qué es una contraseña de aplicación, por qué la piden los conectores de IA, dónde crearla en Gmail, iCloud, Yahoo, AOL, Fastmail y Zoho, y cómo revocarla.',
   coverAlt: 'Una contraseña de aplicación conecta un buzón de correo con un agente de IA a través de MCPEmails',
   content: `Una **contraseña de aplicación** es una contraseña aparte que tu proveedor de correo genera para una sola app, de modo que esa app pueda entrar en tu buzón sin conocer la contraseña real de tu cuenta. La creas en los ajustes de seguridad de tu cuenta, la pegas una vez en el cliente de correo o en el conector y la borras cuando quieras dejar fuera a esa app. Tu contraseña normal, y el resto de apps, siguen funcionando.
 

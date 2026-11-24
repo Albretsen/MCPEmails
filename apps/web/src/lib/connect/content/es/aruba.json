@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Servidor MCP de Aruba: conecta el correo de Aruba a Claude",
-    "description": "Servidor MCP para el correo de Aruba. Conecta los buzones de tu dominio en Aruba (info@, amministrazione@) a Claude y ChatGPT por IMAP en imaps.aruba.it:993 con la contraseña del buzón."
+    "description": "Servidor MCP para el correo de Aruba. Conecta los buzones de tu dominio (info@) a Claude y ChatGPT por IMAP en imaps.aruba.it:993 con la contraseña del buzón."
   },
   "hero": {
     "eyebrow": "Correo de Aruba + IA",

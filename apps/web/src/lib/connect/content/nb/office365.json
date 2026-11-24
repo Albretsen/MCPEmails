@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Microsoft 365-e-post til Claude og ChatGPT",
-    "description": "Koble en Microsoft 365-postkasse fra jobb eller skole til Claude, ChatGPT, Cursor eller en hvilken som helst MCP-klient. Logg inn med Microsoft; mange organisasjoner trenger at en IT-administrator godkjenner appen én gang først."
+    "description": "Koble en Microsoft 365-postkasse fra jobb eller skole til Claude, ChatGPT eller Cursor. Mange organisasjoner trenger at IT godkjenner appen én gang først."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + AI",

@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Raycast AI verbinden: MCP-Server-Setup",
-    "description": "Fügen Sie Raycast AI ein echtes Postfach hinzu. Install MCP Server ausführen, Transport auf HTTP setzen, eine URL einfügen und anmelden. Kein API-Schlüssel. Ein Postfach kostenlos."
+    "description": "Fügen Sie Raycast AI ein echtes Postfach hinzu: Install MCP Server ausführen, Transport auf HTTP setzen, URL einfügen und anmelden. Kein API-Schlüssel."
   },
   "hero": {
     "eyebrow": "Raycast + E-Mail",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble AT&T Mail til Claude med en secure mail key",
-    "description": "Koble AT&T Mail (att.net, sbcglobal.net, bellsouth.net) til Claude og enhver MCP-klient over IMAP på imap.mail.att.net. Krever en secure mail key, ikke passordet."
+    "description": "Koble AT&T Mail (att.net, sbcglobal.net, bellsouth.net) til Claude og MCP-klienter over IMAP på imap.mail.att.net. Krever en secure mail key, ikke passordet."
   },
   "hero": {
     "eyebrow": "AT&T Mail + AI",

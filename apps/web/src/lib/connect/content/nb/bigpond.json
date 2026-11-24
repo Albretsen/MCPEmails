@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Telstra BigPond-e-post til Claude via IMAP",
-    "description": "Koble Telstra BigPond-e-post til Claude og enhver MCP-klient over IMAP på imap.telstra.com:993. Bigpond-adresser ligger nå på Telstra Mail-verter, ikke bigpond-verter."
+    "description": "Koble Telstra BigPond-e-post til Claude og enhver MCP-klient over IMAP på imap.telstra.com:993. Bigpond-adresser ligger nå på Telstra Mail-verter."
   },
   "hero": {
     "eyebrow": "Telstra BigPond + AI",

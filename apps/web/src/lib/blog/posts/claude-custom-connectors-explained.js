@@ -1,8 +1,8 @@
 const post = {
   slug: 'claude-custom-connectors-explained',
-  title: 'Claude Custom Connectors Explained: Plans, Setup, OAuth and Safety',
+  title: 'Claude Custom Connectors: How to Add One by URL',
   description:
-    'What Claude custom connectors are, which plans and apps support them, how to add a remote MCP server by URL, sign-in options, admin controls, and safety tips.',
+    'A Claude custom connector is a remote MCP server you add by URL under Customize, Connectors. Plans, setup steps, sign-in options, admin controls and safety.',
   cover: '/blog/cover-claude-custom-connectors-explained.svg',
   coverAlt: 'Claude custom connectors explained: a remote MCP server added to Claude by URL',
   authorId: 'asgeir',
@@ -10,7 +10,7 @@ const post = {
   updatedAt: '2026-10-26T09:00:00.000Z',
   tags: ['Claude', 'Connectors', 'MCP', 'OAuth'],
   featured: false,
-  content: `**Claude custom connectors** let you add any remote [Model Context Protocol](https://modelcontextprotocol.io) server to Claude by pasting its URL. Once you add one, Claude can call that server's tools in your chats: read a database, file a ticket, or, in the worked example at the end of this guide, read and send your email.
+  content: `**A Claude custom connector is a remote [Model Context Protocol](https://modelcontextprotocol.io) server you add by pasting its URL under Customize → Connectors → Add custom connector.** The Free plan allows one, Pro and Max have no limit, and on Team and Enterprise an Owner adds it for the organization. Once you add one, Claude can call that server's tools in your chats: read a database, file a ticket, or, in the worked example at the end of this guide, read and send your email.
 
 Plan and menu details below come from Anthropic's own help pages, checked on 26 October 2026. Claude's interface changes often, so if a label differs, Anthropic's [custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) is the reference.
 

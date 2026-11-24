@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Connecteurs personnalisés Claude : forfaits, configuration, OAuth et sécurité',
+  title: 'Connecteurs personnalisés Claude : guide complet',
   description:
-    'Connecteurs personnalisés Claude : forfaits et applications compatibles, ajout d’un serveur MCP distant par URL, options de connexion, contrôles admin et sécurité.',
+    'Connecteurs personnalisés Claude : forfaits compatibles, ajout d’un serveur MCP distant par URL, options de connexion, contrôles admin et sécurité.',
   coverAlt: 'Les connecteurs personnalisés Claude expliqués : un serveur MCP distant ajouté à Claude par URL',
   content: `Les **connecteurs personnalisés Claude** permettent d’ajouter à Claude n’importe quel serveur [Model Context Protocol](https://modelcontextprotocol.io) distant en collant simplement son URL. Une fois le connecteur ajouté, Claude peut appeler les outils de ce serveur dans vos conversations : interroger une base de données, créer un ticket ou, dans l’exemple complet à la fin de ce guide, lire et envoyer vos e-mails.
 

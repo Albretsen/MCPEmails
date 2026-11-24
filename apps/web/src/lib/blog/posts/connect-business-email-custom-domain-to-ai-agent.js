@@ -1,8 +1,8 @@
 const post = {
   slug: 'connect-business-email-custom-domain-to-ai-agent',
-  title: 'Connect a Custom-Domain Business Email to Your AI Agent (IMAP Setup)',
+  title: 'Connect Custom-Domain Business Email to an AI Agent',
   description:
-    'Setup guide for you@yourcompany.com: find out who really runs your mail, connect Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS or cPanel, and fix the From name before your agent replies.',
+    'Setup for you@yourcompany.com: find who runs your mail, connect Google Workspace, Zoho, Fastmail, IONOS or cPanel, and fix the From name first.',
   cover: '/blog/cover-connect-gmail-to-claude.svg',
   coverAlt:
     'Connect a business email on your own domain to an AI agent with MCPEmails',

@@ -7,6 +7,7 @@ import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { EVIDENCE_LINKS, adminConsentCopy } from './content.mjs';
 import { withReadingLang } from '@/i18n/reading-lang.mjs';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * "Need admin approval" when connecting a work or school Microsoft 365
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = adminConsentCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

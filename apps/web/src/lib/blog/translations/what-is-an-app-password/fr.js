@@ -1,7 +1,7 @@
 const translation = {
-  title: "Qu'est-ce qu'un mot de passe d'application ? Où le créer chez chaque fournisseur",
+  title: "Mot de passe d'application : où le créer",
   description:
-    "Ce qu'est un mot de passe d'application, pourquoi les clients de messagerie et les connecteurs IA en ont besoin, où le créer pour Gmail, iCloud, Yahoo, AOL, Fastmail et Zoho, et comment le révoquer.",
+    "Ce qu'est un mot de passe d'application, pourquoi l'IA en a besoin, où le créer pour Gmail, iCloud, Yahoo, AOL, Fastmail et Zoho, et comment le révoquer.",
   coverAlt: "Un mot de passe d'application qui relie une boîte mail à un agent IA via MCPEmails",
   content: `Un **mot de passe d'application** est un mot de passe distinct que votre fournisseur de messagerie génère pour une seule application, afin que celle-ci puisse se connecter à votre boîte sans le vrai mot de passe de votre compte. Vous le créez dans les paramètres de sécurité de votre compte, vous le collez une fois dans le client de messagerie ou le connecteur, et vous le supprimez dès que vous voulez couper l'accès à cette application. Votre mot de passe habituel et toutes vos autres applications continuent de fonctionner.
 

@@ -5,6 +5,7 @@ import { DATASET_PATH, FIELD_DOCS } from '@/lib/connect/provider-dataset.mjs';
 import { datasetCopy } from './content.mjs';
 import ProviderDatasetView from '../../../../../components/marketing/ProviderDatasetView';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /docs/providers/data: the open IMAP/SMTP provider dataset.
@@ -30,20 +31,20 @@ export async function generateMetadata({ params }) {
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = datasetCopy().meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, DATASET_PATH, LOCALES),
     openGraph: {
       type: 'article',
       url: localePath(locale, DATASET_PATH),
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       locale: OG_LOCALE[locale],
       images: [OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} · mcpemails`,
+      title: `${title} · MCPEmails`,
       description,
       images: [OG_IMAGE.url],
     },

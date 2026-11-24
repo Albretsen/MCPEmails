@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo conectar iCloud, Fastmail o cualquier buzón IMAP a Claude',
+  title: 'Conecta iCloud, Fastmail o cualquier buzón IMAP a Claude',
   description:
-    'Conecta iCloud, Fastmail o cualquier buzón IMAP a Claude con una contraseña específica de aplicación. Configuración paso a paso, el endpoint MCP y lo que IMAP hace y Gmail no.',
+    'Conecta iCloud, Fastmail o cualquier buzón IMAP a Claude con una contraseña de aplicación: la configuración, el endpoint MCP y lo que IMAP hace y Gmail no.',
   coverAlt: 'Conecta iCloud, Fastmail y cualquier buzón IMAP a Claude a través de MCP',
   content: `Conectar iCloud, Fastmail o cualquier buzón IMAP a Claude requiere algo que Outlook no necesita: una **contraseña específica de aplicación**. La generas dentro de tu proveedor de correo, la pegas una sola vez en MCPEmails y Claude puede leer, buscar y enviar a través de esa bandeja. Sin flujos OAuth, sin tener que memorizar la configuración del servidor SMTP.
 

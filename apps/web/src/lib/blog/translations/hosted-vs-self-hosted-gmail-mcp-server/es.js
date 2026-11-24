@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Servidor MCP de Gmail alojado vs. autoalojado: ventajas, inconvenientes y costes',
+  title: 'Servidor MCP de Gmail alojado o autoalojado: pros y costes',
   description:
-    'Servidor MCP de Gmail alojado vs. autoalojado, comparados: los repos DIY gratis te dan control total, pero asumes OAuth, cifrado y disponibilidad. Uno alojado cuesta minutos.',
+    'Servidor MCP de Gmail alojado o autoalojado: los repos gratis dan control total, pero asumes OAuth, cifrado y disponibilidad. Uno alojado se activa en minutos.',
   coverAlt: 'Comparativa de servidor MCP de Gmail alojado frente a autoalojado (MCPEmails)',
   content: `Si quieres que tu agente de IA lea y envíe correo de Gmail, tienes dos opciones reales: ejecutar un servidor MCP de Gmail autoalojado a partir de un repo de código abierto, o apuntar tu cliente a uno alojado. La vía DIY cuesta cero dólares y te da control total, pero asumes personalmente la configuración de OAuth, el cifrado de tokens, el alojamiento, las actualizaciones y la seguridad. Un servidor alojado como MCPEmails cuesta minutos de configuración y mantiene las credenciales cifradas, a cambio de confiar la conexión a un proveedor.
 

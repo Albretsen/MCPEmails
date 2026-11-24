@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Ajustes IMAP de Interia Poczta y acceso MCP para Claude",
-    "description": "Conecta Interia Poczta a Claude, Cursor y cualquier cliente MCP en poczta.interia.pl:993. IMAP sigue desactivado hasta que pones korzystam z programu pocztowego en TAK."
+    "description": "Conecta Interia Poczta a Claude y clientes MCP en poczta.interia.pl:993. IMAP sigue desactivado hasta que pones korzystam z programu pocztowego en TAK."
   },
   "hero": {
     "eyebrow": "Interia Poczta + IA",

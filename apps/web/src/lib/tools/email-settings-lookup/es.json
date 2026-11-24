@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Configuración IMAP y SMTP de cualquier correo electrónico",
-    "description": "Escribe una dirección de correo y obtén su servidor IMAP y SMTP, el puerto y el tipo de seguridad, y qué proveedor gestiona el correo de un dominio propio. Gratis y en tu navegador."
+    "description": "Escribe una dirección de correo y obtén su servidor IMAP y SMTP, puerto y seguridad, y qué proveedor gestiona un dominio propio. Gratis y en tu navegador."
   },
   "hero": {
     "eyebrow": "Herramienta gratuita",

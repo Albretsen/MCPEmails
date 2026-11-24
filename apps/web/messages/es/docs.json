@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Documentación del servidor MCP de correo: Gmail, Outlook, IMAP y OAuth",
+    "title": "Documentación MCP de correo: Gmail, Outlook, IMAP y OAuth",
     "description": "Empieza con MCPEmails en minutos. Guía de inicio rápido, referencia de herramientas y respuestas de ejemplo para agentes de Gmail, Outlook e IMAP."
   },
   "hero": {
@@ -528,7 +528,7 @@
   "providers": {
     "meta": {
       "title": "Compatibilidad de proveedores de correo para agentes de IA",
-      "description": "Qué proveedores de correo funcionan con un agente de IA vía MCP y qué hace falta para conectar cada uno: OAuth o contraseña específica de aplicación, servidores y puertos IMAP y SMTP, TLS o STARTTLS, qué suele fallar y qué puede hacer el agente una vez conectado. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 e IMAP genérico."
+      "description": "Qué proveedores de correo funcionan con un agente de IA vía MCP: OAuth o contraseña de aplicación, servidores IMAP y SMTP, puertos, TLS y fallos habituales."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

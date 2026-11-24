@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connecter l'e-mail A2 Hosting à Claude et aux clients MCP",
-    "description": "Boîtes A2 Hosting (désormais hosting.com) vers Claude en IMAP, port 993. Utilisez le nom complet du serveur, comme mi3-ss78.a2hosting.com, pour éviter les alertes SSL."
+    "description": "Boîtes A2 Hosting (désormais hosting.com) vers Claude en IMAP 993. Utilisez le nom complet du serveur, comme mi3-ss78.a2hosting.com, sans alerte SSL."
   },
   "hero": {
     "eyebrow": "A2 Hosting + IA",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect AT&T Mail to Claude with a Secure Mail Key",
-    "description": "Connect AT&T Mail (att.net, sbcglobal.net, bellsouth.net) to Claude and any MCP client over IMAP at imap.mail.att.net. Needs a secure mail key, not your password."
+    "description": "Connect AT&T Mail (att.net, sbcglobal.net, bellsouth.net) to Claude and any MCP client over IMAP at imap.mail.att.net with a secure mail key, not your password."
   },
   "hero": {
     "eyebrow": "AT&T Mail + AI",

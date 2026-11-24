@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Zed: MCP en el Agent Panel",
-    "description": "Añade una bandeja real al Agent Panel de Zed como context server. Pega una URL y autoriza con OAuth, sin clave de API. Lee, busca, envía y programa correo. Una bandeja gratis."
+    "description": "Añade una bandeja real al Agent Panel de Zed como context server. Pega una URL y autoriza con OAuth, sin clave de API. Lee, busca y envía correo."
   },
   "hero": {
     "eyebrow": "Zed + correo",

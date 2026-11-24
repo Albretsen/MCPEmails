@@ -1,7 +1,7 @@
 const translation = {
-  title: 'KI-Agent mit E-Mail verbinden: die vollständige Anleitung 2026',
+  title: 'KI-Agent mit E-Mail verbinden: die Anleitung 2026',
   description:
-    'Geben Sie Ihrem KI-Agenten Lese- und Sendezugriff auf ein echtes Postfach über MCP: Gmail, Outlook, iCloud, Fastmail, GMX oder IMAP. Wie es funktioniert, die Tools, die Sicherheit und die Einrichtung.',
+    'Geben Sie Ihrem KI-Agenten Lese- und Sendezugriff auf ein echtes Postfach über MCP: Gmail, Outlook, iCloud oder IMAP. Funktionsweise, Sicherheit, Einrichtung.',
   coverAlt: 'So geben Sie Ihrem KI-Agenten Zugriff auf E-Mails über MCP, mit MCPEmails',
   content: `Um einem KI-Agenten Zugriff auf E-Mails zu geben, verbinden Sie Ihr Postfach mit einem MCP-Server und richten Ihren Agenten auf eine Endpunkt-URL. Der Agent bekommt dann einen kleinen Satz Tools zum Lesen, Suchen und Senden von E-Mails. Der schwierige Teil ist nicht der Agent, sondern das Ganze so zu tun, dass Ihr Passwort nicht in einen Prompt, ein Log oder einen Vektorspeicher gerät. Um diese letzte Meile geht es in dieser Anleitung.
 

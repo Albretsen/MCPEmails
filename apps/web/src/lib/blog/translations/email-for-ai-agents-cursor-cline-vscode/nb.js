@@ -1,6 +1,6 @@
 const translation = {
   title: 'Sette opp e-post for AI-agenter i Cursor, Cline og VS Code',
-  description: 'Gi kodeagenten din e-posttilgang i Cursor, Cline og VS Code. Cursor bruker OAuth; Cline og egendefinerte klienter bruker en avgrenset API-nøkkel over MCP. Komplett oppsett.',
+  description: 'Gi kodeagenten din e-posttilgang i Cursor, Cline og VS Code. Cursor bruker OAuth, mens Cline og egne klienter bruker en avgrenset API-nøkkel over MCP.',
   coverAlt: 'Sette opp e-posttilgang for AI-kodeagenter i Cursor, Cline og VS Code over MCP',
   content: `Her er kortversjonen. For å gi en kodeagent i editoren din tilgang til en ekte innboks, peker du den mot ett MCP-endepunkt: \`https://www.mcpemails.com/api/mcp\`. Cursor snakker OAuth, så du limer inn den URL-en og logger inn. Cline, den rå MCP-konfigurasjonen i VS Code og ethvert egendefinert skript gjør ikke OAuth-dansen, så de autentiserer med en avgrenset API-nøkkel sendt som en \`Authorization: Bearer\`-header. Samme endepunkt, samme verktøy, to veier inn.
 

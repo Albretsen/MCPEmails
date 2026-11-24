@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Disroot-e-post til Claude og MCP-klienter",
-    "description": "Koble Disroot-e-post til Claude, Cursor og enhver MCP-klient over IMAP på disroot.org:993. Bruker Disroot-passordet ditt, app-passord finnes ikke. Én innboks gratis."
+    "description": "Koble Disroot-e-post til Claude, Cursor og enhver MCP-klient over IMAP på disroot.org:993 med Disroot-passordet, app-passord finnes ikke. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Disroot + AI",

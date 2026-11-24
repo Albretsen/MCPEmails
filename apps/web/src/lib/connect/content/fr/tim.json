@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez TIM Mail (tim.it, alice.it, tin.it) à Claude et à tout client MCP",
-    "description": "Connectez TIM Mail, Alice Mail ou tin.it à Claude, Cursor et tout client MCP via IMAP sur imap.tim.it:143 en STARTTLS. Fonctionne sur une boîte liée à une ligne TIM active ; TIM n'autorise les autres boîtes dans les programmes de messagerie que depuis son propre réseau."
+    "title": "Connectez TIM Mail (tim.it, alice.it, tin.it) à Claude",
+    "description": "Connectez TIM Mail, Alice Mail ou tin.it à Claude via IMAP sur imap.tim.it:143 en STARTTLS. Fonctionne avec une boîte liée à une ligne TIM active."
   },
   "hero": {
     "eyebrow": "TIM Mail + IA",

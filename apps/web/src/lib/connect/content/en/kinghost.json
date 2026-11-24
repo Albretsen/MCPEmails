@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "KingHost Email in Claude: IMAP, and the SMTPi Switch for Sending",
-    "description": "Connect a KingHost mailbox to Claude or any MCP client at imap.kinghost.net:993. Sending from outside Brazil goes through smtpi.kinghost.net, which has to be enabled in the KingHost panel first."
+    "title": "KingHost Email in Claude: IMAP and the SMTPi Switch",
+    "description": "Connect a KingHost mailbox to Claude or any MCP client at imap.kinghost.net:993. Sending from outside Brazil uses smtpi.kinghost.net, enabled in the panel."
   },
   "hero": {
     "eyebrow": "KingHost + AI",

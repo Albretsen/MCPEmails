@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connecter NetEase 163 Mail à Claude en IMAP",
-    "description": "Connectez NetEase 163 Mail à Claude, Cursor ou tout client MCP en IMAP sur imap.163.com:993. Exige un code d'autorisation client de 16 caractères, pas votre mot de passe."
+    "description": "Connectez NetEase 163 Mail à Claude, Cursor ou tout client MCP en IMAP sur imap.163.com:993, avec un code d'autorisation de 16 caractères."
   },
   "hero": {
     "eyebrow": "NetEase 163 Mail + IA",

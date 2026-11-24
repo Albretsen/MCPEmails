@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Terra Mail Brasil til Claude: IMAP på betalt abonnement",
-    "description": "Koble en terra.com.br-postkasse til Claude eller enhver MCP-klient på imap.terra.com.br:993. Terra har avviklet gratisnivået, så et aktivt betalt abonnement kreves."
+    "description": "Koble en terra.com.br-postkasse til Claude eller enhver MCP-klient på imap.terra.com.br:993. Terra har avviklet gratisnivået, så et betalt abonnement kreves."
   },
   "hero": {
     "eyebrow": "Terra Mail + AI",

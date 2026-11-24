@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect Telstra BigPond Email to Claude via IMAP",
-    "description": "Connect Telstra BigPond email to Claude and any MCP client over IMAP at imap.telstra.com:993. Bigpond addresses now live on Telstra Mail hosts, not bigpond ones."
+    "description": "Connect Telstra BigPond email to Claude and any MCP client over IMAP at imap.telstra.com:993. Bigpond addresses now live on Telstra Mail hosts."
   },
   "hero": {
     "eyebrow": "Telstra BigPond + AI",

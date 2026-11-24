@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "E-mail IA pour les entreprises : toutes les boîtes sur un seul agent",
-    "description": "Une seule personne, toutes les boîtes de l'entreprise. Connectez info@, ventes@ et factures@ en IMAP, Gmail, Microsoft 365 ou chez tout hébergeur, et gérez-les depuis Claude ou tout client MCP."
+    "title": "E-mail IA en entreprise : toutes les boîtes sur un agent",
+    "description": "Une personne, toutes les boîtes de l'entreprise. Connectez info@, ventes@ et factures@ en IMAP, Gmail ou Microsoft 365, et gérez-les depuis Claude."
   },
   "hero": {
     "eyebrow": "Pour la personne qui gère les e-mails de l'entreprise",

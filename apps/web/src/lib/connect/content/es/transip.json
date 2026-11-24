@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP de TransIP: conecta el correo de TransIP a Claude",
-    "description": "Servidor MCP para el alojamiento de correo de TransIP. Conecta los buzones de tu dominio (info@, facturen@) a Claude, ChatGPT y Cursor por IMAP en imap.transip.email:993 con la contraseña del buzón."
+    "title": "Servidor MCP de TransIP: conecta tu correo a Claude",
+    "description": "Servidor MCP para el correo de TransIP. Conecta los buzones de tu dominio a Claude, ChatGPT y Cursor por IMAP en imap.transip.email:993 con su contraseña."
   },
   "hero": {
     "eyebrow": "Correo TransIP + IA",

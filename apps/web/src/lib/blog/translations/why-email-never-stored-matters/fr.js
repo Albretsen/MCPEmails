@@ -1,7 +1,7 @@
 const translation = {
-  title: "Pourquoi le « courriel jamais stocké » compte quand vous connectez l’IA à votre boîte mail",
+  title: "Pourquoi le « jamais stocké » compte pour vos e-mails",
   description:
-    'Jamais stocké : MCPEmails récupère vos messages en direct puis les jette, ne gardant qu’un jeton chiffré par boîte. Voyez pourquoi c’est mieux qu’un outil qui copie toute votre boîte.',
+    'Jamais stocké : MCPEmails lit vos messages en direct puis les jette, et ne garde qu’un jeton chiffré par boîte. Pourquoi c’est mieux qu’un outil qui copie tout.',
   coverAlt: 'Un courriel récupéré en direct puis jeté, face à une seconde copie stockée dans la base de données d’un fournisseur',
   content: `Quand vous connectez un agent IA à votre boîte mail, la question la plus importante de toutes est de savoir où finissent vos courriels. Avec MCPEmails, la réponse est : nulle part. Chaque appel d’outil récupère vos messages en direct depuis Gmail, Microsoft Graph ou votre serveur IMAP, les transmet à l’agent, puis les jette. Ce que nous conservons pour chaque boîte, c’est un jeton chiffré pour que l’appel suivant puisse avoir lieu, plus les quelques informations dont a besoin une fonctionnalité que vous activez, comme un message programmé en attente d’envoi.
 

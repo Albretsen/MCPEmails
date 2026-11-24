@@ -118,7 +118,7 @@ const es = {
   meta: {
     title: 'Derecho de desistimiento',
     description:
-      'Cómo desistir de una suscripción a MCPEmails o de un pase de 3 meses en un plazo de 14 días, el reembolso que recibes y un modelo de formulario de desistimiento.',
+      'Cómo desistir de una suscripción a MCPEmails o de un pase de 3 meses en 14 días, el reembolso que recibes y un modelo de formulario de desistimiento.',
   },
   eyebrow: 'Legal',
   title: 'Derecho de desistimiento',
@@ -167,7 +167,7 @@ const fr = {
   meta: {
     title: 'Droit de rétractation',
     description:
-      "Comment vous rétracter d'un abonnement MCPEmails ou d'un pass de 3 mois sous 14 jours, le remboursement que vous recevez et un modèle de formulaire de rétractation.",
+      "Comment vous rétracter d'un abonnement MCPEmails ou d'un pass de 3 mois sous 14 jours, le remboursement prévu et un modèle de formulaire.",
   },
   eyebrow: 'Juridique',
   title: 'Droit de rétractation',
@@ -262,7 +262,7 @@ const de = {
   meta: {
     title: 'Widerrufsrecht',
     description:
-      'So widerrufen Sie ein Abonnement oder einen 3-Monats-Pass für MCPEmails innerhalb von 14 Tagen, welche Erstattung Sie erhalten, und ein Muster-Widerrufsformular.',
+      'So widerrufen Sie ein Abonnement oder einen 3-Monats-Pass für MCPEmails innerhalb von 14 Tagen, Ihre Erstattung und ein Muster-Widerrufsformular.',
   },
   eyebrow: 'Rechtliches',
   title: 'Widerrufsrecht',

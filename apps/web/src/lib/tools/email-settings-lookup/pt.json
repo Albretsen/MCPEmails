@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Consulta de configurações IMAP e SMTP para qualquer e-mail",
-    "description": "Digite um endereço de e-mail e veja o servidor IMAP e SMTP, a porta e a segurança, além de qual provedor cuida dos e-mails de um domínio próprio. Grátis, roda no seu navegador."
+    "description": "Digite um endereço de e-mail e veja servidor IMAP e SMTP, porta e segurança, e qual provedor cuida do e-mail de um domínio próprio. Grátis, no seu navegador."
   },
   "hero": {
     "eyebrow": "Ferramenta grátis",

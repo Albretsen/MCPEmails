@@ -1,7 +1,7 @@
 const translation = {
   title: 'Inbox Zero mit KI: Claude räumt Ihr echtes Postfach auf',
   description:
-    'Inbox Zero mit KI erreichen: Claude sortiert, archiviert, labelt und entwirft Antworten in Ihrem echten Gmail-, Outlook- oder IMAP-Postfach über MCP. Eine wiederholbare Routine, die genauen Prompts, und warum nichts gespeichert wird.',
+    'Inbox Zero mit KI: Claude sortiert, archiviert, labelt und entwirft Antworten in Ihrem Gmail-, Outlook- oder IMAP-Postfach über MCP. Mit Routine und Prompts.',
   coverAlt:
     'Inbox Zero mit KI erreichen: Claude sortiert, archiviert und entwirft Antworten in Ihrem echten Postfach über MCP',
   content: `Inbox Zero hatte schon immer dasselbe Problem: Dorthin zu kommen kostet eine Stunde, die Sie nicht haben, und morgen sind Sie wieder bei fünfzig ungelesenen Nachrichten. Ein KI-Agent verändert die Rechnung. Statt dass Sie eine Nachricht nach der anderen sortieren, sagen Sie Claude, was „erledigt“ bedeutet, und es arbeitet das ganze Postfach auf einmal durch: sortieren, archivieren, labeln und Antworten entwerfen, in Ihren *echten* E-Mails, live.

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Kolab Now mit Claude, ChatGPT und Cursor verbinden",
-    "description": "Kolab Now per IMAP über imap.kolabnow.com:993 mit Claude, Cursor und jedem MCP-Client verbinden. Geprüfte Einstellungen, und warum die Anmeldung Ihr Kontopasswort ist. Ein Postfach kostenlos."
+    "description": "Kolab Now per IMAP über imap.kolabnow.com:993 mit Claude und jedem MCP-Client verbinden. Geprüfte Einstellungen, und warum die Anmeldung Ihr Kontopasswort ist."
   },
   "hero": {
     "eyebrow": "Kolab Now + KI",

@@ -17,7 +17,7 @@
   ],
   "meta": {
     "title": "E-Mail mit OpenClaw verbinden: Remote-MCP-Server einrichten",
-    "description": "Geben Sie Ihrem OpenClaw-Agenten ein echtes Postfach. Einen Streamable-HTTP-MCP-Server mit OAuth hinzufügen, einmal anmelden und E-Mails lesen, suchen, entwerfen und senden."
+    "description": "Geben Sie Ihrem OpenClaw-Agenten ein echtes Postfach: Streamable-HTTP-MCP-Server mit OAuth hinzufügen, einmal anmelden, dann E-Mails lesen und senden."
   },
   "hero": {
     "eyebrow": "OpenClaw + E-Mail",

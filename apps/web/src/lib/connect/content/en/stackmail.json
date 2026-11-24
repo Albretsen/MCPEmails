@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "StackMail MCP Server: Connect 20i Email to Claude",
-    "description": "MCP server for 20i StackMail. Connect the mailboxes on your domain (hello@, accounts@) to Claude, ChatGPT and Cursor over IMAP at imap.stackmail.com:993 with the mailbox password, whichever 20i reseller hosts you."
+    "description": "MCP server for 20i StackMail. Connect your domain's mailboxes to Claude and ChatGPT over IMAP at imap.stackmail.com:993, whichever 20i reseller hosts you."
   },
   "hero": {
     "eyebrow": "StackMail email + AI",

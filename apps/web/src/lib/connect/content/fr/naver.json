@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Connecter Naver Mail à Claude avec un mot de passe d'app",
-    "description": "Connectez Naver Mail à Claude, Cursor ou tout client MCP en IMAP sur imap.naver.com:993. Depuis juin 2025 : validation en deux étapes et mot de passe d'application."
+    "description": "Connectez Naver Mail à Claude, Cursor ou tout client MCP via imap.naver.com:993. Depuis juin 2025 : validation en deux étapes et mot de passe d'application."
   },
   "hero": {
     "eyebrow": "Naver Mail + IA",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Correo HEY e IA: sin IMAP, y qué funciona en su lugar",
-    "description": "HEY no acepta conexiones IMAP, POP ni SMTP, así que MCPEmails no puede conectar un buzón de HEY. Por qué 37signals lo diseñó así y las dos vías que sí funcionan."
+    "description": "HEY no acepta IMAP, POP ni SMTP, así que MCPEmails no puede conectar un buzón de HEY. Por qué 37signals lo diseñó así y las dos vías que sí funcionan."
   },
   "hero": {
     "eyebrow": "HEY + IA",

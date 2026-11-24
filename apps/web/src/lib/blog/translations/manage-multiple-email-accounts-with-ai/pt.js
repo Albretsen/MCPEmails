@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Como gerenciar várias contas de e-mail com um único agente de IA',
+  title: 'Como gerenciar várias contas de e-mail com um agente de IA',
   description:
-    'Trabalho, pessoal e o negócio paralelo em um único agente de IA: como ele descobre as caixas, como limitar um pedido a uma conta, nomes de remetente que continuam certos e revisão de envio por caixa.',
+    'Trabalho, pessoal e o negócio paralelo em um agente de IA: como ele descobre as caixas, como limitar um pedido a uma conta e revisão de envio por caixa.',
   coverAlt:
     'Um agente de IA conectado às contas de e-mail do trabalho, pessoal e do negócio paralelo com o MCPEmails',
   content: `Quase ninguém tem uma caixa de correio só. Você tem um endereço do trabalho, um pessoal e pelo menos mais um para um negócio paralelo ou um domínio que ainda mantém. Toda pergunta que cruza duas contas vira uma busca manual em dois lugares.

@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -13,13 +14,13 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect Fastmail to Claude, Cursor & MCP Clients",
-    "description": "Connect Fastmail to Claude, Cursor, ChatGPT and any MCP client over IMAP at imap.fastmail.com:993 with a Fastmail app password. One inbox free, forever."
+    "title": "Fastmail MCP Server for Claude, ChatGPT & Cursor",
+    "description": "Fastmail MCP server for Claude, ChatGPT and Cursor. Connect Fastmail over IMAP with an app password, next to your other mailboxes. One inbox free, forever."
   },
   "hero": {
     "eyebrow": "Fastmail + AI",
-    "titleLine1": "Connect Fastmail to Claude,",
-    "titleLine2": "and Cursor, ChatGPT, any MCP client",
+    "titleLine1": "The Fastmail MCP server",
+    "titleLine2": "for Claude, Cursor, ChatGPT and any MCP client",
     "lead": "Give your AI agent a real Fastmail inbox in minutes. Read, search, send, reply, schedule and organize mail with a single app password, and use the same inbox in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
     "meta1": "App password, no OAuth setup",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmail ships its own MCP server, and it is a good one",
-      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. MCPEmails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
+      "h": "Fastmail already has an official MCP server. Why use MCPEmails?",
+      "p": "It does: in April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>. You sign in with OAuth and grant read, write or send access to mail, contacts and calendars. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route, and we will say so plainly. Fastmail's own help page names two limits: attachments cannot be read through its MCP server, and Claude cannot add more than one Fastmail account. MCPEmails connects Fastmail over IMAP with an app password and puts it behind <b>one</b> MCP URL together with your other Fastmail accounts and your iCloud, Gmail, Yahoo or company IMAP mailboxes, with the same tools over all of them, attachment reads included."
     },
     {
       "h": "Fastmail Basic accounts cannot use IMAP at all",

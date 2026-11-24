@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Connecter Claude à Hotmail et Outlook.com (comptes personnels)',
+  title: 'Connecter Claude à Hotmail et Outlook.com',
   description:
-    "Le connecteur Microsoft 365 de Claude accepte désormais un compte Microsoft personnel sur les formules Free, Pro, Max et Ultra. Quand cela suffit, et comment connecter Hotmail, Outlook.com, Live ou MSN à Claude avec les pièces jointes, plusieurs boîtes ou une formule Team grâce à une seule URL de connecteur personnalisé.",
+    "Le connecteur Microsoft 365 de Claude accepte un compte perso. Quand il suffit, et comment connecter Hotmail ou Outlook.com avec plusieurs boîtes.",
   coverAlt: 'Claude connecté à une boîte Outlook.com ou Hotmail personnelle via MCPEmails',
   content: `Il existe deux façons de connecter Claude à une adresse personnelle Outlook.com, Hotmail, Live ou MSN. Le connecteur Microsoft 365 de Claude accepte un compte Microsoft personnel sur les formules Free, Pro, Max et Ultra, sans qu'aucun administrateur intervienne. L'autre voie est MCPEmails : vous ajoutez la boîte avec **Se connecter avec Microsoft**, puis vous ajoutez une seule URL dans Claude comme connecteur personnalisé. Cette seconde voie couvre ce que le connecteur intégré laisse de côté : les pièces jointes, plusieurs boîtes derrière une seule connexion, les formules Team et Enterprise, et la même boîte dans ChatGPT ou tout autre client MCP. Une vieille adresse hotmail.com fonctionne exactement comme une adresse outlook.com récente dans les deux cas.
 

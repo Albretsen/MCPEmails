@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Conecta el correo de Riseup a Claude por IMAP",
-    "description": "Conecta un buzón de Riseup a Claude, Cursor o cualquier cliente MCP por IMAP en mail.riseup.net:993. Usa el nombre de cuenta, no la dirección riseup.net completa."
+    "description": "Conecta Riseup a Claude, Cursor o cualquier cliente MCP por IMAP en mail.riseup.net:993. Usa el nombre de cuenta, no la dirección riseup.net completa."
   },
   "hero": {
     "eyebrow": "Riseup + IA",

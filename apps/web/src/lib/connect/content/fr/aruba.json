@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Serveur MCP Aruba : connectez la messagerie Aruba à Claude",
-    "description": "Serveur MCP pour la messagerie Aruba. Connectez les boîtes de votre domaine Aruba (info@, amministrazione@) à Claude et ChatGPT en IMAP sur imaps.aruba.it:993 avec le mot de passe de la boîte."
+    "description": "Serveur MCP pour la messagerie Aruba. Connectez les boîtes de votre domaine à Claude et ChatGPT en IMAP sur imaps.aruba.it:993 avec le mot de passe de la boîte."
   },
   "hero": {
     "eyebrow": "E-mail Aruba + IA",

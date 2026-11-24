@@ -12,7 +12,7 @@
   ],
   "meta": {
     "title": "Koble e-post til n8n: MCP Client Tool for AI Agent",
-    "description": "Koble e-post til en AI Agent i n8n med noden MCP Client Tool: HTTP Streamable, Bearer Auth og en API-nøkkel med avgrensede tilganger. Les, søk, skriv utkast og send e-post."
+    "description": "Koble e-post til en AI Agent i n8n med noden MCP Client Tool: HTTP Streamable, Bearer Auth og en avgrenset API-nøkkel. Les, søk, skriv utkast og send e-post."
   },
   "hero": {
     "eyebrow": "n8n + e-post",

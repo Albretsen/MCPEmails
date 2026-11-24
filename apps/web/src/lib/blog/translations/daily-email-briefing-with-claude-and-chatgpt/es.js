@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Resumen diario del correo con Claude y ChatGPT: tu bandeja de entrada resumida cada día',
+  title: 'Resumen diario del correo con Claude y ChatGPT',
   description:
-    'Tres formas de recibir un resumen diario de tu bandeja de entrada: una tarea programada de Claude, una tarea programada de ChatGPT o un resumen matinal que MCPEmails deja en tu bandeja sin abrir ningún chat. Configuración, prompts y límites.',
+    'Tres formas de recibir un resumen diario de tu bandeja: una tarea programada de Claude o ChatGPT, o un resumen matinal de MCPEmails sin abrir ningún chat.',
   coverAlt:
     'Un resumen diario de Claude y ChatGPT con el correo nuevo de varias bandejas de entrada conectadas',
   content: `**Puedes recibir un resumen diario de tu correo de Claude o ChatGPT dándole al asistente dos cosas: acceso a tu buzón y un horario.** Los dos asistentes ya ejecutan tareas programadas. Las de Claude ejecutan un prompt cada hora, cada día, cada semana o los días laborables, y las de ChatGPT se ejecutan a una hora fija en todos los planes. Conecta la tarea a tu buzón mediante un conector y cada mañana tendrás el resumen esperándote.

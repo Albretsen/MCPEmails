@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "WP.pl Poczta dans Claude : activez d'abord IMAP",
-    "description": "Connectez WP.pl Poczta à Claude et tout client MCP en IMAP sur imap.wp.pl:993. Activez d'abord IMAP dans Opcje ; la connexion en deux étapes change le mot de passe."
+    "description": "Connectez WP.pl Poczta à Claude en IMAP sur imap.wp.pl:993. Activez d'abord IMAP dans Opcje ; la connexion en deux étapes change le mot de passe."
   },
   "hero": {
     "eyebrow": "WP.pl Poczta + IA",

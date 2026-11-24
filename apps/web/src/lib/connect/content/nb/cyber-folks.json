@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "cyber_Folks MCP-server: koble postkassene dine til Claude",
-    "description": "MCP-server for e-post hos cyber_Folks. Koble postkassene på domenet ditt (biuro@, kontakt@) til Claude, ChatGPT og Cursor via IMAP på din sNN.cyber-folks.pl-server, port 993, med postkassepassordet."
+    "description": "MCP-server for e-post hos cyber_Folks. Koble postkassene på domenet ditt til Claude, ChatGPT og Cursor via IMAP på din sNN.cyber-folks.pl-server, port 993."
   },
   "hero": {
     "eyebrow": "cyber_Folks-e-post + AI",

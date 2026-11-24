@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Tuta Mail und Claude: kein IMAP, kein SMTP, keine Bridge",
-    "description": "Tuta betreibt bewusst keinen IMAP-, POP- oder SMTP-Dienst und bietet keine Bridge, daher kann kein MCP-Server ein Tuta-Postfach verbinden. Der Grund, und was Sie stattdessen tun können."
+    "description": "Tuta bietet kein IMAP, POP oder SMTP und keine Bridge, daher kann kein MCP-Server ein Tuta-Postfach verbinden. Der Grund, und was Sie stattdessen tun können."
   },
   "hero": {
     "eyebrow": "Tuta Mail + KI",

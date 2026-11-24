@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "KI-E-Mail für Unternehmen: Alle Firmenpostfächer in einem Agenten",
-    "description": "Eine Person, alle Firmenpostfächer. Verbinden Sie info@, sales@ und invoices@ per IMAP, Gmail, Microsoft 365 oder bei jedem Mail-Hoster und bearbeiten Sie alle aus Claude oder einem anderen MCP-Client."
+    "title": "KI-E-Mail für Unternehmen: alle Firmenpostfächer, ein Agent",
+    "description": "Eine Person, alle Firmenpostfächer. Verbinden Sie info@, sales@ und invoices@ per IMAP, Gmail oder Microsoft 365 und bearbeiten Sie alle aus Claude."
   },
   "hero": {
     "eyebrow": "Für alle, die die E-Mails der Firma betreuen",

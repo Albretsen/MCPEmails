@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "mailbox.org mit Claude und jedem MCP-Client verbinden",
-    "description": "mailbox.org mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.mailbox.org:993. Mit Zwei-Faktor-Authentifizierung braucht ein Client ein E-Mail-App-Passwort."
+    "description": "mailbox.org per IMAP über imap.mailbox.org:993 mit Claude, Cursor und jedem MCP-Client verbinden. Mit Zwei-Faktor-Schutz braucht es ein E-Mail-App-Passwort."
   },
   "hero": {
     "eyebrow": "mailbox.org + KI",

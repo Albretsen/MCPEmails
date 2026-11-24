@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Zimbra no Claude: IMAP na 993, ou 7993 sem proxy",
-    "description": "Conecte uma caixa de correio do Zimbra ao Claude, ao Cursor e ao ChatGPT via IMAP. A 993 é do proxy, o mailboxd escuta na 7993, e há quatro lugares em que o IMAP pode estar desligado."
+    "description": "Conecte uma caixa do Zimbra ao Claude, ao Cursor e ao ChatGPT via IMAP. A 993 é do proxy, o mailboxd escuta na 7993, e o IMAP pode estar desligado em 4 lugares."
   },
   "hero": {
     "eyebrow": "Zimbra + IA",

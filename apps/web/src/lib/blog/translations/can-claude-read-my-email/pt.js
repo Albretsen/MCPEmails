@@ -1,7 +1,7 @@
 const translation = {
   title: 'O Claude pode ler e enviar meus e-mails? Caixa por caixa',
   description:
-    'Sim, no Gmail e em contas corporativas do Microsoft 365, com os conectores do próprio Claude. Yahoo, iCloud, Outlook.com, caixas IMAP e vários provedores ao mesmo tempo precisam de um servidor MCP.',
+    'Sim, no Gmail e no Microsoft 365 corporativo, com os conectores do Claude. Yahoo, iCloud, Outlook.com, IMAP e vários provedores juntos exigem um servidor MCP.',
   coverAlt:
     'Claude lendo e enviando e-mails de caixas do Gmail, Microsoft 365, Yahoo, iCloud e IMAP',
   content: `**Sim, o Claude pode ler e enviar seus e-mails, mas só de uma caixa de correio que você conectou a ele.** O Claude tem dois conectores de e-mail próprios: um para o Gmail e outro para contas corporativas do Microsoft 365. O conector do Gmail lê, pesquisa e envia, e por padrão pede sua aprovação antes de cada envio. O conector do Microsoft 365 lê e pesquisa, e só envia depois que um administrador ativa as ferramentas de escrita. Yahoo, iCloud, um endereço pessoal do Outlook.com, uma caixa da empresa em um servidor IMAP ou vários provedores em uma só conexão precisam de um servidor MCP como o MCPEmails.

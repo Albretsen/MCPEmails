@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Anleitungen für KI-E-Mail-Agenten, MCP-Tutorials & Sicherheit",
-    "description": "Praxisnahe Anleitungen, um E-Mail mit Claude und MCP-Clients zu verbinden, den Zugriff von KI-Agenten abzusichern und Gmail, Outlook, IMAP und E-Mail-Workflows sicher zu nutzen."
+    "title": "KI-E-Mail-Agenten: Anleitungen, MCP-Tutorials, Sicherheit",
+    "description": "Praxisnahe Anleitungen, um E-Mail mit Claude und MCP-Clients zu verbinden, KI-Agenten abzusichern und Gmail, Outlook und IMAP sicher zu nutzen."
   },
   "blogName": "MCPEmails Blog",
   "index": {

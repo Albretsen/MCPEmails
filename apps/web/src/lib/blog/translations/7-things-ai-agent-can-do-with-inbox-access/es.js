@@ -1,7 +1,7 @@
 const translation = {
-  title: '7 cosas que tu agente de IA puede hacer en cuanto tiene acceso a la bandeja de entrada',
+  title: '7 cosas que tu agente de IA hace con acceso a tu bandeja',
   description:
-    'Siete cosas concretas que un agente de IA puede hacer con acceso a tu bandeja: clasificar correo sin leer, resumir hilos, redactar respuestas, encontrar adjuntos y hacer seguimientos.',
+    'Siete cosas que un agente de IA hace con acceso a tu bandeja: clasificar lo no leído, resumir hilos, redactar respuestas, buscar adjuntos y hacer seguimientos.',
   coverAlt: 'Siete cosas que tu agente de IA puede hacer con acceso a la bandeja de entrada a través de MCP (MCPEmails)',
   content: `En cuanto tu agente puede leer y enviar correo de verdad, se acaban las demos de juguete y empieza el trabajo real. Aquí tienes siete cosas que puedes ponerle a hacer hoy mismo: clasificar el montón de correos sin leer, resumir un hilo largo, redactar respuestas con tu voz, rescatar ese adjunto concreto, hacer seguimiento de lo pendiente, dirigir el correo al sitio correcto y enviarte un resumen semanal.
 

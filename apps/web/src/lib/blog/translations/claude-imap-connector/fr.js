@@ -1,5 +1,5 @@
 const translation = {
-  title: 'Connecteur IMAP Claude : connectez n’importe quelle boîte IMAP à Claude',
+  title: 'Connecteur IMAP Claude : reliez n’importe quelle boîte IMAP',
   description:
     'Configurez un connecteur IMAP Claude avec les réglages IMAP/SMTP, un mot de passe d’application et TLS, plus sécurité, limites et dépannage.',
   coverAlt: 'Claude connecté à une boîte IMAP et SMTP via MCPEmails',

@@ -23,9 +23,9 @@
 // settings labels are messages/en/dashboard.json settings.morningBrief.
 const post = {
   slug: 'daily-email-briefing-with-claude-and-chatgpt',
-  title: 'Daily Email Briefing with Claude and ChatGPT: Inbox Summaries on a Schedule',
+  title: 'Daily Email Briefing with Claude and ChatGPT',
   description:
-    'Three ways to get a daily summary of your inbox: a Claude scheduled task, a ChatGPT scheduled task, or a morning brief MCPEmails puts in your inbox with no chat open. Setup, prompts and limits.',
+    'Three ways to get a daily inbox summary: a Claude scheduled task, a ChatGPT scheduled task, or a morning brief MCPEmails sends with no chat open.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'A daily email briefing from Claude and ChatGPT summarizing new mail across connected inboxes',

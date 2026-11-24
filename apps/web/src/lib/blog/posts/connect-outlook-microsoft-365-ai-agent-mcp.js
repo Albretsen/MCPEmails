@@ -1,8 +1,8 @@
 const post = {
   slug: 'connect-outlook-microsoft-365-ai-agent-mcp',
-  title: 'Connecting Outlook and Microsoft 365 to Your AI Agent via MCP',
+  title: 'Connect Outlook and Microsoft 365 to an AI Agent via MCP',
   description:
-    'Connect Outlook.com or Microsoft 365 to your AI agent over MCP. Sign in with Microsoft, no app password, Microsoft Graph underneath. Work accounts may need IT admin approval once.',
+    'Connect Outlook.com or Microsoft 365 to your AI agent over MCP. Sign in with Microsoft, no app password. Work accounts may need IT admin approval once.',
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Connecting Outlook and Microsoft 365 to an AI agent over MCP',
   authorId: 'asgeir',

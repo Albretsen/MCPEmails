@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Cursor : serveur MCP via mcp.json",
-    "description": "Ajoutez une vraie boîte à Cursor avec quatre lignes dans mcp.json. Cursor lance la connexion OAuth, sans clé API : lisez, cherchez, envoyez, planifiez. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à Cursor avec quatre lignes dans mcp.json. Cursor lance la connexion OAuth, sans clé API : lisez, cherchez et envoyez."
   },
   "hero": {
     "eyebrow": "Cursor + e-mail",

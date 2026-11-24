@@ -1,7 +1,7 @@
 const translation = {
-  title: 'As melhores formas de deixar o Claude gerenciar sua caixa de entrada em 2026',
+  title: 'Melhores formas de o Claude gerenciar sua caixa em 2026',
   description:
-    'Um comparativo direto das melhores formas de deixar o Claude gerenciar sua caixa de entrada em 2026: integrações nativas, servidores MCP próprios, copiar e colar, extensões de navegador e MCP hospedado.',
+    'Um comparativo direto das formas de deixar o Claude gerenciar sua caixa em 2026: integrações nativas, servidores MCP próprios, extensões e MCP hospedado.',
   coverAlt: 'As melhores formas de deixar o Claude gerenciar sua caixa de entrada em 2026, com o MCPEmails',
   content: `Se você quer que o Claude realmente leia, faça a triagem e responda aos seus e-mails, existem cinco opções de verdade em 2026: um servidor MCP de e-mail hospedado, um servidor MCP que você mesmo roda, copiar e colar conversas no chat, uma extensão de navegador ou uma integração nativa do cliente. Para a maioria das pessoas, um servidor MCP hospedado é a escolha certa, porque funciona em segundos e nunca armazena seus e-mails. As outras têm cada uma o seu nicho, e algumas são piores do que parecem.
 

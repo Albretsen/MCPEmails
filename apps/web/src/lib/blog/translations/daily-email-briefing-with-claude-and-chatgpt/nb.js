@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Daglig e-postoppsummering med Claude og ChatGPT: oversikt over innboksen etter en fast plan',
+  title: 'Daglig e-postoppsummering med Claude og ChatGPT',
   description:
-    'Tre måter å få en daglig oppsummering av innboksen på: en planlagt oppgave i Claude, en planlagt oppgave i ChatGPT, eller en morgenoversikt som MCPEmails legger i innboksen din uten at en chat er åpen. Oppsett, prompter og begrensninger.',
+    'Tre måter å få en daglig oppsummering av innboksen: en planlagt oppgave i Claude eller ChatGPT, eller en morgenoversikt fra MCPEmails uten at en chat er åpen.',
   coverAlt:
     'En daglig e-postoppsummering fra Claude og ChatGPT som oppsummerer ny e-post på tvers av tilkoblede innbokser',
   content: `**Du kan få en daglig e-postoppsummering fra Claude eller ChatGPT ved å gi assistenten to ting: tilgang til postkassen din og en tidsplan.** Begge assistentene kjører nå planlagte oppgaver. Claude kan kjøre en prompt hver time, hver dag, hver uke eller på hverdager, og ChatGPT kjører oppgaver på et fast tidspunkt på alle abonnementer. La oppgaven lese postkassen din gjennom en kobling, så venter oppsummeringen på deg hver morgen.

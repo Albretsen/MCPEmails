@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à Claude Code : MCP en une commande",
-    "description": "Ajoutez une vraie boîte à la CLI Claude Code avec claude mcp add. OAuth dans le terminal, sans clé API : lisez, cherchez, envoyez et planifiez depuis le shell. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte à la CLI Claude Code avec claude mcp add. OAuth dans le terminal, sans clé API : lisez, cherchez et envoyez depuis le shell."
   },
   "hero": {
     "eyebrow": "Claude Code + e-mail",

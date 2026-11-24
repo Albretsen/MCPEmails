@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Serveur MCP Gmail hébergé ou auto-hébergé : avantages, inconvénients et coûts',
+  title: 'Serveur MCP Gmail hébergé ou auto-hébergé ?',
   description:
-    'Serveur MCP Gmail hébergé ou auto-hébergé, comparés : les dépôts DIY gratuits offrent un contrôle total mais vous gérez OAuth, chiffrement et disponibilité. Un serveur hébergé prend quelques minutes.',
+    'Serveur MCP Gmail hébergé ou auto-hébergé : le DIY gratuit donne le contrôle, mais OAuth et chiffrement sont à votre charge. L\'hébergé prend quelques minutes.',
   coverAlt: 'Comparaison entre serveur MCP Gmail hébergé et auto-hébergé, par MCPEmails',
   content: `Si vous voulez que votre agent IA lise et envoie des e-mails Gmail, vous avez deux vraies options : faire tourner un serveur MCP Gmail auto-hébergé à partir d'un dépôt open source, ou pointer votre client vers un serveur hébergé. La voie DIY ne coûte pas un centime et vous donne un contrôle total, mais vous gérez vous-même la configuration OAuth, le chiffrement des jetons, l'hébergement, les mises à jour et la sécurité. Un serveur hébergé comme MCPEmails se branche en quelques minutes et garde les identifiants chiffrés, au prix de faire confiance à un prestataire pour la connexion.
 

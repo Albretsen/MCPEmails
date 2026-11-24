@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Conecta el correo de empresa de tu propio dominio a tu agente de IA (IMAP)',
+  title: 'Conecta el correo de tu dominio a un agente de IA (IMAP)',
   description:
-    'Guía de configuración para tu@tuempresa.com: averigua quién gestiona realmente tu correo, conecta Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS o cPanel, y corrige el nombre del remitente antes de que tu agente responda.',
+    'Guía para tu@tuempresa.com: descubre quién gestiona tu correo, conecta Google Workspace, Zoho, Fastmail, IONOS o cPanel y corrige el nombre del remitente.',
   coverAlt:
     'Conecta un correo de empresa con dominio propio a un agente de IA con MCPEmails',
   content: `> **¿Usas Microsoft 365?** Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo. Conéctalo con **Outlook** mediante Iniciar sesión con Microsoft en lugar de IMAP; puede que tu administrador de TI tenga que aprobar antes la aplicación una sola vez para toda la organización. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los pasos.

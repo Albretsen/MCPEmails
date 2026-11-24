@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "BIGLOBE Mail i Claude: én vert for IMAP og SMTP",
-    "description": "Koble en BIGLOBE-postkasse til Claude eller enhver MCP-klient på mail.biglobe.ne.jp:993. Én vert betjener IMAP og SMTP over SSL, med BIGLOBE-adressen og BIGLOBE-passordet ditt."
+    "description": "Koble en BIGLOBE-postkasse til Claude eller enhver MCP-klient på mail.biglobe.ne.jp:993. Én vert for IMAP og SMTP over SSL, med BIGLOBE-adressen og passordet."
   },
   "hero": {
     "eyebrow": "BIGLOBE + AI",

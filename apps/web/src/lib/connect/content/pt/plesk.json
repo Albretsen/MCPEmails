@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "E-mail do Plesk no Claude: configurações IMAP e acesso MCP",
-    "description": "Caixas de correio do Plesk se conectam ao Claude via IMAP 993. Use o próprio domínio, não mail.dominio.com: o IMAP não tem SNI, então o subdomínio mail recebe o certificado errado."
+    "description": "Caixas do Plesk se conectam ao Claude via IMAP 993. Use o próprio domínio, não mail.dominio.com: sem SNI no IMAP, o subdomínio mail recebe o certificado errado."
   },
   "hero": {
     "eyebrow": "Plesk + IA",

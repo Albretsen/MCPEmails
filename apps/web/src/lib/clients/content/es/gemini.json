@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a la app de Gemini: app MCP personalizada",
-    "description": "Añade una bandeja real a la app de Gemini como app personalizada. Pega la URL de un servidor MCP en Connected Apps e inicia sesión. Sin clave de API. Una bandeja gratis."
+    "description": "Añade una bandeja real a la app de Gemini como app personalizada. Pega la URL del servidor MCP en Connected Apps e inicia sesión. Sin clave de API."
   },
   "hero": {
     "eyebrow": "Gemini + correo",

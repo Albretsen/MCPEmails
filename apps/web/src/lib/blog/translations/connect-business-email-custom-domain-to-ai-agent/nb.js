@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Koble en bedrifts-e-post på eget domene til AI-agenten din (IMAP-oppsett)',
+  title: 'Koble bedrifts-e-post på eget domene til en AI-agent',
   description:
-    'Oppsettsguide for deg@dittfirma.no: finn ut hvem som faktisk drifter e-posten din, koble til Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS eller cPanel, og fiks avsendernavnet før agenten svarer.',
+    'Oppsettsguide for deg@dittfirma.no: finn ut hvem som drifter e-posten din, koble til Google Workspace, Zoho, IONOS eller cPanel, og fiks avsendernavnet.',
   coverAlt:
     'Koble en bedrifts-e-post på eget domene til en AI-agent med MCPEmails',
   content: `> **På Microsoft 365?** Hvis bedriftspostkassen din viser seg å være en Microsoft-tenant, hjelper denne guiden deg med å bekrefte det. Koble den til med **Outlook** og Logg inn med Microsoft i stedet for IMAP; IT-ansvarlig må kanskje først godkjenne appen én gang for hele organisasjonen. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) viser stegene.
