@@ -4,6 +4,7 @@ import { getEntriesByMonth, getEntries, getLatestDate } from '@/lib/changelog/en
 import { getChangelogCopy } from '@/lib/changelog/copy.mjs';
 import ChangelogView from '../../../components/marketing/ChangelogView';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /changelog: the public record of what has shipped.
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }) {
   const copy = getChangelogCopy(locale);
   const { title, description } = copy.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/changelog'),
     openGraph: {

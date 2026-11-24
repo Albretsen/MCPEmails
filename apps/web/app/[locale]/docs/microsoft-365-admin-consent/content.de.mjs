@@ -5,9 +5,9 @@ import { MS_GRANT, MS_ASSIGN, CLAUDE_M365 } from './links.mjs';
 
 const de = {
   meta: {
-    title: 'Administratorgenehmigung für Outlook oder Microsoft 365 nötig? MCPEmails freigeben',
+    title: 'Microsoft 365 Administratorgenehmigung für MCPEmails',
     description:
-      'Warum Microsoft "Need admin approval" anzeigt, wenn Sie ein geschäftliches Postfach bei Outlook oder Microsoft 365 mit Claude oder ChatGPT verbinden, welchen Link Sie Ihrer IT-Abteilung schicken und welche Berechtigungen der Admin genau genehmigt.',
+      'Warum Microsoft "Need admin approval" zeigt, wenn Sie ein Firmenpostfach mit Claude oder ChatGPT verbinden, und welchen Link Sie Ihrer IT-Abteilung schicken.',
   },
   breadcrumb: 'Admin-Genehmigung für Microsoft 365',
   eyebrow: 'Dokumentation',

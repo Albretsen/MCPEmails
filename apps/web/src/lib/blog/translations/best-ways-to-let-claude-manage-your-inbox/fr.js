@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Les meilleures façons de laisser Claude gérer votre boîte mail en 2026',
-  description: 'Un tour d’horizon franc des meilleures façons de laisser Claude gérer votre boîte mail en 2026 : intégrations natives, serveurs MCP maison, copier-coller, extensions de navigateur et MCP hébergé.',
+  title: 'Laisser Claude gérer votre boîte mail en 2026',
+  description: 'Les meilleures façons de laisser Claude gérer votre boîte mail en 2026 : intégrations natives, serveurs MCP maison, copier-coller, extensions et MCP hébergé.',
   coverAlt: 'Les meilleures façons de laisser Claude gérer votre boîte mail en 2026, par MCPEmails',
   content: `Si vous voulez que Claude lise, trie et réponde réellement à vos e-mails, vous avez cinq vraies options en 2026 : un serveur e-mail MCP hébergé, un serveur MCP maison que vous exécutez vous-même, le copier-coller de fils de discussion dans le chat, une extension de navigateur, ou une intégration native dans un client. Pour la plupart des gens, un serveur MCP hébergé est le bon choix, car il fonctionne en quelques secondes et ne stocke jamais vos messages. Les autres ont chacune leur niche, et deux d’entre elles sont moins bonnes qu’elles n’en ont l’air.
 

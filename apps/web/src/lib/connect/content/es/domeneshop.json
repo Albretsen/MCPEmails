@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Conecta el correo de Domeneshop a Claude y clientes MCP",
-    "description": "Conecta el correo de Domeneshop a Claude, Cursor y cualquier cliente MCP por IMAP en imap.domeneshop.no:993 con la contraseña de tu buzón. Una bandeja gratis, para siempre."
+    "description": "Conecta Domeneshop a Claude, Cursor y cualquier cliente MCP por IMAP en imap.domeneshop.no:993 con la contraseña de tu buzón. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Domeneshop + IA",

@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Gemini CLI verbinden: MCP-Setup per httpUrl",
-    "description": "Fügen Sie der Gemini CLI ein echtes Postfach hinzu. Ein Eintrag in settings.json mit httpUrl, dann erkennt die CLI OAuth und öffnet den Ablauf im Browser. Ein Postfach kostenlos."
+    "description": "Fügen Sie der Gemini CLI ein echtes Postfach hinzu: ein Eintrag in settings.json mit httpUrl, dann erkennt die CLI OAuth und öffnet den Browser."
   },
   "hero": {
     "eyebrow": "Gemini CLI + E-Mail",

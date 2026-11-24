@@ -1,7 +1,7 @@
 const translation = {
-  title: 'E-Mail mit Claude oder ChatGPT planen: später senden, zur gewünschten Uhrzeit',
+  title: 'E-Mail mit Claude oder ChatGPT planen und später senden',
   description:
-    'So planen Sie mit Claude oder ChatGPT eine E-Mail, die später von Ihrem eigenen Gmail-, Outlook-, iCloud- oder IMAP-Postfach verschickt wird: Einrichtung, Zeitzonen, Abbrechen und Grenzen.',
+    'So planen Sie mit Claude oder ChatGPT eine E-Mail, die später aus Ihrem Gmail-, Outlook- oder IMAP-Postfach verschickt wird: Einrichtung, Zeitzonen, Abbrechen.',
   coverAlt:
     'Claude und ChatGPT planen mit MCPEmails eine E-Mail, die später von einem verbundenen Postfach gesendet wird',
   content: `Damit Claude oder ChatGPT eine E-Mail zeitversetzt senden kann, braucht der Assistent ein E-Mail-Tool, das eine Nachricht vorhält und später verschickt. MCPEmails hat eines. Verbinden Sie Ihr Postfach, fügen Sie MCPEmails als Konnektor hinzu und sagen Sie, wann: „Schick das am Montag um 9:00 Uhr an Dana, Osloer Zeit.“ Die Nachricht wartet in einer Warteschlange auf dem Server von MCPEmails und wird zu diesem Zeitpunkt von Ihrer eigenen Adresse verschickt, ganz gleich, ob der Chat, die App oder Ihr Computer dann noch geöffnet ist.

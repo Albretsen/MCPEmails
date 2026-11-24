@@ -1,8 +1,8 @@
 const post = {
   slug: 'gmail-labels-vs-imap-folders-ai-agents',
-  title: 'Gmail Labels vs. IMAP Folders for AI Agents: What Changes and What Does Not',
+  title: 'Gmail Labels vs. IMAP Folders for AI Agents',
   description:
-    'Understand the difference between Gmail labels and IMAP folders when connecting an AI agent to email, and how MCPEmails keeps common inbox workflows consistent across providers.',
+    'How Gmail labels differ from IMAP folders when an AI agent works your email, and how MCPEmails keeps common inbox workflows consistent across providers.',
   cover: '/blog/cover-connect-icloud-fastmail-imap-to-claude.svg',
   coverAlt: 'Gmail labels and IMAP folders for AI agents (MCPEmails)',
   authorId: 'asgeir',

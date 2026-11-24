@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Slik får du AI-agenten din til å sortere og oppsummere innboksen',
+  title: 'Få AI-agenten til å sortere og oppsummere innboksen',
   description:
-    'En praktisk veiledning for innbokssortering med AI-agent: ferdige prompter som lister ulest e-post, leser det som betyr noe, oppsummerer og prioriterer, og poller på fast plan.',
+    'Praktisk veiledning for innbokssortering med AI-agent: ferdige prompter som lister ulest e-post, oppsummerer, prioriterer og poller på fast plan.',
   coverAlt: 'AI-agent sorterer og oppsummerer en innboks over MCP (MCPEmails)',
   content: `Den raskeste måten å få en AI-agent til å sortere innboksen din på er å lene deg på to verktøy i rekkefølge: \`inbox_list\` for å finne postkassen din, og så \`email_read\` (med \`action: list\` og \`unread: true\` for å hente det nye, deretter \`action: read\` for de få som ser viktige ut), og så en instruksjon på vanlig norsk om å oppsummere og rangere dem. Det er hele løkka. Vil du at den skal skrive utkast til eller sende svar, legger du til \`email_compose\` med \`action: reply\` til slutt.
 

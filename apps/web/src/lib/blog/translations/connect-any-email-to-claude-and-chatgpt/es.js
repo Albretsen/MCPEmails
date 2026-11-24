@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo conectar cualquier cuenta de correo a Claude o ChatGPT (Yahoo, IMAP, dominio propio, varios buzones)',
+  title: 'Cómo conectar cualquier correo a Claude o ChatGPT',
   description:
-    'Todas las formas de darle a Claude o ChatGPT un buzón real a noviembre de 2026: qué cubren los conectores integrados de Gmail, Outlook e iCloud, dónde se quedan cortos, y cómo conectar Yahoo, un dominio propio, GMX o varios buzones con un servidor MCP, una app de escritorio o una herramienta de automatización.',
+    'Todas las formas de dar a Claude o ChatGPT un buzón real: qué cubren los conectores de Gmail, Outlook e iCloud y cómo conectar Yahoo, GMX o un dominio propio.',
   coverAlt: 'Yahoo, IMAP, dominio propio y varios buzones más conectados a Claude y ChatGPT',
   content: `Claude y ChatGPT traen conectores de correo integrados, y los dos se detienen en los grandes proveedores. Si tu correo está en Yahoo, AOL, GMX, en un dominio de empresa alojado en IONOS, OVH o un hosting con cPanel, o repartido en varias cuentas, necesitas otra cosa. Esta guía recoge todas las opciones a noviembre de 2026: los conectores integrados y exactamente dónde terminan, los servicios MCP alojados que cubren el hueco (MCPEmails es uno de ellos, y nombramos a los demás), las vías locales y autoalojadas, y las plataformas de automatización. Cada afirmación sobre otro producto se leyó en su propia página el 11 de noviembre de 2026; las fuentes están al final.
 

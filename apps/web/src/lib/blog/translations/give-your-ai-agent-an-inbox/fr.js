@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Donnez une boîte mail à votre agent IA : guide pratique de l’email via MCP',
+  title: 'Donnez une boîte mail à votre agent IA via MCP',
   description:
-    'Pourquoi connecter l’email à votre agent IA est plus difficile qu’il n’y paraît, et comment le Model Context Protocol fait de Gmail, Outlook et IMAP un point d’accès unique et sécurisé que votre agent peut vraiment utiliser.',
+    'Pourquoi connecter l’email à un agent IA est plus dur qu’il n’y paraît, et comment MCP fait de Gmail, Outlook et IMAP un point d’accès unique et sécurisé.',
   coverAlt: 'Donnez une boîte mail à votre agent IA, par MCPEmails',
   content: `La plupart des démos d’« email géré par l’IA » s’arrêtent à une capture d’écran. L’agent rédige une réponse, tout le monde applaudit, et personne ne pose la question qui dérange : **comment le modèle atteint-il réellement une vraie boîte mail**, de façon sécurisée, tous fournisseurs confondus, sans que vous colliez un mot de passe d’application dans un prompt ?
 

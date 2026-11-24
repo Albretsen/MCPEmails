@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Cline: servidor MCP remoto",
-    "description": "Añade una bandeja real a Cline como servidor remoto Streamable HTTP con una clave de API limitada. Lee, busca, envía y programa correo desde VS Code. Una bandeja gratis."
+    "description": "Añade una bandeja real a Cline como servidor remoto Streamable HTTP con una clave de API limitada. Lee, busca, envía y programa correo desde VS Code."
   },
   "hero": {
     "eyebrow": "Cline + correo",

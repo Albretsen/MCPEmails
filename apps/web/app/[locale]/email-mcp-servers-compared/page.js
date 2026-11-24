@@ -25,8 +25,7 @@ export function generateStaticParams() {
 export default async function LegacyComparisonRedirect({ params }) {
   const { locale } = await params;
   requireLocale(locale);
-  // Keep a non-default locale prefix if one was used, so /nb/<old> lands on
-  // /nb/<new> and gets that route's own 404 rather than a silent language flip.
-  const prefix = locale && locale !== 'en' ? `/${locale}` : '';
-  permanentRedirect(`${prefix}${C.PATH}`);
+  // The new page is English only, so every locale lands on it directly
+  // (a /nb/<new> hop would only redirect again).
+  permanentRedirect(C.PATH);
 }

@@ -6,6 +6,7 @@ import { localePath, metaAlternatesFor, OG_LOCALE, OG_IMAGE, connectJsonLd } fro
 import { requireLocale } from '@/i18n/require-locale';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { PATH, LOCALES, DATE_PUBLISHED, DATE_MODIFIED, SOURCES, copy } from './content.mjs';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /connect/custom-domain: the own-domain email hub. Copy, sources and the
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }) {
   if (!LOCALES.includes(locale)) return {};
   const { title, description } = copy.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, PATH, LOCALES),
     openGraph: {

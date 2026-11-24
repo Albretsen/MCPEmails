@@ -10,7 +10,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Claude Cowork: conector personalizado",
-    "description": "Dale a Claude Cowork una bandeja real. Añade una URL en Customize, Connectors, inicia sesión con OAuth y Cowork podrá leer, buscar, redactar y enviar correo. Una bandeja gratis."
+    "description": "Dale a Claude Cowork una bandeja real. Añade una URL en Customize, Connectors, inicia sesión con OAuth y Cowork leerá, buscará y enviará correo."
   },
   "hero": {
     "eyebrow": "Claude Cowork + correo",

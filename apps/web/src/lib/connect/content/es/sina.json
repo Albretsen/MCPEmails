@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Conecta Sina Mail a Claude con un código de autorización",
-    "description": "Conecta Sina Mail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.sina.com:993. Requiere un código de autorización de 16 caracteres y el servicio activado."
+    "description": "Conecta Sina Mail a Claude, Cursor o clientes MCP por IMAP en imap.sina.com:993. Requiere un código de autorización de 16 caracteres y el servicio activado."
   },
   "hero": {
     "eyebrow": "Sina Mail + IA",

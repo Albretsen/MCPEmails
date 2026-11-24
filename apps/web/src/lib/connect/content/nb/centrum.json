@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Centrum.cz-, Atlas.cz- og Volný.cz-e-post til Claude og enhver MCP-klient",
-    "description": "Koble en Centrum.cz-, Atlas.cz- eller Volný.cz-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på imap.centrum.cz:993. Sending krever den gratis utvidede postkassen (navýšená schránka); med tofaktor på, et app-passord."
+    "title": "Koble Centrum.cz-, Atlas.cz- og Volný.cz-e-post til Claude",
+    "description": "Koble en Centrum.cz-, Atlas.cz- eller Volný.cz-postkasse til Claude og MCP-klienter over IMAP på imap.centrum.cz:993. Sending krever gratis utvidet postkasse."
   },
   "hero": {
     "eyebrow": "Centrum.cz + AI",

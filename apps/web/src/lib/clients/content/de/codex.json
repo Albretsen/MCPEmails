@@ -15,7 +15,7 @@
   ],
   "meta": {
     "title": "E-Mail mit OpenAI Codex verbinden: MCP-Server einrichten",
-    "description": "Fügen Sie OpenAI Codex mit codex mcp add --url ein Postfach hinzu. Codex erkennt OAuth und öffnet den Browser, kein API-Schlüssel. Funktioniert in CLI, IDE-Erweiterung und Desktop-App."
+    "description": "Fügen Sie OpenAI Codex mit codex mcp add --url ein Postfach hinzu. Codex erkennt OAuth und öffnet den Browser. Für CLI, IDE-Erweiterung und Desktop-App."
   },
   "hero": {
     "eyebrow": "Codex + E-Mail",

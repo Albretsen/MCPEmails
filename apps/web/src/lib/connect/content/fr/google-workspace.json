@@ -17,8 +17,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Google Workspace à Claude, ChatGPT et aux clients MCP",
-    "description": "Connectez les boîtes Google Workspace de votre propre domaine à Claude, ChatGPT, Cursor et tout client MCP. Mot de passe d'application en IMAP, réglages d'administration décisifs, et toutes les boîtes de l'entreprise sur un seul agent."
+    "title": "Connecter Google Workspace à Claude, ChatGPT et MCP",
+    "description": "Connectez les boîtes Google Workspace de votre domaine à Claude, ChatGPT, Cursor et tout client MCP : mot de passe d'application en IMAP et réglages admin."
   },
   "hero": {
     "eyebrow": "Google Workspace + IA",

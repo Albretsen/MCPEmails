@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Paramètres IMAP et SMTP de n'importe quelle adresse e-mail",
-    "description": "Saisissez une adresse e-mail pour obtenir ses serveurs IMAP et SMTP, le port et la sécurité, et le fournisseur qui gère le courrier d'un domaine personnalisé. Gratuit, dans votre navigateur."
+    "description": "Saisissez une adresse e-mail pour obtenir ses serveurs IMAP et SMTP, le port, la sécurité et le fournisseur d'un domaine personnalisé. Gratuit."
   },
   "hero": {
     "eyebrow": "Outil gratuit",

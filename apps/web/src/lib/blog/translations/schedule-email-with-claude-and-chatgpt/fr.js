@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Programmer l\'envoi d\'un e-mail avec Claude ou ChatGPT (envoi différé)',
+  title: 'Programmer un e-mail avec Claude ou ChatGPT',
   description:
-    'Programmez depuis Claude ou ChatGPT un e-mail qui partira plus tard de votre propre boîte Gmail, Outlook, iCloud ou IMAP : configuration, fuseaux horaires, annulation et limites.',
+    'Programmez depuis Claude ou ChatGPT un envoi différé depuis votre boîte Gmail, Outlook, iCloud ou IMAP : configuration, fuseaux horaires et annulation.',
   coverAlt:
     'Claude et ChatGPT programment l\'envoi différé d\'un e-mail depuis une boîte connectée avec MCPEmails',
   content: `Pour programmer l'envoi d'un e-mail avec Claude ou ChatGPT, l'assistant a besoin d'un outil de messagerie capable de garder un message et de l'envoyer plus tard. MCPEmails en propose un. Connectez votre boîte, ajoutez MCPEmails comme connecteur, puis indiquez le moment : « Envoie ceci à Dana lundi à 9 h, heure d'Oslo. » Le message attend dans une file sur le serveur MCPEmails et part de votre propre adresse à l'heure prévue, que la conversation, l'application ou votre ordinateur soient encore ouverts ou non.

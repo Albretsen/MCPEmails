@@ -15,6 +15,7 @@ import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 import { requireLocale } from '@/i18n/require-locale';
 import { hubLinkFor } from '../custom-domain/content.mjs';
+import { pageTitle } from '@/lib/seo/title.mjs';
 import { PATH as LOOKUP_PATH, LOCALES as LOOKUP_LOCALES } from '@/lib/tools/email-settings-lookup.mjs';
 
 /**
@@ -65,7 +66,7 @@ export async function generateMetadata({ params }) {
   const path = `/connect/${slug}`;
   const { title, description } = content.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, path, providerLocales(slug)),
     openGraph: {

@@ -186,7 +186,7 @@ const es = {
   meta: {
     title: 'Cancelar contratos aquí',
     description:
-      'Cancela tu suscripción a MCPEmails, o desiste de una suscripción o de un pase de 3 meses en un plazo de 14 días, sin iniciar sesión. Recibirás una confirmación por correo electrónico.',
+      'Cancela tu suscripción a MCPEmails, o desiste de ella o de un pase de 3 meses en 14 días, sin iniciar sesión. Recibirás una confirmación por correo.',
   },
   eyebrow: 'Legal',
   title: 'Cancelar contratos aquí',
@@ -264,7 +264,7 @@ const fr = {
   meta: {
     title: 'Résilier des contrats ici',
     description:
-      "Résiliez votre abonnement MCPEmails, ou rétractez-vous d'un abonnement ou d'un pass de 3 mois sous 14 jours, sans vous connecter. Vous recevez une confirmation par e-mail.",
+      "Résiliez votre abonnement MCPEmails, ou rétractez-vous d'un abonnement ou d'un pass de 3 mois sous 14 jours, sans connexion. Confirmation par e-mail.",
   },
   eyebrow: 'Juridique',
   title: 'Résilier des contrats ici',
@@ -418,7 +418,7 @@ const de = {
   meta: {
     title: 'Verträge hier kündigen',
     description:
-      'Kündigen Sie Ihr Abonnement für MCPEmails oder widerrufen Sie ein Abonnement oder einen 3-Monats-Pass innerhalb von 14 Tagen, ohne Anmeldung. Sie erhalten eine Bestätigung per E-Mail.',
+      'Kündigen Sie Ihr MCPEmails Abonnement oder widerrufen Sie ein Abo oder einen 3-Monats-Pass innerhalb von 14 Tagen, ohne Anmeldung. Bestätigung per E-Mail.',
   },
   eyebrow: 'Rechtliches',
   title: 'Verträge hier kündigen',
@@ -496,7 +496,7 @@ const pt = {
   meta: {
     title: 'Cancele contratos aqui',
     description:
-      'Cancele sua assinatura do MCPEmails ou exerça o direito de arrependimento de uma assinatura ou de um passe de 3 meses em até 14 dias, sem fazer login. Você recebe uma confirmação por e-mail.',
+      'Cancele sua assinatura do MCPEmails ou desista de uma assinatura ou passe de 3 meses em até 14 dias, sem fazer login. Você recebe confirmação por e-mail.',
   },
   eyebrow: 'Jurídico',
   title: 'Cancele contratos aqui',

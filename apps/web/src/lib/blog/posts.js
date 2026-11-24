@@ -144,9 +144,9 @@ const MODULE_POSTS = [
 export const POSTS = [
   {
     slug: 'give-your-ai-agent-an-inbox',
-    title: 'Give your AI agent an inbox: a practical guide to email over MCP',
+    title: 'Give Your AI Agent an Inbox: Email over MCP',
     description:
-      'Why connecting email to your AI agent is harder than it looks — and how the Model Context Protocol makes Gmail, Outlook, and IMAP a single, secure endpoint your agent can actually use.',
+      'Why connecting email to your AI agent is harder than it looks, and how the Model Context Protocol makes Gmail, Outlook and IMAP one secure endpoint.',
     cover: '/blog/cover-agent-inbox.svg',
     coverAlt: 'Give your AI agent an inbox — MCPEmails',
     authorId: 'asgeir',

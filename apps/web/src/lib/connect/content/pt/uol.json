@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Conectar o UOL Mail ao Claude via IMAP (Brasil)",
-    "description": "Conecte uma caixa de correio do UOL ao Claude, ao Cursor ou a qualquer cliente MCP via IMAP em imap.uol.com.br:993. O IMAP precisa ser ativado antes nas configurações do webmail do UOL."
+    "description": "Conecte uma caixa do UOL ao Claude, ao Cursor ou a clientes MCP via IMAP em imap.uol.com.br:993. Ative antes o IMAP nas configurações do webmail do UOL."
   },
   "hero": {
     "eyebrow": "UOL Mail + IA",

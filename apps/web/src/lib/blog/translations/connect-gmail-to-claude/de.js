@@ -1,7 +1,7 @@
 const translation = {
   title: 'Gmail mit Claude verbinden: integrierter Konnektor oder MCP',
   description:
-    'Gmail in etwa zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, kein API-Schlüssel, kein Code. Claude liest, durchsucht und sendet Ihre E-Mails live, und Ihre E-Mails werden nie gespeichert.',
+    'Gmail in etwa zwei Minuten per MCP mit Claude verbinden: ein Google-App-Passwort, eine URL, kein Code. Claude liest und sendet live, nichts wird gespeichert.',
   coverAlt:
     'Gmail in zwei Minuten über MCP mit Claude verbinden: ein Google-App-Passwort, eine Endpunkt-URL, keine E-Mail gespeichert',
   content: `Claude hat einen eigenen Gmail-Konnektor. Wenn Sie nur ein Gmail-Konto in Claude nutzen wollen, schalten Sie ihn in den Konnektor-Einstellungen von Claude ein, und Sie sind fertig. MCPEmails lohnt sich, wenn Sie mehr brauchen: Outlook, iCloud, Yahoo oder ein beliebiges IMAP-Postfach neben Gmail, mehrere Postfächer im selben Chat oder dasselbe Postfach in ChatGPT, Cursor und anderen MCP-Apps. Der Rest dieser Anleitung richtet das ein.

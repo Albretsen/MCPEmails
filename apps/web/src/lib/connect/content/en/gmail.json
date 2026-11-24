@@ -2,7 +2,9 @@
   "_sources": [
     "https://developers.google.com/gmail/api/guides",
     "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
-    "https://support.google.com/a/answer/7281227"
+    "https://support.google.com/a/answer/7281227",
+    "https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server",
+    "https://claude.com/connectors/gmail"
   ],
   "auth": {
     "method": "app-password",
@@ -13,7 +15,7 @@
   },
   "meta": {
     "title": "Gmail MCP Server for Claude, Cursor and ChatGPT",
-    "description": "A hosted Gmail MCP server. Connect Gmail with a Google app password over IMAP, then read, search, send and schedule mail from Claude, Cursor or any MCP client. One inbox free."
+    "description": "Gmail MCP server for Claude, ChatGPT and Cursor. Connect Gmail with a Google app password, then read, search, send and schedule mail. One inbox free."
   },
   "hero": {
     "eyebrow": "Gmail + AI",
@@ -45,8 +47,8 @@
   ],
   "gotchas": [
     {
-      "h": "Google publishes its own Gmail MCP server, and for Gmail alone it is the shorter path",
-      "p": "Google announced official MCP support for its services, including a Workspace MCP server that covers Gmail alongside Drive, Calendar and Chat. We are not going to pretend otherwise. If Gmail is the only mailbox you want an assistant to touch, and your client speaks to Google's server, use it. The reason to point MCPEmails at Gmail instead is that the same server also holds your iCloud, Fastmail, Zoho, Yahoo or company IMAP mailbox, exposes every one of them through <b>one</b> MCP URL, and behaves the same way in Claude, Cursor and ChatGPT. One connector per provider, each with its own auth and its own tool names, is the thing this avoids."
+      "h": "Gmail already has an official connector and MCP server. Why use MCPEmails?",
+      "p": "Claude has a built-in Gmail connector, made by Google, that reads, searches and sends from one Google account, and ChatGPT has a Gmail app of its own. Google's Gmail MCP server at <code>gmailmcp.googleapis.com</code> is aimed at developers: you enable it in your own Google Cloud project with your own OAuth client. If one Gmail account inside Claude or ChatGPT is all you need, use the built-in connector. MCPEmails is for the rest: several Gmail accounts, or Gmail next to Outlook, iCloud, Yahoo or company IMAP mailboxes, behind <b>one</b> MCP URL that behaves the same way in Claude, ChatGPT and Cursor."
     },
     {
       "h": "Sending from another address takes a verified Send As address",

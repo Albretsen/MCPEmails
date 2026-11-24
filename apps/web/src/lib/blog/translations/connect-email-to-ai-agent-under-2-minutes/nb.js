@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Slik kobler du e-posten til en AI-agent på under 2 minutter (Gmail, Outlook, iCloud, Fastmail og IMAP)',
-  description: 'Koble e-posten til en AI-agent på under 2 minutter. Steg-for-steg-oppsett for Gmail, Outlook, iCloud, Fastmail og hvilken som helst IMAP-innboks over MCP, uten at e-post lagres.',
+  title: 'Koble e-posten til en AI-agent på under 2 minutter',
+  description: 'Koble e-posten til en AI-agent på under 2 minutter. Steg-for-steg-oppsett for Gmail, Outlook, iCloud, Fastmail og IMAP over MCP, uten at e-post lagres.',
   coverAlt: 'Koble e-posten til en AI-agent på under 2 minutter: Gmail, Outlook, iCloud, Fastmail og IMAP over MCP',
   content: `Du kobler e-posten til en AI-agent i to grep: koble til innboksen i MCPEmails-dashbordet, og pek så agenten mot én endepunkt-URL. Med en OAuth-kompatibel klient som claude.ai er det alt. Ingen kode, ingen SDK, og e-posten din lagres aldri noe sted: hver lesing og hver sending går live mot leverandøren din og forkastes i det øyeblikket agenten har den.
 

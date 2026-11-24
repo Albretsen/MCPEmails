@@ -3,7 +3,8 @@
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
-    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted",
+    "https://www.ovhcloud.com/en/public-cloud/mcp-server/"
   ],
   "auth": {
     "method": "mail-password",
@@ -87,6 +88,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "OVHcloud ya tiene un servidor MCP. ¿Para qué usar MCPEmails?",
+      "p": "El servidor MCP de OVHcloud gestiona tu cuenta y tus servicios de OVHcloud, como instancias, almacenamiento, red y bases de datos. No lee ni envía el correo de tus buzones. Para eso necesitas un servidor MCP de correo: MCPEmails inicia sesión en cada buzón de OVH por IMAP y SMTP con la contraseña del buzón y los reúne todos, info@, sales@ y los demás, en <b>una sola</b> URL MCP para Claude, ChatGPT y Cursor."
+    },
     {
       "h": "OVH tiene tres productos de correo con tres patrones de servidor, y acabar en el equivocado es el fallo más común aquí",
       "p": "Este es el problema de OVH. <b>MX Plan</b>, el buzón incluido con los dominios y el alojamiento web, está documentado en <code>ssl0.ovh.net</code> (OVH también indica <code>imap.mail.ovh.net</code> y <code>smtp.mail.ovh.net</code>), con IMAP en el 993 con SSL/TLS y SMTP en el 465 con SSL/TLS. <b>Email Pro</b> responde en <code>pro</code> más el número de tu servidor más <code>.mail.ovh.net</code>, con IMAP en el 993 con SSL y SMTP en el <b>587 con STARTTLS</b>. <b>Hosted Exchange</b> responde en <code>ex</code> más el número de tu servidor más <code>.mail.ovh.net</code>, de nuevo con IMAP en el 993 y SMTP en el 587 con STARTTLS. Los tres no son intercambiables en ningún sentido. Apuntar un buzón de Exchange o Email Pro a <code>ssl0.ovh.net</code> falla, y MX Plan en el puerto 587 con STARTTLS no es donde OVH lo documenta."

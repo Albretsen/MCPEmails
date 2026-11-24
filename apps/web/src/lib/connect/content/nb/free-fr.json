@@ -11,7 +11,7 @@
   },
   "meta": {
     "title": "Free.fr-e-post i Claude: IMAP-innstillinger som virker",
-    "description": "Koble en Free.fr-postkasse til Claude og enhver MCP-klient over IMAP på imap.free.fr:993 med passordet til Free-kontoen. Uten app-passord, ingen bryter å slå på."
+    "description": "Koble en Free.fr-postkasse til Claude og enhver MCP-klient over IMAP på imap.free.fr:993 med passordet til Free-kontoen. Uten app-passord og uten bryter."
   },
   "hero": {
     "eyebrow": "Free.fr Mail + AI",

@@ -1,7 +1,7 @@
 const translation = {
   title: 'Slik håndterer du flere e-postkontoer med én AI-agent',
   description:
-    'Kjør postkassene for jobb, privat og bijobb gjennom én AI-agent: hvordan den finner postkassene, hvordan du avgrenser en forespørsel, avsendernavn som forblir riktige, og godkjenning av sending per postkasse.',
+    'Kjør postkassene for jobb, privat og bijobb gjennom én AI-agent: avgrens forespørsler, behold riktige avsendernavn og godkjenn sending per postkasse.',
   coverAlt:
     'Én AI-agent koblet til e-postkontoer for jobb, privat og bijobb med MCPEmails',
   content: `Nesten ingen har bare én postkasse. Du har en jobbadresse, en privat adresse og minst én til for en bijobb eller et domene du fortsatt eier. Hvert spørsmål som krysser to kontoer, blir et manuelt søk to steder.

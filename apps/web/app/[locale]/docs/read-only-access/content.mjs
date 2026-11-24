@@ -46,7 +46,7 @@ const en = {
   meta: {
     title: 'Read-only email access for AI agents',
     description:
-      'What a read-only MCPEmails connection can and cannot do, how writes are refused by both our server and your mail provider, why reading never marks mail as read, and what happens when you connect.',
+      'What a read-only MCPEmails connection can and cannot do, how both our server and your provider refuse writes, and why reading never marks mail as read.',
   },
   breadcrumb: 'Read-only access',
   eyebrow: 'Docs',
@@ -121,7 +121,7 @@ const nb = {
   meta: {
     title: 'Skrivebeskyttet e-posttilgang for AI-agenter',
     description:
-      'Hva en skrivebeskyttet MCPEmails-tilkobling kan og ikke kan gjøre, hvordan endringer avvises både av vår server og av e-postleverandøren din, hvorfor lesing aldri markerer e-post som lest, og hva som skjer når du kobler til.',
+      'Hva en skrivebeskyttet MCPEmails-tilkobling kan og ikke kan gjøre, hvordan endringer avvises av oss og leverandøren, og hvorfor lesing aldri markerer som lest.',
   },
   breadcrumb: 'Skrivebeskyttet tilgang',
   eyebrow: 'Dokumentasjon',
@@ -196,7 +196,7 @@ const es = {
   meta: {
     title: 'Acceso de solo lectura al correo para agentes de IA',
     description:
-      'Qué puede y qué no puede hacer una conexión de solo lectura de MCPEmails, cómo nuestro servidor y tu proveedor de correo rechazan los cambios, por qué leer nunca marca el correo como leído y qué ocurre al conectarte.',
+      'Qué puede y qué no puede hacer una conexión de solo lectura de MCPEmails, cómo se rechazan los cambios y por qué leer nunca marca el correo como leído.',
   },
   breadcrumb: 'Acceso de solo lectura',
   eyebrow: 'Documentación',
@@ -271,7 +271,7 @@ const fr = {
   meta: {
     title: 'Accès en lecture seule aux e-mails pour les agents IA',
     description:
-      'Ce qu\'une connexion MCPEmails en lecture seule peut et ne peut pas faire, comment notre serveur et votre fournisseur de messagerie refusent les modifications, pourquoi la lecture ne marque jamais un e-mail comme lu, et ce qui se passe à la connexion.',
+      'Ce qu\'une connexion MCPEmails en lecture seule peut faire ou non, comment les modifications sont refusées et pourquoi la lecture ne marque rien comme lu.',
   },
   breadcrumb: 'Accès en lecture seule',
   eyebrow: 'Documentation',
@@ -420,7 +420,7 @@ const de = {
   meta: {
     title: 'Nur-Lese-Zugriff auf E-Mails für KI-Agenten',
     description:
-      'Was eine MCPEmails Verbindung mit Nur-Lese-Zugriff kann und was nicht, wie unser Server und Ihr E-Mail-Anbieter Schreibzugriffe ablehnen, warum Lesen E-Mails nie als gelesen markiert und was beim Verbinden passiert.',
+      'Was eine MCPEmails Verbindung mit Nur-Lese-Zugriff kann, wie Server und Anbieter Schreibzugriffe ablehnen und warum Lesen E-Mails nie als gelesen markiert.',
   },
   breadcrumb: 'Nur-Lese-Zugriff',
   eyebrow: 'Dokumentation',
@@ -495,7 +495,7 @@ const pt = {
   meta: {
     title: 'Acesso somente leitura ao e-mail para agentes de IA',
     description:
-      'O que uma conexão somente leitura do MCPEmails pode e não pode fazer, como alterações são recusadas pelo nosso servidor e pelo seu provedor de e-mail, por que ler nunca marca o e-mail como lido e o que acontece quando você conecta.',
+      'O que uma conexão somente leitura do MCPEmails pode e não pode fazer, como alterações são recusadas e por que ler nunca marca o e-mail como lido.',
   },
   breadcrumb: 'Acesso somente leitura',
   eyebrow: 'Documentação',

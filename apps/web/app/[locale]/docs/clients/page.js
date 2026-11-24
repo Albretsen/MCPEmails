@@ -10,6 +10,7 @@ import { MIcon } from '../../../../components/MarketingPrimitives';
 import { requireLocale } from '@/i18n/require-locale';
 import { orderClients } from '@/lib/clients/preferred.mjs';
 import { getPreferredClient } from '@/lib/clients/preferred-request';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The hub for the per-client setup pages.
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }) {
   const title = fill(ui.meta.title, { count });
   const description = ui.meta.description;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, '/docs/clients', locales),
     openGraph: {

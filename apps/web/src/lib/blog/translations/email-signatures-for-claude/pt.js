@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Assinatura de e-mail no Claude: assinado automaticamente, sempre',
+  title: 'Assinatura de e-mail no Claude: assinado automaticamente',
   description:
-    'Defina uma assinatura por caixa de entrada uma vez, e o Claude assina automaticamente todo e-mail que envia, no Gmail, Outlook, Fastmail, iCloud e em qualquer conta IMAP.',
+    'Defina uma assinatura por caixa uma vez, e o Claude assina automaticamente todo e-mail que envia, no Gmail, Outlook, Fastmail, iCloud e qualquer conta IMAP.',
   coverAlt:
     'Assinaturas de e-mail para o Claude: defina uma assinatura por caixa de entrada uma vez e o Claude assina toda mensagem que envia, em qualquer provedor',
   content: `Quando o Claude envia um e-mail por você, ele deve parecer que foi você quem enviou. Isso inclui o fechamento: seu nome, seu cargo, a linha da empresa, aquele link para a sua agenda. Até agora, você digitava a assinatura em cada prompt ou aceitava mensagens que terminavam de forma um pouco seca. Isso muda hoje: **o MCPEmails agora aplica sua assinatura automaticamente a toda mensagem que o Claude envia.**

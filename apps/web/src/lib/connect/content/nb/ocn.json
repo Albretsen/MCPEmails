@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "OCN Mail i Claude: IMAP og det separate e-postpassordet",
-    "description": "Koble en OCN-postkasse (ocn.ne.jp) til Claude eller enhver MCP-klient på imap.ocn.ne.jp:993. Logg inn med OCN メールパスワード fra medlemsbeviset ditt, ikke OCN-tilkoblingspassordet."
+    "description": "Koble en OCN-postkasse (ocn.ne.jp) til Claude eller MCP-klienter på imap.ocn.ne.jp:993. Logg inn med OCN メールパスワード, ikke OCN-tilkoblingspassordet."
   },
   "hero": {
     "eyebrow": "OCN + AI",

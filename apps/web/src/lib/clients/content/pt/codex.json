@@ -14,8 +14,8 @@
     "https://github.com/openai/codex/issues/20009, /29279 and /15122 (open on 2026-10-27: desktop app OAuth for custom MCP servers; reporters sign in with codex mcp login)"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao OpenAI Codex: configuração do servidor MCP",
-    "description": "Adicione uma caixa de entrada ao OpenAI Codex com codex mcp add --url. O Codex detecta o OAuth e abre o navegador, sem chave de API. Funciona no CLI, na extensão para IDE e no app de desktop."
+    "title": "Conecte o e-mail ao OpenAI Codex: servidor MCP",
+    "description": "Adicione uma caixa ao OpenAI Codex com codex mcp add --url. O Codex detecta o OAuth e abre o navegador, sem chave de API. Funciona no CLI, na IDE e no desktop."
   },
   "hero": {
     "eyebrow": "Codex + e-mail",

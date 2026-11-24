@@ -3,7 +3,8 @@
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
     "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
-    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted",
+    "https://www.ovhcloud.com/en/public-cloud/mcp-server/"
   ],
   "auth": {
     "method": "mail-password",
@@ -87,6 +88,10 @@
     }
   ],
   "gotchas": [
+    {
+      "h": "OVHcloud 已经有 MCP 服务器，为什么还要用 MCPEmails？",
+      "p": "OVHcloud 自己的 MCP 服务器用于管理你的 OVHcloud 账户和服务，例如实例、存储、网络和数据库。它不会读取或发送你邮箱里的邮件。要做到这一点，你需要一个邮件 MCP 服务器：MCPEmails 使用邮箱密码通过 IMAP 和 SMTP 登录每个 OVH 邮箱，并把它们全部，包括 info@、sales@ 等，放在<b>一个</b> MCP URL 之后，供 Claude、ChatGPT 和 Cursor 使用。"
+    },
     {
       "h": "OVH 的三款邮件产品使用三种主机名格式，连错是这里最常见的失败原因",
       "p": "这就是 OVH 的问题所在。<b>MX Plan</b> 是随域名和虚拟主机附带的邮箱，文档中的服务器是 <code>ssl0.ovh.net</code>（OVH 也列出了 <code>imap.mail.ovh.net</code> 和 <code>smtp.mail.ovh.net</code>），IMAP 为 993 端口 SSL/TLS，SMTP 为 465 端口 SSL/TLS。<b>Email Pro</b> 的主机名是 <code>pro</code> 加服务器编号再加 <code>.mail.ovh.net</code>，IMAP 为 993 端口 SSL，SMTP 为 <b>587 端口 STARTTLS</b>。<b>Hosted Exchange</b> 的主机名是 <code>ex</code> 加服务器编号再加 <code>.mail.ovh.net</code>，同样是 IMAP 993、SMTP 587 STARTTLS。三者在任何方向上都不能互换。把 Exchange 或 Email Pro 邮箱指向 <code>ssl0.ovh.net</code> 会失败，而 MX Plan 使用 587 端口 STARTTLS 也不是 OVH 文档中的配置。"

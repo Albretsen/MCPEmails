@@ -528,7 +528,7 @@
   "providers": {
     "meta": {
       "title": "AIエージェント向けメールプロバイダー互換性 (Gmail、Outlook、iCloud、Yahoo、Zoho)",
-      "description": "MCP経由でAIエージェントと連携できるメールプロバイダーと、それぞれの接続に必要なもの：OAuthまたはアプリ専用パスワード、IMAPとSMTPのホストとポート、TLSまたはSTARTTLS、よくある不具合、接続後にエージェントができること。Gmail、Fastmail、iCloudメール、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365、汎用IMAPに対応しています。"
+      "description": "MCP経由でAIエージェントと連携できるメールプロバイダーと、接続に必要なもの：OAuthまたはアプリ専用パスワード、IMAPとSMTPのホストとポート、TLSまたはSTARTTLS、よくある不具合。Gmail、Fastmail、iCloudメール、Outlook、汎用IMAPに対応。"
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

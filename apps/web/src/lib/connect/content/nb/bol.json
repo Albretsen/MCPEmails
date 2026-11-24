@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "BOL Mail til Claude: IMAP på imap.bol.com.br",
-    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993 med BOL-passordet ditt. Utgående e-post er smtps.bol.com.br på port 465, som ikke er innstillingen søstertjenesten UOL bruker."
+    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993 med BOL-passordet ditt. Utgående e-post er smtps.bol.com.br på port 465."
   },
   "hero": {
     "eyebrow": "BOL Mail + AI",

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Hostpoint MCP-Server: Hostpoint-Mail mit Claude verbinden",
-    "description": "MCP-Server für Hostpoint-E-Mail. Verbinden Sie die Postfächer Ihrer Schweizer Domain (info@, buchhaltung@) über IMAP auf imap.mail.hostpoint.ch:993 mit Claude, ChatGPT und Cursor, mit dem Postfach-Passwort."
+    "description": "MCP-Server für Hostpoint-E-Mail. Postfächer Ihrer Schweizer Domain per IMAP über imap.mail.hostpoint.ch:993 mit Claude, ChatGPT und Cursor verbinden."
   },
   "hero": {
     "eyebrow": "Hostpoint-E-Mail + KI",

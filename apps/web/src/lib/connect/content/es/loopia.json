@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo de Loopia a Claude y clientes MCP",
-    "description": "Conecta el correo de Loopia a Claude, Cursor y cualquier cliente MCP por IMAP en mailcluster.loopia.se:993, un servidor compartido para todos los dominios. Una bandeja gratis."
+    "description": "Conecta Loopia a Claude, Cursor y cualquier cliente MCP por IMAP en mailcluster.loopia.se:993, un servidor compartido para todos los dominios."
   },
   "hero": {
     "eyebrow": "Correo de Loopia + IA",

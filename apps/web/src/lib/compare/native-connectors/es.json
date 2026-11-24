@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Conectores de correo de Claude y ChatGPT frente a un servidor MCP",
-    "description": "Lo que pueden hacer los conectores de correo integrados de Claude y ChatGPT y los servidores MCP propios de Fastmail y Zoho, comparado con MCPEmails. Con fuentes y fechas."
+    "title": "Conectores de correo de Claude y ChatGPT frente a MCP",
+    "description": "Qué pueden hacer los conectores de correo de Claude y ChatGPT y los servidores MCP de Fastmail y Zoho, comparado con MCPEmails. Con fuentes y fechas."
   },
   "hero": {
     "eyebrow": "Conectores nativos frente a MCP",

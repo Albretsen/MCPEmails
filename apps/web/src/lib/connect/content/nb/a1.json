@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "A1- og aon.at-e-post i Claude: securemail.a1.net over IMAP",
-    "description": "Koble en A1- eller aon.at-postkasse til Claude og enhver MCP-klient på securemail.a1.net:993. Én vert for IMAP med SSL og SMTP med STARTTLS på port 587, slik A1 dokumenterer det."
+    "description": "Koble en A1- eller aon.at-postkasse til Claude og MCP-klienter på securemail.a1.net:993. Én vert for IMAP med SSL og SMTP med STARTTLS på port 587."
   },
   "hero": {
     "eyebrow": "A1 + AI",

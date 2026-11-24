@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Warp verbinden: MCP-Server-Setup für Agenten",
-    "description": "Fügen Sie Warp-Agenten ein echtes Postfach hinzu. Settings, Agents, MCP servers, einen Streamable-HTTP-Server per URL hinzufügen und OAuth im Browser abschließen. Kein API-Schlüssel. Ein Postfach kostenlos."
+    "description": "Fügen Sie Warp-Agenten ein Postfach hinzu: unter Settings, Agents, MCP servers einen Streamable-HTTP-Server per URL anlegen und OAuth im Browser abschließen."
   },
   "hero": {
     "eyebrow": "Warp + E-Mail",

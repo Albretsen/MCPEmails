@@ -1,7 +1,7 @@
 const translation = {
   title: 'Como evitar envios duplicados de e-mail por agentes de IA',
   description:
-    'Novas tentativas acontecem. Veja como as chaves de idempotência do MCPEmails ajudam a evitar envios, respostas, encaminhamentos, envios de rascunho e e-mails agendados em duplicidade por agentes de IA.',
+    'Novas tentativas acontecem. Veja como as chaves de idempotência do MCPEmails ajudam a evitar envios, respostas e e-mails agendados duplicados por agentes de IA.',
   coverAlt: 'Evitando envios duplicados de e-mail por agentes de IA com o MCPEmails',
   content: `Um timeout nem sempre significa que o e-mail não foi enviado. Às vezes o provedor aceitou a mensagem logo antes de a conexão cair. Se um agente tenta de novo às cegas, um cliente pode receber o mesmo e-mail duas vezes: um resultado constrangedor em qualquer fluxo de trabalho e um problema sério em prospecção, suporte ou cobrança.
 

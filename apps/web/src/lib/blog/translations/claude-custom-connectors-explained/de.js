@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Claude Custom Connectors erklärt: Tarife, Einrichtung, OAuth und Sicherheit',
+  title: 'Claude Custom Connectors erklärt: Einrichtung und OAuth',
   description:
-    'Was benutzerdefinierte Konnektoren in Claude sind, welche Tarife und Apps sie unterstützen, wie Sie einen Remote-MCP-Server per URL hinzufügen, Anmeldeoptionen, Admin-Einstellungen und Sicherheitstipps.',
+    'Was benutzerdefinierte Konnektoren in Claude sind, welche Tarife sie unterstützen, wie Sie einen Remote-MCP-Server per URL hinzufügen, und Sicherheitstipps.',
   coverAlt: 'Claude Custom Connectors erklärt: ein Remote-MCP-Server, der Claude per URL hinzugefügt wird',
   content: `Mit **benutzerdefinierten Konnektoren in Claude** (englisch Custom Connectors) fügen Sie Claude einen beliebigen Remote-Server des [Model Context Protocol](https://modelcontextprotocol.io) hinzu, indem Sie seine URL einfügen. Danach kann Claude die Tools dieses Servers in Ihren Chats aufrufen: eine Datenbank abfragen, ein Ticket anlegen oder, wie im Praxisbeispiel am Ende dieser Anleitung, Ihre E-Mails lesen und senden.
 

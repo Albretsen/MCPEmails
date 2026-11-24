@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a ChatGPT: plugin Any Mailbox paso a paso",
-    "description": "Dale a ChatGPT una bandeja real: instala Any Mailbox desde el directorio de plugins de ChatGPT, inicia sesión en MCPEmails y elige tus buzones. OAuth, sin clave de API. Una bandeja gratis."
+    "description": "Dale a ChatGPT una bandeja real: instala Any Mailbox desde el directorio de plugins, inicia sesión en MCPEmails y elige tus buzones. Sin clave de API."
   },
   "hero": {
     "eyebrow": "ChatGPT + correo",

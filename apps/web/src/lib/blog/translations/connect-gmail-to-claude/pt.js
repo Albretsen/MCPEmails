@@ -1,7 +1,7 @@
 const translation = {
   title: 'Como conectar o Gmail ao Claude: conector integrado ou MCP',
   description:
-    'O conector de Gmail integrado do Claude cobre uma conta do Gmail dentro do Claude. Quando você também precisa de Outlook, IMAP, várias caixas de entrada ou outros apps de IA, conecte o Gmail ao Claude via MCP em dois minutos com uma senha de app e uma URL.',
+    'O conector de Gmail do Claude cobre uma conta. Para Outlook, IMAP, várias caixas ou outros apps de IA, conecte o Gmail ao Claude via MCP em dois minutos.',
   coverAlt:
     'Como conectar o Gmail ao Claude em dois minutos via MCP: uma senha de app do Google, uma URL de endpoint, nenhum e-mail armazenado',
   content: `O Claude tem seu próprio conector de Gmail. Se tudo o que você quer é uma conta do Gmail dentro do Claude, ative esse conector nas configurações de conectores do Claude e pronto. O MCPEmails entra quando você precisa de mais: Outlook, iCloud, Yahoo ou qualquer caixa de correio IMAP ao lado do Gmail, várias caixas de entrada em um único chat, ou a mesma caixa de entrada no ChatGPT, no Cursor e em outros apps MCP. O restante deste guia configura isso.

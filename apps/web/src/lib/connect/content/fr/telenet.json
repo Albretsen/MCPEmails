@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Paramètres IMAP Telenet et accès MCP pour Claude",
-    "description": "Connectez une boîte telenet.be à Claude, Cursor et tout client MCP sur imap.telenet.be:993, avec le mot de passe de la boîte défini dans MyTelenet sous Je mailbox."
+    "description": "Connectez telenet.be à Claude, Cursor et tout client MCP sur imap.telenet.be:993, avec le mot de passe de boîte défini dans MyTelenet sous Je mailbox."
   },
   "hero": {
     "eyebrow": "Telenet + IA",

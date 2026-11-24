@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta el correo de Microsoft 365 a Claude y ChatGPT",
-    "description": "Conecta un buzón de Microsoft 365 del trabajo o de un centro educativo a Claude, ChatGPT, Cursor o cualquier cliente MCP. Inicia sesión con Microsoft; muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero."
+    "description": "Conecta Microsoft 365 del trabajo o de un centro educativo a Claude, ChatGPT o Cursor. Inicia sesión con Microsoft; quizá un administrador deba aprobarlo antes."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + IA",
@@ -108,7 +108,7 @@
   },
   "guide": {
     "intro": "¿Prefieres una guía paso a paso?",
-    "label": "Cómo conectar Outlook y Microsoft 365 a tu agente de IA con MCP",
+    "label": "Conecta Outlook y Microsoft 365 a tu agente de IA con MCP",
     "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

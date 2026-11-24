@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -14,7 +15,7 @@
   },
   "meta": {
     "title": "Fastmail mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "Fastmail mit Claude, Cursor, ChatGPT und jedem MCP-Client verbinden, per IMAP über imap.fastmail.com:993 mit einem Fastmail App-Passwort. Ein Postfach dauerhaft kostenlos."
+    "description": "Fastmail per IMAP über imap.fastmail.com:993 mit Claude, Cursor, ChatGPT und jedem MCP-Client verbinden, mit einem Fastmail App-Passwort."
   },
   "hero": {
     "eyebrow": "Fastmail + KI",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmail hat einen eigenen MCP-Server, und der ist gut",
-      "p": "Im April 2026 hat Fastmail einen eigenen MCP-Server unter <code>https://api.fastmail.com/mcp</code> gestartet. Er nutzt OAuth, bietet Lese-, Schreib- oder Sendezugriff und deckt E-Mail, Kalender und Kontakte ab. Ist Fastmail das einzige Postfach, das ein Assistent erreichen soll, ist das der direkteste Weg, und das sagen wir offen. MCPEmails beantwortet eine andere Frage: <b>eine</b> MCP-URL, die Ihr Fastmail-Konto und gleichzeitig Ihr iCloud-, Zoho-, Yahoo-, GMX- oder Firmen-IMAP-Postfach enthält, mit denselben Tools für alle. So kann ein Agent postfachübergreifend suchen, und Sie richten einen Server ein statt fünf. Uns ist wichtiger, dass Ihnen die Seite hilft, als dass sie gut für uns klingt."
+      "h": "Fastmail hat schon einen offiziellen MCP-Server. Warum MCPEmails?",
+      "p": "Ja, den gibt es: Im April 2026 hat Fastmail einen eigenen MCP-Server unter <code>https://api.fastmail.com/mcp</code> gestartet. Sie melden sich per OAuth an und erteilen Lese-, Schreib- oder Sendezugriff auf E-Mail, Kontakte und Kalender. Ist Fastmail das einzige Postfach, das ein Assistent erreichen soll, ist das der direkteste Weg, und das sagen wir offen. Die Hilfeseite von Fastmail nennt selbst zwei Grenzen: Anhänge lassen sich über den MCP-Server nicht lesen, und Claude kann nicht mehr als ein Fastmail-Konto hinzufügen. MCPEmails verbindet Fastmail per IMAP mit einem App-Passwort und stellt es zusammen mit Ihren weiteren Fastmail-Konten und Ihren iCloud-, Gmail-, Yahoo- oder Firmen-IMAP-Postfächern hinter <b>eine</b> MCP-URL, mit denselben Tools für alle, das Lesen von Anhängen eingeschlossen."
     },
     {
       "h": "Fastmail Basic-Konten können gar kein IMAP nutzen",

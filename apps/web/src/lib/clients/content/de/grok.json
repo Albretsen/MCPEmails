@@ -9,7 +9,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Grok verbinden: Custom-MCP-Connector einrichten",
-    "description": "Fügen Sie Grok ein echtes Postfach als Custom-MCP-Connector hinzu. Eine URL auf grok.com einfügen, per OAuth anmelden, dann E-Mails lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "description": "Fügen Sie Grok ein echtes Postfach als Custom-MCP-Connector hinzu. URL auf grok.com einfügen, per OAuth anmelden, dann E-Mails lesen, suchen, senden und planen."
   },
   "hero": {
     "eyebrow": "Grok + E-Mail",

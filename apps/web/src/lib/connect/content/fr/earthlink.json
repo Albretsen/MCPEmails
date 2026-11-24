@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Connecter l'e-mail EarthLink et Mindspring à Claude",
-    "description": "Connectez l'e-mail EarthLink à Claude et tout client MCP via IMAP sur imap.earthlink.net:993. Votre mot de passe e-mail suffit ; l'envoi passe par un autre serveur."
+    "description": "Connectez EarthLink à Claude et tout client MCP via IMAP sur imap.earthlink.net:993. Votre mot de passe e-mail suffit ; l'envoi passe par un autre serveur."
   },
   "hero": {
     "eyebrow": "EarthLink Mail + IA",

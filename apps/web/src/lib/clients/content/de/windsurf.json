@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Windsurf verbinden: MCP-Server-Setup für Cascade",
-    "description": "Fügen Sie Cascade in Windsurf ein echtes Postfach hinzu. Ein Eintrag in mcp_config.json mit serverUrl, dann per OAuth autorisieren. Kein API-Schlüssel. Ein Postfach kostenlos."
+    "description": "Fügen Sie Cascade in Windsurf ein echtes Postfach hinzu: ein Eintrag in mcp_config.json mit serverUrl, dann per OAuth autorisieren. Kein API-Schlüssel."
   },
   "hero": {
     "eyebrow": "Windsurf + E-Mail",

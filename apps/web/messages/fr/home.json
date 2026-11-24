@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Serveur MCP e-mail : Gmail, Outlook et IMAP",
-    "description": "Serveur MCP e-mail hébergé pour Claude, ChatGPT et Cursor. Connectez Gmail, Outlook ou toute boîte IMAP, plusieurs à la fois. Courrier lu en direct, jamais stocké."
+    "description": "Serveur MCP e-mail hébergé pour Claude, ChatGPT et Cursor. Connectez Gmail, Outlook ou toute boîte IMAP. Courrier lu en direct, jamais stocké."
   },
   "nav": {
     "features": "Fonctionnalités",

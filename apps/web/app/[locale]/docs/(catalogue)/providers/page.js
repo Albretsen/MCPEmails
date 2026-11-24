@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, pageJsonLd } from '@/i18n/seo';
 import ProvidersClient from '../../../../../components/marketing/ProvidersClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }) {
     ? t('providers.meta.description')
     : 'See which email providers MCPEmails supports and which features are available per provider: Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/docs/providers'),
     openGraph: {

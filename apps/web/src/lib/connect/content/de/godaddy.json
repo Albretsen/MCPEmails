@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "GoDaddy E-Mail mit Claude, Cursor und MCP verbinden",
-    "description": "GoDaddy Professional Email mit Claude und jedem MCP-Client verbinden, per IMAP über imap.secureserver.net:993. Microsoft 365 von GoDaddy wird stattdessen über Outlook verbunden."
+    "description": "GoDaddy Professional Email per IMAP über imap.secureserver.net:993 mit Claude verbinden. Microsoft 365 von GoDaddy läuft stattdessen über Outlook."
   },
   "hero": {
     "eyebrow": "GoDaddy E-Mail + KI",

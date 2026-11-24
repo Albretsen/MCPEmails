@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Finn IMAP- og SMTP-innstillinger for enhver e-postadresse",
-    "description": "Skriv inn en e-postadresse og få IMAP- og SMTP-server, port og sikkerhet, og se hvilken leverandør som håndterer e-posten på et eget domene. Gratis, kjører i nettleseren."
+    "description": "Skriv inn en e-postadresse og få IMAP- og SMTP-server, port og sikkerhet, og se hvilken leverandør som håndterer e-posten. Gratis, kjører i nettleseren."
   },
   "hero": {
     "eyebrow": "Gratis verktøy",

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Messagerie Plesk vers Claude : paramètres IMAP et MCP",
-    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com : sans certificat attribué au domaine de messagerie, ce sous-domaine reçoit celui du serveur."
+    "description": "Les boîtes Plesk se connectent à Claude en IMAP 993. Utilisez le domaine lui-même, pas mail.domain.com, qui reçoit le certificat par défaut sans attribution."
   },
   "hero": {
     "eyebrow": "Plesk + IA",

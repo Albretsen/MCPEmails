@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP de Hostpoint: conecta el correo de Hostpoint a Claude",
-    "description": "Servidor MCP para el correo de Hostpoint. Conecta los buzones de tu dominio suizo (info@, buchhaltung@) a Claude, ChatGPT y Cursor por IMAP en imap.mail.hostpoint.ch:993 con la contraseña del buzón."
+    "title": "Servidor MCP de Hostpoint: conecta tu correo a Claude",
+    "description": "Servidor MCP para el correo de Hostpoint. Conecta los buzones de tu dominio suizo a Claude, ChatGPT y Cursor por IMAP en imap.mail.hostpoint.ch:993."
   },
   "hero": {
     "eyebrow": "Correo Hostpoint + IA",

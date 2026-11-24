@@ -11,7 +11,7 @@
   },
   "meta": {
     "title": "Yandex Mail mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "Yandex Mail mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.yandex.com:993. Geprüfte Einstellungen, App-Passwort erforderlich. Ein Postfach kostenlos."
+    "description": "Yandex Mail per IMAP über imap.yandex.com:993 mit Claude, Cursor und jedem MCP-Client verbinden. Geprüfte Einstellungen, App-Passwort erforderlich."
   },
   "hero": {
     "eyebrow": "Yandex Mail + KI",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "IMAP-innstillinger for Ziggo Mail og Claude via MCP",
-    "description": "Koble en Ziggo-postkasse til Claude, Cursor og enhver MCP-klient. IMAP er imap.ziggo.nl:993, men sending er STARTTLS på smtp.ziggo.nl:587, ikke implisitt TLS på 465."
+    "description": "Koble en Ziggo-postkasse til Claude og MCP-klienter. IMAP er imap.ziggo.nl:993, men sending er STARTTLS på smtp.ziggo.nl:587, ikke implisitt TLS på 465."
   },
   "hero": {
     "eyebrow": "Ziggo Mail + AI",

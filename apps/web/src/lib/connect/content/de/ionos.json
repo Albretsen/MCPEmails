@@ -16,7 +16,7 @@
   },
   "meta": {
     "title": "IONOS Mail MCP: IONOS E-Mail mit Claude verbinden",
-    "description": "IONOS E-Mail mit Claude und ChatGPT verbinden: imap.ionos.de:993, Passwort der E-Mail-Adresse statt IONOS-Login. Jedes Firmenpostfach (info@, vertrieb@) einzeln."
+    "description": "IONOS E-Mail mit Claude und ChatGPT verbinden: imap.ionos.de:993, Passwort der E-Mail-Adresse statt IONOS-Login. Jedes Firmenpostfach einzeln."
   },
   "hero": {
     "eyebrow": "IONOS + KI",

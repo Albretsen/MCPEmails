@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Hostinger E-Mail mit Claude, Cursor und MCP-Clients verbinden",
-    "description": "Hostinger Email mit Claude, Cursor und jedem MCP-Client verbinden, per IMAP über imap.hostinger.com:993. Business Email auf Titan-Basis nutzt ganz andere Server."
+    "title": "Hostinger E-Mail mit Claude, Cursor und MCP verbinden",
+    "description": "Hostinger Email per IMAP über imap.hostinger.com:993 mit Claude, Cursor und jedem MCP-Client verbinden. Business Email auf Titan-Basis nutzt andere Server."
   },
   "hero": {
     "eyebrow": "Hostinger + KI",

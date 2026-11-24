@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à VS Code : MCP pour Copilot agent",
-    "description": "Ajoutez une vraie boîte au mode agent de GitHub Copilot dans VS Code. Lancez MCP: Add Server, choisissez HTTP, autorisez avec OAuth. Sans clé API. 1 boîte gratuite."
+    "description": "Ajoutez une vraie boîte au mode agent de Copilot dans VS Code : MCP: Add Server, choisissez HTTP et autorisez avec OAuth. Sans clé API."
   },
   "hero": {
     "eyebrow": "VS Code + e-mail",

@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Serveur MCP TransIP : connectez le mail TransIP à Claude",
-    "description": "Serveur MCP pour l'hébergement mail de TransIP. Connectez les boîtes de votre domaine (info@, facturen@) à Claude, ChatGPT et Cursor en IMAP sur imap.transip.email:993 avec le mot de passe de la boîte."
+    "description": "Serveur MCP pour le mail TransIP. Connectez votre domaine à Claude, ChatGPT et Cursor en IMAP sur imap.transip.email:993 avec le mot de passe de la boîte."
   },
   "hero": {
     "eyebrow": "Mail TransIP + IA",

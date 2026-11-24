@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a Gemini CLI: MCP con httpUrl",
-    "description": "Añade una bandeja real a Gemini CLI. Una entrada en settings.json con httpUrl; después la CLI descubre OAuth y abre el flujo en el navegador. Una bandeja gratis."
+    "description": "Añade una bandeja real a Gemini CLI con una entrada httpUrl en settings.json; la CLI descubre OAuth y abre el navegador. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Gemini CLI + correo",

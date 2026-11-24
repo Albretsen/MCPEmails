@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Koble Onet Poczta til Claude og enhver MCP-klient",
-    "description": "Koble Onet Poczta til Claude, Cursor og enhver MCP-klient over IMAP på imap.poczta.onet.pl:993. Lås opp IMAP og SMTP under Konto Główne, bruk et hasło do aplikacji med totrinnsverifisering, og merk Onets regel om bare IMAP for e-postprogrammer fra 5. mai 2026."
+    "description": "Koble Onet Poczta til Claude og MCP-klienter over IMAP på imap.poczta.onet.pl:993. Lås opp IMAP og SMTP under Konto Główne, og bruk et hasło do aplikacji."
   },
   "hero": {
     "eyebrow": "Onet Poczta + AI",

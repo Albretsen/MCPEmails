@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE, formatLegalDate } from '@/lib/legal-config';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/privacy'),
     openGraph: {

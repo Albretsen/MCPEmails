@@ -13,8 +13,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Rogers Yahoo et Claude : le piège du mot de passe d'application",
-    "description": "La messagerie Rogers tourne sur Yahoo. Connectez rogers.com à Claude en IMAP via imap.broadband.rogers.com, mais Rogers annonce la fin des mots de passe d'application."
+    "title": "Rogers et Claude : le piège du mot de passe d'application",
+    "description": "La messagerie Rogers tourne sur Yahoo. Connectez rogers.com à Claude via imap.broadband.rogers.com, mais Rogers annonce la fin des mots de passe d'app."
   },
   "hero": {
     "eyebrow": "Rogers Yahoo Mail + IA",

@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Serveur MCP REG.RU : connectez le mail de l'hébergement REG.RU à Claude",
-    "description": "Serveur MCP pour le mail sur l'hébergement REG.RU. Connectez les boîtes de votre domaine (info@, zakaz@) à Claude, ChatGPT et Cursor en IMAP sur mail.hosting.reg.ru:993 avec le mot de passe de la boîte."
+    "title": "Serveur MCP REG.RU : connectez votre mail à Claude",
+    "description": "Serveur MCP pour le mail REG.RU. Connectez votre domaine à Claude, ChatGPT et Cursor en IMAP sur mail.hosting.reg.ru:993 avec le mot de passe de la boîte."
   },
   "hero": {
     "eyebrow": "Mail REG.RU + IA",

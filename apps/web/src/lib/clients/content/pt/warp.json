@@ -5,8 +5,8 @@
     "https://docs.warp.dev/agent-platform/capabilities/mcp/"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Warp: configuração do servidor MCP para agentes",
-    "description": "Adicione uma caixa de entrada real aos agentes do Warp. Settings, Agents, MCP servers, adicione um servidor Streamable HTTP pela URL e conclua o OAuth no navegador. Sem chave de API. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao Warp: servidor MCP para agentes",
+    "description": "Adicione uma caixa aos agentes do Warp. Em Settings, Agents, MCP servers, adicione um servidor Streamable HTTP pela URL e conclua o OAuth. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Warp + e-mail",

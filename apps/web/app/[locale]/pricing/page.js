@@ -8,6 +8,7 @@ import { FOUNDER_VALID_UNTIL, pricesWithFounder } from '@/lib/stripe/founder-off
 import { requireLocale } from '@/i18n/require-locale';
 import { withBusinessSeatPrices } from '@/lib/stripe/business-seat-display';
 import { businessSeatPageCopy } from '@/lib/billing/business-seat-copy';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'Simple, transparent pricing for AI agents that read and send email. Free plan available. No card required.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/pricing'),
     openGraph: {

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecte o Zoho Mail ao Claude, Cursor e clientes MCP",
-    "description": "Conecte o Zoho Mail ao Claude, ao Cursor e a qualquer cliente MCP via IMAP em imap.zoho.com:993. O IMAP vem desativado e o host depende do data center do seu Zoho."
+    "description": "Conecte o Zoho Mail ao Claude, ao Cursor e a clientes MCP via IMAP em imap.zoho.com:993. O IMAP vem desativado e o host depende do seu data center."
   },
   "hero": {
     "eyebrow": "Zoho Mail + IA",

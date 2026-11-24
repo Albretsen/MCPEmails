@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Mailfence til Claude: IMAP krever betalt plan",
-    "description": "Mailfence-IMAP på imap.mailfence.com:993 kobles til Claude og MCP-klienter, men bare på betalte planer. Gratiskontoer er kun webmail, og alias kan ikke logge inn."
+    "description": "Mailfence-IMAP på imap.mailfence.com:993 kobles til Claude og MCP-klienter, kun på betalte planer. Gratiskontoer er kun webmail, og alias kan ikke logge inn."
   },
   "hero": {
     "eyebrow": "Mailfence + AI",

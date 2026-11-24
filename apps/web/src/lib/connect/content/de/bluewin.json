@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Bluewin (Swisscom) E-Mail per IMAP mit Claude verbinden",
-    "description": "Bluewin E-Mail per IMAP über imaps.bluewin.ch:993 mit Claude und jedem MCP-Client verbinden. Mail-Clients brauchen das separate E-Mail-Passwort von Swisscom, nicht Ihr Login."
+    "description": "Bluewin E-Mail per IMAP über imaps.bluewin.ch:993 mit Claude verbinden. Mail-Clients brauchen das separate E-Mail-Passwort von Swisscom, nicht Ihr Login."
   },
   "hero": {
     "eyebrow": "Bluewin + KI",

@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Messagerie InMotion Hosting vers Claude en IMAP (MCP)",
-    "description": "InMotion sécurise le courrier sur secureNN.inmotionhosting.com, NN étant le numéro de serveur indiqué dans AMP. Connectez la boîte à Claude en IMAP 993. 1 boîte gratuite."
+    "description": "InMotion sécurise le courrier sur secureNN.inmotionhosting.com, NN étant le numéro de serveur dans AMP. Connectez la boîte à Claude en IMAP 993."
   },
   "hero": {
     "eyebrow": "InMotion Hosting + IA",

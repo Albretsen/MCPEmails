@@ -1,7 +1,7 @@
 const translation = {
-  title: 'E-mail et IA pour les agences : un agent sur toutes les boîtes de vos clients',
+  title: 'E-mail et IA pour les agences : toutes vos boîtes clients',
   description:
-    "Comment une agence ou un indépendant donne à un agent IA l'accès à plusieurs boîtes clients sans les mélanger : un espace de travail par client, des clés limitées, la lecture seule d'abord et une validation humaine avant chaque envoi.",
+    "Donnez à un agent IA l'accès aux boîtes de vos clients sans les mélanger : un espace par client, des clés limitées et une validation avant envoi.",
   coverAlt:
     'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCPEmails',
   content: `Si vous gérez le courrier de plusieurs clients, vous vivez avec une règle : rien du client A ne doit apparaître dans un fil du client B. Un agent IA ne change pas la règle, il rend simplement plus facile de l'enfreindre. Un seul agent avec un seul identifiant qui atteint toutes les boîtes que vous gérez est à une consigne maladroite de citer la mauvaise facture à la mauvaise personne.

@@ -15,7 +15,7 @@
   ],
   "meta": {
     "title": "Connecter l'e-mail à OpenAI Codex : serveur MCP",
-    "description": "Ajoutez une boîte à OpenAI Codex avec codex mcp add --url. Codex détecte OAuth et ouvre le navigateur, sans clé API. Fonctionne dans la CLI, l'extension IDE et l'app de bureau."
+    "description": "Ajoutez une boîte à OpenAI Codex avec codex mcp add --url. Codex ouvre OAuth dans le navigateur, sans clé API. CLI, extension IDE et app de bureau."
   },
   "hero": {
     "eyebrow": "Codex + e-mail",

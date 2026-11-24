@@ -14,8 +14,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "E-mail da HostGator no Claude: configurações IMAP que funcionam",
-    "description": "Na HostGator Brasil o servidor se chama brNNN.hostgator.com.br; na hostgator.com, gator1234.hostgator.com. Use o nome do seu servidor no IMAP 993 e conecte a caixa de correio ao Claude, grátis."
+    "title": "E-mail da HostGator no Claude: configuração IMAP correta",
+    "description": "Na HostGator Brasil o servidor é brNNN.hostgator.com.br; na hostgator.com, gator1234.hostgator.com. Use-o no IMAP 993 e conecte a caixa ao Claude, grátis."
   },
   "hero": {
     "eyebrow": "HostGator + IA",

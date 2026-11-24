@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "IMAP do SAPO Mail: só Premium, e a configuração MCP no Claude",
-    "description": "O SAPO restringe IMAP, POP e SMTP às contas Premium. O que isso significa para conectar imap.sapo.pt:993 ao Claude, e o que uma conta Base gratuita ainda pode fazer."
+    "title": "IMAP do SAPO Mail só no Premium: configuração MCP no Claude",
+    "description": "O SAPO restringe IMAP, POP e SMTP às contas Premium. O que isso significa para conectar imap.sapo.pt:993 ao Claude e o que uma conta Base gratuita ainda faz."
   },
   "hero": {
     "eyebrow": "SAPO Mail + IA",

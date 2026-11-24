@@ -7,7 +7,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Cline verbinden: Setup als Remote-MCP-Server",
-    "description": "Fügen Sie Cline ein echtes Postfach als entfernten Streamable-HTTP-Server mit einem API-Schlüssel mit Scopes hinzu. E-Mails aus VS Code lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "description": "Fügen Sie Cline ein echtes Postfach als Streamable-HTTP-Server mit einem API-Schlüssel mit Scopes hinzu. E-Mails aus VS Code lesen, suchen, senden und planen."
   },
   "hero": {
     "eyebrow": "Cline + E-Mail",

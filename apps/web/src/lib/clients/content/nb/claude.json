@@ -7,8 +7,8 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "Koble e-post til Claude: MCP-oppsett for Gmail, Outlook og IMAP",
-    "description": "Gi claude.ai og Claude Desktop en ekte innboks som egendefinert kobling. Lim inn én URL, autoriser med OAuth, og les, søk, send og planlegg e-post. Én innboks gratis."
+    "title": "Koble e-post til Claude: MCP for Gmail, Outlook og IMAP",
+    "description": "Gi claude.ai og Claude Desktop en ekte innboks som egendefinert kobling. Lim inn én URL, autoriser med OAuth, og les, søk og send e-post. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Claude + e-post",

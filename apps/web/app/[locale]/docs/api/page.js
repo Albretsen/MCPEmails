@@ -8,6 +8,7 @@ import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { Inline, CodeBlock } from '../../../../components/marketing/DevCopy';
 import { CODE, developerDocsCopy } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The developer guide: how to call MCPEmails from a script, a workflow tool or
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = developerDocsCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

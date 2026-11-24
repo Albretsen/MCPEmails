@@ -3,6 +3,7 @@ import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'How MCPEmails protects your email: fetched live and never stored, credentials encrypted, and code you can read or self-host.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/security'),
     openGraph: {

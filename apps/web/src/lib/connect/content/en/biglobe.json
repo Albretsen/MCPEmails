@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "BIGLOBE Mail in Claude: One Host for IMAP and SMTP",
-    "description": "Connect a BIGLOBE mailbox to Claude or any MCP client at mail.biglobe.ne.jp:993. One host serves IMAP and SMTP over SSL, with your BIGLOBE address and BIGLOBE password."
+    "description": "Connect a BIGLOBE mailbox to Claude or any MCP client at mail.biglobe.ne.jp:993. One host serves IMAP and SMTP over SSL with your BIGLOBE address and password."
   },
   "hero": {
     "eyebrow": "BIGLOBE + AI",

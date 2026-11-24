@@ -1,7 +1,7 @@
 const translation = {
   title: 'Claude peut-il lire et envoyer mes e-mails ? Boîte par boîte',
   description:
-    "Oui pour Gmail et les comptes Microsoft 365 professionnels, avec les connecteurs intégrés de Claude. Yahoo, iCloud, Outlook.com, les boîtes IMAP et plusieurs fournisseurs à la fois passent par un serveur MCP.",
+    "Oui pour Gmail et Microsoft 365 pro, via les connecteurs de Claude. Yahoo, iCloud, Outlook.com, IMAP et plusieurs boîtes passent par un serveur MCP.",
   coverAlt:
     'Claude qui lit et envoie des e-mails depuis des boîtes Gmail, Microsoft 365, Yahoo, iCloud et IMAP',
   content: `**Oui, Claude peut lire vos e-mails et en envoyer, mais uniquement depuis une boîte que vous lui avez connectée.** Claude dispose de deux connecteurs e-mail intégrés : l'un pour Gmail, l'autre pour les comptes Microsoft 365 professionnels. Le connecteur Gmail lit, recherche et envoie, et demande par défaut votre accord avant chaque envoi. Le connecteur Microsoft 365 lit et recherche, et ne peut envoyer qu'une fois ses outils d'écriture activés par un administrateur. Pour Yahoo, iCloud, une adresse Outlook.com personnelle, une boîte d'entreprise chez un hébergeur IMAP ou plusieurs fournisseurs derrière une seule connexion, il faut un serveur MCP comme MCPEmails.

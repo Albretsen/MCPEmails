@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Hostpoint MCP Server: Connect Hostpoint Mail to Claude",
-    "description": "MCP server for Hostpoint email. Connect the mailboxes on your Swiss domain (info@, buchhaltung@) to Claude, ChatGPT and Cursor over IMAP at imap.mail.hostpoint.ch:993 with the mailbox password."
+    "description": "MCP server for Hostpoint email. Connect the mailboxes on your Swiss domain to Claude, ChatGPT and Cursor over IMAP at imap.mail.hostpoint.ch:993."
   },
   "hero": {
     "eyebrow": "Hostpoint email + AI",

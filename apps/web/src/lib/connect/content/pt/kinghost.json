@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "E-mail KingHost no Claude: IMAP e o SMTPi para envio",
-    "description": "Conecte uma caixa de correio da KingHost ao Claude ou a qualquer cliente MCP em imap.kinghost.net:993. O envio de fora do Brasil passa por smtpi.kinghost.net, que precisa ser ativado antes no painel da KingHost."
+    "description": "Conecte uma caixa da KingHost ao Claude ou a clientes MCP em imap.kinghost.net:993. O envio de fora do Brasil usa smtpi.kinghost.net, ativado antes no painel."
   },
   "hero": {
     "eyebrow": "KingHost + IA",

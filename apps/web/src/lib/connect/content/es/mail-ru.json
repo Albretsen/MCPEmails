@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Conecta Mail.ru a Claude, Cursor y clientes MCP",
-    "description": "Conecta Mail.ru a Claude, Cursor y cualquier cliente MCP por IMAP en imap.mail.ru:993 con una contraseña para aplicaciones externas. La contraseña del sitio web no funciona."
+    "description": "Conecta Mail.ru a Claude, Cursor y cualquier cliente MCP por IMAP en imap.mail.ru:993 con una contraseña para aplicaciones externas, no la del sitio web."
   },
   "hero": {
     "eyebrow": "Mail.ru + IA",

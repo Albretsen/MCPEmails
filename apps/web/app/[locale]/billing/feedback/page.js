@@ -7,6 +7,7 @@ import { feedbackCopy } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../../styles/help.css';
 import '../../../../styles/contract-forms.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * /billing/feedback?t=<signed token>&r=<reason>: why a subscriber cancelled,
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const c = feedbackCopy(locale);
   return {
-    title: c.meta.title,
+    title: pageTitle(c.meta.title),
     robots: { index: false, follow: false },
   };
 }

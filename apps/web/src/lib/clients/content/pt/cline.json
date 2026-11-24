@@ -6,8 +6,8 @@
     "https://docs.cline.bot/mcp/configuring-mcp-servers"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Cline: configuração de servidor MCP remoto",
-    "description": "Adicione uma caixa de entrada real ao Cline como servidor remoto Streamable HTTP com uma chave de API com escopo. Leia, pesquise, envie e agende e-mails no VS Code. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao Cline: servidor MCP remoto",
+    "description": "Adicione uma caixa real ao Cline como servidor remoto Streamable HTTP com uma chave de API com escopo. Leia, pesquise e envie e-mails. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Cline + e-mail",

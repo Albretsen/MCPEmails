@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Websupport MCP-server: koble Websupport-e-post til Claude",
-    "description": "MCP-server for Websupport-e-post. Koble postkassene på domenet ditt (info@, fakturacia@) til Claude, ChatGPT og Cursor via IMAP på imap.m1.websupport.sk:993, etter å ha tillatt innloggingslandet i GEO ochrana."
+    "description": "MCP-server for Websupport-e-post. Koble domenepostkassene til Claude, ChatGPT og Cursor via IMAP på imap.m1.websupport.sk:993, etter å ha åpnet GEO ochrana."
   },
   "hero": {
     "eyebrow": "Websupport-e-post + AI",

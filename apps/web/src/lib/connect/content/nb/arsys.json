@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Arsys MCP-server: koble Arsys-e-post til Claude",
-    "description": "MCP-server for Arsys-e-post. Koble postkassene på domenet ditt (info@, facturacion@) til Claude, ChatGPT og Cursor via IMAP på imap.serviciodecorreo.es:993 med postkassepassordet."
+    "description": "MCP-server for Arsys-e-post. Koble postkassene på domenet ditt til Claude, ChatGPT og Cursor via IMAP på imap.serviciodecorreo.es:993 med postkassepassordet."
   },
   "hero": {
     "eyebrow": "Arsys-e-post + AI",

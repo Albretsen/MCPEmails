@@ -15,8 +15,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conectar qualquer caixa IMAP ao Claude, ao Cursor e a clientes MCP",
-    "description": "Conecte qualquer caixa de correio IMAP da sua empresa ao Claude, ao Cursor e a qualquer cliente MCP. Traga host e senha: IMAP na 993 ou 143, SMTP na 465 ou 587, detectados para você."
+    "title": "Conecte qualquer caixa IMAP ao Claude, Cursor e clientes MCP",
+    "description": "Conecte qualquer caixa IMAP da sua empresa ao Claude, ao Cursor e a clientes MCP. Host e senha bastam: IMAP na 993 ou 143, SMTP na 465 ou 587, detectados."
   },
   "hero": {
     "eyebrow": "IMAP + IA",

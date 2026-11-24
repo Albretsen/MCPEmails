@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE, pageJsonLd } from '@/i18n/seo';
 import FoundersClient from '../../../../components/marketing/FoundersClient';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 const PATH = '/for/founders';
 
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'Founders use MCPEmails to answer customer email straight from Claude or any AI.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

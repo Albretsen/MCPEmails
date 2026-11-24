@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Plusieurs comptes e-mail dans Claude Cowork, y compris Outlook personnel',
+  title: 'Plusieurs comptes e-mail dans Claude Cowork',
   description:
-    "Claude Cowork n'atteint qu'un seul compte Google avec son connecteur Gmail et le seul compte Microsoft avec lequel vous vous connectez avec son connecteur Microsoft 365. Comment donner plusieurs boîtes, professionnelles et personnelles, à une même tâche Cowork.",
+    "Les connecteurs de Claude Cowork n'atteignent qu'un compte Google et un compte Microsoft. Comment donner plusieurs boîtes à une même tâche Cowork.",
   coverAlt:
     'Des comptes e-mail professionnels et personnels, dont Gmail et Outlook.com, connectés à une même tâche Claude Cowork',
   content: `**Claude Cowork utilise les mêmes connecteurs que Claude en conversation, et il a donc les mêmes limites pour les e-mails : un seul compte Google avec le connecteur Gmail, et un seul compte Microsoft avec le connecteur Microsoft 365, qui n'accepte un compte Outlook.com personnel que sur les formules Free, Pro, Max et Ultra.** Un deuxième Gmail, une adresse personnelle Outlook.com ou Hotmail sur une formule Team ou Enterprise, une boîte d'entreprise chez un hébergeur IMAP ou l'envoi avec pièces jointes nécessitent un connecteur personnalisé. Avec un serveur MCP comme MCPEmails, un seul connecteur personnalisé donne à une tâche Cowork toutes les boîtes que vous connectez, chacune sous son nom.

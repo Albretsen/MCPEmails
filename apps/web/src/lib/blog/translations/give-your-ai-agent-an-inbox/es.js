@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Dale una bandeja de entrada a tu agente de IA: guía práctica del correo sobre MCP',
+  title: 'Dale una bandeja de entrada a tu agente de IA con MCP',
   description:
-    'Por qué conectar el correo a tu agente de IA es más difícil de lo que parece, y cómo el Model Context Protocol convierte Gmail, Outlook e IMAP en un único endpoint seguro que tu agente puede usar de verdad.',
+    'Por qué conectar el correo a un agente de IA es difícil y cómo el Model Context Protocol convierte Gmail, Outlook e IMAP en un endpoint seguro que puede usar.',
   coverAlt: 'Dale una bandeja de entrada a tu agente de IA (MCPEmails)',
   content: `La mayoría de las demos de "correo con IA" se quedan en una captura de pantalla. El agente redacta una respuesta, todos aplauden y nadie hace la pregunta incómoda: **¿cómo llega realmente el modelo a una bandeja de entrada de verdad?** De forma segura, entre proveedores distintos y sin que tengas que pegar una contraseña de aplicación en un prompt.
 

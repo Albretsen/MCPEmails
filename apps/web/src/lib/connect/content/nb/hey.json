@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "HEY-e-post og AI: ingen IMAP, og hva som virker i stedet",
-    "description": "HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger, så MCPEmails kan ikke koble til en HEY-postkasse. Hvorfor 37signals bygde det slik, og to veier som fungerer."
+    "description": "HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger, så MCPEmails kan ikke koble til en HEY-postkasse. Hvorfor det er slik, og to veier som fungerer."
   },
   "hero": {
     "eyebrow": "HEY + AI",

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Segurança de agentes de IA para e-mail: OAuth, criptografia e privacidade",
-    "description": "Veja como o MCPEmails protege o acesso da IA ao seu e-mail: busca em tempo real em vez de armazenamento de e-mails, credenciais criptografadas, permissões restritas e revogáveis, proteções contra prompt injection e código aberto."
+    "title": "Segurança de agentes de IA no e-mail: OAuth e criptografia",
+    "description": "Como o MCPEmails protege o acesso da IA ao e-mail: busca ao vivo sem armazenar e-mails, credenciais criptografadas, permissões revogáveis e código aberto."
   },
   "hero": {
     "eyebrow": "Segurança e confiança",

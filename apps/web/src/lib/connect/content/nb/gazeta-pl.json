@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Koble Gazeta.pl Poczta til Claude og enhver MCP-klient",
-    "description": "Koble en Gazeta.pl-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på imap.gazeta.pl:993 og SMTP på smtp.gazeta.pl:465 med Gazeta.pl-passordet ditt og login@gazeta.pl som brukernavn."
+    "description": "Koble en Gazeta.pl-postkasse til Claude, Cursor og MCP-klienter over IMAP på imap.gazeta.pl:993 og SMTP på smtp.gazeta.pl:465 med Gazeta.pl-passordet ditt."
   },
   "hero": {
     "eyebrow": "Gazeta.pl Poczta + AI",

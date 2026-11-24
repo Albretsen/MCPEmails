@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect Disroot Email to Claude and MCP Clients",
-    "description": "Connect Disroot email to Claude, Cursor and any MCP client over IMAP at disroot.org:993. Uses your Disroot account password, no app password exists. One inbox free."
+    "description": "Connect Disroot email to Claude, Cursor and any MCP client over IMAP at disroot.org:993 with your Disroot account password. No app password exists."
   },
   "hero": {
     "eyebrow": "Disroot + AI",

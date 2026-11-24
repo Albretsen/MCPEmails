@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "StartMail vers Claude : le mot de passe d'appareil de confiance",
-    "description": "Connectez StartMail à Claude, Cursor ou tout client MCP via IMAP sur imap.startmail.com:993. Le mot de passe du compte ne marche jamais : utilisez un mot de passe d'appareil."
+    "title": "StartMail dans Claude : le mot de passe d'appareil",
+    "description": "Connectez StartMail à Claude, Cursor ou tout client MCP via IMAP sur imap.startmail.com:993. Jamais le mot de passe du compte : un mot de passe d'appareil."
   },
   "hero": {
     "eyebrow": "StartMail + IA",

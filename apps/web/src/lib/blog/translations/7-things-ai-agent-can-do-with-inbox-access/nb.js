@@ -1,7 +1,7 @@
 const translation = {
-  title: '7 ting AI-agenten din kan gjøre når den har tilgang til innboksen',
+  title: '7 ting AI-agenten kan gjøre med tilgang til innboksen',
   description:
-    'Sju konkrete ting en AI-agent kan gjøre med innbokstilgang: sortere ulest post, oppsummere tråder, skrive utkast til svar, finne vedlegg, følge opp og rute e-post.',
+    'Sju konkrete ting en AI-agent kan gjøre med innbokstilgang: sortere ulest post, oppsummere tråder, skrive svarutkast, finne vedlegg og følge opp.',
   coverAlt: 'Sju ting AI-agenten din kan gjøre med innbokstilgang via MCP (MCPEmails)',
   content: `Når agenten din kan lese og sende ekte e-post, stopper demoteateret og det faktiske arbeidet begynner. Her er sju ting du kan få den til å gjøre i dag: rydde i den uleste haugen, oppsummere en lang tråd, skrive utkast til svar i din stil, grave frem det ene vedlegget, følge opp ubesvarte tråder, rute post til rett sted og sende deg et ukentlig sammendrag.
 

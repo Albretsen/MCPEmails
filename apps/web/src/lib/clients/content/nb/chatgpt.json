@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "Koble e-post til ChatGPT: oppsett av Any Mailbox-pluginen",
-    "description": "Gi ChatGPT en ekte innboks: installer Any Mailbox fra pluginkatalogen i ChatGPT, logg inn hos MCPEmails og velg postkassene dine. OAuth, ingen API-nøkkel. Én innboks gratis."
+    "description": "Gi ChatGPT en ekte innboks: installer Any Mailbox fra pluginkatalogen, logg inn hos MCPEmails og velg postkassene. OAuth, ingen API-nøkkel. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "ChatGPT + e-post",

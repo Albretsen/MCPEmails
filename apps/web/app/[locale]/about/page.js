@@ -10,6 +10,7 @@ import {
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from '../../../components/marketing/Sections';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'MCPEmails is built and run by Asgeir Albretsen, a software developer in Bergen, Norway.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/about'),
     openGraph: {

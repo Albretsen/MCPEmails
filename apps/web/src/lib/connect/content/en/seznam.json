@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect Seznam Email to Claude & Any MCP Client",
-    "description": "Connect Seznam Email to Claude, Cursor and any MCP client over IMAP at imap.seznam.cz:993. Your Seznam password works until two-factor is on, then an app password does."
+    "description": "Connect Seznam Email to Claude, Cursor and any MCP client over IMAP at imap.seznam.cz:993. Your password works until two-factor is on, then an app password."
   },
   "hero": {
     "eyebrow": "Seznam Email + AI",

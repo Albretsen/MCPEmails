@@ -1,6 +1,6 @@
 const post = {
   slug: 'what-is-an-app-password',
-  title: 'What Is an App Password? Where to Create One for Each Email Provider',
+  title: 'What Is an App Password? Where to Create One',
   description:
     'What an app password is, why mail apps and AI connectors need one, where to create it for Gmail, iCloud, Yahoo, AOL, Fastmail and Zoho, and how to revoke it.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',

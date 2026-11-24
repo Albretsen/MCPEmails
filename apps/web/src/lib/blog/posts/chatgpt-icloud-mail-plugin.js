@@ -20,9 +20,9 @@
 // Microsoft 365) are sourced in can-claude-read-my-email.js.
 const post = {
   slug: 'chatgpt-icloud-mail-plugin',
-  title: "ChatGPT's iCloud Mail Plugin: Setup, Limits and Other Accounts",
+  title: "ChatGPT iCloud Mail Plugin: Setup and Limits",
   description:
-    "How to connect iCloud Mail to ChatGPT with OpenAI's new plugin, what it can and cannot reach, why your other Apple Mail accounts are missing, and how to use iCloud in Claude too.",
+    "How to connect iCloud Mail to ChatGPT with OpenAI's plugin, what it cannot reach, why other Apple Mail accounts are missing, and iCloud in Claude.",
   cover: '/blog/cover-connect-icloud-fastmail-imap-to-claude.svg',
   coverAlt: 'iCloud Mail connected to ChatGPT and Claude',
   authorId: 'asgeir',

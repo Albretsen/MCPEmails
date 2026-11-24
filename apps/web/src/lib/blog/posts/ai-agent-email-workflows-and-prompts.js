@@ -1,8 +1,8 @@
 const post = {
   slug: 'ai-agent-email-workflows-and-prompts',
-  title: 'Reusable AI Agent Email Workflows: Inbox Triage Prompts That Stay Useful',
+  title: 'AI Agent Email Workflows: Inbox Triage Prompts',
   description:
-    'Start reliable inbox triage, follow-up, cleanup, and draft-review routines with MCPEmails workflow prompts, without building a separate tool for every email habit.',
+    'Run inbox triage, follow-up, cleanup and draft-review routines with MCPEmails workflow prompts, without building a separate tool for every email habit.',
   cover: '/blog/cover-ai-agent-triage-summarize-inbox.svg',
   coverAlt: 'Reusable AI agent inbox workflow prompts (MCPEmails)',
   authorId: 'asgeir',

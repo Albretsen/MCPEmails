@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecte o e-mail ao JetBrains AI Assistant: configuração MCP",
-    "description": "Adicione uma caixa de entrada real ao AI Assistant no IntelliJ, PyCharm ou WebStorm. Streamable HTTP mais uma chave de API com escopo num header Authorization. Uma caixa de entrada grátis."
+    "description": "Adicione uma caixa ao AI Assistant no IntelliJ, PyCharm ou WebStorm. Streamable HTTP e uma chave de API com escopo no header Authorization. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "JetBrains + e-mail",

@@ -17,8 +17,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Google Workspace E-Mail mit Claude, ChatGPT und MCP verbinden",
-    "description": "Google Workspace Postfächer auf Ihrer eigenen Domain mit Claude, ChatGPT, Cursor und jedem MCP-Client verbinden. App-Passwort über IMAP, die entscheidenden Admin-Einstellungen und alle Firmenpostfächer in einem Agenten."
+    "title": "Google Workspace E-Mail mit Claude und ChatGPT verbinden",
+    "description": "Google Workspace Postfächer Ihrer Domain mit Claude, ChatGPT und Cursor verbinden: App-Passwort über IMAP, Admin-Einstellungen, alle in einem Agenten."
   },
   "hero": {
     "eyebrow": "Google Workspace + KI",

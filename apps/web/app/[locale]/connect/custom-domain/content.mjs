@@ -69,7 +69,7 @@ export const copy = {
   meta: {
     title: 'Connect Your Own-Domain Email to Claude and ChatGPT',
     description:
-      'Connect you@yourcompany.com to Claude and ChatGPT over IMAP. Server names, ports and passwords at cPanel, Hostinger, SiteGround, Namecheap, GoDaddy and Plesk, plus fixes for certificate errors.',
+      'Connect you@yourcompany.com to Claude and ChatGPT over IMAP: server names, ports and passwords at cPanel, Hostinger, SiteGround, GoDaddy and Plesk.',
   },
   breadcrumb: 'Connect',
   eyebrow: 'Own-domain email + AI',

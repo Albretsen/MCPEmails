@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Ajustes IMAP de Telenet y acceso MCP para Claude",
-    "description": "Conecta un buzón telenet.be a Claude, Cursor y cualquier cliente MCP en imap.telenet.be:993, con la contraseña del buzón establecida en MyTelenet, en Je mailbox."
+    "description": "Conecta telenet.be a Claude, Cursor y cualquier cliente MCP en imap.telenet.be:993, con la contraseña del buzón establecida en MyTelenet, en Je mailbox."
   },
   "hero": {
     "eyebrow": "Telenet + IA",

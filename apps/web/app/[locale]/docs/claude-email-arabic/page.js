@@ -6,6 +6,7 @@ import { localePath, APP_URL, OG_IMAGE } from '@/i18n/seo';
 import { requireLocale } from '@/i18n/require-locale';
 import { Nav, Footer } from '../../../../components/marketing/Sections';
 import { PATH, DATE_MODIFIED, copy } from './content.mjs';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The Arabic setup guide: one right-to-left page that tests whether Arabic
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }) {
   const url = localePath(locale, PATH);
   const { title, description } = copy.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: { canonical: url, languages: { ar: url } },
     openGraph: {

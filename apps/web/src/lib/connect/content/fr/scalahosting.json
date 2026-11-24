@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "E-mail ScalaHosting vers Claude : IMAP SPanel et cPanel",
-    "description": "ScalaHosting utilise SPanel sur certaines offres et cPanel sur d'autres. Trouvez vos paramètres sous Connect device, puis confiez la boîte à Claude en IMAP 993. 1 boîte gratuite."
+    "description": "ScalaHosting utilise SPanel ou cPanel selon l'offre. Trouvez vos réglages sous Connect device, puis confiez la boîte à Claude en IMAP 993."
   },
   "hero": {
     "eyebrow": "ScalaHosting + IA",

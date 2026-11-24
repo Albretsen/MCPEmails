@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "IceWarp a Claude: puertos del servicio IMAP y acceso MCP",
-    "description": "Conecta un buzón de IceWarp a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde está el servicio IMAP en la consola de administración y la trampa de Mailbox Type."
+    "description": "Conecta IceWarp a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde está el servicio IMAP en la consola de administración y la trampa de Mailbox Type."
   },
   "hero": {
     "eyebrow": "IceWarp + IA",

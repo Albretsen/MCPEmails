@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Conecta el correo Bluewin (Swisscom) a Claude por IMAP",
-    "description": "Conecta el correo Bluewin a Claude y a cualquier cliente MCP por IMAP en imaps.bluewin.ch:993. Hace falta la contraseña de correo aparte, no tu acceso a Swisscom."
+    "description": "Conecta Bluewin a Claude y a cualquier cliente MCP por IMAP en imaps.bluewin.ch:993. Hace falta la contraseña de correo aparte, no tu acceso a Swisscom."
   },
   "hero": {
     "eyebrow": "Bluewin + IA",

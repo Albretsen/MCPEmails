@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Hostpoint MCP-server: koble Hostpoint-e-post til Claude",
-    "description": "MCP-server for Hostpoint-e-post. Koble postkassene på det sveitsiske domenet ditt (info@, buchhaltung@) til Claude, ChatGPT og Cursor via IMAP på imap.mail.hostpoint.ch:993 med postkassepassordet."
+    "description": "MCP-server for Hostpoint-e-post. Koble postkassene på det sveitsiske domenet ditt til Claude, ChatGPT og Cursor via IMAP på imap.mail.hostpoint.ch:993."
   },
   "hero": {
     "eyebrow": "Hostpoint-e-post + AI",

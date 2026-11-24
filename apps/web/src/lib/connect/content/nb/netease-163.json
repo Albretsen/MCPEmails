@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble NetEase 163 Mail til Claude via IMAP",
-    "description": "Koble NetEase 163 Mail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.163.com:993. Krever en klientautorisasjonskode på 16 tegn, ikke passordet ditt."
+    "description": "Koble NetEase 163 Mail til Claude, Cursor eller MCP-klienter via IMAP på imap.163.com:993. Krever en klientautorisasjonskode på 16 tegn, ikke passordet ditt."
   },
   "hero": {
     "eyebrow": "NetEase 163 Mail + AI",

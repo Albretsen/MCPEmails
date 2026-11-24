@@ -11,8 +11,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "KingHost-e-post i Claude: IMAP, og SMTPi-bryteren for sending",
-    "description": "Koble en KingHost-postkasse til Claude eller enhver MCP-klient på imap.kinghost.net:993. Sending fra utenfor Brasil går gjennom smtpi.kinghost.net, som først må aktiveres i KingHost-panelet."
+    "title": "KingHost-e-post i Claude: IMAP og SMTPi-bryteren",
+    "description": "Koble en KingHost-postkasse til Claude eller MCP-klienter på imap.kinghost.net:993. Sending utenfra Brasil går via smtpi.kinghost.net, som må aktiveres først."
   },
   "hero": {
     "eyebrow": "KingHost + AI",

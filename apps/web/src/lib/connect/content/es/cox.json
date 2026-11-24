@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Correo de Cox en Yahoo: conecta cox.net a Claude",
-    "description": "Cox traspasó el correo cox.net a Yahoo. Conecta el buzón a Claude y clientes MCP por IMAP con una contraseña de aplicación de Yahoo, no tu antigua contraseña de Cox."
+    "description": "Cox traspasó el correo cox.net a Yahoo. Conéctalo a Claude y clientes MCP por IMAP con una contraseña de aplicación de Yahoo, no tu antigua contraseña de Cox."
   },
   "hero": {
     "eyebrow": "Cox Email + IA",

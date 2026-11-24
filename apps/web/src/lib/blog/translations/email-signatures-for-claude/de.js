@@ -1,7 +1,7 @@
 const translation = {
-  title: 'E-Mail-Signaturen für Claude: automatisch signiert, jedes Mal',
+  title: 'E-Mail-Signaturen für Claude: automatisch signiert',
   description:
-    'Legen Sie pro Postfach einmal eine Signatur fest, und Claude signiert jede E-Mail, die es sendet, automatisch: bei Gmail, Outlook, Fastmail, iCloud und jedem IMAP-Konto.',
+    'Legen Sie pro Postfach einmal eine Signatur fest, und Claude signiert jede gesendete E-Mail automatisch: bei Gmail, Outlook, Fastmail, iCloud und IMAP.',
   coverAlt:
     'E-Mail-Signaturen für Claude: einmal pro Postfach festlegen, und Claude signiert jede gesendete Nachricht, bei jedem Anbieter',
   content: `Wenn Claude eine E-Mail für Sie sendet, soll sie aussehen, als hätten Sie sie gesendet. Dazu gehört der Abschluss: Ihr Name, Ihre Funktion, die Firmenzeile, der Link zu Ihrem Terminkalender. Bisher haben Sie Ihre Signatur entweder in jeden Prompt getippt oder E-Mails akzeptiert, die etwas abrupt endeten. Das ändert sich jetzt: **MCPEmails fügt Ihre Signatur automatisch an jede Nachricht an, die Claude sendet.**

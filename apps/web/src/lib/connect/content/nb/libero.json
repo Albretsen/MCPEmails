@@ -13,8 +13,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble Libero Mail og Virgilio Mail til Claude og enhver MCP-klient",
-    "description": "Koble Libero Mail eller Virgilio Mail til Claude, Cursor og enhver MCP-klient over IMAP på imapmail.libero.it:993 eller in.virgilio.it:993. Kontopassordet virker til Password Sicura er på, deretter et app-passord på 16 tegn."
+    "title": "Koble Libero Mail og Virgilio Mail til Claude og MCP",
+    "description": "Koble Libero Mail eller Virgilio Mail til Claude og MCP-klienter over IMAP på imapmail.libero.it:993. Med Password Sicura på trengs et app-passord på 16 tegn."
   },
   "hero": {
     "eyebrow": "Libero Mail + AI",

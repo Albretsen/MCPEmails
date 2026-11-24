@@ -7,8 +7,8 @@
     "docs/token-cost/research-spec.md"
   ],
   "meta": {
-    "title": "Conecte o e-mail ao Claude Code: configuração MCP com um comando",
-    "description": "Adicione uma caixa de entrada real ao Claude Code CLI com claude mcp add. OAuth no terminal, sem chave de API, e depois leia, pesquise, envie e agende e-mails do seu shell. Uma caixa de entrada grátis."
+    "title": "Conecte o e-mail ao Claude Code: MCP com um comando",
+    "description": "Adicione uma caixa real ao Claude Code CLI com claude mcp add. OAuth no terminal, sem chave de API, para ler, pesquisar e enviar e-mails. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Claude Code + e-mail",

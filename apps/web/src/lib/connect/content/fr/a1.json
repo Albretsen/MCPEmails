@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "E-mail A1 et aon.at dans Claude : securemail.a1.net en IMAP",
-    "description": "Connectez une boîte A1 ou aon.at à Claude et tout client MCP sur securemail.a1.net:993. Un seul serveur pour IMAP avec SSL et SMTP avec STARTTLS sur le port 587, comme A1 le documente."
+    "description": "Connectez une boîte A1 ou aon.at à Claude et tout client MCP sur securemail.a1.net:993. Un seul serveur pour IMAP en SSL et SMTP en STARTTLS sur le port 587."
   },
   "hero": {
     "eyebrow": "A1 + IA",

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Status",
-    "description": "Disponibilidade em tempo real do endpoint do MCPEmails, medida por uma verificação automática que roda a cada cinco minutos contra a produção. Números reais registrados, nada de número de marketing."
+    "description": "Disponibilidade em tempo real do endpoint do MCPEmails, medida por uma verificação automática a cada cinco minutos contra a produção. Números reais registrados."
   },
   "hero": {
     "eyebrow": "Status",

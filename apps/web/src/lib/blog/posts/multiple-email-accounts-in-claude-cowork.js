@@ -23,9 +23,9 @@
 // when a second is added: only vendor blogs say so, not Anthropic.
 const post = {
   slug: 'multiple-email-accounts-in-claude-cowork',
-  title: 'Multiple Email Accounts in Claude Cowork, Including Personal Outlook',
+  title: 'Multiple Email Accounts in Claude Cowork',
   description:
-    'Claude Cowork reaches one Google account through its Gmail connector and the one Microsoft account you sign in with through its Microsoft 365 connector. How to give one Cowork task several inboxes, work and personal.',
+    'Claude Cowork reaches one Google and one Microsoft account through its own connectors. How to give one Cowork task several inboxes, work and personal.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt:
     'Work and personal email accounts, including Gmail and Outlook.com, connected to one Claude Cowork task',

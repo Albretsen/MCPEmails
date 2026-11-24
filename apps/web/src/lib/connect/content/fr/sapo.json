@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "SAPO Mail IMAP : réservé au Premium, et config Claude MCP",
-    "description": "SAPO réserve IMAP, POP et SMTP aux comptes Premium. Ce que cela implique pour connecter imap.sapo.pt:993 à Claude, et ce qu'un compte Base gratuit peut encore faire."
+    "description": "SAPO réserve IMAP, POP et SMTP aux comptes Premium. Ce que cela implique pour connecter imap.sapo.pt:993 à Claude, et ce que permet un compte Base."
   },
   "hero": {
     "eyebrow": "SAPO Mail + IA",

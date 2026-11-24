@@ -7,6 +7,7 @@ import { planDisplayName } from '@/lib/stripe/plans';
 import { REWARD_CAP_PER_YEAR } from '@/lib/referrals/constants';
 import { founderTermsVisible } from '@/lib/stripe/founder-offer-server';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }) {
     ? t('meta.description')
     : 'The terms governing your use of MCPEmails: acceptable use, liability, account termination, and governing law.';
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternates(locale, '/terms'),
     openGraph: {

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Documentação do servidor MCP de e-mail: Gmail, Outlook, IMAP e OAuth",
-    "description": "Configure o MCPEmails com Gmail, Outlook ou IMAP, conecte o Claude e outros clientes MCP com OAuth ou uma chave de API e consulte a referência completa das ferramentas de e-mail."
+    "title": "Documentação do MCP de e-mail: Gmail, Outlook, IMAP e OAuth",
+    "description": "Configure o MCPEmails com Gmail, Outlook ou IMAP, conecte o Claude e outros clientes MCP via OAuth ou chave de API e veja a referência das ferramentas."
   },
   "hero": {
     "eyebrow": "Documentação",
@@ -527,8 +527,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Compatibilidade de provedores de e-mail com agentes de IA (Gmail, Outlook, iCloud, Yahoo, Zoho)",
-      "description": "Quais provedores de e-mail funcionam com um agente de IA via MCP e o que é preciso para conectar cada um: OAuth ou senha de app, hosts e portas IMAP e SMTP, TLS ou STARTTLS, o que costuma dar errado e o que o agente pode fazer depois de conectado. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 e IMAP genérico."
+      "title": "Provedores de e-mail para IA: Gmail, Outlook, iCloud, Yahoo",
+      "description": "Quais provedores de e-mail funcionam com um agente de IA via MCP e o que cada um exige: OAuth ou senha de app, hosts e portas IMAP e SMTP, TLS ou STARTTLS."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",

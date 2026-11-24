@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP',
-  description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : interroger les non lus, rédiger et répondre en toute sécurité avec scopes, limites de débit et garde-fous.',
+  title: 'Créer un répondeur automatique d’e-mails avec MCP',
+  description: 'Créez un répondeur automatique d’e-mails avec un agent IA connecté en MCP : lire les non-lus, rédiger et répondre en sécurité avec scopes et garde-fous.',
   coverAlt: 'Créer un répondeur automatique d’e-mails avec un agent connecté en MCP, par MCPEmails',
   content: `Un répondeur automatique d’e-mails bâti sur MCPEmails est une boucle. Votre agent **interroge** (poll) les e-mails non lus selon une planification avec \`email_read\` (action \`list\`), ou se fait réveiller par un webhook de nouveau message sur Pro et Business, lit chaque message avec \`email_read\` (action \`read\`), rédige une réponse et appelle \`email_compose\` (action \`reply\`). Cet article déroule toute la construction : la boucle d’interrogation, les scopes dont vous avez besoin, comment encaisser les limites de débit, et les garde-fous qui empêchent un agent d’inonder vos contacts de réponses hallucinées.
 

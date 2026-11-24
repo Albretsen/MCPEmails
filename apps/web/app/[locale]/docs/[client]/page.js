@@ -8,6 +8,7 @@ import { stripTags } from '../../../../components/marketing/RichText';
 import { getPreferredClient } from '@/lib/clients/preferred-request';
 import ClientSetupView from '../../../../components/marketing/ClientSetupView';
 import { requireLocale } from '@/i18n/require-locale';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * One setup page per MCP client, at /docs/<slug>.
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }) {
   const path = `/docs/${slug}`;
   const { title, description } = content.meta;
   return {
-    title,
+    title: pageTitle(title),
     description,
     alternates: metaAlternatesFor(locale, path, clientLocales(slug)),
     openGraph: {

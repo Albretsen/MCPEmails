@@ -1,7 +1,7 @@
 const translation = {
   title: 'Koble Claude til Apple Mail: iCloud, Gmail, Outlook, Yahoo',
   description:
-    'Koble Claude til kontoene i Apple Mail (iCloud, Gmail, Outlook.com, Yahoo, IMAP) og les, søk i, skriv utkast til og send e-post fra hvilken som helst enhet, også iPhone.',
+    'Koble Claude til kontoene i Apple Mail (iCloud, Gmail, Outlook.com, Yahoo, IMAP) og les, søk, skriv utkast og send e-post fra hvilken som helst enhet.',
   coverAlt: 'iCloud-, Gmail-, Outlook- og Yahoo-kontoene fra Apple Mail koblet til Claude over MCP',
   content: `For å koble Claude til Apple Mail kobler du til e-postkontoene Apple Mail viser, ikke selve Mail-appen. Apple Mail er en klient: den synkroniserer en iCloud-, Gmail-, Outlook.com-, Yahoo- eller annen IMAP-konto fra leverandørens servere. MCPEmails kobler Claude til de samme kontoene på serversiden, så Claude ser den samme innboksen, de samme mappene, utkastene og den sendte e-posten som Apple Mail gjør, og det fungerer fra claude.ai, Claude Desktop og Claude-appen på iPhonen din. Macen din trenger ikke være på.
 

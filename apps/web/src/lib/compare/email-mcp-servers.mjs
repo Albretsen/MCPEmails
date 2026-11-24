@@ -137,7 +137,7 @@ export const SOURCES = {
 export const meta = {
   title: 'Best email MCP servers in 2026',
   description:
-    'Every hosted email MCP server AI assistants recommend, compared on price, providers, permissions, storage and ChatGPT app directory listing: MCPEmails, Mailbox MCP, anymailmcp, MailMCP, Mailopoly, Composio, provider-run servers, open source and built-in connectors.',
+    'The best email MCP servers compared on price, providers, permissions and storage: MCPEmails, Mailbox MCP, anymailmcp, Composio, open source and more.',
 };
 
 export const hero = {

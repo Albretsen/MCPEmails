@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Comment donner à votre agent IA un accès à la messagerie (le guide complet 2026)',
+  title: 'Donner à votre agent IA l\'accès à vos e-mails',
   description:
-    'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte mail via MCP : Gmail, Outlook, iCloud, Fastmail ou IMAP. Fonctionnement, outils, sécurité et configuration.',
+    'Donnez à votre agent IA un accès en lecture et en envoi à une vraie boîte via MCP : Gmail, Outlook, iCloud, Fastmail ou IMAP. Sécurité et configuration.',
   coverAlt: 'Comment donner à votre agent IA un accès à la messagerie via MCP, par MCPEmails',
   content: `Pour donner à un agent IA un accès à la messagerie, vous connectez votre boîte mail à un serveur MCP et vous pointez votre agent vers une seule URL de point de terminaison. L'agent dispose alors d'un petit ensemble d'outils pour lire, rechercher et envoyer des e-mails. Le plus difficile, ce n'est pas l'agent, c'est de faire tout cela sans laisser fuiter votre mot de passe dans un prompt, un journal ou une base vectorielle. C'est ce dernier kilomètre qui fait l'objet de ce guide.
 

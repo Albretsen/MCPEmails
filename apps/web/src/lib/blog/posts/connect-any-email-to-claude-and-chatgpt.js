@@ -84,9 +84,9 @@
 // prices: both live on their own pages.
 const post = {
   slug: 'connect-any-email-to-claude-and-chatgpt',
-  title: 'How to Connect Any Email Account to Claude or ChatGPT (Yahoo, IMAP, Custom Domains, Several Mailboxes)',
+  title: 'Connect Any Email Account to Claude or ChatGPT',
   description:
-    'Every way to give Claude or ChatGPT a real mailbox as of November 2026: what the built-in Gmail, Outlook and iCloud connectors cover, where they stop, and how to connect Yahoo, a custom domain, GMX or several mailboxes with an MCP server, a desktop app or an automation tool.',
+    'Every way to give Claude or ChatGPT a real mailbox: what the built-in Gmail, Outlook and iCloud connectors cover, and how to connect Yahoo or a custom domain.',
   cover: '/blog/cover-agent-inbox.svg',
   coverAlt: 'Yahoo, IMAP, custom-domain and several other mailboxes connected to Claude and ChatGPT',
   authorId: 'asgeir',

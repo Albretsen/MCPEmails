@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Hostet vs. selvhostet Gmail MCP-server: fordeler, ulemper og kostnader',
+  title: 'Hostet eller selvhostet Gmail MCP-server: fordeler og pris',
   description:
-    'Hostet vs. selvhostet Gmail MCP-server sammenlignet: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
+    'Hostet vs. selvhostet Gmail MCP-server: gratis gjør-det-selv-repoer gir full kontroll, men du eier OAuth, kryptering og oppetid. En hostet server tar minutter.',
   coverAlt: 'Sammenligning av hostet og selvhostet Gmail MCP-server (MCPEmails)',
   content: `Hvis du vil at AI-agenten din skal lese og sende Gmail, har du to reelle valg: kjøre en selvhostet Gmail MCP-server fra et åpen kildekode-repo, eller peke klienten din mot en hostet en. Gjør-det-selv-veien koster null kroner og gir deg total kontroll, men du eier personlig OAuth-oppsettet, token-krypteringen, hostingen, oppdateringene og sikkerheten. En hostet server som MCPEmails tar minutter å sette opp og holder legitimasjonen kryptert, mot at du stoler på at en leverandør håndterer tilkoblingen.
 

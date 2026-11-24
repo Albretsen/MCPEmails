@@ -15,7 +15,7 @@
   },
   "meta": {
     "title": "Axigen Mail Server a Claude: configurar el listener IMAP",
-    "description": "Conecta un buzón de Axigen a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde están los listeners de servicio en WebAdmin y por qué SSL es una casilla de cada listener."
+    "description": "Conecta Axigen a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde están los listeners en WebAdmin y por qué SSL es una casilla de cada listener."
   },
   "hero": {
     "eyebrow": "Axigen + IA",

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Correo de Plesk en Claude: configuración IMAP y acceso MCP",
-    "description": "Los buzones de Plesk se conectan a Claude por IMAP 993. Usa el propio dominio, no mail.domain.com: sin un certificado asignado al dominio de correo, el subdominio mail recibe el del servidor."
+    "description": "Los buzones de Plesk se conectan a Claude por IMAP 993. Usa el propio dominio, no mail.domain.com, que recibe el certificado por defecto si no asignas uno."
   },
   "hero": {
     "eyebrow": "Plesk + IA",

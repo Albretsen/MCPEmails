@@ -1,8 +1,8 @@
 const post = {
   slug: 'why-email-never-stored-matters',
-  title: "Why 'Email Never Stored' Matters When Connecting AI to Your Inbox",
+  title: "Why 'Email Never Stored' Matters for AI Email Access",
   description:
-    'Email never stored means MCPEmails fetches your mail live and discards it, keeping an encrypted token per inbox. See why that beats tools that copy your whole inbox.',
+    'Email never stored means MCPEmails fetches your mail live and discards it, keeping one encrypted token per inbox. Why that beats tools that copy it all.',
   cover: '/blog/cover-why-email-never-stored-matters.svg',
   coverAlt: 'Email fetched live and discarded versus a second copy stored in a vendor database',
   authorId: 'asgeir',

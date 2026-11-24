@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Comment connecter votre e-mail à un agent IA en moins de 2 minutes (Gmail, Outlook, iCloud, Fastmail et IMAP)',
-  description: 'Connectez votre e-mail à un agent IA en moins de 2 minutes. Configuration pas à pas pour Gmail, Outlook, iCloud, Fastmail et n’importe quelle boîte IMAP via MCP. Aucun e-mail n’est jamais stocké.',
+  title: 'Connecter votre e-mail à un agent IA en 2 minutes',
+  description: 'Connectez votre e-mail à un agent IA en moins de 2 minutes : Gmail, Outlook, iCloud, Fastmail ou toute boîte IMAP via MCP. Aucun e-mail n’est jamais stocké.',
   coverAlt: 'Connectez votre e-mail à un agent IA en moins de 2 minutes : Gmail, Outlook, iCloud, Fastmail et IMAP via MCP',
   content: `Vous connectez votre e-mail à un agent IA en deux gestes : connectez la boîte de réception dans le tableau de bord MCPEmails, puis pointez votre agent vers une seule URL d’endpoint. Avec un client compatible OAuth comme claude.ai, c’est tout. Pas de code, pas de SDK, et votre e-mail n’est stocké nulle part : chaque lecture et chaque envoi interroge votre fournisseur en direct, puis est aussitôt jeté dès que l’agent l’a reçu.
 

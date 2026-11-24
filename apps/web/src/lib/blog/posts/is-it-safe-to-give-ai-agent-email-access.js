@@ -1,6 +1,6 @@
 const post = {
   slug: 'is-it-safe-to-give-ai-agent-email-access',
-  title: 'Is It Safe to Give an AI Agent Access to Your Email? What to Know',
+  title: 'Is It Safe to Give an AI Agent Access to Your Email?',
   description: 'Is it safe to give an AI agent email access? It depends on the architecture. Here are the real risks and the checklist that makes it safe.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',
   coverAlt: 'Is it safe to give an AI agent email access: risks and safeguards explained (MCPEmails)',

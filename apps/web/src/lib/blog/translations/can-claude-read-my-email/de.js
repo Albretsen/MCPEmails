@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Kann Claude meine E-Mails lesen und senden? Postfach für Postfach',
+  title: 'Kann Claude meine E-Mails lesen und senden?',
   description:
-    'Ja, bei Gmail und geschäftlichen Microsoft 365-Konten über die eigenen Konnektoren von Claude. Für Yahoo, iCloud, Outlook.com, IMAP-Postfächer und mehrere Anbieter gleichzeitig brauchen Sie einen MCP-Server.',
+    'Ja, bei Gmail und Microsoft 365 über die Konnektoren von Claude. Für Yahoo, iCloud, Outlook.com, IMAP und mehrere Anbieter brauchen Sie einen MCP-Server.',
   coverAlt:
     'Claude liest und sendet E-Mails aus Postfächern bei Gmail, Microsoft 365, Yahoo, iCloud und IMAP',
   content: `**Ja, Claude kann Ihre E-Mails lesen und E-Mails senden, aber nur aus einem Postfach, das Sie mit Claude verbunden haben.** Claude hat zwei eigene E-Mail-Konnektoren, einen für Gmail und einen für geschäftliche Microsoft 365-Konten. Der Gmail-Konnektor liest, durchsucht und sendet und fragt standardmäßig vor jedem Versand nach Ihrer Zustimmung. Der Microsoft 365-Konnektor liest und durchsucht und kann erst senden, wenn ein Administrator seine Schreib-Tools einschaltet. Für Yahoo, iCloud, eine private Adresse bei Outlook.com, ein Firmenpostfach bei einem IMAP-Host oder mehrere Anbieter hinter einer Verbindung brauchen Sie einen MCP-Server wie MCPEmails.

@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Tuta Mail y Claude: sin IMAP, sin SMTP, sin bridge",
-    "description": "Tuta no ofrece IMAP, POP ni SMTP por diseño, ni ningún bridge, así que ningún servidor MCP puede conectar un buzón de Tuta. El motivo, y qué puedes hacer en su lugar."
+    "description": "Tuta no ofrece IMAP, POP ni SMTP por diseño, ni ningún bridge, así que ningún servidor MCP puede conectar un buzón de Tuta. El motivo y las alternativas."
   },
   "hero": {
     "eyebrow": "Tuta Mail + IA",

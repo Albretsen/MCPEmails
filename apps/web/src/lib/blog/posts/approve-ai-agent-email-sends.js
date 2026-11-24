@@ -1,6 +1,6 @@
 const post = {
   slug: 'approve-ai-agent-email-sends',
-  title: 'Human Approval for AI Agent Email Sends: How to Stay in Control',
+  title: 'Human Approval for AI Agent Email Sends',
   description:
     'Let an AI agent prepare useful email work while a workspace owner or admin makes the final call to send. A practical guide to human approval for AI email.',
   cover: '/blog/cover-is-it-safe-to-give-ai-agent-email-access.svg',

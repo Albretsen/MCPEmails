@@ -15,9 +15,9 @@
 // Microsoft, permissions, Graph search filter limit).
 const post = {
   slug: 'connect-chatgpt-to-outlook-com-hotmail',
-  title: 'Connect ChatGPT to Hotmail and Outlook.com (Personal Accounts)',
+  title: 'Connect ChatGPT to Hotmail and Outlook.com',
   description:
-    "ChatGPT's Outlook plugin is built for work and school accounts. Connect a personal Hotmail, Outlook.com, Live or MSN inbox to ChatGPT with Sign in with Microsoft and one custom MCP server URL.",
+    "ChatGPT's Outlook plugin is built for work and school accounts. Connect a personal Hotmail, Outlook.com, Live or MSN inbox with Sign in with Microsoft.",
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'ChatGPT connected to a personal Outlook.com or Hotmail inbox through MCPEmails',
   authorId: 'asgeir',

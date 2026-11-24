@@ -1,7 +1,7 @@
 const translation = {
   title: 'Koble Claude til Hotmail og Outlook.com (personlige kontoer)',
   description:
-    'Microsoft 365-koblingen i Claude godtar nå en personlig Microsoft-konto på Free, Pro, Max og Ultra. Når det er nok, og hvordan du kobler Hotmail, Outlook.com, Live eller MSN til Claude med vedlegg, flere postkasser eller et Team-abonnement gjennom én URL til en egendefinert kobling.',
+    'Microsoft 365-koblingen i Claude godtar nå personlige Microsoft-kontoer. Når det er nok, og hvordan du kobler Hotmail eller Outlook.com til Claude med én URL.',
   coverAlt: 'Claude koblet til en personlig Outlook.com- eller Hotmail-innboks gjennom MCPEmails',
   content: `Det er to måter å koble Claude til en personlig Outlook.com-, Hotmail-, Live- eller MSN-adresse. Claudes egen Microsoft 365-kobling godtar en personlig Microsoft-konto på Free, Pro, Max og Ultra, uten at noen administrator er involvert. Den andre veien er MCPEmails: legg til postkassen med **Koble til med Microsoft**, og legg deretter til én URL i Claude som en egendefinert kobling (custom connector). Den andre veien dekker det den innebygde koblingen ikke gjør: vedlegg, flere postkasser bak én tilkobling, Team- og Enterprise-abonnementer, og den samme innboksen i ChatGPT eller en annen MCP-klient. En gammel hotmail.com-adresse fungerer på samme måte som en ny outlook.com-adresse på begge.
 

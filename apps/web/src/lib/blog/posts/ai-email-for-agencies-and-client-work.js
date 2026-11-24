@@ -1,8 +1,8 @@
 const post = {
   slug: 'ai-email-for-agencies-and-client-work',
-  title: 'AI Email Access for Agencies: One Agent Across Every Client Mailbox',
+  title: 'AI Email Access for Agencies: One Agent, Every Client',
   description:
-    'How an agency or freelancer gives an AI agent access to several client mailboxes without mixing clients up: a workspace per client, scoped keys, read-only first, and an approval hold on every send.',
+    'Give an AI agent several client mailboxes without mixing clients up: a workspace per client, scoped keys, read-only first and an approval hold on sends.',
   cover: '/blog/cover-best-ways-to-let-claude-manage-your-inbox.svg',
   coverAlt:
     'One AI agent working across separate client mailboxes with scoped access, MCPEmails',

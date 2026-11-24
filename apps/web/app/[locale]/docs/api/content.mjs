@@ -255,7 +255,7 @@ const en = {
   meta: {
     title: 'Email API for developers: MCPEmails HTTP guide',
     description:
-      'Call MCPEmails from scripts, n8n and your own agents: API keys and scopes, the JSON-RPC calls with curl, errors, pagination, idempotency keys, rate limits and signed webhooks for new mail.',
+      'Call MCPEmails from scripts, n8n and your own agents: API keys and scopes, JSON-RPC calls with curl, pagination, idempotency, rate limits and signed webhooks.',
   },
   breadcrumb: 'Developer guide',
   eyebrow: 'Docs',
@@ -500,7 +500,7 @@ const nb = {
   meta: {
     title: 'E-post-API for utviklere: MCPEmails HTTP-guide',
     description:
-      'Kall MCPEmails fra skript, n8n og dine egne agenter: API-nøkler og omfang, JSON-RPC-kallene med curl, feil, paginering, idempotensnøkler, hastighetsgrenser og signerte webhooks for ny e-post.',
+      'Kall MCPEmails fra skript, n8n og egne agenter: API-nøkler og omfang, JSON-RPC med curl, feil, paginering, hastighetsgrenser og signerte webhooks.',
   },
   breadcrumb: 'Utviklerguide',
   eyebrow: 'Dokumentasjon',
@@ -745,7 +745,7 @@ const es = {
   meta: {
     title: 'API de correo para desarrolladores: guía HTTP de MCPEmails',
     description:
-      'Llama a MCPEmails desde scripts, n8n y tus propios agentes: claves de API y ámbitos, las llamadas JSON-RPC con curl, errores, paginación, claves de idempotencia, límites de tasa y webhooks firmados para el correo nuevo.',
+      'Llama a MCPEmails desde scripts, n8n y tus agentes: claves de API con ámbitos, JSON-RPC con curl, errores, paginación, idempotencia y webhooks firmados.',
   },
   breadcrumb: 'Guía para desarrolladores',
   eyebrow: 'Documentación',
@@ -990,7 +990,7 @@ const fr = {
   meta: {
     title: 'API e-mail pour développeurs : guide HTTP de MCPEmails',
     description:
-      'Appelez MCPEmails depuis des scripts, n8n et vos propres agents : clés API et portées, les appels JSON-RPC avec curl, erreurs, pagination, clés d\'idempotence, limites de débit et webhooks signés pour le nouveau courrier.',
+      'Appelez MCPEmails depuis des scripts, n8n et vos agents : clés API, appels JSON-RPC avec curl, erreurs, pagination, limites de débit et webhooks signés.',
   },
   breadcrumb: 'Guide développeur',
   eyebrow: 'Documentation',
@@ -1235,7 +1235,7 @@ const de = {
   meta: {
     title: 'E-Mail-API für Entwickler: der HTTP-Leitfaden von MCPEmails',
     description:
-      'Rufen Sie MCPEmails aus Skripten, n8n und eigenen Agenten auf: API-Schlüssel und Scopes, die JSON-RPC-Aufrufe mit curl, Fehler, Paginierung, Idempotenzschlüssel, Ratenlimits und signierte Webhooks für neue E-Mails.',
+      'MCPEmails aus Skripten, n8n und eigenen Agenten aufrufen: API-Schlüssel und Scopes, JSON-RPC mit curl, Fehler, Paginierung, Ratenlimits und signierte Webhooks.',
   },
   breadcrumb: 'Entwicklerleitfaden',
   eyebrow: 'Dokumentation',
@@ -1480,7 +1480,7 @@ const pt = {
   meta: {
     title: 'API de e-mail para desenvolvedores: guia HTTP do MCPEmails',
     description:
-      'Chame o MCPEmails a partir de scripts, do n8n e dos seus próprios agentes: chaves de API e escopos, as chamadas JSON-RPC com curl, erros, paginação, chaves de idempotência, limites de taxa e webhooks assinados para e-mails novos.',
+      'Chame o MCPEmails de scripts, do n8n e dos seus agentes: chaves de API e escopos, JSON-RPC com curl, erros, paginação, idempotência e webhooks assinados.',
   },
   breadcrumb: 'Guia para desenvolvedores',
   eyebrow: 'Documentação',

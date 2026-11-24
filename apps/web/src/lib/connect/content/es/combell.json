@@ -12,8 +12,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "Servidor MCP de Combell: conecta el correo de Combell a Claude",
-    "description": "Servidor MCP para buzones Basic de Combell. Conecta los buzones de tu dominio (info@, facturatie@) a Claude, ChatGPT y Cursor por IMAP en imap.mailprotect.be:993 con la contraseña del buzón."
+    "title": "Servidor MCP de Combell: conecta tu correo a Claude",
+    "description": "Servidor MCP para buzones Basic de Combell. Conecta los buzones de tu dominio a Claude, ChatGPT y Cursor por IMAP en imap.mailprotect.be:993 con su contraseña."
   },
   "hero": {
     "eyebrow": "Correo Combell + IA",

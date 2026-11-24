@@ -1,7 +1,7 @@
 const translation = {
-  title: 'E-post og AI for byråer: én agent på tvers av alle kundepostkasser',
+  title: 'E-post og AI for byråer: én agent for alle kundepostkasser',
   description:
-    'Slik gir et byrå eller en frilanser en AI-agent tilgang til flere kundepostkasser uten å blande kundene: ett arbeidsområde per kunde, avgrensede nøkler, lesetilgang først og en godkjenning før hver utsending.',
+    'Slik gir et byrå eller en frilanser en AI-agent tilgang til flere kundepostkasser uten å blande kundene: ett arbeidsområde per kunde og avgrensede nøkler.',
   coverAlt:
     'Én AI-agent som jobber på tvers av adskilte kundepostkasser med avgrenset tilgang, MCPEmails',
   content: `Driver du e-post for mer enn én kunde, lever du med én regel: ingenting fra kunde A skal dukke opp i en tråd hos kunde B. En AI-agent endrer ikke regelen, den gjør det bare lettere å bryte den. Én agent med én legitimasjon som når hver eneste postkasse du forvalter, er én uforsiktig instruksjon unna å sitere feil faktura til feil person.

@@ -6,7 +6,7 @@
   ],
   "meta": {
     "title": "Conecta el correo a VS Code: MCP para Copilot agent",
-    "description": "Añade una bandeja real al modo agente de GitHub Copilot en VS Code. Ejecuta MCP: Add Server, elige HTTP y autoriza con OAuth. Sin clave de API. Una bandeja gratis."
+    "description": "Añade una bandeja real al modo agente de GitHub Copilot en VS Code. Ejecuta MCP: Add Server, elige HTTP y autoriza con OAuth. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "VS Code + correo",

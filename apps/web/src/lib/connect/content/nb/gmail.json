@@ -2,7 +2,9 @@
   "_sources": [
     "https://developers.google.com/gmail/api/guides",
     "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
-    "https://support.google.com/a/answer/7281227"
+    "https://support.google.com/a/answer/7281227",
+    "https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server",
+    "https://claude.com/connectors/gmail"
   ],
   "auth": {
     "method": "app-password",
@@ -13,7 +15,7 @@
   },
   "meta": {
     "title": "Gmail MCP-server for Claude, Cursor og ChatGPT",
-    "description": "En driftet Gmail MCP-server. Koble til Gmail med et Google-app-passord over IMAP, og les, søk, send og planlegg e-post fra Claude, Cursor eller enhver MCP-klient. Én innboks gratis."
+    "description": "Driftet Gmail MCP-server. Koble til Gmail med et Google-app-passord over IMAP, og les, søk, send og planlegg e-post fra Claude, Cursor eller enhver MCP-klient."
   },
   "hero": {
     "eyebrow": "Gmail + AI",
@@ -45,8 +47,8 @@
   ],
   "gotchas": [
     {
-      "h": "Google publiserer sin egen Gmail MCP-server, og for Gmail alene er den den korteste veien",
-      "p": "Google har annonsert offisiell MCP-støtte for tjenestene sine, blant annet en Workspace MCP-server som dekker Gmail sammen med Drive, Calendar og Chat. Vi skal ikke late som noe annet. Hvis Gmail er den eneste postkassen du vil at en assistent skal røre, og klienten din snakker med Googles server, så bruk den. Grunnen til å peke MCPEmails mot Gmail i stedet er at den samme serveren også rommer iCloud-, Fastmail-, Zoho-, Yahoo- eller bedrifts-IMAP-postkassen din, eksponerer hver eneste av dem gjennom <b>én</b> MCP-URL, og oppfører seg likt i Claude, Cursor og ChatGPT. Én kobling per leverandør, hver med sin egen autentisering og sine egne verktøynavn, er nettopp det dette unngår."
+      "h": "Gmail har allerede en offisiell kobling og MCP-server. Hvorfor bruke MCPEmails?",
+      "p": "Claude har en innebygd Gmail-kobling, laget av Google, som leser, søker og sender fra én Google-konto, og ChatGPT har sin egen Gmail-app. Googles Gmail MCP-server på <code>gmailmcp.googleapis.com</code> er laget for utviklere: du slår den på i ditt eget Google Cloud-prosjekt med din egen OAuth-klient. Hvis én Gmail-konto i Claude eller ChatGPT er alt du trenger, bruk den innebygde koblingen. MCPEmails er for resten: flere Gmail-kontoer, eller Gmail ved siden av postkasser hos Outlook, iCloud, Yahoo eller på jobbens IMAP, bak <b>én</b> MCP-URL som oppfører seg likt i Claude, ChatGPT og Cursor."
     },
     {
       "h": "Å sende fra en annen adresse krever en bekreftet Send som-adresse",

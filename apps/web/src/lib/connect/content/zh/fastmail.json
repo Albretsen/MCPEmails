@@ -3,7 +3,8 @@
     "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
     "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
     "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
-    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports",
+    "https://www.fastmail.help/hc/en-us/articles/15869557281295"
   ],
   "auth": {
     "method": "app-password",
@@ -50,8 +51,8 @@
   ],
   "gotchas": [
     {
-      "h": "Fastmail 有自己的 MCP 服务器，而且做得不错",
-      "p": "2026 年 4 月，Fastmail 推出了官方 MCP 服务器，地址为 <code>https://api.fastmail.com/mcp</code>，使用 OAuth 认证，提供只读、写入或发送权限，覆盖邮件、日历和通讯录。如果 Fastmail 是你唯一想让助手访问的邮箱，那它就是最直接的途径，我们会直说。MCPEmails 解决的是另一个问题：<b>一个</b> MCP URL 同时容纳你的 Fastmail 账户以及 iCloud、Zoho、Yahoo、GMX 或公司 IMAP 邮箱，对所有邮箱提供同样的工具，让代理可以跨邮箱搜索，而你只需配置一台服务器，而不是五台。在这里，对你有用比替我们说好话更重要。"
+      "h": "Fastmail 已经有官方 MCP 服务器，为什么还要用 MCPEmails？",
+      "p": "确实有：2026 年 4 月，Fastmail 推出了官方 MCP 服务器，地址为 <code>https://api.fastmail.com/mcp</code>。你通过 OAuth 登录，并授予对邮件、通讯录和日历的读取、写入或发送权限。如果 Fastmail 是你唯一想让助手访问的邮箱，那它就是最直接的途径，我们会直说。Fastmail 自己的帮助页面列出了两项限制：无法通过其 MCP 服务器读取附件，而且 Claude 不能添加多个 Fastmail 账户。MCPEmails 用应用专用密码通过 IMAP 连接 Fastmail，并把它与你的其他 Fastmail 账户以及 iCloud、Gmail、Yahoo 或公司 IMAP 邮箱一起放在<b>一个</b> MCP URL 之后，对所有邮箱提供同样的工具，包括读取附件。"
     },
     {
       "h": "Fastmail Basic 账户完全不能使用 IMAP",

@@ -1,8 +1,8 @@
 const post = {
   slug: 'connect-gmail-to-claude',
-  title: 'How to Connect Gmail to Claude: Built-in Connector or MCP',
+  title: 'How to Connect Gmail to Claude: 2 Ways',
   description:
-    "Claude's built-in Gmail connector covers one Gmail account inside Claude. When you also need Outlook, IMAP, several inboxes or other AI apps, connect Gmail to Claude over MCP in two minutes with an app password and one URL.",
+    "To connect Gmail to Claude, switch on Claude's built-in Gmail connector. For Outlook, IMAP or several inboxes too, connect over MCP in two minutes.",
   cover: '/blog/cover-connect-gmail-to-claude.svg',
   coverAlt:
     'How to connect Gmail to Claude in two minutes over MCP: a Google app password, one endpoint URL, no email stored',
@@ -11,7 +11,7 @@ const post = {
   updatedAt: '2026-10-29T09:00:00.000Z',
   tags: ['Tutorial', 'Gmail', 'Claude', 'MCP'],
   featured: false,
-  content: `Claude has its own Gmail connector. If all you want is one Gmail account inside Claude, switch that on in Claude's connector settings and you are done. MCPEmails fits when you need more: Outlook, iCloud, Yahoo or any IMAP mailbox next to Gmail, several inboxes in one chat, or the same inbox in ChatGPT, Cursor and other MCP apps. The rest of this guide sets that up.
+  content: `To connect Gmail to Claude, open **Customize → Connectors** in Claude, switch on the built-in Gmail connector and sign in with Google. If all you want is one Gmail account inside Claude, you are done. MCPEmails fits when you need more: Outlook, iCloud, Yahoo or any IMAP mailbox next to Gmail, several inboxes in one chat, or the same inbox in ChatGPT, Cursor and other MCP apps. The rest of this guide sets that up.
 
 To connect Gmail to Claude through MCPEmails, you do two things: connect your Gmail inbox once in the MCPEmails dashboard with a Google app password, then paste a single endpoint URL into Claude's connector settings and approve a sign-in. That's the whole job: no code, no SDK, no API key. It takes about two minutes, and Claude never stores your email: every read and send goes to Gmail live and is discarded the moment Claude has it.
 

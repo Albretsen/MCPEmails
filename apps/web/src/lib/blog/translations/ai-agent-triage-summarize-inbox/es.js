@@ -1,7 +1,7 @@
 const translation = {
-  title: 'Cómo hacer que tu agente de IA clasifique y resuma tu bandeja de entrada',
+  title: 'Haz que tu agente de IA clasifique y resuma tu bandeja',
   description:
-    'Guía práctica para clasificar la bandeja de entrada con un agente de IA: prompts listos para copiar que listan el correo no leído, leen lo importante, resumen y priorizan, y consultan según un horario.',
+    'Guía para clasificar tu bandeja con un agente de IA: prompts listos para copiar que listan lo no leído, resumen, priorizan y consultan según un horario.',
   coverAlt: 'Un agente de IA clasifica y resume una bandeja de entrada a través de MCP (MCPEmails)',
   content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es apoyarte en dos herramientas en orden: \`inbox_list\` para encontrar tu buzón, y luego \`email_read\` (con \`action: list\` y \`unread: true\` para sacar lo nuevo, y después \`action: read\` para los pocos que parezcan importantes), y por último una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`email_compose\` con \`action: reply\` al final.
 

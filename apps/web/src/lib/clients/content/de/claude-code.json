@@ -8,7 +8,7 @@
   ],
   "meta": {
     "title": "E-Mail mit Claude Code verbinden: MCP-Setup mit einem Befehl",
-    "description": "Fügen Sie der Claude Code CLI mit claude mcp add ein echtes Postfach hinzu. OAuth im Terminal, kein API-Schlüssel, dann E-Mails aus der Shell lesen, suchen, senden und planen. Ein Postfach kostenlos."
+    "description": "Fügen Sie der Claude Code CLI mit claude mcp add ein echtes Postfach hinzu. OAuth im Terminal, kein API-Schlüssel, dann E-Mails aus der Shell lesen und senden."
   },
   "hero": {
     "eyebrow": "Claude Code + E-Mail",

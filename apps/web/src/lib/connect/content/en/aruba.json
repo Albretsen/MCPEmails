@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Aruba MCP Server: Connect Aruba Mail to Claude",
-    "description": "MCP server for Aruba mail. Connect the mailboxes on your Aruba domain (info@, amministrazione@) to Claude and ChatGPT over IMAP at imaps.aruba.it:993 with the mailbox password."
+    "description": "MCP server for Aruba mail. Connect the mailboxes on your Aruba domain to Claude and ChatGPT over IMAP at imaps.aruba.it:993 with the mailbox password."
   },
   "hero": {
     "eyebrow": "Aruba email + AI",

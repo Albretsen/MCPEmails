@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Plesk-e-post til Claude: IMAP-innstillinger og MCP-tilgang",
-    "description": "Plesk-postkasser kobles til Claude via IMAP 993. Bruk selve domenet, ikke mail.domain.com: uten et sertifikat tildelt e-postdomenet får mail-underdomenet serverens standardsertifikat."
+    "description": "Plesk-postkasser kobles til Claude via IMAP 993. Bruk selve domenet, ikke mail.domain.com, som får standardsertifikatet til et sertifikat er tildelt."
   },
   "hero": {
     "eyebrow": "Plesk + AI",

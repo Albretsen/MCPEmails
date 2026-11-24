@@ -1,6 +1,6 @@
 const translation = {
-  title: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026',
-  description: 'Un repaso sin rodeos a las mejores formas de dejar que Claude gestione tu bandeja en 2026: integraciones nativas, servidores MCP propios, copiar y pegar, extensiones de navegador y MCP gestionado.',
+  title: 'Las mejores formas de que Claude gestione tu bandeja en 2026',
+  description: 'Las mejores formas de que Claude gestione tu bandeja en 2026: integraciones nativas, servidores MCP propios, copiar y pegar, extensiones y MCP gestionado.',
   coverAlt: 'Las mejores formas de dejar que Claude gestione tu bandeja de entrada en 2026 (MCPEmails)',
   content: `Si quieres que Claude lea, clasifique y responda de verdad tu correo, en 2026 tienes cinco opciones reales: un servidor de correo MCP alojado, un servidor MCP propio que tú mismo ejecutas, copiar y pegar hilos en el chat, una extensión de navegador o una integración nativa en el cliente. Para la mayoría de la gente, un servidor MCP alojado es la decisión acertada, porque funciona en segundos y nunca almacena tu correo. El resto tiene cada uno su nicho, y un par son peores de lo que parecen.
 

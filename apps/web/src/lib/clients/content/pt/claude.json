@@ -7,8 +7,8 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "Conectar e-mail ao Claude: configuração MCP para Gmail, Outlook e IMAP",
-    "description": "Adicione uma caixa de entrada real ao claude.ai e ao Claude Desktop como conector personalizado. Cole uma URL, autorize com OAuth, e o Claude consegue ler, pesquisar, enviar e agendar e-mails. Uma caixa de entrada grátis."
+    "title": "Conectar e-mail ao Claude: MCP para Gmail, Outlook e IMAP",
+    "description": "Adicione uma caixa real ao claude.ai e ao Claude Desktop como conector personalizado. Cole uma URL, autorize com OAuth e leia e envie e-mails. Uma caixa grátis."
   },
   "hero": {
     "eyebrow": "Claude + e-mail",

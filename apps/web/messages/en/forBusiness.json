@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email for Business: Every Company Mailbox on One Agent",
-    "description": "One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client."
+    "description": "One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail or Microsoft 365 and work them all from Claude or any MCP client."
   },
   "hero": {
     "eyebrow": "For the person who runs the company's email",

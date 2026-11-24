@@ -10,8 +10,8 @@
     "status": "active"
   },
   "meta": {
-    "title": "E-mail Vodafone et Arcor dans Claude : le mot de passe IMAP distinct",
-    "description": "Connectez une boîte Vodafone, Arcor ou Kabel Deutschland à Claude et tout client MCP sur imap.vodafonemail.de:993. Il faut le E-Mail-/IMAP-Passwort distinct, pas votre mot de passe MeinVodafone."
+    "title": "E-mail Vodafone et Arcor : le mot de passe IMAP distinct",
+    "description": "Connectez une boîte Vodafone, Arcor ou Kabel Deutschland à Claude sur imap.vodafonemail.de:993, avec le E-Mail-/IMAP-Passwort, pas le mot de passe MeinVodafone."
   },
   "hero": {
     "eyebrow": "Vodafone + IA",

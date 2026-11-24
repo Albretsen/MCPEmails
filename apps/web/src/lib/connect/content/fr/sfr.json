@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Paramètres IMAP SFR Mail et accès MCP pour Claude",
-    "description": "Connectez une boîte SFR Mail à Claude, Cursor et tout client MCP sur imap.sfr.fr:993 avec votre adresse et votre mot de passe SFR, tels que SFR les documente. TLS 1.2 ou 1.3 requis."
+    "description": "Connectez SFR Mail à Claude, Cursor et tout client MCP sur imap.sfr.fr:993 avec votre adresse et votre mot de passe SFR. TLS 1.2 ou 1.3 requis."
   },
   "hero": {
     "eyebrow": "SFR Mail + IA",

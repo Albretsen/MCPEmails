@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Paramètres IMAP de Ziggo Mail et accès MCP pour Claude",
-    "description": "Connectez une boîte Ziggo à Claude, Cursor et tout client MCP. IMAP sur imap.ziggo.nl:993, mais l'envoi passe en STARTTLS sur smtp.ziggo.nl:587, pas en TLS implicite sur 465."
+    "description": "Connectez Ziggo à Claude, Cursor et tout client MCP. IMAP sur imap.ziggo.nl:993, envoi en STARTTLS sur smtp.ziggo.nl:587, pas en TLS implicite sur 465."
   },
   "hero": {
     "eyebrow": "Ziggo Mail + IA",

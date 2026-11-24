@@ -7,6 +7,7 @@ import { Nav, Footer } from '../../../components/marketing/Sections';
 import { DPA_DOCUMENT, DPA_PDF_PATH, dpaPageCopy, fillDpaText } from './content.mjs';
 import { requireLocale } from '@/i18n/require-locale';
 import '../../../styles/dpa.css';
+import { pageTitle } from '@/lib/seo/title.mjs';
 
 /**
  * The MCPEmails Data Processing Agreement. It forms part of the terms and
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }) {
   requireLocale(locale);
   const { meta } = dpaPageCopy(locale);
   return {
-    title: meta.title,
+    title: pageTitle(meta.title),
     description: meta.description,
     alternates: metaAlternates(locale, PATH),
     openGraph: {

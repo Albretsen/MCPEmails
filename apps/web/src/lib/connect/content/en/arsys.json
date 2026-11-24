@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "Arsys MCP Server: Connect Arsys Mail to Claude",
-    "description": "MCP server for Arsys email. Connect the mailboxes on your domain (info@, facturacion@) to Claude, ChatGPT and Cursor over IMAP at imap.serviciodecorreo.es:993 with the mailbox password."
+    "description": "MCP server for Arsys email. Connect the mailboxes on your domain to Claude and ChatGPT over IMAP at imap.serviciodecorreo.es:993 with the mailbox password."
   },
   "hero": {
     "eyebrow": "Arsys email + AI",

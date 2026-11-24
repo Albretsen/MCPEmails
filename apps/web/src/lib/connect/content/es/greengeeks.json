@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Ajustes IMAP de GreenGeeks y configuración MCP para Claude",
-    "description": "GreenGeeks muestra tu servidor de correo real en cPanel, Email Accounts, Connect Devices. Conecta ese buzón a Claude por IMAP 993. Una bandeja gratis, para siempre."
+    "description": "GreenGeeks muestra tu servidor de correo real en cPanel, Email Accounts, Connect Devices. Conecta ese buzón a Claude por IMAP 993. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "GreenGeeks + IA",
