@@ -66,7 +66,9 @@ SELECT is_empty(
 );
 
 SELECT ok(
-  'statement_timeout=5s' = ANY ((SELECT rolconfig FROM pg_roles WHERE rolname = 'support_readonly')),
+  EXISTS (SELECT 1 FROM pg_roles
+           WHERE rolname = 'support_readonly'
+             AND 'statement_timeout=5s' = ANY (rolconfig)),
   'support_readonly has a 5 s statement timeout'
 );
 

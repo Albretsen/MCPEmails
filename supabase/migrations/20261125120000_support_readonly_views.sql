@@ -30,7 +30,7 @@
 --   app_errors    stack, context (may hold anything, including addresses)
 --   mcp_activity  ip_address, user_agent, error_details (jsonb, may hold
 --                 anything)
---   api_keys      key_hash, card_build_notified, card_listed, updated_at
+--   api_keys      key_hash, the two card_* flags, updated_at
 --   inboxes       oauth_access_token, oauth_refresh_token,
 --                 oauth_token_expires_at, oauth_scope, imap_password,
 --                 imap_username, imap_tls, smtp_tls, signature_*,
