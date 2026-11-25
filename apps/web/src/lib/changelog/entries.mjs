@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-25',
+    kind: 'fixed',
+    title: 'Changing the access of a ChatGPT connection now saves',
+    body:
+      "Edit access on a ChatGPT connection in the API keys page now saves the inboxes and permissions you pick. Before, saving showed the error 'Unknown scope: openid' and nothing changed.",
+  },
+  {
     date: '2026-11-24',
     kind: 'fixed',
     title: 'Mail servers that ask for your sign-in in two steps now connect',

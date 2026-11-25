@@ -73,6 +73,8 @@ function seed() {
       key('k-revoked-member', MEMBER, ['read:email'], { deleted_at: '2026-10-01T00:00:00.000Z' }),
       key('k-webclient', null, ['read:email', 'send:email'], { kind: 'web_client' }),
       key('k-outsider', OUTSIDER, ['read:email'], { workspace_id: OTHER_WS }),
+      // An OAuth key whose client (ChatGPT) asked for the OIDC identity scopes.
+      key('k-oidc', MEMBER, ['read:email', 'send:email', 'openid', 'email'], { inbox_ids: ['ib-1'] }),
     ],
     inboxes: [
       { id: 'ib-1', workspace_id: WS, deleted_at: null },
@@ -84,6 +86,7 @@ function seed() {
     oauth_refresh_tokens: [
       { id: 'rt-owner', api_key_id: 'k-owner', workspace_id: WS, revoked_at: null, scopes: ['read:email'], inbox_ids: null },
       { id: 'rt-member', api_key_id: 'k-member', workspace_id: WS, revoked_at: null, scopes: ['read:email'], inbox_ids: null },
+      { id: 'rt-oidc', api_key_id: 'k-oidc', workspace_id: WS, revoked_at: null, scopes: ['read:email', 'send:email', 'openid', 'email'], inbox_ids: ['ib-1'] },
       { id: 'rt-revoked-member', api_key_id: 'k-revoked-member', workspace_id: WS, revoked_at: null, scopes: ['read:email'], inbox_ids: null },
     ],
   };
@@ -646,4 +649,32 @@ test('privacy: inboxIds null (every inbox the creator can see) is still accepted
   const res = await edit('k-member', { scopes: ['read:email'], inboxIds: null });
   assert.equal(res.status, 200);
   assert.equal(keyRow('k-member').inbox_ids, null);
+});
+
+test('edit: a key holding openid/email saves when the dialog sends them back, and keeps them', async () => {
+  as(MEMBER);
+  const res = await edit('k-oidc', { scopes: ['read:email', 'send:email', 'openid', 'email'], inboxIds: ['ib-1', 'ib-2'] });
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.deepEqual(body.scopes, ['read:email', 'send:email', 'openid', 'email']);
+  assert.deepEqual(body.inboxIds, ['ib-1', 'ib-2']);
+  assert.deepEqual(keyRow('k-oidc').inbox_ids, ['ib-1', 'ib-2']);
+  assert.deepEqual(rt('rt-oidc').scopes, ['read:email', 'send:email', 'openid', 'email']);
+  assert.deepEqual(rt('rt-oidc').inbox_ids, ['ib-1', 'ib-2']);
+});
+
+test('edit: identity scopes are kept even when the body leaves them out, and never added', async () => {
+  as(MEMBER);
+  assert.equal((await edit('k-oidc', { scopes: ['read:email'], inboxIds: null })).status, 200);
+  assert.deepEqual(keyRow('k-oidc').scopes, ['read:email', 'openid', 'email']);
+
+  assert.equal((await edit('k-member', { scopes: ['read:email', 'openid'], inboxIds: null })).status, 200);
+  assert.deepEqual(keyRow('k-member').scopes, ['read:email']);
+});
+
+test('edit: identity scopes alone are not a grant', async () => {
+  as(MEMBER);
+  const res = await edit('k-oidc', { scopes: ['openid', 'email'], inboxIds: null });
+  assert.equal(res.status, 400);
+  assert.deepEqual(keyRow('k-oidc').scopes, ['read:email', 'send:email', 'openid', 'email']);
 });
