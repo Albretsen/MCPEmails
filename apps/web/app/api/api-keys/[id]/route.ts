@@ -6,6 +6,7 @@ import { VALID_SCOPES, VIEWER_SCOPES, isValidScope, type Scope } from '@/lib/api
 import { insufficientRoleBody } from '@/lib/workspace/roles';
 import { allVisible, visibleInboxIds } from '@/lib/inboxes/visibility';
 import { canChangeApiKey, keyScopeCap, scopeBeyondCap } from '@/lib/api-keys/key-authority';
+import { isIdentityScope } from '@/lib/oauth/grant-role';
 
 /**
  * PATCH /api/api-keys/[id]
@@ -87,8 +88,14 @@ export async function PATCH(
     );
   }
 
+  // The OIDC identity scopes (`openid`, `email`) ride on OAuth keys whose
+  // client asked for them. The edit dialog sends back every scope the key
+  // holds, so they arrive here too. They are not editable tool scopes: skip
+  // them on input and carry over whichever ones the key already held (step
+  // 3c), so editing a ChatGPT key neither fails nor drops them.
   const sanitizedScopes: Scope[] = [];
   for (const s of scopes) {
+    if (typeof s === 'string' && isIdentityScope(s)) continue;
     if (!isValidScope(s)) {
       return NextResponse.json(
         { error: `Unknown scope: ${String(s)}. Valid scopes: ${VALID_SCOPES.join(', ')}.` },
@@ -96,6 +103,13 @@ export async function PATCH(
       );
     }
     if (!sanitizedScopes.includes(s)) sanitizedScopes.push(s);
+  }
+
+  if (sanitizedScopes.length === 0) {
+    return NextResponse.json(
+      { error: 'At least one scope is required.' },
+      { status: 400 },
+    );
   }
 
   // inboxIds: null (or omitted) = all inboxes; otherwise a non-empty UUID array.
@@ -219,6 +233,13 @@ export async function PATCH(
     );
   }
 
+  // 3c. Keep the identity scopes the key already holds. Never adds one the
+  //     client did not ask for at consent.
+  const heldIdentityScopes = (key.scopes ?? []).filter(
+    (s: string) => isIdentityScope(s),
+  );
+  const storedScopes: string[] = [...sanitizedScopes, ...heldIdentityScopes];
+
   // 4. When an explicit inbox allowlist is given, verify every id belongs to
   //    this workspace and is not deleted. This prevents granting access to
   //    inboxes outside the workspace by injecting arbitrary UUIDs.
@@ -266,7 +287,7 @@ export async function PATCH(
   //    cannot be raced by the row changing hands in between.
   let update = service
     .from('api_keys')
-    .update({ scopes: sanitizedScopes, inbox_ids: sanitizedInboxIds })
+    .update({ scopes: storedScopes, inbox_ids: sanitizedInboxIds })
     .eq('id', keyId)
     .eq('workspace_id', workspaceId)
     .is('deleted_at', null)
@@ -290,7 +311,7 @@ export async function PATCH(
   //    legacy key-recreation path would reintroduce the old values.
   const { error: rtSyncError } = await service
     .from('oauth_refresh_tokens')
-    .update({ scopes: sanitizedScopes, inbox_ids: sanitizedInboxIds })
+    .update({ scopes: storedScopes, inbox_ids: sanitizedInboxIds })
     .eq('api_key_id', keyId)
     .eq('workspace_id', workspaceId)
     .is('revoked_at', null);
