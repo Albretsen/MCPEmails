@@ -45,6 +45,13 @@ export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
     date: '2026-11-26',
+    kind: 'added',
+    title: 'Reply in a thread whose original lives in another mailbox',
+    body:
+      "Sending a new email can now take in_reply_to and references, the Message-ID and reference chain of the email you are answering, so the send joins that thread even when the original is not in a connected inbox. Works on Gmail and IMAP inboxes.",
+  },
+  {
+    date: '2026-11-26',
     kind: 'fixed',
     title: 'Show matches works again when you set up an automation',
     body:

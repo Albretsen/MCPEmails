@@ -392,6 +392,7 @@ import {
   type SignatureOutcome,
   textCarriesOwnSignature,
 } from "./signature-compose.ts";
+import { parseThreadHeaderArgs } from "./thread-headers.ts";
 import { attributionSender, bodyKeepingQuote } from "./quoted-reply.ts";
 import {
   createSignatureImageFetcher,
@@ -6609,6 +6610,22 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Reply-To address, so replies go here instead of to the sender.",
         },
+        in_reply_to: {
+          type: "string",
+          maxLength: 260,
+          description:
+            "Message-ID of an email you are answering that is not in a connected inbox, " +
+            "e.g. \"<abc123@mail.example.com>\". Sets In-Reply-To so the send joins that " +
+            "thread. Nothing is looked up. Gmail and IMAP inboxes only.",
+        },
+        references: {
+          type: "array",
+          items: { type: "string", maxLength: 260 },
+          maxItems: 100,
+          description:
+            "That email's References chain, oldest first. in_reply_to is appended " +
+            "for you. Gmail and IMAP inboxes only.",
+        },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
         confirmation: CONFIRMATION_PROPERTY,
@@ -9566,6 +9583,8 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     propertyNotes: {
       to: "Send and forward only: a reply goes to the original's Reply-To, or its From when it has none, and reply_all adds its To and Cc.",
       subject: "Send only: reply and forward reuse the original subject.",
+      in_reply_to: "Send only: reply threads from message_id instead.",
+      references: "Send only.",
       include_attachments: "Forward only: a reply never carries the original's attachments.",
     },
     // Destructive: a delivered message cannot be recalled. It was false until
@@ -14597,6 +14616,8 @@ async function sendImapMessage(
       })),
       replyTo: params.replyTo,
       messageId,
+      inReplyTo: params.inReplyTo,
+      references: params.references,
     });
 
     return {
@@ -17644,6 +17665,10 @@ interface SendEmailParams {
   htmlBody?: string;
   attachments: Array<{ filename: string; mime_type: string; data: string }>;
   replyTo?: string;
+  /** Caller-supplied In-Reply-To, normalised by thread-headers.ts. Gmail and IMAP only. */
+  inReplyTo?: string;
+  /** Caller-supplied References chain, space-separated msg-ids. Gmail and IMAP only. */
+  references?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -17698,6 +17723,8 @@ async function sendGmailMessage(
       })),
       replyTo: params.replyTo,
       messageId,
+      inReplyTo: params.inReplyTo,
+      references: params.references,
     });
 
     return { accessToken, messageId, rawBase64url: mimeMessageToBase64url(mimeMessage) };
@@ -21078,6 +21105,17 @@ async function executeSendEmail(
   // reply_to (optional)
   const replyTo = typeof args["reply_to"] === "string" ? args["reply_to"] : undefined;
 
+  // in_reply_to / references (optional): threading onto a message that is not
+  // in any connected inbox. Shape-checked only; see thread-headers.ts.
+  const threadHeaders = parseThreadHeaderArgs(args, "email_send");
+  if (!threadHeaders.ok) {
+    return {
+      result: { content: [{ type: "text", text: threadHeaders.message }], isError: true },
+      logStatus: "error",
+      logErrorCode: "-32602",
+    };
+  }
+
   // ── RFC 5322 email address validation ─────────────────────────────────────
   // All recipient addresses (and reply_to) are validated before any provider
   // call. This prevents misaddressed emails caused by agent hallucination and
@@ -21132,6 +21170,26 @@ async function executeSendEmail(
     return { result: { content: [{ type: "text", text }], isError: true }, logStatus: "error", logErrorCode: senderIdentityErrorCode(message) };
   }
 
+  // Graph builds the message itself and accepts only `x-` custom headers, so
+  // In-Reply-To / References cannot be set on an Outlook send (see
+  // replyOutlookMessage). Refused here, before anything is held or sent.
+  if (threadHeaders.inReplyTo && senderInbox.provider === "outlook") {
+    return {
+      result: {
+        content: [{
+          type: "text",
+          text:
+            "email_send: in_reply_to and references are not supported on Outlook inboxes, because " +
+            "Microsoft Graph does not let a sender set those headers. Nothing was sent. Send without " +
+            "them, or use email_compose action 'reply' with a message_id from this inbox.",
+        }],
+        isError: true,
+      },
+      logStatus: "error",
+      logErrorCode: "unsupported_feature",
+    };
+  }
+
   // ── Resolve referenced attachments ────────────────────────────────────────
   // Before the approval gate, deliberately: the approval snapshot has always
   // carried the attachment bytes for an inline send, and a reviewer approving
@@ -21166,6 +21224,8 @@ async function executeSendEmail(
     htmlBody,
     attachments,
     replyTo: replyTo ?? senderReplyTo,
+    inReplyTo: threadHeaders.inReplyTo,
+    references: threadHeaders.references,
   };
 
   // Append the per-inbox signature to this new message before it is serialized
@@ -21235,6 +21295,9 @@ async function executeSendEmail(
       from: senderInbox.email_address.toLowerCase() !== inbox.email_address.toLowerCase()
         ? senderInbox.email_address
         : undefined,
+      // Same for threading: the re-run reads them back off the snapshot.
+      inReplyTo: sendParams.inReplyTo,
+      references: sendParams.references,
     }));
     if (approval) return {
       result: await heldSendResult(approval, apiKey, senderInbox.id, "email"),
