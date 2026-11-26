@@ -12,6 +12,66 @@ This covers the Stripe configuration only. The code switches
 where they are read. Nothing here was run against live with `--apply` by the
 PR that added it.
 
+## Small launch 2026-12-02 (decided 2026-11-26)
+
+The owner moved EUR forward to 2026-12-02, the day after Black Week, as a
+smaller launch than the plan above:
+
+- EUR prices for NEW checkouts only, same digits as USD.
+- Stripe Tax stays OFF (`STRIPE_AUTOMATIC_TAX` unset), exactly like the USD
+  sales today. VAT is settled through the owner's OSS filing, not Checkout.
+- Existing subscribers stay as they are: no twins, no swap.
+- Not tied to the Pro $19 flip on 2026-12-08.
+- The dispatcher is NOT used: its preflight requires a tax registration and
+  its window opens 2026-12-07. The env switch is the launch.
+
+Already true on 2026-11-26: the live EUR path works (a Business founder sale
+was paid in EUR by PayPal and the account upgraded within seconds), SEPA and
+iDEAL are active and offered on EUR sessions, the three async/dispute events
+are on the enabled webhook endpoint, and the live dry run of
+`eur-currency-options.mjs` showed 9 prices to update and no problems.
+
+Checklist, on 2026-12-02 after 07:00 Oslo (the Black Week coupons are
+fixed USD amounts and stay redeemable until 12-02 07:00 Oslo; a EUR
+session cannot take them):
+
+1. Confirm Black Week is over: `/pricing` shows no offer, and
+   `stripe coupons retrieve BW2026_PRO_Y1 --live` is past `redeem_by`.
+2. Dry run again and read it (read-only; the local live key cannot write):
+
+   ```bash
+   cd apps/web
+   node scripts/stripe-eur/eur-currency-options.mjs --prices ../../Documents/stripe-eur/prices.live.json --live
+   ```
+
+3. Add the EUR options in the Stripe Dashboard (built-in browser), one
+   price at a time, with the values the dry run printed: currency EUR,
+   amount = the USD digits (Japan route EUR 108), tax behavior
+   **inclusive**. Set the top-level tax behavior to **exclusive** where the
+   dry run says so. A currency option can never be changed or removed, so
+   check each amount before saving. Skip the product tax codes; they only
+   matter for Stripe Tax.
+4. Run the dry run again. Every price must say `ok, nothing to do`.
+   Euro-area buyers now get EUR in Checkout.
+5. Vercel (Production): set `STRIPE_EUR_PRICES=true` and redeploy. This
+   shows EUR on the marketing pages and forces EUR for the six non-euro EU
+   countries. Leave `STRIPE_AUTOMATIC_TAX` and `STRIPE_PRICE_TWINS` unset.
+6. Check in production: `/api/geo` answers `eur: true` for an EU visitor
+   and `eur: false` from Norway; `/pricing` from an EU country shows EUR
+   and "incl. VAT"; one Checkout session for an EU country is in EUR and
+   lists SEPA and iDEAL.
+7. Watch the first EUR sales: the subscription is EUR, the account is
+   upgraded, and a SEPA payment that is still processing keeps access.
+8. Add the changelog entry (prices in euros, SEPA Direct Debit and iDEAL)
+   dated 2026-12-02.
+
+Rollback: `STRIPE_FORCE_USD=true` in Vercel (Production) and redeploy.
+
+Not covered by the small launch: the Pro $19 V2 prices still need
+`currency_options[eur]` at creation (otherwise EU Pro buyers get USD from
+12-08), the legacy EU swap, Stripe Tax, and the Free-cap "$9 per month" line
+in mcp-server.
+
 ## No automatic launch (decided 2026-10-25)
 
 The owner decided the EUR launch does NOT turn itself on. Migration
