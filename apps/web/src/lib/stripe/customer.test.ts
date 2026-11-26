@@ -28,6 +28,9 @@ const deleted: string[] = [];
 const updates: Array<{ values: Record<string, unknown>; filters: Array<[string, string, unknown]> }> = [];
 let reads = 0;
 let nextId = 1;
+let stripeEmail: string | null = 'a@example.com';
+let retrieveThrows = false;
+const emailUpdates: Array<[string, string]> = [];
 
 function reset() {
   savedBefore = null;
@@ -38,6 +41,9 @@ function reset() {
   deleted.length = 0;
   updates.length = 0;
   reads = 0;
+  stripeEmail = 'a@example.com';
+  retrieveThrows = false;
+  emailUpdates.length = 0;
 }
 
 nodeMock.module('@/lib/stripe/client', {
@@ -48,6 +54,14 @@ nodeMock.module('@/lib/stripe/client', {
           const id = `cus_new_${nextId++}`;
           created.push(id);
           return { id };
+        },
+        retrieve: async (id: string) => {
+          if (retrieveThrows) throw new Error('stripe down');
+          return { id, email: stripeEmail };
+        },
+        update: async (id: string, params: { email: string }) => {
+          emailUpdates.push([id, params.email]);
+          return { id, email: params.email };
         },
         del: async (id: string) => {
           deleted.push(id);
@@ -89,11 +103,35 @@ nodeMock.module('@/lib/supabase/service', {
 const { getOrCreateStripeCustomer, discardNewStripeCustomer } = await import('./customer.ts');
 const opts = { userId: USER, ownerEmail: 'a@example.com', displayName: 'A' };
 
-test('a saved customer is reused without calling Stripe', async () => {
+test('a saved customer is reused; a matching email is left alone', async () => {
   reset();
   savedBefore = 'cus_saved';
+  stripeEmail = 'A@Example.com';
   assert.deepEqual(await getOrCreateStripeCustomer(opts), { customerId: 'cus_saved', created: false });
   assert.equal(created.length, 0);
+  assert.equal(emailUpdates.length, 0);
+});
+
+test('a saved customer with an old email gets the account email', async () => {
+  reset();
+  savedBefore = 'cus_saved';
+  stripeEmail = 'old@example.com';
+  assert.deepEqual(await getOrCreateStripeCustomer(opts), { customerId: 'cus_saved', created: false });
+  assert.deepEqual(emailUpdates, [['cus_saved', 'a@example.com']]);
+});
+
+test('a Stripe failure during the email sync does not block checkout', async () => {
+  reset();
+  savedBefore = 'cus_saved';
+  retrieveThrows = true;
+  const errLog = console.error;
+  console.error = () => {};
+  try {
+    assert.deepEqual(await getOrCreateStripeCustomer(opts), { customerId: 'cus_saved', created: false });
+  } finally {
+    console.error = errLog;
+  }
+  assert.equal(emailUpdates.length, 0);
 });
 
 test('a new customer is created and reported as created', async () => {

@@ -28,6 +28,23 @@ interface GetOrCreateCustomerOptions {
 }
 
 /**
+ * Set the saved customer's email to the current account email when they
+ * differ. Best effort: a Stripe failure here must never block a checkout.
+ */
+async function syncCustomerEmail(customerId: string, ownerEmail: string): Promise<void> {
+  const want = ownerEmail.trim();
+  if (!want) return;
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if ('deleted' in customer && customer.deleted) return;
+    if ((customer.email ?? '').trim().toLowerCase() === want.toLowerCase()) return;
+    await stripe.customers.update(customerId, { email: want });
+  } catch (err) {
+    console.error('[stripe-customer] email sync failed:', err instanceof Error ? err.message : err);
+  }
+}
+
+/**
  * Idempotently fetch or create the single Stripe Customer for the given user.
  *
  * 1. Reads `stripe_customer_id` from the user's `user_billing` row.
@@ -58,8 +75,11 @@ export async function getOrCreateStripeCustomer(
     );
   }
 
-  // 2. Already has a customer; return immediately.
+  // 2. Already has a customer; bring its email up to the account email (a
+  //    person who changed their login address must not see the old one in
+  //    checkout or on receipts), then return it.
   if (billing?.stripe_customer_id) {
+    await syncCustomerEmail(billing.stripe_customer_id, ownerEmail);
     return { customerId: billing.stripe_customer_id, created: false };
   }
 
