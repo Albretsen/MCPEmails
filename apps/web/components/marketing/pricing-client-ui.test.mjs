@@ -100,6 +100,9 @@ async function renderPricing(t, { user = null, gate = null, locale = 'en' } = {}
   const beacons = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
+    // The seasonal-offer lookup runs only near a sale window, so it depends on
+    // today's date; it is not an analytics beacon and is left out here.
+    if (String(url) === '/api/seasonal-offer') return { ok: true, status: 200, json: async () => ({ offers: {} }) };
     beacons.push({ url: String(url), body: init.body ? JSON.parse(init.body) : null });
     return { ok: true, status: 204, json: async () => ({}) };
   };
