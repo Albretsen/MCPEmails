@@ -601,6 +601,13 @@ export interface HeldSendSnapshotInput {
    * 2026-11-23). It is re-verified against the inbox's identities at dispatch.
    */
   from?: string;
+  /**
+   * Caller-supplied threading headers (thread-headers.ts), already normalised.
+   * Same reason as `from`: the dispatcher re-runs email_send over this
+   * snapshot, so without them an approved send leaves the thread.
+   */
+  inReplyTo?: string;
+  references?: string;
 }
 
 /**
@@ -645,6 +652,8 @@ export function heldSendSnapshot(
     ...(input.attachments.length ? { attachments: input.attachments } : {}),
     ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     ...(input.from ? { from: input.from } : {}),
+    ...(input.inReplyTo ? { in_reply_to: input.inReplyTo } : {}),
+    ...(input.references ? { references: input.references.split(" ") } : {}),
     include_signature: false,
   };
 }
