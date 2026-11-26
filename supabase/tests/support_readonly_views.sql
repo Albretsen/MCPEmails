@@ -8,14 +8,15 @@
 --   - no column is named like a key except api_key_id and key_prefix;
 --   - anon, authenticated and PUBLIC have no usage on the schema;
 --   - the support_readonly role can select the views but no public table;
---   - the role's statement timeout is 5 s.
+--   - the role's statement timeout is 5 s;
+--   - app_errors.workspace_id is a uuid (20261126120000).
 --
 -- Run with: supabase test db
 -- ============================================================
 
 BEGIN;
 
-SELECT plan(9);
+SELECT plan(10);
 
 SELECT is_empty(
   $$ SELECT table_name, column_name FROM information_schema.columns
@@ -70,6 +71,11 @@ SELECT ok(
            WHERE rolname = 'support_readonly'
              AND 'statement_timeout=5s' = ANY (rolconfig)),
   'support_readonly has a 5 s statement timeout'
+);
+
+SELECT col_type_is(
+  'support_readonly', 'app_errors', 'workspace_id', 'uuid',
+  'app_errors exposes the workspace as a uuid (20261126120000)'
 );
 
 SELECT * FROM finish();
