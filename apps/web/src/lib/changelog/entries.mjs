@@ -44,6 +44,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-11-26',
+    kind: 'fixed',
+    title: 'Show matches works again when you set up an automation',
+    body:
+      "Show matches in the new automation dialog lists the emails your filter finds in the mailbox. Since November 24 it answered 'unauthorized' instead, whichever API key you picked.",
+  },
+  {
     date: '2026-11-25',
     kind: 'fixed',
     title: 'Changing the access of a ChatGPT connection now saves',

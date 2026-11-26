@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { isServiceRoleBearer } from "./service-bearer.ts";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
@@ -38538,9 +38539,10 @@ async function handleTriagePreview(req: Request): Promise<Response> {
   // ── Auth ────────────────────────────────────────────────────────────────
   const header = req.headers.get("authorization") ?? "";
   const bearer = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
-  // Constant-time: the service-role key is a bearer secret, and a short-circuit
-  // compare leaks its prefix to anyone who can time the response.
-  if (!supabaseServiceKey || !bearer || !timingSafeStringEqual(bearer, supabaseServiceKey)) {
+  // Not a plain compare with our own SUPABASE_SERVICE_ROLE_KEY: Supabase
+  // replaced that injected value on 2026-11-24 while the web app's key stayed
+  // valid, and every preview answered 401. See service-bearer.ts.
+  if (!(await isServiceRoleBearer(bearer, { supabaseUrl, ownServiceKey: supabaseServiceKey }))) {
     return json({ error: "unauthorized" }, 401);
   }
 

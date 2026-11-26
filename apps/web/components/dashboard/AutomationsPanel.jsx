@@ -674,7 +674,13 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
         body: JSON.stringify({ inbox_id: form.inboxId, api_key_id: form.apiKeyId, filter }),
       });
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || t('automations.modal.previewFailed'));
+      // Only a sentence written for people (the route's own 400s) is shown as
+      // is. Server faults and bare codes ("unauthorized", "search_failed")
+      // get the translated message instead of English internals.
+      if (!response.ok) {
+        const readable = response.status < 500 && typeof payload.error === 'string' && /\s/.test(payload.error);
+        throw new Error(readable ? payload.error : t('automations.modal.previewFailed'));
+      }
       setPreview(payload);
     } catch (error_) {
       setPreview(null);
