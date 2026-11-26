@@ -13,8 +13,9 @@ import { createClient } from '@/lib/supabase/server';
  *   3. Call supabase.auth.updateUser({ email }). With Supabase's secure email
  *      change enabled this sends a confirmation link to the new address (and,
  *      when configured, the old one); the change only takes effect once the
- *      link is clicked. We never write the new email to the users table here —
- *      a DB trigger / next sign-in syncs it after confirmation.
+ *      link is clicked. We never write the new email to the users table here:
+ *      the on_auth_user_email_changed trigger copies it to public.users once
+ *      the change is confirmed, and checkout updates the Stripe customer.
  *   4. Return 200 with the pending address so the UI can tell the user to check
  *      their inbox.
  *
