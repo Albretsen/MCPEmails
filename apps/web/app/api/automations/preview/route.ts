@@ -125,6 +125,14 @@ export async function POST(request: NextRequest) {
     if (upstream.status === 404) {
       return NextResponse.json({ error: 'Preview is not available on this server yet.' }, { status: 503 });
     }
+    // The Edge Function refusing THIS server's credential is our fault, never
+    // the customer's. It must not reach the browser as a 4xx "unauthorized"
+    // (2026-11-26: it did, for every customer, after Supabase replaced the
+    // function's injected service key).
+    if (upstream.status === 401) {
+      console.error('[api/automations/preview] edge function refused the service credential');
+      return NextResponse.json({ error: 'Preview is not available right now.' }, { status: 502 });
+    }
     const upstreamError = payload && typeof payload === 'object' && typeof (payload as { error?: unknown }).error === 'string'
       ? (payload as { error: string }).error
       : 'Could not preview this filter against the mailbox.';
